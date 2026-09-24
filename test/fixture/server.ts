@@ -133,6 +133,35 @@ ${[3, 2, 1].map((n) => {
 </body></html>`;
 
 /** An assets table the way Snipe-IT renders one (fwsi8): headers, then tag and name cells. */
+/**
+ * A board the way Kanboard renders one (fwkb41): the column titles in the
+ * header row, and AGAIN in each column's collapsed view in the tasks row —
+ * not rendered (display:none) until a column is collapsed. The newest card
+ * shows its id only as "#<n>" (`board.card`, reset to 4).
+ */
+const KANBOARD = (card: number) => `<!doctype html><html><head><meta charset="utf-8"><title>Board</title></head><body>
+<h1>KB Bench Board</h1>
+<table class="board-project"><tr class="board-swimlane-columns">
+${['Backlog', 'Ready', 'Work in progress', 'Done'].map((c) => `<th class="board-column-header"><div class="board-column-title"><a href="#">${c}</a></div></th>`).join('')}
+</tr><tr class="board-swimlane-tasks">
+${['Backlog', 'Ready', 'Work in progress', 'Done'].map((c, i) => `<td class="board-column"><div class="board-column-collapsed" style="display:none"><div class="board-rotation">${c}</div></div>${i === 0 ? `<div class="task-board"><a class="task-id" href="#">#${card}</a> <a class="task-title" href="#">Bench Task</a></div>` : ''}</td>`).join('')}
+</tr></table>
+</body></html>`;
+
+/**
+ * A record detail view the way EspoCRM renders one (fwec10): labelled cells
+ * with a `.field[data-name]` each, and a Stream entry narrating the save
+ * that repeats the stage (`espo.stage`, reset to "Negotiation").
+ */
+const ESPO_DETAIL = (stage: string) => `<!doctype html><html><head><meta charset="utf-8"><title>Opportunity</title></head><body>
+<h3><span>Bench Opportunity</span></h3>
+<div class="record"><div class="row">
+<div class="cell" data-name="stage"><label class="control-label">Stage</label><div class="field" data-name="stage"><span>${stage}</span></div></div>
+<div class="cell" data-name="amount"><label class="control-label">Amount</label><div class="field" data-name="amount"><span>$12,500.00</span></div></div>
+</div></div>
+<div class="panel stream"><h4>Stream</h4><ul><li class="list-group-item"><a href="#">Admin</a> created this opportunity <span>${stage}</span> <a href="#">07:20</a></li></ul></div>
+</body></html>`;
+
 const ASSET_TABLE = `<!doctype html><html><head><meta charset="utf-8"><title>Assets</title></head><body>
 <h1>Assets</h1>
 <table><thead><tr><th>Asset Tag</th><th>Name</th><th>Model</th></tr></thead><tbody>
@@ -1232,6 +1261,10 @@ export interface FixtureServer {
   readonly items: string[];
   /** The ticket list's created date (/tickets); reset() restores the recording's, 2026-09-23. */
   listing: { date: string };
+  /** The kanboard fixture's newest card id (/kanboard); reset() restores 4. */
+  board: { card: number };
+  /** The EspoCRM fixture's stage (/espo); reset() restores "Negotiation". */
+  espo: { stage: string };
   /** Reset state for a new test/case: `n` fresh items, empty log, faults cleared. */
   reset(n: number): void;
   faults: {
@@ -1258,6 +1291,8 @@ export async function createFixtureServer(initialCount = 10): Promise<FixtureSer
   let log: string[] = [];
   const pending: Fault[] = [];
   const listing = { date: '2026-09-23' };
+  const board = { card: 4 };
+  const espo = { stage: 'Negotiation' };
 
   function take<K extends Fault['kind']>(kind: K, req?: http.IncomingMessage): Extract<Fault, { kind: K }> | undefined {
     for (const f of pending) {
@@ -1287,6 +1322,16 @@ export async function createFixtureServer(initialCount = 10): Promise<FixtureSer
     if (url === '/') {
       res.writeHead(200, { 'content-type': 'text/html' });
       res.end(PAGE);
+      return;
+    }
+    if (url === '/espo') {
+      res.writeHead(200, { 'content-type': 'text/html' });
+      res.end(ESPO_DETAIL(espo.stage));
+      return;
+    }
+    if (url === '/kanboard' || url.startsWith('/kanboard?')) {
+      res.writeHead(200, { 'content-type': 'text/html' });
+      res.end(KANBOARD(board.card));
       return;
     }
     if (url === '/issue-list' || url === '/asset-table') {
@@ -1620,11 +1665,15 @@ export async function createFixtureServer(initialCount = 10): Promise<FixtureSer
     get log() { return log; },
     get items() { return items; },
     listing,
+    board,
+    espo,
     reset(n: number) {
       items = Array.from({ length: n }, (_, i) => `Item ${i + 1}`);
       log = [];
       pending.length = 0;
       listing.date = '2026-09-23';
+      board.card = 4;
+      espo.stage = 'Negotiation';
     },
     faults: {
       delay(ms, opts = {}) {

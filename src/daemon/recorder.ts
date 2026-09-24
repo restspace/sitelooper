@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import type { ElementHandle, Frame, Locator, Page } from 'playwright-core';
 import { ensureSessionDir } from '../shared/paths.js';
-import { escapeRe, fieldByName, frameValue, hasTextMatcher, implicitRoles, roleName, unfreezeFrame, volatileMatcher } from '../shared/text.js';
+import { FRAME_MARK, escapeRe, fieldByName, frameValue, hasTextMatcher, implicitRoles, roleName, unfreezeFrame, volatileMatcher } from '../shared/text.js';
 import { urlParts } from '../execution/url.js';
 import { pointLocator } from '../execution/point.js';
 import { dispatchesFirstMatch } from '../execution/lifecycle.js';
@@ -943,6 +943,83 @@ function foldedTextRe(v: string): RegExp {
  * only a value-based (circular) locator would resolve — in which case the
  * value stays un-threadable and the caller falls back to recovery.
  */
+/**
+ * THE FIELD THE KEY NAMES. EspoCRM fwec10 02-create reported `stage:
+ * "Negotiation"`; the saved record shows it in its stage field and again in
+ * the Stream entry that narrates the save ("… assigned to Bench Assignee /
+ * Negotiation / 07:20"). Two matches, not in one row, not a heading, no test
+ * hook: captureReadBack refused, and the one value the instruction asked for
+ * stayed a recorded literal.
+ *
+ * The page's own field structure decides which match is the value: the one
+ * that IS a field whose name the reported key names — an element with
+ * `data-name` equal to the key (EspoCRM's `.field[data-name=stage]`), a `dd`
+ * whose `dt` is the key, or an element beside a `label`/`dt`/`th` whose text is
+ * the key — each compared case- and separator-insensitively ("close_date" and
+ * "Close date"), and each showing exactly the value. Exactly one such field,
+ * and it must resolve to one element by its own selector: the read is pinned
+ * there, the stream's copy left alone. The value's shape is never read.
+ */
+async function fieldReadBack(page: Page, loc: Locator, v: string, label: string): Promise<RecordedStep | null> {
+  const selectors = await loc
+    .evaluateAll(
+      (els, { value, key }) => {
+        const norm = (s: string | null | undefined) => (s ?? '').toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
+        const shows = (el: Element) => ((el as HTMLElement).innerText ?? '').replace(/\s+/g, ' ').trim() === value;
+        const want = norm(key);
+        const out = new Set<string>();
+        for (const el of els) {
+          for (let a: Element | null = el as Element; a && a !== document.body; a = a.parentElement) {
+            if (!shows(a)) break; // climbed past the element that shows the value alone
+            const tag = a.tagName.toLowerCase();
+            const name = a.getAttribute('data-name');
+            if (name && norm(name) === want) {
+              const cls = (a.getAttribute('class') ?? '').split(/\s+/).filter(Boolean)[0];
+              out.add(`${cls ? `.${cls}` : tag}[data-name=${JSON.stringify(name)}]`);
+              break;
+            }
+            const prev = a.previousElementSibling;
+            if (tag === 'dd' && prev && prev.tagName === 'DT' && norm((prev as HTMLElement).innerText) === want) {
+              out.add(`dt:text-is(${JSON.stringify((prev as HTMLElement).innerText.trim())}) + dd`);
+              break;
+            }
+            const labelled = a.parentElement
+              ? Array.from(a.parentElement.children).find((c) => c !== a && ['LABEL', 'DT', 'TH'].includes(c.tagName) && norm((c as HTMLElement).innerText) === want)
+              : undefined;
+            if (labelled) {
+              const lt = labelled.tagName.toLowerCase();
+              out.add(`:has(> ${lt}:text-is(${JSON.stringify((labelled as HTMLElement).innerText.trim())})) > ${tag}:not(${lt})`);
+              break;
+            }
+          }
+        }
+        return [...out];
+      },
+      { value: v.replace(/\s+/g, ' ').trim(), key: label },
+    )
+    .catch(() => [] as string[]);
+  if (selectors.length !== 1) return null;
+  const field = page.locator(selectors[0]);
+  if ((await field.count().catch(() => 0)) !== 1) return null;
+  const handle = await field.elementHandle({ timeout: 1_000 }).catch(() => null);
+  if (!handle) return null;
+  try {
+    const own: LocatorCandidate = { kind: 'css', selector: selectors[0] };
+    const derived = await readBackFromHandle(page, handle, v);
+    const chain = [own, ...(derived?.locators.target.chain ?? []).filter((c) => !(c.kind === 'css' && c.selector === selectors[0]))];
+    return {
+      k: 'step',
+      tool: 'read',
+      args: { target: '(read-back)', what: 'text' },
+      locators: { target: { expr: candidateExpr(own), verified: true, raw: '(read-back)', chain } },
+      result: JSON.stringify(v),
+      label,
+    };
+  } finally {
+    await handle.dispose().catch(() => {});
+  }
+}
+
 export async function captureReadBack(page: Page, value: string, label?: string): Promise<RecordedStep | null> {
   const v = value.trim();
   const want = foldValue(v);
@@ -982,6 +1059,12 @@ export async function captureReadBack(page: Page, value: string, label?: string)
         await handle.dispose().catch(() => {});
       }
     }
+  }
+  // Ambiguous by text, but the reported KEY names a field the page itself
+  // labels, and exactly one match is that field's value (fieldReadBack).
+  if (count > 1 && label) {
+    const field = await fieldReadBack(page, loc, v, label);
+    if (field) return field;
   }
   // Ambiguous by text, but every match inside ONE record: the same row
   // showing one value twice. An Odoo order line shows its product in the
@@ -1187,6 +1270,169 @@ export function selectionReadBack(steps: readonly RecordedStep[], value: string,
     }
   }
   return null;
+}
+
+/**
+ * An option chosen by its VALUE ATTRIBUTE, read back from the saved record.
+ *
+ * EspoCRM fwec10 02-create chose the stage by clicking
+ * `.field[data-name="stage"] .option[data-value="Negotiation"]`: no
+ * role=option candidate, and a click whose own diff shows nothing holding the
+ * choice (selectionReadBack's evidence). What the recording does show is
+ * WHERE the option sat — the selector's scope before the option itself — and
+ * the value it carried. After the save the same scope is the saved record's
+ * field; if the page the finish looks at shows exactly the value there, in one
+ * element, that is the read: re-read at the end of every replay, where the
+ * saved record is, not from the transient dropdown.
+ *
+ * Provenance: the recorded click's own selector (its `[data-value]` equal to
+ * the reported value) and the live page confirming the scope shows it. Null
+ * otherwise.
+ */
+export async function savedSelectionReadBack(page: Page, steps: readonly RecordedStep[], value: string, label: string): Promise<RecordedStep | null> {
+  const want = value.replace(/\s+/g, ' ').trim();
+  if (!want) return null;
+  const scopes: string[] = [];
+  for (const s of steps) {
+    if (s.tool !== 'click') continue;
+    for (const c of s.locators.target?.chain ?? []) {
+      if (c.kind !== 'css') continue;
+      const parts = cssCompounds(c.selector);
+      const last = parts[parts.length - 1] ?? '';
+      const m = /\[data-value=(["'])(.*?)\1\]/.exec(last);
+      if (!m || m[2].replace(/\s+/g, ' ').trim() !== want || parts.length < 2) continue;
+      scopes.push(parts.slice(0, -1).join(' '));
+    }
+  }
+  for (const scope of [...new Set(scopes)].reverse()) {
+    const field = page.locator(scope);
+    if ((await field.count().catch(() => 0)) !== 1) continue;
+    const shown = ((await field.innerText({ timeout: 1_000 }).catch(() => '')) ?? '').replace(/\s+/g, ' ').trim();
+    if (shown !== want) continue;
+    const own: LocatorCandidate = { kind: 'css', selector: scope };
+    const handle = await field.elementHandle({ timeout: 1_000 }).catch(() => null);
+    let rest: LocatorCandidate[] = [];
+    if (handle) {
+      try {
+        rest = ((await readBackFromHandle(page, handle, want))?.locators.target.chain ?? []).filter((c) => !(c.kind === 'css' && c.selector === scope));
+      } finally {
+        await handle.dispose().catch(() => {});
+      }
+    }
+    return {
+      k: 'step',
+      tool: 'read',
+      args: { target: '(read-back)', what: 'text' },
+      locators: { target: { expr: candidateExpr(own), verified: true, raw: '(read-back)', chain: [own, ...rest] } },
+      result: JSON.stringify(want),
+      label,
+    };
+  }
+  return null;
+}
+
+/** A css selector's descendant compounds (top-level whitespace), brackets, quotes and parentheses kept whole. */
+function cssCompounds(selector: string): string[] {
+  const out: string[] = [];
+  let cur = '';
+  let depth = 0;
+  let quote: string | null = null;
+  for (const ch of selector.trim()) {
+    if (quote) {
+      cur += ch;
+      if (ch === quote) quote = null;
+      continue;
+    }
+    if (ch === '"' || ch === "'") quote = ch;
+    else if (ch === '[' || ch === '(') depth += 1;
+    else if (ch === ']' || ch === ')') depth -= 1;
+    if (depth === 0 && /\s/.test(ch)) {
+      if (cur) out.push(cur);
+      cur = '';
+      continue;
+    }
+    cur += ch;
+  }
+  if (cur) out.push(cur);
+  // A combinator (`>`, `+`, `~`) belongs to what follows it, not a scope of its own.
+  return out.reduce<string[]>((acc, part) => {
+    if (acc.length && /^[>+~]$/.test(acc[acc.length - 1])) acc[acc.length - 1] += ` ${part}`;
+    else acc.push(part);
+    return acc;
+  }, []);
+}
+
+/**
+ * AN ID REPORTED WITHOUT ITS AFFIX. kanboard fwkb41 02-create reported
+ * `new_task_numeric_id: "4"`; the board shows only `link "#4"`, which the same
+ * finish pinned (`card_id_shown`, `board_tasks_after_7`). No element shows "4"
+ * whole, so the value stayed a recorded literal and no replay reported it.
+ *
+ * Provenance: a read this instruction PINNED returned `#4`, and the reported
+ * value is exactly that text's letter/digit core — the text with only its
+ * leading and trailing non-letter/digit characters taken off. When exactly one
+ * distinct pinned text has that core, the value is read from that element,
+ * framed at the core ("#{{=}}", FRAME_MARK), so both runners publish the live
+ * core ("5" on the run whose task is #5; observe.ts framedRead).
+ *
+ * Never a bare number inside a longer text: "Task #4" and "Backlog (4)" have
+ * cores "Task #4" and "Backlog (4", not "4". Never a value some read already
+ * returned whole.
+ *
+ * And a core is only an IDENTITY where the recording says so: the value must
+ * be a part of a url this instruction stood on (an id sits in `task_id=4`; a
+ * count sits nowhere), and no other reported key may carry the same value.
+ * Offline over every published n1 recording, the bare rule also fired on
+ * fwkb41 i1 `backlog_task_count: "3"` (the pinned `#3` is a task) and i2
+ * `backlog_column_count_after: "4"` — counts that happen to equal an id. The
+ * url rule refuses the first; the second shares "4" with
+ * `new_task_numeric_id` in the same report, so which key is the id is not
+ * something the recording decides, and neither is read. Pure; null when no
+ * pinned read qualifies.
+ */
+export function coreReadBack(steps: readonly RecordedStep[], value: string, label: string, reported: Record<string, unknown> = {}): RecordedStep | null {
+  const want = value.replace(/\s+/g, ' ').trim();
+  if (!want || !/[\p{L}\p{N}]/u.test(want)) return null;
+  if (Object.entries(reported).some(([k, v]) => k !== label && String(v ?? '').replace(/\s+/g, ' ').trim() === want)) return null;
+  const urls = steps.flatMap((s) => [s.diff?.url, typeof s.args.url === 'string' ? s.args.url : undefined]).filter((u): u is string => Boolean(u));
+  // A path or hash part (urlParts), or a query value — Kanboard's `task_id=4`.
+  const partsOf = (u: string): string[] => {
+    const out = urlParts(u).map((p) => p.value);
+    try {
+      for (const v of new URL(u).searchParams.values()) out.push(v);
+    } catch {
+      /* not an absolute url: its path parts are all there is */
+    }
+    return out;
+  };
+  if (!urls.some((u) => partsOf(u).includes(want))) return null;
+  const core = (t: string) => t.replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, '');
+  const texts = new Map<string, RecordedStep>();
+  for (const s of steps) {
+    if (s.tool !== 'read' || s.args.target !== '(read-back)' || s.args.frame || typeof s.result !== 'string') continue;
+    let text: unknown;
+    try {
+      text = JSON.parse(s.result);
+    } catch {
+      continue;
+    }
+    if (typeof text !== 'string') continue;
+    const shown = text.replace(/\s+/g, ' ').trim();
+    if (shown === want) return null; // shown whole: not this rule's to read
+    if (core(shown) === want) texts.set(shown, s);
+  }
+  if (texts.size !== 1) return null;
+  const [[shown, source]] = [...texts];
+  const frame = frameValue(shown, want);
+  if (!frame || frame === FRAME_MARK) return null;
+  return {
+    k: 'step',
+    tool: 'read',
+    args: { target: '(read-back)', what: 'text', frame },
+    locators: source.locators,
+    result: JSON.stringify(want),
+    label,
+  };
 }
 
 /**

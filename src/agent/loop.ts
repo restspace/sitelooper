@@ -13,8 +13,8 @@ import { siteModel } from '../skills/sitemap.js';
 import { buildSystemPrompt } from './prompt.js';
 import { admitsIncompletion, artefactKeys, backfillReadValues, flattenComposedValues, flattenContainedComposite, flattenProvenComposite, mergeReportValues, namingAskMessage, positionDatumKeys, promoteLabelledReads, publishProseIdentifiers, unnamedReadValues, validateReport, type Report } from './report.js';
 import { executeTool, toolDefsFor, type ToolExecution } from './tools.js';
-import { captureReadBack, captureReadBackAt, selectionReadBack, setIdentityHints, visibleTextsWithin } from '../daemon/recorder.js';
-import { describeOutcome, sourceReadBacks, type ReadBackDecider, type ReadBackTarget } from './readback.js';
+import { captureReadBack, captureReadBackAt, coreReadBack, savedSelectionReadBack, selectionReadBack, setIdentityHints, visibleTextsWithin } from '../daemon/recorder.js';
+import { describeOutcome, pinPart, sourceReadBacks, type ReadBackDecider, type ReadBackTarget } from './readback.js';
 
 /** Tools that change the page URL, staleing every existing snapshot's refs. */
 const NAVIGATION_TOOLS = new Set(['goto', 'back', 'tabs']);
@@ -627,6 +627,15 @@ export async function runInstruction(
               opts.onProgress?.(`[report] ${name} is the option this instruction selected: read back from its control after the selection`);
               continue;
             }
+            // An option clicked by its value attribute (EspoCRM fwec10's
+            // `.field[data-name="stage"] .option[data-value="Negotiation"]`):
+            // read from that field on the saved record. See savedSelectionReadBack.
+            const saved = await savedSelectionReadBack(page, browser.script.stepsThisInstruction?.() ?? [], value, name).catch(() => null);
+            if (saved) {
+              browser.script.addStep(saved);
+              opts.onProgress?.(`[report] ${name} is the option this instruction chose by value: read back from the saved field`);
+              continue;
+            }
             composites.push({ name, value }); // maybe several values — try splitting, then the model
           }
           // A value the page refuses AS ONE STRING may be several values the
@@ -642,7 +651,7 @@ export async function runInstruction(
           // case is one extra count() per candidate part.
           for (const { name, value } of composites) {
             const { names, pinned } = await flattenProvenComposite(report, name, (part, partName) =>
-              captureReadBack(page, part, partName),
+              pinPart(page, part, partName),
             );
             if (!names.length) {
               // Not a list of values the page shows — perhaps the page's
@@ -651,7 +660,7 @@ export async function runInstruction(
               // Name Seed: Reception Laptop"). Carved only where the visible
               // elements account for every word of it; see planContainedParts.
               const contained = await flattenContainedComposite(report, name, await visibleTextsWithin(page, value), opts.recordAs?.text ?? instruction, (part, partName) =>
-                captureReadBack(page, part, partName),
+                pinPart(page, part, partName),
               );
               if (contained.names.length) {
                 for (const step of contained.pinned) browser.script.addStep(step);
@@ -683,6 +692,16 @@ export async function runInstruction(
           // (see readback.ts: refused on length, or nowhere on the page).
           // Never past the instruction deadline: this is one more model
           // call, and the caller believes the budget bounds the whole thing.
+          // An id reported without the affix the page shows it with (kanboard
+          // fwkb41 "4" beside a pinned `#4`): read from that element, framed at
+          // its core. See coreReadBack.
+          for (const straggler of [...stragglers]) {
+            const cored = coreReadBack(browser.script.stepsThisInstruction?.() ?? [], straggler.value, straggler.name, report.evidence?.values ?? {});
+            if (!cored) continue;
+            browser.script.addStep(cored);
+            stragglers.splice(stragglers.indexOf(straggler), 1);
+            opts.onProgress?.(`[report] ${straggler.name} is the core of a text this instruction pinned: read there, framed`);
+          }
           if (stragglers.length && Date.now() < deadline) {
             const sourced = await sourceReadBacks(stragglers, page, {
               instruction: opts.recordAs?.text ?? instruction,
