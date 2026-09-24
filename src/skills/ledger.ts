@@ -19,8 +19,9 @@
  */
 
 /** How a later run obtains its own value for a slot. */
-import type { RecordedEntry } from '../daemon/recorder.js';
-import { urlParts as urlPartsOf, type UrlSegDiff } from '../execution/url.js';
+import type { RecordedEntry, RecordedStep } from '../daemon/recorder.js';
+import { isMutatingAction } from '../execution/lifecycle.js';
+import { urlParts as urlPartsOf, urlShapeOf, type UrlSegDiff } from '../execution/url.js';
 import { MIN_ID_LEN, looksLikeId, tokenPattern } from './shape.js';
 import type { Skill } from './store.js';
 
@@ -184,6 +185,12 @@ export function pathDigitPart(part: { label: string; value: string }): boolean {
 export function unseenGotoParts(url: string, before: readonly RecordedEntry[]): { label: string; value: string }[] {
   const parts = urlPartsOf(url).filter((p) => pathDigitPart(p) || idPositionPart(p));
   if (!parts.length) return [];
+  const shown = shownIn(before);
+  return parts.filter((p) => !shown(p.value));
+}
+
+/** Whether anything in `before` showed a value: a url part, or a whole token of any recorded text (unseenGotoParts' net). */
+function shownIn(before: readonly RecordedEntry[]): (value: string) => boolean {
   const urlValues = new Set<string>();
   const texts: string[] = [];
   const addUrl = (u: unknown): void => {
@@ -204,7 +211,91 @@ export function unseenGotoParts(url: string, before: readonly RecordedEntry[]): 
     }
   }
   const text = texts.join('\n');
-  return parts.filter((p) => !urlValues.has(p.value) && !occursAsToken(text, p.value));
+  return (value) => urlValues.has(value) || occursAsToken(text, value);
+}
+
+/**
+ * The url parts — at ANY position, whatever the param is called — that a
+ * step's own mutation minted and then linked to. Three facts from the
+ * recording, never the part's name or characters:
+ *  - a state-changing step M of this instruction (not a typed value: fill and
+ *    type add what was typed) ADDED an element named by exactly the part's
+ *    value at its core (`- link "#4"`: core `4`, idCore), and nothing before M
+ *    had shown that value (shownIn);
+ *  - M also added the element the url was reached BY: the link a goto was read
+ *    from (RecordedStep.linkedFrom), or the element a click acted on;
+ *  - `reached` is that goto or click, after M in the same instruction.
+ *
+ * kanboard fwkb41: 02-create's save (#37) added `- link "#4"` and `- link
+ * "fwkb41-n1 Bench Task"`, and the next navigation (#41) was `goto
+ * …?controller=TaskViewController&action=show&task_id=4`, linked from the
+ * title link. idPositionPart admits only a param named exactly `id` (fwod29's
+ * menu_id lesson), so `task_id=4` was no record position: never banked, never
+ * minted. The report's new_task_numeric_id stayed the literal "4" and was
+ * pruned, and s_2977d9 kept `goto …task_id=4` and the goal "Task #4" — right
+ * only because the reset makes the new task #4 again.
+ *
+ * Odoo's `menu_id=120` stays out: no mutation adds an element named 120. A
+ * seed card's `#1` stays out: the page showed it before any mutation.
+ */
+export function linkMintedParts(reached: RecordedStep, before: readonly RecordedEntry[]): { label: string; value: string }[] {
+  const url = reached.diff?.url;
+  if (!url || (reached.tool !== 'goto' && !isMutatingAction(reached.tool))) return [];
+  const by = (reached.tool === 'goto' ? reached.linkedFrom?.chain : reached.locators?.target?.chain) ?? [];
+  const byName = by.map((c) => (c.kind === 'role' ? c.name : c.kind === 'text' ? c.text : undefined)).find((n): n is string => Boolean(n?.trim()));
+  if (!byName) return [];
+  for (let k = before.length - 1; k >= 0; k--) {
+    const m = before[k];
+    if (m.k === 'instruction') return [];
+    if (m.k !== 'step' || !isMutatingAction(m.tool) || m.tool === 'fill' || m.tool === 'type') continue;
+    const names = addedElementNames(m);
+    if (!names.includes(byName.trim())) continue;
+    const shown = shownIn(before.slice(0, k));
+    const cores = new Set(names.map(idCore).filter(Boolean));
+    // Not the label of the element it was reached by: a url keyed by the name
+    // you clicked (grafana fwgr25 `showCategory=Panel options`, reached by the
+    // "Panel options" button its Add click had shown) addresses that label,
+    // not a record. Kanboard's `#4` names the task; its url carries `4`.
+    return partsWithQuery(url).filter((p) => cores.has(p.value) && p.value !== byName.trim() && !shown(p.value));
+  }
+  return [];
+}
+
+/**
+ * urlParts plus the ordinary query string's values, labelled `q.<key>` as the
+ * hash state is (execution/url.ts urlPart reads both). Only linkMintedParts
+ * enumerates these: a query value is a record position here by provenance.
+ */
+function partsWithQuery(url: string): { label: string; value: string }[] {
+  const out = urlPartsOf(url);
+  for (const [key, value] of urlShapeOf(url)?.query ?? []) if (!out.some((p) => p.label === `q.${key}`)) out.push({ label: `q.${key}`, value });
+  return out;
+}
+
+/** The names of the elements a step's page change added (`- role "name"`), trimmed. */
+function addedElementNames(step: RecordedStep): string[] {
+  const out: string[] = [];
+  for (const line of step.diff?.added ?? []) {
+    const m = /^- [\w-]+ ("(?:[^"\\]|\\.)*")/.exec(line.trim());
+    if (!m) continue;
+    try {
+      const name = String(JSON.parse(m[1])).trim();
+      if (name) out.push(name);
+    } catch {
+      // an unparseable name is no evidence
+    }
+  }
+  return out;
+}
+
+/** A name with the punctuation around it taken off (`#4` → `4`, `(12)` → `12`); inner characters are kept. */
+function idCore(name: string): string {
+  const isWord = (c: string): boolean => (c >= '0' && c <= '9') || c.toLowerCase() !== c.toUpperCase();
+  let a = 0;
+  let b = name.length;
+  while (a < b && !isWord(name[a])) a++;
+  while (b > a && !isWord(name[b - 1])) b--;
+  return name.slice(a, b);
 }
 
 /**
@@ -433,7 +524,7 @@ export class RunLedger {
     step: string,
     parts: { label: string; value: string }[],
     /** `landedLabels`: the parts a goto LANDED (unseenGotoParts) — landed at those positions only. */
-    opts: { landed?: boolean; landedLabels?: readonly string[] } = {},
+    opts: { landed?: boolean; landedLabels?: readonly string[]; linkMinted?: readonly { label: string; value: string }[] } = {},
   ): LedgerEntry[] {
     const out: LedgerEntry[] = [];
     for (const part of parts) {
@@ -490,6 +581,18 @@ export class RunLedger {
           vouched: runSpecific || idPositionPart(part) || pathIdPart(part) || landedId,
           ...(landedId && !pathIdPart(part) && part.value.length < MIN_ID_LEN ? { positional: true as const } : {}),
         },
+      );
+      if (entry) out.push(entry);
+    }
+    // Parts a step's own mutation minted and linked to (linkMintedParts),
+    // whatever their position is called: a record id by provenance. Kanboard
+    // fwkb41's `task_id=4` is below the floor, so it is banked for its position
+    // only, as a landed path digit is.
+    for (const part of opts.linkMinted ?? []) {
+      const entry = this.add(
+        part.value,
+        { from: 'url', step, label: part.label },
+        { kind: 'identifier', basis: 'shape', vouched: true, ...(part.value.length < MIN_ID_LEN ? { positional: true as const } : {}) },
       );
       if (entry) out.push(entry);
     }

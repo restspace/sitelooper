@@ -8,8 +8,8 @@ import type { LocatorCandidate, RecordedEntry, RecordedInstruction, RecordedRepo
 import { rootDir } from '../shared/paths.js';
 import { escapeRe } from '../shared/text.js';
 import { urlParts, urlPattern } from './compile.js';
-import { mintedShape, urlShapeOf } from '../execution/url.js';
-import { idPositionPart, pathDigitPart, pathIdPart, unseenGotoParts } from './ledger.js';
+import { mintedShape, urlPart, urlShapeOf } from '../execution/url.js';
+import { idPositionPart, linkMintedParts, pathDigitPart, pathIdPart, unseenGotoParts } from './ledger.js';
 import { MIN_ID_LEN, looksLikeId, tokenPattern } from './shape.js';
 import { statedPlainly } from '../spec/rethread.js';
 
@@ -517,6 +517,20 @@ export function buildFlow(
         if (produced.some((p) => p.value === part.value) || varEntries.some(([, v]) => v === part.value)) continue;
         const path = part.value.length < 2 ? pathTo(g.endUrl, part.label) : undefined;
         minted.push({ stepId: id, output: `url.${part.label}`, value: part.value, ...(path ? { path } : {}) });
+      }
+      // A part this step's own mutation minted and linked to, at any position
+      // (ledger.ts linkMintedParts; kanboard fwkb41 `task_id=4`), when the step
+      // ENDS on it: a replay publishes it from its end url (urlOutputs, by the
+      // label a later step consumes).
+      const endUrl = g.endUrl;
+      for (const s of g.steps) {
+        if (!s.diff?.url) continue;
+        for (const part of linkMintedParts(s, entries.slice(0, Math.max(0, entries.indexOf(s))))) {
+          if (urlPart(endUrl, part.label) !== part.value || startParts.has(part.value)) continue;
+          if (minted.some((m) => m.output === `url.${part.label}` || m.value === part.value)) continue;
+          if (produced.some((p) => p.value === part.value) || varEntries.some(([, v]) => v === part.value)) continue;
+          minted.push({ stepId: id, output: `url.${part.label}`, value: part.value });
+        }
       }
     }
     produced.push(...minted);
@@ -2444,7 +2458,7 @@ export function lintUnpublishedOutputs(
  * `referencablePart`. They had drifted again in the meantime — minting
  * admitted `idPositionPart` and this did not.
  */
-export function urlOutputs(url: string, runSpecific?: RunSpecific): Record<string, string> {
+export function urlOutputs(url: string, runSpecific?: RunSpecific, wanted?: ReadonlySet<string>): Record<string, string> {
   const out: Record<string, string> = { url };
   for (const part of urlParts(url)) {
     const key = `url.${part.label}`;
@@ -2452,6 +2466,15 @@ export function urlOutputs(url: string, runSpecific?: RunSpecific): Record<strin
     // (buildFlow's landedByAction), and a replay cannot tell what landed its
     // url, so it publishes every candidate the producer might have minted.
     if ((referencablePart(part, runSpecific) || pathDigitPart(part)) && !(key in out)) out[key] = part.value;
+  }
+  // …and any part a later step CONSUMES, by its label, whatever it looks like:
+  // the producer minted it by provenance (linkMintedParts; kanboard fwkb41's
+  // `url.q.task_id`, a query value). The artifact already publishes exactly
+  // the consumed parts this way (emit.ts urlOutputLines, urlPartWhen).
+  for (const key of wanted ?? []) {
+    if (key in out || !key.startsWith('url.')) continue;
+    const value = urlPart(url, key.slice('url.'.length));
+    if (value) out[key] = value;
   }
   return out;
 }
