@@ -1,0 +1,180 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwgr70-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwgr70-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwgr70-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/bench/results/fwgr70-spec-spec-tmp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwgr70-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwgr70.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwgr70-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwgr70.spec.ts",
+      "file": "fwgr70.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwgr70",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "timedOut",
+                  "duration": 300143,
+                  "error": {
+                    "message": "\u001b[31mTest timeout of 300000ms exceeded.\u001b[39m",
+                    "stack": "\u001b[31mTest timeout of 300000ms exceeded.\u001b[39m"
+                  },
+                  "errors": [
+                    {
+                      "message": "\u001b[31mTest timeout of 300000ms exceeded.\u001b[39m"
+                    },
+                    {
+                      "location": {
+                        "file": "/home/user/sitelooper/bench/results/fwgr70-spec-spec-tmp/fwgr70.flow.ts",
+                        "column": 17,
+                        "line": 7348
+                      },
+                      "message": "Error: locator.evaluate: Target page, context or browser has been closed\n\n   at fwgr70.flow.ts:7348\n\n  7346 | async function syntheticHover(locator: Locator): Promise<void> {\n  7347 |   await locator.hover().catch(() => {});\n> 7348 |   await locator.evaluate((el) => {\n       |                 ^\n  7349 |     for (const type of ['pointerover', 'mouseover', 'mouseenter', 'mousemove']) {\n  7350 |       el.dispatchEvent(new MouseEvent(type, { bubbles: type !== 'mouseenter' }));\n  7351 |     }\n    at syntheticHover (/home/user/sitelooper/bench/results/fwgr70-spec-spec-tmp/fwgr70.flow.ts:7348:17)\n    at hover (/home/user/sitelooper/bench/results/fwgr70-spec-spec-tmp/fwgr70.flow.ts:12891:3)\n    at Object.act (/home/user/sitelooper/bench/results/fwgr70-spec-spec-tmp/fwgr70.flow.ts:15223:9)\n    at runStepLifecycle (/home/user/sitelooper/bench/results/fwgr70-spec-spec-tmp/fwgr70.flow.ts:9694:18)\n    at Object.02-create (/home/user/sitelooper/bench/results/fwgr70-spec-spec-tmp/fwgr70.flow.ts:15204:5)\n    at /home/user/sitelooper/bench/results/fwgr70-spec-spec-tmp/fwgr70.flow.ts:18821:7\n    at runFlow (/home/user/sitelooper/bench/results/fwgr70-spec-spec-tmp/fwgr70.flow.ts:18820:5)\n    at /home/user/sitelooper/bench/results/fwgr70-spec-spec-tmp/fwgr70.spec.ts:14:21"
+                    }
+                  ],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper step] 01-open\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 02-create s_664228/6: 1 field(s) this procedure filled were empty again before this click (the page rebuilt its form, or dropped the value when the field lost focus, after the fills were checked) — refilled once\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-open: Open http://127.0.0.1:3000/, sign in with username admin and password exactly {{env:APP_PASSWORD}}, then find the provisioned dashboard named 'Service health' and report the titles of its panels exactly as shown.",
+                      "duration": 14292
+                    },
+                    {
+                      "title": "02-create: Create a NEW dashboard titled '{{runid}} Bench Dashboard' containing a Stat panel titled '{{runid}} Availability' whose query uses the TestData data source (any TestData query, e.g. classic scenario random walk). Save the dashboard. Then report whether the saved dashboard shows the Stat panel with that title.",
+                      "duration": 284675,
+                      "error": {
+                        "message": "Error: locator.evaluate: Target page, context or browser has been closed",
+                        "stack": "Error: locator.evaluate: Target page, context or browser has been closed\n    at syntheticHover (/home/user/sitelooper/bench/results/fwgr70-spec-spec-tmp/fwgr70.flow.ts:7348:17)\n    at hover (/home/user/sitelooper/bench/results/fwgr70-spec-spec-tmp/fwgr70.flow.ts:12891:3)\n    at Object.act (/home/user/sitelooper/bench/results/fwgr70-spec-spec-tmp/fwgr70.flow.ts:15223:9)\n    at runStepLifecycle (/home/user/sitelooper/bench/results/fwgr70-spec-spec-tmp/fwgr70.flow.ts:9694:18)\n    at Object.02-create (/home/user/sitelooper/bench/results/fwgr70-spec-spec-tmp/fwgr70.flow.ts:15204:5)\n    at /home/user/sitelooper/bench/results/fwgr70-spec-spec-tmp/fwgr70.flow.ts:18821:7\n    at runFlow (/home/user/sitelooper/bench/results/fwgr70-spec-spec-tmp/fwgr70.flow.ts:18820:5)\n    at /home/user/sitelooper/bench/results/fwgr70-spec-spec-tmp/fwgr70.spec.ts:14:21",
+                        "location": {
+                          "file": "/home/user/sitelooper/bench/results/fwgr70-spec-spec-tmp/fwgr70.flow.ts",
+                          "column": 17,
+                          "line": 7348
+                        },
+                        "snippet": "\u001b[90m   at \u001b[39mfwgr70.flow.ts:7348\n\n  7346 | async function syntheticHover(locator: Locator): Promise<void> {\n  7347 |   await locator.hover().catch(() => {});\n> 7348 |   await locator.evaluate((el) => {\n       |                 ^\n  7349 |     for (const type of ['pointerover', 'mouseover', 'mouseenter', 'mousemove']) {\n  7350 |       el.dispatchEvent(new MouseEvent(type, { bubbles: type !== 'mouseenter' }));\n  7351 |     }"
+                      }
+                    }
+                  ],
+                  "startTime": "2026-09-24T06:55:51.124Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/home/user/sitelooper/bench/results/fwgr70-spec-spec-tmp/test-results/fwgr70-fwgr70/test-failed-1.png"
+                    },
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": ""
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/home/user/sitelooper/bench/results/fwgr70-spec-spec-tmp/test-results/fwgr70-fwgr70/error-context.md"
+                    }
+                  ]
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "d0aec27219eb36efe6ac-2d7d1c4afe4559d68a94",
+          "file": "fwgr70.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-24T06:55:49.047Z",
+    "duration": 302438.06899999996,
+    "expected": 0,
+    "skipped": 0,
+    "unexpected": 1,
+    "flaky": 0
+  }
+}

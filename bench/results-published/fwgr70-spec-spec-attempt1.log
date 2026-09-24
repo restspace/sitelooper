@@ -1,0 +1,46 @@
+
+Running 1 test using 1 worker
+
+[sitelooper step] 01-open
+[sitelooper warn] 02-create s_664228/6: 1 field(s) this procedure filled were empty again before this click (the page rebuilt its form, or dropped the value when the field lost focus, after the fills were checked) — refilled once
+  ✘  1 fwgr70.spec.ts:9:1 › fwgr70 (5.0m)
+
+
+  1) fwgr70.spec.ts:9:1 › fwgr70 › 02-create: Create a NEW dashboard titled '{{runid}} Bench Dashboard' containing a Stat panel titled '{{runid}} Availability' whose query uses the TestData data source (any TestData query, e.g. classic scenario random walk). Save the dashboard. Then report whether the saved dashboard shows the Stat panel with that title. 
+
+    Test timeout of 300000ms exceeded.
+
+    Error: locator.evaluate: Target page, context or browser has been closed
+
+       at fwgr70.flow.ts:7348
+
+      7346 | async function syntheticHover(locator: Locator): Promise<void> {
+      7347 |   await locator.hover().catch(() => {});
+    > 7348 |   await locator.evaluate((el) => {
+           |                 ^
+      7349 |     for (const type of ['pointerover', 'mouseover', 'mouseenter', 'mousemove']) {
+      7350 |       el.dispatchEvent(new MouseEvent(type, { bubbles: type !== 'mouseenter' }));
+      7351 |     }
+        at syntheticHover (/home/user/sitelooper/bench/results/fwgr70-spec-spec-tmp/fwgr70.flow.ts:7348:17)
+        at hover (/home/user/sitelooper/bench/results/fwgr70-spec-spec-tmp/fwgr70.flow.ts:12891:3)
+        at Object.act (/home/user/sitelooper/bench/results/fwgr70-spec-spec-tmp/fwgr70.flow.ts:15223:9)
+        at runStepLifecycle (/home/user/sitelooper/bench/results/fwgr70-spec-spec-tmp/fwgr70.flow.ts:9694:18)
+        at Object.02-create (/home/user/sitelooper/bench/results/fwgr70-spec-spec-tmp/fwgr70.flow.ts:15204:5)
+        at /home/user/sitelooper/bench/results/fwgr70-spec-spec-tmp/fwgr70.flow.ts:18821:7
+        at runFlow (/home/user/sitelooper/bench/results/fwgr70-spec-spec-tmp/fwgr70.flow.ts:18820:5)
+        at /home/user/sitelooper/bench/results/fwgr70-spec-spec-tmp/fwgr70.spec.ts:14:21
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/fwgr70-fwgr70/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/fwgr70-fwgr70/error-context.md
+
+  Slow test file: fwgr70.spec.ts (5.0m)
+  Consider running tests from slow files in parallel. See: https://playwright.dev/docs/test-parallel
+  1 failed
+    fwgr70.spec.ts:9:1 › fwgr70 ────────────────────────────────────────────────────────────────────

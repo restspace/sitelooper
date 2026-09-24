@@ -1,0 +1,43 @@
+
+Running 1 test using 1 worker
+
+[sitelooper step] 01-open
+[sitelooper warn] 02-create s_664228/6: 1 field(s) this procedure filled were empty again before this click (the page rebuilt its form, or dropped the value when the field lost focus, after the fills were checked) — refilled once
+  ✘  1 fwgr70.spec.ts:9:1 › fwgr70 (56.5s)
+
+
+  1) fwgr70.spec.ts:9:1 › fwgr70 › 02-create: Create a NEW dashboard titled '{{runid}} Bench Dashboard' containing a Stat panel titled '{{runid}} Availability' whose query uses the TestData data source (any TestData query, e.g. classic scenario random walk). Save the dashboard. Then report whether the saved dashboard shows the Stat panel with that title. 
+
+    Error: click NOT dispatched: the control is disabled, so the app would ignore it. Make whatever enables it true first (a required field, a selection, a finished load), then click it. [outcome: not dispatched]
+
+       at fwgr70.flow.ts:6900
+
+      6898 |  */
+      6899 | function actionFailure(outcome: 'not-dispatched' | 'unknown', reason: ActionFailureReason, error: string | Error): ActionFailure {
+    > 6900 |   const failure = (typeof error === 'string' ? new Error(error) : error) as ActionFailure;
+           |                                                ^
+      6901 |   failure.actionOutcome = outcome;
+      6902 |   failure.actionReason = reason;
+      6903 |   return failure;
+        at actionFailure (/home/user/sitelooper/bench/results/fwgr70-spec-spec-tmp/fwgr70.flow.ts:6900:48)
+        at robustClick (/home/user/sitelooper/bench/results/fwgr70-spec-spec-tmp/fwgr70.flow.ts:7071:15)
+        at click (/home/user/sitelooper/bench/results/fwgr70-spec-spec-tmp/fwgr70.flow.ts:12859:3)
+        at Object.act (/home/user/sitelooper/bench/results/fwgr70-spec-spec-tmp/fwgr70.flow.ts:14923:13)
+        at runStepLifecycle (/home/user/sitelooper/bench/results/fwgr70-spec-spec-tmp/fwgr70.flow.ts:9694:18)
+        at Object.02-create (/home/user/sitelooper/bench/results/fwgr70-spec-spec-tmp/fwgr70.flow.ts:14902:9)
+        at /home/user/sitelooper/bench/results/fwgr70-spec-spec-tmp/fwgr70.flow.ts:18821:7
+        at runFlow (/home/user/sitelooper/bench/results/fwgr70-spec-spec-tmp/fwgr70.flow.ts:18820:5)
+        at /home/user/sitelooper/bench/results/fwgr70-spec-spec-tmp/fwgr70.spec.ts:14:21
+
+    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/fwgr70-fwgr70/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/fwgr70-fwgr70/error-context.md
+
+  1 failed
+    fwgr70.spec.ts:9:1 › fwgr70 ────────────────────────────────────────────────────────────────────

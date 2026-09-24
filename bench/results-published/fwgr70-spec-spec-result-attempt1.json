@@ -1,0 +1,34 @@
+{
+  "arm": "spec",
+  "runid": "fwgr70-spec",
+  "target": "grafana",
+  "flow": "fwgr70.json",
+  "flowName": "fwgr70",
+  "skillsDir": "/home/user/sitelooper/bench/results/fwgr70-skills",
+  "compiled": true,
+  "flowFile": "bench/results/fwgr70-spec-spec-tmp/fwgr70.flow.ts",
+  "specFile": "bench/results/fwgr70-spec-spec-tmp/fwgr70.spec.ts",
+  "wallMs": 303785,
+  "exitCode": 1,
+  "timedOut": false,
+  "costUsd": 0,
+  "stats": {
+    "total": 1,
+    "passed": 0,
+    "failed": 1,
+    "skipped": 0
+  },
+  "tests": [
+    {
+      "title": "fwgr70",
+      "status": "unexpected",
+      "ok": false,
+      "durationMs": 300143,
+      "error": "\u001b[31mTest timeout of 300000ms exceeded.\u001b[39m",
+      "drift": []
+    }
+  ],
+  "drift": [],
+  "driftCount": 0,
+  "logTail": "\nRunning 1 test using 1 worker\n\n[sitelooper step] 01-open\n[sitelooper warn] 02-create s_664228/6: 1 field(s) this procedure filled were empty again before this click (the page rebuilt its form, or dropped the value when the field lost focus, after the fills were checked) — refilled once\n  ✘  1 fwgr70.spec.ts:9:1 › fwgr70 (5.0m)\n\n\n  1) fwgr70.spec.ts:9:1 › fwgr70 › 02-create: Create a NEW dashboard titled '{{runid}} Bench Dashboard' containing a Stat panel titled '{{runid}} Availability' whose query uses the TestData data source (any TestData query, e.g. classic scenario random walk). Save the dashboard. Then report whether the saved dashboard shows the Stat panel with that title. \n\n    Test timeout of 300000ms exceeded.\n\n    Error: locator.evaluate: Target page, context or browser has been closed\n\n       at fwgr70.flow.ts:7348\n\n      7346 | async function syntheticHover(locator: Locator): Promise<void> {\n      7347 |   await locator.hover().catch(() => {});\n    > 7348 |   await locator.evaluate((el) => {\n           |                 ^\n      7349 |     for (const type of ['pointerover', 'mouseover', 'mouseenter', 'mousemove']) {\n      7350 |       el.dispatchEvent(new MouseEvent(type, { bubbles: type !== 'mouseenter' }));\n      7351 |     }\n        at syntheticHover (/home/user/sitelooper/bench/results/fwgr70-spec-spec-tmp/fwgr70.flow.ts:7348:17)\n        at hover (/home/user/sitelooper/bench/results/fwgr70-spec-spec-tmp/fwgr70.flow.ts:12891:3)\n        at Object.act (/home/user/sitelooper/bench/results/fwgr70-spec-spec-tmp/fwgr70.flow.ts:15223:9)\n        at runStepLifecycle (/home/user/sitelooper/bench/results/fwgr70-spec-spec-tmp/fwgr70.flow.ts:9694:18)\n        at Object.02-create (/home/user/sitelooper/bench/results/fwgr70-spec-spec-tmp/fwgr70.flow.ts:15204:5)\n        at /home/user/sitelooper/bench/results/fwgr70-spec-spec-tmp/fwgr70.flow.ts:18821:7\n        at runFlow (/home/user/sitelooper/bench/results/fwgr70-spec-spec-tmp/fwgr70.flow.ts:18820:5)\n        at /home/user/sitelooper/bench/results/fwgr70-spec-spec-tmp/fwgr70.spec.ts:14:21\n\n    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────\n    test-results/fwgr70-fwgr70/test-failed-1.png\n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    attachment #2: sitelooper-drift (text/plain) ───────────────────────────────────────────────────\n    \n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    Error Context: test-results/fwgr70-fwgr70/error-context.md\n\n  Slow test file: fwgr70.spec.ts (5.0m)\n  Consider running tests from slow files in parallel. See: https://playwright.dev/docs/test-parallel\n  1 failed\n    fwgr70.spec.ts:9:1 › fwgr70 ────────────────────────────────────────────────────────────────────\n"
+}
