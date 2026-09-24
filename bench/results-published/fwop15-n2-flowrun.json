@@ -1,0 +1,507 @@
+{
+  "flow": "fwop15",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Signed-in session (from the replayed segments) is already on Bench Project; I opened its Work packages module and read the list. Exactly three work packages exist in the project and all three have subjects beginning with \"Seed:\", verified two ways: the live table (\"1 - 3/3\", \"You are on the only page\") and the header work-package search typeahead for \"Seed:\" (which also returned only these three, #38/#39/#40). I additionally filtered the view by Status = closed and got \"No work packages to display\", so no closed/hidden Seed: items are being omitted. Subjects verbatim: Seed: triage inbox (#38), Seed: order missing parts (#39), Seed: ship repaired device (#40) — all TASK / New / Normal priority. No record was created by this instruction.",
+      "values": {
+        "project_url": "http://127.0.0.1:8090/projects/bench-project",
+        "work_packages_url": "http://127.0.0.1:8090/projects/bench-project/work_packages",
+        "seed_work_package_ids": "#38, #39, #40",
+        "seed_work_package_count": "3 (pagination: \"1 - 3/3\", only page)",
+        "pagination": "(1 - 3/3)\nYou are on the only page.",
+        "role_option": "open",
+        "role_option_2": "closed",
+        "seed_subjects_1": "Seed: triage inbox",
+        "seed_subjects_2": "Seed: order missing parts",
+        "seed_subjects_3": "Seed: ship repaired device"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_bab182 stopped at step 5 — after step 5 expected url http://127.0.0.1:8090/projects but browser is at http://127.0.0.1:8090/projects/bench-project",
+      "replayed": "4/9",
+      "repaired": false,
+      "turns": 20,
+      "warnings": [
+        "s_a01444: step 1: skipped — it closes the dialog \"Welcome to OpenProject, Bench Admin\" with \"Close\", and that dialog is not open this time: already in effect",
+        "s_bab182: step 1: recorded url http://127.0.0.1:8090/projects is the page the clicked link left (captured before its navigation committed); the click went where the link points, http://127.0.0.1:8090/projects/bench-project — accepted",
+        "s_bab182: step 5: no element matched any known locator for target (tried 3: page.getByRole('link', { name: 'Bench Project', exact: true }), page.locator('#project-3 > td:nth-of-type(3) > div > span > a'), elementAt(446, 308) /* link */); healed inline: the step ran on page.getByRole('button', { name: 'Bench Project', exact: true }), proposed from the live page (nothing in the recorded chain resolved)",
+        "s_bab182: step 5: the inline heal page.getByRole('button', { name: 'Bench Project', exact: true }) ran and the step's own checks then refused it — treat that locator as known-wrong"
+      ],
+      "unreported": [
+        "project_name",
+        "work_package_ids_1",
+        "work_package_ids_2",
+        "work_package_ids_3"
+      ]
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_c0ce44; observed ref=fwop15-n2, type_label=New, work_package_id=#42, numeric_id=42, subject=fwop15-n2 Bench Work Package, status=In progress, description=Bench work package for run fwop15-n2, date_label=Work, finish_date_displayed=no start date - 12/31/2026, created_by=Bench Admin, work_label=Assignee.",
+      "unanswered": [
+        "assignee"
+      ],
+      "values": {
+        "ref": "fwop15-n2",
+        "type_label": "New",
+        "work_package_id": "#42",
+        "numeric_id": "42",
+        "subject": "fwop15-n2 Bench Work Package",
+        "status": "In progress",
+        "description": "Bench work package for run fwop15-n2",
+        "date_label": "Work",
+        "finish_date_displayed": "no start date - 12/31/2026",
+        "created_by": "Bench Admin",
+        "work_label": "Assignee"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "30/30",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_e6255e: start url differs from the recorded pattern in 1 segment(s) ({\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}→{\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[{\"n\":\"status\",\"o\":\"o\",\"v\":[]}],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}) — proceeding optimistically",
+        "s_e6255e: step 1: url segment(s) differ from recorded ({\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}→{\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[{\"n\":\"status\",\"o\":\"o\",\"v\":[]}],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}) — treated as volatile",
+        "s_e6255e: step 2: url segment(s) differ from recorded ({\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}→{\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[{\"n\":\"status\",\"o\":\"o\",\"v\":[]}],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}) — treated as volatile",
+        "s_e6255e: step 2: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear",
+        "s_99ac70: start url differs from the recorded pattern in 1 segment(s) ({\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}→{\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[{\"n\":\"status\",\"o\":\"o\",\"v\":[]}],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}) — proceeding optimistically",
+        "s_99ac70: step 1: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear",
+        "s_99ac70: step 2: url segment(s) differ from recorded ({\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}→{\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[{\"n\":\"status\",\"o\":\"o\",\"v\":[]}],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}) — treated as volatile",
+        "s_99ac70: step 2: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear",
+        "s_99ac70: step 3: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear",
+        "s_99ac70: step 4: url segment(s) differ from recorded ({\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}→{\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[{\"n\":\"status\",\"o\":\"o\",\"v\":[]}],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}) — treated as volatile",
+        "s_99ac70: step 4: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear",
+        "s_99ac70: step 5: url segment(s) differ from recorded ({\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}→{\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[{\"n\":\"status\",\"o\":\"o\",\"v\":[]}],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}) — treated as volatile",
+        "s_99ac70: step 5: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear",
+        "s_99ac70: step 6: read 'create_form_status' returned a value the skill itself set/selected ('Status New: Edit') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_99ac70: step 8: url segment(s) differ from recorded ({\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}→{\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[{\"n\":\"status\",\"o\":\"o\",\"v\":[]}],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}) — treated as volatile",
+        "s_99ac70: step 8: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear",
+        "s_99ac70: step 9: url segment(s) differ from recorded ({\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}→{\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[{\"n\":\"status\",\"o\":\"o\",\"v\":[]}],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}) — treated as volatile",
+        "s_99ac70: step 9: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear",
+        "s_99ac70: step 10: url segment(s) differ from recorded ({\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}→{\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[{\"n\":\"status\",\"o\":\"o\",\"v\":[]}],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}) — treated as volatile",
+        "s_99ac70: step 10: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear"
+      ],
+      "unreported": [
+        "success_message",
+        "create_form_status",
+        "create_form_assignee_dis",
+        "datepicker_finish_value"
+      ]
+    },
+    {
+      "id": "03-open",
+      "status": "success",
+      "summary": "Opened work package #42 (subject \"fwop15-n2 Bench Work Package\") in Bench Project.",
+      "unanswered": [
+        "assignee_displayed"
+      ],
+      "values": {
+        "assignee_aria_label": "Assignee Bench Assignee: Edit",
+        "ref": "fwop15-n2",
+        "finish_date_displayed": "no start date - 12/31/2026",
+        "assignee_display": "BA\nBench Assignee",
+        "work_package_id": "#42",
+        "subject": "fwop15-n2 Bench Work Package",
+        "status_displayed": "In progress",
+        "description_displayed": "Bench work package for run fwop15-n2",
+        "status_aria_label": "In progress",
+        "comment_author": "Bench Admin"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "17/17",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_1dadeb: start url differs from the recorded pattern in 1 segment(s) ({\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}→{\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[{\"n\":\"status\",\"o\":\"o\",\"v\":[]}],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}) — proceeding optimistically",
+        "s_1dadeb: step 4: url segment(s) differ from recorded (41→42, {\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}→{\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[{\"n\":\"status\",\"o\":\"o\",\"v\":[]}],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}) — treated as volatile",
+        "s_48d1aa: start url differs from the recorded pattern in 1 segment(s) ({\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}→{\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[{\"n\":\"status\",\"o\":\"o\",\"v\":[]}],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}) — proceeding optimistically",
+        "s_48d1aa: step 1: url segment(s) differ from recorded (41→42, {\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}→{\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[{\"n\":\"status\",\"o\":\"o\",\"v\":[]}],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}) — treated as volatile",
+        "s_48d1aa: step 2: url segment(s) differ from recorded (41→42) — treated as volatile",
+        "s_48d1aa: step 3: url segment(s) differ from recorded (41→42, {\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}→{\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[{\"n\":\"status\",\"o\":\"o\",\"v\":[]}],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}) — treated as volatile",
+        "s_48d1aa: step 5: url segment(s) differ from recorded (41→42, {\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}→{\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[{\"n\":\"status\",\"o\":\"o\",\"v\":[]}],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}) — treated as volatile",
+        "s_b2bccf: start url differs from the recorded pattern in 1 segment(s) ({\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}→{\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[{\"n\":\"status\",\"o\":\"o\",\"v\":[]}],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}) — proceeding optimistically",
+        "s_b2bccf: step 1: url segment(s) differ from recorded (41→42, {\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}→{\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[{\"n\":\"status\",\"o\":\"o\",\"v\":[]}],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}) — treated as volatile",
+        "s_b2bccf: step 2: url segment(s) differ from recorded (41→42, {\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}→{\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[{\"n\":\"status\",\"o\":\"o\",\"v\":[]}],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}) — treated as volatile",
+        "s_b2bccf: report value finish_date_picker_value is given, not observed: it is built only from the step's own parameters, and neither this run's page nor any of its reads shows it — withheld",
+        "s_b2bccf: report value comment_added is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)"
+      ],
+      "unreported": [
+        "finish_date_picker_value",
+        "assignee_displayed",
+        "comment_added"
+      ]
+    },
+    {
+      "id": "04-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_946b96; observed ref=fwop15-n2, status_element=In progress, page_title=Task: fwop15-n2 Bench Work Package (#42) | Work Packages | Bench Project | OpenProject, finish_date_picker_value=2026-12-31, overview_tab_announcement=You are on the Overview tab for Task fwop15-n2 Bench Work Package., most_recent_comment=Bench comment for run fwop15-n2, activity_tab_content=You are on the Activity tab for Task fwop15-n2 Bench Work Package.\nSet parent\nTASK\nfwop15-n2 Bench Work Package\nShow everything\nNewest at the bottom\nBA\nBench Admin\ncreated this on\n09/24/2026 09:16 PM\n\nBench comment for run fwop15-n2\n\nAdd a comment. Type @ to notify people., work_package_id=#42, subject=fwop15-n2 Bench Work Package, description=Bench work package for run fwop15-n2, work_label=Work, date_label=Date, work_packages_details_co_5=no start date - 12/31/2026, most_recent_comment_author=Bench Admin, most_recent_comment_timestamp=09/24/2026 9:16 PM, type_label=TASK.",
+      "unanswered": [
+        "assignee",
+        "type",
+        "status"
+      ],
+      "values": {
+        "ref": "fwop15-n2",
+        "status_element": "In progress",
+        "page_title": "Task: fwop15-n2 Bench Work Package (#42) | Work Packages | Bench Project | OpenProject",
+        "finish_date_picker_value": "2026-12-31",
+        "overview_tab_announcement": "You are on the Overview tab for Task fwop15-n2 Bench Work Package.",
+        "most_recent_comment": "Bench comment for run fwop15-n2",
+        "activity_tab_content": "You are on the Activity tab for Task fwop15-n2 Bench Work Package.\nSet parent\nTASK\nfwop15-n2 Bench Work Package\nShow everything\nNewest at the bottom\nBA\nBench Admin\ncreated this on\n09/24/2026 09:16 PM\n\nBench comment for run fwop15-n2\n\nAdd a comment. Type @ to notify people.",
+        "work_package_id": "#42",
+        "subject": "fwop15-n2 Bench Work Package",
+        "description": "Bench work package for run fwop15-n2",
+        "work_label": "Work",
+        "date_label": "Date",
+        "work_packages_details_co_5": "no start date - 12/31/2026",
+        "most_recent_comment_author": "Bench Admin",
+        "most_recent_comment_timestamp": "09/24/2026 9:16 PM",
+        "type_label": "TASK"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "26/26",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_64c04d: start url differs from the recorded pattern in 1 segment(s) ({\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}→{\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[{\"n\":\"status\",\"o\":\"o\",\"v\":[]}],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}) — proceeding optimistically",
+        "s_64c04d: step 2: url segment(s) differ from recorded ({\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}→{\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[{\"n\":\"status\",\"o\":\"o\",\"v\":[]}],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}) — treated as volatile",
+        "s_0f9d6a: start url differs from the recorded pattern in 1 segment(s) ({\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}→{\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[{\"n\":\"status\",\"o\":\"o\",\"v\":[]}],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}) — proceeding optimistically",
+        "s_0f9d6a: step 1: url segment(s) differ from recorded ({\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}→{\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[{\"n\":\"status\",\"o\":\"o\",\"v\":[]}],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}) — treated as volatile",
+        "s_0f9d6a: step 4: url segment(s) differ from recorded ({\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}→{\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[{\"n\":\"status\",\"o\":\"o\",\"v\":[]}],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}) — treated as volatile",
+        "s_01d894: start url differs from the recorded pattern in 1 segment(s) ({\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}→{\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[{\"n\":\"status\",\"o\":\"o\",\"v\":[]}],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}) — proceeding optimistically",
+        "s_01d894: step 1: url segment(s) differ from recorded ({\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}→{\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[{\"n\":\"status\",\"o\":\"o\",\"v\":[]}],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}) — treated as volatile",
+        "s_01d894: step 3: url segment(s) differ from recorded ({\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}→{\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[{\"n\":\"status\",\"o\":\"o\",\"v\":[]}],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}) — treated as volatile",
+        "s_01d894: step 6: url segment(s) differ from recorded ({\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}→{\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[{\"n\":\"status\",\"o\":\"o\",\"v\":[]}],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}) — treated as volatile",
+        "s_36485b: start url differs from the recorded pattern in 1 segment(s) ({\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}→{\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[{\"n\":\"status\",\"o\":\"o\",\"v\":[]}],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}) — proceeding optimistically",
+        "s_36485b: step 2: url segment(s) differ from recorded ({\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}→{\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[{\"n\":\"status\",\"o\":\"o\",\"v\":[]}],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}) — treated as volatile",
+        "s_36485b: step 4: url segment(s) differ from recorded ({\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}→{\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[{\"n\":\"status\",\"o\":\"o\",\"v\":[]}],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}) — treated as volatile",
+        "s_946b96: start url differs from the recorded pattern in 1 segment(s) ({\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}→{\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[{\"n\":\"status\",\"o\":\"o\",\"v\":[]}],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}) — proceeding optimistically"
+      ]
+    }
+  ],
+  "passed": 4,
+  "total": 4,
+  "repinned": 0,
+  "drift": 4,
+  "driftTickets": [
+    {
+      "flow": "fwop15",
+      "step": "01-open",
+      "skill": "s_a01444",
+      "atStep": "1",
+      "key": "target",
+      "similarity": 0.995,
+      "missedLocator": "page.getByRole('button', { name: 'Close', exact: true })",
+      "fallbackUsed": null,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:8090/projects/bench-project",
+      "pageUrl": "http://127.0.0.1:8090/projects/bench-project"
+    },
+    {
+      "flow": "fwop15",
+      "step": "01-open",
+      "skill": "s_bab182",
+      "atStep": "5",
+      "key": "target",
+      "similarity": 0.995,
+      "missedLocator": "page.getByRole('link', { name: 'Bench Project', exact: true })",
+      "fallbackUsed": "page.getByRole('button', { name: 'Bench Project', exact: true })",
+      "recovered": true,
+      "healed": true,
+      "proposal": {
+        "kind": "role",
+        "role": "button",
+        "name": "Bench Project"
+      },
+      "rows": [
+        {
+          "tag": "div"
+        },
+        {
+          "tag": "div"
+        },
+        {
+          "tag": "a",
+          "id": "skip-navigation--content",
+          "label": "Click here to skip over the menu and go to the content",
+          "text": "Jump to content"
+        },
+        {
+          "tag": "button",
+          "id": "dialog-show-dialog-75ee1f96-9438-452d-859f-02e00268cba7",
+          "type": "button"
+        },
+        {
+          "tag": "a",
+          "text": "Home"
+        },
+        {
+          "tag": "div",
+          "role": "search",
+          "label": "Search in OpenProject"
+        },
+        {
+          "tag": "button",
+          "id": "top-menu-search-button",
+          "label": "Search",
+          "type": "button"
+        },
+        {
+          "tag": "input",
+          "role": "combobox",
+          "label": "Search in OpenProject",
+          "type": "text"
+        },
+        {
+          "tag": "div",
+          "role": "status"
+        },
+        {
+          "tag": "button",
+          "id": "op-app-header--quick-add-menu-button",
+          "type": "button"
+        },
+        {
+          "tag": "svg",
+          "role": "img",
+          "label": "Add…"
+        },
+        {
+          "tag": "a",
+          "id": "icon-button-c526dc2c-60a9-4892-9b41-7f78acd94888"
+        },
+        {
+          "tag": "button",
+          "id": "op-app-header--help-menu-button",
+          "type": "button"
+        },
+        {
+          "tag": "button",
+          "id": "dialog-show-dialog-f2c7b8e6-d69e-46fb-8b98-44204684e358",
+          "text": "BA",
+          "type": "button"
+        },
+        {
+          "tag": "div",
+          "role": "img",
+          "label": "User menu",
+          "text": "BA"
+        },
+        {
+          "tag": "button",
+          "label": "Collapse project menu"
+        },
+        {
+          "tag": "button",
+          "id": "projects-menu",
+          "text": "Bench Project",
+          "type": "button"
+        },
+        {
+          "tag": "button",
+          "id": "menu-toggle--collapse-button",
+          "type": "button"
+        },
+        {
+          "tag": "hr",
+          "role": "presentation"
+        },
+        {
+          "tag": "a",
+          "text": "Project home"
+        },
+        {
+          "tag": "a",
+          "id": "main-menu-work-packages",
+          "text": "Work packages"
+        },
+        {
+          "tag": "button",
+          "label": "Open Work packages sub-menu",
+          "type": "button"
+        },
+        {
+          "tag": "a",
+          "id": "main-menu-gantt",
+          "text": "Gantt charts"
+        },
+        {
+          "tag": "button",
+          "label": "Open Gantt charts sub-menu",
+          "type": "button"
+        },
+        {
+          "tag": "a",
+          "text": "Boards"
+        },
+        {
+          "tag": "button",
+          "label": "Open Boards sub-menu",
+          "type": "button"
+        },
+        {
+          "tag": "a",
+          "text": "Meetings"
+        },
+        {
+          "tag": "button",
+          "label": "Open Meetings sub-menu",
+          "type": "button"
+        },
+        {
+          "tag": "a",
+          "text": "Wiki"
+        },
+        {
+          "tag": "a",
+          "text": "Backlogs"
+        },
+        {
+          "tag": "button",
+          "label": "Open Backlogs sub-menu",
+          "type": "button"
+        },
+        {
+          "tag": "a",
+          "text": "News"
+        },
+        {
+          "tag": "a",
+          "text": "Time and costs"
+        },
+        {
+          "tag": "button",
+          "label": "Open Time and costs sub-menu",
+          "type": "button"
+        },
+        {
+          "tag": "a",
+          "text": "Documents"
+        },
+        {
+          "tag": "button",
+          "label": "Open Documents sub-menu",
+          "type": "button"
+        },
+        {
+          "tag": "a",
+          "text": "Members"
+        },
+        {
+          "tag": "button",
+          "label": "Open Members sub-menu",
+          "type": "button"
+        },
+        {
+          "tag": "a",
+          "text": "Project settings"
+        },
+        {
+          "tag": "button",
+          "label": "Open Project settings sub-menu",
+          "type": "button"
+        },
+        {
+          "tag": "a",
+          "id": "page-header-2b60aa4a-f4dc-40fd-be97-8c4f5161c193"
+        },
+        {
+          "tag": "button",
+          "id": "primary-menu-cf36066e-b850-4984-aa96-2a04f58fff40-button",
+          "type": "button"
+        },
+        {
+          "tag": "a",
+          "text": "Overview"
+        },
+        {
+          "tag": "a",
+          "text": "Dashboard"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "id": "ac08c991-6032-4809-bfd3-2db4e40bb831",
+          "text": "-"
+        },
+        {
+          "tag": "button",
+          "id": "primary-menu-a0a9dd6a-07aa-43e2-94cc-e79bf9870ab5-button",
+          "label": "Edit status",
+          "text": "Not set",
+          "type": "button"
+        },
+        {
+          "tag": "div",
+          "role": "button",
+          "id": "7e901a67-640a-4970-b705-bbd78f288328",
+          "text": "-"
+        },
+        {
+          "tag": "button",
+          "id": "primary-menu-3aac26b6-fc9f-4da2-9306-733368cd5f7c-button",
+          "type": "button"
+        }
+      ],
+      "pageUrlPattern": "http://127.0.0.1:8090/projects/bench-project",
+      "pageUrl": "http://127.0.0.1:8090/projects/bench-project"
+    },
+    {
+      "flow": "fwop15",
+      "step": "02-create",
+      "skill": "s_c0ce44",
+      "atStep": "9",
+      "key": "target",
+      "similarity": 0.996,
+      "missedLocator": "page.getByRole('alert', { name: 'Successful creation.', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:id/overview?query_props={\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[{\"n\":\"status\",\"o\":\"o\",\"v\":[]}],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}",
+      "pageUrl": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/42/overview?query_props=%7B%22c%22%3A%5B%22id%22%2C%22subject%22%2C%22type%22%2C%22status%22%2C%22assignee%22%2C%22priority%22%5D%2C%22hi%22%3Atrue%2C%22g%22%3A%22%22%2C%22is%22%3Atrue%2C%22tv%22%3Afalse%2C%22hla%22%3A%5B%22status%22%2C%22priority%22%2C%22dueDate%22%5D%2C%22t%22%3A%22id%3Aasc%22%2C%22f%22%3A%5B%7B%22n%22%3A%22status%22%2C%22o%22%3A%22o%22%2C%22v%22%3A%5B%5D%7D%5D%2C%22ts%22%3A%22PT0S%22%2C%22pp%22%3A20%2C%22pa%22%3A1%7D"
+    },
+    {
+      "flow": "fwop15",
+      "step": "02-create",
+      "skill": "s_c0ce44",
+      "atStep": "10",
+      "key": "target",
+      "similarity": 0.996,
+      "missedLocator": "page.getByRole('link', { name: 'ASSIGNEE', exact: true })",
+      "fallbackUsed": "page.getByRole('button', { name: 'Assignee', exact: true })",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:id/overview?query_props={\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[{\"n\":\"status\",\"o\":\"o\",\"v\":[]}],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}",
+      "pageUrl": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/42/overview?query_props=%7B%22c%22%3A%5B%22id%22%2C%22subject%22%2C%22type%22%2C%22status%22%2C%22assignee%22%2C%22priority%22%5D%2C%22hi%22%3Atrue%2C%22g%22%3A%22%22%2C%22is%22%3Atrue%2C%22tv%22%3Afalse%2C%22hla%22%3A%5B%22status%22%2C%22priority%22%2C%22dueDate%22%5D%2C%22t%22%3A%22id%3Aasc%22%2C%22f%22%3A%5B%7B%22n%22%3A%22status%22%2C%22o%22%3A%22o%22%2C%22v%22%3A%5B%5D%7D%5D%2C%22ts%22%3A%22PT0S%22%2C%22pp%22%3A20%2C%22pa%22%3A1%7D"
+    }
+  ],
+  "wallMs": 261179,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 272877,
+    "completionTokens": 7576,
+    "cachedTokens": 248832
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 272877,
+      "completionTokens": 7576,
+      "cachedTokens": 248832
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}
