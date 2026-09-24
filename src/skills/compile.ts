@@ -1,5 +1,9 @@
 import { isMutatingAction, mutatesSteps } from '../execution/lifecycle.js';
 import type { LocatorCandidate, RecordedEntry, RecordedInstruction, RecordedStep, StepDiff } from '../daemon/recorder.js';
+import { urlMatches } from '../execution/url.js';
+
+/** What the recorder knew about one action (daemon/step-evidence.ts StepEvidence), as abandonedLinkClick reads it. */
+type RecordedEvidence = NonNullable<RecordedStep['obs']>;
 import type { Report } from '../agent/report.js';
 import { contractFor, newSkillId, originOf, type Skill, type SkillParam, type SkillStep, type StepExpectation } from './store.js';
 import { MIN_ID_LEN, digitDominant, looksLikeId, skeleton, tokenPattern } from './shape.js';
@@ -868,6 +872,9 @@ export function compileSkills(input: CompileInput): Skill[] {
     for (const [name, value] of slots) segParams[name] = { example: value, usedIn: [] };
     // What each built step recorded, for transforms that must look past its expectation (dropDismissedDialogs).
     const recordedDiffs = new WeakMap<SkillStep, StepDiff>();
+    // ...and what the recorder knew about each action (RecordedStep.obs): the
+    // settle's link and the uncapped totals decide an abandoned link click (fwop15).
+    const recordedObs = new WeakMap<SkillStep, RecordedEvidence>();
     const skillSteps: SkillStep[] = sg.steps.map((step, i) => {
       const g = base + i;
       // A minted value is a reference only DOWNSTREAM of its mint: in this
@@ -1002,12 +1009,13 @@ export function compileSkills(input: CompileInput): Skill[] {
       // by re-inlining every dropped slot into the steps, expectations included.
       for (const name of slotsUsed(JSON.stringify({ args, locators }))) segParams[name]?.usedIn.push(i + 1);
       if (step.diff) recordedDiffs.set(out, step.diff);
+      if (step.obs) recordedObs.set(out, step.obs);
       return out;
     });
     const mintedForStart = mintedMap((m) => m.keptIndex < base);
     const notes: TransformNote[] = [];
     const folded = foldLoops(
-      coalesceControls(dropDismissedDialogs(dropSupersededNavigation(markRequiredRemovals(skillSteps, (s) => recordedDiffs.get(s)), notes, (s) => recordedDiffs.get(s)), notes, (s) => recordedDiffs.get(s)), notes),
+      coalesceControls(dropDismissedDialogs(dropSupersededNavigation(markRequiredRemovals(skillSteps, (s) => recordedDiffs.get(s)), notes, (s) => recordedDiffs.get(s), (s) => recordedObs.get(s)), notes, (s) => recordedDiffs.get(s)), notes),
       input.instruction,
       notes,
     );
@@ -3272,14 +3280,26 @@ export function coalesceControls(steps: SkillStep[], notes?: TransformNote[]): S
  * intermediate page may have been load-bearing (a session bootstrap, a
  * redirect that set a cookie), and this cannot tell from the outside.
  */
-export function dropSupersededNavigation(steps: SkillStep[], notes?: TransformNote[], diffOf?: (step: SkillStep) => StepDiff | undefined): SkillStep[] {
+export function dropSupersededNavigation(
+  steps: SkillStep[],
+  notes?: TransformNote[],
+  diffOf?: (step: SkillStep) => StepDiff | undefined,
+  obsOf?: (step: SkillStep) => RecordedEvidence | undefined,
+): SkillStep[] {
+  /** Gestures that only prepared an abandoned click (abandonedLinkClick's `prepared`): they go with it. */
+  const preparedDrop = new Set<number>();
   return steps.filter((step, i) => {
+    if (preparedDrop.has(i)) {
+      notes?.push({ name: 'dropSupersededNavigation', at: i + 1, reason: `a ${step.tool} that only prepared a link click the recording saw go nowhere, replaced by a goto to its href` });
+      return false;
+    }
     const superseded = step.tool === 'goto' && steps[i + 1]?.tool === 'goto';
     if (superseded) notes?.push({ name: 'dropSupersededNavigation', at: i + 1, reason: `the next step navigates again, to ${JSON.stringify(String(steps[i + 1].args.url ?? ''))}` });
     if (superseded) return false;
-    const replacedBy = abandonedLinkClick(steps, i);
-    if (replacedBy !== null) {
-      notes?.push({ name: 'dropSupersededNavigation', at: i + 1, reason: `a link click that recorded no consequence, replaced by the goto at step ${replacedBy + 1}` });
+    const abandoned = abandonedLinkClick(steps, i, diffOf, obsOf);
+    if (abandoned !== null) {
+      for (const k of abandoned.prepared) preparedDrop.add(k);
+      notes?.push({ name: 'dropSupersededNavigation', at: i + 1, reason: `a link click that recorded no consequence, replaced by the goto at step ${abandoned.goto + 1}` });
       return false;
     }
     const repeated = repeatOf(steps, i, diffOf);
@@ -3541,7 +3561,23 @@ function removalUndoneBetween(steps: readonly SkillStep[], i: number, j: number,
  * recorded). And the goto comes before any other gesture: only observations
  * (reads, waits) and further such clicks lie between.
  */
-function abandonedLinkClick(steps: readonly SkillStep[], i: number): number | null {
+function abandonedLinkClick(
+  steps: readonly SkillStep[],
+  i: number,
+  diffOf?: (step: SkillStep) => StepDiff | undefined,
+  obsOf?: (step: SkillStep) => RecordedEvidence | undefined,
+): { goto: number; prepared: number[] } | null {
+  // THE RECORDING'S OWN EVIDENCE, when the recorder kept it (openproject
+  // fwop15 01-open): the click's settle waited on a link whose navigation
+  // never committed — the url after it is still the link's `from`, and the
+  // uncapped totals say it added and removed nothing. Such a click was the
+  // procedure trying to reach the link's href, and a goto to that href is the
+  // navigation it relies on. The recording clicked it three times, forced,
+  // with a scroll and a hover on the same link between: those prepared a
+  // click that went nowhere and go with it. Without the evidence, the rule
+  // below is today's, exactly.
+  const link = obsOf?.(steps[i])?.settle?.link;
+  if (link) return abandonedByEvidence(steps, i, link, diffOf, obsOf);
   const inert = (k: number): boolean => {
     const s = steps[k];
     if (s.tool !== 'click' || s.effect || s.mints || s.label !== undefined || s.toggle) return false;
@@ -3556,9 +3592,67 @@ function abandonedLinkClick(steps: readonly SkillStep[], i: number): number | nu
   if (!inert(i)) return null;
   for (let j = i + 1; j < steps.length; j++) {
     const s = steps[j];
-    if (s.tool === 'goto') return j;
+    if (s.tool === 'goto') return { goto: j, prepared: [] };
     if (observesOnly(s)) continue;
     if (inert(j)) continue;
+    return null;
+  }
+  return null;
+}
+
+/** Tools that only PREPARE a click on the same control, and change nothing the recorder diffs (tools.ts STATE_CHANGING leaves them out). */
+const PREPARING_TOOLS = new Set(['scroll_into_view', 'hover', 'focus']);
+
+/**
+ * abandonedLinkClick when the recording's evidence (RecordedStep.obs) says the
+ * click went nowhere: see there. A click is dropped when its settle's link
+ * went nowhere (the url after it is still `link.from`) and it added and
+ * removed nothing (obs.totals, else the diff), and the first gesture past
+ * the observations, further such clicks and gestures preparing one of them is
+ * a goto to `link.href`. A goto anywhere else, or any other gesture first,
+ * keeps it. A preparing gesture counts only when the next gesture after it
+ * is another such click or the goto: a hover that opened something the
+ * procedure then used is part of the procedure.
+ */
+function abandonedByEvidence(
+  steps: readonly SkillStep[],
+  i: number,
+  link: { from: string; href: string },
+  diffOf?: (step: SkillStep) => StepDiff | undefined,
+  obsOf?: (step: SkillStep) => RecordedEvidence | undefined,
+): { goto: number; prepared: number[] } | null {
+  const wentNowhere = (k: number): boolean => {
+    const s = steps[k];
+    if (s.tool !== 'click' || s.effect || s.mints || s.label !== undefined || s.toggle) return false;
+    const obs = obsOf?.(s);
+    if (!obs?.settle?.link || obs.settle.link.href !== link.href || obs.captureFailed) return false;
+    const diff = diffOf?.(s);
+    if (!diff || diff.url !== obs.settle.link.from) return false;
+    const added = obs.totals?.added ?? diff.added.length;
+    const removed = obs.totals?.removed ?? (diff.removed ?? []).length;
+    return added === 0 && removed === 0 && !diff.alerts.length;
+  };
+  if (!wentNowhere(i)) return null;
+  const controls = new Set([primaryLocator(steps[i])]);
+  const prepared: number[] = [];
+  let pending: number[] = [];
+  for (let j = i + 1; j < steps.length; j++) {
+    const s = steps[j];
+    if (s.tool === 'goto') {
+      if (typeof s.args.url !== 'string' || !urlMatches(s.args.url, link.href)) return null;
+      return { goto: j, prepared: [...prepared, ...pending] };
+    }
+    if (observesOnly(s)) continue;
+    if (wentNowhere(j)) {
+      controls.add(primaryLocator(s));
+      prepared.push(...pending);
+      pending = [];
+      continue;
+    }
+    if (PREPARING_TOOLS.has(s.tool) && controls.has(primaryLocator(s))) {
+      pending.push(j);
+      continue;
+    }
     return null;
   }
   return null;

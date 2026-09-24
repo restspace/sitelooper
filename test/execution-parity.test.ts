@@ -6401,4 +6401,88 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
       expect(ids(emittedLog, 'publish')).toEqual([madeE[1]]);
     }, 180_000);
   });
+
+  /**
+   * Round 61, openproject fwop15 01-open: the recording clicked the project
+   * link three times, each forced and each going nowhere (obs: the link's
+   * navigation never committed, url unchanged, 0 added and 0 removed), with a
+   * scroll and a hover on the same link between, then typed a goto to the
+   * link's href. Compiled with two of the clicks, the first navigated on
+   * replay and the second — on a project page that has only a SELECTOR button
+   * of that name — found nothing. Compiled from the same shape with the
+   * recording's evidence, both runners reach the project and open its work
+   * packages. Controls: a goto elsewhere keeps the clicks, and a hover whose
+   * menu the procedure then used is kept; each time both runners agree.
+   */
+  describe('link clicks the recording saw go nowhere, by its evidence (round 61, fwop15)', () => {
+    const LINK = [{ kind: 'role' as const, role: 'link', name: 'Bench Project' }, { kind: 'css' as const, selector: '#bench' }];
+    const at = { d: 1, s: 2, c: 3 };
+    const step = (tool: string, args: Record<string, unknown>, chain: LocatorCandidate[], extra: Partial<RecordedStep> = {}): RecordedStep => ({
+      k: 'step',
+      tool,
+      args,
+      locators: chain.length ? { target: { expr: 'x', verified: true, raw: String(args.target ?? ''), chain } } : {},
+      ...extra,
+    });
+    const recording = (mode: 'fwop15' | 'elsewhere' | 'menu'): RecordedEntry[] => {
+      const LIST = `${origin}/proj2-list`;
+      const HREF = `${origin}/proj2/bench`;
+      const nowhere = (): RecordedStep =>
+        step('click', { target: '@e7' }, LINK, {
+          diff: { url: LIST, alerts: [], added: [], dialect: 2 },
+          obs: { at, settle: { outcome: 'dispatched', via: 'forced', link: { from: LIST, href: HREF }, waited: { domMs: 60, networkMs: 0, urlMs: 0, effectMs: 0 } }, totals: { added: 0, removed: 0 } },
+        });
+      const hover = mode === 'menu' ? step('hover', { target: '@e9' }, [{ kind: 'css', selector: '#more' }], { obs: { at } }) : step('hover', { target: '@e7' }, LINK, { obs: { at } });
+      const target = mode === 'elsewhere' ? `${origin}/proj/bench` : HREF;
+      return [
+        { k: 'instruction', text: 'open the Bench Project and its work packages', url: LIST },
+        nowhere(),
+        step('read', { what: 'url', label: 'project_url' }, [], { result: JSON.stringify(LIST) }),
+        nowhere(),
+        step('scroll_into_view', { target: '@e7' }, LINK, { obs: { at } }),
+        hover,
+        ...(mode === 'menu' ? [step('click', { target: '@e10' }, [{ kind: 'role', role: 'button', name: 'Archive' }], { diff: { url: LIST, alerts: [], added: ['- dialog "Archive"'], dialect: 2 } })] : []),
+        step('goto', { url: target }, [], { diff: { url: target, alerts: [], added: ['- heading "Overview"', '- button "Work packages"'], dialect: 2 } }),
+        step('click', { target: '@e8' }, [{ kind: 'role', role: 'button', name: 'Work packages' }], { diff: { url: target, alerts: [], added: [], dialect: 2 } }),
+      ];
+    };
+    const compiled = (mode: 'fwop15' | 'elsewhere' | 'menu'): SkillStep[] =>
+      compileSkills({ entries: recording(mode), instruction: 'open the Bench Project and its work packages', report: { status: 'success', summary: 'ok' }, session: 's' }).flatMap((sk) => sk.steps);
+    const run = async (steps: SkillStep[]) => {
+      const all: SkillStep[] = [{ tool: 'goto', args: { url: `${origin}/proj2-list` }, locators: {} }, ...steps];
+      const skill: Skill = { ...skillOf(all), id: 's_nowhere_links', template: 's_nowhere_links' };
+      return bothOf(skill, specOf(all), {});
+    };
+    const linkClicks = (steps: SkillStep[]) => steps.filter((s) => s.tool === 'click' && JSON.stringify(s.locators.target ?? []).includes('Bench Project'));
+
+    it('both runners replay the goto to the link’s href, with no click that went nowhere and nothing that prepared one', async () => {
+      const steps = compiled('fwop15');
+      expect(linkClicks(steps)).toEqual([]);
+      expect(steps.some((s) => s.tool === 'scroll_into_view' || s.tool === 'hover')).toBe(false);
+      const { replay, emitted, replayLog, emittedLog } = await run(steps);
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      await new Promise((r) => setTimeout(r, 300));
+      expect(replayLog).toEqual(['commit:wp:open']);
+      expect(emittedLog).toEqual(['commit:wp:open']);
+    }, 240_000);
+
+    it('control: a goto somewhere other than the link’s href keeps the clicks, and both runners stop alike', async () => {
+      const steps = compiled('elsewhere');
+      expect(linkClicks(steps).length).toBeGreaterThan(0);
+      const { replay, emitted, replayLog, emittedLog } = await run(steps);
+      expect(replay.ok).toBe(emitted.ok);
+      expect(replayLog).toEqual(emittedLog);
+      expect(replayLog).not.toContain('commit:selector:open');
+    }, 240_000);
+
+    it('control: a hover whose menu the procedure then used is kept, with the clicks, and both runners agree', async () => {
+      const steps = compiled('menu');
+      expect(steps.some((s) => s.tool === 'hover')).toBe(true);
+      expect(linkClicks(steps).length).toBeGreaterThan(0);
+      const { replay, emitted, replayLog, emittedLog } = await run(steps);
+      expect(replay.ok).toBe(emitted.ok);
+      expect(replayLog).toEqual(emittedLog);
+    }, 240_000);
+  });
 });

@@ -240,6 +240,38 @@ export function unhealableWhy(step: SkillStep, key: string, tag: string): string
   return 'the step recorded nothing that would verify a healed locator (no url pattern, no added lines, no page effect)';
 }
 
+/**
+ * Rule D (ghost fwgh14 n3, openproject fwop15 n2/n3): why an inline heal must
+ * NOT dispatch, or null. A click the recording saw stay on its page (its url
+ * expectation is the page it started on) whose recorded chain names a role —
+ * a role candidate, or a point's role — healed onto an element of ANOTHER
+ * role is a different control, and its only verifier is a url gate that can
+ * refuse it only after it has clicked. fwop15's s_bab182 step 5 was a link
+ * "Bench Project"; on the project page the heal clicked the project-selector
+ * button of that name before the url gate refused it, and fwgh14 n3's heal
+ * clicked Ghost's Settings nav link for a settings button. A heal of the same
+ * role, a proposal with no role, or a click whose recording navigated is left
+ * to the step's own checks, as before. Replay-only: a compiled artifact has
+ * no inline heal.
+ */
+export function healRoleRefused(
+  steps: readonly SkillStep[],
+  at: number,
+  preconditionPattern: string | undefined,
+  chain: readonly LocatorCandidate[],
+  proposal: LocatorCandidate,
+): string | null {
+  const step = steps[at];
+  if (!step || (step.tool !== 'click' && step.tool !== 'dblclick')) return null;
+  const roleOf = (c: LocatorCandidate): string | null => (c.kind === 'role' ? c.role : c.kind === 'point' && c.role ? c.role : null);
+  const recorded = new Set(chain.map(roleOf).filter((r): r is string => Boolean(r)));
+  const proposed = roleOf(proposal);
+  if (!recorded.size || !proposed || recorded.has(proposed)) return null;
+  const before = steps.slice(0, at).reverse().find((s) => s.expect?.urlPattern)?.expect?.urlPattern ?? preconditionPattern;
+  if (!step.expect?.urlPattern || !before || step.expect.urlPattern !== before) return null;
+  return `an inline heal proposed a ${proposed} for a control recorded as a ${[...recorded].join('/')}, on a click the recording saw stay on its page — a different control, not dispatched`;
+}
+
 /** Tools that write into one control: the wrong one is echoed back by the step's own expectation. */
 const HEAL_WRITE_TOOLS = new Set(['fill', 'type', 'select', 'check', 'uncheck']);
 /** Tools that COMMIT: healed only against a recorded verifier (see unhealableWhy). */
@@ -730,6 +762,15 @@ export async function replaySkill(
       return null;
     }
     if (!proposal) return null;
+    // Rule D: a heal onto another role, for a click recorded staying on its
+    // page, would click a different control before anything could refuse it.
+    const stepAt = skill.steps.indexOf(step);
+    const refusedRole = stepAt >= 0 ? healRoleRefused(skill.steps, stepAt, skill.preconditions.urlPattern, chain, proposal.candidate) : null;
+    if (refusedRole) {
+      proposal.settled?.(false);
+      res.warnings.push(`step ${tag}: ${refusedRole} (${candidateExpr(proposal.candidate)})`);
+      return null;
+    }
     const expr = candidateExpr(proposal.candidate);
     let locator: Locator;
     try {

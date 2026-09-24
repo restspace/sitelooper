@@ -1517,6 +1517,31 @@ document.getElementById('wp').addEventListener('click', () => fetch('/commit/wp/
 </script>
 </body></html>`;
 
+/**
+ * The fwop15 variant (round 61): the project page has NO link to itself, only
+ * the project selector, a BUTTON of the same name (OpenProject's), so a
+ * second click on the list's link from there finds nothing, and a heal that
+ * picked the button would press a different control. Its "Work packages"
+ * posts commit:wp:open; the selector posts commit:selector:open.
+ */
+const PROJ2_LIST = `<!doctype html><html><head><meta charset="utf-8"><title>Projects</title></head><body>
+<h1>Projects</h1>
+<a id="bench" href="/proj2/bench">Bench Project</a>
+<span id="more" title="More">More</span><div id="menu" hidden><button type="button">Archive</button></div>
+<script>
+document.getElementById('more').addEventListener('mouseover', () => { document.getElementById('menu').hidden = false; });
+</script>
+</body></html>`;
+const PROJ2_PAGE = `<!doctype html><html><head><meta charset="utf-8"><title>Bench Project</title></head><body>
+<button id="selector" type="button">Bench Project</button>
+<h1>Overview</h1>
+<button id="wp" type="button">Work packages</button>
+<script>
+document.getElementById('wp').addEventListener('click', () => fetch('/commit/wp/open', { method: 'POST' }));
+document.getElementById('selector').addEventListener('click', () => fetch('/commit/selector/open', { method: 'POST' }));
+</script>
+</body></html>`;
+
 const POPUP_CHILD = `<!doctype html><html><head><meta charset="utf-8"><title>Approval</title></head><body>
 <h1>Approve order</h1>
 <button type="button" id="approve">Approve</button>
@@ -1944,6 +1969,8 @@ export async function createFixtureServer(initialCount = 10): Promise<FixtureSer
       if (url === '/opener') return html(OPENER);
       if (url === '/proj-list') return html(PROJ_LIST);
       if (url === '/proj/bench') return html(PROJ_PAGE);
+      if (url === '/proj2-list') return html(PROJ2_LIST);
+      if (url === '/proj2/bench') return html(PROJ2_PAGE);
       if (url === '/opener-plain') return html(OPENER_PLAIN);
       if (url === '/popup/child') return html(POPUP_CHILD);
       if (url.startsWith('/stall/')) {
