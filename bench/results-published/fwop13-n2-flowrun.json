@@ -1,0 +1,147 @@
+{
+  "flow": "fwop13",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Signed in to OpenProject as admin, opened project 'Bench Project', and viewed its work packages at /projects/bench-project/work_packages. The project contains exactly 3 work packages (pagination \"1 - 3/3, only page\"), and all three have subjects starting with \"Seed:\": \"Seed: triage inbox\", \"Seed: order missing parts\", \"Seed: ship repaired device\". Verified the count held after removing the default \"Status = Open\" filter, so none are hidden by filtering.",
+      "values": {
+        "project_name": "Bench Project",
+        "work_package_count": "3 (1 - 3/3, only page)",
+        "work_package_subjects_1": "Seed: triage inbox",
+        "work_package_subjects_2": "Seed: order missing parts",
+        "work_package_subjects_3": "Seed: ship repaired device",
+        "ids_1": "38",
+        "ids_2": "39",
+        "ids_3": "40"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_d1e9fe stopped at step 4 — after step 4 expected url http://127.0.0.1:8090/projects but browser is at http://127.0.0.1:8090/projects/bench-project",
+      "replayed": "3/6",
+      "repaired": false,
+      "turns": 13,
+      "warnings": [
+        "s_60d5ff: step 1: skipped — it closes the dialog \"Welcome to OpenProject, Bench Admin\" with \"Close\", and that dialog is not open this time: already in effect",
+        "s_d1e9fe: step 1: recorded url http://127.0.0.1:8090/projects is the page the clicked link left (captured before its navigation committed); the click went where the link points, http://127.0.0.1:8090/projects/bench-project — accepted"
+      ],
+      "unreported": [
+        "project",
+        "view",
+        "pagination_text",
+        "initial_page_url",
+        "total_work_packages_shown",
+        "current_url",
+        "projects_link_text",
+        "seed_work_packages_1",
+        "seed_work_packages_2",
+        "seed_work_packages_3",
+        "work_package_ids_1",
+        "work_package_ids_2",
+        "work_package_ids_3"
+      ]
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Numeric ID: #42.",
+      "values": {
+        "ref": "fwop13-n2",
+        "url_after_task_click": "http://127.0.0.1:8090/projects/bench-project/work_packages/create_new?query_props=%7B%22c%22%3A%5B%22id%22%2C%22subject%22%2C%22type%22%2C%22status%22%2C%22assignee%22%2C%22priority%22%5D%2C%22hi%22%3Atrue%2C%22g%22%3A%22%22%2C%22is%22%3Atrue%2C%22tv%22%3Afalse%2C%22hla%22%3A%5B%22status%22%2C%22priority%22%2C%22dueDate%22%5D%2C%22t%22%3A%22id%3Aasc%22%2C%22f%22%3A%5B%5D%2C%22ts%22%3A%22PT0S%22%2C%22pp%22%3A20%2C%22pa%22%3A1%7D&type=1",
+        "status": "In progress",
+        "work_package_id": "#42",
+        "subject": "fwop13-n2 Bench Work Package",
+        "description": "Bench work package for run fwop13-n2",
+        "assignee": "Bench Assignee",
+        "project": "Bench Project",
+        "type": "TASK",
+        "assignee_display_name": "BA\nBench Assignee"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "23/23",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_692aa1: step 2: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear",
+        "s_b8029c: step 2: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear",
+        "s_b8029c: step 3: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear",
+        "s_21b4a2: step 5: expected alert containing \"Successful update.\"",
+        "s_21b4a2: step 8: expected alert containing \"Successful update.\""
+      ]
+    },
+    {
+      "id": "03-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_be8fb0; observed work_package=#42 fwop13-n2 Bench Work Package, ref=fwop13-n2, comment_timestamp_displayed=09/24/2026 01:12 PM.",
+      "unanswered": [
+        "comment_author_displayed"
+      ],
+      "values": {
+        "work_package": "#42 fwop13-n2 Bench Work Package",
+        "ref": "fwop13-n2",
+        "comment_timestamp_displayed": "09/24/2026 01:12 PM"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "7/7",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_be8fb0: step 1: url segment(s) differ from recorded (41→42) — treated as volatile",
+        "s_be8fb0: step 2: url segment(s) differ from recorded (41→42) — treated as volatile",
+        "s_be8fb0: step 3: url segment(s) differ from recorded (41→42) — treated as volatile",
+        "s_be8fb0: step 4: url segment(s) differ from recorded (41→42) — treated as volatile",
+        "s_be8fb0: step 6: read 'comment_text' returned a value the skill itself set/selected ('Bench comment for run fwop13-n2') — confirms the control, not persistence; dropped from the report's confident values"
+      ],
+      "unreported": [
+        "comment_text"
+      ]
+    }
+  ],
+  "passed": 3,
+  "total": 3,
+  "repinned": 0,
+  "drift": 1,
+  "driftTickets": [
+    {
+      "flow": "fwop13",
+      "step": "01-signin",
+      "skill": "s_60d5ff",
+      "atStep": "1",
+      "key": "target",
+      "similarity": 0.995,
+      "missedLocator": "page.getByRole('button', { name: 'Close', exact: true })",
+      "fallbackUsed": null,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:8090/projects/bench-project",
+      "pageUrl": "http://127.0.0.1:8090/projects/bench-project"
+    }
+  ],
+  "wallMs": 126111,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 163011,
+    "completionTokens": 3423,
+    "cachedTokens": 148864
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 163011,
+      "completionTokens": 3423,
+      "cachedTokens": 148864
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

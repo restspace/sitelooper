@@ -1,0 +1,161 @@
+{
+  "flow": "fwop13",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Signed-in session carried into the 'Bench Project' work package list at http://127.0.0.1:8090/projects/bench-project/work_packages. The list shows 3 work packages in total (pagination reads \"3/3\"), and all three have subjects starting with \"Seed:\": \"Seed: triage inbox\", \"Seed: order missing parts\", \"Seed: ship repaired device\" — read directly from the live DOM subject cells (IDs 38, 39, 40).",
+      "values": {
+        "total_work_packages": "3/3",
+        "seed_work_package_1_1": "Seed: triage inbox",
+        "seed_work_package_1_2": "ID",
+        "seed_work_package_1_3": "38",
+        "seed_work_package_2_1": "Seed: order missing parts",
+        "seed_work_package_2_2": "ID",
+        "seed_work_package_2_3": "39",
+        "seed_work_package_3_1": "Seed: ship repaired device",
+        "seed_work_package_3_2": "ID",
+        "seed_work_package_3_3": "40"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_d1e9fe stopped at step 4 — after step 4 expected url http://127.0.0.1:8090/projects but browser is at http://127.0.0.1:8090/projects/bench-project",
+      "replayed": "3/6",
+      "repaired": false,
+      "turns": 8,
+      "warnings": [
+        "s_60d5ff: step 1: skipped — it closes the dialog \"Welcome to OpenProject, Bench Admin\" with \"Close\", and that dialog is not open this time: already in effect",
+        "s_d1e9fe: step 1: recorded url http://127.0.0.1:8090/projects is the page the clicked link left (captured before its navigation committed); the click went where the link points, http://127.0.0.1:8090/projects/bench-project — accepted"
+      ],
+      "unreported": [
+        "project",
+        "view",
+        "pagination_text",
+        "initial_page_url",
+        "total_work_packages_shown",
+        "current_url",
+        "projects_link_text",
+        "seed_work_packages_1",
+        "seed_work_packages_2",
+        "seed_work_packages_3",
+        "work_package_ids_1",
+        "work_package_ids_2",
+        "work_package_ids_3"
+      ]
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Numeric ID: #43.",
+      "values": {
+        "ref": "fwop13-n3",
+        "url_after_task_click": "http://127.0.0.1:8090/projects/bench-project/work_packages/create_new?type=1",
+        "status": "In progress",
+        "work_package_id": "#43",
+        "subject": "fwop13-n3 Bench Work Package",
+        "description": "Bench work package for run fwop13-n3",
+        "assignee": "Bench Assignee",
+        "project": "Bench Project",
+        "assignee_display_name": "BA\nBench Assignee"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "23/23",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_692aa1: step 2: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear",
+        "s_b8029c: step 2: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear",
+        "s_b8029c: step 3: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear",
+        "s_21b4a2: step 5: expected alert containing \"Successful update.\"",
+        "s_21b4a2: step 8: expected alert containing \"Successful update.\"",
+        "s_823958: step 7: skipped read — no element matched any known locator for target (none recorded)"
+      ],
+      "unreported": [
+        "type"
+      ]
+    },
+    {
+      "id": "03-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_be8fb0; observed work_package=#43 fwop13-n3 Bench Work Package, ref=fwop13-n3, comment_timestamp_displayed=09/24/2026 01:14 PM.",
+      "unanswered": [
+        "comment_author_displayed"
+      ],
+      "values": {
+        "work_package": "#43 fwop13-n3 Bench Work Package",
+        "ref": "fwop13-n3",
+        "comment_timestamp_displayed": "09/24/2026 01:14 PM"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "7/7",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_be8fb0: step 6: read 'comment_text' returned a value the skill itself set/selected ('Bench comment for run fwop13-n3') — confirms the control, not persistence; dropped from the report's confident values"
+      ],
+      "unreported": [
+        "comment_text"
+      ]
+    }
+  ],
+  "passed": 3,
+  "total": 3,
+  "repinned": 0,
+  "drift": 2,
+  "driftTickets": [
+    {
+      "flow": "fwop13",
+      "step": "01-signin",
+      "skill": "s_60d5ff",
+      "atStep": "1",
+      "key": "target",
+      "similarity": 0.995,
+      "missedLocator": "page.getByRole('button', { name: 'Close', exact: true })",
+      "fallbackUsed": null,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:8090/projects/bench-project",
+      "pageUrl": "http://127.0.0.1:8090/projects/bench-project"
+    },
+    {
+      "flow": "fwop13",
+      "step": "02-create",
+      "skill": "s_823958",
+      "atStep": "7",
+      "key": "target",
+      "similarity": 1.001,
+      "missedLocator": "(none recorded)",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/:id/activity",
+      "pageUrl": "http://127.0.0.1:8090/projects/bench-project/work_packages/43/activity"
+    }
+  ],
+  "wallMs": 100270,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 83706,
+    "completionTokens": 1563,
+    "cachedTokens": 76800
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 83706,
+      "completionTokens": 1563,
+      "cachedTokens": 76800
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

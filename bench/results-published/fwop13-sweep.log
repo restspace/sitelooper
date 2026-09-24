@@ -1,0 +1,130 @@
+
+[sweep] run 1/3: fwop13-n1 (store: /home/user/sitelooper/bench/results/fwop13-skills)
+[harness] openproject: defaulting APP_URL
+[harness] openproject: defaulting APP_EMAIL
+[harness] openproject: defaulting APP_PASSWORD
+[reset] openproject: no leftover bench work packages
+[harness] openproject responded 302 at http://127.0.0.1:8090/
+stopped: fwop13-n1
+  flow "fwop13" saved: 3 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwop13.json
+  warning: note: dropped 1 locator candidate(s) carrying a value this run minted (known only by export time)
+  warning: note: 02-create no longer publishes assignee_autocomplete_option, assignee_email, finish_date, page_title — no replay reads them from the page and the recording showed no line to read
+  warning: warning: 03-open's instruction asks to report comment_author_displayed, and no replay can publish it: nothing in its procedure reads it from the page, so export dropped it — re-record the step so the value is read, not only reported
+  warning: note: 03-open no longer publishes work_package, comment_author_id, comment_journal_anchor, comment_aria_label, ref_2 — no replay reads them from the page and the recording showed no line to read
+  warning: note: 01-signin: added a read for project to s_321b93 (page.getByRole('button', { name: 'Bench Project', exact: true }), page.getByRole('link', { name: 'Bench Project', exact: true }); seen on the next instruction's start page)
+  warning: warning: 157 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[0].instruction: "Bench Project" (output) in "Sign in to OpenProject at http://127.0.0.1:8090/ with username admin and password exactly the text {{env:APP_PASSWORD}} (it gets filled automatically), then ope"
+  flow.steps[0].instruction: "Project" (output) in "Sign in to OpenProject at http://127.0.0.1:8090/ with username admin and password exactly the text {{env:APP_PASSWORD}} (it gets filled automatically), then ope"
+  flow.steps[0].route: "http://127.0.0.1:8090/projects" (output) in "http://127.0.0.1:8090/projects/bench-project/work_packages"
+  flow.steps[1].instruction: "Bench Assignee" (output) in "In the Bench Project, create a new work package of type Task titled '{{runid}} Bench Work Package' with a description containing the text {{runid}} (e.g. 'Bench"
+  flow.steps[1].instruction: "Bench Project" (output) in "In the Bench Project, create a new work package of type Task titled '{{runid}} Bench Work Package' with a description containing the text {{runid}} (e.g. 'Bench"
+arm=sitelooper model=z-ai/glm-5.3 runid=fwop13-n1 stop=completed
+turns=4 wall=382.9s
+commands=3 cmdTime=369.8s cmdBytes=4145 timeouts=0
+orchestrator in=3978 cw=0 cr=9472 out=710
+inner prompt=1784691 cached=1683456 completion=21508
+spend=$0.0445 maxUsd=3
+learn: A_n=0 replayed=0/3 full=0 repaired=0 compiled=3 variants=0
+-> /home/user/sitelooper/bench/results/fwop13-n1-sitelooper-result.json
+
+fwop13-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed subjects reported
+  obj 2: PASS — type=Task, description includes runid=true
+  obj 3: PASS — assignee=Bench Assignee
+  obj 4: PASS — status=In progress
+  obj 5: PASS — finish date=2026-12-31, want 2026-12-31
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — work package id 41 reported
+
+[sweep] run 2/3: fwop13-n2 (replay flow fwop13, no orchestrator)
+[reset] openproject: deleted 1 leftover bench work package(s)
+[sweep] fwop13-n2: 1 drift ticket(s) → fwop13-n2-drift.json
+
+fwop13-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed subjects reported
+  obj 2: PASS — type=Task, description includes runid=true
+  obj 3: PASS — assignee=Bench Assignee
+  obj 4: PASS — status=In progress
+  obj 5: PASS — finish date=2026-12-31, want 2026-12-31
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — work package id 42 reported
+
+[sweep] run 3/3: fwop13-n3 (replay flow fwop13, no orchestrator)
+[reset] openproject: deleted 1 leftover bench work package(s)
+[sweep] fwop13-n3: 2 drift ticket(s) → fwop13-n3-drift.json
+
+fwop13-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed subjects reported
+  obj 2: PASS — type=Task, description includes runid=true
+  obj 3: PASS — assignee=Bench Assignee
+  obj 4: PASS — status=In progress
+  obj 5: PASS — finish date=2026-12-31, want 2026-12-31
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — work package id 43 reported
+
+Learning sweep fwop13 (K=3)
+┌─────────┬───┬─────────────┬──────────┬─────────────┬───────┬──────┬───────────┬──────┬──────────────┬────────┐
+│ (index) │ n │ runid       │ verified │ stop        │ turns │ cmds │ total_usd │ A_n  │ replayed     │ wall_s │
+├─────────┼───┼─────────────┼──────────┼─────────────┼───────┼──────┼───────────┼──────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwop13-n1' │ '7/7'    │ 'completed' │ 4     │ 3    │ 0.0445    │ 0    │ '0/3'        │ 383    │
+│ 1       │ 2 │ 'fwop13-n2' │ '7/7'    │ 'success'   │ 13    │ 3    │ 0.0046    │ 0.67 │ '3/3 (flow)' │ 126    │
+│ 2       │ 3 │ 'fwop13-n3' │ '7/7'    │ 'success'   │ 8     │ 3    │ 0.0022    │ 0.67 │ '3/3 (flow)' │ 100    │
+└─────────┴───┴─────────────┴──────────┴─────────────┴───────┴──────┴───────────┴──────┴──────────────┴────────┘
+http://127.0.0.1:8090
+  s_21b4a2  validated    9 steps  3/3 (100%)
+           In the {{v1}}, create a new work package of type Task titled '{{v4}}' with a description containing the text {…
+  s_60d5ff  validated    2 steps  3/3 (100%)
+           Sign in to OpenProject at {{v1}} with username {{v2}} and password exactly the text {{v3}} (it gets filled aut…
+  s_692aa1  validated    2 steps  3/3 (100%)
+           In the {{v1}}, create a new work package of type Task titled '{{v4}}' with a description containing the text {…
+  s_823958  validated    8 steps  3/3 (100%)
+           In the {{v1}}, create a new work package of type Task titled '{{v4}}' with a description containing the text {…
+  s_b8029c  validated    4 steps  3/3 (100%)
+           In the {{v1}}, create a new work package of type Task titled '{{v4}}' with a description containing the text {…
+  s_be8fb0  validated    7 steps  3/3 (100%)
+           On work package {{v1}} in {{v3}}, open the Activity/comments area and add a comment whose text includes {{v5}}…
+  s_d1e9fe  provisional  6 steps  1/3 (33%)
+           Sign in to OpenProject at {{v1}} with username {{v2}} and password exactly the text {{v3}} (it gets filled aut…
+  s_f71139  validated    3 steps  3/3 (100%)
+           Sign in to OpenProject at {{v1}} with username {{v2}} and password exactly the text {{v3}} (it gets filled aut…
+  s_fec7cc  validated    2 steps  3/3 (100%)
+           Sign in to OpenProject at {{v1}} with username {{v2}} and password exactly the text {{v3}} (it gets filled aut…
+  s_133c29  provisional 10 steps  1/1 (100%)
+           Sign in to OpenProject at {{v1}} with username {{v2}} and password exactly the text {{v3}} (it gets filled aut…
+  s_321b93  provisional 16 steps  1/1 (100%)
+           Sign in to OpenProject at {{v1}} with username {{v2}} and password exactly the text {{v3}} (it gets filled aut…
+  s_3786fd  provisional  1 steps  1/1 (100%)  variant of s_d1e9fe
+           Sign in to OpenProject at http://127.0.0.1:8090/ with username admin and password exactly the text {{env:APP_P…
+  s_55a515  provisional  1 steps  1/1 (100%)
+           Sign in to OpenProject at {{v1}} with username {{v2}} and password exactly the text {{v3}} (it gets filled aut…
+  s_8c268e  provisional  8 steps  1/1 (100%)  variant of s_d1e9fe
+           Sign in to OpenProject at http://127.0.0.1:8090/ with username admin and password exactly the text {{env:APP_P…
+  s_8c791a  provisional  1 steps  1/1 (100%)
+           Sign in to OpenProject at {{v1}} with username {{v2}} and password exactly the text {{v3}} (it gets filled aut…
+  s_8d4e91  provisional  4 steps  1/1 (100%)
+           Sign in to OpenProject at {{v1}} with username {{v2}} and password exactly the text {{v3}} (it gets filled aut…
+  s_8f560c  provisional  2 steps  1/1 (100%)
+           Sign in to OpenProject at {{v1}} with username {{v2}} and password exactly the text {{v3}} (it gets filled aut…
+  s_93059f  provisional  4 steps  1/1 (100%)
+           Sign in to OpenProject at {{v1}} with username {{v2}} and password exactly the text {{v3}} (it gets filled aut…
+  s_9732aa  provisional  2 steps  1/1 (100%)  variant of s_d1e9fe
+           Sign in to OpenProject at http://127.0.0.1:8090/ with username admin and password exactly the text {{env:APP_P…
+  s_a7f624  provisional  1 steps  1/1 (100%)
+           Sign in to OpenProject at {{v1}} with username {{v2}} and password exactly the text {{v3}} (it gets filled aut…
+  s_ae8bff  provisional  2 steps  1/1 (100%)  variant of s_d1e9fe
+           Sign in to OpenProject at http://127.0.0.1:8090/ with username admin and password exactly the text {{env:APP_P…
+  s_bc3c67  provisional  1 steps  1/1 (100%)  variant of s_d1e9fe
+           Sign in to OpenProject at http://127.0.0.1:8090/ with username admin and password exactly the text {{env:APP_P…
+  s_c3f6b8  provisional  1 steps  1/1 (100%)
+           Sign in to OpenProject at {{v1}} with username {{v2}} and password exactly the text {{v3}} (it gets filled aut…
+  s_d567d6  provisional  1 steps  1/1 (100%)
+           Sign in to OpenProject at {{v1}} with username {{v2}} and password exactly the text {{v3}} (it gets filled aut…
+  s_e94a13  provisional  2 steps  1/1 (100%)
+           Sign in to OpenProject at {{v1}} with username {{v2}} and password exactly the text {{v3}} (it gets filled aut…
+  s_f8971d  provisional  8 steps  1/1 (100%)
+           Sign in to OpenProject at {{v1}} with username {{v2}} and password exactly the text {{v3}} (it gets filled aut…
+  s_fbaab2  provisional 10 steps  1/1 (100%)  variant of s_d1e9fe
+           Sign in to OpenProject at http://127.0.0.1:8090/ with username admin and password exactly the text {{env:APP_P…
+store: /home/user/sitelooper/bench/results/fwop13-skills
+
+summary: /home/user/sitelooper/bench/results/fwop13-sweep.json

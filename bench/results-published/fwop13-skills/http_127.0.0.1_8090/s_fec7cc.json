@@ -1,0 +1,65 @@
+{
+ "id": "s_fec7cc",
+ "origin": "http://127.0.0.1:8090",
+ "template": "Sign in to OpenProject at {{v1}} with username {{v2}} and password exactly the text {{v3}} (it gets filled automatically), then open the project 'Bench Project', view its work packages, and report the subjects of all work packages whose subject starts with 'Seed:', exactly as displayed.",
+ "params": {
+  "v1": {
+   "example": "http://127.0.0.1:8090/",
+   "usedIn": [
+    2
+   ]
+  },
+  "v2": {
+   "example": "admin",
+   "usedIn": []
+  },
+  "v3": {
+   "example": "{{env:APP_PASSWORD}}",
+   "usedIn": []
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8090/"
+ },
+ "steps": [
+  {
+   "tool": "read",
+   "args": {
+    "what": "url"
+   },
+   "locators": {},
+   "label": "initial_page_url"
+  },
+  {
+   "tool": "goto",
+   "args": {
+    "url": "{{v1}}"
+   },
+   "locators": {}
+  }
+ ],
+ "contract": 4,
+ "stats": {
+  "uses": 3,
+  "successes": 3,
+  "partial": 0,
+  "created": "2026-09-24T13:07:32.029Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 4,
+  "lastUsed": "2026-09-24T13:14:10.909Z"
+ },
+ "status": "validated",
+ "seq": {
+  "chain": "s_60a163",
+  "index": 0,
+  "of": 6
+ },
+ "provenance": {
+  "session": "fwop13-n1",
+  "instruction": "Sign in to OpenProject at http://127.0.0.1:8090/ with username admin and password exactly the text {{env:APP_PASSWORD}} (it gets filled automatically), then open the project 'Bench Project', view its work packages, and report the subjects of all work packages whose subject starts with 'Seed:', exactly as displayed.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-24T13:07:32.029Z"
+ },
+ "revision": 3
+}

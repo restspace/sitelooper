@@ -1,0 +1,34 @@
+{
+  "arm": "spec",
+  "runid": "fwop13-spec",
+  "target": "openproject",
+  "flow": "fwop13.json",
+  "flowName": "fwop13",
+  "skillsDir": "/home/user/sitelooper/bench/results/fwop13-skills",
+  "compiled": true,
+  "flowFile": "bench/results/fwop13-spec-spec-tmp/fwop13.flow.ts",
+  "specFile": "bench/results/fwop13-spec-spec-tmp/fwop13.spec.ts",
+  "wallMs": 29162,
+  "exitCode": 1,
+  "timedOut": false,
+  "costUsd": 0,
+  "stats": {
+    "total": 1,
+    "passed": 0,
+    "failed": 1,
+    "skipped": 0
+  },
+  "tests": [
+    {
+      "title": "fwop13",
+      "status": "unexpected",
+      "ok": false,
+      "durationMs": 24769,
+      "error": "Error: after 01-signin s_d1e9fe/4 expected url http://127.0.0.1:8090/projects but browser is at http://127.0.0.1:8090/projects/bench-project",
+      "drift": []
+    }
+  ],
+  "drift": [],
+  "driftCount": 0,
+  "logTail": "\nRunning 1 test using 1 worker\n\n[sitelooper skip] 01-signin s_60d5ff/1: closes the dialog \"Welcome to OpenProject, Bench Admin\" with \"Close\", which is not open — already in effect\n[sitelooper warn] 01-signin s_d1e9fe/1: recorded url http://127.0.0.1:8090/projects is the page the clicked link left (captured before its navigation committed); the click went where the link points, http://127.0.0.1:8090/projects/bench-project — accepted\n  ✘  1 fwop13.spec.ts:9:1 › fwop13 (24.8s)\n\n\n  1) fwop13.spec.ts:9:1 › fwop13 › 01-signin: Sign in to OpenProject at http://127.0.0.1:8090/ with username admin and password exactly the text {{env:APP_PASSWORD}} (it gets filled automatically), then open the project 'Bench Project', view its work packages, and report the subjects of all work packages whose subject starts with 'Seed:', exactly as displayed. \n\n    Error: after 01-signin s_d1e9fe/4 expected url http://127.0.0.1:8090/projects but browser is at http://127.0.0.1:8090/projects/bench-project\n\n       at fwop13.flow.ts:10494\n\n      10492 |   // (navigationTarget), whether or not the step goes on to stop.\n      10493 |   if (verdict.diffs) volatile.push(...verdict.diffs);\n    > 10494 |   if (verdict.stop) throw new Error(verdict.stop);\n            |                           ^\n      10495 | }\n      10496 |\n      10497 | /**\n        at urlEffect (/home/user/sitelooper/bench/results/fwop13-spec-spec-tmp/fwop13.flow.ts:10494:27)\n        at Object.verify (/home/user/sitelooper/bench/results/fwop13-spec-spec-tmp/fwop13.flow.ts:11538:9)\n        at runStepLifecycle (/home/user/sitelooper/bench/results/fwop13-spec-spec-tmp/fwop13.flow.ts:7360:24)\n        at Object.01-signin (/home/user/sitelooper/bench/results/fwop13-spec-spec-tmp/fwop13.flow.ts:11506:5)\n        at /home/user/sitelooper/bench/results/fwop13-spec-spec-tmp/fwop13.flow.ts:13678:7\n        at runFlow (/home/user/sitelooper/bench/results/fwop13-spec-spec-tmp/fwop13.flow.ts:13677:5)\n        at /home/user/sitelooper/bench/results/fwop13-spec-spec-tmp/fwop13.spec.ts:14:21\n\n    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────\n    \n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────\n    test-results/fwop13-fwop13/test-failed-1.png\n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    Error Context: test-results/fwop13-fwop13/error-context.md\n\n  1 failed\n    fwop13.spec.ts:9:1 › fwop13 ────────────────────────────────────────────────────────────────────\n"
+}

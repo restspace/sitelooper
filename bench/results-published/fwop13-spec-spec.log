@@ -1,0 +1,41 @@
+
+Running 1 test using 1 worker
+
+[sitelooper skip] 01-signin s_60d5ff/1: closes the dialog "Welcome to OpenProject, Bench Admin" with "Close", which is not open — already in effect
+[sitelooper warn] 01-signin s_d1e9fe/1: recorded url http://127.0.0.1:8090/projects is the page the clicked link left (captured before its navigation committed); the click went where the link points, http://127.0.0.1:8090/projects/bench-project — accepted
+  ✘  1 fwop13.spec.ts:9:1 › fwop13 (24.8s)
+
+
+  1) fwop13.spec.ts:9:1 › fwop13 › 01-signin: Sign in to OpenProject at http://127.0.0.1:8090/ with username admin and password exactly the text {{env:APP_PASSWORD}} (it gets filled automatically), then open the project 'Bench Project', view its work packages, and report the subjects of all work packages whose subject starts with 'Seed:', exactly as displayed. 
+
+    Error: after 01-signin s_d1e9fe/4 expected url http://127.0.0.1:8090/projects but browser is at http://127.0.0.1:8090/projects/bench-project
+
+       at fwop13.flow.ts:10494
+
+      10492 |   // (navigationTarget), whether or not the step goes on to stop.
+      10493 |   if (verdict.diffs) volatile.push(...verdict.diffs);
+    > 10494 |   if (verdict.stop) throw new Error(verdict.stop);
+            |                           ^
+      10495 | }
+      10496 |
+      10497 | /**
+        at urlEffect (/home/user/sitelooper/bench/results/fwop13-spec-spec-tmp/fwop13.flow.ts:10494:27)
+        at Object.verify (/home/user/sitelooper/bench/results/fwop13-spec-spec-tmp/fwop13.flow.ts:11538:9)
+        at runStepLifecycle (/home/user/sitelooper/bench/results/fwop13-spec-spec-tmp/fwop13.flow.ts:7360:24)
+        at Object.01-signin (/home/user/sitelooper/bench/results/fwop13-spec-spec-tmp/fwop13.flow.ts:11506:5)
+        at /home/user/sitelooper/bench/results/fwop13-spec-spec-tmp/fwop13.flow.ts:13678:7
+        at runFlow (/home/user/sitelooper/bench/results/fwop13-spec-spec-tmp/fwop13.flow.ts:13677:5)
+        at /home/user/sitelooper/bench/results/fwop13-spec-spec-tmp/fwop13.spec.ts:14:21
+
+    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/fwop13-fwop13/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/fwop13-fwop13/error-context.md
+
+  1 failed
+    fwop13.spec.ts:9:1 › fwop13 ────────────────────────────────────────────────────────────────────
