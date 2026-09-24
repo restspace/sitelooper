@@ -699,7 +699,12 @@ describe('emitted step lifecycle', () => {
     // The one catch a body has is on a state-changing action's own call, and it
     // rethrows (actionFailed adds the outcome and throws): nothing is swallowed.
     expect(body).toContain('.catch(actionFailed);');
-    const rethrowsRemoved = body.split('.catch(actionFailed);').join(';');
+    // Round 61 R2(a) (execution/positional.ts): when no identifying locator
+    // resolves, the resolve's catch asks positionalClick whether every line
+    // the click was recorded adding already shows. It skips only then, and
+    // otherwise rethrows, so nothing is swallowed there either.
+    const positional = /\.catch\(async \(error: unknown\) => \{ if \(await positionalClick\([^;]*\)\) return null; throw error; \}\);/g;
+    const rethrowsRemoved = body.split('.catch(actionFailed);').join(';').replace(positional, ';');
     expect(rethrowsRemoved).not.toMatch(/\btry\b/);
     expect(rethrowsRemoved).not.toMatch(/\.catch\(/);
   });

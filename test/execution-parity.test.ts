@@ -5389,6 +5389,94 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
       expect(run.emitted.reason).toMatch(said);
     }, 180_000);
 
+    /**
+     * Round 61, gitea fwgt12 03-set (s_f54a5a), on /labels-picker: pick "bug",
+     * shut the picker (Escape here; the page body there — Gitea commits),
+     * open it again, pick "bug" again (recorded with `link "bug"` unique, the
+     * label not applied), pick "priority-high", shut, and read the applied
+     * labels scoped to "bug". On the artifact's run the first shut committed
+     * "bug", the second pick un-ticked it, and the scoped read was skipped.
+     *
+     * (A) the shared pickAlreadyApplied skips the second pick when `link
+     * "bug"` shows inside the picker AND outside it and was not on the page the
+     * segment started on; (B) the shared scopedReadLanded fails a read scoped
+     * to a value the procedure set whose value no match shows.
+     */
+    const pickSteps = (url: string, o: { secondPickByRole: boolean; firstPickTwice?: boolean }): SkillStep[] => {
+      const opener: SkillStep = { tool: 'click', args: { target: '@e1' }, locators: { target: [{ kind: 'css', selector: '#labels' }] }, expect: { addedContains: ['- listbox "Label choices"'], lineDialect: 2 } };
+      const bug = (byRole: boolean): SkillStep => ({
+        tool: 'click',
+        args: { target: '@e2' },
+        locators: { target: byRole ? [{ kind: 'role', role: 'link', name: '{{v4}}' }, { kind: 'css', selector: '#menu a[data-value="1"]' }] : [{ kind: 'css', selector: '#menu a[data-value="1"]' }] },
+      });
+      const escape: SkillStep = { tool: 'press', args: { key: 'Escape' }, locators: {} };
+      return [
+        { tool: 'goto', args: { url }, locators: {} },
+        opener,
+        bug(true),
+        ...(o.firstPickTwice ? [bug(true)] : []),
+        escape,
+        opener,
+        bug(o.secondPickByRole),
+        { tool: 'click', args: { target: '@e3' }, locators: { target: [{ kind: 'role', role: 'link', name: 'priority-high' }, { kind: 'css', selector: '#menu a[data-value="2"]' }] } },
+        escape,
+        { tool: 'read', args: { target: '#applied', what: 'text', scopedBy: 'v4' }, locators: { target: [{ kind: 'css', selector: '#applied' }] }, label: 'labels_shown' },
+      ];
+    };
+    const pickRun = async (url: string, o: { secondPickByRole: boolean; firstPickTwice?: boolean }) => {
+      const steps = pickSteps(url, o);
+      const params = { v4: { example: 'bug', usedIn: [2], known: true } };
+      const skill: Skill = { ...skillOf(steps), id: 's_pick', template: 'set the labels {{v4}} and priority-high', params };
+      const spec: SpecFlow = {
+        ...specOf(steps),
+        steps: [{ id: '01-set', instruction: 'set the labels bug and priority-high', params: { v4: 'bug' }, outputs: ['labels_shown'], segments: [{ id: 's_pick', template: skill.template, params, preconditions: skill.preconditions, steps }] }],
+      };
+      return bothOf(skill, spec, { v4: 'bug' });
+    };
+
+    it('both runners skip a pick this run already applied, and commit bug,priority-high (fwgt12, rule A)', async () => {
+      const run = await pickRun(`${origin}/labels-picker`, { secondPickByRole: true });
+      expect(run.replay.ok, run.replay.reason ?? '').toBe(true);
+      expect(run.emitted.ok, run.emitted.reason ?? '').toBe(true);
+      expect(run.replayLog).toEqual(['commit:labels:bug', 'commit:labels:bug,priority-high']);
+      expect(run.emittedLog).toEqual(['commit:labels:bug', 'commit:labels:bug,priority-high']);
+    }, 180_000);
+
+    it('control (i): a link of that name on the page from the start is not this run\'s pick — clicked as today, and the scoped read fails the step', async () => {
+      const run = await pickRun(`${origin}/labels-picker?furniture=1`, { secondPickByRole: true });
+      expect(run.replayLog, 'replay must click the pick, not skip it').toEqual(['commit:labels:bug', 'commit:labels:priority-high']);
+      expect(run.emittedLog, 'the artifact must click the pick, not skip it').toEqual(['commit:labels:bug', 'commit:labels:priority-high']);
+      expect(run.replay.ok).toBe(false);
+      expect(run.emitted.ok).toBe(false);
+      const said = /a value this procedure set, shows "priority-high" and nothing it reads shows "bug": what the step set did not land/;
+      expect(run.replay.reason).toMatch(said);
+      expect(run.emitted.reason).toMatch(said);
+    }, 180_000);
+
+    it('control (ii): an item this run has not applied (unique at replay) is clicked', async () => {
+      // "bug" ticked and un-ticked before the first shut: nothing committed, so
+      // the second pick finds `link "bug"` in the picker alone and ticks it.
+      const run = await pickRun(`${origin}/labels-picker`, { secondPickByRole: true, firstPickTwice: true });
+      expect(run.replay.ok, run.replay.reason ?? '').toBe(true);
+      expect(run.emitted.ok, run.emitted.reason ?? '').toBe(true);
+      expect(run.replayLog).toEqual(['commit:labels:bug,priority-high']);
+      expect(run.emittedLog).toEqual(['commit:labels:bug,priority-high']);
+    }, 180_000);
+
+    it('both runners fail, not skip, a read scoped to a value the procedure set that no match shows (fwgt12, rule B)', async () => {
+      // The second pick recorded by position (rule A's gate does not hold):
+      // it un-ticks "bug", as fwgt12's artifact did, and the scoped read of
+      // the applied labels finds "priority-high" alone.
+      const run = await pickRun(`${origin}/labels-picker`, { secondPickByRole: false });
+      expect(run.replayLog).toEqual(['commit:labels:bug', 'commit:labels:priority-high']);
+      expect(run.emittedLog).toEqual(['commit:labels:bug', 'commit:labels:priority-high']);
+      expect(run.replay.ok).toBe(false);
+      expect(run.emitted.ok).toBe(false);
+      const said = /the read scoped to "bug", a value this procedure set, shows "priority-high" and nothing it reads shows "bug": what the step set did not land/;
+      expect(run.replay.reason).toMatch(said);
+      expect(run.emitted.reason).toMatch(said);
+    }, 180_000);
+
     it('both runners stop, not skip, a toggle whose target no longer resolves although its popup is showing', async () => {
       const { replay, emitted, replayLog, emittedLog } = await both(menuSteps('gone'), 0);
 

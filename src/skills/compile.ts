@@ -3494,7 +3494,11 @@ function dropFlashedLines(
     // it is the flash's when it IS the recorded line, or when the step that
     // re-added the flash compiled the very same line.
     const again = new Set(folded.filter((s) => readdedAt.has(at(s))).flatMap((s) => s.expect?.addedContains ?? []));
-    const drop = lines.filter((l) => !SLOT_LINE.test(l) && (flashed.has(trim(l)) || (again.has(l) && !added.includes(trim(l)))));
+    // A popup's own line is never a flash: it belongs to the opener and
+    // close rules (carryOpener, closedBefore, openerLines), and a picker can
+    // shut between gestures with nothing recorded (gitea fwgt11), so the
+    // 'complete removal record' this rule trusts is not complete for it.
+    const drop = lines.filter((l) => !SLOT_LINE.test(l) && !POPUP_LINE.test(trim(l)) && (flashed.has(trim(l)) || (again.has(l) && !added.includes(trim(l)))));
     if (!drop.length) return;
     const kept = lines.filter((l) => !drop.includes(l));
     if (kept.length) step.expect!.addedContains = kept;
