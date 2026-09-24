@@ -41,7 +41,7 @@ import type { LocatorCandidate, RecordedEntry, RecordedStep } from '../src/daemo
 import { captureReadBack, coreReadBack, selectionReadBack, titleReadBack, visibleTextsWithin } from '../src/daemon/recorder.js';
 import { pinPart } from '../src/agent/readback.js';
 import { flattenContainedComposite, flattenProvenComposite, planContainedParts, type Report } from '../src/agent/report.js';
-import { compileSkills } from '../src/skills/compile.js';
+import { carryOpener, compileSkills } from '../src/skills/compile.js';
 import { FIXTURE_TOTP_SEED, createFixtureServer, type FixtureServer } from './fixture/server.js';
 import { hotpCode, totpSeed } from '../src/execution/totp.js';
 
@@ -5023,6 +5023,60 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
       expect(closed.emittedLog).toEqual(['toggle:actions', 'archive:row']);
       expect(closed.replay.ok, closed.replay.reason ?? '').toBe(true);
       expect(closed.emitted.ok, closed.emitted.reason ?? '').toBe(true);
+    }, 180_000);
+
+    /**
+     * Round 60, gitea fwgt11-n1 04-set, through compileSkills and carryOpener.
+     * A dead instruction opened the Labels picker and ticked "bug"; the picker
+     * shut unrecorded (the app commits on close); its resume opened it again,
+     * and that diff offered every item but `link "bug"` — applied by then. The
+     * next instruction ticked "priority-high" and pressed Escape. Carried from
+     * the FIRST opening, both runners open, tick bug, skip the re-open as
+     * already showing, tick priority-high, and the Escape commits both. The
+     * control is the same recording whose re-open still offered "bug" (the
+     * tick came to nothing): only the re-open is carried, and both runners
+     * commit priority-high alone, as today.
+     */
+    it('both runners commit both labels once a picker the dead instruction opened twice is carried from its first opening (fwgt11)', async () => {
+      const url = `${origin}/labels-picker`;
+      const T = "Use the Labels picker to set exactly 'bug' and 'priority-high'.";
+      const diff = (added: string[]) => ({ url, alerts: [], added, dialect: 2 as const });
+      const choices = '- listbox "Label choices"';
+      const opener = (added: string[]): RecordedStep => ({ k: 'step', tool: 'click', args: { target: '@e1' }, locators: { target: { expr: 'x', verified: true, raw: '@e1', chain: [{ kind: 'css', selector: '#labels' }, { kind: 'role', role: 'combobox', name: 'Labels' }] } }, diff: diff(added) });
+      const item = (value: string, name: string): RecordedStep => ({ k: 'step', tool: 'click', args: { target: '@e2' }, locators: { target: { expr: 'x', verified: true, raw: '@e2', chain: [{ kind: 'css', selector: `#menu a[data-value="${value}"]` }, { kind: 'role', role: 'link', name }] } }, diff: diff([]) });
+      const recording = (tookEffect: boolean) => {
+        const before: RecordedEntry[] = [
+          { k: 'instruction', text: T, url },
+          opener([choices, '- link "bug"', '- link "priority-high"']),
+          item('1', 'bug'),
+          { k: 'report', status: 'blocked', summary: 'the picker did not apply the labels', values: {} },
+          { k: 'instruction', text: T, url, resume: true },
+          opener(tookEffect ? [choices, '- link "priority-high"'] : [choices, '- link "bug"', '- link "priority-high"']),
+        ];
+        const own: RecordedEntry[] = [
+          { k: 'instruction', text: T, url, startText: `- heading "Issue #4"\n- combobox "Labels"\n${choices}\n- link "bug"\n- link "priority-high"`, startDialect: 2 },
+          item('2', 'priority-high'),
+          { k: 'step', tool: 'press', args: { key: 'Escape' }, locators: {}, diff: diff(['- link "priority-high"']) },
+        ];
+        return carryOpener(before, own);
+      };
+      const run = async (tookEffect: boolean) => {
+        const report: Report = { status: 'success', summary: 'labels set', evidence: { values: {} } };
+        const [skill] = compileSkills({ entries: recording(tookEffect), instruction: T, report, session: 'parity', knownValues: {} });
+        return both([{ tool: 'goto', args: { url }, locators: {} }, ...skill.steps], 0);
+      };
+
+      const fixed = await run(true);
+      expect(fixed.replay.ok, fixed.replay.reason ?? '').toBe(true);
+      expect(fixed.emitted.ok, fixed.emitted.reason ?? '').toBe(true);
+      expect(fixed.replayLog, 'replay must commit the carried tick with the recorded one').toEqual(['commit:labels:bug,priority-high']);
+      expect(fixed.emittedLog, 'the artifact must commit the carried tick with the recorded one').toEqual(['commit:labels:bug,priority-high']);
+
+      const control = await run(false);
+      expect(control.replay.ok, control.replay.reason ?? '').toBe(true);
+      expect(control.emitted.ok, control.emitted.reason ?? '').toBe(true);
+      expect(control.replayLog).toEqual(['commit:labels:priority-high']);
+      expect(control.emittedLog).toEqual(['commit:labels:priority-high']);
     }, 180_000);
 
     it('both runners stop, not skip, a toggle whose target no longer resolves although its popup is showing', async () => {

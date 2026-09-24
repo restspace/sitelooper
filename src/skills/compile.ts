@@ -164,17 +164,29 @@ const POPUP_LINE = /^-?\s*(dialog|alertdialog|menu|menubar|listbox|tooltip)\b/;
  * steps (`via`): a variant's start is variantStart's to decide.
  */
 export function carryOpener(before: readonly RecordedEntry[], entries: RecordedEntry[]): RecordedEntry[] {
+  const carried = carriedSteps(before, entries);
+  if (!carried.length) return entries;
+  return [entries[0], ...carried.map(({ via: _via, result: _result, ...step }) => step), ...entries.slice(1)];
+}
+
+/**
+ * The recorded steps of an earlier, dead instruction that carryOpener puts in
+ * front of `entries` — the very entries of `before`, so unbankedMutations can
+ * tell which of a dead instruction's gestures a procedure did take up.
+ */
+export function carriedSteps(before: readonly RecordedEntry[], entries: readonly RecordedEntry[]): RecordedStep[] {
+  const none: RecordedStep[] = [];
   const head = entries[0];
   // A resume carries on its own attempt, which it is compiled with.
-  if (head?.k !== 'instruction' || !head.url || head.resume) return entries;
+  if (head?.k !== 'instruction' || !head.url || head.resume) return none;
   const steps = entries.filter((e): e is RecordedStep => e.k === 'step');
-  if (steps.some((s) => s.via)) return entries;
+  if (steps.some((s) => s.via)) return none;
   const first = steps.find((s) => isMutatingAction(s.tool));
   const role = first?.locators?.target?.chain?.find((c): c is Extract<LocatorCandidate, { kind: 'role' }> => c.kind === 'role');
-  if (!role) return entries;
+  if (!role) return none;
   const line = `- ${role.role} ${JSON.stringify(role.name)}`;
   const names = (l: string): boolean => l.trim() === line || l.trim().startsWith(`${line}:`) || l.trim().startsWith(`${line} [`);
-  if (head.startText !== undefined && !head.startText.split('\n').some(names)) return entries;
+  if (head.startText !== undefined && !head.startText.split('\n').some(names)) return none;
   const page = pathOf(head.url);
   // Only the instruction just before this one: what it left open is what
   // this one began in (a line an older instruction added may have been on
@@ -190,36 +202,96 @@ export function carryOpener(before: readonly RecordedEntry[], entries: RecordedE
     if (e.k === 'instruction') {
       const closed = reportAfter(before, k);
       if (!spanHasStep && closed?.status !== 'success') continue;
-      return entries;
+      return none;
     }
     if (e.k !== 'step') continue;
     spanHasStep = true;
-    if (e.tool === 'goto' || e.tool === 'back' || e.effect) return entries;
-    if (e.diff?.url && pathOf(e.diff.url) !== page) return entries;
+    if (e.tool === 'goto' || e.tool === 'back' || e.effect) return none;
+    if (e.diff?.url && pathOf(e.diff.url) !== page) return none;
     if (!e.diff?.added?.some(names)) continue;
-    if (e.tool !== 'click' || !e.diff.added.some((l) => POPUP_LINE.test(l))) return entries;
+    if (e.tool !== 'click' || !e.diff.added.some((l) => POPUP_LINE.test(l))) return none;
     // An opening, not an arrival: the page it was clicked on is the page it
     // left open (a link that navigated here also "added" every line of it).
-    if (pathOf(urlBefore(before, k) ?? '') !== page) return entries;
+    if (pathOf(urlBefore(before, k) ?? '') !== page) return none;
     // Left open by an instruction that reported failure — work that is not a
     // step of the flow, or one replayed model-first. A successful one's own
     // procedure ends with this click, so its replay leaves the popup open as
     // the recording did; one with no report is the same instruction still
     // in flight, compiled with it.
-    if (!endedInFailure(before, k)) return entries;
+    if (!endedInFailure(before, k)) return none;
     // The opener AND every gesture the dead instruction made after it on this
     // page: fwgt3-n1's 38 opened the menu and ticked "bug" before it died, so
     // 50 began with "bug" already ticked, and its own first click on "bug"
     // UNticked it. Carrying the opener alone left every replay one toggle
     // out: "succeeded" at tier A with the labels never applied. With the
     // tick carried too, the toggles net out as they did in the recording.
-    const carried = before
-      .slice(k, instructionEnd(before, k))
-      .filter((s): s is RecordedStep => s.k === 'step' && (s === e || isMutatingAction(s.tool)))
-      .map(({ via: _via, result: _result, ...step }) => step);
-    return [head, ...carried, ...entries.slice(1)];
+    //
+    // …from the dead instruction's FIRST opening of this popup on this page,
+    // when a later re-open shows what it did there took effect (earlierOpening:
+    // gitea fwgt11-n1 04-set ticked "bug" in the picker it opened at 89; the
+    // resume's re-open at 98 no longer offered `- link "bug"`, applied by
+    // then; from 98 alone every replay ticked priority-high only).
+    const from = earlierOpening(before, k, page);
+    return before
+      .slice(from, instructionEnd(before, k))
+      .filter((s): s is RecordedStep => s.k === 'step' && (s === e || s === before[from] || isMutatingAction(s.tool)));
   }
-  return entries;
+  return none;
+}
+
+/** A step's target as the snapshot line naming it (`- link "bug"`), from its role candidate. */
+function roleLine(step: RecordedStep): string | undefined {
+  const role = step.locators?.target?.chain?.find((c): c is Extract<LocatorCandidate, { kind: 'role' }> => c.kind === 'role');
+  return role ? `- ${role.role} ${JSON.stringify(role.name)}` : undefined;
+}
+
+/**
+ * Where carryOpener's span starts, given the opener at before[k]: at k, or at
+ * an EARLIER click of the same dead instruction (resumes included) that
+ * opened the same popup on this page, when the recording shows what was done
+ * inside that earlier opening took effect.
+ *
+ * gitea fwgt11-n1 04-set: 89 opened the Labels picker (its diff added
+ * `- listbox "Clear labels bug …"` and `- link "bug"`), 90 ticked "bug", the
+ * attempt reported blocked; the picker closed unrecorded, which is when
+ * Gitea commits; the resume's 98 opened it again and its diff added every
+ * item line but `- link "bug"` — already on the page, the applied label. That
+ * absence is the evidence: a gesture inside the earlier opening whose target
+ * line that opening offered and the re-open did NOT add. Without it (the
+ * re-open offered the item again: the tick came to nothing, or there was no
+ * gesture at all) the span starts at k as before. Never past a navigation, a
+ * page effect, another page, or the dead instruction's own start.
+ */
+function earlierOpening(before: readonly RecordedEntry[], k: number, page: string): number {
+  const popupOf = (s: RecordedStep) => (s.diff?.added ?? []).filter((l) => POPUP_LINE.test(l)).map((l) => l.trim());
+  const popup = new Set(popupOf(before[k] as RecordedStep));
+  let start = k;
+  let gestures: RecordedStep[] = [];
+  for (let j = k - 1; j >= 0; j--) {
+    const e = before[j];
+    if (e.k === 'report') continue;
+    if (e.k === 'instruction') {
+      if (e.resume) continue;
+      break;
+    }
+    if (e.k !== 'step') continue;
+    if (e.tool === 'goto' || e.tool === 'back' || e.effect) break;
+    if (e.diff?.url && pathOf(e.diff.url) !== page) break;
+    if (e.tool === 'click' && popupOf(e).some((l) => popup.has(l))) {
+      const offered = new Set((e.diff?.added ?? []).map((l) => l.trim()));
+      const reoffered = new Set(((before[start] as RecordedStep).diff?.added ?? []).map((l) => l.trim()));
+      const tookEffect = gestures.some((g) => {
+        const line = roleLine(g);
+        return line !== undefined && offered.has(line) && !reoffered.has(line);
+      });
+      if (!tookEffect) break;
+      start = j;
+      gestures = [];
+      continue;
+    }
+    if (isMutatingAction(e.tool)) gestures.push(e);
+  }
+  return start;
 }
 
 /** The index just past the last entry of the instruction entries[k] ran under (its next non-resume instruction, or the end). */

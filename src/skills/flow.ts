@@ -7,7 +7,7 @@ import path from 'node:path';
 import type { LocatorCandidate, RecordedEntry, RecordedInstruction, RecordedReport, RecordedStep, StepDiff } from '../daemon/recorder.js';
 import { rootDir } from '../shared/paths.js';
 import { escapeRe } from '../shared/text.js';
-import { urlParts, urlPattern } from './compile.js';
+import { carriedSteps, urlParts, urlPattern } from './compile.js';
 import { mintedShape, urlPart, urlShapeOf } from '../execution/url.js';
 import { idPositionPart, linkMintedParts, pathDigitPart, pathIdPart, unseenGotoParts } from './ledger.js';
 import { MIN_ID_LEN, looksLikeId, tokenPattern } from './shape.js';
@@ -1807,8 +1807,27 @@ export function unbankedMutations(entries: RecordedEntry[]): string[] {
   resolveGroups(groups); // marks `adopted` in place
   const out: string[] = [];
   const quote = (text: string): string => `"${text.slice(0, 70)}${text.length > 70 ? '…' : ''}"`;
+  // A dead instruction's gestures that a later, successful instruction's
+  // procedure carries in front of its own (compile.ts carryOpener) ARE in the
+  // flow: gitea fwgt11-n1 04-set's blocked attempt was said to have "ran 17
+  // state-changing step(s) … NOT in the flow" while 107's procedure replayed 7
+  // of them. Counted out, and said.
+  const carried = new Set<RecordedEntry>();
+  for (let i = 0; i < entries.length; i++) {
+    const e = entries[i];
+    if (e.k !== 'instruction' || e.resume) continue;
+    let end = i + 1;
+    while (end < entries.length && !(entries[end].k === 'instruction' && !(entries[end] as RecordedInstruction).resume)) end++;
+    const span = entries.slice(i, end);
+    const reports = span.filter((x): x is Extract<RecordedEntry, { k: 'report' }> => x.k === 'report');
+    if (reports[reports.length - 1]?.status !== 'success') continue;
+    for (const step of carriedSteps(entries.slice(0, i), span)) carried.add(step);
+  }
   for (const g of groups) {
     if (g.report?.status === 'success' || g.adopted || !g.mutations) continue;
+    const taken = g.acts.filter((a) => carried.has(a)).length;
+    const left = g.mutations - taken;
+    if (!left) continue;
     const text = g.instruction.text;
     // The pair undoneByNext drops: the successor reported success, so this is
     // the only place its absence from the flow is said.
@@ -1821,8 +1840,9 @@ export function unbankedMutations(entries: RecordedEntry[]): string[] {
       continue;
     }
     out.push(
-      `instruction "${text.slice(0, 70)}${text.length > 70 ? '…' : ''}" ran ${g.mutations} state-changing step(s) ` +
-        `but reported ${g.report ? g.report.status : 'nothing'} — its work is NOT in the flow`,
+      `instruction "${text.slice(0, 70)}${text.length > 70 ? '…' : ''}" ran ${left} state-changing step(s) ` +
+        `but reported ${g.report ? g.report.status : 'nothing'} — its work is NOT in the flow` +
+        (taken ? ` (${taken} more were carried into the next instruction's procedure)` : ''),
     );
   }
   return out;

@@ -928,6 +928,55 @@ const PARTS = `<!doctype html><html><head><meta charset="utf-8"><title>Ticket</t
 </body></html>`;
 
 /**
+ * A label picker that commits on CLOSE (round 60, gitea fwgt11 04-set):
+ * clicking "Labels" opens or shuts the listbox; a click on an item toggles it
+ * in the pending selection; shutting the picker (the Labels click again, or
+ * Escape) posts `commit:labels:<applied, comma-joined>` when the selection
+ * changed and lists the applied labels as links beside it, as Gitea's
+ * sidebar does.
+ */
+const LABEL_PICKER = `<!doctype html><html><head><meta charset="utf-8"><title>Issue</title></head><body>
+<h1>Issue #4</h1>
+<div id="labels" role="combobox" aria-label="Labels" aria-expanded="false" tabindex="0">Labels</div>
+<div id="menu" role="listbox" aria-label="Label choices" hidden>
+  <a href="#" class="item" data-value="1">bug</a>
+  <a href="#" class="item" data-value="2">priority-high</a>
+</div>
+<div id="applied"></div>
+<script>
+const names = { 1: 'bug', 2: 'priority-high' };
+let applied = [];
+let pending = new Set();
+const menu = document.getElementById('menu');
+const box = document.getElementById('labels');
+function shut() {
+  if (menu.hidden) return;
+  menu.hidden = true;
+  box.setAttribute('aria-expanded', 'false');
+  const next = [...pending].sort();
+  if (next.join(',') === applied.join(',')) return;
+  applied = next;
+  fetch('/commit/labels/' + encodeURIComponent(applied.map((v) => names[v]).join(',')), { method: 'POST' });
+  document.getElementById('applied').innerHTML = applied.map((v) => '<a href="/issues?labels=' + v + '">' + names[v] + '</a>').join(' ');
+}
+box.addEventListener('click', () => {
+  if (!menu.hidden) return shut();
+  pending = new Set(applied);
+  menu.hidden = false;
+  box.setAttribute('aria-expanded', 'true');
+});
+menu.addEventListener('click', (e) => {
+  const a = e.target.closest('a.item');
+  if (!a) return;
+  e.preventDefault();
+  const v = a.dataset.value;
+  if (pending.has(v)) pending.delete(v); else pending.add(v);
+});
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') shut(); });
+</script>
+</body></html>`;
+
+/**
  * A status change that raised no alert (round 56, repairdesk fwrd88
  * 05-change: `read_all role=alert what:count` recorded "0"). `#list` is the
  * container a count of its rows scopes to; `?nolist=1` is the same page with
@@ -1778,6 +1827,7 @@ export async function createFixtureServer(initialCount = 10): Promise<FixtureSer
       if (url === '/stamp') return html(STAMP);
       if (url === '/hash') return html(HASH);
       if (url.startsWith('/menu/')) return html(MENU(tail('/menu/')));
+      if (url === '/labels-picker') return html(LABEL_PICKER);
       if (url === '/create/form') return html(CREATE);
       if (url === '/hopper') return html(HOPPER);
       if (url.startsWith('/hop/')) {
