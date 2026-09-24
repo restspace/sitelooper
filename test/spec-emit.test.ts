@@ -876,7 +876,7 @@ describe('expectations', () => {
     // tag for the reason text, and the pre-action capture as the diff leg.
     expect(out).toContain(
       "await expectChanges(page, ['- heading \"{{v1}} Widget\"', '- generic \"sidebar\"', '- tab \"New Project\"'], p, " +
-        "{ tag: '01-do s_test1/1', tool: 'click', positionalResolution: positional1 }, linesBefore1);",
+        "{ tag: '01-do s_test1/1', tool: 'click', positionalResolution: positional1 }, linesBefore1, 1, linesAfter1);",
     );
     // a transient line never reaches the gate (the FLOW constant still records it)
     expect(out).not.toContain("'- status \"Loading…\"'");
@@ -890,7 +890,7 @@ describe('expectations', () => {
     expect(captured).toBeLessThan(lines.indexOf('act: async () => {', prepare));
     expect(out).toContain('let linesBefore1: string[] | null = null;');
     // the gate runs in verify, and it is the daemon's own — embedded, not restated
-    expect(lines.indexOf("const changes1 = await expectChanges(page, ['- heading \"{{v1}} Widget\"', '- generic \"sidebar\"', '- tab \"New Project\"'], p, { tag: '01-do s_test1/1', tool: 'click', positionalResolution: positional1 }, linesBefore1);")).toBeGreaterThan(lines.indexOf('verify: async () => {'));
+    expect(lines.indexOf("const changes1 = await expectChanges(page, ['- heading \"{{v1}} Widget\"', '- generic \"sidebar\"', '- tab \"New Project\"'], p, { tag: '01-do s_test1/1', tool: 'click', positionalResolution: positional1 }, linesBefore1, 1, linesAfter1);")).toBeGreaterThan(lines.indexOf('verify: async () => {'));
     expect(out).toContain('// Shared execution source: expect.ts. Regenerate to update.');
     expect(out).toContain('// Shared execution source: snapshot.ts. Regenerate to update.');
     expect(out).toContain('async function expectedChangesVerdict(');
@@ -918,7 +918,7 @@ describe('expectations', () => {
   it('checks the value after the colon, not only the control\'s name (the false-success shape)', async () => {
     const out = withExpect({ addedContains: ['- combobox "Project": {{v1}}'] }, 'select', { target: '@e1', option: '{{v1}}' });
     expect(out).toContain(
-      "await expectChanges(page, ['- combobox \"Project\": {{v1}}'], p, { tag: '01-do s_test1/1', tool: 'select', positionalResolution: positional1 }, linesBefore1);",
+      "await expectChanges(page, ['- combobox \"Project\": {{v1}}'], p, { tag: '01-do s_test1/1', tool: 'select', positionalResolution: positional1 }, linesBefore1, 1, linesAfter1);",
     );
     const { expectedChangesVerdict } = runnableHelpers(out);
     const ctx = { tag: '01-do s_test1/1', tool: 'select', positionalResolution: false };
@@ -959,7 +959,7 @@ describe('expectations', () => {
   it("passes a fill's value to the verdict, and says whether the target may be positional", () => {
     const named = withExpect({ addedContains: ['- textbox "": {{v1}}', '- heading "{{v1}}"'] }, 'fill', { target: '@e1', value: '{{v1}}' });
     expect(named).toContain(
-      "await expectChanges(page, ['- textbox \"\": {{v1}}', '- heading \"{{v1}}\"'], p, { tag: '01-do s_test1/1', tool: 'fill', value: `${p.v1}`, positionalResolution: positional1 }, linesBefore1);",
+      "await expectChanges(page, ['- textbox \"\": {{v1}}', '- heading \"{{v1}}\"'], p, { tag: '01-do s_test1/1', tool: 'fill', value: `${p.v1}`, positionalResolution: positional1 }, linesBefore1, 1, linesAfter1);",
     );
     // the echo rule is the verdict's own, applied at run time and only to a
     // positional resolution — exactly as replay applies it; the compiler no
@@ -971,6 +971,7 @@ describe('expectations', () => {
     expect(
       sequenceAt(named, [
         'let linesBefore1: string[] | null = null;',
+        'let linesAfter1: string[] | null = null;',
         'let positional1 = false;',
       ]),
     ).toBeGreaterThan(-1);
@@ -1039,7 +1040,7 @@ describe('expectations', () => {
     expect(lines.indexOf('let absentDialog: { name: string; lines: string[] } | null = null;')).toBeLessThan(lines.indexOf('// @step 01-do s_test1/1'));
     // set by the verdict of the step that recorded the dialog
     expect(source).toContain(
-      "const changes1 = await expectChanges(page, ['- dialog \"Discard changes?\"', '- button \"Discard\"'], p, { tag: '01-do s_test1/1', tool: 'click', positionalResolution: positional1 }, linesBefore1);",
+      "const changes1 = await expectChanges(page, ['- dialog \"Discard changes?\"', '- button \"Discard\"'], p, { tag: '01-do s_test1/1', tool: 'click', positionalResolution: positional1 }, linesBefore1, 1, linesAfter1);",
     );
     expect(source).toContain('absentDialog = changes1.absentDialog ?? null;');
     // the step before it consults nothing (there is no dialog to be absent yet)
@@ -3018,8 +3019,8 @@ describe('emitFlowFile: the already-satisfied guard', () => {
       // The template stands in for the read-backs through the shared rule, on
       // the page just judged: recorded text publishes only where it shows (fwrd86).
       'const satisfiedShown = await shownForReport(page).catch(() => null);',
-      "{ const value = templateValue('Cancelled', p, satisfiedShown, { literal: true }); if (value !== null) outputs['08-open.order_status'] = value; }",
-      "{ const value = templateValue('{{v1}}', p, satisfiedShown, { literal: true }); if (value !== null) outputs['08-open.order_reference'] = value; }",
+      "{ const value = templateValue('Cancelled', p, satisfiedShown, { literal: true, given: { typed: [], live: [] } }); if (value !== null) outputs['08-open.order_status'] = value; }",
+      "{ const value = templateValue('{{v1}}', p, satisfiedShown, { literal: true, given: { typed: [], live: [] } }); if (value !== null) outputs['08-open.order_reference'] = value; }",
       'return;',
       '}',
     ]);
@@ -3086,7 +3087,7 @@ describe('emitFlowFile: the already-satisfied guard', () => {
 
   it('skips a report value it cannot fill, and publishes the rest', () => {
     const source = emit(cancelStep({ report: { summary: 's', values: { order_status: 'Cancelled', stray: '{{v9}}' } } }));
-    expect(source).toContain("templateValue('Cancelled', p, satisfiedShown, { literal: true }); if (value !== null) outputs['08-open.order_status'] = value;");
+    expect(source).toContain("templateValue('Cancelled', p, satisfiedShown, { literal: true, given: { typed: [], live: [] } }); if (value !== null) outputs['08-open.order_status'] = value;");
     expect(source).not.toContain("outputs['08-open.stray'] =");
   });
 
@@ -3335,9 +3336,14 @@ describe('report-template values after the last segment', () => {
     const flow = flowWith('{{v2}}');
     expect(unsourced(flow)).toEqual([]);
     const body = emit(flow);
+    // Consumed, so it gives the consumer its slot (referenceValue); made only
+    // of a param nothing typed, so the page is looked at, and a run that did
+    // not observe it says the report was given it (round 60, fwgt11 07-add).
+    expect(body).toContain('const reportShown = await shownForReport(page).catch(() => null);');
     expect(body).toContain(
-      "{ const value = referenceValue('{{v2}}', p, null); if (value !== null && outputs['02-create.post_title_element_text'] === undefined) outputs['02-create.post_title_element_text'] = value; }",
+      "if (outputs['02-create.post_title_element_text'] === undefined) { if (withheldAsGiven('{{v2}}', p, reportShown, reportGiven)) { logWarning('02-create: report value post_title_element_text is given, not observed: it is built only from the step\\'s own parameters, and neither this run\\'s page nor any of its reads shows it — withheld'); } const value = referenceValue('{{v2}}', p, reportShown); if (value !== null) outputs['02-create.post_title_element_text'] = value; }",
     );
+    expect(syntaxErrors(body)).toEqual([]);
     // the slot the template names is passed to the step, though no action uses it
     expect(body).toMatch(/async '02-create'\(page: Page, p: \{[^}]*v2: string/);
     expect(body).toContain('// Shared execution source: report.ts.');
@@ -3378,7 +3384,7 @@ describe('report-template values after the last segment', () => {
   it('a live read of the same output keeps it: the template only fills in when nothing read it', () => {
     const body = emit(flowWith('{{v2}}', 'post_title_element_text'));
     const readAt = body.indexOf("outputs['02-create.post_title_element_text'] = ");
-    const templateAt = body.indexOf("referenceValue('{{v2}}', p, null)");
+    const templateAt = body.indexOf("referenceValue('{{v2}}', p, reportShown)");
     expect(readAt).toBeGreaterThan(-1);
     expect(templateAt).toBeGreaterThan(readAt);
     expect(body).toContain("outputs['02-create.post_title_element_text'] === undefined");

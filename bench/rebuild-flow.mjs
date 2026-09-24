@@ -443,6 +443,7 @@ for (const { runid, file } of sessions()) {
         const sk = store.get(id);
         return sk ? Object.fromEntries(Object.entries(sk.params).flatMap(([k, p]) => (p.binding ? [[k, p.binding]] : []))) : null;
       },
+      pinned: (id) => store.get(id) ?? null,
     });
     if (flow) {
       const text = JSON.stringify(flow);

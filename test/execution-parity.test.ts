@@ -30,18 +30,22 @@ import { presentOnPage } from '../src/execution/snapshot.js';
 import { recordedValueShown } from '../src/execution/snapshot.js';
 import { recordedStandIn } from '../src/skills/flow.js';
 import { fingerprintPage } from '../src/execution/fingerprint.js';
+import { urlTrail } from '../src/execution/browser.js';
+import { routeAt, visitedUrlPart } from '../src/execution/url.js';
 import { SOFT_MATCH_MIN_SIMILARITY, fillableChain, unfilledStepVerdict } from '../src/execution/gates.js';
 import { emitFlowFile } from '../src/spec/emit.js';
 import type { SpecFlow } from '../src/spec/ir.js';
 import { goalSatisfied, type ReplayResult } from '../src/skills/replay.js';
 import { replayReport } from '../src/skills/learn.js';
+import { givenPartialReason, givenWarning } from '../src/execution/report.js';
+import { partialReasons } from '../src/daemon/step-verdict.js';
 import { consumedReportedOutputs, ignorableRefs, resolveInstruction, resolveStepParams, type FlowStep } from '../src/skills/flow.js';
 import type { Skill, SkillParam, SkillStep } from '../src/skills/store.js';
 import type { LocatorCandidate, RecordedEntry, RecordedStep } from '../src/daemon/recorder.js';
 import { captureReadBack, coreReadBack, selectionReadBack, titleReadBack, visibleTextsWithin } from '../src/daemon/recorder.js';
 import { pinPart } from '../src/agent/readback.js';
 import { flattenContainedComposite, flattenProvenComposite, planContainedParts, type Report } from '../src/agent/report.js';
-import { compileSkills } from '../src/skills/compile.js';
+import { carryOpener, compileSkills } from '../src/skills/compile.js';
 import { FIXTURE_TOTP_SEED, createFixtureServer, type FixtureServer } from './fixture/server.js';
 import { hotpCode, totpSeed } from '../src/execution/totp.js';
 
@@ -352,13 +356,22 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
   async function emittedFlowOf(spec: SpecFlow, vars: Record<string, string> = {}): Promise<Outcome> {
     const mod = await moduleOf(spec);
     const session = new BrowserSession({ session: `parity-flow-${Date.now()}`, persist: false });
+    // The artifact's warnings, as emittedOf keeps them.
+    const warnings: string[] = [];
+    const log = console.log;
+    console.log = (...args: unknown[]) => {
+      const line = args.map(String).join(' ');
+      if (line.startsWith('[sitelooper warn] ')) warnings.push(line.slice('[sitelooper warn] '.length));
+      log(...args);
+    };
     try {
       const page = await session.getPage();
       const outputs = await mod.runFlow(page, vars, { startUrl: mod.FLOW.startUrl });
-      return { ok: true, reason: null, outputs: outputs as Record<string, string> };
+      return { ok: true, reason: null, outputs: outputs as Record<string, string>, warnings };
     } catch (err) {
-      return { ok: false, reason: err instanceof Error ? err.message : String(err), outputs: {}, echoed: [] };
+      return { ok: false, reason: err instanceof Error ? err.message : String(err), outputs: {}, echoed: [], warnings };
     } finally {
+      console.log = log;
       await session.close();
     }
   }
@@ -1107,6 +1120,106 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
       expect(daemonRefs).toEqual(want);
       expect(published(emitted)).toEqual(want);
       expect(daemonReport.list_count).toBeUndefined();
+    }, 120_000);
+  });
+
+  /**
+   * Round 60, Gitea fwgt11 07-add: `issue_content_right_a_it: "{{v7}}"` is
+   * built only from a param — the flow's literal "bug", from the instruction
+   * — and nothing in the chain types or reads it. n2's issue carried
+   * priority-high alone (the live labels_shown said so), and the report still
+   * published "bug". A param-only value is published only where THIS run
+   * observed it: the page shows it, a read of this run returned it, or the
+   * chain typed it. Otherwise both runners withhold it and say it was given,
+   * not observed; the step is partial when its instruction asked for it.
+   */
+  describe('a report value made only of params (round 60, fwgt11 07-add)', () => {
+    const LABELS: SkillStep = { tool: 'read_all', args: { target: '.issue-content-right a.item', what: 'text' }, locators: { target: [{ kind: 'css', selector: '.issue-content-right a.item' }] }, label: 'labels_shown' };
+    const values = { labels_shown: '{{v7}}, {{v8}}', label_first: '{{v7}}', label_second: '{{v8}}', milestone_name: '{{v10}}' };
+    const params = { v7: 'bug', v8: 'priority-high', v10: 'Bench Milestone' };
+    const instruction = 'Open the issue and report the first label, and confirm milestone {{v10}}.';
+    const skillParams = (): Record<string, SkillParam> => ({ v7: { example: 'bug', usedIn: [] }, v8: { example: 'priority-high', usedIn: [] }, v10: { example: 'Bench Milestone', usedIn: [] } });
+    const issueSkill = (): Skill => ({
+      ...skillOf([LABELS]),
+      id: 's_issue',
+      template: instruction,
+      params: skillParams(),
+      preconditions: { urlPattern: `${origin}/gitea-issue` },
+      reportTemplate: { summary: '', values },
+    });
+    const issueFlow = (): SpecFlow => ({
+      version: 1,
+      name: 'parity-given',
+      origin,
+      startUrl: `${origin}/gitea-issue`,
+      vars: [],
+      steps: [
+        {
+          id: '07-add',
+          instruction,
+          params,
+          outputs: Object.keys(values),
+          segments: [{ id: 's_issue', template: instruction, params: skillParams(), preconditions: { urlPattern: `${origin}/gitea-issue` }, steps: [LABELS], report: { summary: '', values } }],
+        },
+      ],
+    });
+
+    /** Daemon replay, the report the flow runner publishes from it, its warnings and its verdict. */
+    async function daemonOf(): Promise<{ values: Record<string, string>; warnings: string[]; partial: string[] }> {
+      const session = new BrowserSession({ session: `parity-given-${Date.now()}`, persist: false, learn: true });
+      try {
+        const page = await session.getPage();
+        await page.goto(`${origin}/gitea-issue`);
+        const skill = issueSkill();
+        session.learn!.put(skill);
+        const out = await executeTool(session, 'run_skill', { id: skill.id, params }, os.tmpdir());
+        const replay = out.replay as ReplayResult;
+        expect(replay?.ok, replay?.reason ?? String(out.result)).toBe(true);
+        const r = await replayReport(() => session.getPage(), skill, params, replay.values, { chain: [skill], instruction });
+        const got = Object.fromEntries(Object.entries(r.report.evidence?.values ?? {}).map(([k, v]) => [k, String(v)]));
+        const partial = partialReasons({ reportStatus: 'success', recovered: false, given: r.given, declaredOutputs: Object.keys(values), values: got, instruction });
+        return { values: got, warnings: r.given.map((k) => givenWarning(k)), partial };
+      } finally {
+        await session.close();
+      }
+    }
+
+    const publishedBy = (o: Outcome): Record<string, string> =>
+      Object.fromEntries(Object.entries(o.outputs).filter(([k, v]) => k.startsWith('07-add.') && v !== undefined).map(([k, v]) => [k.slice('07-add.'.length), v]));
+
+    it('both runners withhold a param-only value the page does not show, warn, and call the asked one partial', async () => {
+      reset(10);
+      fx.issue.labels = ['priority-high'];
+      const daemon = await daemonOf();
+      reset(10);
+      fx.issue.labels = ['priority-high'];
+      const emitted = await emittedOf(issueFlow(), params);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+
+      const want = { labels_shown: 'priority-high', label_second: 'priority-high', milestone_name: 'Bench Milestone' };
+      expect(daemon.values).toEqual(want);
+      expect(publishedBy(emitted)).toEqual(want);
+      const given = /label_first .*given, not observed/;
+      expect(daemon.warnings.some((w) => given.test(w)), daemon.warnings.join('\n')).toBe(true);
+      expect(emitted.warnings?.some((w) => given.test(w)), emitted.warnings?.join('\n')).toBe(true);
+      // label_first was asked ("report the first label"): partial on both.
+      expect(daemon.partial).toEqual([givenPartialReason('label_first')]);
+      expect(emitted.warnings?.some((w) => w.includes(`PARTIAL — ${givenPartialReason('label_first')}`)), emitted.warnings?.join('\n')).toBe(true);
+    }, 120_000);
+
+    it('both runners publish it where the page shows it', async () => {
+      reset(10);
+      const daemon = await daemonOf();
+      reset(10);
+      const emitted = await emittedOf(issueFlow(), params);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+
+      const want = { labels_shown: 'bug | priority-high', label_first: 'bug', label_second: 'priority-high', milestone_name: 'Bench Milestone' };
+      expect(daemon.values).toEqual(want);
+      expect(publishedBy(emitted)).toEqual(want);
+      expect(daemon.warnings).toEqual([]);
+      expect(daemon.partial).toEqual([]);
+      expect(emitted.warnings?.filter((w) => /given, not observed|PARTIAL/.test(w))).toEqual([]);
     }, 120_000);
   });
 
@@ -2864,6 +2977,83 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
       expect(emitted.ok, emitted.reason ?? '').toBe(true);
       // ...and the daemon says the line went unchecked rather than staying silent
       expect((replay.warnings ?? []).join(' ')).toContain('could not fill');
+    }, 120_000);
+
+    /**
+     * odoo fwod85 05-open (round 59): the flow binds NOTHING to a declared
+     * slot — v10 was dropped at export — and only a recorded expectation names
+     * it (`- cell "{{v10}}"`, usedIn []). Its origin (`output:i4:…`) says the
+     * recorded example is run 1's value of something every run makes afresh.
+     * Daemon replay refused the pin outright ("missing params: v10"); the
+     * artifact inlined the example and checked run 1's value. One verdict now
+     * (slotActs): no step acts by it, so both run, drop the line with a
+     * warning, still judge the fillable line beside it, and save this run's
+     * value — and where a step DOES act by such a slot, both refuse before any
+     * mutation (the artifact at compile, as `unbound-slot`).
+     */
+    const originBound = (usedIn: number[]): Record<string, SkillParam> => ({
+      v1: { example: 'Gamma', usedIn: [2], known: true },
+      v2: { example: 'Order 41', usedIn, known: true, binding: 'output:i1:order' },
+    });
+    const unboundFlow = (steps: SkillStep[], params: Record<string, SkillParam>): SpecFlow => ({
+      version: 1,
+      name: 'parity-unbound',
+      origin,
+      startUrl: `${origin}/`,
+      vars: [],
+      steps: [
+        {
+          id: '01-pick',
+          instruction: 'pick project Beta',
+          params: { v1: 'Beta' },
+          outputs: [],
+          segments: [{ id: 's_project', template: 'pick project {{v1}} on {{v2}}', params, preconditions: { urlPattern: `${origin}/project/:id` }, steps }],
+        },
+      ],
+    });
+
+    it('both runners run a procedure whose expectation-only slot the flow never bound, and say the line went unchecked', async () => {
+      const steps = projectSteps('open');
+      steps[1] = { ...steps[1], expect: { addedContains: ['- combobox "Project": {{v1}}', '- heading "{{v2}}"'] } };
+      const params = originBound([]);
+      const consumer: Skill = { ...skillOf(steps), id: 's_project', template: 'pick project {{v1}} on {{v2}}', params, preconditions: { urlPattern: `${origin}/project/:id` } };
+      const spec = unboundFlow(steps, params);
+      expect(emitFlowFile(spec, { tier: 'plain' }).diagnostics.filter((d) => d.code === 'unbound-slot')).toEqual([]);
+
+      reset(0);
+      const replay = await replayOf(consumer, { v1: 'Beta' });
+      const replayLog = [...fx.log];
+      reset(0);
+      const emitted = await emittedFlowOf(spec);
+      const emittedLog = [...fx.log];
+
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      expect(replayLog.filter((l) => l.startsWith('save:'))).toEqual(['save:Beta']);
+      expect(emittedLog.filter((l) => l.startsWith('save:'))).toEqual(['save:Beta']);
+      // never silent: the daemon names the unbound param in its warnings (the
+      // step record carries them), and both say the line was not checked
+      expect((replay.warnings ?? []).join(' ')).toMatch(/param v2 .*unbound/);
+      expect((replay.warnings ?? []).join(' ')).toContain('could not fill');
+      expect((emitted.warnings ?? []).join(' ')).toContain('could not fill');
+    }, 120_000);
+
+    it('neither runner acts when a slot a step types by has an origin and no binding', async () => {
+      const steps = projectSteps('open');
+      steps[1] = { ...steps[1], args: { target: '@e1', option: '{{v2}}' } };
+      const params = originBound([2]);
+      const consumer: Skill = { ...skillOf(steps), id: 's_project', template: 'pick project {{v1}} on {{v2}}', params, preconditions: { urlPattern: `${origin}/project/:id` } };
+      const spec = unboundFlow(steps, params);
+
+      reset(0);
+      const replay = await replayOf(consumer, { v1: 'Beta' });
+      const replayLog = [...fx.log];
+      expect(replay.ok).toBe(false);
+      expect(replay.reason ?? '').toMatch(/missing params: v2/);
+      expect(replayLog.filter((l) => l.startsWith('save:'))).toEqual([]);
+      // the artifact has no model to hand the step to: the compile refuses
+      const found = emitFlowFile(spec, { tier: 'plain' }).diagnostics.filter((d) => d.code === 'unbound-slot');
+      expect(found.map((d) => [d.severity, d.step])).toEqual([['error', '01-pick']]);
     }, 120_000);
 
     /**
@@ -4939,6 +5129,97 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
       expect(closed.emitted.ok, closed.emitted.reason ?? '').toBe(true);
     }, 180_000);
 
+    /**
+     * Round 60, gitea fwgt11-n1 04-set, through carryOpener and compileSkills.
+     * A dead instruction opened the Labels picker and ticked "bug"; the picker
+     * shut unrecorded (the app commits on close); its resume opened it again,
+     * and that diff added the listbox again — it had been shut — and offered
+     * every item but `link "bug"`, applied by then. The next instruction
+     * ticked "priority-high" and pressed Escape (and, in `reload`, went on as
+     * fwgt11's did: reloaded the issue, opened the picker, ticked
+     * priority-high and shut it). Carried from the FIRST opening, the re-open
+     * is `closedBefore`: both runners shut the showing picker first (which
+     * commits "bug"), prove it went, and open it again as recorded
+     * (execution/toggle.ts closeBeforeReopen).
+     */
+    const labelsRecording = (url: string, o: { tookEffect: boolean; reload: boolean }) => {
+      const T = "Use the Labels picker to set exactly 'bug' and 'priority-high'.";
+      const diff = (added: string[], removed: string[] = []) => ({ url, alerts: [], added, removed, dialect: 2 as const });
+      const choices = '- listbox "Label choices"';
+      const opener = (added: string[], removed: string[] = []): RecordedStep => ({ k: 'step', tool: 'click', args: { target: '@e1' }, locators: { target: { expr: 'x', verified: true, raw: '@e1', chain: [{ kind: 'css', selector: '#labels' }, { kind: 'role', role: 'combobox', name: 'Labels' }] } }, diff: diff(added, removed) });
+      const item = (value: string, name: string): RecordedStep => ({ k: 'step', tool: 'click', args: { target: '@e2' }, locators: { target: { expr: 'x', verified: true, raw: '@e2', chain: [{ kind: 'css', selector: `#menu a[data-value="${value}"]` }, { kind: 'role', role: 'link', name }] } }, diff: diff([]) });
+      const before: RecordedEntry[] = [
+        { k: 'instruction', text: T, url },
+        opener([choices, '- link "bug"', '- link "priority-high"']),
+        item('1', 'bug'),
+        { k: 'report', status: 'blocked', summary: 'the picker did not apply the labels', values: {} },
+        { k: 'instruction', text: T, url, resume: true },
+        opener(o.tookEffect ? [choices, '- link "priority-high"'] : [choices, '- link "bug"', '- link "priority-high"']),
+      ];
+      const own: RecordedEntry[] = [
+        { k: 'instruction', text: T, url, startText: `- heading "Issue #4"\n- combobox "Labels"\n${choices}\n- link "bug"\n- link "priority-high"`, startDialect: 2 },
+        item('2', 'priority-high'),
+        { k: 'step', tool: 'press', args: { key: 'Escape' }, locators: {}, diff: diff([]) },
+        ...(o.reload
+          ? [
+            { k: 'step', tool: 'goto', args: { url }, locators: {}, diff: diff(['- link "bug"']) } as RecordedStep,
+            opener([choices, '- link "priority-high"']),
+            item('2', 'priority-high'),
+            opener([], [choices]),
+          ]
+          : []),
+      ];
+      return { entries: carryOpener(before, own), T };
+    };
+    const labelsRun = async (url: string, o: { tookEffect: boolean; reload: boolean }) => {
+      const { entries, T } = labelsRecording(url, o);
+      const report: Report = { status: 'success', summary: 'labels set', evidence: { values: {} } };
+      const [skill] = compileSkills({ entries, instruction: T, report, session: 'parity', knownValues: {} });
+      return { skill, ...(await both([{ tool: 'goto', args: { url }, locators: {} }, ...skill.steps], 0)) };
+    };
+
+    it('both runners shut a picker the recording shut before re-opening it, and commit the carried tick (fwgt11)', async () => {
+      const fixed = await labelsRun(`${origin}/labels-picker`, { tookEffect: true, reload: false });
+      expect(fixed.skill.steps.filter((s) => s.closedBefore)).toHaveLength(1);
+      expect(fixed.replay.ok, fixed.replay.reason ?? '').toBe(true);
+      expect(fixed.emitted.ok, fixed.emitted.reason ?? '').toBe(true);
+      expect(fixed.replayLog, 'replay must commit the carried tick before re-opening').toEqual(['commit:labels:bug', 'commit:labels:bug,priority-high']);
+      expect(fixed.emittedLog, 'the artifact must commit the carried tick before re-opening').toEqual(['commit:labels:bug', 'commit:labels:bug,priority-high']);
+
+      // The control: the re-open still offered "bug" (the tick came to
+      // nothing), so only the re-open is carried, with no closedBefore, and
+      // both runners behave as before: open, tick priority-high, Escape.
+      const control = await labelsRun(`${origin}/labels-picker`, { tookEffect: false, reload: false });
+      expect(control.skill.steps.filter((s) => s.closedBefore)).toHaveLength(0);
+      expect(control.replay.ok, control.replay.reason ?? '').toBe(true);
+      expect(control.emitted.ok, control.emitted.reason ?? '').toBe(true);
+      expect(control.replayLog).toEqual(['commit:labels:priority-high']);
+      expect(control.emittedLog).toEqual(['commit:labels:priority-high']);
+    }, 240_000);
+
+    it('both runners commit bug,priority-high where Escape does not shut the picker and a reload follows, as on fwgt11\'s replays', async () => {
+      // Gitea's picker on fwgt11-n2/n3 stayed open through the recorded Escape
+      // (the artifact then skipped a later re-open as "already showing"), and
+      // the procedure reloads the issue before its final close. Skipping the
+      // carried re-open kept "bug" pending until that reload dropped it.
+      const run = await labelsRun(`${origin}/labels-picker?escape=0`, { tookEffect: true, reload: true });
+      expect(run.replay.ok, run.replay.reason ?? '').toBe(true);
+      expect(run.emitted.ok, run.emitted.reason ?? '').toBe(true);
+      expect(run.replayLog).toEqual(['commit:labels:bug', 'commit:labels:bug,priority-high']);
+      expect(run.emittedLog).toEqual(['commit:labels:bug', 'commit:labels:bug,priority-high']);
+    }, 240_000);
+
+    it('both runners stop, never skip, when the closing click does not shut the picker', async () => {
+      const run = await labelsRun(`${origin}/labels-picker?escape=0&stuck=1`, { tookEffect: true, reload: false });
+      expect(run.replayLog, 'replay must not commit past a pending tick').toEqual([]);
+      expect(run.emittedLog, 'the artifact must not commit past a pending tick').toEqual([]);
+      expect(run.replay.ok).toBe(false);
+      expect(run.emitted.ok).toBe(false);
+      const said = /still showing after a closing click/;
+      expect(run.replay.reason).toMatch(said);
+      expect(run.emitted.reason).toMatch(said);
+    }, 180_000);
+
     it('both runners stop, not skip, a toggle whose target no longer resolves although its popup is showing', async () => {
       const { replay, emitted, replayLog, emittedLog } = await both(menuSteps('gone'), 0);
 
@@ -5817,5 +6098,138 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
       expect(replayLog).toEqual([]);
       expect(emittedLog).toEqual([]);
     }, 120_000);
+  });
+
+  /**
+   * Round 60, openproject fwop14 02-create s_459e98/3: the Save's recorded
+   * effect is the new record's row, `- row "{{d1}} … {{v3}} TASK New - Normal"`
+   * (hard). The daemon judges the diff between its action's before capture and
+   * the capture it takes the moment the action settles (tools.ts runStep); the
+   * artifact re-captured the page in verify, after its alert settle, and the
+   * row had by then been re-rendered under another name. The daemon passed n2
+   * and n3; the compiled run stopped on both attempts. Both runners now judge
+   * the capture taken as the action settled, with the live page as fallback.
+   */
+  describe('a recorded change the action showed as it settled (round 60, fwop14)', () => {
+    const run = (mode: string) => {
+      const steps: SkillStep[] = [
+        { tool: 'goto', args: { url: `${origin}/row-save/${mode}` }, locators: {} },
+        { tool: 'fill', args: { target: '@e1', value: '{{v1}}' }, locators: { target: [{ kind: 'label', label: 'Subject' }] } },
+        {
+          tool: 'click',
+          args: { target: '@e2' },
+          locators: { target: [{ kind: 'role', role: 'button', name: 'Save' }] },
+          expect: {
+            addedContains: ['- row "47 {{v1}} New"'],
+            lineDialect: 2,
+            ...(mode.startsWith('url-') ? { urlPattern: `${origin}/row-save/${mode}/details/47` } : {}),
+          },
+        },
+      ];
+      const params: Record<string, SkillParam> = { v1: { example: 'rec-1 Bench Record', usedIn: [2] } };
+      const skill: Skill = { ...skillOf(steps), params };
+      const base = specOf(steps);
+      const spec: SpecFlow = { ...base, steps: [{ ...base.steps[0], params: { v1: 'rec-2 Bench Record' }, segments: [{ ...base.steps[0].segments[0], params }] }] };
+      return bothOf(skill, spec, { v1: 'rec-2 Bench Record' });
+    };
+
+    it('both runners accept the row the Save showed as it settled, although it was renamed a moment later', async () => {
+      const { replay, emitted, replayLog, emittedLog } = await run('url-1500');
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      expect(replayLog).toEqual(['commit:row:rec-2 Bench Record']);
+      expect(emittedLog).toEqual(['commit:row:rec-2 Bench Record']);
+    }, 120_000);
+
+    it('both runners still stop when the row never appears', async () => {
+      const { replay, emitted } = await run('never');
+      expect(replay.ok).toBe(false);
+      expect(emitted.ok).toBe(false);
+      const said = /did not show "- row \\"47 rec-2 Bench Record New\\"" as it did when recorded/;
+      expect(replay.reason).toMatch(said);
+      expect(emitted.reason ?? '').toMatch(/the recorded page change did not appear|did not show "- row/);
+    }, 120_000);
+  });
+
+  /**
+   * Round 60, ghost fwgh14 rule A: 02-create's editor autosave routed the page
+   * to `#/editor/post/<id>` and the step went back to the posts list, so its
+   * end url carried no id and 03-open was handed n1's. A step publishes a url
+   * part it VISITED (FlowStep/SpecStep.urlRoutes) from its url trail, through
+   * the shared visitedUrlPart: the daemon's flow runner (server.ts
+   * captureUrlOutputs, whose publishing this leg calls as it does) and the
+   * artifact's step body. `/hashposts`: New post mints an id and routes to it.
+   */
+  describe('a url part the producing step visited but did not end on (round 60, fwgh14)', () => {
+    const newPost: SkillStep = { tool: 'click', args: { target: '@e1' }, locators: { target: [{ kind: 'role', role: 'button', name: 'New post' }] } };
+    const backToPosts: SkillStep = { tool: 'click', args: { target: '@e2' }, locators: { target: [{ kind: 'role', role: 'link', name: 'Posts' }] } };
+    const create = (twice: boolean): SkillStep[] => [
+      { tool: 'goto', args: { url: `${origin}/hashposts#/posts` }, locators: {} },
+      newPost,
+      backToPosts,
+      ...(twice ? [newPost, backToPosts] : []),
+    ];
+    const open = (): SkillStep[] => [
+      { tool: 'goto', args: { url: `${origin}/hashposts#/editor/post/{{v1}}` }, locators: {} },
+      { tool: 'click', args: { target: '@e3' }, locators: { target: [{ kind: 'role', role: 'button', name: 'Publish' }] } },
+    ];
+    const V1: Record<string, SkillParam> = { v1: { example: '0011223344556677', usedIn: [1] } };
+    const ROUTE = () => routeAt(`${origin}/hashposts#/editor/post/0011223344556677`, 'h2')!;
+
+    async function run(twice: boolean) {
+      // Daemon: each flow step replayed, the producer's url outputs published
+      // from its trail exactly as server.ts captureUrlOutputs publishes them.
+      reset(0);
+      let trail: ReturnType<typeof urlTrail> | null = null;
+      const first = await replayOf({ ...skillOf(create(twice)), id: 's_hash_create' }, {}, async (page) => {
+        trail = urlTrail(page);
+      });
+      const urls = trail ? [...(trail as ReturnType<typeof urlTrail>).urls] : [];
+      const end = urls[urls.length - 1] ?? '';
+      const published = visitedUrlPart(urls, end, 'h2', ROUTE());
+      const second = await replayOf({ ...skillOf(open()), id: 's_hash_open', params: V1 }, { v1: published ?? '' });
+      const replayLog = [...fx.log];
+      // Artifact: the whole flow through its own runFlow.
+      reset(0);
+      const spec: SpecFlow = {
+        version: 1,
+        name: 'parity-hash-posts',
+        origin,
+        startUrl: `${origin}/`,
+        vars: [],
+        steps: [
+          { id: '01-create', instruction: 'create a post', params: {}, outputs: [], urlRoutes: { 'url.h2': ROUTE() }, segments: [{ id: 's_hash_create', template: 'create a post', params: {}, preconditions: { urlPattern: `${origin}/` }, steps: create(twice) }] },
+          { id: '02-open', instruction: 'publish {{01-create.url.h2}}', params: { v1: '{{01-create.url.h2}}' }, outputs: [], segments: [{ id: 's_hash_open', template: 'publish {{v1}}', params: V1, preconditions: { urlPattern: `${origin}/` }, steps: open() }] },
+        ],
+      };
+      const emitted = await emittedFlowOf(spec);
+      const emittedLog = [...fx.log];
+      return { first, second, published, replayLog, emitted, emittedLog };
+    }
+    const ids = (log: string[], kind: string) => log.filter((l) => l.startsWith(`commit:${kind}:`)).map((l) => l.slice(`commit:${kind}:`.length));
+
+    it('both runners publish the id the producer visited, and the consumer acts on it', async () => {
+      const { first, second, published, replayLog, emitted, emittedLog } = await run(false);
+      expect(first.ok, first.reason ?? '').toBe(true);
+      expect(second.ok, second.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      expect(ids(replayLog, 'create')).toHaveLength(1);
+      expect(published).toBe(ids(replayLog, 'create')[0]);
+      expect(ids(replayLog, 'publish')).toEqual(ids(replayLog, 'create'));
+      expect(ids(emittedLog, 'create')).toHaveLength(1);
+      expect(ids(emittedLog, 'publish')).toEqual(ids(emittedLog, 'create'));
+    }, 180_000);
+
+    it('a record the producer backed out of for another is not the one published (control)', async () => {
+      const { published, replayLog, emitted, emittedLog } = await run(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      const made = ids(replayLog, 'create');
+      expect(made).toHaveLength(2);
+      expect(published).toBe(made[1]);
+      expect(ids(replayLog, 'publish')).toEqual([made[1]]);
+      const madeE = ids(emittedLog, 'create');
+      expect(madeE).toHaveLength(2);
+      expect(ids(emittedLog, 'publish')).toEqual([madeE[1]]);
+    }, 180_000);
   });
 });

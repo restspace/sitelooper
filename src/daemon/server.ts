@@ -10,7 +10,8 @@ import { urlPattern as compiledUrlPattern, carryOpener, dropAbsentReadLocators, 
 import type { DriftTicket } from '../skills/repair.js';
 import type { Page } from 'playwright-core';
 import { agentGesturesOutsideReplay, bindSkill, canAdoptPin, decideRepin, instructionEntry, learnFromInstruction, matchTemplate, pinCarriesFailedStep, pinEndsElsewhere, pinStartsElsewhere, pinStatus, publishedOutputs, replayReport, selectCandidates } from '../skills/learn.js';
-import { buildFlow, consumedReportedOutputs, consumedUrlOutputs, ignorableRefs, jsonLeaves, lintFlowRefs, lintUnpublishedOutputs, listFlows, liveReadsFor, liveReadsForRecovery, loadFlow, loadFlowFile, lookupOutput, mutatingIntent, noteOutputEvidence, pruneUnsourcedOutputs, recoveryRoute, remapParams, resolveInstruction, resolveStepParams, softResolveInstruction, saveFlow, staleInstructionIds, taskConstants, textMints, unbankedMutations, unreportedOutputs, urlOutputs, varyingValues, type RunSpecific } from '../skills/flow.js';
+import { threadStepParams } from '../skills/rethread.js';
+import { buildFlow, consumedReportedOutputs, consumedUrlOutputs, ignorableRefs, jsonLeaves, lintFlowRefs, lintUnboundParams, lintUnpublishedOutputs, listFlows, liveReadsFor, liveReadsForRecovery, loadFlow, loadFlowFile, lookupOutput, mutatingIntent, noteOutputEvidence, pruneUnsourcedOutputs, recoveryRoute, remapParams, resolveInstruction, resolveStepParams, softResolveInstruction, saveFlow, staleInstructionIds, taskConstants, textMints, unbankedMutations, unreportedOutputs, urlOutputs, varyingValues, type RunSpecific } from '../skills/flow.js';
 import { applyRelabelToEntries, applyRelabelToSkills, relabelCases, requestRelabelPlan, runValueKeyRenames } from '../skills/relabel.js';
 import { goalSatisfied, renderChainStop } from '../skills/replay.js';
 import { drainDrift, llmProposer, recordCandidateEvidence } from '../skills/repair.js';
@@ -37,9 +38,10 @@ import { encodeFrame, LineDecoder, type CommandName, type FlowStepResult, type F
 import { aliasLegacyEnv, ensureSessionDir, socketPath, validateSessionName } from '../shared/paths.js';
 import { literalCredentialsIn, markLiteralCredentials } from '../shared/secrets.js';
 import { BrowserSession } from './browser.js';
-import { DEFAULT_BROWSER_PROFILE } from '../execution/browser.js';
+import { DEFAULT_BROWSER_PROFILE, urlTrail } from '../execution/browser.js';
+import { visitedUrlPart } from '../execution/url.js';
 import { observedChange } from '../execution/lifecycle.js';
-import { referenceValue, shownForReport, templateValue } from '../execution/report.js';
+import { givenWarning, referenceValue, shownForReport, templateValue } from '../execution/report.js';
 import { startPageSettled } from '../execution/action.js';
 import { coverageComplete, recordedValueShown } from '../execution/snapshot.js';
 import { captureSignature } from './diff.js';
@@ -1209,6 +1211,9 @@ ${describeLeaks(leaks.slice(0, 6))}`);
         const sk = store.get(id);
         return sk ? Object.fromEntries(Object.entries(sk.params).flatMap(([k, p]) => (p.binding ? [[k, p.binding]] : []))) : null;
       },
+      // The pinned skill itself: the export binds its slots against the
+      // referenced instruction too (threadStepParams, fwod85).
+      pinned: (id) => store.get(id) ?? null,
       // Empty for a fresh recording. Populated when this export follows a run
       // of an existing flow (runFlow seeds the ledger), which is exactly when
       // there is a second run's worth of evidence to build on.
@@ -1347,7 +1352,7 @@ ${describeLeaks(leaks.slice(0, 6))}`);
       if (!refChain.length) return false;
       return !ignorableRefs([ref], step, refChain).includes(ref);
     };
-    const warnings = [...lintFlowRefs(flow, publishedOutputsOf, actsOnRef), ...lintUnpublishedOutputs(flow, publishedOutputsOf, chainTailOf)];
+    const warnings = [...lintFlowRefs(flow, publishedOutputsOf, actsOnRef), ...lintUnpublishedOutputs(flow, publishedOutputsOf, chainTailOf), ...lintUnboundParams(flow, (id) => store.get(id) ?? null)];
     // Phase 2 of PLAN-provenance: report anything of this run's that survived
     // into the flow. WARN for now — the ledger's coverage is what is being
     // measured, and a false alarm must not block an export.
@@ -1474,6 +1479,19 @@ ${describeLeaks(certain.slice(0, 30))}${certain.length > 30 ? `\n  … and ${cer
     const { flow, file: flowFile } = loaded;
     const missingVars = flow.vars.filter((v) => !(v in varsIn));
     if (missingVars.length) throw new Error(`flow "${flow.name}" needs --var for: ${missingVars.join(', ')}`);
+
+    // Each pinned step's params threaded against its own instruction — the
+    // same threadStepParams the compiled artifact is built through (spec ir),
+    // so a flow written before the export threaded them (fwod85's 05-open: v9
+    // a truncated literal, v10 absent) runs the same on both sides.
+    for (const step of flow.steps) {
+      const pinned = step.skill ? this.browser.learn?.get(step.skill) : null;
+      const threaded = threadStepParams(step, pinned);
+      if (threaded.params && threaded.params !== step.params && (Object.keys(threaded.rebound).length || Object.keys(threaded.filled).length)) {
+        step.params = threaded.params;
+        for (const w of threaded.warnings) opts.progress(`[flow ${flow.name}] ${w}`);
+      }
+    }
 
     // Hand the ledger the values earlier runs of THIS flow watched CHANGE,
     // before it banks anything. From here on each is kinded an identifier
@@ -1624,8 +1642,12 @@ ${describeLeaks(certain.slice(0, 30))}${certain.length > 30 ? `\n  … and ${cer
     // replay ends where the recording ended — at rest — so only a recovery
     // needs the boundary swept.
     let prevRecovered = false;
+    /** The running step's url trail, for the url outputs it minted mid-step (FlowStep.urlRoutes, fwgh14). */
+    let trail: ReturnType<typeof urlTrail> | null = null;
 
     for (const step of flow.steps) {
+      trail?.stop();
+      trail = null;
       if (opts.signal.aborted) {
         stepResults.push({ id: step.id, status: 'blocked', reason: 'run stopped', recovered: false });
         halted = true;
@@ -1648,6 +1670,15 @@ ${describeLeaks(certain.slice(0, 30))}${certain.length > 30 ? `\n  … and ${cer
         }
       }
       prevRecovered = false;
+      // A step that minted a url output mid-step keeps its url trail from here
+      // (FlowStep.urlRoutes; the artifact's step body keeps the same).
+      if (step.urlRoutes) {
+        try {
+          trail = urlTrail(await this.browser.getPage());
+        } catch {
+          trail = null;
+        }
+      }
       const pinned = step.skill ? (this.browser.learn?.get(step.skill) ?? null) : null;
       // The pin's whole segment chain, computed once: a replay runs EVERY
       // segment with the same params, so both questions asked below — what
@@ -1763,7 +1794,9 @@ ${describeLeaks(certain.slice(0, 30))}${certain.length > 30 ? `\n  … and ${cer
           const consumed = new Set(consumedReportedOutputs(flow.steps, step.id));
           const referenced: Record<string, string> = {};
           for (const [k, v] of Object.entries(tail.reportTemplate?.values ?? {})) {
-            const kept = templateValue(v, bound.params, pageShown, { literal: true });
+            // Nothing ran, so nothing was typed or read: a param-only value stands
+            // on this page alone (round 60, fwgt11), as the artifact's guard asks it.
+            const kept = templateValue(v, bound.params, pageShown, { literal: true, given: { typed: [], live: [] } });
             if (kept !== null) values[k] = kept;
             // A consumed value the page does not show still gives a later
             // step its one slot (referenceValue), as on the replay path.
@@ -1778,7 +1811,7 @@ ${describeLeaks(certain.slice(0, 30))}${certain.length > 30 ? `\n  … and ${cer
           // {{step.output}} reference threads through a step that ran nothing.
           const stepOutputs: Record<string, string> = { ...referenced, ...values };
           try {
-            const urlOuts = await captureUrlOutputs(await this.browser.getPage(), wantedUrlOuts.get(step.id), step.id, this.runSpecific);
+            const urlOuts = await captureUrlOutputs(await this.browser.getPage(), wantedUrlOuts.get(step.id), step.id, this.runSpecific, trail?.urls, step.urlRoutes);
             for (const [key, value] of Object.entries(urlOuts)) if (!(key in stepOutputs)) stepOutputs[key] = value;
           } catch {
             /* browser gone — nothing to bind */
@@ -1962,6 +1995,8 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
         recovered,
         unfinishedGesture: result.unfinishedGesture,
         skippedReads: result.skill?.skippedReads,
+        // A report value withheld as given, not observed (round 60, fwgt11 07-add).
+        given: result.skill?.given,
         declaredOutputs: step.outputs,
         values: result.report.evidence?.values ?? {},
         // Only an ASKED output's skipped read makes the step partial (fwec11 01-signin).
@@ -2217,7 +2252,7 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
       try {
         // A model-driven end state has no reason to carry the recorded url
         // shape, so a recovered step does not wait for the consumed parts.
-        const urlOuts = await captureUrlOutputs(await this.browser.getPage(), recovered ? undefined : wantedUrlOuts.get(step.id), step.id, this.runSpecific);
+        const urlOuts = await captureUrlOutputs(await this.browser.getPage(), recovered ? undefined : wantedUrlOuts.get(step.id), step.id, this.runSpecific, trail?.urls, step.urlRoutes);
         for (const [key, value] of Object.entries(urlOuts)) {
           if (!(key in stepOutputs)) stepOutputs[key] = value;
         }
@@ -2388,6 +2423,7 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
       // A recovery may have left a dialog open; sweep it at the next boundary.
       prevRecovered = recovered;
     }
+    trail?.stop();
 
     // Deferred re-pins (see deferredPins): the next step's pin as it stands
     // now, this run's re-pins included. A step the run never reached keeps
@@ -2773,11 +2809,22 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
     // Echoed keys are withheld from the template too: the guard dropped them
     // from the confident values, and refilling them from "{{v4}}" put them
     // straight back (fwrd86 01-signin ticket_title) — the artifact never did.
-    const { report, withheld, unobservedProse, references } = await replayReport(() => this.browser.getPage(), last, { ...match.params, ...derived }, confidentValues, {
+    // A value made only of params is published only where this run observed
+    // it — on the page, in a read, or typed by a segment of the chain it
+    // walked (round 60, fwgt11 07-add published "bug" beside a live
+    // labels_shown of "priority-high").
+    const { report, withheld, unobservedProse, references, given } = await replayReport(() => this.browser.getPage(), last, { ...match.params, ...derived }, confidentValues, {
       withhold: agg.echoed,
       instruction,
+      chain: [...earlier.map((e) => e.skill), last],
     });
     if (withheld.length) progress(`[replay] withheld ${withheld.length} report value(s) whose recorded text this run's page did not show: ${withheld.join(', ')}`);
+    if (given.length) {
+      const said = given.map((key) => `${last.id}: ${givenWarning(key)}`);
+      for (const line of said) progress(`[replay] ${line}`);
+      record.warnings = [...(record.warnings ?? []), ...said];
+      record.given = given;
+    }
     if (unobservedProse.length) progress(`[replay] dropped ${unobservedProse.length} summary clause(s) this run did not observe`);
     // Keep the conversation coherent for later instructions: the same one-line
     // entry the loop would have written.
@@ -2866,13 +2913,34 @@ const URL_OUTPUT_POLL_MS = 500;
  * {{03-open.url.q.id}} to a snapshot taken before Odoo's hash gained the
  * freshly minted id.
  */
-async function captureUrlOutputs(page: Page, wanted: Set<string> | undefined, stepId: string, runSpecific?: RunSpecific): Promise<Record<string, string>> {
-  let urlOuts = urlOutputs(page.url(), runSpecific, wanted);
-  if (!wanted?.size) return urlOuts;
+export async function captureUrlOutputs(
+  page: Page,
+  wanted: Set<string> | undefined,
+  stepId: string,
+  runSpecific?: RunSpecific,
+  visited?: readonly string[],
+  routes?: Record<string, string>,
+): Promise<Record<string, string>> {
+  // A part the step minted from a url it VISITED (FlowStep.urlRoutes): its end
+  // url's part when there is one, else the last url of the trail on the
+  // recorded route — the shared visitedUrlPart, which the artifact calls too.
+  // Never waited for: the end url is not where it lives.
+  const fromTrail = (out: Record<string, string>, url: string): Record<string, string> => {
+    for (const [key, route] of Object.entries(routes ?? {})) {
+      if (key in out || !key.startsWith('url.')) continue;
+      const value = visitedUrlPart(visited ?? [], url, key.slice('url.'.length), route);
+      if (value) out[key] = value;
+    }
+    return out;
+  };
+  const waitFor = wanted ? new Set([...wanted].filter((k) => !(routes && k in routes))) : undefined;
+  let urlOuts = fromTrail(urlOutputs(page.url(), runSpecific, wanted), page.url());
+  if (!waitFor?.size) return urlOuts;
+  wanted = waitFor;
   const deadline = Date.now() + URL_OUTPUT_WAIT_MS;
   const arrived = (url: string) => {
-    urlOuts = urlOutputs(url, runSpecific, wanted);
-    return [...wanted].every((k) => k in urlOuts);
+    urlOuts = fromTrail(urlOutputs(url, runSpecific, wanted), url);
+    return [...wanted!].every((k) => k in urlOuts);
   };
   while (!arrived(page.url()) && Date.now() < deadline) {
     // Wait on the url event, not on a clock: a route that lands 30ms after
@@ -2883,7 +2951,7 @@ async function captureUrlOutputs(page: Page, wanted: Set<string> | undefined, st
       .waitForURL((u) => arrived(u.toString()), { timeout: Math.min(URL_OUTPUT_POLL_MS, Math.max(1, deadline - Date.now())) })
       .catch(() => {});
   }
-  const missing = [...wanted].filter((k) => !(k in urlOuts));
+  const missing = [...wanted!].filter((k) => !(k in urlOuts));
   if (missing.length) console.error(`[flow] ${stepId}: url output(s) never appeared: ${missing.join(', ')} (url: ${page.url().slice(0, 160)})`);
   return urlOuts;
 }

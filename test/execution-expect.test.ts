@@ -543,11 +543,19 @@ describe('the emitted adapter', () => {
     expect(first).toContain('linesBefore1 = await capturePageLines(page);');
     expect(first.indexOf('linesBefore1 = await capturePageLines(page);')).toBeLessThan(first.indexOf('act: async () => {'));
     // positional resolution is what the step's own resolution reported, not a compile-time guess
-    const verdict = "await expectChanges(page, ['- combobox \"Project\": {{v1}}'], p, { tag: '01-step s_emit/1', tool: 'select', positionalResolution: positional1 }, linesBefore1);";
+    const verdict = "await expectChanges(page, ['- combobox \"Project\": {{v1}}'], p, { tag: '01-step s_emit/1', tool: 'select', positionalResolution: positional1 }, linesBefore1, 1, linesAfter1);";
     expect(first).toContain(verdict);
     expect(first).toContain('let positional1 = false;');
     expect(first).toContain('positional1 = positional1 || hit1.structural || hit1.nth !== undefined;');
     expect(first.indexOf(verdict)).toBeGreaterThan(first.indexOf('verify: async () => {'));
+    // the AFTER leg is captured as the action settles — where tools.ts runStep
+    // takes the daemon's — before the alert settle and the url wait (fwop14)
+    expect(first).toContain('let linesAfter1: string[] | null = null;');
+    const after = first.indexOf('linesAfter1 = await capturePageLines(page);');
+    expect(after).toBeGreaterThan(first.indexOf('settle: async () => {'));
+    expect(after).toBeLessThan(first.indexOf('alertsAfter1 = await settledAlerts(page'));
+    expect(after).toBeLessThan(first.indexOf('verify: async () => {'));
+    expect(source).toContain('added: addedLines(linesBefore, linesAfter ?? (await capturePageLines(page, dialect))),');
     const second = stepOf(source, 2);
     expect(second).not.toContain('linesBefore');
     expect(second).not.toContain('expectChanges(');

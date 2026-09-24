@@ -1499,13 +1499,16 @@ describe('ignorableRefs (fwgr23 05-open)', () => {
   // The daemon and the artifact must answer this question the same way, or a
   // spec refuses a step the daemon happily acts on. emit.ts's `usedSlot` has
   // always been chain-wide; this is the pin that keeps the pair together.
-  it('matches its compile-time twin usedSlot, which reads every segment', () => {
+  it('matches its compile-time twin usedSlot: both ask the one shared slotActs, which reads every segment', () => {
     const emit = fs.readFileSync(path.resolve(__dirname, '../src/spec/emit.ts'), 'utf8');
     const twin = emit.slice(emit.indexOf('function usedSlot('));
-    expect(twin.slice(0, 400)).toMatch(/step\.segments\.some\(/);
+    expect(twin.slice(0, 200)).toMatch(/slotActs\(step\.segments, slot\)/);
     const flowSrc = fs.readFileSync(path.resolve(__dirname, '../src/skills/flow.ts'), 'utf8');
     const mine = flowSrc.slice(flowSrc.indexOf('export function ignorableRefs('));
-    expect(mine.slice(0, 600)).toMatch(/for \(const seg of chain\)/);
+    expect(mine.slice(0, 600)).toMatch(/slotActs\(chain, name\)/);
+    const shared = fs.readFileSync(path.resolve(__dirname, '../src/execution/expect.ts'), 'utf8');
+    const rule = shared.slice(shared.indexOf('export function slotActs('));
+    expect(rule.slice(0, 600)).toMatch(/chain\.some\(/);
   });
 });
 
@@ -2851,7 +2854,7 @@ describe('the recorded stand-in reaches every unresolved reference (fwod49)', as
     // The satisfied path goes through the shared templateValue, which refuses
     // a fill still holding `{{` (and, since fwrd86, recorded text the page
     // does not show).
-    const satisfied = source.indexOf('const kept = templateValue(v, bound.params, pageShown, { literal: true });');
+    const satisfied = source.indexOf('const kept = templateValue(v, bound.params, pageShown, { literal: true, given: { typed: [], live: [] } });');
     expect(satisfied).toBeGreaterThan(0);
     expect(fs.readFileSync(path.resolve(__dirname, '../src/execution/report.ts'), 'utf8')).toMatch(/if \(!filled \|\| \/\\\{\\\{\/\.test\(filled\)\) return null;/);
     const normal = source.indexOf("Object.entries(result.report.evidence?.values ?? {})");

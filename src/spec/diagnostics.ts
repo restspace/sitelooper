@@ -36,6 +36,7 @@ export type DiagnosticCode =
   | 'unmeasured-precondition' // a segment's skill carries a page fingerprint the compiled spec cannot measure against
   | 'unsupported-capability' // the recording uses something the standalone artifact cannot carry (a tab switch, an attribute read, a position-only locator)
   | 'unsourced-ref' // a slot the procedure acts on is bound to an output nothing can publish: no read, only a synthesized read no run has ever resolved, or a reference naming no step of the flow at all (fwgr47's `{{i2.…}}`)
+  | 'unbound-slot' // a slot with a recorded origin that the flow binds nothing to, and a step acts by it: replay refuses the pin, and the artifact has no model to hand it to (fwod85 05-open's v10)
   | 'unfilled-slot' // a step that ACTS names a slot the artifact can never fill by the time it acts: no caller param, and nothing running before it mints it — neither an earlier SEGMENT of its chain nor an earlier step of its own (fwod57) — so it would type or locate by the literal `{{vN}}` text
   | 'recipe-snapshot' // flow-level: the component store holds state the artifact's compile-time recipe snapshot cannot express (a demoted recipe, a family with none usable, a learned variant travelling as data)
   | 'literal-credential' // the procedure carries the value of a credential-named environment variable in the clear (fwrd83: `v2: 'bench-pass-1234'`, requiredEnvNames [])

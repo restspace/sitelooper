@@ -40,6 +40,8 @@
  * out to" asks for, is still partial.
  */
 
+import { givenPartialReason } from '../execution/report.js';
+
 export interface StepVerdictInput {
   /** What the step reported. */
   reportStatus: 'success' | 'failure' | 'blocked';
@@ -59,6 +61,13 @@ export interface StepVerdictInput {
    * declared output counts, as before round 59.
    */
   instruction?: string;
+  /**
+   * SkillRecord.given: report values made only of params that the replay
+   * withheld as given, not observed (round 60, fwgt11 07-add; src/execution/
+   * report.ts). Like a skipped read, partial only for an output the
+   * instruction asked for.
+   */
+  given?: readonly string[];
 }
 
 /**
@@ -80,6 +89,11 @@ export function partialReasons(input: StepVerdictInput): string[] {
     for (const label of missed) {
       reasons.push(`the procedure's read of ${label}, an output this step reports, was skipped (nothing matched on the page), so ${label} went unreported`);
     }
+  }
+  if (!input.recovered && input.given?.length) {
+    // The artifact bakes the same ask in at compile time (emit.ts reportTemplateLines).
+    const declared = new Set(input.instruction === undefined ? input.declaredOutputs : askedOutputs(input.instruction, input.declaredOutputs));
+    for (const label of [...new Set(input.given)].filter((l) => declared.has(l) && !(l in input.values))) reasons.push(givenPartialReason(label));
   }
   return reasons;
 }

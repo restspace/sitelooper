@@ -164,17 +164,56 @@ const POPUP_LINE = /^-?\s*(dialog|alertdialog|menu|menubar|listbox|tooltip)\b/;
  * steps (`via`): a variant's start is variantStart's to decide.
  */
 export function carryOpener(before: readonly RecordedEntry[], entries: RecordedEntry[]): RecordedEntry[] {
+  const carried = carriedSteps(before, entries);
+  if (!carried.length) return entries;
+  const reopens = closedReopens(carried);
+  return [
+    entries[0],
+    ...carried.map(({ via: _via, result: _result, ...step }, i): RecordedStep => (reopens.has(i) ? { ...step, closedBefore: true } : step)),
+    ...entries.slice(1),
+  ];
+}
+
+/**
+ * The carried openers whose recorded diff shows the popup was CLOSED just
+ * before them: a click after an earlier carried opening of the same popup
+ * that ADDED a popup line that opening had added (a line a diff adds was not
+ * on the page it started from). gitea fwgt11-n1 04-set: 98 added
+ * `- listbox "Clear labels bug …"`, as 89 had — the picker 89 opened had
+ * shut, unrecorded, and with it Gitea committed the tick at 90. A replay
+ * finds that picker still open (nothing it replays shut it), so it must shut
+ * it, not skip the re-open as already showing (SkillStep.closedBefore).
+ */
+function closedReopens(carried: readonly RecordedStep[]): Set<number> {
+  const popupOf = (s: RecordedStep) => (s.tool === 'click' ? (s.diff?.added ?? []).filter((l) => POPUP_LINE.test(l)).map((l) => l.trim()) : []);
+  const out = new Set<number>();
+  const opened = new Set<string>();
+  carried.forEach((s, i) => {
+    const lines = popupOf(s);
+    if (lines.some((l) => opened.has(l))) out.add(i);
+    for (const l of lines) opened.add(l);
+  });
+  return out;
+}
+
+/**
+ * The recorded steps of an earlier, dead instruction that carryOpener puts in
+ * front of `entries` — the very entries of `before`, so unbankedMutations can
+ * tell which of a dead instruction's gestures a procedure did take up.
+ */
+export function carriedSteps(before: readonly RecordedEntry[], entries: readonly RecordedEntry[]): RecordedStep[] {
+  const none: RecordedStep[] = [];
   const head = entries[0];
   // A resume carries on its own attempt, which it is compiled with.
-  if (head?.k !== 'instruction' || !head.url || head.resume) return entries;
+  if (head?.k !== 'instruction' || !head.url || head.resume) return none;
   const steps = entries.filter((e): e is RecordedStep => e.k === 'step');
-  if (steps.some((s) => s.via)) return entries;
+  if (steps.some((s) => s.via)) return none;
   const first = steps.find((s) => isMutatingAction(s.tool));
   const role = first?.locators?.target?.chain?.find((c): c is Extract<LocatorCandidate, { kind: 'role' }> => c.kind === 'role');
-  if (!role) return entries;
+  if (!role) return none;
   const line = `- ${role.role} ${JSON.stringify(role.name)}`;
   const names = (l: string): boolean => l.trim() === line || l.trim().startsWith(`${line}:`) || l.trim().startsWith(`${line} [`);
-  if (head.startText !== undefined && !head.startText.split('\n').some(names)) return entries;
+  if (head.startText !== undefined && !head.startText.split('\n').some(names)) return none;
   const page = pathOf(head.url);
   // Only the instruction just before this one: what it left open is what
   // this one began in (a line an older instruction added may have been on
@@ -190,36 +229,96 @@ export function carryOpener(before: readonly RecordedEntry[], entries: RecordedE
     if (e.k === 'instruction') {
       const closed = reportAfter(before, k);
       if (!spanHasStep && closed?.status !== 'success') continue;
-      return entries;
+      return none;
     }
     if (e.k !== 'step') continue;
     spanHasStep = true;
-    if (e.tool === 'goto' || e.tool === 'back' || e.effect) return entries;
-    if (e.diff?.url && pathOf(e.diff.url) !== page) return entries;
+    if (e.tool === 'goto' || e.tool === 'back' || e.effect) return none;
+    if (e.diff?.url && pathOf(e.diff.url) !== page) return none;
     if (!e.diff?.added?.some(names)) continue;
-    if (e.tool !== 'click' || !e.diff.added.some((l) => POPUP_LINE.test(l))) return entries;
+    if (e.tool !== 'click' || !e.diff.added.some((l) => POPUP_LINE.test(l))) return none;
     // An opening, not an arrival: the page it was clicked on is the page it
     // left open (a link that navigated here also "added" every line of it).
-    if (pathOf(urlBefore(before, k) ?? '') !== page) return entries;
+    if (pathOf(urlBefore(before, k) ?? '') !== page) return none;
     // Left open by an instruction that reported failure — work that is not a
     // step of the flow, or one replayed model-first. A successful one's own
     // procedure ends with this click, so its replay leaves the popup open as
     // the recording did; one with no report is the same instruction still
     // in flight, compiled with it.
-    if (!endedInFailure(before, k)) return entries;
+    if (!endedInFailure(before, k)) return none;
     // The opener AND every gesture the dead instruction made after it on this
     // page: fwgt3-n1's 38 opened the menu and ticked "bug" before it died, so
     // 50 began with "bug" already ticked, and its own first click on "bug"
     // UNticked it. Carrying the opener alone left every replay one toggle
     // out: "succeeded" at tier A with the labels never applied. With the
     // tick carried too, the toggles net out as they did in the recording.
-    const carried = before
-      .slice(k, instructionEnd(before, k))
-      .filter((s): s is RecordedStep => s.k === 'step' && (s === e || isMutatingAction(s.tool)))
-      .map(({ via: _via, result: _result, ...step }) => step);
-    return [head, ...carried, ...entries.slice(1)];
+    //
+    // …from the dead instruction's FIRST opening of this popup on this page,
+    // when a later re-open shows what it did there took effect (earlierOpening:
+    // gitea fwgt11-n1 04-set ticked "bug" in the picker it opened at 89; the
+    // resume's re-open at 98 no longer offered `- link "bug"`, applied by
+    // then; from 98 alone every replay ticked priority-high only).
+    const from = earlierOpening(before, k, page);
+    return before
+      .slice(from, instructionEnd(before, k))
+      .filter((s): s is RecordedStep => s.k === 'step' && (s === e || s === before[from] || isMutatingAction(s.tool)));
   }
-  return entries;
+  return none;
+}
+
+/** A step's target as the snapshot line naming it (`- link "bug"`), from its role candidate. */
+function roleLine(step: RecordedStep): string | undefined {
+  const role = step.locators?.target?.chain?.find((c): c is Extract<LocatorCandidate, { kind: 'role' }> => c.kind === 'role');
+  return role ? `- ${role.role} ${JSON.stringify(role.name)}` : undefined;
+}
+
+/**
+ * Where carryOpener's span starts, given the opener at before[k]: at k, or at
+ * an EARLIER click of the same dead instruction (resumes included) that
+ * opened the same popup on this page, when the recording shows what was done
+ * inside that earlier opening took effect.
+ *
+ * gitea fwgt11-n1 04-set: 89 opened the Labels picker (its diff added
+ * `- listbox "Clear labels bug …"` and `- link "bug"`), 90 ticked "bug", the
+ * attempt reported blocked; the picker closed unrecorded, which is when
+ * Gitea commits; the resume's 98 opened it again and its diff added every
+ * item line but `- link "bug"` — already on the page, the applied label. That
+ * absence is the evidence: a gesture inside the earlier opening whose target
+ * line that opening offered and the re-open did NOT add. Without it (the
+ * re-open offered the item again: the tick came to nothing, or there was no
+ * gesture at all) the span starts at k as before. Never past a navigation, a
+ * page effect, another page, or the dead instruction's own start.
+ */
+function earlierOpening(before: readonly RecordedEntry[], k: number, page: string): number {
+  const popupOf = (s: RecordedStep) => (s.diff?.added ?? []).filter((l) => POPUP_LINE.test(l)).map((l) => l.trim());
+  const popup = new Set(popupOf(before[k] as RecordedStep));
+  let start = k;
+  let gestures: RecordedStep[] = [];
+  for (let j = k - 1; j >= 0; j--) {
+    const e = before[j];
+    if (e.k === 'report') continue;
+    if (e.k === 'instruction') {
+      if (e.resume) continue;
+      break;
+    }
+    if (e.k !== 'step') continue;
+    if (e.tool === 'goto' || e.tool === 'back' || e.effect) break;
+    if (e.diff?.url && pathOf(e.diff.url) !== page) break;
+    if (e.tool === 'click' && popupOf(e).some((l) => popup.has(l))) {
+      const offered = new Set((e.diff?.added ?? []).map((l) => l.trim()));
+      const reoffered = new Set(((before[start] as RecordedStep).diff?.added ?? []).map((l) => l.trim()));
+      const tookEffect = gestures.some((g) => {
+        const line = roleLine(g);
+        return line !== undefined && offered.has(line) && !reoffered.has(line);
+      });
+      if (!tookEffect) break;
+      start = j;
+      gestures = [];
+      continue;
+    }
+    if (isMutatingAction(e.tool)) gestures.push(e);
+  }
+  return start;
 }
 
 /** The index just past the last entry of the instruction entries[k] ran under (its next non-resume instruction, or the end). */
@@ -464,6 +563,13 @@ export function variantStart(
   entries: RecordedEntry[],
   variantOf: string | undefined,
   slots: Map<string, string> = new Map(),
+  /**
+   * The variant's first KEPT step, when the caller knows it: the walk then
+   * goes up to it, past every recorded step ahead of it, not only the ones
+   * replayed through another skill — a recovery compile also drops the step
+   * that stopped the replay (rule C, ghost fwgh14).
+   */
+  firstKept?: RecordedStep,
 ): { url: string; fingerprint?: number[]; startText?: string; startTextComplete?: boolean; dropped: number } {
   const head = entries.find((e): e is RecordedInstruction => e.k === 'instruction');
   const steps = entries.filter((e): e is RecordedStep => e.k === 'step');
@@ -475,8 +581,9 @@ export function variantStart(
   };
   let dropped = 0;
   if (!variantOf) return { ...at, dropped };
-  for (const step of steps) {
-    if (!step.via || step.via.skill === variantOf) break;
+  const until = firstKept ? steps.findIndex((s) => sameRecordedStep(s, firstKept)) : -1;
+  for (const [i, step] of steps.entries()) {
+    if (until >= 0 ? i >= until : !step.via || step.via.skill === variantOf) break;
     dropped++;
     if (step.effect && step.effect.kind !== 'navigate' && step.afterUrl) {
       at = { url: step.afterUrl, ...(step.fingerprintAfter ? { fingerprint: step.fingerprintAfter } : {}) };
@@ -496,6 +603,37 @@ export function variantStart(
     }
   }
   return { ...at, dropped };
+}
+
+/** The same recorded step, whether or not a transform copied it (a copy keeps its tool, args, via and diff). */
+function sameRecordedStep(a: RecordedStep, b: RecordedStep): boolean {
+  if (a === b) return true;
+  return (
+    a.tool === b.tool &&
+    JSON.stringify(a.args) === JSON.stringify(b.args) &&
+    JSON.stringify(a.via ?? null) === JSON.stringify(b.via ?? null) &&
+    (a.diff?.url ?? '') === (b.diff?.url ?? '')
+  );
+}
+
+/**
+ * Rule B (ghost fwgh14): the replayed step that stopped a replay DID the
+ * step's work when it is an action on the page (not an addressed navigation,
+ * goto or back), it had an effect (it moved the url, or added lines), and the
+ * recovery's next gesture — a step of the recovery's own, not another replayed
+ * one — ran on the very url it landed on, with only observations between.
+ */
+function landedWhereRecoveryContinued(kept: readonly RecordedStep[], at: number, startUrl: string | undefined): boolean {
+  const failed = kept[at];
+  if (!failed || failed.tool === 'goto' || failed.tool === 'back' || !failed.diff?.url) return false;
+  const before = kept.slice(0, at).reverse().find((s) => s.diff?.url)?.diff?.url ?? startUrl ?? '';
+  const effect = failed.diff.url !== before || failed.diff.added.length > 0;
+  if (!effect) return false;
+  // Observations move nothing, so the next gesture runs on the url the step
+  // landed on; that gesture must be the recovery's own, and act THERE — a
+  // goto or back as the recovery's first move abandons the page instead.
+  const next = kept.slice(at + 1).find((s) => !['read', 'read_all', 'wait_for'].includes(s.tool));
+  return Boolean(next && !next.via && next.tool !== 'goto' && next.tool !== 'back');
 }
 
 /** One recorded segment: the steps that ran on one page template. */
@@ -584,7 +722,20 @@ export function compileSkills(input: CompileInput): Skill[] {
       const next = kept.slice(at + 1).find((s) => !['read', 'read_all', 'wait_for'].includes(s.tool));
       if (next?.tool === 'click' && !next.via && sameControl(failed, next)) pressedAgain.add(next);
     }
-    kept = kept.filter((s) => !(s.via?.skill === stopped.skill && s.via.step === stopped.step));
+    // ...and unless its ACTION did the step's work: it landed on a page (it
+    // moved the url or added something) and the recovery's next gesture ran on
+    // exactly that page, so the recovery continued from where the step left it
+    // and only its gate refused it. ghost fwgh14-n2 03-open: s_9433ad's click
+    // on the post opened n2's own post and its url gate refused it for not
+    // being n1's (a frozen id); dropping the click left n2's variant s_a63811
+    // starting with an editor control gated on the posts list, and n3 healed
+    // it onto Ghost's Settings nav (22 turns). Kept, its expectation is
+    // compiled from THIS recording like any step's, re-slotted. An addressed
+    // navigation (goto, back) is never kept: its target is what was wrong
+    // (fwsi7's goto /hardware/4, the recording's record).
+    if (!(failed && landedWhereRecoveryContinued(kept, at, startUrl))) {
+      kept = kept.filter((s) => !(s.via?.skill === stopped.skill && s.via.step === stopped.step));
+    }
   }
   kept = sourcelessGoto(kept, input, recordingNotes);
   if (!kept.length) return [];
@@ -635,7 +786,10 @@ export function compileSkills(input: CompileInput): Skill[] {
   // `/login` (the instruction's start) with a first step that clicks a
   // project in the signed-in projects list — a precondition no page it can
   // run on satisfies, and the compiled artifact then ran it on the login form.
-  const start = variantStart(input.entries, input.variantOf, slots);
+  // A variant is gated on the page its FIRST KEPT step ran on (rule C, ghost
+  // fwgh14): walked past every recorded step ahead of it — the ones replayed
+  // through another skill, and the stopped step a recovery compile dropped.
+  const start = variantStart(input.entries, input.variantOf, slots, input.variantOf ? kept[0] : undefined);
   const beginsAt = start.dropped ? start : { url: startUrl, fingerprint: head?.fingerprint, startText: head?.startText, startTextComplete: head?.startTextComplete };
 
   // Split at page-template seams. A step that navigated (diff.url) to a url
@@ -801,6 +955,7 @@ export function compileSkills(input: CompileInput): Skill[] {
       if (Object.keys(contexts).length) out.contexts = contexts;
       if (step.page !== undefined) out.page = step.page;
       if (step.toggle) out.toggle = true;
+      if (step.closedBefore && step.tool === 'click') out.closedBefore = true;
       if (pressedAgain.has(step)) out.repeatIfNoEffect = true;
       if (step.effect) {
         out.effect =

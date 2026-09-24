@@ -115,6 +115,25 @@ const TICKETS = (total: number, date: string) => `<!doctype html><html><head><me
 </body></html>`;
 
 /**
+ * A Gitea issue page's sidebar (round 60, fwgt11 07-add): the labels the
+ * issue carries are the app's STATE (`issue.labels`), and the label picker's
+ * menu, hidden until opened, lists every label the repository has. fwgt11's
+ * n2 issue carried priority-high alone while the flow's instruction still
+ * named "bug".
+ */
+const GITEA_ISSUE = (labels: readonly string[]) => `<!doctype html><html><head><meta charset="utf-8"><title>Issue #5</title></head><body>
+<h1 id="issue-title">fwgt11-n2 Bench Issue <span>#5</span></h1>
+<div class="issue-content-right">
+<div class="labels"><span>Labels</span>
+${labels.map((l) => `<a class="item" href="/issues?labels=${encodeURIComponent(l)}">${l}</a>`).join('\n')}
+</div>
+<div class="menu" style="display:none">${['bug', 'priority-high', 'wontfix'].map((l) => `<div class="item" data-value="${l}">${l}</div>`).join('')}</div>
+<div><span>Milestone</span> <a href="/milestone/1">Bench Milestone</a></div>
+</div>
+<p id="comment">Comment for run fwgt11-n2.</p>
+</body></html>`;
+
+/**
  * An issue list the way Gitea renders one (fwgt8): the title and the `#n`
  * number are separate elements, a pagination link shows a bare "1", and a
  * hidden row carries text no visitor sees.
@@ -928,6 +947,60 @@ const PARTS = `<!doctype html><html><head><meta charset="utf-8"><title>Ticket</t
 </body></html>`;
 
 /**
+ * A label picker that commits on CLOSE (round 60, gitea fwgt11 04-set):
+ * clicking "Labels" opens or shuts the listbox; a click on an item toggles it
+ * in the pending selection; shutting the picker (the Labels click again, or
+ * Escape) posts `commit:labels:<applied, comma-joined>` when the selection
+ * changed and lists the applied labels as links beside it, as Gitea's
+ * sidebar does. What is applied survives a reload (sessionStorage); what is
+ * pending does not. `?escape=0`: Escape does not shut it (Gitea's picker on
+ * fwgt11's replays). `?stuck=1`: the Labels click does not shut it either.
+ */
+const LABEL_PICKER = (mode: { escape: boolean; stuck: boolean }) => `<!doctype html><html><head><meta charset="utf-8"><title>Issue</title></head><body>
+<h1>Issue #4</h1>
+<div id="labels" role="combobox" aria-label="Labels" aria-expanded="false" tabindex="0">Labels</div>
+<div id="menu" role="listbox" aria-label="Label choices" hidden>
+  <a href="#" class="item" data-value="1">bug</a>
+  <a href="#" class="item" data-value="2">priority-high</a>
+</div>
+<div id="applied"></div>
+<script>
+const names = { 1: 'bug', 2: 'priority-high' };
+let applied = JSON.parse(sessionStorage.getItem('applied') || '[]');
+let pending = new Set();
+const menu = document.getElementById('menu');
+const box = document.getElementById('labels');
+const render = () => { document.getElementById('applied').innerHTML = applied.map((v) => '<a href="/issues?labels=' + v + '">' + names[v] + '</a>').join(' '); };
+render();
+function shut() {
+  if (menu.hidden) return;
+  menu.hidden = true;
+  box.setAttribute('aria-expanded', 'false');
+  const next = [...pending].sort();
+  if (next.join(',') === applied.join(',')) return;
+  applied = next;
+  sessionStorage.setItem('applied', JSON.stringify(applied));
+  fetch('/commit/labels/' + encodeURIComponent(applied.map((v) => names[v]).join(',')), { method: 'POST' });
+  render();
+}
+box.addEventListener('click', () => {
+  if (!menu.hidden) { if (${mode.stuck ? 'false' : 'true'}) shut(); return; }
+  pending = new Set(applied);
+  menu.hidden = false;
+  box.setAttribute('aria-expanded', 'true');
+});
+menu.addEventListener('click', (e) => {
+  const a = e.target.closest('a.item');
+  if (!a) return;
+  e.preventDefault();
+  const v = a.dataset.value;
+  if (pending.has(v)) pending.delete(v); else pending.add(v);
+});
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && ${mode.escape ? 'true' : 'false'}) shut(); });
+</script>
+</body></html>`;
+
+/**
  * A status change that raised no alert (round 56, repairdesk fwrd88
  * 05-change: `read_all role=alert what:count` recorded "0"). `#list` is the
  * container a count of its rows scopes to; `?nolist=1` is the same page with
@@ -990,6 +1063,76 @@ document.getElementById('account').addEventListener('input', () => { amount.valu
 document.getElementById('save').addEventListener('click', () => {
   fetch('/commit/opportunity/' + encodeURIComponent(amount.value), { method: 'POST' });
 });
+</script>
+</body></html>`;
+
+/**
+ * A Save that adds the new record's row, whose accessible name then changes
+ * (round 60, openproject fwop14 02-create s_459e98/3): OpenProject's list
+ * showed `- row "<id> … TASK New - Normal"` as the save settled, and a moment
+ * later the app routed to the record and re-rendered it. `/row-save/<ms>`: the
+ * row reads "47 <subject> New", and <ms> later its last cell becomes "Open".
+ * `/row-save/url-<ms>`: the same, and the app routes to `…/details/47` as it
+ * renames the row. `/row-save/never`: Save posts but adds no row. Save posts
+ * `commit:row:<subject>`.
+ */
+const ROW_SAVE = (mode: string) => `<!doctype html><html><head><meta charset="utf-8"><title>Records</title></head><body>
+<h1>Records</h1>
+<label for="subject">Subject</label><input id="subject">
+<button id="save" type="button">Save</button>
+<table><tbody id="rows"></tbody></table>
+<script>
+const MODE = ${JSON.stringify(mode)};
+document.getElementById('save').addEventListener('click', () => {
+  const subject = document.getElementById('subject').value;
+  fetch('/commit/row/' + encodeURIComponent(subject), { method: 'POST' });
+  if (MODE === 'never') return;
+  const tr = document.createElement('tr');
+  tr.innerHTML = '<td>47</td><td></td><td>New</td>';
+  tr.children[1].textContent = subject;
+  document.getElementById('rows').appendChild(tr);
+  // 'url-<ms>': <ms> later the app routes to the record's own view
+  // (history.pushState to <this url>/details/47) and re-renders the row as it
+  // does — the save's url is where the recording expected it to end.
+  const routed = /^url-([0-9]+)$/.exec(MODE);
+  const after = routed ? Number(routed[1]) : Number(MODE);
+  setTimeout(() => {
+    if (routed) history.pushState({}, '', location.pathname + '/details/47');
+    tr.children[2].textContent = 'Open';
+  }, after);
+});
+</script>
+</body></html>`;
+
+/**
+ * A hash-routed editor (round 60, ghost fwgh14): "New post" mints a post and
+ * routes to '#/editor/post/<id>' (Ghost's autosave does the same), "Posts"
+ * routes back to the list, and a step that went back ends on '#/posts'.
+ * Opening '#/editor/post/<id>' directly shows "Post <id>" and a Publish that
+ * posts commit:publish:<id>. Every create posts commit:create:<id>.
+ */
+const HASH_POSTS = `<!doctype html><html><head><meta charset="utf-8"><title>Posts</title></head><body>
+<main id="view"></main>
+<script>
+const view = document.getElementById('view');
+const render = () => {
+  const at = '#/editor/post/';
+  const m = location.hash.startsWith(at) ? [location.hash, location.hash.slice(at.length)] : null;
+  if (m) {
+    view.innerHTML = '<h1></h1><button id="publish" type="button">Publish</button> <a href="#/posts">Posts</a>';
+    view.querySelector('h1').textContent = 'Post ' + m[1];
+    view.querySelector('#publish').onclick = () => fetch('/commit/publish/' + m[1], { method: 'POST' });
+  } else {
+    view.innerHTML = '<h1>Posts</h1><button id="new" type="button">New post</button>';
+    view.querySelector('#new').onclick = () => {
+      const id = Array.from(crypto.getRandomValues(new Uint8Array(8)), (b) => b.toString(16).padStart(2, '0')).join('');
+      fetch('/commit/create/' + id, { method: 'POST' });
+      location.hash = '#/editor/post/' + id;
+    };
+  }
+};
+window.addEventListener('hashchange', render);
+render();
 </script>
 </body></html>`;
 
@@ -1456,6 +1599,8 @@ export interface FixtureServer {
   espo: { stage: string };
   /** The sign-in fixture's document title (/signin); reset() restores "EspoCRM". */
   signin: { title: string };
+  /** The Gitea issue fixture's labels (/gitea-issue); reset() restores the recording's, bug and priority-high. */
+  issue: { labels: string[] };
   /** Reset state for a new test/case: `n` fresh items, empty log, faults cleared. */
   reset(n: number): void;
   faults: {
@@ -1485,6 +1630,7 @@ export async function createFixtureServer(initialCount = 10): Promise<FixtureSer
   const board = { card: 4 };
   const espo = { stage: 'Negotiation' };
   const signin = { title: 'EspoCRM' };
+  const issue = { labels: ['bug', 'priority-high'] };
 
   function take<K extends Fault['kind']>(kind: K, req?: http.IncomingMessage): Extract<Fault, { kind: K }> | undefined {
     for (const f of pending) {
@@ -1539,6 +1685,11 @@ export async function createFixtureServer(initialCount = 10): Promise<FixtureSer
     if (url === '/issue-list' || url === '/asset-table') {
       res.writeHead(200, { 'content-type': 'text/html' });
       res.end(url === '/issue-list' ? ISSUE_LIST : ASSET_TABLE);
+      return;
+    }
+    if (url === '/gitea-issue') {
+      res.writeHead(200, { 'content-type': 'text/html' });
+      res.end(GITEA_ISSUE(issue.labels));
       return;
     }
     if (url === '/tickets') {
@@ -1740,6 +1891,7 @@ export async function createFixtureServer(initialCount = 10): Promise<FixtureSer
       if (url === '/stamp') return html(STAMP);
       if (url === '/hash') return html(HASH);
       if (url.startsWith('/menu/')) return html(MENU(tail('/menu/')));
+      if (url === '/labels-picker' || url.startsWith('/labels-picker?')) return html(LABEL_PICKER({ escape: !url.includes('escape=0'), stuck: url.includes('stuck=1') }));
       if (url === '/create/form') return html(CREATE);
       if (url === '/hopper') return html(HOPPER);
       if (url.startsWith('/hop/')) {
@@ -1753,6 +1905,8 @@ export async function createFixtureServer(initialCount = 10): Promise<FixtureSer
       if (url === '/picker' || url.startsWith('/picker?')) return html(PICKER(url.includes('open=1')));
       if (url === '/price' || url === '/price?stuck=1') return html(PRICE(url.endsWith('stuck=1')));
       if (url === '/imagelink') return html(IMAGE_LINK);
+      if (url === '/hashposts') return html(HASH_POSTS);
+      if (url.startsWith('/row-save/')) return html(ROW_SAVE(tail('/row-save/')));
       if (url === '/typed-amount' || url === '/typed-amount?sticky=1') return html(TYPED_AMOUNT(url.endsWith('sticky=1')));
       if (url === '/hover-menu') return html(HOVER_MENU);
       if (url === '/counts' || url === '/counts?nolist=1') return html(COUNTS(!url.endsWith('nolist=1')));
@@ -1876,6 +2030,7 @@ export async function createFixtureServer(initialCount = 10): Promise<FixtureSer
     board,
     espo,
     signin,
+    issue,
     reset(n: number) {
       items = Array.from({ length: n }, (_, i) => `Item ${i + 1}`);
       log = [];
@@ -1884,6 +2039,7 @@ export async function createFixtureServer(initialCount = 10): Promise<FixtureSer
       board.card = 4;
       espo.stage = 'Negotiation';
       signin.title = 'EspoCRM';
+      issue.labels = ['bug', 'priority-high'];
     },
     faults: {
       delay(ms, opts = {}) {

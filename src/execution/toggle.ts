@@ -1,6 +1,6 @@
 import type { Page } from 'playwright-core';
 import { DIALOG_LINE, SLOT_LINE, TRANSIENT_LINE, identifiesNothing, liveLines, type LiveLines } from './expect.js';
-import { captureLines, lineShows, type LineDialect } from './snapshot.js';
+import { captureLines, lineShows, presence, type LineDialect } from './snapshot.js';
 
 /**
  * The DISCLOSURE TOGGLE rule both execution targets share. A step compiled
@@ -140,4 +140,40 @@ export function pressHadNoEffect(o: {
 }): boolean {
   if (o.added === null || o.urlBefore !== o.urlAfter) return false;
   return !o.added.length && !(o.removed ?? []).length && !(o.alerts ?? []).length;
+}
+
+/** How long a closing click gets to take the popup off the page (closeBeforeReopen). */
+export const CLOSE_BEFORE_REOPEN_MS = 3_000;
+
+/**
+ * The CLOSED-BEFORE rule both execution targets share (SkillStep.closedBefore,
+ * gitea fwgt11-n1 04-set). The step is a popup opener whose recorded diff
+ * shows the popup was closed just before it: the dead instruction's earlier
+ * opening shut unrecorded — which is when the app committed what was ticked
+ * in it — and this click opened it again. A replay reaches it with that
+ * popup still open, the tick still pending. Skipping it as already showing
+ * (the opener guard) walks on into the pending tick, and a reload later
+ * drops it: labels=[priority-high] where the recording applied bug too.
+ *
+ * So: when the popup shows, click the opener once to close it (`close`, the
+ * step's own resolved target — the same control the recording opened it
+ * with), and wait for its lines to go. Returns null when the popup was not
+ * showing or went; otherwise the stop reason. Never skips: a close that did
+ * not close, or a page that could not be read to prove it did, is a stop.
+ */
+export async function closeBeforeReopen(page: Page, lines: string[], d: LineDialect, close: () => Promise<unknown>, timeoutMs = CLOSE_BEFORE_REOPEN_MS): Promise<string | null> {
+  if (!lines.length) return null;
+  if ((await presence(page, lines, d)) !== 'present') return null;
+  await close();
+  const until = Date.now() + timeoutMs;
+  let seen = await presence(page, lines, d);
+  while (seen !== 'absent' && Date.now() < until) {
+    await new Promise((r) => setTimeout(r, 100));
+    seen = await presence(page, lines, d);
+  }
+  if (seen === 'absent') return null;
+  const line = lines[0].length > 60 ? `${lines[0].slice(0, 60)}…` : lines[0];
+  return seen === 'present'
+    ? `the popup this opener was recorded re-opening from closed (${line}) is still showing after a closing click — the recording shut it before re-opening, and going on would carry its pending selection past the point it was committed`
+    : `could not confirm the popup this opener was recorded re-opening from closed (${line}) went after a closing click — the page could not be read whole — so its pending selection may not have been committed`;
 }

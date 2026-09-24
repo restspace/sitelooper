@@ -40,7 +40,7 @@ import {
   type LineDialect,
   type PageObservation,
 } from '../execution/snapshot.js';
-import { dismissalAlreadyInEffect, effectExpectation, expectedChangesVerdict, liveLines, namesDialogControl } from '../execution/expect.js';
+import { dismissalAlreadyInEffect, effectExpectation, expectedChangesVerdict, liveLines, namesDialogControl, slotActs } from '../execution/expect.js';
 // The observation dialect and the content-expectation rules live in the
 // shared execution modules, where a compiled artifact embeds them too.
 // Re-exported so this module's callers need not know which owns the source.
@@ -49,7 +49,7 @@ export { consequentialExpectations, isEchoLine } from '../execution/expect.js';
 import { candidateNames, echoAt, echoVerdict, markActed, noteCommit, noteInteraction, setsSomething } from '../execution/echo.js';
 import { documentOf, fillLost, guardedTyping, noteFill, rearmStandingFills, restoreStandingFills, standingFills, standingFillsLost } from '../execution/refill.js';
 import { hasTotpMarker, resolveSecrets, resolveSecretsAsync } from '../shared/secrets.js';
-import { hideBefore, hideEffectLines, hideVerdict, pressHadNoEffect, toggleAlreadyShown, toggleEffectLines } from '../execution/toggle.js';
+import { closeBeforeReopen, hideBefore, hideEffectLines, hideVerdict, pressHadNoEffect, toggleAlreadyShown, toggleEffectLines } from '../execution/toggle.js';
 import { mayNavigateToDestination, navigateToDestination, textHeldElsewhere } from '../execution/recover.js';
 import { CONTEXT_CONTRACT, contractOf, contractVerdict, isVerified, originOf, stepsCarryContext, type Skill, type SkillStep } from './store.js';
 import { armPageEffect, describeFramePath, pageIndexVerdict, rootFor, stepEffect, type Root } from '../execution/context.js';
@@ -96,6 +96,14 @@ export interface ReplayOptions {
    * call it — a stray tab a replayed click opens does not move the replay.
    */
   follow?: (page: Page) => void;
+  /**
+   * The procedure chain from this segment on (this one first), for the one
+   * question a missing param asks: does a step of it act by that slot
+   * (slotActs)? A slot unused here but typed by a later segment must refuse
+   * the chain before its first step, not strand it part-way. Absent: this
+   * segment alone.
+   */
+  chain?: ReadonlyArray<Pick<Skill, 'params' | 'preconditions'>>;
   /**
    * Inline healing for a step whose whole chain missed (site B of notes/PLAN-jev.md).
    * Per call, so a test supplies its own; the daemon registers one for the
@@ -510,11 +518,25 @@ export async function replaySkill(
     return res;
   }
 
+  // A missing param refuses the procedure only when a step ACTS by it
+  // (slotActs — the rule the compiled artifact applies to the same slot, and
+  // the daemon's own consumption gate to a missing reference). One that only
+  // the template, the report or a recorded expectation names is run without:
+  // each line carrying it is dropped with a warning at check time
+  // (unfilledSlot), and the replay says so up front, in its own warnings, so
+  // the step's record shows which checks this run could not make. fwod85
+  // 05-open: s_6a1629's v10 sat in the Save step's `- cell "{{v10}}"` only;
+  // the artifact ran and passed, both daemon replays refused the pin.
   const missing = Object.keys(skill.params).filter((p) => !(p in params) || params[p] === '');
-  if (missing.length) {
+  const chain = opts.chain?.length ? opts.chain : [skill];
+  const acting = missing.filter((p) => slotActs(chain, p));
+  if (acting.length) {
     res.refused = true;
-    res.reason = `missing params: ${missing.map((m) => `${m} (e.g. ${JSON.stringify(skill.params[m].example)})`).join(', ')} — nothing was run`;
+    res.reason = `missing params: ${acting.map((m) => `${m} (e.g. ${JSON.stringify(skill.params[m].example)})`).join(', ')} — nothing was run`;
     return res;
+  }
+  for (const m of missing) {
+    res.warnings.push(`param ${m} (e.g. ${JSON.stringify(skill.params[m].example)}) is unbound — no step acts by it, so the procedure runs and every recorded line naming {{${m}}} goes unchecked this run`);
   }
 
   // The segment's gate — where it starts, and whose record it is — runs
@@ -1101,10 +1123,24 @@ export async function replaySkill(
     // replay. Skipped as already in effect. Only popup lines count: a
     // re-usable effect (another row of textboxes) must still be produced.
     const opener = openerLines(step, params);
+    // …except an opener the recording shows re-opening a popup that had SHUT
+    // (SkillStep.closedBefore, gitea fwgt11 04-set): closed first by clicking
+    // it, checked gone, then clicked as recorded — the shared
+    // closeBeforeReopen, which the artifact runs too. Never skipped.
+    if (step.closedBefore && opener.length) {
+      const stop = await closeBeforeReopen(page, opener, dialectOf(step), () => opts.exec(step.tool, args, resolved, { skill: skill.id, step: failIndex }));
+      if (stop) {
+        res.failedAt = failIndex;
+        res.reason = stop;
+        res.lines.push(`${head} → FAILED: ${stop}`);
+        return 'stop';
+      }
+      res.lines.push(`${head} → re-opens a popup the recording shut first: shut if showing, then clicked`);
+    }
     // Asked in the step's own line dialect; only a match skips — a look that
     // could not cover the page clicks, which is the direction this guard
     // already leans (a wrong skip loses the step everything after needs).
-    if (opener.length && (await presentOnPage(page, opener, {}, dialectOf(step)))) {
+    else if (opener.length && (await presentOnPage(page, opener, {}, dialectOf(step)))) {
       res.warnings.push(`step ${tag}: the recorded effect (${clip(opener[0], 60)}) is already showing — a click would toggle it away; skipped as already in effect`);
       res.lines.push(`${head} → skipped (already in effect)`);
       return 'skipped';

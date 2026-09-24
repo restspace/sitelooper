@@ -4,7 +4,8 @@ import { setsSomething } from '../execution/echo.js';
 import { standingFillRole } from '../execution/refill.js';
 import { DEFAULT_ACTION_TIMEOUT_MS } from '../execution/browser.js';
 import { hideEffectLines, toggleEffectLines } from '../execution/toggle.js';
-import { derivesFromParams, reportNeedsPage, templateMarkers, templateSource } from '../execution/report.js';
+import { derivesFromParams, givenPartialReason, givenWarning, reportNeedsPage, templateMarkers, templateSource, typedSlots } from '../execution/report.js';
+import { askedOutputs } from '../daemon/step-verdict.js';
 import { observedNothing } from '../execution/observe.js';
 import { segmentGate } from '../execution/gates.js';
 /**
@@ -29,7 +30,7 @@ import { segmentGate } from '../execution/gates.js';
  */
 import { EXECUTION_MODULES, executionClosure } from './runtime-source.js';
 import { candidateExpr, type LocatorCandidate } from '../daemon/recorder.js';
-import { DIALOG_LINE, SLOT_LINE, TRANSIENT_LINE } from '../execution/expect.js';
+import { DIALOG_LINE, SLOT_LINE, TRANSIENT_LINE, slotActs } from '../execution/expect.js';
 import { identityFields } from '../execution/resolve.js';
 import { originOf } from '../execution/url.js';
 import { describeFramePath, stepEffect } from '../execution/context.js';
@@ -1061,7 +1062,14 @@ const HELPERS: { token: string; source: string[] }[] = [
       ' * HARD, the rest are a plain group; either is looked for first in the lines',
       ' * this step ADDED (capturePageLines before and after, diffed as the recorder',
       ' * diffs its signatures) and then on the live page, as WHOLE snapshot lines:',
-      ' * role, name, state, and the value after the colon. An earlier cut of this',
+      ' * role, name, state, and the value after the colon. The AFTER capture is',
+      ' * `linesAfter`, taken in the settle phase the moment the action settled —',
+      " * where tools.ts runStep takes the daemon's — not a fresh one here, after the",
+      ' * url wait: openproject fwop14 02-create s_459e98/3 saved, showed the new row',
+      ' * as it settled, routed to the record and re-rendered the row, and the',
+      ' * artifact, looking only after its url wait, stopped on a line the daemon had',
+      ' * seen (n2, n3 passed). With no settle capture each poll captures afresh.',
+      ' * An earlier cut of this',
       ' * file rebuilt each recorded line as a Playwright locator and asserted it',
       ' * visible, which never looked past the name — `- combobox "Project": {{v1}}`',
       ' * passed on any visible Project combobox whatever it showed. Polled for',
@@ -1081,13 +1089,14 @@ const HELPERS: { token: string; source: string[] }[] = [
       '  ctx: { tag: string; tool: string; value?: string; positionalResolution: boolean },',
       '  linesBefore: string[] | null,',
       '  dialect: LineDialect = 1,',
+      '  linesAfter: string[] | null = null,',
       '): Promise<ChangeVerdict> {',
       '  let last: ChangeVerdict = { warnings: [] };',
       '  await expect',
       '    .poll(',
       '      async () => {',
       '        last = await expectedChangesVerdict(recorded, p, ctx, {',
-      '          added: addedLines(linesBefore, await capturePageLines(page, dialect)),',
+      '          added: addedLines(linesBefore, linesAfter ?? (await capturePageLines(page, dialect))),',
       '          live: () => captureLines(page, dialect),',
       '        });',
       '        return last.stop ?? null;',
@@ -1546,11 +1555,12 @@ function originSource(step: SkillStep): string {
  * replay does, and reads the WHOLE line — a slot in the value after the colon
  * is checked, where the locator union this replaced only ever found the name.
  *
- * `linesBefore` is the pre-action capture emitSkillStep takes in `prepare`.
+ * `linesBefore` is the pre-action capture emitSkillStep takes in `prepare`,
+ * `linesAfter` the one it takes in `settle` as the action settles (fwop14).
  * A recorded dialog that did not open comes back as `absentDialog`, which the
  * body remembers for the steps that were going to act inside it.
  */
-function expectationLines(step: SkillStep, ctx: Ctx, out: string[], linesBefore: string): string | null {
+function expectationLines(step: SkillStep, ctx: Ctx, out: string[], linesBefore: string, linesAfter: string): string | null {
   const recorded = recordedChanges(step);
   if (!recorded.length) return null;
   noteSlots(recorded, ctx);
@@ -1560,7 +1570,7 @@ function expectationLines(step: SkillStep, ctx: Ctx, out: string[], linesBefore:
   // time (replay's own per-step flag), not a compile-time guess over the chain.
   const call =
     `await expectChanges(page, [${recorded.map(q).join(', ')}], p, ` +
-    `{ tag: ${q(where)}, tool: ${q(step.tool)}${value}, positionalResolution: ${ctx.positional ?? 'false'} }, ${linesBefore}${dialectArg(step)})`;
+    `{ tag: ${q(where)}, tool: ${q(step.tool)}${value}, positionalResolution: ${ctx.positional ?? 'false'} }, ${linesBefore}, ${step.expect?.lineDialect === 2 ? 2 : 1}, ${linesAfter})`;
   out.push("// The step's recorded page changes, judged by the daemon's own effect gate (see expectChanges):");
   for (const line of recorded) out.push(`//   ${commentSafe(line)}`);
   // Only a plain `- dialog "…"` line can leave a dialog absent (the verdict's
@@ -1634,13 +1644,28 @@ function noteSlots(value: unknown, ctx: Ctx): void {
  * resolves is a stop in both runners, and a guard that swallowed the miss
  * would report skipped-and-green where the daemon reports a stop.
  */
-function wrapAlreadyInEffect(step: SkillStep, ctx: Ctx, out: string[], actionAt: number): void {
+function wrapAlreadyInEffect(step: SkillStep, ctx: Ctx, out: string[], actionAt: number, target: string): void {
   const opener = openerExpectations(step);
   if (!opener.length) {
     wrapToggle(step, ctx, out, actionAt);
     return;
   }
   noteSlots(opener, ctx);
+  if (step.closedBefore) {
+    // SkillStep.closedBefore (gitea fwgt11 04-set): the recording shut this
+    // popup before re-opening it, so it is shut first when it shows — by
+    // clicking this very opener — checked gone, and then clicked as recorded;
+    // never skipped (the shared closeBeforeReopen, as replay runs it).
+    out.splice(
+      actionAt,
+      0,
+      '// The recording shut this popup before re-opening it (SkillStep.closedBefore): shut it',
+      '// first if it shows, prove it went, then click as recorded — never skipped as already showing:',
+      ...opener.map((l) => `//   ${commentSafe(l)}`),
+      `{ const closedFirst = await closeBeforeReopen(page, liveLines([${opener.map(q).join(', ')}], p), ${step.expect?.lineDialect === 2 ? 2 : 1}, () => click(${target})); if (closedFirst) throw new Error(closedFirst); }`,
+    );
+    return;
+  }
   const where = `${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex}`;
   const acted = out
     .splice(actionAt)
@@ -2229,7 +2254,11 @@ function emitSkillStep(recorded: SkillStep, segment: SpecSegment, index: number,
   // in `prepare`, after the settle, in the same dialect it will judge by.
   // A click marked to press again (repeatIfNoEffect) needs the pre-action lines too: its no-effect test diffs them.
   const linesBefore = recordedChanges(step).length || (step.tool === 'click' && step.repeatIfNoEffect) ? `linesBefore${ctx.urls}` : null;
-  const changes = linesBefore ? expectationLines(step, ctx, checks, linesBefore) : null;
+  // ...and the lines AFTER it, captured as the action settles (fwop14): the
+  // page the daemon's diff is taken from, before the alert settle, the bind's
+  // url wait and the url gate move it on.
+  const linesAfter = linesBefore && recordedChanges(step).length ? `linesAfter${ctx.urls}` : null;
+  const changes = linesBefore && linesAfter ? expectationLines(step, ctx, checks, linesBefore, linesAfter) : null;
   // Replay's expectedRemovals gate, after the page changes and before the
   // alerts: a hide whose lines all survive the click did not have its effect.
   const hidden = hideEffectLines(step);
@@ -2278,6 +2307,7 @@ function emitSkillStep(recorded: SkillStep, segment: SpecSegment, index: number,
     `let ${urlBefore} = '';`,
     ...(alerts ? [`let ${alerts}: string[] = [];`, `let ${alertsAfter}: ObservedAlerts | null = null;`] : []),
     ...(linesBefore ? [`let ${linesBefore}: string[] | null = null;`] : []),
+    ...(linesAfter ? [`let ${linesAfter}: string[] | null = null;`] : []),
     ...(nav ? [`let ${nav}: NavigationTarget = { url: '' };`] : []),
     ...(positional ? [`let ${positional} = false;`] : []),
     ...(refill ? [`let ${refill.doc}: number | null = null;`] : []),
@@ -2308,6 +2338,9 @@ function emitSkillStep(recorded: SkillStep, segment: SpecSegment, index: number,
     ...(observed
       ? [`    if (${observed}) await ${observed}.settle();`, `    else if (page.url() !== ${urlBefore}) await settle(page);`]
       : [`    if (page.url() !== ${urlBefore}) await settle(page);`]),
+    // The page-change observation too, first: the capture tools.ts runStep
+    // takes the moment the action settled, which the daemon's diff is (fwop14).
+    ...(linesAfter ? [`    ${linesAfter} = await capturePageLines(page${dialectArg(step)});`] : []),
     // The alert observation belongs to the settle phase, not to verify:
     // taken right after the action has settled, before the url wait.
     ...(alerts ? [`    ${alertsAfter} = await settledAlerts(page${dialectArg(step)});`] : []),
@@ -2760,7 +2793,7 @@ function emitSkillAction(step: SkillStep, segment: SpecSegment, index: number, c
   if (ctx.landing) {
     out.splice(actionAt, 0, `${ctx.landing} = await armPageEffect(page, ${JSON.stringify(stepEffect(step))}, ${q(`${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex}`)});`);
   }
-  wrapAlreadyInEffect(step, ctx, out, actionAt);
+  wrapAlreadyInEffect(step, ctx, out, actionAt, target);
   // A flagged step's `pick` carries the note in its own throw (actionTarget),
   // but the ACTION after it can fail too — a click that timed out on what
   // resolved says only that Playwright waited — and that failure must say
@@ -3159,7 +3192,10 @@ function satisfiedGuard(step: SpecStep, ctx: Ctx, consumed: ReadonlySet<string> 
   for (const [label, value] of templated) {
     noteSlots(value, ctx);
     const fn = consumed.has(label) ? 'referenceValue' : 'templateValue';
-    out.push(`  { const value = ${fn}(${q(value)}, p, satisfiedShown, { literal: true }); if (value !== null) outputs[${q(`${step.id}.${label}`)}] = value; }`);
+    // Nothing ran, so nothing was typed or read: a param-only value stands on
+    // this page alone (round 60, fwgt11), as the daemon's guard asks it.
+    const given = fn === 'templateValue' ? ', given: { typed: [], live: [] }' : '';
+    out.push(`  { const value = ${fn}(${q(value)}, p, satisfiedShown, { literal: true${given} }); if (value !== null) outputs[${q(`${step.id}.${label}`)}] = value; }`);
   }
   out.push('  return;', '}');
   return out;
@@ -3188,15 +3224,38 @@ function reportTemplateLines(step: SpecStep, ctx: Ctx, consumed: ReadonlySet<str
   // Recorded text around a slot publishes only where this page shows it
   // (fwrd86 06-delete: "Created: 2026-09-23"), so the page is looked at once,
   // after the last segment — where the daemon looks, after the chain.
-  const needsPage = reportNeedsPage(entries.map(([, template]) => template));
+  //
+  // A value made only of params is published only where this run observed it
+  // (round 60, fwgt11 07-add: "{{v7}}" published "bug" beside a live
+  // labels_shown of "priority-high"): the page shows it, a read of the step
+  // returned it, or the step's procedure typed it — every segment's fills, as
+  // the daemon counts its chain's (typedSlots).
+  const typed = typedSlots(step.segments.flatMap((segment) => segment.steps));
+  const needsPage = reportNeedsPage(
+    entries.map(([, template]) => template),
+    typed,
+  );
   if (needsPage) out.push('const reportShown = await shownForReport(page).catch(() => null);');
+  const shown = needsPage ? 'reportShown' : 'null';
+  // What the step's own reads returned, echoes aside: the daemon's confident values.
+  out.push(
+    `const reportGiven = { typed: ${JSON.stringify(typed)}, live: Object.entries(outputs).filter(([k, v]) => k.startsWith(${q(`${step.id}.`)}) && typeof v === 'string' && !run.echoed.includes(k)).map(([, v]) => v as string) };`,
+  );
+  // Asked for by the instruction (step-verdict.ts askedOutputs, as the flow
+  // runner's partialReasons asks it): withheld, the step is partial.
+  const asked = new Set(askedOutputs(step.instruction, step.outputs ?? []));
   for (const [label, template] of entries) {
     noteSlots(template, ctx);
     const key = q(`${step.id}.${label}`);
     // A consumed key falls back to its one slot (referenceValue): a later
-    // step's reference, never a finding — the daemon banks the same.
-    const fn = consumed.has(label) ? 'referenceValue' : 'templateValue';
-    out.push(`{ const value = ${fn}(${q(template)}, p, ${needsPage ? 'reportShown' : 'null'}); if (value !== null && outputs[${key}] === undefined) outputs[${key}] = value; }`);
+    // step's reference, never a finding — the daemon banks the same, and
+    // still says the report withheld it.
+    const value = consumed.has(label) ? `referenceValue(${q(template)}, p, ${shown})` : `templateValue(${q(template)}, p, ${shown}, { given: reportGiven })`;
+    const said = [`logWarning(${q(`${step.id}: ${givenWarning(label)}`)});`];
+    if (asked.has(label)) said.push(`logWarning(${q(`${step.id}: PARTIAL — ${givenPartialReason(label)}`)});`);
+    out.push(
+      `if (outputs[${key}] === undefined) { if (withheldAsGiven(${q(template)}, p, ${shown}, reportGiven)) { ${said.join(' ')} } const value = ${value}; if (value !== null) outputs[${key}] = value; }`,
+    );
   }
   return out;
 }
@@ -3455,8 +3514,8 @@ function refExpr(ref: string, vars: Set<string>, by?: string): string {
 /**
  * Can a missing value in this slot change what the step DOES?
  *
- * The port of `ignorableRefs` (src/skills/flow.ts:1083), derived from the same
- * two facts it reads: a slot some recorded step types or locates by
+ * The shared `slotActs` (src/execution/expect.ts), which `ignorableRefs`
+ * (src/skills/flow.ts) and replay's missing-param refusal also ask. Two facts: a slot some recorded step types or locates by
  * (`SkillParam.usedIn`), or one naming the record the procedure must find (a
  * `{{vN}}` inside `preconditions.requireText`). Everything else — a tag the
  * instruction mentions for context, a price quoted from the recording —
@@ -3465,11 +3524,7 @@ function refExpr(ref: string, vars: Set<string>, by?: string): string {
  * no step used.
  */
 function usedSlot(step: SpecStep, slot: string): boolean {
-  return step.segments.some(
-    (s) =>
-      (s.params[slot]?.usedIn.length ?? 0) > 0 ||
-      (s.preconditions.requireText ?? []).some((marker) => marker.includes(`{{${slot}}}`)),
-  );
+  return slotActs(step.segments, slot);
 }
 
 /**
@@ -3650,6 +3705,35 @@ function callArgs(step: SpecStep, slots: string[], vars: Set<string>, warnings: 
     }
     const example = step.segments.map((s) => s.params[slot]?.example).find((e) => typeof e === 'string');
     if (example === undefined) return `${slot}: ''`;
+    // A slot with a recorded ORIGIN came from another step or a var: its
+    // recorded example is run 1's value of something every run makes afresh,
+    // so it is never inlined. Left unbound — not passed at all, exactly as
+    // daemon replay leaves the param absent (replay.ts, slotActs): a slot no
+    // step acts by keeps its marker, and every line naming it is dropped with
+    // a warning at check time (unfilledSlot) — never '', which a line like
+    // `- cell "{{v10}}"` would fill to `- cell ""` and drop silently as naming
+    // nothing. One a step acts by refuses the compile — replay refuses the same pin
+    // and hands the step to the model, and the artifact has no model. fwod85
+    // 05-open: v10 (`output:i4:line2_quantity`) was inlined as "2.00" and the
+    // artifact passed while both replays refused.
+    const origin = step.segments.map((s) => s.params[slot]?.binding).find((b) => typeof b === 'string' && b);
+    if (origin) {
+      if (usedSlot(step, slot)) {
+        diagnostics.push({
+          code: 'unbound-slot',
+          step: step.id,
+          what: `slot ${slot} (origin ${origin}) has no flow binding, and ${step.id}'s procedure acts by it`,
+          why: `the flow binds nothing to ${slot}, and its recorded example ${JSON.stringify(example)} is run 1's value of ${origin}, not this run's. Daemon replay refuses this pin for the same missing param and hands the step to the model; a compiled artifact has no model to hand it to.`,
+          fix: `re-export or re-record the flow so ${step.id} binds ${slot} (\`sitelooper rerecord <flow file> ${step.id}\`)`,
+          action: { command: 'rerecord', args: [step.id], step: step.id },
+          severity: 'error',
+          line: `step ${step.id} slot ${slot} (origin ${origin}) has no flow binding and a step acts by it`,
+        });
+      } else {
+        warnings.push(`${step.id}: slot ${slot} (origin ${origin}) has no flow binding — left unbound, lines naming it are not checked`);
+      }
+      return null;
+    }
     // No flow binding: the recording's own value is the only one there is,
     // and inlining it silently is how a replay comes to work the recorded
     // run's record. Emitted, but the caller is told.
@@ -3689,8 +3773,15 @@ function consumedUrlRefs(spec: SpecFlow): Map<string, string[]> {
   return new Map([...wanted].map(([id, outs]) => [id, [...outs].sort()]));
 }
 
-/** The lines that publish one step's end-url outputs, or none. */
-function urlOutputLines(stepId: string, outs: string[] | undefined): string[] {
+/**
+ * The lines that publish one step's end-url outputs, or none. An output the
+ * step minted from a url it VISITED (SpecStep.urlRoutes, fwgh14) is published
+ * through the shared visitedUrlPart over the step's url trail — its end url's
+ * part when there is one, else the last url on the recorded route — as the
+ * daemon's flow runner publishes it (server.ts captureUrlOutputs); the trail
+ * is started at the top of the body (urlTrailLines).
+ */
+function urlOutputLines(stepId: string, outs: string[] | undefined, routes?: Record<string, string>): string[] {
   if (!outs?.length) return [];
   const lines = ['// Later steps refer to this step by where it left the browser, so publish its'];
   lines.push('// end url the way the flow runner does (urlOutputs / consumedUrlOutputs in');
@@ -3698,6 +3789,7 @@ function urlOutputLines(stepId: string, outs: string[] | undefined): string[] {
   for (const out of outs) {
     const key = `${stepId}.${out}`;
     if (out === 'url') lines.push(`outputs[${q(key)}] = page.url();`);
+    else if (routes?.[out]) lines.push(`outputs[${q(key)}] = visitedUrlPart(trail.urls, page.url(), ${q(out.slice('url.'.length))}, ${q(routes[out])}) ?? '';`);
     // No urlBefore: nothing here acted, so the wait is simply for the part to
     // be there at all — an SPA can update its url a beat after the page itself
     // settles, which is what consumedUrlOutputs waits out.
@@ -3789,8 +3881,16 @@ export function emitFlowFile(spec: SpecFlow, o: EmitOptions): { source: string; 
       }
       const templated = reportTemplateLines(step, ctx, consumed);
       if (templated.length) lines.push('', ...templated);
-      const published = urlOutputLines(step.id, urlRefs.get(step.id));
+      const routes = step.urlRoutes;
+      const consumedRoutes = (urlRefs.get(step.id) ?? []).some((out) => routes?.[out]);
+      const published = urlOutputLines(step.id, urlRefs.get(step.id), routes);
       if (published.length) lines.push('', ...published);
+      // The url trail a mid-step url output is published from, kept from the
+      // top of the body as the flow runner keeps it (server.ts urlTrail).
+      if (consumedRoutes) {
+        lines.unshift("// The urls this step visits: a url output it minted mid-step is published from them (fwgh14).", 'const trail = urlTrail(page);', '');
+        lines.push('trail.stop();');
+      }
       // The one piece of state a body keeps between its steps: a recorded
       // dialog that did not open (see expectationLines), consulted by every
       // later step before it resolves — as runOneStep keeps it.
