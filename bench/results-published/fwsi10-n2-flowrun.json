@@ -1,0 +1,177 @@
+{
+  "flow": "fwsi10",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_71d380; observed dashboard_page_title=Dashboard\n                :: Bench Assets, page_title=Bench Assets.",
+      "values": {
+        "dashboard_page_title": "Dashboard\n                :: Bench Assets",
+        "page_title": "Bench Assets"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "5/5",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-find",
+      "status": "success",
+      "summary": "Replayed stored procedure s_aaabf8; observed SEED-0001=Seed: Reception Laptop, SEED-0002=Seed: Training Laptop, SEED-0003=Seed: Spare Laptop, total_rows_on_page=3, seed_assets_1_asset_tag=SEED-0001, seed_assets_2_asset_tag=SEED-0002, seed_assets_3_asset_tag=SEED-0003, page_title=Bench Assets, seed_assets_1_name=Seed: Reception Laptop, seed_assets_2_name=Seed: Training Laptop, seed_assets_3_name=Seed: Spare Laptop.",
+      "values": {
+        "SEED-0001": "Seed: Reception Laptop",
+        "SEED-0002": "Seed: Training Laptop",
+        "SEED-0003": "Seed: Spare Laptop",
+        "total_rows_on_page": "3",
+        "seed_assets_1_asset_tag": "SEED-0001",
+        "seed_assets_2_asset_tag": "SEED-0002",
+        "seed_assets_3_asset_tag": "SEED-0003",
+        "page_title": "Bench Assets",
+        "seed_assets_1_name": "Seed: Reception Laptop",
+        "seed_assets_2_name": "Seed: Training Laptop",
+        "seed_assets_3_name": "Seed: Spare Laptop"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "12/12",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "Continuing from the partially-replayed chain (the create form was still open and unsaved — its name/model/status/location/date fields had to be completed), I finished the Create Asset form and saved it once: name \"fwsi10-n2 Bench Asset\", model \"Bench Laptop Model\" (chosen from the searchable model dropdown, which offered \"Bench Laptops - Bench Manufacturer Bench Laptop Model\"), status \"Ready to Deploy\", Default Location \"Bench Office\", purchase date 2026-03-15. The earlier failed datepicker-day click did not matter — the Purchase Date field held 2026-03-15 before saving and the saved record shows \"Purchased 2026-03-15\". Saving produced \"Asset with tag BA-00005 was created successfully\" and the asset page /hardware/5 (heading \"Assets fwsi10-n2 Bench Asset #BA-00005 - Bench Laptop Model\") confirms every field. No existing duplicate was found and nothing else was modified.",
+      "values": {
+        "asset_tag": "BA-00005",
+        "asset_name": "fwsi10-n2 Bench Asset",
+        "model": "Bench Laptop Model",
+        "model_family": "Bench Laptops",
+        "manufacturer": "Bench Manufacturer",
+        "status": "Ready to Deploy deployable",
+        "default_location": "Bench Office",
+        "purchase_date": "Purchased 2026-03-15 - 6 months 1 week ago",
+        "created_by": "Bench Admin",
+        "created": "2026-09-24 12:32 PM",
+        "page_heading": "Assets fwsi10-n2 Bench Asset #BA-00005 - Bench Laptop Model",
+        "save_alert": "Success: Asset with tag BA-00005 was created successfully.",
+        "model_dropdown_placeholder": "Select a Model",
+        "status_dropdown_placeholder": "Select Status",
+        "default_location_dropdown_placeholder": "Select a Location",
+        "purchase_date_field": "2026-03-15",
+        "ref": "fwsi10-n2"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_6cdda3 stopped at step 7 — no element matched any known locator for target (tried 4: page.locator('div > div:nth-of-type(1) > table > tbody > tr:nth-of-type(3) > td:nth-of-type(1)'), page.locator('.datepicker-days td.day:not(.old):not(.new):has-text(\"15\")'), page.getByText('15', { exact: true }), …)",
+      "replayed": "6/15",
+      "repaired": false,
+      "turns": 23,
+      "unreported": [
+        "model_as_displayed",
+        "status_as_displayed",
+        "category",
+        "purchase_date_value",
+        "asset_view_url",
+        "run_id"
+      ]
+    },
+    {
+      "id": "04-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_c9269a; observed run_id=fwsi10-n2, asset_tag=BA-00005, asset_name=fwsi10-n2 Bench Asset, checkout_note=Checkout for run fwsi10-n2, default_location=Bench Office.",
+      "unanswered": [
+        "checked_out_to"
+      ],
+      "values": {
+        "run_id": "fwsi10-n2",
+        "asset_tag": "BA-00005",
+        "asset_name": "fwsi10-n2 Bench Asset",
+        "checkout_note": "Checkout for run fwsi10-n2",
+        "default_location": "Bench Office"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "14/14",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "05-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_a951a0; observed run_id=fwsi10-n2, history_checkout_row_2=2026-09-24 12:32 PM Bench Admincheckout fwsi10-n2 Bench Asset #BA-00005 - Bench Laptop Model Bench Assignee1Checkout for run fwsi10-n2Current Location: [id: 1] Bench Office, checkout_note=Checkout for run fwsi10-n2, model=Bench Laptop Model, asset_tag=BA-00005, asset_name=fwsi10-n2 Bench Asset, page_heading=Assets  fwsi10-n2 Bench Asset #BA-00005 - Bench Laptop Model, model_category=Bench Laptops, model_manufacturer=Bench Manufacturer, status_extra_label=Deployed, default_location=Bench Office, purchase_date=Purchased 2026-03-15 - 6 months 1 week ago, history_row_date=2026-09-24 12:32 PM, history_row_action=checkout, history_row_asset=fwsi10-n2 Bench Asset #BA-00005 - Bench Laptop Model, status_label=Ready to Deploy, checked_out_to=Bench Assignee, last_checkout=2026-09-24 7 seconds ago, expected_checkin=N/A, checkouts_count=1.",
+      "values": {
+        "run_id": "fwsi10-n2",
+        "history_checkout_row_2": "2026-09-24 12:32 PM Bench Admincheckout fwsi10-n2 Bench Asset #BA-00005 - Bench Laptop Model Bench Assignee1Checkout for run fwsi10-n2Current Location: [id: 1] Bench Office",
+        "checkout_note": "Checkout for run fwsi10-n2",
+        "model": "Bench Laptop Model",
+        "asset_tag": "BA-00005",
+        "asset_name": "fwsi10-n2 Bench Asset",
+        "page_heading": "Assets  fwsi10-n2 Bench Asset #BA-00005 - Bench Laptop Model",
+        "model_category": "Bench Laptops",
+        "model_manufacturer": "Bench Manufacturer",
+        "status_extra_label": "Deployed",
+        "default_location": "Bench Office",
+        "purchase_date": "Purchased 2026-03-15 - 6 months 1 week ago",
+        "history_row_date": "2026-09-24 12:32 PM",
+        "history_row_action": "checkout",
+        "history_row_asset": "fwsi10-n2 Bench Asset #BA-00005 - Bench Laptop Model",
+        "status_label": "Ready to Deploy",
+        "checked_out_to": "Bench Assignee",
+        "last_checkout": "2026-09-24 7 seconds ago",
+        "expected_checkin": "N/A",
+        "checkouts_count": "1"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "23/23",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 5,
+  "total": 5,
+  "repinned": 0,
+  "drift": 1,
+  "driftTickets": [
+    {
+      "flow": "fwsi10",
+      "step": "03-create",
+      "skill": "s_6cdda3",
+      "atStep": "7",
+      "key": "target",
+      "similarity": 1.001,
+      "missedLocator": "page.locator('div > div:nth-of-type(1) > table > tbody > tr:nth-of-type(3) > td:nth-of-type(1)')",
+      "fallbackUsed": null,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:8098/hardware/create",
+      "pageUrl": "http://127.0.0.1:8098/hardware/create"
+    }
+  ],
+  "wallMs": 115951,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 367851,
+    "completionTokens": 9213,
+    "cachedTokens": 339584
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 367851,
+      "completionTokens": 9213,
+      "cachedTokens": 339584
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

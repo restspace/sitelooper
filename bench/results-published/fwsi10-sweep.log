@@ -1,0 +1,142 @@
+
+[sweep] run 1/3: fwsi10-n1 (store: /home/user/sitelooper/bench/results/fwsi10-skills)
+[harness] snipeit: defaulting APP_URL
+[harness] snipeit: defaulting APP_EMAIL
+[harness] snipeit: defaulting APP_PASSWORD
+[reset] snipeit: no leftover bench assets
+[harness] snipeit responded 302 at http://127.0.0.1:8098/
+stopped: fwsi10-n1
+  flow "fwsi10" saved: 5 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwsi10.json
+  warning: note: 01-signin no longer publishes login_url, assets_count, licenses_count, accessories_count, consumables_count, components_count, people_count, asset_categories, seed_asset_tag_range — no replay reads them from the page and the recording showed no line to read
+  warning: warning: 03-create's instruction asks to report default_location_as_displayed, and no replay can publish it: nothing in its procedure reads it from the page, so export dropped it — re-record the step so the value is read, not only reported
+  warning: note: 03-create no longer publishes create_alert, seed_asset_tag_range — no replay reads them from the page and the recording showed no line to read
+  warning: warning: 04-create's instruction asks to report checked_out_to, and no replay can publish it: nothing in its procedure reads it from the page, so export dropped it — re-record the step so the value is read, not only reported
+  warning: note: 04-create no longer publishes status_after_checkout, success_alert — no replay reads them from the page and the recording showed no line to read
+  warning: note: 05-open no longer publishes history_checkout_row, model_as_displayed, checked_out_to_as_displayed, history_row_admin — no replay reads them from the page and the recording showed no line to read
+  warning: note: 02-find: added a read for seed_assets_1_name to s_aaabf8 (page.getByRole('link', { name: 'Seed: Reception Laptop', exact: true }); seen on the next instruction's start page)
+  warning: note: 02-find: added a read for seed_assets_2_name to s_aaabf8 (page.getByRole('link', { name: 'Seed: Training Laptop', exact: true }); seen on the next instruction's start page)
+  warning: note: 02-find: added a read for seed_assets_3_name to s_aaabf8 (page.getByRole('link', { name: 'Seed: Spare Laptop', exact: true }); seen on the next instruction's start page)
+  warning: warning: 225 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[1].outputs[0]: "SEED-0001" (output) in "SEED-0001"
+  flow.steps[1].outputs[1]: "SEED-0002" (output) in "SEED-0002"
+  flow.steps[1].outputs[2]: "SEED-0003" (output) in "SEED-0003"
+  flow.steps[2].instruction: "Bench Laptop Model" (output) in "Create a new asset (hardware) in this Snipe-IT instance: name it exactly '{{runid}} Bench Asset', model 'Bench Laptop Model' (choose from the searchable model d"
+  flow.steps[2].instruction: "Ready to Deploy" (output) in "Create a new asset (hardware) in this Snipe-IT instance: name it exactly '{{runid}} Bench Asset', model 'Bench Laptop Model' (choose from the searchable model d"
+arm=sitelooper model=z-ai/glm-5.3 runid=fwsi10-n1 stop=completed
+turns=7 wall=326.8s
+commands=6 cmdTime=273.3s cmdBytes=8488 timeouts=0
+orchestrator in=9619 cw=0 cr=17344 out=1448
+inner prompt=1732540 cached=1614848 completion=21431
+spend=$0.06 maxUsd=3
+learn: A_n=0 replayed=0/5 full=0 repaired=0 compiled=5 variants=0
+-> /home/user/sitelooper/bench/results/fwsi10-n1-sitelooper-result.json
+
+fwsi10-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed tags and names reported
+  obj 2: PASS — BA-00004, model=Bench Laptop Model, status=Ready to Deploy
+  obj 3: PASS — default location=Bench Office
+  obj 4: PASS — purchase date=2026-03-15
+  obj 5: PASS — assigned to=Bench Assignee (user bench-assignee)
+  obj 6: PASS — 1 checkout(s), 1 with a note carrying the runid
+  obj 7: PASS — asset tag BA-00004 reported
+
+[sweep] run 2/3: fwsi10-n2 (replay flow fwsi10, no orchestrator)
+[reset] snipeit: deleted 1 leftover bench asset(s)
+[sweep] fwsi10-n2: 1 drift ticket(s) → fwsi10-n2-drift.json
+
+fwsi10-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed tags and names reported
+  obj 2: PASS — BA-00005, model=Bench Laptop Model, status=Ready to Deploy
+  obj 3: PASS — default location=Bench Office
+  obj 4: PASS — purchase date=2026-03-15
+  obj 5: PASS — assigned to=Bench Assignee (user bench-assignee)
+  obj 6: PASS — 1 checkout(s), 1 with a note carrying the runid
+  obj 7: PASS — asset tag BA-00005 reported
+
+[sweep] run 3/3: fwsi10-n3 (replay flow fwsi10, no orchestrator)
+[reset] snipeit: deleted 1 leftover bench asset(s)
+[sweep] fwsi10-n3: 1 drift ticket(s) → fwsi10-n3-drift.json
+
+fwsi10-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed tags and names reported
+  obj 2: PASS — BA-00006, model=Bench Laptop Model, status=Ready to Deploy
+  obj 3: PASS — default location=Bench Office
+  obj 4: PASS — purchase date=2026-03-15
+  obj 5: PASS — assigned to=Bench Assignee (user bench-assignee)
+  obj 6: PASS — 1 checkout(s), 1 with a note carrying the runid
+  obj 7: PASS — asset tag BA-00006 reported
+
+Learning sweep fwsi10 (K=3)
+┌─────────┬───┬─────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid       │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼─────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwsi10-n1' │ '7/7'    │ 'completed' │ 7     │ 6    │ 0.06      │ 0   │ '0/5'        │ 327    │
+│ 1       │ 2 │ 'fwsi10-n2' │ '7/7'    │ 'success'   │ 23    │ 5    │ 0.0108    │ 0.8 │ '5/5 (flow)' │ 116    │
+│ 2       │ 3 │ 'fwsi10-n3' │ '7/7'    │ 'success'   │ 29    │ 5    │ 0.0118    │ 0.8 │ '5/5 (flow)' │ 180    │
+└─────────┴───┴─────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:8098
+  s_0a890d  validated    1 steps  3/3 (100%)
+           Go to the Assets list page (Assets -> List All or /hardware). Find every asset whose name starts with 'Seed:'.…
+  s_230c92  validated    1 steps  3/3 (100%)
+           On the asset page for asset '{{v1}}' (asset tag {{v3}}, at /hardware/4), perform a Check Out: check the asset …
+  s_2b5f1a  validated    1 steps  3/3 (100%)
+           On the asset page for asset '{{v1}}' (asset tag {{v3}}, at /hardware/4), perform a Check Out: check the asset …
+  s_3413d6  validated    1 steps  3/3 (100%)
+           On the asset page for asset '{{v1}}' (asset tag {{v3}}, at /hardware/4), perform a Check Out: check the asset …
+  s_37ba54  validated    1 steps  3/3 (100%)
+           On the asset page for asset '{{v1}}' (asset tag {{v3}}, at /hardware/4), perform a Check Out: check the asset …
+  s_3b7257  validated    1 steps  3/3 (100%)
+           On the asset page for asset '{{v1}}' (asset tag {{v3}}, at /hardware/4), perform a Check Out: check the asset …
+  s_6cdda3  demoted     15 steps  1/3 (33%)
+           Create a new asset (hardware) in this Snipe-IT instance: name it exactly '{{v2}}', model 'Bench Laptop Model' …
+  s_71d380  validated    2 steps  3/3 (100%)
+           Sign in to this Snipe-IT app with username {{v1}} and password {{v2}} (type the password text exactly as given…
+  s_8dc3eb  validated    1 steps  3/3 (100%)
+           Create a new asset (hardware) in this Snipe-IT instance: name it exactly '{{v2}}', model 'Bench Laptop Model' …
+  s_9574d2  validated    3 steps  3/3 (100%)
+           Sign in to this Snipe-IT app with username {{v1}} and password {{v2}} (type the password text exactly as given…
+  s_a611ff  validated    2 steps  3/3 (100%)
+           Open the asset page for asset tag {{v1}} (asset '{{v2}}') and verify, reading only: (a) the asset tag exactly …
+  s_a951a0  validated   21 steps  3/3 (100%)
+           Open the asset page for asset tag {{v1}} (asset '{{v2}}') and verify, reading only: (a) the asset tag exactly …
+  s_aaabf8  validated   11 steps  3/3 (100%)
+           Go to the Assets list page (Assets -> List All or /hardware). Find every asset whose name starts with 'Seed:'.…
+  s_c9269a  validated    4 steps  3/3 (100%)
+           On the asset page for asset '{{v1}}' (asset tag {{v3}}, at /hardware/4), perform a Check Out: check the asset …
+  s_e92830  validated    5 steps  3/3 (100%)
+           On the asset page for asset '{{v1}}' (asset tag {{v3}}, at /hardware/4), perform a Check Out: check the asset …
+  s_0c3fb2  provisional  5 steps  1/1 (100%)  variant of s_6cdda3
+           Create a new asset (hardware) in this Snipe-IT instance: name it exactly '{{v2}}', model 'Bench Laptop Model' …
+  s_1a6290  provisional  1 steps  1/1 (100%)
+           Create a new asset (hardware) in this Snipe-IT instance: name it exactly '{{v2}}', model 'Bench Laptop Model' …
+  s_230d1b  provisional  9 steps  1/1 (100%)  variant of s_6cdda3
+           Create a new asset (hardware) in this Snipe-IT instance: name it exactly '{{v2}}', model 'Bench Laptop Model' …
+  s_37e631  provisional  1 steps  1/1 (100%)
+           Create a new asset (hardware) in this Snipe-IT instance: name it exactly '{{v2}}', model 'Bench Laptop Model' …
+  s_45d735  provisional  8 steps  1/1 (100%)
+           Create a new asset (hardware) in this Snipe-IT instance: name it exactly '{{v2}}', model 'Bench Laptop Model' …
+  s_6aece6  provisional  1 steps  1/1 (100%)
+           Create a new asset (hardware) in this Snipe-IT instance: name it exactly '{{v2}}', model 'Bench Laptop Model' …
+  s_898b4f  provisional  1 steps  1/1 (100%)  variant of s_6cdda3
+           Create a new asset (hardware) in this Snipe-IT instance: name it exactly '{{v2}}', model 'Bench Laptop Model' …
+  s_90668b  provisional 16 steps  1/1 (100%)  variant of s_6cdda3
+           Create a new asset (hardware) in this Snipe-IT instance: name it exactly '{{v2}}', model 'Bench Laptop Model' …
+  s_96c5f3  provisional  5 steps  1/1 (100%)
+           Create a new asset (hardware) in this Snipe-IT instance: name it exactly '{{v2}}', model 'Bench Laptop Model' …
+  s_a62c2c  provisional 18 steps  1/1 (100%)
+           Create a new asset (hardware) in this Snipe-IT instance: name it exactly '{{v2}}', model 'Bench Laptop Model' …
+  s_b15400  provisional  2 steps  1/1 (100%)
+           Create a new asset (hardware) in this Snipe-IT instance: name it exactly '{{v2}}', model 'Bench Laptop Model' …
+  s_b5a591  provisional 16 steps  1/1 (100%)
+           Create a new asset (hardware) in this Snipe-IT instance: name it exactly '{{v2}}', model 'Bench Laptop Model' …
+  s_c891be  provisional 18 steps  1/1 (100%)  variant of s_6cdda3
+           Create a new asset (hardware) in this Snipe-IT instance: name it exactly '{{v2}}', model 'Bench Laptop Model' …
+  s_d0de20  provisional  2 steps  1/1 (100%)  variant of s_6cdda3
+           Create a new asset (hardware) in this Snipe-IT instance: name it exactly '{{v2}}', model 'Bench Laptop Model' …
+  s_e010a2  provisional  9 steps  1/1 (100%)
+           Create a new asset (hardware) in this Snipe-IT instance: name it exactly '{{v2}}', model 'Bench Laptop Model' …
+  s_fc00d9  provisional  1 steps  1/1 (100%)
+           Create a new asset (hardware) in this Snipe-IT instance: name it exactly '{{v2}}', model 'Bench Laptop Model' …
+store: /home/user/sitelooper/bench/results/fwsi10-skills
+
+summary: /home/user/sitelooper/bench/results/fwsi10-sweep.json

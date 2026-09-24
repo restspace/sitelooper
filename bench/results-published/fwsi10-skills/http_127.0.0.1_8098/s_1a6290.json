@@ -1,0 +1,94 @@
+{
+ "id": "s_1a6290",
+ "origin": "http://127.0.0.1:8098",
+ "template": "Create a new asset (hardware) in this Snipe-IT instance: name it exactly '{{v2}}', model 'Bench Laptop Model' (choose from the searchable model dropdown), status 'Ready to Deploy' (choose from dropdown), default location 'Bench Office' (choose from dropdown), and purchase date {{v3}} (use the date picker; if the displayed format differs like 'Wednesday, March 15, 2026', pick that date). Fill any other required fields minimally, do not create new models/locations/statuses/users, and do not modify seed assets. Save it, then report the asset's page showing name, model, status, default location, purchase date, and the auto-assigned asset tag exactly as displayed.",
+ "params": {
+  "v1": {
+   "example": "fwsi10-n2",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v2": {
+   "example": "fwsi10-n2 Bench Asset",
+   "usedIn": [],
+   "known": true
+  },
+  "v3": {
+   "example": "2026-03-15",
+   "usedIn": []
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8098/hardware"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e138"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "button[name=\"btnAdd\"]"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(2) > button:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 915,
+      "y": 206,
+      "w": 38.3,
+      "h": 34,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8098/hardware/create",
+    "addedContains": [
+     "- heading \"Assets Create New\"",
+     "- button \"Save\"",
+     "- combobox \"Company\"",
+     "- combobox \"Select Company\"",
+     "- textbox \"Select Company\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_8dc3eb",
+    "step": 1
+   }
+  }
+ ],
+ "contract": 2,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-24T12:32:42.390Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_3874dd",
+  "index": 0,
+  "of": 4
+ },
+ "provenance": {
+  "session": "fwsi10-n2",
+  "instruction": "Create a new asset (hardware) in this Snipe-IT instance: name it exactly 'fwsi10-n2 Bench Asset', model 'Bench Laptop Model' (choose from the searchable model dropdown), status 'Ready to Deploy' (choose from dropdown), default location 'Bench Office' (choose from dropdown), and purchase date 2026-03-15 (use the date picker; if the displayed format differs like 'Wednesday, March 15, 2026', pick that date). Fill any other required fields minimally, do not create new models/locations/statuses/users, and do not modify seed assets. Save it, then report the asset's page showing name, model, status, default location, purchase date, and the auto-assigned asset tag exactly as displayed.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-24T12:32:42.390Z"
+ },
+ "revision": 1
+}
