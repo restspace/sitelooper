@@ -1,0 +1,183 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwgh13-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwgh13-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwgh13-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/bench/results/fwgh13-spec-spec-tmp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwgh13-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwgh13.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwgh13-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwgh13.spec.ts",
+      "file": "fwgh13.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwgh13",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 75008,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper step] 01-open\n"
+                    },
+                    {
+                      "text": "[sitelooper recipe] filled via recipe contenteditable/set-value (r_7b1e49); value verified on the component\n"
+                    },
+                    {
+                      "text": "[sitelooper drift] 02-create s_98458c/2: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoContainText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed; the text was already showing in fallback #2 locator('section > header > div > div > span > div')\n"
+                    },
+                    {
+                      "text": "[sitelooper drift] 02-create s_c30eed/2 target: primary getByText('This bench post was created by run fwgh13-spec for verification.', { exact: true }) missed; used #2 locator('div:nth-of-type(1) > div > div:nth-of-type(1) > div > p > span') (#1 ambiguous)\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-create\n"
+                    },
+                    {
+                      "text": "[sitelooper skip] 03-open s_9f5691/8: toggled panel already showing — click skipped\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 03-open s_9f5691/9: read 'custom_excerpt' returned a value the skill itself set/selected ('Bench verification post for run fwgh13-spec.') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper drift] 03-open s_9f5691/14 target: primary getByText('fwgh13-spec', { exact: true }) missed; used #2 locator('div > div:nth-of-type(1) > div > div:nth-of-type(1) > div > p') (#1 absent)\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 05-open\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-open: Open http://127.0.0.1:8099/ghost/ in the browser and sign in with email admin@bench.local and password {{env:APP_PASSWORD}} — the password is the literal text {{env:APP_PASSWORD}}: type exactly those characters into the password field and the real password is filled in automatically as you type; do not guess, look up, or substitute anything else. Once signed in, go to the Posts section of the Ghost admin. Report the exact titles of all posts whose title begins with 'Seed:' that are published (use the status filter to confirm which are Published), and separately note any 'Seed:' posts that are drafts or scheduled. Check all pages of the list if there are several. This is read-only: do not edit, publish, or delete anything.",
+                      "duration": 10072
+                    },
+                    {
+                      "title": "02-create: In the Ghost admin at http://127.0.0.1:8099/ghost/, create a NEW post (New post button) with the exact title '{{runid}} Bench Post'. In the body rich-text editor, type a single paragraph of text that includes the runid '{{runid}}' — for example a sentence like 'This bench post was created by run {{runid}} for verification.' Type it once only (do not paste or type it twice, and do not leave duplicate paragraphs). Then save the post as a draft (do NOT publish it yet). Verify the draft saved and report the title and the body text you see in the editor.",
+                      "duration": 32091
+                    },
+                    {
+                      "title": "03-open: In the Ghost admin, open the existing draft post titled '{{runid}} Bench Post' (it is in the Drafts list). Open its post settings panel and make these three changes: (1) In the tags field, type 'Bench News' and choose the EXISTING tag 'Bench News' from the suggestion dropdown — do not create a new tag, and be careful not to pick the similar existing tag 'Bench Newsletter'; the final tag must be exactly 'Bench News' and the only tag. (2) In the custom excerpt field, set an excerpt that includes the runid '{{runid}}', e.g. 'Bench verification post for run {{runid}}.' (3) Set the publish date to 2026-09-01 (September 1, 2026) — keep the time as whatever it defaults to. Save/close the settings so the changes persist, and report exactly what the settings panel now shows for: the tag(s), the custom excerpt, and the publish date and time. Do not publish the post yet — leave it a draft.",
+                      "duration": 12357
+                    },
+                    {
+                      "title": "04-open: In the Ghost admin, open the draft post titled '{{runid}} Bench Post' and publish it using Ghost's publish confirmation flow (click the Publish button in the top right and confirm in the dialog that appears). IMPORTANT: the publish date is set to 2026-09-01 — if Ghost offers to 'Schedule' the post instead of publishing it (because it considers that date in the future), do NOT schedule it; instead report exactly what the dialog said and leave the post unpublished, telling me the current date/time the app shows. If the flow publishes the post, complete it fully. Then verify: the post's status shows Published (not Draft, not Scheduled), it appears in the Published posts list, and the public site page for it loads at http://127.0.0.1:8099/ with the title and body visible. Report the post's status, its publish date as shown in settings, and the public URL.",
+                      "duration": 17280
+                    },
+                    {
+                      "title": "05-open: In the Ghost admin, open the published post titled '{{runid}} Bench Post' and open its post settings panel. Read and report exactly, as displayed: (1) the URL slug field value (the slug shown in the settings panel, character for character), (2) the tag(s) listed in the tags field, (3) the custom excerpt text, (4) the publish date and time, (5) the post's visibility setting (public/members), and (6) the post status shown in the editor. Also confirm the body editor contains exactly one paragraph containing the text '{{runid}}' and quote that paragraph. Do not change anything — read only.",
+                      "duration": 2123
+                    }
+                  ],
+                  "startTime": "2026-09-24T12:34:05.125Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": "W3NpdGVsb29wZXIgZHJpZnRdIDAyLWNyZWF0ZSBzXzk4NDU4Yy8yOiAbWzJtZXhwZWN0KBtbMjJtG1szMW1sb2NhdG9yG1szOW0bWzJtKS4bWzIybXRvQ29udGFpblRleHQbWzJtKBtbMjJtG1szMm1leHBlY3RlZBtbMzltG1sybSkbWzIybSBmYWlsZWQ7IHRoZSB0ZXh0IHdhcyBhbHJlYWR5IHNob3dpbmcgaW4gZmFsbGJhY2sgIzIgbG9jYXRvcignc2VjdGlvbiA+IGhlYWRlciA+IGRpdiA+IGRpdiA+IHNwYW4gPiBkaXYnKQpbc2l0ZWxvb3BlciBkcmlmdF0gMDItY3JlYXRlIHNfYzMwZWVkLzIgdGFyZ2V0OiBwcmltYXJ5IGdldEJ5VGV4dCgnVGhpcyBiZW5jaCBwb3N0IHdhcyBjcmVhdGVkIGJ5IHJ1biBmd2doMTMtc3BlYyBmb3IgdmVyaWZpY2F0aW9uLicsIHsgZXhhY3Q6IHRydWUgfSkgbWlzc2VkOyB1c2VkICMyIGxvY2F0b3IoJ2RpdjpudGgtb2YtdHlwZSgxKSA+IGRpdiA+IGRpdjpudGgtb2YtdHlwZSgxKSA+IGRpdiA+IHAgPiBzcGFuJykgKCMxIGFtYmlndW91cykKW3NpdGVsb29wZXIgZHJpZnRdIDAzLW9wZW4gc185ZjU2OTEvMTQgdGFyZ2V0OiBwcmltYXJ5IGdldEJ5VGV4dCgnZndnaDEzLXNwZWMnLCB7IGV4YWN0OiB0cnVlIH0pIG1pc3NlZDsgdXNlZCAjMiBsb2NhdG9yKCdkaXYgPiBkaXY6bnRoLW9mLXR5cGUoMSkgPiBkaXYgPiBkaXY6bnRoLW9mLXR5cGUoMSkgPiBkaXYgPiBwJykgKCMxIGFic2VudCk="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ed8664f43b99a5c5a8be-186b6f5224e62fbf1abc",
+          "file": "fwgh13.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-24T12:34:03.182Z",
+    "duration": 77150.144,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}
