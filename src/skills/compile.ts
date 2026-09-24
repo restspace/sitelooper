@@ -8,7 +8,7 @@ import { WILDCARD, escapeRe, identityRe, maskVolatile } from '../shared/text.js'
 import { CREDENTIAL_KEY, fillParamsDeep, queryPairs, safeDecode, urlParts, urlShapeOf } from '../execution/url.js';
 import { contextsEqual, framesEqual, stepEffect } from '../execution/context.js';
 import { hideEffectLines } from '../execution/toggle.js';
-import { collapseTogglePairs, dropSupersededSets } from './toggles.js';
+import { collapseTogglePairs, dropSupersededSets, sameControl } from './toggles.js';
 import { locatingSlots, scopeReadBySlot } from './readscope.js';
 
 /**
@@ -562,7 +562,24 @@ export function compileSkills(input: CompileInput): Skill[] {
   // chain s_9a4939 → s_19095e → s_0aa6d6 kept that goto as its third segment
   // (`via: {skill: s_5dcb48, step: 1}`) — the compiled script died on it.
   const stopped = input.stoppedAt;
-  if (stopped) kept = kept.filter((s) => !(s.via?.skill === stopped.skill && s.via.step === stopped.step));
+  // ...unless it was a CLICK that had no effect and the recovery's next
+  // gesture is the same control clicked again, with only observations
+  // between: the app ignored the replay's press, not the procedure. ghost
+  // fwgh12-n3: the replay's click on link "Published" did nothing and stopped
+  // ("did not have its recorded effect"), the recovery's first action was the
+  // same click, which navigated, and the re-pin s_e46ad2 → s_414d80 kept only
+  // that one press — failing the same way on the next run. The failed press
+  // is dropped as before, and the recovery's click is marked to press again.
+  const pressedAgain = new WeakSet<RecordedStep>();
+  if (stopped) {
+    const at = kept.findIndex((s) => s.via?.skill === stopped.skill && s.via.step === stopped.step);
+    const failed = at >= 0 ? kept[at] : undefined;
+    if (failed?.tool === 'click' && failed.diff && !failed.diff.added.length && !(failed.diff.removed ?? []).length && !failed.diff.alerts.length) {
+      const next = kept.slice(at + 1).find((s) => !['read', 'read_all', 'wait_for'].includes(s.tool));
+      if (next?.tool === 'click' && !next.via && sameControl(failed, next)) pressedAgain.add(next);
+    }
+    kept = kept.filter((s) => !(s.via?.skill === stopped.skill && s.via.step === stopped.step));
+  }
   kept = sourcelessGoto(kept, input, recordingNotes);
   if (!kept.length) return [];
   // A url id this span minted is its OUTPUT: derived ({{dN}}, discoverMinted),
@@ -766,6 +783,7 @@ export function compileSkills(input: CompileInput): Skill[] {
       if (Object.keys(contexts).length) out.contexts = contexts;
       if (step.page !== undefined) out.page = step.page;
       if (step.toggle) out.toggle = true;
+      if (pressedAgain.has(step)) out.repeatIfNoEffect = true;
       if (step.effect) {
         out.effect =
           step.effect.kind === 'popup' && step.afterUrl
@@ -2995,9 +3013,18 @@ export function dropSupersededNavigation(steps: SkillStep[], notes?: TransformNo
       notes?.push({ name: 'dropSupersededNavigation', at: i + 1, reason: `a link click that recorded no consequence, replaced by the goto at step ${replacedBy + 1}` });
       return false;
     }
-    const repeatedBy = abandonedRepeatClick(steps, i, diffOf);
-    if (repeatedBy !== null) {
-      notes?.push({ name: 'dropSupersededNavigation', at: i + 1, reason: `a click that recorded no consequence, repeated with one at step ${repeatedBy + 1}` });
+    const repeated = repeatOf(steps, i, diffOf);
+    if (repeated) {
+      // Nothing but observations between: the app ignored the first press, so
+      // the kept click presses again when a replay meets the same (repeatOf).
+      if (!repeated.fieldWork && !steps[repeated.j].mints) steps[repeated.j].repeatIfNoEffect = true;
+      notes?.push({
+        name: 'dropSupersededNavigation',
+        at: i + 1,
+        reason: repeated.fieldWork
+          ? `a click that recorded no consequence, repeated with one at step ${repeated.j + 1}`
+          : `a click the app ignored (no effect, only observations before the identical click at step ${repeated.j + 1}): kept once, pressed again when it has no effect`,
+      });
       return false;
     }
     return true;
@@ -3089,6 +3116,21 @@ function consequenceFree(steps: readonly SkillStep[], k: number, diffOf?: (step:
  * a page effect, a mint or a label is never dropped (consequenceFree).
  */
 function abandonedRepeatClick(steps: readonly SkillStep[], i: number, diffOf?: (step: SkillStep) => StepDiff | undefined): number | null {
+  return repeatOf(steps, i, diffOf)?.j ?? null;
+}
+
+/**
+ * abandonedRepeatClick's answer, with whether any FIELD WORK lay between the
+ * two clicks (a fill, type, press, or a click focusing a field one of them
+ * acts on). None — only observations — means the first press was not a
+ * failed attempt the agent then corrected: the app ignored it (ghost
+ * fwgh12-n1: link "Published" did nothing after the publish flow, a read and
+ * a screenshot, then the identical click navigated). The repeat is then kept
+ * marked `repeatIfNoEffect`, so a replay that meets the same indifference
+ * presses again instead of stopping. fwec5's re-entered amount is field work:
+ * dropped, unmarked, as before.
+ */
+function repeatOf(steps: readonly SkillStep[], i: number, diffOf?: (step: SkillStep) => StepDiff | undefined): { j: number; fieldWork: boolean } | null {
   if (!consequenceFree(steps, i, diffOf)) return null;
   const key = primaryLocator(steps[i]);
   if (!key) return null;
@@ -3109,7 +3151,9 @@ function abandonedRepeatClick(steps: readonly SkillStep[], i: number, diffOf?: (
       const before = steps.slice(0, j).reverse().find((p) => p.expect?.urlPattern)?.expect?.urlPattern;
       const moved = Boolean(e?.urlPattern && before && e.urlPattern !== before);
       if (!(moved || s.mints || e?.addedContains?.length || e?.alertContains)) return null;
-      return removalUndoneBetween(steps, i, j, diffOf) ? j : null;
+      if (!removalUndoneBetween(steps, i, j, diffOf)) return null;
+      const fieldWork = steps.slice(i + 1, j).some((b) => !['read', 'read_all', 'wait_for'].includes(b.tool));
+      return { j, fieldWork };
     }
     if (['fill', 'type', 'press', 'read', 'read_all', 'wait_for'].includes(s.tool)) continue;
     const k = primaryLocator(s);

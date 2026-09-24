@@ -304,6 +304,16 @@ export interface SkillStep {
    * can only stop a run whose panel was already open, never pass a wrong one.
    */
   toggle?: true;
+  /**
+   * A click the app IGNORED once in the recording: the same click, with only
+   * observations between, recorded no effect the first time and its effect
+   * the second (ghost fwgh12-n1's link "Published" after the publish flow).
+   * Both runners press it once more when the first press changed nothing —
+   * the url held, no line added or removed, no alert (execution/toggle.ts
+   * pressHadNoEffect) — and never after a press that did anything. Optional:
+   * a build that ignores it presses once, as before.
+   */
+  repeatIfNoEffect?: true;
   expect?: StepExpectation;
   /** For read/read_all steps: which report value this read supplied, if any. */
   label?: string;

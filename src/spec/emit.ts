@@ -2160,7 +2160,8 @@ function emitSkillStep(recorded: SkillStep, segment: SpecSegment, index: number,
   // The page-change gate needs the lines the page showed BEFORE the action —
   // the diff leg of its evidence — so a step that carries one captures them
   // in `prepare`, after the settle, in the same dialect it will judge by.
-  const linesBefore = recordedChanges(step).length ? `linesBefore${ctx.urls}` : null;
+  // A click marked to press again (repeatIfNoEffect) needs the pre-action lines too: its no-effect test diffs them.
+  const linesBefore = recordedChanges(step).length || (step.tool === 'click' && step.repeatIfNoEffect) ? `linesBefore${ctx.urls}` : null;
   const changes = linesBefore ? expectationLines(step, ctx, checks, linesBefore) : null;
   // Replay's expectedRemovals gate, after the page changes and before the
   // alerts: a hide whose lines all survive the click did not have its effect.
@@ -2637,6 +2638,25 @@ function emitSkillAction(step: SkillStep, segment: SpecSegment, index: number, c
   // The action's observation begins just before it dispatches, after the
   // arming below (both before the dispatch, as replay orders them).
   if (!(step.tool === 'drag' && !out[out.length - 1]?.includes('.dragTo('))) observeAction(step, ctx, out);
+  // A click the app ignored once in the recording (SkillStep.repeatIfNoEffect,
+  // ghost fwgh12-n1's link "Published"): replay's runStepBody presses once more
+  // when the press changed nothing — the shared pressHadNoEffect, over the
+  // settled page against the pre-action lines, url and alerts.
+  if (step.tool === 'click' && step.repeatIfNoEffect && ctx.obs) {
+    const n = ctx.urls;
+    const d = dialectArg(step);
+    const [begin, dispatch] = out.slice(-2);
+    out.push(
+      `await ${ctx.obs}?.settle();`,
+      `{ const after = await capturePageLines(page${d}); const raised = ((await liveAlerts(page${d})) ?? []).filter((a) => !alertsBefore${n}.includes(a));`,
+      `  if (pressHadNoEffect({ urlBefore: urlBefore${n}, urlAfter: page.url(), added: linesBefore${n} === null || after === null ? null : addedLines(linesBefore${n}, after), removed: linesBefore${n} === null || after === null ? null : addedLines(after, linesBefore${n}), alerts: raised })) {`,
+      `    console.log(${q(`[sitelooper warn] ${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex}: the first press changed nothing — pressed again, as the recording had to`)});`,
+      `    ${begin}`,
+      `    ${dispatch}`,
+      '  }',
+      '}',
+    );
+  }
   // A fill that ran joins the segment's standing fills, with the url it ran on
   // (replay notes the same once the step has run).
   if (step.tool === 'fill' && ctx.standing) {

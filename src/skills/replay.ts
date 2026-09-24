@@ -49,7 +49,7 @@ export { consequentialExpectations, isEchoLine } from '../execution/expect.js';
 import { candidateNames, echoVerdict, noteInteraction, setsSomething } from '../execution/echo.js';
 import { documentOf, fillLost, noteFill, rearmStandingFills, restoreStandingFills, standingFills, standingFillsLost } from '../execution/refill.js';
 import { hasTotpMarker, resolveSecrets, resolveSecretsAsync } from '../shared/secrets.js';
-import { hideBefore, hideEffectLines, hideVerdict, toggleAlreadyShown, toggleEffectLines } from '../execution/toggle.js';
+import { hideBefore, hideEffectLines, hideVerdict, pressHadNoEffect, toggleAlreadyShown, toggleEffectLines } from '../execution/toggle.js';
 import { mayNavigateToDestination, navigateToDestination, textHeldElsewhere } from '../execution/recover.js';
 import { CONTEXT_CONTRACT, contractOf, contractVerdict, isVerified, originOf, stepsCarryContext, type Skill, type SkillStep } from './store.js';
 import { armPageEffect, describeFramePath, pageIndexVerdict, rootFor, stepEffect, type Root } from '../execution/context.js';
@@ -1191,7 +1191,21 @@ export async function replaySkill(
           // The step's expected effect is what its action observation polls for
           // (effect-verified), in the step's own line dialect.
           const expect = effectExpectation(page, step.expect?.addedContains, params, dialectOf(step));
-          const value = await opts.exec(step.tool, args, resolved, { skill: skill.id, step: failIndex }, expect ? { expect } : undefined);
+          let value = await opts.exec(step.tool, args, resolved, { skill: skill.id, step: failIndex }, expect ? { expect } : undefined);
+          // A click the app ignored once in the recording (SkillStep.
+          // repeatIfNoEffect, ghost fwgh12-n1's link "Published"): pressed
+          // once more when this press changed nothing at all — the shared
+          // pressHadNoEffect, over the settled diff the executor took. Never
+          // after a press that did anything, and never on a failed capture.
+          if (
+            step.tool === 'click' &&
+            step.repeatIfNoEffect &&
+            !value.captureFailed &&
+            pressHadNoEffect({ urlBefore, urlAfter: page.url(), added: value.diff?.added ?? null, removed: value.diff?.removed, alerts: value.diff?.alerts })
+          ) {
+            res.warnings.push(`step ${tag}: the first press changed nothing — pressed again, as the recording had to`);
+            value = await opts.exec(step.tool, args, resolved, { skill: skill.id, step: failIndex }, expect ? { expect } : undefined);
+          }
           if (value.outcome) res.outcome = value.outcome;
           const landed = await landing();
           if (landed && 'error' in landed) {

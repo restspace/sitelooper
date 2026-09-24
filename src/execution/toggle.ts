@@ -121,3 +121,23 @@ export function hideVerdict(
   }
   return { warnings: [] };
 }
+
+/**
+ * The recorded NO-EFFECT condition for a click marked `repeatIfNoEffect`
+ * (SkillStep): after the press the url held, the page gained and lost no line
+ * and raised no alert. Only then does either runner press once more — never
+ * after a press that did anything, and never on a capture that failed (a
+ * null `added`): "we could not see" is not "nothing happened". ghost
+ * fwgh12-n1's link "Published" ignored its first press after the publish
+ * flow; the recording pressed again and it navigated.
+ */
+export function pressHadNoEffect(o: {
+  urlBefore: string;
+  urlAfter: string;
+  added: readonly string[] | null;
+  removed?: readonly string[] | null;
+  alerts?: readonly string[] | null;
+}): boolean {
+  if (o.added === null || o.urlBefore !== o.urlAfter) return false;
+  return !o.added.length && !(o.removed ?? []).length && !(o.alerts ?? []).length;
+}
