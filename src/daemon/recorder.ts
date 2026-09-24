@@ -15,6 +15,7 @@ import { GENERATED_ID_HEX_RUN, skeleton } from '../skills/shape.js';
 import { flattenContainedComposite, type Report } from '../agent/report.js';
 import { evalResultForRecord } from './eval-result.js';
 import type { StepEvidence, StepFailure } from './step-evidence.js';
+import type { StepJournal } from './journal.js';
 
 /**
  * One way of finding an element, in a form that can be rebuilt into a Locator
@@ -332,6 +333,12 @@ export interface RecordedStep {
    */
   failed?: true;
   failure?: StepFailure;
+  /**
+   * What the page did in and around this step, attributed (daemon/journal.ts,
+   * SHADOW MODE: read only by the shadow report, never by replay, compile or
+   * export). Absent on older stores and with SITELOOPER_JOURNAL=0.
+   */
+  journal?: StepJournal;
 }
 
 export interface RecordedInstruction {
@@ -564,9 +571,9 @@ export class ScriptRecorder {
    * appended to script.jsonl after whatever was last recorded, and kept out of
    * `entries` — no read of this take, no compile, no export ever sees it.
    */
-  fail(step: RecordedStep | null, failure: StepFailure, obs?: StepEvidence): void {
+  fail(step: RecordedStep | null, failure: StepFailure, obs?: StepEvidence, journal?: StepJournal): void {
     if (!step) return;
-    const entry = this.stamp<RecordedStep>({ ...step, failed: true, failure, ...(obs ? { obs } : {}) });
+    const entry = this.stamp<RecordedStep>({ ...step, failed: true, failure, ...(obs ? { obs } : {}), ...(journal ? { journal } : {}) });
     const after = this.entries.length ? this.entries[this.entries.length - 1] : null;
     this.failedAfter.set(after, [...(this.failedAfter.get(after) ?? []), entry]);
     try {
@@ -800,7 +807,7 @@ export class ScriptRecorder {
   commit(
     step: RecordedStep | null,
     result: string,
-    extra: { diff?: StepDiff; via?: RecordedStep['via']; fingerprintAfter?: number[]; page?: number; effect?: PageEffect; afterUrl?: string; obs?: StepEvidence } = {},
+    extra: { diff?: StepDiff; via?: RecordedStep['via']; fingerprintAfter?: number[]; page?: number; effect?: PageEffect; afterUrl?: string; obs?: StepEvidence; journal?: StepJournal } = {},
   ): void {
     if (!step) return;
     // A select is recorded by the option's visible LABEL whatever the caller
@@ -824,6 +831,7 @@ export class ScriptRecorder {
       ...(extra.effect ? { effect: extra.effect } : {}),
       ...(extra.afterUrl ? { afterUrl: extra.afterUrl } : {}),
       ...(extra.obs ? { obs: extra.obs } : {}),
+      ...(extra.journal ? { journal: extra.journal } : {}),
     };
     this.append(RESULT_TOOLS.has(step.tool) ? { ...entry, result } : step.tool === 'eval' ? { ...entry, evalResult: evalResultForRecord(result) } : entry);
   }

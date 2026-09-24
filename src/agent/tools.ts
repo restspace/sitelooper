@@ -3,7 +3,7 @@ import path from 'node:path';
 import type { Locator, Page } from 'playwright-core';
 import { actionFailure, NAVIGATING_ACTIONS, outcomeLabel, outcomeOfError, robustClick, type ActionOutcome } from '../execution/browser.js';
 import { beginAction, type ActionExpectation, type ActionObservation, type LinkNavigation, type SettleVerdict } from '../execution/action.js';
-import { CURRENT_DIALECT, addedLines, removedLines, type PageObservation } from '../execution/snapshot.js';
+import { CURRENT_DIALECT, MAX_ADDED_LINES, addedLines, removedLines, type PageObservation } from '../execution/snapshot.js';
 import { DIALOG_LINE } from '../execution/expect.js';
 import { POPUP_WAIT_MS, type PageEffect } from '../execution/context.js';
 import { isElementRead, readElements } from '../execution/observe.js';
@@ -23,6 +23,8 @@ import { fingerprintPage } from '../daemon/fingerprint.js';
 import { isRecordable, type StepDiff } from '../daemon/recorder.js';
 import { imageForResult, visionSettings, type VisionSettings } from './vision.js';
 import { diffTotals, settleEvidence, stepFailure, type StepEvidence } from '../daemon/step-evidence.js';
+import { splitForStep, windowKindOf, type StepJournal } from '../daemon/journal.js';
+import { feedbackLines, feedbackText, journalFeedbackOn } from '../daemon/journal-feedback.js';
 import { contractWeakening } from '../skills/contract.js';
 import { urlPattern as compiledUrlPattern } from '../skills/compile.js';
 import { renderReplay, replaySkill, type ReplayResult } from '../skills/replay.js';
@@ -488,6 +490,9 @@ export async function executeTool(
   /** `deadlineMs`: the whole-action deadline of a state-changing tool (ACTION_DEADLINE_MS). */
   options: { deadlineMs?: number } = {},
 ): Promise<ToolExecution> {
+  // The whole tool call is the daemon's window (journal.ts); the action inside
+  // it opens its own, narrower one at dispatch (runStep).
+  const toolWindow = session.journal?.open('daemon', `tool:${name}`);
   try {
     // Inside the guard: a dead browser (getPage throwing) must come back as
     // an error result the loop can report, never a rejection that ends the
@@ -534,6 +539,8 @@ export async function executeTool(
       return { result: truncate(`ERROR: ${explainError(err, args)} ${outcomeLabel(outcome)}`, TOOL_RESULT_BUDGET), isError: true, outcome };
     }
     return { result: truncate(`ERROR: ${explainError(err, args)}`, TOOL_RESULT_BUDGET), isError: true };
+  } finally {
+    if (toolWindow) session.journal?.close(toolWindow);
   }
 }
 
@@ -793,6 +800,8 @@ async function runStep(
   // throws before commit is recorded as FAILED (stage 0 evidence, never a gesture).
   let dispatchAt: number | undefined;
   let committed = false;
+  const journal = pending ? session.journal : null;
+  let jw = 0;
   try {
     // Secrets ({{env:NAME}}) resolve HERE and only here — after the recorder
     // captured the marker-bearing args above, immediately before the browser
@@ -810,7 +819,16 @@ async function runStep(
           expect: opts.expect,
         })
       : null;
+    // Where a click is aimed, for the in-page hit record (bounded, 100 ms).
+    if (journal && CLICK_TOOLS_AIMED.has(name) && page) await journal.intend(opts.resolved?.target ?? (typeof args.target === 'string' ? resolveTarget(page, args.target) : null));
     dispatchAt = Date.now();
+    // The journal's window for this action (daemon/journal.ts, SHADOW MODE):
+    // dispatch to settle. A value it types is noted, marker-bearing args only,
+    // so a request that carries it can say so; a credential is never noted.
+    if (journal) {
+      jw = journal.open(windowKindOf(name), name, INPUT_TOOLS.has(name));
+      journal.noteTyped(jw, name === 'fill' ? args.value : name === 'type' ? args.text : name === 'select' ? args.option : undefined);
+    }
     let result = scrubSecrets(await dispatch(session, name, live, screenshotDir, signal, opts.resolved, obs));
     // A secret typed into a PASSWORD field: that field's own line is where an
     // ambiguous secret (a value some non-credential variable holds too) may be
@@ -837,10 +855,12 @@ async function runStep(
     // through. Both are the observation's url wait now (urlHeldStill inside it).
     const verdict: SettleVerdict | null = obs ? await obs.settle() : null;
     const settledAt = Date.now();
+    if (journal && jw) journal.close(jw);
     // What the recorder knew and used to drop (daemon/step-evidence.ts): the
     // uncapped diff counts, and the removals the diff itself keeps only for a
     // dialog or an add-less step. Never read by compile, export or replay.
     let totals: StepEvidence['totals'];
+    let gapAfter: { lines: string[]; url: string } | undefined;
     let removedAll: string[] | undefined;
     let capturedAt: number | undefined;
     // A link whose navigation had still not committed when the settle ran out
@@ -866,6 +886,7 @@ note: this link points to ${verdict.link.href}, and its navigation had not commi
       capturedAt = Date.now();
       if (after) {
         totals = diffTotals(before.lines, after.lines);
+        gapAfter = { lines: after.lines, url: after.url };
         // Recorded in CURRENT_DIALECT (the signature's lines), and tagged so:
         // compile carries the tag onto the step's expectation, and every runner
         // renders the live page in the dialect the expectation was written in.
@@ -923,15 +944,31 @@ note: this link points to ${verdict.link.href}, and its navigation had not commi
           ...(removedAll?.length && !diff?.removed ? { removed: removedAll } : {}),
         }
       : undefined;
+    // Everything the journal saw since the last recorded step, attributed: this
+    // window's share on the step, the rest in its gap. Never shown to the model.
+    const journaled: StepJournal | undefined = journal && jw && pending ? splitForStep(jw, await journal.collect(page)) : undefined;
+    // Stage 3: what changed on this page BETWEEN the last diffed step's
+    // after-capture and this one's before-capture (both already taken).
+    if (journaled && journal && before && journal.lastAfter?.page === page && !journal.lastAfter.page.isClosed()) {
+      const gap = gapDiff(journal.lastAfter, before);
+      if (gap) journaled.gap = { ...journaled.gap, ...gap };
+    }
+    if (journal && jw && pending && page && gapAfter) journal.lastAfter = { page, lines: gapAfter.lines, url: gapAfter.url, w: jw };
     committed = true;
     recorder?.commit(pending, result, {
       diff,
+      ...(journaled ? { journal: journaled } : {}),
       ...(evidence ? { obs: evidence } : {}),
       via: opts.via,
       fingerprintAfter,
       ...(context.page !== undefined ? { page: context.page } : {}),
       ...(context.effect ? { effect: context.effect, afterUrl: context.afterPage?.url() } : {}),
     });
+    // Stage 4, behind SITELOOPER_JOURNAL_FEEDBACK=on: the journal's facts about
+    // this gesture, told to the model after the recording took the result.
+    if (journaled && journal && journalFeedbackOn() && windowKindOf(name) === 'gesture') {
+      result += feedbackText(feedbackLines(name, jw, journaled.ev ?? [], journal.inFlight(dispatchAt ?? settledAt, settledAt)));
+    }
     return {
       result,
       diff,
@@ -943,7 +980,11 @@ note: this link points to ${verdict.link.href}, and its navigation had not commi
   } catch (err) {
     // A failed action is evidence, not a gesture: on disk as `failed: true`,
     // out of every read of the take (ScriptRecorder.fail).
-    if (!committed && pending && recorder) recorder.fail(pending, stepFailure(err), { at: { d: dispatchAt ?? Date.now() } });
+    if (journal && jw) journal.close(jw);
+    if (!committed && pending && recorder) {
+      const journaled = journal && jw ? splitForStep(jw, await journal.collect(page).catch(() => [])) : undefined;
+      recorder.fail(pending, stepFailure(err), { at: { d: dispatchAt ?? Date.now() } }, journaled);
+    }
     throw err;
   } finally {
     obs?.cancel();
@@ -951,6 +992,30 @@ note: this link points to ${verdict.link.href}, and its navigation had not commi
     pageContext?.off('page', onPage);
   }
 }
+
+/**
+ * The gap diff (stage 3): what the page gained and lost between the previous
+ * diffed step's after-capture and this step's before-capture, capped like a
+ * step diff, with uncapped totals. Null when nothing changed.
+ */
+function gapDiff(last: { lines: readonly string[]; url: string; w: number }, before: PageSignature): NonNullable<StepJournal['gap']> | null {
+  const was = new Set(last.lines);
+  const now = new Set(before.lines);
+  const added = before.lines.filter((l) => !was.has(l));
+  const removed = last.lines.filter((l) => !now.has(l));
+  const moved = before.url !== last.url;
+  if (!added.length && !removed.length && !moved) return null;
+  return scrubSecretsDeep({
+    since: last.w,
+    ...(moved ? { url: before.url } : {}),
+    ...(added.length ? { added: added.slice(0, MAX_ADDED_LINES) } : {}),
+    ...(removed.length ? { removed: removed.slice(0, MAX_ADDED_LINES) } : {}),
+    totals: { added: added.length, removed: removed.length },
+  });
+}
+
+/** Clicks whose target the journal marks before dispatch (Journal.intend). */
+const CLICK_TOOLS_AIMED = new Set(['click', 'dblclick', 'modifier_click', 'right_click']);
 
 /** Tools whose action can open a popup. */
 const POPUP_TOOLS = new Set(['click', 'dblclick', 'modifier_click', 'press', 'select', 'check']);
