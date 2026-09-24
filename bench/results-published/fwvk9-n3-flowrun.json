@@ -1,0 +1,142 @@
+{
+  "flow": "fwvk9",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Titles exactly as shown: \"Seed: triage inbox\" (BENCH-1), \"Seed: order missing parts\" (BENCH-2), \"Seed: ship repaired device\" (BENCH-5).",
+      "values": {
+        "project_url": "http://127.0.0.1:8096/projects/2/5",
+        "table_view_url": "http://127.0.0.1:8096/projects/2/7",
+        "start_url": "http://127.0.0.1:8096/login",
+        "signin_url": "http://127.0.0.1:8096/login",
+        "task_1": "Seed: triage inbox",
+        "task_1_id": "BENCH-1",
+        "task_2": "Seed: order missing parts",
+        "task_2_id": "BENCH-2",
+        "task_3": "Seed: ship repaired device",
+        "task_3_id": "BENCH-5",
+        "username": "admin",
+        "project": "Bench Project"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "20/20",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_d262e9; observed ref=fwvk9-n3, task_title=fwvk9-n3 Bench Task, task_identifier=BENCH-6, project=Bench Project, due_date_shown=31 Dec 2026, 12:00:00.",
+      "values": {
+        "ref": "fwvk9-n3",
+        "task_title": "fwvk9-n3 Bench Task",
+        "task_identifier": "BENCH-6",
+        "project": "Bench Project",
+        "due_date_shown": "31 Dec 2026, 12:00:00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "27/27",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_d262e9: step 19: read 'description_text' returned a value the skill itself set/selected ('Description for fwvk9-n3 bench task.') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_d262e9: step 21: the target chain is dead and was not healed inline — the step is a synthesized read no run has ever resolved, so nothing about it has drifted",
+        "s_d262e9: step 21: skipped read — no element matched any known locator for target (tried 1: page.getByRole('heading', { name: 'Description Saved!', exact: true }))"
+      ],
+      "unreported": [
+        "description_text",
+        "description_saved_confirmation",
+        "priority_set"
+      ]
+    },
+    {
+      "id": "03-add",
+      "status": "success",
+      "summary": "Replayed stored procedure s_353a33; observed priority_value=3, label_chip=Backend, due_date_shown=31 Dec 2026, 12:00:00, description_shown=Description for fwvk9-n3 bench task., task_identifier=BENCH-6, task_title=fwvk9-n3 Bench Task, priority_selected_option=High, ref=fwvk9-n3.",
+      "values": {
+        "priority_value": "3",
+        "label_chip": "Backend",
+        "due_date_shown": "31 Dec 2026, 12:00:00",
+        "description_shown": "Description for fwvk9-n3 bench task.",
+        "task_identifier": "BENCH-6",
+        "task_title": "fwvk9-n3 Bench Task",
+        "priority_selected_option": "High",
+        "ref": "fwvk9-n3"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "12/12",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_353a33: step 11: read 'comment_posted' returned a value the skill itself set/selected ('Comment for fwvk9-n3 bench task') — confirms the control, not persistence; dropped from the report's confident values"
+      ],
+      "unreported": [
+        "comment_posted"
+      ]
+    },
+    {
+      "id": "04-verify",
+      "status": "success",
+      "summary": "Replayed stored procedure s_92791b; observed bench_project_url=http://127.0.0.1:8096/projects/2/5, label_list_button_main_b=Backend, label_list_button_main_b_2=Docs, label_list_button_main_b_3=Frontend, seed_task_1=Seed: triage inbox, seed_task_2=Seed: order missing parts, seed_task_3=Seed: ship repaired device, other_task_in_project=fwvk9-n3 Bench Task, ref=fwvk9-n3, seed_task_4=Seed: ship repaired device.",
+      "values": {
+        "bench_project_url": "http://127.0.0.1:8096/projects/2/5",
+        "label_list_button_main_b": "Backend",
+        "label_list_button_main_b_2": "Docs",
+        "label_list_button_main_b_3": "Frontend",
+        "seed_task_1": "Seed: triage inbox",
+        "seed_task_2": "Seed: order missing parts",
+        "seed_task_3": "Seed: ship repaired device",
+        "other_task_in_project": "fwvk9-n3 Bench Task",
+        "ref": "fwvk9-n3",
+        "seed_task_4": "Seed: ship repaired device"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "12/12",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "labels_list_names"
+      ]
+    }
+  ],
+  "passed": 4,
+  "total": 4,
+  "repinned": 0,
+  "drift": 1,
+  "driftTickets": [
+    {
+      "flow": "fwvk9",
+      "step": "02-create",
+      "skill": "s_d262e9",
+      "atStep": "21",
+      "key": "target",
+      "similarity": 0.999,
+      "missedLocator": "page.getByRole('heading', { name: 'Description Saved!', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8096/tasks/:id",
+      "pageUrl": "http://127.0.0.1:8096/tasks/8"
+    }
+  ],
+  "wallMs": 34694,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "cachedTokens": 0
+  },
+  "usageByModel": {},
+  "servedByModel": {},
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}
