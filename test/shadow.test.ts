@@ -199,13 +199,16 @@ describe('shadow (c): what caused a flash an expectation rests on (vikunja fwvk1
     ],
   };
 
-  it('#23\'s flash is ambiguous (an answer the click did not ask for landed with it) and compile expects it; #34\'s is its own', () => {
+  it('#23\'s flash is ambiguous (an answer the click did not ask for landed with it), and compile no longer expects it (round 61); #34\'s is its own', () => {
     const rows = show('fwvk12 02-create', rowsFor(compileSpan(annotate(load('fwvk12-n1-02-create.jsonl'), raw), 'fwvk12-n1'), 'flashCause'));
     const at = (seq: number) => rows.find((r) => r.seq === seq)!;
     expect(at(23).fact).toMatch(/ambiguous/);
     expect(at(23).fact).toContain("the app's own request");
-    expect(at(23).heuristic).toBe('the compiled step expects it');
-    expect(at(23).agree).toBe(false);
+    // Phase C's shadow first recorded this as a disagreement; round 61's
+    // dropFlashedLines (compile.ts) removed the flash from #23's step, so the
+    // heuristic and the recorded fact now agree.
+    expect(at(23).heuristic).toBe('the compiled step does not expect it');
+    expect(at(23).agree).toBe(true);
     expect(at(34).fact).toMatch(/was this step's own change/);
     expect(at(34).agree).toBe(true);
   });
