@@ -291,7 +291,7 @@ describe('the policy the artifact derives at compile time', () => {
     expect(body).toContain("positionalResolution: positional1 }, linesBefore1, 1, linesAfter1);");
     // a step with changes but no locator has nothing to report
     const goto = emit(flowOf([{ tool: 'goto', args: { url: 'http://app.test/x' }, locators: {}, expect: { addedContains: ['- heading "X"'] } }]));
-    expect(bodyOf(goto.source)).toContain('positionalResolution: false }, linesBefore1);');
+    expect(bodyOf(goto.source)).toContain('positionalResolution: false }, linesBefore1, 1, linesAfter1);');
     expect(bodyOf(goto.source)).not.toContain('positional1');
   });
 });
