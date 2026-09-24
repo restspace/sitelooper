@@ -1,6 +1,6 @@
 import ts from 'typescript';
 import { describe, expect, it } from 'vitest';
-import { MIN_ECHO_LEN, candidateNames, echoAt, echoKey, echoVerdict, markActed, noteInteraction, setsSomething } from '../src/execution/echo.js';
+import { MIN_ECHO_LEN, candidateNames, echoKey, echoVerdict, noteInteraction, setsSomething } from '../src/execution/echo.js';
 import type { SkillStep } from '../src/skills/store.js';
 import { emitFlowFile } from '../src/spec/emit.js';
 import type { SpecFlow } from '../src/spec/ir.js';
@@ -73,42 +73,6 @@ const specOf = (steps: SkillStep[]): SpecFlow => ({
   ],
 });
 
-/**
- * Round 59's element rule (markActed / echoAt) never fails a step and never
- * turns a failure into an observation: an element that cannot be marked — a
- * locator double with no evaluate, a detached element, a closed page — leaves
- * that source on the text rule, which calls a matching read an echo.
- */
-describe('the element rule falls back to the text rule', () => {
-  const throwing = { first: () => ({ evaluate: () => { throw new TypeError('evaluate is not a function'); }, elementHandle: async () => null }) };
-  const missing = { first: () => ({}) };
-  const page = { url: () => 'http://x.test/', frames: () => [] };
-  const readHere = { first: () => ({ elementHandle: async () => ({ evaluate: async () => ({ replaced: false, detached: true, isControl: false }), dispose: async () => {} }) }) };
-
-  it('markActed never throws, whatever the locator or page does', async () => {
-    const ledger = new Set<string>();
-    await expect(markActed(page as never, throwing as never, ledger, ['Echoville'], '1')).resolves.toBeUndefined();
-    await expect(markActed(page as never, missing as never, ledger, ['Echoville'], '2')).resolves.toBeUndefined();
-    await expect(markActed({ url: () => { throw new Error('closed'); } } as never, missing as never, ledger, ['Echoville'], '3')).resolves.toBeUndefined();
-  });
-
-  it('a read whose only source could not be marked is still an echo — even where the page would say "detached"', async () => {
-    const ledger = new Set<string>();
-    noteInteraction(ledger, ['Echoville']);
-    await markActed(page as never, missing as never, ledger, ['Echoville'], '1');
-    // `readHere` answers "not the control, detached" — what would make it
-    // observed for a MARKED source; unmarked, the text rule stands.
-    expect(await echoAt(page as never, ledger, 'echoville', readHere as never)).toBe(true);
-  });
-
-  it('a page that throws while judging is an echo too, and a value the ledger never held is never one', async () => {
-    const ledger = new Set<string>();
-    noteInteraction(ledger, ['Echoville']);
-    expect(await echoAt(page as never, ledger, 'Echoville', { first: () => { throw new Error('closed'); } } as never)).toBe(true);
-    expect(await echoAt(page as never, ledger, 'Somewhere else', readHere as never)).toBe(false);
-  });
-});
-
 describe('the emitted ledger', () => {
   const steps: SkillStep[] = [
     { tool: 'fill', args: { target: '@e1', value: '{{v1}}' }, locators: { target: [{ kind: 'label', label: 'City' }] } },
@@ -126,9 +90,7 @@ describe('the emitted ledger', () => {
     expect(source).toMatch(/const hit\d+ = await pick\([^;]*?'Last 6 hours'[\s\S]*?\);\n\s*noteInteraction\(typed1, \['Last 6 hours'\]\);/);
     // a scroll sets nothing: its heading never enters the ledger
     expect(source).not.toContain("noteInteraction(typed1, ['Latency by endpoint'])");
-    // Round 59: echoRead is async and judges by the element too (echoAt), so it
-    // is awaited and handed the page and the element the read resolved to.
-    expect(source).toContain("await echoRead(typed1, run, 'shown', '01-set.shown', outputs['01-set.shown'], '01-set s_echo/4', page, lastReadHit);");
+    expect(source).toContain("echoRead(typed1, run, 'shown', '01-set.shown', outputs['01-set.shown'], '01-set s_echo/4');");
     // the embedded rule rides along
     expect(source).toContain('function echoVerdict(');
     expect(source).toContain('echoed: string[];');
@@ -142,7 +104,7 @@ describe('the emitted ledger', () => {
     expect(plain).not.toContain('function echoVerdict(');
   });
 
-  it('echoRead, run from the whole helper block, lists the key and warns once for an echo, and nothing otherwise', async () => {
+  it('echoRead, run from the whole helper block, lists the key and warns once for an echo, and nothing otherwise', () => {
     const block = /export const DRIFT: string\[\] = \[\];\n([\s\S]*?)\nexport const steps = \{/.exec(source);
     if (!block) throw new Error('helper block not found in the emitted source');
     const js = ts.transpileModule(block[1], { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText;
@@ -153,12 +115,9 @@ describe('the emitted ledger', () => {
     const ledger = new Set<string>();
     helpers.noteInteraction(ledger, ['Echoville']);
     const run = { outputs: {}, drift: [], echoed: [] as string[] };
-    // No element evidence here (no page, no marked control): the text rule
-    // decides, exactly as before round 59 — the verdict did not change, only
-    // the signature (async, the page and the read's element passed in).
-    await helpers.echoRead(ledger, run, 'shown', '01-set.shown', 'echoville', '01-set s_echo/4', null, null);
-    await helpers.echoRead(ledger, run, 'other', '01-set.other', 'Somewhere else', '01-set s_echo/5', null, null);
-    await helpers.echoRead(ledger, run, 'none', '01-set.none', undefined, '01-set s_echo/6', null, null);
+    helpers.echoRead(ledger, run, 'shown', '01-set.shown', 'echoville', '01-set s_echo/4');
+    helpers.echoRead(ledger, run, 'other', '01-set.other', 'Somewhere else', '01-set s_echo/5');
+    helpers.echoRead(ledger, run, 'none', '01-set.none', undefined, '01-set s_echo/6');
     expect(run.echoed).toEqual(['01-set.shown']);
     expect(log).toEqual([
       "[sitelooper warn] 01-set s_echo/4: read 'shown' returned a value the skill itself set/selected ('echoville') — confirms the control, not persistence; dropped from the report's confident values",

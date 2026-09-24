@@ -102,12 +102,7 @@ interface EchoSet {
   locator: Locator;
   /** The page url when it acted. */
   url: string;
-  /**
-   * Its entry in the page-side list (markActed), or -1 when the element could
-   * not be marked — a detached element, a closed page, a page double with no
-   * evaluate. An unmarked set has no element evidence, so a read it could be
-   * the source of keeps the text rule: an echo (echoAt).
-   */
+  /** Its entry in the page-side list (markActed), or -1 when the element could not be marked. */
   index: number;
 }
 
@@ -148,49 +143,30 @@ function echoMeta(ledger: Set<string>): EchoMeta {
 export async function markActed(page: Page, loc: Locator, ledger: Set<string>, texts: readonly unknown[], step: string): Promise<void> {
   const meta = echoMeta(ledger);
   const keys = new Set(texts.filter((t): t is string => typeof t === 'string' && t.length >= MIN_ECHO_LEN).map(echoKey).filter(Boolean));
-  // Best-effort, never a reason for a step to fail: whatever throws here — a
-  // detached element, a closed page, a locator double — leaves the set
-  // unmarked (index -1), which echoAt reads as "no element evidence".
-  const index = await markInPage(loc, meta.id);
-  let url = '';
-  try {
-    url = page.url();
-  } catch {
-    /* a page that cannot say where it is: the url rule decides nothing */
-  }
+  const index = await loc
+    .first()
+    .evaluate((el, key) => {
+      const w = window as unknown as { __sitelooperActed?: Record<string, { el: Element; control: Element }[]> };
+      const all = (w.__sitelooperActed ??= {});
+      const list = (all[key] ??= []);
+      let control: Element = el;
+      const role = el.getAttribute('role') ?? '';
+      const owner = el.closest('[role="listbox"], [role="menu"]');
+      if (owner || role === 'option' || role.startsWith('menuitem')) {
+        const id = owner?.id;
+        const named = id ? document.querySelector(`[aria-controls~="${CSS.escape(id)}"], [aria-owns~="${CSS.escape(id)}"]`) : null;
+        control = named ?? (list.length ? list[list.length - 1].control : el);
+      }
+      list.push({ el, control });
+      return list.length - 1;
+    }, meta.id, { timeout: 1_000 })
+    .catch(() => -1);
   // Every acted element is marked in the page (an option's owner may be the
   // opener before it, whatever it set); only one that put text there can be
   // the source of a read, so only those are sets.
   if (!keys.size) return;
   meta.seq += 1;
-  meta.sets.push({ seq: meta.seq, step, texts: keys, locator: loc, url, index });
-}
-
-/** The page-side mark (markActed); -1 on any failure. */
-async function markInPage(loc: Locator, key: string): Promise<number> {
-  try {
-    return await loc.first().evaluate(
-      (el, key) => {
-        const w = window as unknown as { __sitelooperActed?: Record<string, { el: Element; control: Element }[]> };
-        const all = (w.__sitelooperActed ??= {});
-        const list = (all[key] ??= []);
-        let control: Element = el;
-        const role = el.getAttribute('role') ?? '';
-        const owner = el.closest('[role="listbox"], [role="menu"]');
-        if (owner || role === 'option' || role.startsWith('menuitem')) {
-          const id = owner?.id;
-          const named = id ? document.querySelector(`[aria-controls~="${CSS.escape(id)}"], [aria-owns~="${CSS.escape(id)}"]`) : null;
-          control = named ?? (list.length ? list[list.length - 1].control : el);
-        }
-        list.push({ el, control });
-        return list.length - 1;
-      },
-      key,
-      { timeout: 1_000 },
-    );
-  } catch {
-    return -1;
-  }
+  meta.sets.push({ seq: meta.seq, step, texts: keys, locator: loc, url: page.url(), index });
 }
 
 /**
@@ -218,21 +194,9 @@ export async function echoAt(page: Page, ledger: Set<string>, value: string, rea
   if (!value || value.length < MIN_ECHO_LEN) return false;
   const want = echoKey(value);
   if (!ledger.has(want)) return false;
-  // Past the text rule, anything that throws is no evidence: an echo.
-  try {
-    return await echoByElement(page, ledger, want, read);
-  } catch {
-    return true;
-  }
-}
-
-/** echoAt past the text rule: true (an echo) unless both of the module comment's conditions hold for every source. */
-async function echoByElement(page: Page, ledger: Set<string>, want: string, read: Locator | null): Promise<boolean> {
   const meta = ECHO_META.get(ledger);
   const sets = meta ? meta.sets.filter((s) => s.texts.has(want)) : [];
   if (!meta || !sets.length || !read) return true;
-  // A source that could not be marked keeps the text rule for itself.
-  if (sets.some((s) => s.index < 0)) return true;
   const readEl = await read.first().elementHandle({ timeout: 1_000 }).catch(() => null);
   if (!readEl) return true;
   try {
@@ -275,7 +239,7 @@ async function echoByElement(page: Page, ledger: Set<string>, want: string, read
         const committed =
           seen.replaced ||
           seen.detached ||
-          (set.url !== '' && page.url() !== set.url) ||
+          page.url() !== set.url ||
           meta.commits.some((c) => c.seq > set.seq && c.step !== set.step && c.lines.some((l) => ` ${echoKey(l)} `.includes(` ${want} `)));
         if (!committed) return true;
       } finally {

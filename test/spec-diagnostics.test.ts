@@ -405,24 +405,19 @@ describe('the emitter on a flagged step', () => {
     const { source } = emitFlowFile(specOf([oneWay]), { tier: 'plain', diagnostics: [FLAG] });
     const block = stepsBlock(source);
     // the emitted act phase, cut whole, with `pick` and `click` faked at its edges — and the
-    // action's observation and its outcome rethrow, which act as the shared ones do here.
-    // Round 59: act also marks the element it resolved for the echo rule (the
-    // shared markActed, into the segment's ledger `typed1`) — a collaborator
-    // of act like pick, so it is handed in here the same way, as a no-op.
+    // action's observation and its outcome rethrow, which act as the shared ones do here
     const act = /act: async \(\) => \{([\s\S]*?)\n\s*\},\n\s*settle:/.exec(block);
     expect(act).not.toBeNull();
-    expect(act![1]).toContain('await markActed(page, ');
-    const js = ts.transpileModule(`async function act(pick, click, page, p, run, originOf, RESOLVE_WAIT_MS, beginAction, ACTION_DEADLINE_MS, actionFailed, markActed, typed1) {${act![1]}\n}`, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText;
-    type Act = (pick: unknown, click: unknown, page: unknown, p: unknown, run: unknown, originOf: unknown, wait: number, beginAction: unknown, deadline: number, actionFailed: unknown, markActed: unknown, typed1: unknown) => Promise<unknown>;
+    const js = ts.transpileModule(`async function act(pick, click, page, p, run, originOf, RESOLVE_WAIT_MS, beginAction, ACTION_DEADLINE_MS, actionFailed) {${act![1]}\n}`, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext } }).outputText;
+    type Act = (pick: unknown, click: unknown, page: unknown, p: unknown, run: unknown, originOf: unknown, wait: number, beginAction: unknown, deadline: number, actionFailed: unknown) => Promise<unknown>;
     const built = new Function(`${js}\nreturn act;`) as () => Act;
-    const markActed = async () => {};
     const beginAction = () => ({ remaining: () => 1_000, settle: async () => ({}) });
     const actionFailed = (err: Error) => {
       err.message += ' [outcome: unknown]';
       throw err;
     };
     const build = () => (pick: unknown, click: unknown, page: unknown, p: unknown, run: unknown, originOf: unknown, wait: number) =>
-      built()(pick, click, page, p, run, originOf, wait, beginAction, 25_000, actionFailed, markActed, new Set<string>());
+      built()(pick, click, page, p, run, originOf, wait, beginAction, 25_000, actionFailed);
     const page = { locator: () => 'loc', url: () => 'http://x.test/' };
     const run = { drift: [] };
     const originOf = () => 'http://x.test';
