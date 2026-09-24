@@ -1,0 +1,105 @@
+
+[sweep] run 1/3: fwgt10-n1 (store: /home/user/sitelooper/bench/results/fwgt10-skills)
+[harness] gitea: defaulting APP_URL
+[harness] gitea: defaulting APP_EMAIL
+[harness] gitea: defaulting APP_PASSWORD
+[reset] gitea: no leftover bench issues
+[harness] gitea responded 200 at http://127.0.0.1:8095/
+stopped: fwgt10-n1
+  flow "fwgt10" saved: 5 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwgt10.json
+  warning: note: dropped 2 locator candidate(s) carrying a value this run minted (known only by export time)
+  warning: note: 01-open no longer publishes open_issue_count_menu — no replay reads it from the page and the recording showed no line to read
+  warning: warning: 03-open's instruction asks to report sidebar_labels, and no replay can publish it: nothing in its procedure reads it from the page, so export dropped it — re-record the step so the value is read, not only reported
+  warning: note: 03-open no longer publishes projects — no replay reads it from the page and the recording showed no line to read
+  warning: note: 04-add no longer publishes comment_author, comment_timestamp — no replay reads them from the page and the recording showed no line to read
+  warning: warning: 05-open's instruction asks to report open_issue_title_3, open_issue_title_2, open_issue_title_1, and no replay can publish them: nothing in its procedure reads them from the page, so export dropped them — re-record the step so the value is read, not only reported
+  warning: note: 05-open no longer publishes description_block_id, labels_in_sidebar, label_count, milestone_shown, comment_anchor, issues_list_counts, sidebar_label_1, sidebar_label_2, ref_2, ref_3 — no replay reads them from the page and the recording showed no line to read
+  warning: warning: contradicted-step: 05-open read ref_2 "issue-4" right after 04-add reported "issuecomment-5"; 04-add's change may not have landed and a later step may be retrying it. Re-record 04-add.
+  warning: warning: 163 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[0].instruction: "admin" (output) in "Open http://127.0.0.1:8095/ and sign in with username admin and password typed exactly as the text {{env:APP_PASSWORD}} (type that literal text into the passwor"
+  flow.steps[0].instruction: "bench" (output) in "Open http://127.0.0.1:8095/ and sign in with username admin and password typed exactly as the text {{env:APP_PASSWORD}} (type that literal text into the passwor"
+  flow.steps[0].params.v3: "admin" (output) in "admin"
+  flow.steps[0].route: "bench" (output) in "http://127.0.0.1:8095/bench/bench-repo/issues"
+  flow.steps[1].instruction: "bench" (output) in "In the repository bench/bench-repo on Gitea, create a NEW issue with title exactly '{{runid}} Bench Issue' and a description (markdown text area) that includes "
+  warning: {{01-open.bench_issue_exists}} (used by 03-open) can only be re-observed by model recovery — consider re-recording so the value is read from the page.
+  warning: 01-open reports bench_issue_exists, but no segment of the procedure it pins (s_9d3a1a, through its last segment s_2ea0ba) re-reads it from the page — a replay without the model will succeed without that value; re-record so a read for it lands in s_2ea0ba.
+arm=sitelooper model=z-ai/glm-5.3 runid=fwgt10-n1 stop=completed
+turns=6 wall=432.0s
+commands=5 cmdTime=407.6s cmdBytes=7384 timeouts=0
+orchestrator in=5586 cw=0 cr=18304 out=2576
+inner prompt=2143509 cached=1957376 completion=24382
+spend=$0.2439 maxUsd=3
+learn: A_n=0 replayed=0/5 full=0 repaired=0 compiled=5 variants=0
+-> /home/user/sitelooper/bench/results/fwgt10-n1-sitelooper-result.json
+
+fwgt10-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — #4, state=open, description includes runid=true
+  obj 3: PASS — labels=[bug, priority-high], want [bug, priority-high]
+  obj 4: PASS — assignees=[bench-assignee]
+  obj 5: PASS — milestone=Bench Milestone
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — issue #4 reported
+
+[sweep] run 2/3: fwgt10-n2 (replay flow fwgt10, no orchestrator)
+[reset] gitea: deleted 1 leftover bench issue(s)
+[sweep] fwgt10-n2: 3 drift ticket(s) → fwgt10-n2-drift.json
+
+fwgt10-n2: objectives passed 6/7
+  obj 1: FAIL — title(s) not in report: Seed: ship repaired device, Seed: order missing parts, Seed: triage inbox
+  obj 2: PASS — #5, state=open, description includes runid=true
+  obj 3: PASS — labels=[bug, priority-high], want [bug, priority-high]
+  obj 4: PASS — assignees=[bench-assignee]
+  obj 5: PASS — milestone=Bench Milestone
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — issue #5 reported
+
+[sweep] run 3/3: fwgt10-n3 (replay flow fwgt10, no orchestrator)
+[reset] gitea: deleted 1 leftover bench issue(s)
+[sweep] fwgt10-n3: 3 drift ticket(s) → fwgt10-n3-drift.json
+
+fwgt10-n3: objectives passed 6/7
+  obj 1: FAIL — title(s) not in report: Seed: ship repaired device, Seed: order missing parts, Seed: triage inbox
+  obj 2: PASS — #6, state=open, description includes runid=true
+  obj 3: PASS — labels=[bug, priority-high], want [bug, priority-high]
+  obj 4: PASS — assignees=[bench-assignee]
+  obj 5: PASS — milestone=Bench Milestone
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — issue #6 reported
+
+Learning sweep fwgt10 (K=3)
+┌─────────┬───┬─────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid       │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼─────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwgt10-n1' │ '7/7'    │ 'completed' │ 6     │ 5    │ 0.2439    │ 0   │ '0/5'        │ 432    │
+│ 1       │ 2 │ 'fwgt10-n2' │ '6/7'    │ 'success'   │ 0     │ 5    │ 0         │ 1   │ '5/5 (flow)' │ 49     │
+│ 2       │ 3 │ 'fwgt10-n3' │ '6/7'    │ 'success'   │ 0     │ 5    │ 0         │ 1   │ '5/5 (flow)' │ 51     │
+└─────────┴───┴─────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:8095
+  s_174645  validated    1 steps  3/3 (100%)
+           Open {{v1}} and verify the full state of this issue, reporting each of these facts exactly as displayed on the…
+  s_1a62d4  validated    1 steps  3/3 (100%)
+           Open {{v2}} and sign in with username {{v3}} and password typed exactly as the text {{v4}} (type that literal …
+  s_1ab3e5  validated    5 steps  3/3 (100%)
+           In the repository bench/bench-repo on Gitea, create a NEW issue with title exactly '{{v2}}' and a description …
+  s_2ea0ba  validated    6 steps  3/3 (100%)
+           Open {{v2}} and sign in with username {{v3}} and password typed exactly as the text {{v4}} (type that literal …
+  s_896b75  validated   13 steps  3/3 (100%)
+           Open {{v1}} and verify the full state of this issue, reporting each of these facts exactly as displayed on the…
+  s_9d3a1a  validated    2 steps  3/3 (100%)
+           Open {{v2}} and sign in with username {{v3}} and password typed exactly as the text {{v4}} (type that literal …
+  s_bbdaaa  validated   24 steps  3/3 (100%)
+           On the Gitea issue page {{v1}} (issue '{{v2}}'), use the sidebar pickers to configure the issue so that: (1) i…
+  s_bf1a54  validated    3 steps  3/3 (100%)
+           Open {{v2}} and sign in with username {{v3}} and password typed exactly as the text {{v4}} (type that literal …
+  s_ca4afc  validated    3 steps  3/3 (100%)
+           On the Gitea issue page {{v1}} (issue '{{v3}}'), add a comment using the markdown comment text area at the bot…
+  s_dcace4  validated    1 steps  3/3 (100%)
+           In the repository bench/bench-repo on Gitea, create a NEW issue with title exactly '{{v2}}' and a description …
+  s_e58b50  validated    2 steps  3/3 (100%)
+           In the repository bench/bench-repo on Gitea, create a NEW issue with title exactly '{{v2}}' and a description …
+  s_fd5c0b  validated    2 steps  3/3 (100%)
+           On the Gitea issue page {{v1}} (issue '{{v3}}'), add a comment using the markdown comment text area at the bot…
+store: /home/user/sitelooper/bench/results/fwgt10-skills
+
+summary: /home/user/sitelooper/bench/results/fwgt10-sweep.json
