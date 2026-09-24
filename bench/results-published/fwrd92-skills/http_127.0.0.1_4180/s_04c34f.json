@@ -1,0 +1,964 @@
+{
+ "id": "s_04c34f",
+ "origin": "http://127.0.0.1:4180",
+ "template": "On the ticket '{{v1}}' (reference {{v3}}), remove/delete both parts ('{{v4}}' and '{{v5}}') using the app's remove/delete control for each part, waiting after each deletion for the ticket detail view to refresh so the part is actually gone. Then archive the ticket using the app's archive control (confirm any confirmation dialog). Wait for the refresh and verify the ticket no longer appears in the active tickets list. Report the confirmation text shown, the parts table contents after both removals, and whether the ticket is gone from the active list.",
+ "params": {
+  "v1": {
+   "example": "fwrd92-n1 RD Bench Ticket",
+   "usedIn": [
+    5,
+    8,
+    9
+   ],
+   "known": true,
+   "binding": "output:i2:ticket_title"
+  },
+  "v2": {
+   "example": "fwrd92-n1",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v3": {
+   "example": "RD-1015",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i2:ticket_reference"
+  },
+  "v4": {
+   "example": "fwrd92-n1 RD Part A",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i3:part_name"
+  },
+  "v5": {
+   "example": "fwrd92-n1 RD Part B",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i4:part_name"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:4180/#/tickets",
+  "fingerprint": [
+   0,
+   0.018,
+   0.009,
+   0.018,
+   0,
+   0,
+   0.028,
+   0,
+   0,
+   0.009,
+   0,
+   0,
+   0.018,
+   0.018,
+   0,
+   0,
+   0,
+   0,
+   0.092,
+   0,
+   0,
+   0.018,
+   0,
+   0,
+   0.046,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.028,
+   0,
+   0,
+   0.018,
+   0,
+   0,
+   0.018,
+   0.028,
+   0,
+   0,
+   0,
+   0,
+   0.183,
+   0,
+   0.037,
+   0,
+   0.009,
+   0,
+   0,
+   0.009,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.037,
+   0,
+   0.018,
+   0,
+   0.073,
+   0,
+   0,
+   0.009,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.018,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.009,
+   0,
+   0,
+   0,
+   0.018,
+   0,
+   0,
+   0.018,
+   0,
+   0,
+   0,
+   0,
+   0.018,
+   0,
+   0,
+   0,
+   0.037,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.009,
+   0.028,
+   0,
+   0,
+   0,
+   0.018,
+   0.018,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.009,
+   0.009,
+   0,
+   0,
+   0.009,
+   0.009,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.009,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.018,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.018,
+   0,
+   0.009,
+   0,
+   0.018,
+   0.202,
+   0.028,
+   0,
+   0.018,
+   0.018,
+   0.009,
+   0.018,
+   0,
+   0,
+   0,
+   0,
+   0.018,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.009,
+   0,
+   0.734,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.018,
+   0.018,
+   0,
+   0.028,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.092,
+   0,
+   0,
+   0,
+   0.009,
+   0,
+   0.092,
+   0.009,
+   0.028,
+   0.018,
+   0,
+   0,
+   0,
+   0.092,
+   0.009,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.092,
+   0.037,
+   0,
+   0.018,
+   0,
+   0,
+   0.018,
+   0,
+   0,
+   0.018,
+   0,
+   0.009,
+   0,
+   0,
+   0,
+   0.037,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.009,
+   0,
+   0.037,
+   0,
+   0,
+   0,
+   0.018,
+   0.018,
+   0,
+   0.055,
+   0,
+   0,
+   0,
+   0.018,
+   0,
+   0,
+   0,
+   0,
+   0.018,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.183,
+   0.009,
+   0,
+   0,
+   0,
+   0,
+   0.018,
+   0.018,
+   0.028,
+   0,
+   0,
+   0,
+   0,
+   0.009,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.018,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.018,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.028,
+   0,
+   0.073,
+   0,
+   0,
+   0,
+   0,
+   0.018,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.028,
+   0,
+   0,
+   0,
+   0.009,
+   0,
+   0,
+   0.009,
+   0,
+   0,
+   0,
+   0,
+   0.009,
+   0.183,
+   0,
+   0.037,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.018,
+   0,
+   0,
+   0,
+   0.073,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.009,
+   0.009,
+   0,
+   0.092,
+   0.009,
+   0,
+   0.018,
+   0.018,
+   0,
+   0,
+   0,
+   0.046,
+   0.055,
+   0,
+   0,
+   0,
+   0.009,
+   0.009,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.009,
+   0,
+   0,
+   0,
+   0,
+   0.018,
+   0,
+   0.037,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.028,
+   0,
+   0,
+   0.018,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.018,
+   0,
+   0,
+   0,
+   0,
+   0.018,
+   0.018,
+   0,
+   0,
+   0,
+   0,
+   0.018,
+   0,
+   0,
+   0.009,
+   0,
+   0,
+   0,
+   0.092,
+   0,
+   0,
+   0.055,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.018,
+   0,
+   0.385,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.101,
+   0.018,
+   0,
+   0.018,
+   0,
+   0.037,
+   0,
+   0,
+   0.147,
+   0.009,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.018,
+   0,
+   0,
+   0.018,
+   0.028,
+   0,
+   0,
+   0.101,
+   0.018,
+   0,
+   0,
+   0,
+   0,
+   0.018,
+   0,
+   0.018,
+   0.009,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
+  ]
+ },
+ "steps": [
+  {
+   "tool": "read_all",
+   "args": {
+    "target": "#main table tbody a, main table a",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#main table tbody a, main table a"
+     }
+    ]
+   },
+   "label": "active_list_refs_page1"
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e709"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "page-next"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Next"
+     },
+     {
+      "kind": "id",
+      "selector": "#page-next"
+     },
+     {
+      "kind": "css",
+      "selector": "#page-next"
+     },
+     {
+      "kind": "point",
+      "x": 1126,
+      "y": 895,
+      "w": 58.8,
+      "h": 39,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets",
+    "addedContains": [
+     "- row \"RD-1003 Chest freezer icing up Pinehurst Grocers Ready 2 {{*}}\"",
+     "- cell \"RD-1003\"",
+     "- link \"RD-1003\"",
+     "- cell \"Chest freezer icing up\"",
+     "- row \"RD-1002 Dough mixer trips the breaker Marlow Bakery Closed 1 {{*}}\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e707"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "page-prev"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Previous"
+     },
+     {
+      "kind": "id",
+      "selector": "#page-prev"
+     },
+     {
+      "kind": "css",
+      "selector": "#page-prev"
+     },
+     {
+      "kind": "point",
+      "x": 959,
+      "y": 572,
+      "w": 84.5,
+      "h": 39,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets",
+    "addedContains": [
+     "- row \"{{*}} Under-counter fridge door misaligned Marlow Bakery Draft 1 {{*}}\"",
+     "- cell \"Under-counter fridge door misaligned\"",
+     "- cell \"Draft\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "check",
+   "args": {
+    "target": "@e599"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "show-archived"
+     },
+     {
+      "kind": "role",
+      "role": "checkbox",
+      "name": "Show archived"
+     },
+     {
+      "kind": "label",
+      "label": "Show archived"
+     },
+     {
+      "kind": "id",
+      "selector": "#show-archived"
+     },
+     {
+      "kind": "css",
+      "selector": "#show-archived"
+     },
+     {
+      "kind": "point",
+      "x": 1054,
+      "y": 216,
+      "w": 16,
+      "h": 16,
+      "role": "checkbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets",
+    "addedContains": [
+     "- checkbox \"Show archived\" [checked]",
+     "- row \"{{v3}} {{v1}} Archived Bench Co Ready 0 {{*}}\"",
+     "- cell \"{{v3}}\"",
+     "- link \"{{v3}}\"",
+     "- cell \"{{v1}} Archived\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "scoped",
+      "container": "#ticket-rows tr",
+      "hasText": "{{v1}} Archived",
+      "selector": "td:nth-of-type(1) > a"
+     },
+     {
+      "kind": "css",
+      "selector": "#ticket-rows > tr:nth-of-type(1) > td:nth-of-type(1) > a"
+     },
+     {
+      "kind": "point",
+      "x": 152,
+      "y": 423,
+      "w": 54.6,
+      "h": 15,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "ticket_reference"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "list-summary"
+     },
+     {
+      "kind": "id",
+      "selector": "#list-summary"
+     },
+     {
+      "kind": "css",
+      "selector": "#list-summary"
+     },
+     {
+      "kind": "point",
+      "x": 1098,
+      "y": 334,
+      "w": 114.9,
+      "h": 19.5,
+      "role": null,
+      "tag": "p",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "archived_view_total"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#ticket-rows > tr:nth-of-type(2) > td:nth-of-type(1) > a"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"ticket-row-t14\"] a"
+     },
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "ticket-link-t14"
+     },
+     {
+      "kind": "point",
+      "x": 152,
+      "y": 470,
+      "w": 54.6,
+      "h": 15,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "active_list_page1_first_ref"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text",
+    "scopedBy": "v1"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "scoped",
+      "container": "#ticket-rows tr",
+      "hasText": "{{v1}} Archived"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"ticket-table\"] tr",
+      "nth": 1
+     },
+     {
+      "kind": "css",
+      "selector": "#ticket-rows > tr:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 423,
+      "w": 1070,
+      "h": 46.2,
+      "role": null,
+      "tag": "tr",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "archived_row"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text",
+    "frame": "{{=}} RD Bench Ticket Archived",
+    "slotFrame": "{{v1}} Archived",
+    "frameMark": "v2"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "scoped",
+      "container": "#ticket-rows tr",
+      "hasText": "{{v1}} Archived",
+      "selector": "td:nth-of-type(2)"
+     },
+     {
+      "kind": "text",
+      "text": "{{v1}} Archived"
+     },
+     {
+      "kind": "css",
+      "selector": "#ticket-rows > tr:nth-of-type(1) > td:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 416,
+      "y": 423,
+      "w": 380.7,
+      "h": 46.2,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "ref"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "Deleted both parts on {{v3}} using each row's Delete button plus its in-app confirm dialog (\"Delete the part \\\"{{v4}}/B\\\" from this ticket? This cannot be undone.\" → \"Delete part\"); after each deletion the page refreshed and after the second the Parts table showed only \"No parts on this ticket yet.\" with the Total row gone. I then clicked \"Archive ticket\" — the app showed NO confirmation dialog, it archived immediately (the button flipped to \"Unarchive ticket\"). Verification: with \"Show archived\" unchecked the list reads \"Showing 1–10 of 13\" and {{v3}} is on neither page (page 1: RD-1014…RD-1004; page 2: RD-1003…RD-1001), i.e. it is gone from the active list; ticking \"Show archived\" (total 15) brings it back as \"{{v3}} {{v1}} Archived Bench Co Ready 0\", confirming it is archived rather than deleted.",
+  "values": {
+   "ticket_reference": "{{v3}}",
+   "part_delete_confirm_text": "Confirm / Delete the part \"{{v4}}\" from this ticket? This cannot be undone. / Cancel / Delete part",
+   "part_b_delete_confirm_text": "Confirm / Delete the part \"{{v5}}\" from this ticket? This cannot be undone. / Cancel / Delete part",
+   "parts_table_after_removals": "Name Cost Markup Qty Supplier Price Actions / No parts on this ticket yet. (Total row removed)",
+   "archive_confirmation_text": "none — no confirmation dialog was shown; archive applied immediately",
+   "active_list_total_without_archived": "Showing 1–10 of 13",
+   "active_list_refs_page1": "RD-1014, RD-1012, RD-1011, RD-1010, RD-1009, RD-1008, RD-1007, RD-1006, RD-1005, RD-1004",
+   "active_list_refs_page2": "RD-1003, RD-1002, RD-1001",
+   "archived_view_total": "Showing 1–10 of 15",
+   "archived_row": "{{v3}} {{v1}} Archived Bench Co Ready 0 2026-09-24",
+   "archived_button_state_after": "Unarchive ticket (replaced Archive ticket)",
+   "delete_part_confirm_text": "Confirm\n\nDelete the part \"{{v4}}\" from this ticket? This cannot be undone.\n\nCancel\nDelete part",
+   "active_list_page1_first_ref": "RD-1014",
+   "active_list_page1_last_ref": "RD-1004",
+   "ref": "{{v2}}",
+   "active_list_page2_first_ref": "RD-1003",
+   "active_list_page2_last_ref": "RD-1001"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 3,
+  "successes": 3,
+  "partial": 0,
+  "created": "2026-09-24T21:02:16.071Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2,
+  "lastUsed": "2026-09-24T21:04:05.246Z"
+ },
+ "status": "validated",
+ "seq": {
+  "chain": "s_cb43d0",
+  "index": 1,
+  "of": 2
+ },
+ "provenance": {
+  "session": "fwrd92-n1",
+  "instruction": "On the ticket 'fwrd92-n1 RD Bench Ticket' (reference RD-1015), remove/delete both parts ('fwrd92-n1 RD Part A' and 'fwrd92-n1 RD Part B') using the app's remove/delete control for each part, waiting after each deletion for the ticket detail view to refresh so the part is actually gone. Then archive the ticket using the app's archive control (confirm any confirmation dialog). Wait for the refresh and verify the ticket no longer appears in the active tickets list. Report the confirmation text shown, the parts table contents after both removals, and whether the ticket is gone from the active list.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-24T21:02:16.071Z",
+  "transforms": [
+   {
+    "name": "unfreezeExpectations",
+    "at": 3,
+    "reason": "recorded page change(s) only the recording run could produce: [\"- row \\\"RD-1014 Under-counter fridge door misaligned Marlow Bakery Draft 1 {{*}}\\\"\",\"- cell \\\"RD-1014\\\"\",\"- link \\\"RD-1014\\\"\",\"- cell \\\"Under-counter fridge door misaligned\\\"\",\"- cell \\\"Draft\\\"\"] → [\"- row \\\"{{*}} Under-counter fridge door misaligned Marlow Bakery Draft 1 {{*}}\\\"\",\"- cell \\\"Under-counter fridge door misaligned\\\"\",\"- cell \\\"Draft\\\"\"]"
+   }
+  ]
+ },
+ "revision": 4
+}

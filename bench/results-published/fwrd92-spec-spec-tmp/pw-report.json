@@ -1,0 +1,192 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwrd92-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwrd92-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwrd92-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/bench/results/fwrd92-spec-spec-tmp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwrd92-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwrd92.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwrd92-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwrd92.spec.ts",
+      "file": "fwrd92.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwrd92",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 35824,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper step] 01-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-create\n"
+                    },
+                    {
+                      "text": "[sitelooper drift] 03-open s_5aedfc/6 target: primary getByText('RD-1018', { exact: true }) missed; used #2 getByTestId('ticket-ref') (#1 ambiguous)\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-add\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 05-edit\n"
+                    },
+                    {
+                      "text": "[sitelooper drift] 06-change s_2c6768/19 target: primary getByText('fwrd92-spec', { exact: true }) missed; used #2 getByTestId('ticket-title') (#1 absent)\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 06-change\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 07-remove\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 08-report\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-open: Open http://127.0.0.1:4180/ and sign in with email bench@example.com and password {{env:APP_PASSWORD}} (type the password text exactly as given, it will be filled in when typed). Then confirm you are signed in by reporting what page/screen you land on.",
+                      "duration": 3476
+                    },
+                    {
+                      "title": "02-create: Create a new repair ticket titled exactly '{{runid}} RD Bench Ticket'. Fill in any required fields the form demands (discover them; use sensible minimal values, e.g. a customer if required). Submit it and wait for the list/detail view to refresh so the new ticket actually appears. Report the ticket's reference/ID as shown on screen, its title, and its current status.",
+                      "duration": 3446
+                    },
+                    {
+                      "title": "03-open: Open the ticket '{{runid}} RD Bench Ticket' (reference {{02-create.ticket_reference}}) and add a part to it named exactly '{{runid}} RD Part A' with cost 100 and markup 25. Fill any other required fields the part form demands with sensible values. Save it and wait for the ticket detail view to refresh so the part appears. Report the part's name, cost, markup, and the PRICE the app computes for that part (the computed price field shown on screen).",
+                      "duration": 5593
+                    },
+                    {
+                      "title": "04-add: On the ticket '{{runid}} RD Bench Ticket' (reference {{02-create.ticket_reference}}), add a second part named exactly '{{runid}} RD Part B' with cost 200 and markup 25. Fill any other required fields the part form demands with sensible values. Save it and wait for the ticket detail view to refresh so the part appears. Report the part's name, cost, markup, and the PRICE the app computes for that part, plus the ticket's parts total.",
+                      "duration": 4262
+                    },
+                    {
+                      "title": "05-edit: On the ticket '{{runid}} RD Bench Ticket' (reference {{02-create.ticket_reference}}), edit the part named '{{runid}} RD Part A' and change its cost from 100 to 150, keeping markup at 25. Save the change and wait for the ticket detail view to refresh. Report the part's new cost, its markup, and the PRICE the app computes for it afterwards, plus the ticket's parts total.",
+                      "duration": 2580
+                    },
+                    {
+                      "title": "06-change: On the ticket '{{runid}} RD Bench Ticket' (reference {{02-create.ticket_reference}}), attempt to change the ticket's status to 'Ready'. The app enforces preconditions before it will accept that status — if it refuses, read the exact error/validation message it shows, then discover and satisfy whatever the precondition is (e.g. filling in missing required fields, setting an intermediate status first, etc.), retrying until the ticket's status is actually 'Ready'. Report exactly what the app required (the literal error message(s) shown) and what you had to do to satisfy them, and confirm the final status shown on the ticket.",
+                      "duration": 6895
+                    },
+                    {
+                      "title": "07-remove: On the ticket '{{runid}} RD Bench Ticket' (reference {{02-create.ticket_reference}}), remove/delete both parts ('{{runid}} RD Part A' and '{{runid}} RD Part B') using the app's remove/delete control for each part, waiting after each deletion for the ticket detail view to refresh so the part is actually gone. Then archive the ticket using the app's archive control (confirm any confirmation dialog). Wait for the refresh and verify the ticket no longer appears in the active tickets list. Report the confirmation text shown, the parts table contents after both removals, and whether the ticket is gone from the active list.",
+                      "duration": 6607
+                    },
+                    {
+                      "title": "08-report: Final verification: go to the repair tickets list at {{01-open.url}} with 'Show archived' unchecked, and check every page of the active tickets list for any ticket whose title contains '{{runid}}'. Report whether any such ticket appears in the ACTIVE list, and report the total count of active tickets shown.",
+                      "duration": 1759
+                    }
+                  ],
+                  "startTime": "2026-09-24T21:04:49.676Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": "W3NpdGVsb29wZXIgZHJpZnRdIDAzLW9wZW4gc181YWVkZmMvNiB0YXJnZXQ6IHByaW1hcnkgZ2V0QnlUZXh0KCdSRC0xMDE4JywgeyBleGFjdDogdHJ1ZSB9KSBtaXNzZWQ7IHVzZWQgIzIgZ2V0QnlUZXN0SWQoJ3RpY2tldC1yZWYnKSAoIzEgYW1iaWd1b3VzKQpbc2l0ZWxvb3BlciBkcmlmdF0gMDYtY2hhbmdlIHNfMmM2NzY4LzE5IHRhcmdldDogcHJpbWFyeSBnZXRCeVRleHQoJ2Z3cmQ5Mi1zcGVjJywgeyBleGFjdDogdHJ1ZSB9KSBtaXNzZWQ7IHVzZWQgIzIgZ2V0QnlUZXN0SWQoJ3RpY2tldC10aXRsZScpICgjMSBhYnNlbnQp"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "ec7d394462ba0641ab1c-5ba595ff83702cf2ed47",
+          "file": "fwrd92.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-24T21:04:47.005Z",
+    "duration": 38789.525,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}
