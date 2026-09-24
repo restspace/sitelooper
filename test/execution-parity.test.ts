@@ -3775,6 +3775,49 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
     }, 240_000);
   });
 
+  describe('a click the app ignored once (round 57, fwgh12 03-publish)', () => {
+    /**
+     * ghost fwgh12-n1: after the publish flow the first click on link
+     * "Published" did nothing (url held, nothing added), a read and a
+     * screenshot followed, and the identical click navigated. Compiled from
+     * such a recording, the click is kept once, marked repeatIfNoEffect; both
+     * runners press again when a press changes nothing, and both still stop
+     * when the second press does nothing either.
+     */
+    const ignoredSteps = (): SkillStep[] => {
+      const url = `${origin}/ignored`;
+      const link = { expr: 'x', verified: true, raw: '@e1', chain: [{ kind: 'role' as const, role: 'link', name: 'Published' }] };
+      const entries: RecordedEntry[] = [
+        { k: 'instruction', text: 'open the published posts', url },
+        { k: 'step', tool: 'goto', args: { url }, locators: {}, diff: { url, alerts: [], added: [], dialect: 2 } },
+        { k: 'step', tool: 'click', args: { target: '@e1' }, locators: { target: link }, diff: { url, alerts: [], added: [], removed: [], dialect: 2 } },
+        { k: 'step', tool: 'read_all', args: { target: '#list h2', what: 'text' }, locators: { target: { expr: 'x', verified: true, raw: '#list h2', chain: [{ kind: 'css', selector: '#list h2' }] } }, result: '[]' },
+        { k: 'step', tool: 'click', args: { target: '@e1' }, locators: { target: link }, diff: { url: `${url}#/posts?type=published`, alerts: [], added: ['- heading "Seed: Welcome to the bench"'], dialect: 2 } },
+      ];
+      return compileSkills({ entries, instruction: 'open the published posts', report: { status: 'success', summary: 'ok' }, session: 's' }).flatMap((sk) => sk.steps);
+    };
+
+    it('both runners press again after a press that changed nothing, and stop when that does nothing either', async () => {
+      const compiled = ignoredSteps();
+      const clicks = compiled.filter((st) => st.tool === 'click');
+      expect(clicks).toHaveLength(1);
+      expect(clicks[0].repeatIfNoEffect).toBe(true);
+
+      const ok = await both(compiled, 0);
+      expect(ok.replay.ok, ok.replay.reason ?? '').toBe(true);
+      expect(ok.emitted.ok, ok.emitted.reason ?? '').toBe(true);
+      await new Promise((r) => setTimeout(r, 300));
+      expect(ok.replayLog).toEqual(['commit:list:published']);
+      expect(ok.emittedLog).toEqual(['commit:list:published']);
+
+      const dead = await both(compiled.map((st) => (st.tool === 'goto' ? { ...st, args: { url: `${origin}/ignored?dead=1` } } : st)), 0);
+      expect(dead.replay.ok, 'replay passed a link that never moved').toBe(false);
+      expect(dead.emitted.ok, 'the artifact passed a link that never moved').toBe(false);
+      expect(dead.replayLog).toEqual([]);
+      expect(dead.emittedLog).toEqual([]);
+    }, 240_000);
+  });
+
   describe('list reads split per element (fwop7 02-open)', () => {
     it('both runners publish each value a read_all was the one-to-one source of', async () => {
       // openproject fwop7-n1: the seed subjects were read only through a

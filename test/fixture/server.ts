@@ -892,6 +892,29 @@ document.getElementById('save').addEventListener('click', async () => {
 </script>
 </body></html>`;
 
+/**
+ * A link the app IGNORES once (round 57, ghost fwgh12 after the publish
+ * flow): the first press on "Published" does nothing; the next moves the
+ * hash to `#/posts?type=published`, posts `/commit/list/published` and shows
+ * the list's heading. `/ignored?dead=1` ignores every press.
+ */
+const IGNORED = (dead: boolean) => `<!doctype html><html><head><meta charset="utf-8"><title>Posts</title></head><body>
+<h1>Posts</h1>
+<a id="published" href="#">Published</a>
+<div id="list"></div>
+<script>
+let presses = 0;
+document.getElementById('published').addEventListener('click', async (e) => {
+  e.preventDefault();
+  presses++;
+  if (${dead ? 'true' : 'presses === 1'}) return;
+  location.hash = '#/posts?type=published';
+  await fetch('/commit/list/published', { method: 'POST' });
+  document.getElementById('list').innerHTML = '<h2>Seed: Welcome to the bench</h2>';
+});
+</script>
+</body></html>`;
+
 const CONTROLS = `<!doctype html><html><head><meta charset="utf-8"><title>Controls</title></head><body>
 <h1>Controls</h1>
 <select id="code" aria-label="Code">
@@ -1477,6 +1500,7 @@ export async function createFixtureServer(initialCount = 10): Promise<FixtureSer
         return html(HOP(tail('/hop/')));
       }
       if (url === '/controls') return html(CONTROLS);
+      if (url === '/ignored' || url === '/ignored?dead=1') return html(IGNORED(url.endsWith('dead=1')));
       if (url === '/modal' || url === '/modal?open=1') return html(MODAL(url.endsWith('open=1')));
       if (url === '/filters' || url.startsWith('/filters?')) return html(FILTERS(url.includes('open=1'), url.includes('stuck=1')));
       if (url === '/price' || url === '/price?stuck=1') return html(PRICE(url.endsWith('stuck=1')));
