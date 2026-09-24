@@ -1,0 +1,75 @@
+
+[sweep] run 1/3: fwec12-n1 (store: /home/user/sitelooper/bench/results/fwec12-skills)
+[harness] espocrm: defaulting APP_URL
+[harness] espocrm: defaulting APP_EMAIL
+[harness] espocrm: defaulting APP_PASSWORD
+[reset] espocrm: no leftover bench opportunities
+[harness] espocrm responded 200 at http://127.0.0.1:8097/
+stopped: fwec12-n1
+  flow "fwec12" saved: 1 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwec12.json
+  warning: note: 01-open no longer publishes opportunity_count, account, stage — no replay reads them from the page and the recording showed no line to read
+  warning: warning: instruction "From the Opportunities list, create a new Opportunity with these exact…" ran 18 state-changing step(s) but reported nothing — its work is NOT in the flow
+  warning: warning: 6 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  s_a07bcb.reportTemplate.values.opportunity_count: "3 (pager 1–3 / 3)" (output) in "3 (pager 1–3 / 3)"
+  s_a07bcb.reportTemplate.values.account: "Bench Account (all three)" (output) in "Bench Account (all three)"
+  s_a07bcb.reportTemplate.values.stage: "Prospecting (all three)" (output) in "Prospecting (all three)"
+  s_a07bcb.reportTemplate.values.seed_opportunities_1: "Seed: training package" (output) in "Seed: training package"
+  s_a07bcb.reportTemplate.values.seed_opportunities_2: "Seed: pilot expansion" (output) in "Seed: pilot expansion"
+arm=sitelooper model=z-ai/glm-5.3 runid=fwec12-n1 stop=error: API 402: {"error":{"message":"This request would exceed your available credits given your current in-flight requests. Retry after in-flight requests settle, or add credits.","code":402,"metadata":{"reason":"in_flight_budget_exhausted","limit_source":"openrouter_in_flight_budget","remedy_hint":"Retry after your in-flight requests settle (see the Retry-After header). Adding credits at https://openrouter.ai/settings/credits raises your in-flight budget, up to a capped ceiling.","headers":{"Retry-After":"120
+turns=3 wall=127.7s
+commands=2 cmdTime=114.6s cmdBytes=1181 timeouts=0
+orchestrator in=2267 cw=0 cr=3200 out=990
+inner prompt=107899 cached=102400 completion=1410
+spend=$0.0103 maxUsd=3
+learn: A_n=0 replayed=0/1 full=0 repaired=0 compiled=1 variants=0
+-> /home/user/sitelooper/bench/results/fwec12-n1-sitelooper-result.json
+
+fwec12-n1: objectives passed 0/7
+  obj 1: FAIL — name(s) not in report: Seed: training package, Seed: pilot expansion, Seed: annual support renewal
+  obj 2: FAIL — opportunity not found
+  obj 3: FAIL — no opportunity
+  obj 4: FAIL — no opportunity
+  obj 5: FAIL — no opportunity
+  obj 6: FAIL — no opportunity
+  obj 7: FAIL — no opportunity to report
+
+[sweep] run 2/3: fwec12-n2 (replay flow fwec12, no orchestrator)
+[reset] espocrm: no leftover bench opportunities
+
+fwec12-n2: objectives passed 1/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: FAIL — opportunity not found
+  obj 3: FAIL — no opportunity
+  obj 4: FAIL — no opportunity
+  obj 5: FAIL — no opportunity
+  obj 6: FAIL — no opportunity
+  obj 7: FAIL — no opportunity to report
+
+[sweep] run 3/3: fwec12-n3 (replay flow fwec12, no orchestrator)
+[reset] espocrm: no leftover bench opportunities
+
+fwec12-n3: objectives passed 1/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: FAIL — opportunity not found
+  obj 3: FAIL — no opportunity
+  obj 4: FAIL — no opportunity
+  obj 5: FAIL — no opportunity
+  obj 6: FAIL — no opportunity
+  obj 7: FAIL — no opportunity to report
+
+Learning sweep fwec12 (K=3)
+┌─────────┬───┬─────────────┬──────────┬────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid       │ verified │ stop                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼─────────────┼──────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwec12-n1' │ '0/7'    │ 'error: API 402: {"error":{"message":"This request would exceed your available credits given your current in-flight requests. Retry after in-flight requests settle, or add credits.","code":402,"metadata":{"reason":"in_flight_budget_exhausted","limit_source":"openrouter_in_flight_budget","remedy_hint":"Retry after your in-flight requests settle (see the Retry-After header). Adding credits at https://openrouter.ai/settings/credits raises your in-flight budget, up to a capped ceiling.","headers":{"Retry-After":"120' │ 3     │ 2    │ 0.0103    │ 0   │ '0/1'        │ 128    │
+│ 1       │ 2 │ 'fwec12-n2' │ '1/7'    │ 'success'                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              │ 0     │ 1    │ 0         │ 1   │ '1/1 (flow)' │ 5      │
+│ 2       │ 3 │ 'fwec12-n3' │ '1/7'    │ 'success'                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              │ 0     │ 1    │ 0         │ 1   │ '1/1 (flow)' │ 5      │
+└─────────┴───┴─────────────┴──────────┴────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:8097
+  s_a07bcb  validated    3 steps  3/3 (100%)
+           Open {{v1}} and sign in with username {{v2}} and password exactly the literal text {{v3}} (type it as-is; it g…
+  s_dd7800  validated    5 steps  3/3 (100%)
+           Open {{v1}} and sign in with username {{v2}} and password exactly the literal text {{v3}} (type it as-is; it g…
+store: /home/user/sitelooper/bench/results/fwec12-skills
+
+summary: /home/user/sitelooper/bench/results/fwec12-sweep.json
