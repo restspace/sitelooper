@@ -13,7 +13,7 @@ import { siteModel } from '../skills/sitemap.js';
 import { buildSystemPrompt } from './prompt.js';
 import { admitsIncompletion, artefactKeys, backfillReadValues, flattenComposedValues, flattenContainedComposite, flattenProvenComposite, mergeReportValues, namingAskMessage, positionDatumKeys, promoteLabelledReads, publishProseIdentifiers, unnamedReadValues, validateReport, type Report } from './report.js';
 import { executeTool, toolDefsFor, type ToolExecution } from './tools.js';
-import { captureReadBack, captureReadBackAt, coreReadBack, savedSelectionReadBack, selectionReadBack, setIdentityHints, visibleTextsWithin } from '../daemon/recorder.js';
+import { captureReadBack, captureReadBackAt, coreReadBack, savedSelectionReadBack, selectionReadBack, setIdentityHints, shownReadBack, visibleTextsWithin } from '../daemon/recorder.js';
 import { describeOutcome, pinPart, sourceReadBacks, type ReadBackDecider, type ReadBackTarget } from './readback.js';
 
 /** Tools that change the page URL, staleing every existing snapshot's refs. */
@@ -665,6 +665,20 @@ export async function runInstruction(
               if (contained.names.length) {
                 for (const step of contained.pinned) browser.script.addStep(step);
                 opts.onProgress?.(`[report] ${name} is element texts the page shows, labelled: split into ${contained.names.join(', ')} (read-back)`);
+                continue;
+              }
+              // Not on THIS page, but shown on an earlier one of this
+              // instruction (Gitea fwgt10 01-open: the issue titles on the
+              // list, the report made on the search page): read there, right
+              // after the step whose diff showed them. See shownReadBack.
+              const shown = await shownReadBack(browser.script.stepsThisInstruction?.() ?? [], report, name, opts.recordAs?.text ?? instruction);
+              if (shown) {
+                let after = shown.after;
+                for (const read of shown.reads) {
+                  browser.script.insertStepAfter(after, read);
+                  after = read;
+                }
+                opts.onProgress?.(`[report] ${name} was shown earlier in this instruction (${shown.after.tool}): split into ${shown.names.join(', ')}, read where it was shown`);
                 continue;
               }
               stragglers.push({ name, value }); // not pinnable, whole or in parts — try the cascade next
