@@ -1,0 +1,177 @@
+{
+  "flow": "fwsi11",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_8557a5; observed current_url=http://127.0.0.1:8098/login, landing_url=http://127.0.0.1:8098/, signed_in_user_menu=Bench Admin, account_link_href=#, user_first_name=Bench, user_last_name=Admin, login_username_used=Admin, app_name=Bench Assets.",
+      "values": {
+        "current_url": "http://127.0.0.1:8098/login",
+        "landing_url": "http://127.0.0.1:8098/",
+        "signed_in_user_menu": "Bench Admin",
+        "account_link_href": "#",
+        "user_first_name": "Bench",
+        "user_last_name": "Admin",
+        "login_username_used": "Admin",
+        "app_name": "Bench Assets"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "17/17",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-find",
+      "status": "success",
+      "summary": "Replayed stored procedure s_5e95ba; observed asset_1_tag=SEED-0001, asset_2_tag=SEED-0002, asset_3_tag=SEED-0003, asset_1_name=Seed: Reception Laptop, asset_2_name=Seed: Training Laptop, asset_3_name=Seed: Spare Laptop, asset_list_url=http://127.0.0.1:8098/hardware?page=1&size=20&order=asc&sort=created_at&search=Seed%3A, search_term=Seed:, total_rows_matching=3.",
+      "values": {
+        "asset_1_tag": "SEED-0001",
+        "asset_2_tag": "SEED-0002",
+        "asset_3_tag": "SEED-0003",
+        "asset_1_name": "Seed: Reception Laptop",
+        "asset_2_name": "Seed: Training Laptop",
+        "asset_3_name": "Seed: Spare Laptop",
+        "asset_list_url": "http://127.0.0.1:8098/hardware?page=1&size=20&order=asc&sort=created_at&search=Seed%3A",
+        "search_term": "Seed:",
+        "total_rows_matching": "3"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "17/17",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_d76ffc; observed default_location=Bench Office, asset_view_url=http://127.0.0.1:8098/hardware/5, asset_tag=BA-00005, model=Bench Laptop Model, status=Ready to Deploy, model_manufacturer_category_1=Bench Laptops, model_manufacturer_category_2=Bench Manufacturer, task_reference=fwsi11-n2.",
+      "unanswered": [
+        "purchase_date_on_view_page"
+      ],
+      "values": {
+        "default_location": "Bench Office",
+        "asset_view_url": "http://127.0.0.1:8098/hardware/5",
+        "asset_tag": "BA-00005",
+        "model": "Bench Laptop Model",
+        "status": "Ready to Deploy",
+        "model_manufacturer_category_1": "Bench Laptops",
+        "model_manufacturer_category_2": "Bench Manufacturer",
+        "task_reference": "fwsi11-n2"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "25/25",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_40df0d: step 10: read 'asset_name' returned a value the skill itself set/selected ('fwsi11-n2 Bench Asset') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_40df0d: step 11: read 'purchase_date_entered' returned a value the skill itself set/selected ('2026-03-15') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_40df0d: step 14: read 'model_selection_rendered' returned a value the skill itself set/selected ('×\nBench Laptops - Bench Manufacturer Bench Laptop Model') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_40df0d: step 15: read 'default_location_rendered' returned a value the skill itself set/selected ('×\nBench Office') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_d76ffc: step 4: primary locator did not resolve; used fallback #2 page.locator('#details > div > div > div:nth-of-type(2) > div > a')"
+      ],
+      "unreported": [
+        "asset_name",
+        "purchase_date_entered",
+        "default_location_rendered"
+      ]
+    },
+    {
+      "id": "04-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_1e200d; observed asset_view_url=http://127.0.0.1:8098/hardware/5, task_reference=fwsi11-n2, asset_tag=BA-00005, asset_name=fwsi11-n2 Bench Asset, note_text_displayed=Checked out for fwsi11-n2 bench task, checked_out_to=Bench Assignee, purchase_date_shown=Purchased 2026-03-15.",
+      "values": {
+        "asset_view_url": "http://127.0.0.1:8098/hardware/5",
+        "task_reference": "fwsi11-n2",
+        "asset_tag": "BA-00005",
+        "asset_name": "fwsi11-n2 Bench Asset",
+        "note_text_displayed": "Checked out for fwsi11-n2 bench task",
+        "checked_out_to": "Bench Assignee",
+        "purchase_date_shown": "Purchased 2026-03-15"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "16/16",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_0c8541: step 3: read 'checkout_user_rendered' returned a value the skill itself set/selected ('×\nBench Assignee (bench-assignee)') — confirms the control, not persistence; dropped from the report's confident values"
+      ],
+      "unreported": [
+        "note_display_location",
+        "checkout_user_rendered"
+      ]
+    },
+    {
+      "id": "05-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_d3f184; observed created_by=Bench Admin, task_reference=fwsi11-n2, asset_tag=BA-00005, asset_name=fwsi11-n2 Bench Asset, page_heading=Assets  fwsi11-n2 Bench Asset #BA-00005 - Bench Laptop Model, model=Bench Laptop Model, model_category=Bench Laptops, model_manufacturer=Bench Manufacturer, status_badge=Deployed, default_location=Bench Office, purchase_date_display=Purchased 2026-03-15 - 6 months 1 week ago, note_text=Checked out for fwsi11-n2 bench task, created=2026-09-24 04:49 PM, updated=2026-09-24 04:49 PM, status_label=Ready to Deploy, purchase_date=2026-03-15, checked_out_to=Bench Assignee, byod_flag=BYOD, requestable_flag=Requestable.",
+      "values": {
+        "created_by": "Bench Admin",
+        "task_reference": "fwsi11-n2",
+        "asset_tag": "BA-00005",
+        "asset_name": "fwsi11-n2 Bench Asset",
+        "page_heading": "Assets  fwsi11-n2 Bench Asset #BA-00005 - Bench Laptop Model",
+        "model": "Bench Laptop Model",
+        "model_category": "Bench Laptops",
+        "model_manufacturer": "Bench Manufacturer",
+        "status_badge": "Deployed",
+        "default_location": "Bench Office",
+        "purchase_date_display": "Purchased 2026-03-15 - 6 months 1 week ago",
+        "note_text": "Checked out for fwsi11-n2 bench task",
+        "created": "2026-09-24 04:49 PM",
+        "updated": "2026-09-24 04:49 PM",
+        "status_label": "Ready to Deploy",
+        "purchase_date": "2026-03-15",
+        "checked_out_to": "Bench Assignee",
+        "byod_flag": "BYOD",
+        "requestable_flag": "Requestable"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "18/18",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "model_sidebar_text"
+      ]
+    }
+  ],
+  "passed": 5,
+  "total": 5,
+  "repinned": 0,
+  "drift": 1,
+  "driftTickets": [
+    {
+      "flow": "fwsi11",
+      "step": "03-create",
+      "skill": "s_d76ffc",
+      "atStep": "4",
+      "key": "target",
+      "similarity": 1.001,
+      "missedLocator": "page.locator('#details div.col-md-5', { hasText: 'Ready to Deploy deployable' }).locator('div > a')",
+      "fallbackUsed": "page.locator('#details > div > div > div:nth-of-type(2) > div > a')",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8098/hardware/:id",
+      "pageUrl": "http://127.0.0.1:8098/hardware/5"
+    }
+  ],
+  "wallMs": 90955,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "cachedTokens": 0
+  },
+  "usageByModel": {},
+  "servedByModel": {},
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

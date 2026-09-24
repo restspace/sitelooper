@@ -1,0 +1,461 @@
+{
+ "id": "s_5e95ba",
+ "origin": "http://127.0.0.1:8098",
+ "template": "In this Snipe-IT app, find all assets whose NAME starts with '{{v1}}' (the name field, not the asset tag). Go to Assets -> Asset List and search/filter so you see them all. Report for EACH such asset: its asset tag exactly as displayed (e.g. something like 'BA-00012') and its name exactly as displayed. List every one you find — do not modify them. Report the complete list.",
+ "params": {
+  "v1": {
+   "example": "Seed:",
+   "usedIn": [
+    1,
+    9,
+    11,
+    13,
+    15
+   ]
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8098/hardware"
+ },
+ "steps": [
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e160",
+    "value": "{{v1}}"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "searchbox",
+      "name": "Search"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "Search"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(3) > div > input"
+     },
+     {
+      "kind": "point",
+      "x": 1115,
+      "y": 258,
+      "w": 207,
+      "h": 34,
+      "role": "searchbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8098/hardware",
+    "addedContains": [
+     "- searchbox \"Search\": {{v1}}"
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "table tbody tr td:nth-child(1), table tbody tr td:nth-child(2)",
+    "what": "text",
+    "label": "asset_1_tag"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "table tbody tr td:nth-child(1), table tbody tr td:nth-child(2)",
+      "nth": 1
+     }
+    ]
+   },
+   "label": "asset_1_tag"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "table tbody tr td:nth-child(1), table tbody tr td:nth-child(2)",
+    "what": "text",
+    "label": "asset_2_tag"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "table tbody tr td:nth-child(1), table tbody tr td:nth-child(2)",
+      "nth": 3
+     }
+    ]
+   },
+   "label": "asset_2_tag"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "table tbody tr td:nth-child(1), table tbody tr td:nth-child(2)",
+    "what": "text",
+    "label": "asset_3_tag"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "table tbody tr td:nth-child(1), table tbody tr td:nth-child(2)",
+      "nth": 5
+     }
+    ]
+   },
+   "label": "asset_3_tag"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "table tbody tr td:nth-child(3)",
+    "what": "text",
+    "label": "asset_1_name",
+    "scopedBy": "v1"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "table tbody tr td:nth-child(3)",
+      "nth": 0
+     }
+    ]
+   },
+   "label": "asset_1_name"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "table tbody tr td:nth-child(3)",
+    "what": "text",
+    "label": "asset_2_name",
+    "scopedBy": "v1"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "table tbody tr td:nth-child(3)",
+      "nth": 1
+     }
+    ]
+   },
+   "label": "asset_2_name"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "table tbody tr td:nth-child(3)",
+    "what": "text",
+    "label": "asset_3_name",
+    "scopedBy": "v1"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "table tbody tr td:nth-child(3)",
+      "nth": 2
+     }
+    ]
+   },
+   "label": "asset_3_name"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "what": "url",
+    "label": "asset_list_url"
+   },
+   "locators": {},
+   "label": "asset_list_url"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text",
+    "scopedBy": "v1"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "scoped",
+      "container": "#assetsListingTable tr",
+      "hasText": "{{v1}} Reception Laptop",
+      "selector": "td:nth-of-type(3) > span > a > mark"
+     },
+     {
+      "kind": "css",
+      "selector": "tbody > tr:nth-of-type(1) > td:nth-of-type(3) > span > a > mark"
+     },
+     {
+      "kind": "point",
+      "x": 240,
+      "y": 433,
+      "w": 36.6,
+      "h": 20.2,
+      "role": null,
+      "tag": "mark",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "search_term"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "value"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "label",
+      "label": "Name"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(1) > ul > li:nth-of-type(6) > label > input"
+     }
+    ]
+   },
+   "label": "total_rows_matching"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "scoped",
+      "container": "#assetsListingTable tr",
+      "hasText": "{{v1}} Reception Laptop",
+      "selector": "td:nth-of-type(2) > span > a"
+     },
+     {
+      "kind": "css",
+      "selector": "#assetsListingTable > tbody > tr:nth-of-type(1) > td:nth-of-type(2) > span > a"
+     },
+     {
+      "kind": "point",
+      "x": 158,
+      "y": 433,
+      "w": 68.7,
+      "h": 15,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "asset_1_tag"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text",
+    "scopedBy": "v1"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#assetsListingTable > tbody > tr:nth-of-type(1) > td:nth-of-type(3) > span > a"
+     },
+     {
+      "kind": "point",
+      "x": 293,
+      "y": 433,
+      "w": 142.1,
+      "h": 20.2,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "asset_1_name"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "scoped",
+      "container": "#assetsListingTable tr",
+      "hasText": "{{v1}} Training Laptop",
+      "selector": "td:nth-of-type(2) > span > a"
+     },
+     {
+      "kind": "css",
+      "selector": "#assetsListingTable > tbody > tr:nth-of-type(2) > td:nth-of-type(2) > span > a"
+     },
+     {
+      "kind": "point",
+      "x": 158,
+      "y": 487,
+      "w": 68.7,
+      "h": 15,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "asset_2_tag"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text",
+    "scopedBy": "v1"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#assetsListingTable > tbody > tr:nth-of-type(2) > td:nth-of-type(3) > span > a"
+     },
+     {
+      "kind": "point",
+      "x": 287,
+      "y": 487,
+      "w": 129.8,
+      "h": 20.2,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "asset_2_name"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "scoped",
+      "container": "#assetsListingTable tr",
+      "hasText": "{{v1}} Spare Laptop",
+      "selector": "td:nth-of-type(2) > span > a"
+     },
+     {
+      "kind": "css",
+      "selector": "#assetsListingTable > tbody > tr:nth-of-type(3) > td:nth-of-type(2) > span > a"
+     },
+     {
+      "kind": "point",
+      "x": 158,
+      "y": 541,
+      "w": 68.7,
+      "h": 15,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "asset_3_tag"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text",
+    "scopedBy": "v1"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#assetsListingTable > tbody > tr:nth-of-type(3) > td:nth-of-type(3) > span > a"
+     },
+     {
+      "kind": "point",
+      "x": 281,
+      "y": 541,
+      "w": 118.3,
+      "h": 20.2,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "asset_3_name"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "Went to Assets -> Asset List (http://127.0.0.1:8098/hardware) and filtered the table with the search term \"{{v1}}\". The filtered result is 3 assets (the table reports \"Showing 1 to 3 of 3 rows\", one page, no pagination), and all three have names beginning with \"{{v1}}\". None were modified. The assets are: SEED-0001 / \"{{v1}} Reception Laptop\"; SEED-0002 / \"{{v1}} Training Laptop\"; SEED-0003 / \"{{v1}} Spare Laptop\".",
+  "values": {
+   "asset_list_url": "http://127.0.0.1:8098/hardware?page=1&size=20&order=asc&sort=created_at&search=Seed%3A",
+   "search_term": "{{v1}}",
+   "total_rows_matching": "3",
+   "asset_1_tag": "SEED-0001",
+   "asset_1_name": "{{v1}} Reception Laptop",
+   "asset_2_tag": "SEED-0002",
+   "asset_2_name": "{{v1}} Training Laptop",
+   "asset_3_tag": "SEED-0003",
+   "asset_3_name": "{{v1}} Spare Laptop",
+   "example_asset_tag_format": "SEED-000N",
+   "example_tag_prefix_format": "BA-000NN"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 3,
+  "successes": 3,
+  "partial": 0,
+  "created": "2026-09-24T16:43:57.999Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2,
+  "lastUsed": "2026-09-24T16:50:23.498Z"
+ },
+ "status": "validated",
+ "seq": {
+  "chain": "s_bfa95c",
+  "index": 1,
+  "of": 2
+ },
+ "provenance": {
+  "session": "fwsi11-n1",
+  "instruction": "In this Snipe-IT app, find all assets whose NAME starts with 'Seed:' (the name field, not the asset tag). Go to Assets -> Asset List and search/filter so you see them all. Report for EACH such asset: its asset tag exactly as displayed (e.g. something like 'BA-00012') and its name exactly as displayed. List every one you find — do not modify them. Report the complete list.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-24T16:43:57.999Z"
+ },
+ "revision": 4
+}

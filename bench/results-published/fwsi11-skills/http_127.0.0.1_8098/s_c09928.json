@@ -1,0 +1,88 @@
+{
+ "id": "s_c09928",
+ "origin": "http://127.0.0.1:8098",
+ "template": "Open {{v1}} and sign in with username 'admin' and password '{{env:APP_PASSWORD}}' (type the password text exactly as '{{env:APP_PASSWORD}}' — it gets filled in automatically). Verify you are signed in as admin and report what page you land on.",
+ "params": {
+  "v1": {
+   "example": "http://127.0.0.1:8098/",
+   "usedIn": [
+    3
+   ]
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8098/"
+ },
+ "steps": [
+  {
+   "tool": "wait_for",
+   "args": {
+    "target": "body",
+    "state": "visible"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "body"
+     },
+     {
+      "kind": "css",
+      "selector": "html > body"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 450,
+      "w": 1264,
+      "h": 884,
+      "role": null,
+      "tag": "body",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "what": "url",
+    "label": "current_url"
+   },
+   "locators": {},
+   "label": "current_url"
+  },
+  {
+   "tool": "goto",
+   "args": {
+    "url": "{{v1}}"
+   },
+   "locators": {}
+  }
+ ],
+ "contract": 4,
+ "stats": {
+  "uses": 3,
+  "successes": 3,
+  "partial": 0,
+  "created": "2026-09-24T16:42:43.071Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 4,
+  "lastUsed": "2026-09-24T16:50:19.365Z"
+ },
+ "status": "validated",
+ "seq": {
+  "chain": "s_3e061f",
+  "index": 0,
+  "of": 4
+ },
+ "provenance": {
+  "session": "fwsi11-n1",
+  "instruction": "Open http://127.0.0.1:8098/ and sign in with username 'admin' and password '{{env:APP_PASSWORD}}' (type the password text exactly as '{{env:APP_PASSWORD}}' — it gets filled in automatically). Verify you are signed in as admin and report what page you land on.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-24T16:42:43.071Z"
+ },
+ "revision": 3
+}
