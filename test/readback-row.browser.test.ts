@@ -14,6 +14,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { BrowserSession } from '../src/daemon/browser.js';
 import { captureReadBack } from '../src/daemon/recorder.js';
+import { pinPart } from '../src/agent/readback.js';
 
 const enabled = process.env.BP_BROWSER_TESTS === '1';
 const d = enabled ? describe : describe.skip;
@@ -53,6 +54,21 @@ d('captureReadBack: one record showing one value twice', () => {
         <tr><td>fwod9-n1 Bench Customer</td><td>Otherton</td></tr>
       </tbody></table>`);
     expect(await captureReadBack(page, 'fwod9-n1 Bench Customer', 'customer')).toBeNull();
+    // Round 57's part pinning counts rendered matches only; two RENDERED
+    // records are still two, and still refused.
+    expect(await pinPart(page, 'fwod9-n1 Bench Customer', 'customer')).toBeNull();
+  });
+
+  it('pins a part past a copy of it that is not rendered (fwkb41 column titles)', async () => {
+    const page = await session.getPage();
+    await page.setContent(`
+      <table><tr><th><a href="#">Ready</a></th><th><a href="#">Done</a></th></tr>
+      <tr><td><div style="display:none">Ready</div></td><td><div style="display:none">Done</div></td></tr></table>`);
+    expect(await captureReadBack(page, 'Ready', 'col')).toBeNull(); // counted the hidden copy
+    const step = await pinPart(page, 'Ready', 'col');
+    expect(step).not.toBeNull();
+    expect(step!.label).toBe('col');
+    expect(JSON.parse(step!.result!)).toBe('Ready');
   });
 });
 

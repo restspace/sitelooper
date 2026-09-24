@@ -38,8 +38,9 @@ import { replayReport } from '../src/skills/learn.js';
 import { consumedReportedOutputs, ignorableRefs, resolveInstruction, resolveStepParams, type FlowStep } from '../src/skills/flow.js';
 import type { Skill, SkillParam, SkillStep } from '../src/skills/store.js';
 import type { LocatorCandidate, RecordedEntry, RecordedStep } from '../src/daemon/recorder.js';
-import { captureReadBack, selectionReadBack, visibleTextsWithin } from '../src/daemon/recorder.js';
-import { flattenContainedComposite, planContainedParts, type Report } from '../src/agent/report.js';
+import { captureReadBack, coreReadBack, selectionReadBack, visibleTextsWithin } from '../src/daemon/recorder.js';
+import { pinPart } from '../src/agent/readback.js';
+import { flattenContainedComposite, flattenProvenComposite, planContainedParts, type Report } from '../src/agent/report.js';
 import { compileSkills } from '../src/skills/compile.js';
 import { FIXTURE_TOTP_SEED, createFixtureServer, type FixtureServer } from './fixture/server.js';
 import { hotpCode, totpSeed } from '../src/execution/totp.js';
@@ -776,6 +777,129 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
       }, 120_000);
     }
   });
+
+  /**
+   * Round 57, kanboard fwkb41. n1 reported `board_columns_left_to_right:
+   * "Backlog, Ready, Work in progress, Done"`; the list splitter planned the
+   * four titles, but Kanboard renders each title twice — the header, and a
+   * collapsed-column copy that is not rendered — and captureReadBack counted
+   * both, refused, and the all-or-nothing split published none of them (obj 1
+   * FAIL on both replays, "Ready, Done"). And `new_task_numeric_id: "4"` was
+   * shown only as `#4`. Recorded against the same markup, the columns split
+   * into four reads (pinPart: the code tier's rendered-only count) and the id
+   * is read from `#4` framed at its core; both runners publish all of it —
+   * and "5" once the board's newest card is #5.
+   */
+  it('both runners publish every column a split composite pinned past hidden duplicates, and an id read at its core', async () => {
+    // The recording stood on the new task's own url, the id's provenance.
+    const url = `${origin}/kanboard?task_id=4`;
+    const instruction = "Open the 'Bench Board' project board and report its column titles left to right, and the new task's numeric id.";
+    const report: Report = { status: 'success', summary: 'ok', evidence: { values: { board_columns_left_to_right: 'Backlog, Ready, Work in progress, Done', new_task_numeric_id: '4' } } };
+    const reads: RecordedStep[] = [];
+    reset(0);
+    const session = new BrowserSession({ session: `parity-kb-${Date.now()}`, persist: false });
+    try {
+      const page = await session.getPage();
+      await page.goto(url);
+      // What round 56 did: every part through captureReadBack alone — refused.
+      const before: Report = JSON.parse(JSON.stringify(report));
+      expect((await flattenProvenComposite(before, 'board_columns_left_to_right', (part, name) => captureReadBack(page, part, name))).names).toEqual([]);
+      const split = await flattenProvenComposite(report, 'board_columns_left_to_right', (part, name) => pinPart(page, part, name));
+      expect(split.names).toEqual(['board_columns_left_to_right_1', 'board_columns_left_to_right_2', 'board_columns_left_to_right_3', 'board_columns_left_to_right_4']);
+      reads.push(...split.pinned);
+      const card = await captureReadBack(page, '#4', 'new_task_card_id_shown');
+      expect(card).not.toBeNull();
+      reads.push(card!);
+      expect(await captureReadBack(page, '4', 'new_task_numeric_id')).toBeNull(); // no element shows "4" whole
+      const landed: RecordedStep = { k: 'step', tool: 'goto', args: { url }, locators: {}, diff: { url, alerts: [], added: [] } };
+      const core = coreReadBack([landed, ...reads], '4', 'new_task_numeric_id', report.evidence!.values);
+      expect(core).not.toBeNull();
+      reads.push(core!);
+      (report.evidence!.values as Record<string, string>).new_task_card_id_shown = '#4';
+    } finally {
+      await session.close();
+    }
+    const entries: RecordedEntry[] = [
+      { k: 'instruction', text: instruction, url },
+      { k: 'step', tool: 'goto', args: { url }, locators: {}, diff: { url, alerts: [], added: [] } },
+      ...reads,
+    ];
+    const [skill] = compileSkills({ entries, instruction, report, session: 'parity', knownValues: {} });
+    const spec: SpecFlow = {
+      version: 1,
+      name: 'parity-kb',
+      origin,
+      startUrl: `${origin}/`,
+      vars: [],
+      steps: [{ id: '01-open', instruction, params: {}, outputs: [], segments: [{ id: skill.id, template: skill.template, params: skill.params, preconditions: skill.preconditions, steps: skill.steps }] }],
+    };
+    const columns = { board_columns_left_to_right_1: 'Backlog', board_columns_left_to_right_2: 'Ready', board_columns_left_to_right_3: 'Work in progress', board_columns_left_to_right_4: 'Done' };
+
+    for (const n of [4, 5]) {
+      reset(0);
+      fx.board.card = n;
+      const replay = await replayOf(skill);
+      reset(0);
+      fx.board.card = n;
+      const emitted = await emittedOf(spec);
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      const want = { ...columns, new_task_card_id_shown: `#${n}`, new_task_numeric_id: String(n) };
+      for (const [key, value] of Object.entries(want)) {
+        expect(replay.outputs[key], `replay ${key} (#${n})`).toBe(value);
+        expect(emitted.outputs[`01-open.${key}`], `artifact ${key} (#${n})`).toBe(value);
+      }
+    }
+  }, 180_000);
+
+  /**
+   * Round 57, EspoCRM fwec10: `stage: "Negotiation"` shows in the record's
+   * stage field and in the Stream entry narrating the save. captureReadBack
+   * now pins the match inside the field the key names (fieldReadBack), and
+   * both runners re-read the live stage from that field — never the stream's.
+   */
+  it('both runners re-read a value from the field its key names, past a narrating copy of it', async () => {
+    const url = `${origin}/espo`;
+    const instruction = 'Open the opportunity and report its stage.';
+    reset(0);
+    const session = new BrowserSession({ session: `parity-espo-${Date.now()}`, persist: false });
+    let read: RecordedStep | null = null;
+    try {
+      const page = await session.getPage();
+      await page.goto(url);
+      read = await captureReadBack(page, 'Negotiation', 'stage');
+    } finally {
+      await session.close();
+    }
+    expect(read).not.toBeNull();
+    const entries: RecordedEntry[] = [
+      { k: 'instruction', text: instruction, url },
+      { k: 'step', tool: 'goto', args: { url }, locators: {}, diff: { url, alerts: [], added: [] } },
+      read!,
+    ];
+    const report: Report = { status: 'success', summary: 'ok', evidence: { values: { stage: 'Negotiation' } } };
+    const [skill] = compileSkills({ entries, instruction, report, session: 'parity', knownValues: {} });
+    const spec: SpecFlow = {
+      version: 1,
+      name: 'parity-espo',
+      origin,
+      startUrl: `${origin}/`,
+      vars: [],
+      steps: [{ id: '02-create', instruction, params: {}, outputs: [], segments: [{ id: skill.id, template: skill.template, params: skill.params, preconditions: skill.preconditions, steps: skill.steps }] }],
+    };
+    for (const stage of ['Negotiation', 'Proposal']) {
+      reset(0);
+      fx.espo.stage = stage;
+      const replay = await replayOf(skill);
+      reset(0);
+      fx.espo.stage = stage;
+      const emitted = await emittedOf(spec);
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      expect(replay.outputs.stage, stage).toBe(stage);
+      expect(emitted.outputs['02-create.stage'], stage).toBe(stage);
+    }
+  }, 120_000);
 
   describe('report values (fwrd86)', () => {
     const READ_REF: SkillStep = { tool: 'read', args: { target: '(read-back)', what: 'text' }, locators: { target: [{ kind: 'id', selector: '#ref' }] }, label: 'ticket_reference' };

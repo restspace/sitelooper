@@ -1,6 +1,6 @@
 import type { Frame, Page } from 'playwright-core';
 import type { RecordedStep } from '../daemon/recorder.js';
-import { onOwnLine } from '../daemon/recorder.js';
+import { captureReadBack, captureReadBackAt, onOwnLine } from '../daemon/recorder.js';
 import { foldValue } from '../skills/flow.js';
 import { lineShows } from '../execution/snapshot.js';
 import { MIN_ID_LEN } from '../skills/shape.js';
@@ -546,6 +546,38 @@ export async function sourceReadBacks(targets: readonly ReadBackTarget[], page: 
     }
   }
   return out;
+}
+
+/**
+ * One PART of a split composite, pinned: captureReadBack first, and where it
+ * refuses, the code tier's own judgement — the one element the page RENDERS
+ * the part in (sightValues skips an element with no box; displayersOf keeps
+ * the smallest exact displayer), verified by captureReadBackAt. No model: a
+ * part is pinned by code or the split does not happen.
+ *
+ * kanboard fwkb41 is why. `board_columns_left_to_right = "Backlog, Ready, Work
+ * in progress, Done"` split into four titles, but Kanboard renders each title
+ * twice — the header, and a collapsed-column copy that is not rendered —
+ * and captureReadBack's text count saw both, so every part was "ambiguous",
+ * the all-or-nothing split published nothing, and both replays failed obj 1
+ * (every kanboard flow had pruned the columns since fwkb18). The code tier
+ * counts only what is shown. Visible matches in two records are still two
+ * displayers, and still refused (fwod9).
+ */
+export async function pinPart(page: Page, value: string, name: string): Promise<RecordedStep | null> {
+  const direct = await captureReadBack(page, value, name).catch(() => null);
+  if (direct) return direct;
+  let sighting: ValueSighting | undefined;
+  try {
+    sighting = (await sightValues(page, [value])).get(value.trim());
+  } catch {
+    return null;
+  }
+  if (!sighting || sighting.incomplete || sighting.truncated) return null;
+  const displayers = displayersOf(sighting.candidates, value);
+  if (displayers.length !== 1) return null;
+  const step = await captureReadBackAt(page, value, displayers[0].path).catch(() => null);
+  return step ? { ...step, label: name } : null;
 }
 
 /** The `[read-back]` progress line for a cascade outcome, or '' when it did nothing worth saying. */
