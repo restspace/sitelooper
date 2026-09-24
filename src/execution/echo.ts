@@ -4,11 +4,13 @@
  * display, not that the app persisted anything. grafana's time picker read
  * back "Last 6 hours" after the replay had clicked the option of that name.
  *
- * The daemon (src/skills/replay.ts) keeps one ledger per replayed segment and
- * reports an echoed label in `ReplayResult.echoedValues`, which the flow runner
- * drops from its confident values. A compiled `.flow.ts` embeds this exact
- * source (spec/runtime-source.ts), keeps the same ledger per segment, and lists
- * the label in `run.echoed`. Neither runner withholds the value from a later
+ * The daemon (src/skills/replay.ts) keeps one ledger per flow step's chain —
+ * the flow runner passes it through every segment (round 61; a lone replay
+ * keeps its own) — and reports an echoed label in `ReplayResult.echoedValues`,
+ * which the flow runner drops from its confident values. A compiled `.flow.ts`
+ * embeds this exact source (spec/runtime-source.ts), keeps one ledger per flow
+ * step across its segments, and lists the label in `run.echoed`. Both ask
+ * judgeEcho: the element first, then the text (ELEMENT BEFORE TEXT, below). Neither runner withholds the value from a later
  * step: an echo is a report-confidence finding, not a gate.
  *
  * TEXT ALONE IS NOT PROVENANCE (round 59). The ledger holds text, and text
@@ -37,6 +39,9 @@
  * Self-contained: sibling shared modules and Playwright types only.
  */
 import type { Locator, Page } from 'playwright-core';
+
+/** A read's resolved element (Locator.elementHandle), named without importing another Playwright type into the artifact. */
+type ReadElement = NonNullable<Awaited<ReturnType<Locator['elementHandle']>>>;
 import { clip } from './text.js';
 
 /**
@@ -135,6 +140,12 @@ interface EchoSet {
    * the source of keeps the text rule: an echo (echoAt).
    */
   index: number;
+  /**
+   * The step put a VALUE into a control: a fill, a type, a select, a check —
+   * or an option it picked into the control that owns it. A read of that
+   * control is judged by the element before any text (echoByControl, round 61).
+   */
+  value: boolean;
 }
 
 /** A later click whose recorded effect ADDED these lines (noteCommit). */
@@ -171,13 +182,17 @@ function echoMeta(ledger: Set<string>): EchoMeta {
  * a listbox or menu, the combobox that owns it (aria-controls / aria-owns),
  * else the element the segment acted on just before (the opener). Never throws.
  */
-export async function markActed(page: Page, loc: Locator, ledger: Set<string>, texts: readonly unknown[], step: string): Promise<void> {
+export async function markActed(page: Page, loc: Locator, ledger: Set<string>, texts: readonly unknown[], step: string, tool = ''): Promise<void> {
   const meta = echoMeta(ledger);
   const keys = new Set(texts.filter((t): t is string => typeof t === 'string').map(echoKey).filter(Boolean));
   // Best-effort, never a reason for a step to fail: whatever throws here — a
   // detached element, a closed page, a locator double — leaves the set
   // unmarked (index -1), which echoAt reads as "no element evidence".
-  const index = await markInPage(loc, meta.id);
+  const marked = await markInPage(loc, meta.id);
+  // A page double's evaluate may answer anything: only a mark it returned counts.
+  const index = marked && typeof marked.index === 'number' ? marked.index : -1;
+  const option = marked?.option === true;
+  const value = VALUE_TOOLS.has(tool) || option;
   let url = '';
   try {
     url = page.url();
@@ -187,13 +202,18 @@ export async function markActed(page: Page, loc: Locator, ledger: Set<string>, t
   // Every acted element is marked in the page (an option's owner may be the
   // opener before it, whatever it set); only one that put text there can be
   // the source of a read, so only those are sets.
-  if (!keys.size) return;
+  // A step that put a value into a control is a set whatever its text: the
+  // control is what a later read is judged by (echoByControl).
+  if (!keys.size && !value) return;
   meta.seq += 1;
-  meta.sets.push({ seq: meta.seq, step, texts: keys, locator: loc, url, index });
+  meta.sets.push({ seq: meta.seq, step, texts: keys, locator: loc, url, index, value });
 }
 
-/** The page-side mark (markActed); -1 on any failure. */
-async function markInPage(loc: Locator, key: string): Promise<number> {
+/** The tools that put a VALUE into the control they act on (EchoSet.value). */
+const VALUE_TOOLS = new Set(['fill', 'type', 'select', 'check', 'uncheck', 'set_checked']);
+
+/** The page-side mark (markActed): its index (-1 on any failure) and whether the element was an option picked into its owner. */
+async function markInPage(loc: Locator, key: string): Promise<{ index: number; option: boolean }> {
   try {
     return await loc.first().evaluate(
       (el, key) => {
@@ -203,19 +223,20 @@ async function markInPage(loc: Locator, key: string): Promise<number> {
         let control: Element = el;
         const role = el.getAttribute('role') ?? '';
         const owner = el.closest('[role="listbox"], [role="menu"]');
-        if (owner || role === 'option' || role.startsWith('menuitem')) {
+        const option = Boolean(owner || role === 'option' || role.startsWith('menuitem'));
+        if (option) {
           const id = owner?.id;
           const named = id ? document.querySelector(`[aria-controls~="${CSS.escape(id)}"], [aria-owns~="${CSS.escape(id)}"]`) : null;
           control = named ?? (list.length ? list[list.length - 1].control : el);
         }
         list.push({ el, control });
-        return list.length - 1;
+        return { index: list.length - 1, option };
       },
       key,
       { timeout: 1_000 },
     );
   } catch {
-    return -1;
+    return { index: -1, option: false };
   }
 }
 
@@ -257,6 +278,82 @@ export async function echoAt(page: Page, ledger: Set<string>, value: string, rea
   }
 }
 
+/** Where a set's control stands, seen from a read's element: see sourceState. */
+interface SourceState {
+  /** The page the set acted on was replaced (a navigation or reload): its marks are gone. */
+  replaced: boolean;
+  /** The control is gone, and nothing matching its locator stands in its place. */
+  detached: boolean;
+  /** The read IS the control, is inside its widget, or contains it. */
+  isControl: boolean;
+}
+
+/**
+ * The page-side half of the element rule, one set at a time: is the read's
+ * element the set's control (or its widget), and is the control still the one
+ * the set acted on. Null when the page cannot answer.
+ */
+async function sourceState(meta: EchoMeta, set: EchoSet, readEl: ReadElement): Promise<SourceState | null> {
+  const current = await set.locator.first().elementHandle({ timeout: 250 }).catch(() => null);
+  try {
+    return await readEl
+      .evaluate(
+        (r, arg) => {
+          const w = window as unknown as { __sitelooperActed?: Record<string, { el: Element; control: Element }[]> };
+          const list = w.__sitelooperActed?.[arg.key];
+          if (!list) return { replaced: true, detached: true, isControl: false };
+          const mark = arg.index >= 0 ? list[arg.index] : undefined;
+          let control: Element | null = null;
+          if (mark && mark.control !== mark.el) control = mark.control.isConnected ? mark.control : null;
+          else if (mark && mark.el.isConnected) control = mark.el;
+          else control = (arg.current as Element | null) ?? null;
+          if (!control) return { replaced: false, detached: true, isControl: false };
+          // The control's widget: its nearest field wrapper — the closest
+          // ancestor that holds anything beside it, while it holds no
+          // other control.
+          const CONTROLS =
+            'input:not([type="hidden"]), select, textarea, [contenteditable=""], [contenteditable="true"], [role="combobox"], [role="textbox"], [role="searchbox"], [role="spinbutton"]';
+          const controls = (a: Element) => a.querySelectorAll(CONTROLS).length + (a.matches(CONTROLS) ? 1 : 0);
+          let widget: Element = control;
+          for (let a = control.parentElement; a && a !== document.body && a !== document.documentElement; a = a.parentElement) {
+            if (controls(a) > 1) break;
+            widget = a;
+            const beside = Array.from(a.childNodes).some((n) => n !== control && !n.contains(control) && (n.nodeType === 1 || (n.textContent ?? '').trim() !== ''));
+            if (beside) break;
+          }
+          const isControl = widget === r || widget.contains(r as Node) || (r as Element).contains(control);
+          return { replaced: false, detached: false, isControl };
+        },
+        { key: meta.id, index: set.index, current },
+      )
+      .catch(() => null);
+  } finally {
+    await current?.dispose().catch(() => {});
+  }
+}
+
+/**
+ * Did something COMMIT between `set` and now (the module comment's rule b):
+ * the page replaced, the control gone, a route change (never a rewritten query
+ * string), or a later click whose own diff showed one of `keys` — the read's
+ * value, or (for the element rule, where the read's text may be the app's
+ * reformatting) what the set itself put there.
+ */
+function committedSince(page: Page, meta: EchoMeta, set: EchoSet, seen: SourceState, keys: readonly string[]): boolean {
+  let url = '';
+  try {
+    url = page.url();
+  } catch {
+    /* a page that cannot say where it is: the url rule decides nothing */
+  }
+  return (
+    seen.replaced ||
+    seen.detached ||
+    (set.url !== '' && url !== '' && routeOf(url) !== routeOf(set.url)) ||
+    meta.commits.some((c) => c.seq > set.seq && c.step !== set.step && c.lines.some((l) => keys.some((k) => k !== '' && ` ${echoKey(l)} `.includes(` ${k} `))))
+  );
+}
+
 /**
  * echoAt past the text rule: true (an echo) unless both of the module
  * comment's conditions hold for every source. For a `short` value only
@@ -273,55 +370,77 @@ async function echoByElement(page: Page, ledger: Set<string>, want: string, read
   if (!readEl) return !short;
   try {
     for (const set of sets) {
-      const current = await set.locator.first().elementHandle({ timeout: 250 }).catch(() => null);
-      try {
-        const seen = await readEl
-          .evaluate(
-            (r, arg) => {
-              const w = window as unknown as { __sitelooperActed?: Record<string, { el: Element; control: Element }[]> };
-              const list = w.__sitelooperActed?.[arg.key];
-              if (!list) return { replaced: true, detached: true, isControl: false };
-              const mark = arg.index >= 0 ? list[arg.index] : undefined;
-              let control: Element | null = null;
-              if (mark && mark.control !== mark.el) control = mark.control.isConnected ? mark.control : null;
-              else if (mark && mark.el.isConnected) control = mark.el;
-              else control = (arg.current as Element | null) ?? null;
-              if (!control) return { replaced: false, detached: true, isControl: false };
-              // The control's widget: its nearest field wrapper — the closest
-              // ancestor that holds anything beside it, while it holds no
-              // other control.
-              const CONTROLS =
-                'input:not([type="hidden"]), select, textarea, [contenteditable=""], [contenteditable="true"], [role="combobox"], [role="textbox"], [role="searchbox"], [role="spinbutton"]';
-              const controls = (a: Element) => a.querySelectorAll(CONTROLS).length + (a.matches(CONTROLS) ? 1 : 0);
-              let widget: Element = control;
-              for (let a = control.parentElement; a && a !== document.body && a !== document.documentElement; a = a.parentElement) {
-                if (controls(a) > 1) break;
-                widget = a;
-                const beside = Array.from(a.childNodes).some((n) => n !== control && !n.contains(control) && (n.nodeType === 1 || (n.textContent ?? '').trim() !== ''));
-                if (beside) break;
-              }
-              const isControl = widget === r || widget.contains(r as Node) || (r as Element).contains(control);
-              return { replaced: false, detached: false, isControl };
-            },
-            { key: meta.id, index: set.index, current },
-          )
-          .catch(() => null);
-        if (!seen) return !short;
-        if (seen.isControl) return true;
-        if (short) continue;
-        const committed =
-          seen.replaced ||
-          seen.detached ||
-          // A route change, not a rewritten query string (routeOf).
-          (set.url !== '' && routeOf(page.url()) !== routeOf(set.url)) ||
-          meta.commits.some((c) => c.seq > set.seq && c.step !== set.step && c.lines.some((l) => ` ${echoKey(l)} `.includes(` ${want} `)));
-        if (!committed) return true;
-      } finally {
-        await current?.dispose().catch(() => {});
-      }
+      const seen = await sourceState(meta, set, readEl);
+      if (!seen) return !short;
+      if (seen.isControl) return true;
+      if (short) continue;
+      if (!committedSince(page, meta, set, seen, [want])) return true;
     }
     return false;
   } finally {
     await readEl.dispose().catch(() => {});
   }
+}
+
+/*
+ * ELEMENT BEFORE TEXT (round 61, EspoCRM fwec13 03-create). The text rule asks
+ * first whether the read's text is one the step set, and only then looks at
+ * the element. EspoCRM formats what it is given: the Amount input typed with
+ * "12500" read back "12,500" and "12,500.00", and the Close Date input, after
+ * its picker toggled, read "2018-01-16" — neither text is in the ledger, so
+ * the element rule was never asked and all three went out as observed values,
+ * on n2, n3 and the compiled script alike. A control shows what it was given,
+ * however it renders it; that is not what the app stored.
+ *
+ * So a read whose element IS a control a step of this chain put a value into
+ * (EchoSet.value), or that control's widget, with nothing committed since the
+ * set, is an echo whatever its text says. The text rule still decides every
+ * read elsewhere. The ledger spans the flow step's whole chain (both runners
+ * keep one per step, not per segment), so a control an earlier segment filled
+ * is judged too — and a Save plus a reopen (odoo fwod86 02-create) is still a
+ * commit: the reopened page's marks are gone.
+ */
+
+/**
+ * Is the read's element a control this chain put a value into, with nothing
+ * committed since? False wherever the page cannot say: this rule only ever
+ * withholds on positive element evidence.
+ */
+export async function echoByControl(page: Page, ledger: Set<string>, value: string, read: Locator | null): Promise<boolean> {
+  const meta = ECHO_META.get(ledger);
+  const sets = meta ? meta.sets.filter((s) => s.value && s.index >= 0) : [];
+  if (!meta || !sets.length || !read) return false;
+  const readEl = await read.first().elementHandle({ timeout: 1_000 }).catch(() => null);
+  if (!readEl) return false;
+  try {
+    const want = echoKey(value);
+    for (const set of sets) {
+      const seen = await sourceState(meta, set, readEl).catch(() => null);
+      if (!seen?.isControl) continue;
+      if (!committedSince(page, meta, set, seen, [want, ...set.texts])) return true;
+    }
+    return false;
+  } catch {
+    return false;
+  } finally {
+    await readEl.dispose().catch(() => {});
+  }
+}
+
+/**
+ * THE echo judgement both runners ask of a published read: the warning when it
+ * is an echo, else null. The element first (echoByControl), then the text
+ * rule (echoVerdict, echoAt) for a read anywhere else.
+ */
+export async function judgeEcho(page: Page, ledger: Set<string>, label: string, value: string, read: Locator | null, where: string): Promise<string | null> {
+  if (!value) return null;
+  const byText = echoVerdict(ledger, label, value, where);
+  if (await echoByControl(page, ledger, value, read)) {
+    return (
+      byText ??
+      `${where}: read '${label}' returned '${clip(value, 60)}' from a control this step set, and nothing committed it since — it shows the control, however the app formats it, not what the app stored; dropped from the report's confident values`
+    );
+  }
+  if (!byText) return null;
+  return (await echoAt(page, ledger, value, read)) ? byText : null;
 }

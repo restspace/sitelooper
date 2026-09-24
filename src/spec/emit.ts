@@ -270,11 +270,14 @@ const HELPERS: { token: string; source: string[] }[] = [
       ' * app persisted anything, so the label is listed in `run.echoed` and warned;',
       ' * the value is still published, as replay still carries it to later steps.',
       ' * Judged by the element, not only the text (the shared echoAt, round 59:',
-      " * fwec11's display name \"Admin\" after the sign-in form was submitted).",
+      " * fwec11's display name \"Admin\" after the sign-in form was submitted), and",
+      ' * the element FIRST (the shared judgeEcho, round 61: EspoCRM fwec13 read',
+      ' * "12,500" back from the Amount input typed with 12500). The ledger is the',
+      " * flow step's, across its segments, as the daemon's flow runner keeps it.",
       ' */',
       'async function echoRead(ledger: Set<string>, run: FlowRun, label: string, key: string, value: string | undefined, where: string, page: Page, at: Locator | null): Promise<void> {',
-      "  const echo = echoVerdict(ledger, label, value ?? '', where);",
-      "  if (!echo || !(await echoAt(page, ledger, value ?? '', at))) return;",
+      "  const echo = await judgeEcho(page, ledger, label, value ?? '', at, where);",
+      '  if (!echo) return;',
       '  run.echoed.push(key);',
       '  logWarning(echo);',
       '}',
@@ -1436,6 +1439,8 @@ interface Ctx {
   appliedPicks?: Map<number, { role: string; name: string }>;
   /** The variable holding this segment's starting page lines, when it has an applied-pick candidate. */
   pickStart?: string;
+  /** A segment of this flow step named the step's echo ledger: the body declares it once, at its top (round 61). */
+  stepEchoUsed?: boolean;
   /**
    * A line of the body named `typedCommitted`, the step's set of typed slots a
    * commit showed (expect.ts committedSlots), which its report classifies by
@@ -2010,7 +2015,7 @@ function actionTarget(step: SkillStep, key: 'target' | 'source', ctx: Ctx, out: 
     if (ctx.echoes) {
       noteSlots(echoTexts, ctx);
       ctx.echoUsed = true;
-      out.push(`await markActed(page, ${name}.locator, ${ctx.echoes}, [${echoTexts.map(src).join(', ')}], ${q(`${ctx.segmentId}/${ctx.stepIndex}`)});`);
+      out.push(`await markActed(page, ${name}.locator, ${ctx.echoes}, [${echoTexts.map(src).join(', ')}], ${q(`${ctx.segmentId}/${ctx.stepIndex}`)}, ${q(step.tool)});`);
     }
   }
   return `${name}.locator`;
@@ -3464,9 +3469,11 @@ function identityChecks(segment: SpecSegment, ctx: Ctx): string[] {
 function emitSegment(segment: SpecSegment, ctx: Ctx): string[] {
   const out: string[] = [];
   ctx.known = new Set(Object.entries(segment.params).filter(([, p]) => p.known === true).map(([slot]) => slot));
-  // One echo ledger per segment, as replay keeps one per replayed segment.
+  // One echo ledger per FLOW STEP, spanning its segments, as the daemon's flow
+  // runner passes one ledger through the chain (round 61): a segment's read
+  // of a control an earlier segment filled is judged too.
   ctx.segments = (ctx.segments ?? 0) + 1;
-  ctx.echoes = `typed${ctx.segments}`;
+  ctx.echoes = 'echoLedger';
   ctx.echoUsed = false;
   // One volatility ledger per segment, as replay keeps one per replayed skill:
   // a navigation is retargeted by what THIS procedure has watched vary, never
@@ -3528,9 +3535,7 @@ function emitSegment(segment: SpecSegment, ctx: Ctx): string[] {
   if (ctx.volatileUsed) {
     out.splice(2, 0, `// Url positions this segment has watched vary, for a later navigation (see navigationTarget).`, `const ${ctx.volatile}: UrlSegDiff[] = [];`);
   }
-  if (ctx.echoUsed) {
-    out.splice(2, 0, `// What this segment types, selects or names: a read that returns only that is an echo (see echoRead).`, `const ${ctx.echoes} = new Set<string>();`);
-  }
+  if (ctx.echoUsed) ctx.stepEchoUsed = true;
   if (ctx.standingUsed) {
     out.splice(2, 0, `// What this segment filled, which must still stand when the action that submits it goes (see restoreStandingFills).`, `const ${ctx.standing} = standingFills();`);
   }
@@ -4021,12 +4026,17 @@ export function emitFlowFile(spec: SpecFlow, o: EmitOptions): { source: string; 
       const consumed = new Set(consumedReportedOutputs(spec.steps, step.id));
       const guard = satisfiedGuard(step, ctx, consumed);
       if (guard.length) lines.push(...guard, '');
+      // Where the step's echo ledger goes, if a segment names it: after the guard, before the first segment.
+      const ledgerAt = lines.length;
       for (const [i, segment] of step.segments.entries()) {
         if (i) lines.push('');
         lines.push(...emitSegment(segment, ctx));
       }
       const templated = reportTemplateLines(step, ctx, consumed);
       if (templated.length) lines.push('', ...templated);
+      // What the step's segments type, select or name: a read that returns only that, or reads a control
+      // one of them set, is an echo (see echoRead). One for the whole chain (round 61).
+      if (ctx.stepEchoUsed) lines.splice(ledgerAt, 0, '// What this step types, selects or names, across its segments (see echoRead).', 'const echoLedger = new Set<string>();', '');
       // The typed slots a commit showed, collected across the body's segments (see committedSlots).
       if (ctx.committedUsed) lines.unshift('const typedCommitted = new Set<string>();', '');
       const routes = step.urlRoutes;

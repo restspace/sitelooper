@@ -581,6 +581,9 @@ async function executeSkill(
             .sort((a, b) => (a.seq?.index ?? 0) - (b.seq?.index ?? 0))
         : [skill],
       follow: (next) => session.repin(next),
+      // The flow runner's one echo ledger for the step's chain (round 61), passed
+      // in-process; a model's run_skill never carries one (a Set is not JSON).
+      ...(args.echoLedger instanceof Set ? { echoLedger: args.echoLedger as Set<string> } : {}),
       exec: async (tool, stepArgs, resolved, via, action) => runStep(session, tool, stepArgs, screenshotDir, signal, { resolved, via, expect: action?.expect }),
     }),
   );

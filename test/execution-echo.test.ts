@@ -1,6 +1,6 @@
 import ts from 'typescript';
 import { describe, expect, it } from 'vitest';
-import { MIN_ECHO_LEN, candidateNames, echoAt, echoKey, echoVerdict, markActed, noteInteraction, routeOf, setsSomething } from '../src/execution/echo.js';
+import { MIN_ECHO_LEN, candidateNames, echoAt, echoKey, echoVerdict, judgeEcho, markActed, noteInteraction, routeOf, setsSomething } from '../src/execution/echo.js';
 import type { SkillStep } from '../src/skills/store.js';
 import { emitFlowFile } from '../src/spec/emit.js';
 import type { SpecFlow } from '../src/spec/ir.js';
@@ -115,6 +115,22 @@ describe('the element rule falls back to the text rule', () => {
     expect(await echoAt(page as never, ledger, 'echoville', readHere as never)).toBe(true);
   });
 
+  /**
+   * Round 61: the element rule runs FIRST, whatever the text — and only ever
+   * withholds on positive evidence. A set that could not be marked, or a page
+   * that cannot answer, leaves the read to the text rule: a reformatted value
+   * ("12,500" for the 12500 typed) is then observed, as before; a matching one
+   * is still an echo.
+   */
+  it('judgeEcho asks the element first and falls back to the text rule where the page cannot answer', async () => {
+    const ledger = new Set<string>();
+    noteInteraction(ledger, ['12500']);
+    await markActed(page as never, missing as never, ledger, ['12500'], '1', 'fill');
+    expect(await judgeEcho(page as never, ledger, 'amount', '12,500', readHere as never, 'step 3')).toBeNull();
+    expect(await judgeEcho(page as never, ledger, 'amount', '12500', readHere as never, 'step 3')).toContain("read 'amount' returned a value the skill itself set");
+    expect(await judgeEcho(page as never, ledger, 'amount', '', readHere as never, 'step 3')).toBeNull();
+  });
+
   it('a page that throws while judging is an echo too, and a value the ledger never held is never one', async () => {
     const ledger = new Set<string>();
     noteInteraction(ledger, ['Echoville']);
@@ -132,17 +148,17 @@ describe('the emitted ledger', () => {
   ];
   const { source } = emitFlowFile(specOf(steps), { tier: 'plain' });
 
-  it('declares one ledger per segment, feeds it from what a step sets and what a resolved target is named, and asks it at the read', () => {
-    expect(source).toContain('const typed1 = new Set<string>();');
+  it('declares one ledger per flow step (its segments share it, round 61), feeds it from what a step sets and what a resolved target is named, and asks it at the read', () => {
+    expect(source).toContain('const echoLedger = new Set<string>();');
     // the filled value, with its slot filled at run time
-    expect(source).toContain('noteInteraction(typed1, [`${p.v1}`]);');
+    expect(source).toContain('noteInteraction(echoLedger, [`${p.v1}`]);');
     // the clicked option's name, once its chain resolved
-    expect(source).toMatch(/const hit\d+ = await pick\([^;]*?'Last 6 hours'[\s\S]*?\);\n\s*noteInteraction\(typed1, \['Last 6 hours'\]\);/);
+    expect(source).toMatch(/const hit\d+ = await pick\([^;]*?'Last 6 hours'[\s\S]*?\);\n\s*noteInteraction\(echoLedger, \['Last 6 hours'\]\);/);
     // a scroll sets nothing: its heading never enters the ledger
-    expect(source).not.toContain("noteInteraction(typed1, ['Latency by endpoint'])");
+    expect(source).not.toContain("noteInteraction(echoLedger, ['Latency by endpoint'])");
     // Round 59: echoRead is async and judges by the element too (echoAt), so it
     // is awaited and handed the page and the element the read resolved to.
-    expect(source).toContain("await echoRead(typed1, run, 'shown', '01-set.shown', outputs['01-set.shown'], '01-set s_echo/4', page, lastReadHit);");
+    expect(source).toContain("await echoRead(echoLedger, run, 'shown', '01-set.shown', outputs['01-set.shown'], '01-set s_echo/4', page, lastReadHit);");
     // the embedded rule rides along
     expect(source).toContain('function echoVerdict(');
     expect(source).toContain('echoed: string[];');
