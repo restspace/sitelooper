@@ -37,6 +37,8 @@ import { emitFlowFile } from '../src/spec/emit.js';
 import type { SpecFlow } from '../src/spec/ir.js';
 import { goalSatisfied, type ReplayResult } from '../src/skills/replay.js';
 import { replayReport } from '../src/skills/learn.js';
+import { givenPartialReason, givenWarning } from '../src/execution/report.js';
+import { partialReasons } from '../src/daemon/step-verdict.js';
 import { consumedReportedOutputs, ignorableRefs, resolveInstruction, resolveStepParams, type FlowStep } from '../src/skills/flow.js';
 import type { Skill, SkillParam, SkillStep } from '../src/skills/store.js';
 import type { LocatorCandidate, RecordedEntry, RecordedStep } from '../src/daemon/recorder.js';
@@ -1118,6 +1120,106 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
       expect(daemonRefs).toEqual(want);
       expect(published(emitted)).toEqual(want);
       expect(daemonReport.list_count).toBeUndefined();
+    }, 120_000);
+  });
+
+  /**
+   * Round 60, Gitea fwgt11 07-add: `issue_content_right_a_it: "{{v7}}"` is
+   * built only from a param — the flow's literal "bug", from the instruction
+   * — and nothing in the chain types or reads it. n2's issue carried
+   * priority-high alone (the live labels_shown said so), and the report still
+   * published "bug". A param-only value is published only where THIS run
+   * observed it: the page shows it, a read of this run returned it, or the
+   * chain typed it. Otherwise both runners withhold it and say it was given,
+   * not observed; the step is partial when its instruction asked for it.
+   */
+  describe('a report value made only of params (round 60, fwgt11 07-add)', () => {
+    const LABELS: SkillStep = { tool: 'read_all', args: { target: '.issue-content-right a.item', what: 'text' }, locators: { target: [{ kind: 'css', selector: '.issue-content-right a.item' }] }, label: 'labels_shown' };
+    const values = { labels_shown: '{{v7}}, {{v8}}', label_first: '{{v7}}', label_second: '{{v8}}', milestone_name: '{{v10}}' };
+    const params = { v7: 'bug', v8: 'priority-high', v10: 'Bench Milestone' };
+    const instruction = 'Open the issue and report the first label, and confirm milestone {{v10}}.';
+    const skillParams = (): Record<string, SkillParam> => ({ v7: { example: 'bug', usedIn: [] }, v8: { example: 'priority-high', usedIn: [] }, v10: { example: 'Bench Milestone', usedIn: [] } });
+    const issueSkill = (): Skill => ({
+      ...skillOf([LABELS]),
+      id: 's_issue',
+      template: instruction,
+      params: skillParams(),
+      preconditions: { urlPattern: `${origin}/gitea-issue` },
+      reportTemplate: { summary: '', values },
+    });
+    const issueFlow = (): SpecFlow => ({
+      version: 1,
+      name: 'parity-given',
+      origin,
+      startUrl: `${origin}/gitea-issue`,
+      vars: [],
+      steps: [
+        {
+          id: '07-add',
+          instruction,
+          params,
+          outputs: Object.keys(values),
+          segments: [{ id: 's_issue', template: instruction, params: skillParams(), preconditions: { urlPattern: `${origin}/gitea-issue` }, steps: [LABELS], report: { summary: '', values } }],
+        },
+      ],
+    });
+
+    /** Daemon replay, the report the flow runner publishes from it, its warnings and its verdict. */
+    async function daemonOf(): Promise<{ values: Record<string, string>; warnings: string[]; partial: string[] }> {
+      const session = new BrowserSession({ session: `parity-given-${Date.now()}`, persist: false, learn: true });
+      try {
+        const page = await session.getPage();
+        await page.goto(`${origin}/gitea-issue`);
+        const skill = issueSkill();
+        session.learn!.put(skill);
+        const out = await executeTool(session, 'run_skill', { id: skill.id, params }, os.tmpdir());
+        const replay = out.replay as ReplayResult;
+        expect(replay?.ok, replay?.reason ?? String(out.result)).toBe(true);
+        const r = await replayReport(() => session.getPage(), skill, params, replay.values, { chain: [skill], instruction });
+        const got = Object.fromEntries(Object.entries(r.report.evidence?.values ?? {}).map(([k, v]) => [k, String(v)]));
+        const partial = partialReasons({ reportStatus: 'success', recovered: false, given: r.given, declaredOutputs: Object.keys(values), values: got, instruction });
+        return { values: got, warnings: r.given.map((k) => givenWarning(k)), partial };
+      } finally {
+        await session.close();
+      }
+    }
+
+    const publishedBy = (o: Outcome): Record<string, string> =>
+      Object.fromEntries(Object.entries(o.outputs).filter(([k, v]) => k.startsWith('07-add.') && v !== undefined).map(([k, v]) => [k.slice('07-add.'.length), v]));
+
+    it('both runners withhold a param-only value the page does not show, warn, and call the asked one partial', async () => {
+      reset(10);
+      fx.issue.labels = ['priority-high'];
+      const daemon = await daemonOf();
+      reset(10);
+      fx.issue.labels = ['priority-high'];
+      const emitted = await emittedOf(issueFlow(), params);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+
+      const want = { labels_shown: 'priority-high', label_second: 'priority-high', milestone_name: 'Bench Milestone' };
+      expect(daemon.values).toEqual(want);
+      expect(publishedBy(emitted)).toEqual(want);
+      const given = /label_first .*given, not observed/;
+      expect(daemon.warnings.some((w) => given.test(w)), daemon.warnings.join('\n')).toBe(true);
+      expect(emitted.warnings?.some((w) => given.test(w)), emitted.warnings?.join('\n')).toBe(true);
+      // label_first was asked ("report the first label"): partial on both.
+      expect(daemon.partial).toEqual([givenPartialReason('label_first')]);
+      expect(emitted.warnings?.some((w) => w.includes(`PARTIAL — ${givenPartialReason('label_first')}`)), emitted.warnings?.join('\n')).toBe(true);
+    }, 120_000);
+
+    it('both runners publish it where the page shows it', async () => {
+      reset(10);
+      const daemon = await daemonOf();
+      reset(10);
+      const emitted = await emittedOf(issueFlow(), params);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+
+      const want = { labels_shown: 'bug | priority-high', label_first: 'bug', label_second: 'priority-high', milestone_name: 'Bench Milestone' };
+      expect(daemon.values).toEqual(want);
+      expect(publishedBy(emitted)).toEqual(want);
+      expect(daemon.warnings).toEqual([]);
+      expect(daemon.partial).toEqual([]);
+      expect(emitted.warnings?.filter((w) => /given, not observed|PARTIAL/.test(w))).toEqual([]);
     }, 120_000);
   });
 

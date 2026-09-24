@@ -1,6 +1,7 @@
 import type { Page } from 'playwright-core';
 import { captureLines } from './snapshot.js';
 import { fillParams } from './url.js';
+import { setsSomething } from './echo.js';
 
 /**
  * REPORT-TEMPLATE VALUES, the rule both execution targets share. A zero-model
@@ -97,12 +98,104 @@ function wordRun(text: string): string {
  * read-backs would have, and there the page it just judged is the only
  * observation there is.
  */
-export function templateValue(template: string, params: Record<string, string>, shown: readonly string[] | null | undefined, opts: { literal?: boolean } = {}): string | null {
+export function templateValue(
+  template: string,
+  params: Record<string, string>,
+  shown: readonly string[] | null | undefined,
+  opts: { literal?: boolean; given?: GivenEvidence } = {},
+): string | null {
   if (!opts.literal && !derivesFromParams(template)) return null;
   const filled = fillParams(template, params);
   if (!filled || /\{\{/.test(filled)) return null;
   if (unshownLiterals(template, shown).length) return null;
+  if (opts.given && unobservedGiven(template, params, shown, opts.given).length) return null;
   return filled;
+}
+
+/*
+ * A PARAM IS GIVEN, NOT OBSERVED (round 60, Gitea fwgt11 07-add). The rule
+ * above checks the text BETWEEN a template's slots; a value made of slots
+ * alone has none, so it published whatever the caller passed. s_c8e15e's
+ * template carried `issue_content_right_a_it: "{{v7}}"` — the recording's
+ * read of the sidebar labels, split into keys — and v7 was the flow's literal
+ * "bug", taken from the instruction; no step of the chain typed or read it.
+ * n2 and n3's issue carried priority-high alone (their live labels_shown said
+ * so), and both published "bug" beside it as a finding.
+ *
+ * So a slot of a value with no recorded text is published only where THIS run
+ * observed it: its words stand in one line of the page the step settled on
+ * (shownForReport — the url included, so an id used only in the url is
+ * observed there), or in a value a read of this run returned. A slot the
+ * procedure TYPED (a setting step's `value`/`text` names it) keeps today's
+ * rule: what the run put on the page is the echo rules' to judge, not this
+ * one's. Otherwise the value is withheld, and said to be given, not observed.
+ *
+ * "Where the recording's read-back would look" has no recorded location for a
+ * value no step reads, so the page's lines are where it looks; the page is
+ * judged line by line, as the literal rule judges it. A `{{dN}}` is the run's
+ * own url, observed by construction.
+ */
+
+/** What a run observed besides the page: the slots its procedure typed, and the values its reads returned. */
+export interface GivenEvidence {
+  typed: readonly string[];
+  live: readonly string[];
+}
+
+/** A step the typed-slot walk reads: its tool, its args, and a loop's body. */
+interface TypingStep {
+  tool: string;
+  args: Record<string, unknown>;
+  body?: readonly TypingStep[];
+}
+
+/** The `{{vN}}` slots a procedure TYPED: named in the `value` or `text` a setting step put on the page, loop bodies included. */
+export function typedSlots(steps: readonly TypingStep[]): string[] {
+  const out = new Set<string>();
+  const walk = (list: readonly TypingStep[]): void => {
+    for (const s of list) {
+      if (setsSomething(s.tool)) {
+        for (const arg of [s.args.value, s.args.text]) {
+          if (typeof arg === 'string') for (const m of templateMarkers(arg)) if (m.startsWith('v')) out.add(m);
+        }
+      }
+      if (s.body) walk(s.body);
+    }
+  };
+  walk(steps);
+  return [...out];
+}
+
+/**
+ * The `{{vN}}` slots of a template value made only of params that this run did
+ * not observe (see above); [] when it observed them all, and for a value with
+ * recorded text, which unshownLiterals governs. A slot unbound, or bound to a
+ * value with no letter or digit, states nothing to observe.
+ */
+export function unobservedGiven(template: string, params: Record<string, string>, shown: readonly string[] | null | undefined, evidence: GivenEvidence): string[] {
+  if (templateLiterals(template).length) return [];
+  const typed = new Set(evidence.typed);
+  const lines = [...(shown ?? []), ...evidence.live].map((line) => ` ${wordRun(line)} `);
+  return templateMarkers(template).filter((slot) => {
+    if (!slot.startsWith('v') || typed.has(slot)) return false;
+    const run = wordRun(params[slot] ?? '');
+    return run !== '' && !lines.some((line) => line.includes(` ${run} `));
+  });
+}
+
+/** Whether a template value is withheld as given, not observed: it would publish, but for its unobserved slots. */
+export function withheldAsGiven(template: string, params: Record<string, string>, shown: readonly string[] | null | undefined, evidence: GivenEvidence): boolean {
+  return templateValue(template, params, shown) !== null && unobservedGiven(template, params, shown, evidence).length > 0;
+}
+
+/** The warning both runners give for a value withheld as given, not observed. */
+export function givenWarning(key: string): string {
+  return `report value ${key} is given, not observed: it is built only from the step's own parameters, and neither this run's page nor any of its reads shows it — withheld`;
+}
+
+/** Why a step whose instruction asked for such a value is PARTIAL (step-verdict.ts partialReasons; the artifact says the same). */
+export function givenPartialReason(key: string): string {
+  return `${key}, an output this step was asked to report, is only the step's own parameter and this run never observed it, so ${key} went unreported`;
 }
 
 /** The one slot a template value is built from, or null when it names none or several. */
@@ -156,9 +249,13 @@ export function templateSource(template: string, bound: (name: string) => boolea
   );
 }
 
-/** Does any of these template values need the page to decide it — a value with recorded text to observe? */
-export function reportNeedsPage(templates: readonly string[]): boolean {
-  return templates.some((t) => templateLiterals(t).length > 0);
+/**
+ * Does any of these template values need the page to decide it — a value with
+ * recorded text to observe, or (round 60, fwgt11) a slot of a param-only value
+ * the procedure did not type (`typed`, typedSlots), which is observed there.
+ */
+export function reportNeedsPage(templates: readonly string[], typed: readonly string[] = []): boolean {
+  return templates.some((t) => templateLiterals(t).length > 0 || templateMarkers(t).some((m) => m.startsWith('v') && !typed.includes(m)));
 }
 
 /**

@@ -302,6 +302,8 @@ export interface SkillRecord {
   warnings?: string[];
   /** Labels of the replay's labelled reads that were skipped — nothing observed (ReplayResult.skippedReads; tier A only). */
   skippedReads?: string[];
+  /** Report values made only of params that the replay withheld as given, not observed (ReplayReport.given, round 60; tier A only). */
+  given?: string[];
   /** 1-based skill step the replay failed at, when it did. */
   failedAt?: number;
   /** The url the replay finished (or stopped) on. */

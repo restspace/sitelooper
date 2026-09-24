@@ -3019,8 +3019,8 @@ describe('emitFlowFile: the already-satisfied guard', () => {
       // The template stands in for the read-backs through the shared rule, on
       // the page just judged: recorded text publishes only where it shows (fwrd86).
       'const satisfiedShown = await shownForReport(page).catch(() => null);',
-      "{ const value = templateValue('Cancelled', p, satisfiedShown, { literal: true }); if (value !== null) outputs['08-open.order_status'] = value; }",
-      "{ const value = templateValue('{{v1}}', p, satisfiedShown, { literal: true }); if (value !== null) outputs['08-open.order_reference'] = value; }",
+      "{ const value = templateValue('Cancelled', p, satisfiedShown, { literal: true, given: { typed: [], live: [] } }); if (value !== null) outputs['08-open.order_status'] = value; }",
+      "{ const value = templateValue('{{v1}}', p, satisfiedShown, { literal: true, given: { typed: [], live: [] } }); if (value !== null) outputs['08-open.order_reference'] = value; }",
       'return;',
       '}',
     ]);
@@ -3087,7 +3087,7 @@ describe('emitFlowFile: the already-satisfied guard', () => {
 
   it('skips a report value it cannot fill, and publishes the rest', () => {
     const source = emit(cancelStep({ report: { summary: 's', values: { order_status: 'Cancelled', stray: '{{v9}}' } } }));
-    expect(source).toContain("templateValue('Cancelled', p, satisfiedShown, { literal: true }); if (value !== null) outputs['08-open.order_status'] = value;");
+    expect(source).toContain("templateValue('Cancelled', p, satisfiedShown, { literal: true, given: { typed: [], live: [] } }); if (value !== null) outputs['08-open.order_status'] = value;");
     expect(source).not.toContain("outputs['08-open.stray'] =");
   });
 
@@ -3336,9 +3336,14 @@ describe('report-template values after the last segment', () => {
     const flow = flowWith('{{v2}}');
     expect(unsourced(flow)).toEqual([]);
     const body = emit(flow);
+    // Consumed, so it gives the consumer its slot (referenceValue); made only
+    // of a param nothing typed, so the page is looked at, and a run that did
+    // not observe it says the report was given it (round 60, fwgt11 07-add).
+    expect(body).toContain('const reportShown = await shownForReport(page).catch(() => null);');
     expect(body).toContain(
-      "{ const value = referenceValue('{{v2}}', p, null); if (value !== null && outputs['02-create.post_title_element_text'] === undefined) outputs['02-create.post_title_element_text'] = value; }",
+      "if (outputs['02-create.post_title_element_text'] === undefined) { if (withheldAsGiven('{{v2}}', p, reportShown, reportGiven)) { logWarning('02-create: report value post_title_element_text is given, not observed: it is built only from the step\\'s own parameters, and neither this run\\'s page nor any of its reads shows it — withheld'); } const value = referenceValue('{{v2}}', p, reportShown); if (value !== null) outputs['02-create.post_title_element_text'] = value; }",
     );
+    expect(syntaxErrors(body)).toEqual([]);
     // the slot the template names is passed to the step, though no action uses it
     expect(body).toMatch(/async '02-create'\(page: Page, p: \{[^}]*v2: string/);
     expect(body).toContain('// Shared execution source: report.ts.');
@@ -3379,7 +3384,7 @@ describe('report-template values after the last segment', () => {
   it('a live read of the same output keeps it: the template only fills in when nothing read it', () => {
     const body = emit(flowWith('{{v2}}', 'post_title_element_text'));
     const readAt = body.indexOf("outputs['02-create.post_title_element_text'] = ");
-    const templateAt = body.indexOf("referenceValue('{{v2}}', p, null)");
+    const templateAt = body.indexOf("referenceValue('{{v2}}', p, reportShown)");
     expect(readAt).toBeGreaterThan(-1);
     expect(templateAt).toBeGreaterThan(readAt);
     expect(body).toContain("outputs['02-create.post_title_element_text'] === undefined");

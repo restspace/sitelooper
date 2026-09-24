@@ -41,7 +41,7 @@ import { BrowserSession } from './browser.js';
 import { DEFAULT_BROWSER_PROFILE, urlTrail } from '../execution/browser.js';
 import { visitedUrlPart } from '../execution/url.js';
 import { observedChange } from '../execution/lifecycle.js';
-import { referenceValue, shownForReport, templateValue } from '../execution/report.js';
+import { givenWarning, referenceValue, shownForReport, templateValue } from '../execution/report.js';
 import { startPageSettled } from '../execution/action.js';
 import { coverageComplete, recordedValueShown } from '../execution/snapshot.js';
 import { captureSignature } from './diff.js';
@@ -1794,7 +1794,9 @@ ${describeLeaks(certain.slice(0, 30))}${certain.length > 30 ? `\n  … and ${cer
           const consumed = new Set(consumedReportedOutputs(flow.steps, step.id));
           const referenced: Record<string, string> = {};
           for (const [k, v] of Object.entries(tail.reportTemplate?.values ?? {})) {
-            const kept = templateValue(v, bound.params, pageShown, { literal: true });
+            // Nothing ran, so nothing was typed or read: a param-only value stands
+            // on this page alone (round 60, fwgt11), as the artifact's guard asks it.
+            const kept = templateValue(v, bound.params, pageShown, { literal: true, given: { typed: [], live: [] } });
             if (kept !== null) values[k] = kept;
             // A consumed value the page does not show still gives a later
             // step its one slot (referenceValue), as on the replay path.
@@ -1993,6 +1995,8 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
         recovered,
         unfinishedGesture: result.unfinishedGesture,
         skippedReads: result.skill?.skippedReads,
+        // A report value withheld as given, not observed (round 60, fwgt11 07-add).
+        given: result.skill?.given,
         declaredOutputs: step.outputs,
         values: result.report.evidence?.values ?? {},
         // Only an ASKED output's skipped read makes the step partial (fwec11 01-signin).
@@ -2805,11 +2809,22 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
     // Echoed keys are withheld from the template too: the guard dropped them
     // from the confident values, and refilling them from "{{v4}}" put them
     // straight back (fwrd86 01-signin ticket_title) — the artifact never did.
-    const { report, withheld, unobservedProse, references } = await replayReport(() => this.browser.getPage(), last, { ...match.params, ...derived }, confidentValues, {
+    // A value made only of params is published only where this run observed
+    // it — on the page, in a read, or typed by a segment of the chain it
+    // walked (round 60, fwgt11 07-add published "bug" beside a live
+    // labels_shown of "priority-high").
+    const { report, withheld, unobservedProse, references, given } = await replayReport(() => this.browser.getPage(), last, { ...match.params, ...derived }, confidentValues, {
       withhold: agg.echoed,
       instruction,
+      chain: [...earlier.map((e) => e.skill), last],
     });
     if (withheld.length) progress(`[replay] withheld ${withheld.length} report value(s) whose recorded text this run's page did not show: ${withheld.join(', ')}`);
+    if (given.length) {
+      const said = given.map((key) => `${last.id}: ${givenWarning(key)}`);
+      for (const line of said) progress(`[replay] ${line}`);
+      record.warnings = [...(record.warnings ?? []), ...said];
+      record.given = given;
+    }
     if (unobservedProse.length) progress(`[replay] dropped ${unobservedProse.length} summary clause(s) this run did not observe`);
     // Keep the conversation coherent for later instructions: the same one-line
     // entry the loop would have written.

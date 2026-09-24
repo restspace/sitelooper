@@ -2854,7 +2854,7 @@ describe('the recorded stand-in reaches every unresolved reference (fwod49)', as
     // The satisfied path goes through the shared templateValue, which refuses
     // a fill still holding `{{` (and, since fwrd86, recorded text the page
     // does not show).
-    const satisfied = source.indexOf('const kept = templateValue(v, bound.params, pageShown, { literal: true });');
+    const satisfied = source.indexOf('const kept = templateValue(v, bound.params, pageShown, { literal: true, given: { typed: [], live: [] } });');
     expect(satisfied).toBeGreaterThan(0);
     expect(fs.readFileSync(path.resolve(__dirname, '../src/execution/report.ts'), 'utf8')).toMatch(/if \(!filled \|\| \/\\\{\\\{\/\.test\(filled\)\) return null;/);
     const normal = source.indexOf("Object.entries(result.report.evidence?.values ?? {})");
