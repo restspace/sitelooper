@@ -13,6 +13,7 @@ import {
   type PageObservation,
 } from '../execution/snapshot.js';
 import { truncate } from './refs.js';
+import { daemonWindow } from './journal.js';
 
 /**
  * A cheap, comparable fingerprint of what the page currently shows. Captured
@@ -47,6 +48,11 @@ const DIFF_BUDGET = 700;
  * to "no diff", never to an error.
  */
 export async function captureSignature(page: Page): Promise<PageSignature | null> {
+  // The daemon's own look: anything the page does meanwhile is not a gesture's (journal.ts).
+  return daemonWindow('capture', () => captureInWindow(page));
+}
+
+async function captureInWindow(page: Page): Promise<PageSignature | null> {
   try {
     // NOT ariaSnapshot(): every call to it — mode:'ai' *or* plain — re-mints
     // Playwright's [ref=eN] registry, and a plain call leaves it empty, so the

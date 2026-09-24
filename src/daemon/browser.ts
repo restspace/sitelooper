@@ -5,6 +5,7 @@ import { DialogManager } from './dialogs.js';
 import { RECORDING_VIEWPORT, profileMismatch, readLiveBrowser, type BrowserProfile } from '../execution/browser.js';
 import { pageTraffic } from '../execution/action.js';
 import { ScriptRecorder } from './recorder.js';
+import { Journal, currentJournal, setCurrentJournal } from './journal.js';
 import { SkillStore } from '../skills/store.js';
 
 /**
@@ -117,6 +118,12 @@ export class BrowserSession {
   readonly learn: SkillStore | null;
   /** The browser this session launches (and so records and replays) in; stored on a flow it saves. */
   readonly profile: BrowserProfile;
+  /**
+   * The recorder journal (daemon/journal.ts, SHADOW MODE): on whenever the
+   * script recorder is, unless SITELOOPER_JOURNAL=0. Read only by the shadow
+   * report; nothing it records changes what replays, compiles or exports.
+   */
+  readonly journal: Journal | null;
 
   constructor(private opts: BrowserOptions) {
     this.profile = opts.profile ?? profileFromEnv();
@@ -124,6 +131,8 @@ export class BrowserSession {
     this.learn = learning ? new SkillStore() : null;
     this.script =
       learning || opts.script || process.env.SITELOOPER_SCRIPT === '1' ? new ScriptRecorder(opts.session) : null;
+    this.journal = this.script && process.env.SITELOOPER_JOURNAL !== '0' ? new Journal() : null;
+    if (this.journal) setCurrentJournal(this.journal);
   }
 
   private async launch(): Promise<BrowserContext> {
@@ -167,8 +176,11 @@ export class BrowserSession {
     // the first launch is in flight used to start a second browser and
     // orphan the first, videos and all.
     this.launching ??= this.launch()
-      .then((context) => {
+      .then(async (context) => {
+        // Before any page is adopted: the in-page journal must be in every document from its first script.
+        await this.journal?.attachContext(context).catch(() => {});
         this.context = context;
+        this.journal?.setPageLister(() => context.pages().filter((p) => !p.isClosed()));
         context.on('page', (p) => this.adoptPage(p));
         context.on('close', () => {
           this.context = null;
@@ -187,6 +199,7 @@ export class BrowserSession {
 
   private adoptPage(page: Page): void {
     this.dialogs.attach(page);
+    this.journal?.attachPage(page);
     // Traffic is recorded from the moment the session adopts the page, so the
     // first action on it has a baseline (src/execution/action.ts).
     pageTraffic(page);
@@ -319,6 +332,7 @@ export class BrowserSession {
    * one moment they can be reported. Idempotent.
    */
   async close(): Promise<string[]> {
+    if (this.journal && currentJournal() === this.journal) setCurrentJournal(null);
     const context = this.context;
     if (context) {
       this.context = null;

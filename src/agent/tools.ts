@@ -22,6 +22,7 @@ import { settleDom, settlePage } from '../daemon/settle.js';
 import { fingerprintPage } from '../daemon/fingerprint.js';
 import { isRecordable, type StepDiff } from '../daemon/recorder.js';
 import { diffTotals, settleEvidence, stepFailure, type StepEvidence } from '../daemon/step-evidence.js';
+import { splitForStep, windowKindOf, type StepJournal } from '../daemon/journal.js';
 import { contractWeakening } from '../skills/contract.js';
 import { urlPattern as compiledUrlPattern } from '../skills/compile.js';
 import { renderReplay, replaySkill, type ReplayResult } from '../skills/replay.js';
@@ -479,6 +480,9 @@ export async function executeTool(
   /** `deadlineMs`: the whole-action deadline of a state-changing tool (ACTION_DEADLINE_MS). */
   options: { deadlineMs?: number } = {},
 ): Promise<ToolExecution> {
+  // The whole tool call is the daemon's window (journal.ts); the action inside
+  // it opens its own, narrower one at dispatch (runStep).
+  const toolWindow = session.journal?.open('daemon', `tool:${name}`);
   try {
     // Inside the guard: a dead browser (getPage throwing) must come back as
     // an error result the loop can report, never a rejection that ends the
@@ -520,6 +524,8 @@ export async function executeTool(
       return { result: truncate(`ERROR: ${explainError(err, args)} ${outcomeLabel(outcome)}`, TOOL_RESULT_BUDGET), isError: true, outcome };
     }
     return { result: truncate(`ERROR: ${explainError(err, args)}`, TOOL_RESULT_BUDGET), isError: true };
+  } finally {
+    if (toolWindow) session.journal?.close(toolWindow);
   }
 }
 
@@ -762,6 +768,8 @@ async function runStep(
   // throws before commit is recorded as FAILED (stage 0 evidence, never a gesture).
   let dispatchAt: number | undefined;
   let committed = false;
+  const journal = pending ? session.journal : null;
+  let jw = 0;
   try {
     // Secrets ({{env:NAME}}) resolve HERE and only here — after the recorder
     // captured the marker-bearing args above, immediately before the browser
@@ -780,6 +788,13 @@ async function runStep(
         })
       : null;
     dispatchAt = Date.now();
+    // The journal's window for this action (daemon/journal.ts, SHADOW MODE):
+    // dispatch to settle. A value it types is noted, marker-bearing args only,
+    // so a request that carries it can say so; a credential is never noted.
+    if (journal) {
+      jw = journal.open(windowKindOf(name), name, INPUT_TOOLS.has(name));
+      journal.noteTyped(jw, name === 'fill' ? args.value : name === 'type' ? args.text : name === 'select' ? args.option : undefined);
+    }
     let result = scrubSecrets(await dispatch(session, name, live, screenshotDir, signal, opts.resolved, obs));
     // A secret typed into a PASSWORD field: that field's own line is where an
     // ambiguous secret (a value some non-credential variable holds too) may be
@@ -806,6 +821,7 @@ async function runStep(
     // through. Both are the observation's url wait now (urlHeldStill inside it).
     const verdict: SettleVerdict | null = obs ? await obs.settle() : null;
     const settledAt = Date.now();
+    if (journal && jw) journal.close(jw);
     // What the recorder knew and used to drop (daemon/step-evidence.ts): the
     // uncapped diff counts, and the removals the diff itself keeps only for a
     // dialog or an add-less step. Never read by compile, export or replay.
@@ -892,9 +908,13 @@ note: this link points to ${verdict.link.href}, and its navigation had not commi
           ...(removedAll?.length && !diff?.removed ? { removed: removedAll } : {}),
         }
       : undefined;
+    // Everything the journal saw since the last recorded step, attributed: this
+    // window's share on the step, the rest in its gap. Never shown to the model.
+    const journaled: StepJournal | undefined = journal && jw && pending ? splitForStep(jw, await journal.collect(page)) : undefined;
     committed = true;
     recorder?.commit(pending, result, {
       diff,
+      ...(journaled ? { journal: journaled } : {}),
       ...(evidence ? { obs: evidence } : {}),
       via: opts.via,
       fingerprintAfter,
@@ -912,7 +932,11 @@ note: this link points to ${verdict.link.href}, and its navigation had not commi
   } catch (err) {
     // A failed action is evidence, not a gesture: on disk as `failed: true`,
     // out of every read of the take (ScriptRecorder.fail).
-    if (!committed && pending && recorder) recorder.fail(pending, stepFailure(err), { at: { d: dispatchAt ?? Date.now() } });
+    if (journal && jw) journal.close(jw);
+    if (!committed && pending && recorder) {
+      const journaled = journal && jw ? splitForStep(jw, await journal.collect(page).catch(() => [])) : undefined;
+      recorder.fail(pending, stepFailure(err), { at: { d: dispatchAt ?? Date.now() } }, journaled);
+    }
     throw err;
   } finally {
     obs?.cancel();

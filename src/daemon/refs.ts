@@ -1,5 +1,6 @@
 import type { Locator, Page } from 'playwright-core';
 import { fieldByName, implicitRoles } from '../execution/text.js';
+import { daemonWindow } from './journal.js';
 
 /** Moved to the shared execution/text.ts (the artifact embeds it); re-exported for existing callers. */
 export { implicitRoles };
@@ -22,6 +23,11 @@ const SCOPE_WAIT_MS = 2_000;
  * when available, falling back to the plain aria snapshot without refs.
  */
 export async function snapshot(page: Page, opts: SnapshotOptions = {}): Promise<string> {
+  // The daemon's own look: anything the page does meanwhile is not a gesture's (journal.ts).
+  return daemonWindow('snapshot', () => snapshotInWindow(page, opts));
+}
+
+async function snapshotInWindow(page: Page, opts: SnapshotOptions): Promise<string> {
   let raw: string;
   if (opts.selector) opts = { ...opts, selector: implicitRoles(opts.selector) };
   const scope = opts.selector ? page.locator(opts.selector) : page;
