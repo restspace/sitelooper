@@ -3,7 +3,7 @@
  * (src/daemon/step-verdict.ts askedOutputs / unansweredAsks; round 56).
  *
  * test/fixture/report-asks-steps.json holds every zero-model step of the
- * round-54 and round-56 flow runs we hold (16 runs, 127 steps): its
+ * round-54, 56 and 57 flow runs we hold (17 runs, 130 steps): its
  * instruction, its candidate outputs (declared, plus what export pruned) and
  * what the replay published (reported values and echo-reads).
  */
@@ -104,7 +104,7 @@ describe('export: a pruned output the instruction asked for is named, not droppe
   });
 });
 
-describe('the whole of rounds 54 and 56', () => {
+describe('the whole of rounds 54, 56 and 57', () => {
   it('names exactly these steps (a warning, not a verdict — see step-verdict.ts for why)', () => {
     const named = ROWS.filter((r) => unanswered(r).length).map((r) => `${r.green ? 'GREEN ' : ''}${r.run} ${r.replay} ${r.step}: ${unanswered(r).join(', ')}`).sort();
     expect(named).toEqual([
@@ -147,6 +147,8 @@ describe('the whole of rounds 54 and 56', () => {
       'fwsi7 n3 05-open: checked_out_to_user, model, status',
       'fwsi8 n2 01-signin: asset_1, asset_2, asset_3',
       'fwsi8 n3 01-signin: asset_1, asset_2, asset_3',
+      'fwsi9 n3 04-report: confirmation_message, note_text_shown, status_label_displayed',
+      'fwsi9 n3 05-open: purchase_date, status_label',
     ]);
   });
 });
