@@ -1,0 +1,160 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwec10-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwec10-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwec10-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/bench/results/fwec10-spec-spec-tmp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwec10-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwec10.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwec10-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwec10.spec.ts",
+      "file": "fwec10.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwec10",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 39296,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper step] 01-signin\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 02-create s_7d6b2f/6: 2 field(s) this procedure filled were empty again before this click (the page rebuilt its form, or dropped the value when the field lost focus, after the fills were checked) — refilled once\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 02-create s_7d6b2f/9: read 'account' returned a value the skill itself set/selected ('Bench Account') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-create\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 03-open s_64c733/3: read 'post_text' returned a value the skill itself set/selected ('fwec10-spec bench note') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-open\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-signin: Sign in with username admin and password {{env:APP_PASSWORD}} (type the password exactly as the literal text {{env:APP_PASSWORD}}). Then go to Opportunities list, and report the names of all opportunities whose name starts with 'Seed:' exactly as shown.",
+                      "duration": 4883
+                    },
+                    {
+                      "title": "02-create: Create a new Opportunity with name '{{runid}} Bench Opportunity', account linked to 'Bench Account' (choose it from the link field's suggestions or select dialog so the record is actually linked — there are similarly-named accounts, pick exactly 'Bench Account'), description containing the text '{{runid}}', stage 'Negotiation', amount 12500 in the default currency, close date 2026-12-31, and assigned user 'Bench Assignee' (again actually selected, not just typed). Save it. Then open the new opportunity's record page and report the exact values shown for name, account, stage, amount, close date, assigned user, and description.",
+                      "duration": 31672
+                    },
+                    {
+                      "title": "03-open: Open the opportunity '{{runid}} Bench Opportunity' (its record page address is #Opportunity/view/{{02-create.url.h2}}). In its Stream panel, write a post whose text includes '{{runid}}' (e.g. '{{runid}} bench note') and post it. Then report the text of the post as shown in the Stream, and confirm the record's ID from the address bar.",
+                      "duration": 1522
+                    }
+                  ],
+                  "startTime": "2026-09-24T07:23:56.966Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": ""
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "03e0ffb73dfbaffc17aa-cd1edee6acb8bb0fb011",
+          "file": "fwec10.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-24T07:23:54.848Z",
+    "duration": 41645.958999999995,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

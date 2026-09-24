@@ -1,0 +1,85 @@
+
+[sweep] run 1/3: fwec10-n1 (store: /home/user/sitelooper/bench/results/fwec10-skills)
+[harness] espocrm: defaulting APP_URL
+[harness] espocrm: defaulting APP_EMAIL
+[harness] espocrm: defaulting APP_PASSWORD
+[reset] espocrm: no leftover bench opportunities
+[harness] espocrm responded 200 at http://127.0.0.1:8097/
+stopped: fwec10-n1
+  flow "fwec10" saved: 3 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwec10.json
+  warning: note: dropped 1 locator candidate(s) carrying a value this run minted (known only by export time)
+  warning: warning: 02-create's instruction asks to report stage, and no replay can publish it: nothing in its procedure reads it from the page, so export dropped it — re-record the step so the value is read, not only reported
+  warning: note: 02-create no longer publishes assigned_user_id, currency — no replay reads them from the page and the recording showed no line to read
+  warning: note: 03-open no longer publishes post_author — no replay reads it from the page and the recording showed no line to read
+  warning: warning: 57 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[1].instruction: "Bench Assignee" (output) in "Create a new Opportunity with name '{{runid}} Bench Opportunity', account linked to 'Bench Account' (choose it from the link field's suggestions or select dialo"
+  flow.steps[1].instruction: "Bench Account" (output) in "Create a new Opportunity with name '{{runid}} Bench Opportunity', account linked to 'Bench Account' (choose it from the link field's suggestions or select dialo"
+  flow.steps[1].instruction: "Negotiation" (output) in "Create a new Opportunity with name '{{runid}} Bench Opportunity', account linked to 'Bench Account' (choose it from the link field's suggestions or select dialo"
+  flow.steps[1].instruction: "2026-12-31" (output) in "Create a new Opportunity with name '{{runid}} Bench Opportunity', account linked to 'Bench Account' (choose it from the link field's suggestions or select dialo"
+  flow.steps[1].params.v4: "2026-12-31" (output) in "2026-12-31"
+arm=sitelooper model=z-ai/glm-5.3 runid=fwec10-n1 stop=completed
+turns=5 wall=221.1s
+commands=4 cmdTime=206.1s cmdBytes=15813 timeouts=0
+orchestrator in=9578 cw=0 cr=13632 out=958
+inner prompt=848076 cached=779392 completion=11790
+spend=$0.041 maxUsd=3
+learn: A_n=0 replayed=0/3 full=0 repaired=0 compiled=3 variants=0
+-> /home/user/sitelooper/bench/results/fwec10-n1-sitelooper-result.json
+
+fwec10-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: PASS — id=6ab4cf2217162033d, account=Bench Account, description includes runid=true
+  obj 3: PASS — stage=Negotiation
+  obj 4: PASS — amount=12500 USD, closeDate=2026-12-31
+  obj 5: PASS — assignedUser=Bench Assignee
+  obj 6: PASS — 1 post(s), 1 carrying the runid
+  obj 7: PASS — record id 6ab4cf2217162033d reported
+
+[sweep] run 2/3: fwec10-n2 (replay flow fwec10, no orchestrator)
+[reset] espocrm: deleted 1 leftover bench opportunit(ies)
+
+fwec10-n2: objectives passed 6/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: PASS — id=6ab4cf84392b51cc4, account=Bench Account, description includes runid=true
+  obj 3: PASS — stage=Negotiation
+  obj 4: FAIL — amount=1250012500 USD, closeDate=2026-12-31
+  obj 5: PASS — assignedUser=Bench Assignee
+  obj 6: PASS — 1 post(s), 1 carrying the runid
+  obj 7: PASS — record id 6ab4cf84392b51cc4 reported
+
+[sweep] run 3/3: fwec10-n3 (replay flow fwec10, no orchestrator)
+[reset] espocrm: deleted 1 leftover bench opportunit(ies)
+
+fwec10-n3: objectives passed 6/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: PASS — id=6ab4cfb37f7f28394, account=Bench Account, description includes runid=true
+  obj 3: PASS — stage=Negotiation
+  obj 4: FAIL — amount=1250012500 USD, closeDate=2026-12-31
+  obj 5: PASS — assignedUser=Bench Assignee
+  obj 6: PASS — 1 post(s), 1 carrying the runid
+  obj 7: PASS — record id 6ab4cfb37f7f28394 reported
+
+Learning sweep fwec10 (K=3)
+┌─────────┬───┬─────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid       │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼─────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwec10-n1' │ '7/7'    │ 'completed' │ 5     │ 4    │ 0.041     │ 0   │ '0/3'        │ 221    │
+│ 1       │ 2 │ 'fwec10-n2' │ '6/7'    │ 'success'   │ 0     │ 3    │ 0         │ 1   │ '3/3 (flow)' │ 50     │
+│ 2       │ 3 │ 'fwec10-n3' │ '6/7'    │ 'success'   │ 0     │ 3    │ 0         │ 1   │ '3/3 (flow)' │ 40     │
+└─────────┴───┴─────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:8097
+  s_416437  validated    4 steps  3/3 (100%)
+           Sign in with username {{v1}} and password {{env:APP_PASSWORD}} (type the password exactly as the literal text …
+  s_46bdf5  validated    1 steps  3/3 (100%)
+           Create a new Opportunity with name '{{v2}}', account linked to 'Bench Account' (choose it from the link field'…
+  s_547b18  validated    7 steps  3/3 (100%)
+           Create a new Opportunity with name '{{v2}}', account linked to 'Bench Account' (choose it from the link field'…
+  s_64c733  validated    4 steps  3/3 (100%)
+           Open the opportunity '{{v1}}' (its record page address is #Opportunity/view/{{v3}}). In its Stream panel, writ…
+  s_7d6b2f  validated   19 steps  3/3 (100%)
+           Create a new Opportunity with name '{{v2}}', account linked to 'Bench Account' (choose it from the link field'…
+  s_d9a26a  validated   10 steps  3/3 (100%)
+           Sign in with username {{v1}} and password {{env:APP_PASSWORD}} (type the password exactly as the literal text …
+store: /home/user/sitelooper/bench/results/fwec10-skills
+
+summary: /home/user/sitelooper/bench/results/fwec10-sweep.json
