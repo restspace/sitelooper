@@ -1,0 +1,267 @@
+{
+ "id": "s_e3598d",
+ "origin": "http://127.0.0.1:8095",
+ "template": "Navigate to the repository bench/bench-repo and open its Issues list. Filter to show only OPEN issues. Report the exact titles of all open issues whose title starts with 'Seed:' — copy the titles exactly as displayed, character for character. Also report whether any issue titled '{{v1}} Bench Issue' already exists in the list.",
+ "params": {
+  "v1": {
+   "example": "fwgt9-n1",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues?q=&state=open&type=all"
+ },
+ "steps": [
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div:nth-of-type(2) > overflow-menu > div > a:nth-of-type(2) > span:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 226,
+      "y": 117,
+      "w": 19,
+      "h": 17,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "open_issue_count"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "value"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "input[name=\"milestone\"]"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > div:nth-of-type(1) > form > div > input:nth-of-type(4)"
+     }
+    ]
+   },
+   "label": "closed_issue_count"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#issue-list > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div > a"
+     },
+     {
+      "kind": "point",
+      "x": 207,
+      "y": 263,
+      "w": 240.9,
+      "h": 19,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "open_issue_link_title_1"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#issue-list > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div > a"
+     },
+     {
+      "kind": "point",
+      "x": 203,
+      "y": 328,
+      "w": 233.7,
+      "h": 19,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "open_issue_link_title_2"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#issue-list > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(1) > div > a"
+     },
+     {
+      "kind": "point",
+      "x": 170,
+      "y": 394,
+      "w": 166,
+      "h": 19,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "open_issue_link_title_3"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#issue-list > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div > a"
+     },
+     {
+      "kind": "point",
+      "x": 207,
+      "y": 263,
+      "w": 240.9,
+      "h": 19,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "open_issue_titles_1"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#issue-list > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div > a"
+     },
+     {
+      "kind": "point",
+      "x": 203,
+      "y": 328,
+      "w": 233.7,
+      "h": 19,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "open_issue_titles_2"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#issue-list > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(1) > div > a"
+     },
+     {
+      "kind": "point",
+      "x": 170,
+      "y": 394,
+      "w": 166,
+      "h": 19,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "open_issue_titles_3"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "Opened the Issues list of bench/bench-repo at /bench/bench-repo/issues?q=&type=all&state=open (filter = Open only, as confirmed by the \"3 Open / 0 Closed\" counters). Exactly 3 open issues exist, all titled \"Seed: …\": \"Seed: ship repaired device\" (#3), \"Seed: order missing parts\" (#2), and \"Seed: triage inbox\" (#1) — titles copied character for character from the rendered issue links. No open issue titled '{{v1}} Bench Issue' exists; the repository has 0 closed issues either (0 Closed), so it exists nowhere in the list.",
+  "values": {
+   "open_issue_count": "3",
+   "closed_issue_count": "0",
+   "seed_titled_issue_titles": "Seed: ship repaired device, Seed: order missing parts, Seed: triage inbox",
+   "Bench Issue exists": "no",
+   "open_issue_link_title_1": "Seed: ship repaired device",
+   "open_issue_link_title_2": "Seed: order missing parts",
+   "open_issue_link_title_3": "Seed: triage inbox",
+   "run_reference": "{{v1}}",
+   "open_issue_titles_1": "Seed: ship repaired device",
+   "open_issue_titles_2": "Seed: order missing parts",
+   "open_issue_titles_3": "Seed: triage inbox"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 3,
+  "successes": 3,
+  "partial": 0,
+  "created": "2026-09-24T07:18:12.426Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2,
+  "lastUsed": "2026-09-24T07:26:08.808Z"
+ },
+ "status": "validated",
+ "seq": {
+  "chain": "s_689f82",
+  "index": 1,
+  "of": 2
+ },
+ "provenance": {
+  "session": "fwgt9-n1",
+  "instruction": "Navigate to the repository bench/bench-repo and open its Issues list. Filter to show only OPEN issues. Report the exact titles of all open issues whose title starts with 'Seed:' — copy the titles exactly as displayed, character for character. Also report whether any issue titled 'fwgt9-n1 Bench Issue' already exists in the list.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-24T07:18:12.426Z"
+ },
+ "revision": 5
+}
