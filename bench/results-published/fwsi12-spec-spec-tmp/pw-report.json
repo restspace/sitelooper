@@ -1,0 +1,164 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwsi12-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwsi12-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwsi12-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/bench/results/fwsi12-spec-spec-tmp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwsi12-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwsi12.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwsi12-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwsi12.spec.ts",
+      "file": "fwsi12.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwsi12",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 58592,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper step] 01-open\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 02-create s_40bc20/8: read 'purchase_date_field' returned a value the skill itself set/selected ('2026-03-15') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper skip] 02-create s_151b54/8 target: read target not found — value left empty\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-create\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-create\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-open\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-open: Open http://127.0.0.1:8098/ and sign in with username admin and password {{env:APP_PASSWORD}} (type the password text exactly as {{env:APP_PASSWORD}}). Then go to the Assets list and find all assets whose name starts with 'Seed:'. Report for each one its asset tag and its name exactly as displayed in the list.",
+                      "duration": 8259
+                    },
+                    {
+                      "title": "02-create: Create a new asset in Snipe-IT with these values: Asset Name = '{{runid}} Bench Asset', Model = 'Bench Laptop Model' (choose it from the searchable model dropdown so it is actually selected), Status = 'Ready to Deploy' (choose from the status dropdown), Default Location = 'Bench Office' (choose from the location dropdown), Purchase Date = 2026-03-15. Fill any other required fields sensibly but do NOT create new models, locations, or users. Save the asset, then report the asset tag Snipe-IT assigned to it (format like BA-00012) and confirm the model, status, location and purchase date shown on the asset's page.",
+                      "duration": 35805
+                    },
+                    {
+                      "title": "03-create: On the asset page for asset tag {{02-create.assigned_asset_tag}} (named '{{runid}} Bench Asset', at {{02-create.url}}), perform a Check Out action: check the asset out to the user 'Bench Assignee' (select that user from the searchable user dropdown — do not create a new user), and include a note whose text contains '{{runid}}' (for example 'Checkout note for {{runid}}'). Complete the checkout only once. Then report what the asset page shows for its checked-out status, the assignee user, and the note text.",
+                      "duration": 10918
+                    },
+                    {
+                      "title": "04-open: Open the asset page for asset tag {{02-create.assigned_asset_tag}} ({{02-create.url}}) and read back, from the live page, these exact displayed values: the asset name, the asset tag, the model, the status label, the default location, the purchase date, the user it is checked out to, and the note text attached to the checkout event in the {{03-create.history_heading}} table. Report each value exactly as displayed. Do not change anything.",
+                      "duration": 2886
+                    }
+                  ],
+                  "startTime": "2026-09-24T21:42:46.252Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": ""
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "22f6a6abd71e2bb20126-42e43e41d3412501a8c2",
+          "file": "fwsi12.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-24T21:42:44.310Z",
+    "duration": 60716.44,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}
