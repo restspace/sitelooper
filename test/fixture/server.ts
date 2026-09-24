@@ -862,6 +862,60 @@ ${list ? '<section id="panel"><ul id="list"></ul></section>' : ''}
 </body></html>`;
 
 /**
+ * A panel whose menu button the app shows only once the panel is hovered
+ * (round 57, grafana fwgr70 02-create s_2712e5/5): the button is
+ * `visibility: hidden` until a mouseover reaches the panel, so a real hover
+ * on the button itself never becomes actionable. Clicking the shown button
+ * opens the menu and posts `commit:menu:open`.
+ */
+const HOVER_MENU = `<!doctype html><html><head><meta charset="utf-8"><title>Dashboard</title></head><body>
+<h1>Dashboard</h1>
+<div id="panel" style="padding: 24px; border: 1px solid #999; width: 300px"><span>CPU panel</span>
+<button id="menu" type="button" aria-label="Menu for CPU panel" style="visibility: hidden">&#8942;</button></div>
+<ul id="items" role="menu" hidden><li role="menuitem">Edit</li></ul>
+<script>
+const panel = document.getElementById('panel');
+const menu = document.getElementById('menu');
+panel.addEventListener('mouseover', () => { menu.style.visibility = 'visible'; });
+menu.addEventListener('click', () => {
+  document.getElementById('items').hidden = false;
+  fetch('/commit/menu/open', { method: 'POST' });
+});
+</script>
+</body></html>`;
+
+/**
+ * An opportunity form whose account field empties the amount (round 57,
+ * espocrm fwec10): typing an account clears `#amount` without an input event,
+ * as the app's own relation handler did. "Pick" is a click that does nothing
+ * but go out (a submit, for the standing-fill check); Save posts
+ * `commit:opportunity:<amount as the field holds it>`. `?sticky=1`: the amount
+ * widget keeps its own copy of the last value it held and puts it back in
+ * front of whatever is typed into the field afterwards — a field that ends up
+ * holding its value twice however it was cleared.
+ */
+const TYPED_AMOUNT = (sticky: boolean) => `<!doctype html><html><head><meta charset="utf-8"><title>Opportunity</title></head><body>
+<h1>Create Opportunity</h1>
+<label for="amount">Amount</label><input id="amount">
+<label for="account">Account</label><input id="account">
+<button id="pick" type="button">Pick</button>
+<button id="save" type="button">Save</button>
+<script>
+const STICKY = ${sticky};
+const amount = document.getElementById('amount');
+let copy = '';
+amount.addEventListener('input', () => {
+  if (STICKY && copy && amount.value && !amount.value.startsWith(copy)) amount.value = copy + amount.value;
+  if (amount.value) copy = amount.value;
+});
+document.getElementById('account').addEventListener('input', () => { amount.value = ''; });
+document.getElementById('save').addEventListener('click', () => {
+  fetch('/commit/opportunity/' + encodeURIComponent(amount.value), { method: 'POST' });
+});
+</script>
+</body></html>`;
+
+/**
  * A part row and its cost field (round 51, repairdesk fwrd84 05-edit): Save
  * posts `/commit/cost/<value>` and redraws the row with the saved cost and
  * its price (cost × 1.25). `/price?stuck=1` is the same form whose Save
@@ -1167,6 +1221,16 @@ const OPENER = `<!doctype html><html><head><meta charset="utf-8"><title>Opener</
 <script>
 document.getElementById('after').addEventListener('click', () => fetch('/after', { method: 'POST' }));
 </script>
+</body></html>`;
+
+/**
+ * The opener with a PLAIN link (round 57, snipe-it fwsi9 step 12): the
+ * recording Ctrl+clicked it, and the tab that opened has no opener — no
+ * `popup` event reaches the page, only the context's `page` event.
+ */
+const OPENER_PLAIN = `<!doctype html><html><head><meta charset="utf-8"><title>Opener</title></head><body>
+<h1>Orders</h1>
+<a id="open" href="/popup/child">Open approval</a>
 </body></html>`;
 
 const POPUP_CHILD = `<!doctype html><html><head><meta charset="utf-8"><title>Approval</title></head><body>
@@ -1550,6 +1614,8 @@ export async function createFixtureServer(initialCount = 10): Promise<FixtureSer
       if (url === '/filters' || url.startsWith('/filters?')) return html(FILTERS(url.includes('open=1'), url.includes('stuck=1')));
       if (url === '/price' || url === '/price?stuck=1') return html(PRICE(url.endsWith('stuck=1')));
       if (url === '/imagelink') return html(IMAGE_LINK);
+      if (url === '/typed-amount' || url === '/typed-amount?sticky=1') return html(TYPED_AMOUNT(url.endsWith('sticky=1')));
+      if (url === '/hover-menu') return html(HOVER_MENU);
       if (url === '/counts' || url === '/counts?nolist=1') return html(COUNTS(!url.endsWith('nolist=1')));
       if (url === '/transform') return html(TRANSFORM);
       if (url === '/board') return html(BOARD);
@@ -1567,6 +1633,7 @@ export async function createFixtureServer(initialCount = 10): Promise<FixtureSer
       if (url === '/frames/renamed' || url === '/frames?renamed=1') return html(FRAMES(true));
       if (url === '/frames/inner' || url === '/frames/moved') return html(FRAME_INNER);
       if (url === '/opener') return html(OPENER);
+      if (url === '/opener-plain') return html(OPENER_PLAIN);
       if (url === '/popup/child') return html(POPUP_CHILD);
       if (url.startsWith('/stall/')) {
         const [pathPart, query = ''] = url.slice('/stall/'.length).split('?');

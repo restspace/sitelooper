@@ -155,16 +155,52 @@ describe('page effects', () => {
     return page as unknown as Page & { armed: string[] };
   }
 
-  it('attaches the popup listener when armed — before the action — and continues on the popup', async () => {
+  /**
+   * A page on a context that gains `appear` when its `page` event fires — the
+   * recorder's rule (tools.ts pageContextOf): the popup is the one page that
+   * appeared, opener or not (snipe-it fwsi9's Ctrl+click tab has none).
+   */
+  function onContext(appear: Page[]): Page & { armed: string[] } {
+    const armed: string[] = [];
+    const pages: Page[] = [];
+    const page = {
+      armed,
+      isClosed: () => false,
+      opener: async () => null,
+      context: () => ({
+        pages: () => pages,
+        waitForEvent: (name: string) => {
+          armed.push(name);
+          if (!appear.length) return Promise.reject(new Error(`timeout waiting for ${name}`));
+          pages.push(...appear);
+          return Promise.resolve(appear[0]);
+        },
+      }),
+    } as unknown as Page & { armed: string[] };
+    pages.push(page);
+    return page;
+  }
+
+  it('attaches the listener when armed — before the action — and continues on the one page that appeared, opener or not', async () => {
     const popup = fakePage();
-    const page = fakePage({ events: { popup: () => popup } });
+    const page = onContext([popup]);
     const landing = await armPageEffect(page, { kind: 'popup' }, 'step 1');
-    expect(page.armed).toEqual(['popup']);
+    expect(page.armed).toEqual(['page']);
     expect(await landing()).toEqual({ page: popup });
   });
 
+  it('of several new pages, continues only on the one this page opened', async () => {
+    const stray = fakePage();
+    let page: Page & { armed: string[] };
+    const mine = { ...fakePage(), opener: async () => page } as unknown as Page;
+    page = onContext([stray, mine]);
+    expect(await (await armPageEffect(page, { kind: 'popup' }, 'step 1'))()).toEqual({ page: mine });
+    const neither = onContext([fakePage(), fakePage()]);
+    expect(await (await armPageEffect(neither, { kind: 'popup' }, 'step 1'))()).toEqual({ error: 'step 1 was recorded opening a popup, and 2 pages opened, none of them by this page' });
+  });
+
   it('stops when a recorded popup does not open', async () => {
-    const page = fakePage();
+    const page = onContext([]);
     const landing = await armPageEffect(page, { kind: 'popup' }, 'step 1', 10);
     expect(await landing()).toEqual({ error: 'step 1 was recorded opening a popup, and none opened within 10ms' });
   });

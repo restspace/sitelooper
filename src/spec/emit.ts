@@ -2,6 +2,7 @@ import { dispatchesFirstMatch, isMutatingAction, isReadAction, spansEveryMatch }
 import { DEFAULT_BROWSER_PROFILE, isNavigatingAction, type BrowserProfile } from '../execution/browser.js';
 import { setsSomething } from '../execution/echo.js';
 import { standingFillRole } from '../execution/refill.js';
+import { DEFAULT_ACTION_TIMEOUT_MS } from '../execution/browser.js';
 import { hideEffectLines, toggleEffectLines } from '../execution/toggle.js';
 import { derivesFromParams, reportNeedsPage, templateMarkers, templateSource } from '../execution/report.js';
 import { observedNothing } from '../execution/observe.js';
@@ -2548,15 +2549,22 @@ function emitSkillAction(step: SkillStep, segment: SpecSegment, index: number, c
       break;
     }
     case 'fill':
-      // Through the inlined helper, never `locator.fill`: see its comment.
-      out.push(`await fill(${target}, ${actSrc(str('value'))});`);
-      break;
     case 'type': {
-      // Through the inlined helper, never `pressSequentially` alone: a recorded
-      // `type` into an editor or an aria-combobox is recipe-driven in the
-      // daemon, and was the one action the artifact drove past the recipe.
-      const delay = num('delay_ms');
-      out.push(`await type(${target}, ${actSrc(str('text'))}${delay === undefined ? '' : `, { delay: ${delay} }`});`);
+      // Through the inlined helpers, never `locator.fill` or `pressSequentially`
+      // alone: a recorded `type` into an editor or an aria-combobox is
+      // recipe-driven in the daemon, and was the one action the artifact drove
+      // past the recipe. Both inside the shared guardedTyping replay wraps its
+      // own dispatch in: a `type` never lands on a copy of its own value, and a
+      // field left holding its value twice over stops (espocrm fwec10).
+      const key = step.tool === 'fill' ? 'value' : 'text';
+      const delay = step.tool === 'type' ? num('delay_ms') : undefined;
+      const call =
+        step.tool === 'fill'
+          ? `fill(${target}, ${actSrc(str('value'))})`
+          : `type(${target}, ${actSrc(str('text'))}${delay === undefined ? '' : `, { delay: ${delay} }`})`;
+      if (ctx.standing) ctx.standingUsed = true;
+      const where = `${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex}: `;
+      out.push(`await guardedTyping(${ctx.standing ?? 'null'}, ${target}, ${src(str(key))}, ${q(step.tool)}, (w) => logWarning(${q(where)} + w), async () => await ${call});`);
       break;
     }
     case 'press':
@@ -3864,6 +3872,16 @@ export function emitFlowFile(spec: SpecFlow, o: EmitOptions): { source: string; 
   out.push('', '/** Runs every step in order. Each call owns its output and drift state. */');
   out.push('export async function runFlow(page: Page, vars: Vars, options: RunOptions = {}): Promise<Outputs> {');
   out.push('  validateInputs(vars);');
+  // The daemon's pages run under playwright-core's 30s action and navigation
+  // defaults; Playwright Test's actionTimeout and navigationTimeout default to
+  // 0 (unbounded), and fwgr70's compiled run hung 300s in a hover the daemon
+  // gave up on. Set on the PAGE, not in a playwright.config: the artifact runs
+  // under whatever config the consumer's project has (the isolated check's
+  // generated config is only one of them), and a page default overrides the
+  // context's. The shared execution code bounds its own calls too
+  // (browser.ts DEFAULT_ACTION_TIMEOUT_MS); this covers what it does not.
+  out.push(`  page.setDefaultTimeout(${DEFAULT_ACTION_TIMEOUT_MS});`);
+  out.push(`  page.setDefaultNavigationTimeout(${DEFAULT_ACTION_TIMEOUT_MS});`);
   out.push('  const run = options.run ?? createFlowRun();');
   out.push('  run.outputs = {};');
   out.push('  run.drift.length = 0;');

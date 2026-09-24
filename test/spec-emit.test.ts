@@ -288,11 +288,11 @@ describe('step bodies', () => {
     expect(one({ tool: 'right_click', args: { target: '@e1' }, locators: loc })).toContain("await hit1.locator.click({ button: 'right' }).catch(actionFailed); // plain, as replay dispatches it — robustClick's tiers are for click/dblclick only");
     // through the inlined helper, never Playwright's own fill (which fires no `change`)
     expect(one({ tool: 'fill', args: { target: '@e1', value: '{{v1}}' }, locators: loc })).toContain(
-      'await fill(hit1.locator, `${p.v1}`).catch(actionFailed);',
+      'async () => await fill(hit1.locator, `${p.v1}`)).catch(actionFailed);',
     );
     // through the inlined helper, never `pressSequentially` alone (the recipe ladder comes first, as in tools.ts)
-    expect(one({ tool: 'type', args: { target: '@e1', text: 'abc', delay_ms: 50 }, locators: loc })).toContain("await type(hit1.locator, 'abc', { delay: 50 }).catch(actionFailed);");
-    expect(one({ tool: 'type', args: { target: '@e1', text: 'abc' }, locators: loc })).toContain("await type(hit1.locator, 'abc').catch(actionFailed);");
+    expect(one({ tool: 'type', args: { target: '@e1', text: 'abc', delay_ms: 50 }, locators: loc })).toContain("async () => await type(hit1.locator, 'abc', { delay: 50 })).catch(actionFailed);");
+    expect(one({ tool: 'type', args: { target: '@e1', text: 'abc' }, locators: loc })).toContain("async () => await type(hit1.locator, 'abc')).catch(actionFailed);");
     expect(one({ tool: 'press', args: { target: '@e1', key: 'Enter' }, locators: loc })).toContain("await hit1.locator.press('Enter').catch(actionFailed);");
     expect(one({ tool: 'select', args: { target: '@e1', option: 'Client One' }, locators: loc })).toContain(
       "await select(hit1.locator, 'Client One').catch(actionFailed);",
@@ -400,7 +400,7 @@ describe('step bodies', () => {
     });
     expect(out).toContain('const hit1 = await pick(page, [');
     expect(out).toContain(`{ locator: page.locator('#login-email'), index: 0, structural: false, kind: 'id', carries: JSON.stringify({ kind: 'id', selector: '#login-email' }) },`);
-    expect(out).toContain("await fill(hit1.locator, 'x').catch(actionFailed);");
+    expect(out).toContain("async () => await fill(hit1.locator, 'x')).catch(actionFailed);");
     // a union would be a strict-mode violation the moment a fallback matched two inputs
     expect(out).not.toContain('.or(page');
     // the helper is the adapter over the shared policy, and takes observations
@@ -2598,7 +2598,7 @@ describe('a click that an overlay intercepts', () => {
     // src/execution/recipes.ts), whose native half is that reactSafeFill.
     const filled: SkillStep = { tool: 'fill', args: { target: '@e1', value: '3' }, locators: { target: [{ kind: 'id', selector: '#qty' }] } };
     const out = emit(specOf([filled]));
-    expect(out).toContain("await fill(hit1.locator, '3').catch(actionFailed);");
+    expect(out).toContain("async () => await fill(hit1.locator, '3')).catch(actionFailed);");
     expect(out).toContain('async function fill(loc: Locator, value: string): Promise<void> {');
     expect(out).toContain('const attempt = await fillWithRecipe(loc.page(), loc, value, recipeBook);');
     // recognition first, as the daemon's case 'fill': no visibility wait ahead of the ladder
@@ -2612,7 +2612,7 @@ describe('a click that an overlay intercepts', () => {
     expect(out).toContain("input.dispatchEvent(new Event('input', { bubbles: true }));");
     expect(out).toContain("input.dispatchEvent(new Event('change', { bubbles: true }));");
     // and the same fallback for a widget with no native value setter
-    expect(out).toContain('    await locator.fill(value);');
+    expect(out).toContain('    await locator.fill(value, { timeout: DEFAULT_ACTION_TIMEOUT_MS });');
     expect(syntaxErrors(out)).toEqual([]);
   });
 
@@ -2662,7 +2662,7 @@ describe('a click that an overlay intercepts', () => {
     // type and select climb their own ladders through the same book
     const typed: SkillStep = { tool: 'type', args: { target: '@e1', text: 'abc' }, locators: { target: [{ kind: 'id', selector: '#ed' }] } };
     const typedOut = emit(specOf([typed]));
-    expect(typedOut).toContain("await type(hit1.locator, 'abc').catch(actionFailed);");
+    expect(typedOut).toContain("async () => await type(hit1.locator, 'abc')).catch(actionFailed);");
     expect(typedOut).toContain('async function type(loc: Locator, text: string, opts: { delay?: number } = {}): Promise<void> {');
     expect(typedOut).toContain('const attempt = await typeWithRecipe(loc.page(), loc, text, recipeBook, { timeout: TYPE_TIMEOUT_MS, delay: opts.delay ?? TYPE_DELAY_MS });');
     // tools.ts's own defaults, not Playwright's: 10s timeout, 20ms per key

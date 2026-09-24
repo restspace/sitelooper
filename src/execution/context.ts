@@ -150,10 +150,32 @@ export async function armPageEffect(
 ): Promise<() => Promise<{ page: Page } | { error: string } | null>> {
   if (!effect || effect.kind === 'navigate') return async () => null;
   if (effect.kind === 'popup') {
-    const popup = page.waitForEvent('popup', { timeout: waitMs }).catch(() => null);
+    // The recorder's rule (tools.ts pageContextOf), not the page's `popup`
+    // event alone: a tab a Ctrl+click or a `rel=noopener` link opens has no
+    // opener, so that event never reaches this page — snipe-it fwsi9 step 12
+    // reported "none opened" with two pages open, and ran everything after on
+    // page 0. The popup is the one page that appeared on the context since
+    // the action was armed; of several, only one this page opened.
+    const context = page.context();
+    const before = new Set(context.pages());
+    const appeared = context.waitForEvent('page', { timeout: waitMs }).catch(() => null);
     return async () => {
-      const opened = await popup;
-      if (!opened) return { error: `${where} was recorded opening a popup, and none opened within ${waitMs}ms` };
+      await appeared;
+      const fresh = context.pages().filter((p) => !before.has(p) && !p.isClosed());
+      let opened: Page | null = fresh.length === 1 ? fresh[0] : null;
+      for (const p of fresh.length > 1 ? fresh : []) {
+        if ((await p.opener().catch(() => null)) === page) {
+          opened = p;
+          break;
+        }
+      }
+      if (!opened) {
+        return {
+          error: fresh.length
+            ? `${where} was recorded opening a popup, and ${fresh.length} pages opened, none of them by this page`
+            : `${where} was recorded opening a popup, and none opened within ${waitMs}ms`,
+        };
+      }
       await opened.waitForLoadState('domcontentloaded', { timeout: waitMs }).catch(() => {});
       return { page: opened };
     };

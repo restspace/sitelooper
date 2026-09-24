@@ -4540,6 +4540,29 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
     }, 240_000);
 
     /**
+     * Round 57, snipe-it fwsi9 step 12: the recording Ctrl+clicked a profile
+     * link, saved a popup effect, and went on in the new tab. A tab opened
+     * that way has no opener, so no `popup` event reaches the page: replay
+     * said "none opened within 5000ms" with two pages open, and everything
+     * after ran stranded on page 0. Both runners must take the one page that
+     * appeared, as the recorder credited it (tools.ts pageContextOf).
+     */
+    it('both runners follow the tab a Ctrl+click opened, which has no opener', async () => {
+      const steps: SkillStep[] = [
+        { tool: 'goto', args: { url: `${origin}/opener-plain` }, locators: {} },
+        { tool: 'modifier_click', args: { target: '@e1', modifiers: ['Control'] }, locators: { target: role('Open approval', 'link') }, effect: { kind: 'popup' } },
+        { tool: 'click', args: { target: '@e2' }, locators: { target: role('Approve') }, page: 1 },
+      ];
+      const flow = contextProcedure('s_ctrl_popup', steps);
+      const { replay, emitted, replayLog, emittedLog } = await bothOf(flow.skill, flow.spec, {});
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      await new Promise((r) => setTimeout(r, 300));
+      expect(replayLog).toEqual(['approve']);
+      expect(emittedLog).toEqual(['approve']);
+    }, 240_000);
+
+    /**
      * ghost fwgh6-n1 step 63: the tab its click opened arrived after the
      * capture, so the recording wrote no popup effect, only the later steps'
      * `page: 1`. Compile credits the popup to the click (creditUncreditedPopups),
@@ -5445,6 +5468,113 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
       expect(emitted.ok).toBe(false);
       expect(replay.reason).toMatch(/did not show "- textbox \\"Username\\": admin"/);
       expect(emitted.reason ?? '').toMatch(/the recorded page change did not appear|did not show/);
+      expect(replayLog).toEqual([]);
+      expect(emittedLog).toEqual([]);
+    }, 120_000);
+  });
+
+  /**
+   * Round 57, grafana fwgr70 02-create s_2712e5/5: the daemon passed at tier A,
+   * and the compiled artifact hung on a hover of the panel-menu button until
+   * Playwright Test's 300s budget. syntheticHover's real hover had no timeout
+   * of its own: 30s under the daemon's library page, and none at all under
+   * Playwright Test, whose actionTimeout and navigationTimeout default to 0.
+   * The harness drove the artifact on a library page, so it never saw that.
+   * Here the artifact runs through its own runFlow on a context set as
+   * Playwright Test's fixtures set it, and both runners must finish quickly and
+   * open the menu.
+   */
+  describe('a hover under an unbounded default timeout (round 57, fwgr70)', () => {
+    /** The artifact's runFlow on a page whose CONTEXT defaults to no timeout, as under Playwright Test; guarded, so a hang reads as a failure. */
+    async function emittedUnbounded(spec: SpecFlow, guardMs: number): Promise<Outcome & { ms: number }> {
+      const mod = await moduleOf(spec);
+      const session = new BrowserSession({ session: `parity-unbounded-${Date.now()}`, persist: false });
+      const started = Date.now();
+      try {
+        const page = await session.getPage();
+        page.context().setDefaultTimeout(0);
+        page.context().setDefaultNavigationTimeout(0);
+        const run = mod.runFlow(page, {}, { startUrl: mod.FLOW.startUrl }).then(
+          (outputs): Outcome => ({ ok: true, reason: null, outputs: outputs as Record<string, string> }),
+          (err: unknown): Outcome => ({ ok: false, reason: err instanceof Error ? err.message : String(err), outputs: {} }),
+        );
+        const guard = new Promise<Outcome>((resolve) => setTimeout(() => resolve({ ok: false, reason: `still running after ${guardMs}ms`, outputs: {} }), guardMs));
+        const out = await Promise.race([run, guard]);
+        return { ...out, ms: Date.now() - started };
+      } finally {
+        // Closing the browser ends a hover still waiting, so a hung run cannot outlive the case.
+        await session.close();
+      }
+    }
+
+    it('both runners hover a control the app shows only on hover, then open its menu, promptly', async () => {
+      const menu = [{ kind: 'css' as const, selector: '#menu' }];
+      const steps: SkillStep[] = [
+        { tool: 'goto', args: { url: `${origin}/hover-menu` }, locators: {} },
+        { tool: 'hover', args: { target: '@e1' }, locators: { target: menu } },
+        { tool: 'click', args: { target: '@e1' }, locators: { target: menu } },
+      ];
+      const BOUND_MS = 20_000;
+      reset(0);
+      const started = Date.now();
+      const replay = await replayOf(skillOf(steps));
+      const replayMs = Date.now() - started;
+      const replayLog = [...fx.log];
+      reset(0);
+      const emitted = await emittedUnbounded(specOf(steps), 45_000);
+      const emittedLog = [...fx.log];
+
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      expect(replayLog).toEqual(['commit:menu:open']);
+      expect(emittedLog).toEqual(['commit:menu:open']);
+      expect(replayMs, 'the daemon waited out a hover that was only a probe').toBeLessThan(BOUND_MS);
+      expect(emitted.ms, 'the artifact waited out a hover that was only a probe').toBeLessThan(BOUND_MS);
+    }, 180_000);
+  });
+
+  /**
+   * Round 57, espocrm fwec10: s_7d6b2f fills Amount (step 2), an account
+   * choice empties it, and the recording TYPES the amount again (step 18,
+   * which carries no page expectation). On replay the standing-fill check put
+   * the amount back before the next click, and the type appended onto it: the
+   * app saved 1,250,012,500 for 12500, with every runner reporting success.
+   */
+  describe('a value typed onto its own restored copy (round 57, fwec10)', () => {
+    const amount = [{ kind: 'label' as const, label: 'Amount' }];
+    const steps = (mode: '' | '?sticky=1'): SkillStep[] => [
+      { tool: 'goto', args: { url: `${origin}/typed-amount${mode}` }, locators: {} },
+      { tool: 'fill', args: { target: '@e1', value: '{{v1}}' }, locators: { target: amount } },
+      { tool: 'type', args: { target: '@e2', text: 'Bench Account' }, locators: { target: [{ kind: 'label', label: 'Account' }] } },
+      { tool: 'click', args: { target: '@e3' }, locators: { target: [{ kind: 'role', role: 'button', name: 'Pick' }] } },
+      { tool: 'type', args: { target: '@e1', text: '{{v1}}' }, locators: { target: amount } },
+      { tool: 'click', args: { target: '@e4' }, locators: { target: [{ kind: 'role', role: 'button', name: 'Save' }] } },
+    ];
+    const run = (mode: '' | '?sticky=1') => {
+      const params: Record<string, SkillParam> = { v1: { example: '12500', usedIn: [2, 5] } };
+      const skill: Skill = { ...skillOf(steps(mode)), params };
+      const base = specOf(steps(mode));
+      const spec: SpecFlow = { ...base, steps: [{ ...base.steps[0], params: { v1: '12500' }, segments: [{ ...base.steps[0].segments[0], params }] }] };
+      return bothOf(skill, spec, { v1: '12500' });
+    };
+
+    it('both runners save the value once, clearing the restored copy before typing it', async () => {
+      const { replay, emitted, replayLog, emittedLog } = await run('');
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      expect(replayLog).toEqual(['commit:opportunity:12500']);
+      expect(emittedLog).toEqual(['commit:opportunity:12500']);
+      for (const warnings of [replay.warnings, emitted.warnings]) {
+        expect(warnings?.some((w) => /already held the value this type enters/.test(w)), JSON.stringify(warnings)).toBe(true);
+      }
+    }, 120_000);
+
+    it('both runners stop, and save nothing, when the field ends up holding its value twice', async () => {
+      const { replay, emitted, replayLog, emittedLog } = await run('?sticky=1');
+      expect(replay.ok).toBe(false);
+      expect(emitted.ok).toBe(false);
+      expect(replay.reason).toMatch(/holds the value it was given twice over \("1250012500" for "12500"\)/);
+      expect(emitted.reason).toMatch(/holds the value it was given twice over \("1250012500" for "12500"\)/);
       expect(replayLog).toEqual([]);
       expect(emittedLog).toEqual([]);
     }, 120_000);

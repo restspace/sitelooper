@@ -1,5 +1,5 @@
 import type { ElementHandle, Locator, Page } from 'playwright-core';
-import { actionFailure, reactSafeFill, reactSafeSelect, settleDom } from './browser.js';
+import { DEFAULT_ACTION_TIMEOUT_MS, actionFailure, reactSafeFill, reactSafeSelect, settleDom } from './browser.js';
 
 /**
  * Component recipes — the RUNNER, shared by daemon replay and the standalone
@@ -443,7 +443,7 @@ export async function typeWithRecipe(
   const attempt = await applyRecipe(page, target, 'set-value', text, book);
   if (attempt?.ok) return attempt;
   await focusOrRefuse(target, opts.timeout);
-  await target.pressSequentially(text, opts);
+  await target.pressSequentially(text, { ...opts, timeout: opts.timeout ?? DEFAULT_ACTION_TIMEOUT_MS });
   return null;
 }
 
@@ -460,16 +460,20 @@ export async function typeWithRecipe(
  * fails with nothing typed.
  */
 async function focusOrRefuse(target: Locator, timeout?: number): Promise<void> {
-  await target.focus(timeout === undefined ? {} : { timeout });
-  const holds = await target.evaluate((el) => {
-    let active: Element | null = document.activeElement;
-    const label = el.closest('label')?.control ?? null;
-    while (active) {
-      if (active === el || el.contains(active) || active === label) return true;
-      active = active.shadowRoot?.activeElement ?? null;
-    }
-    return false;
-  });
+  await target.focus({ timeout: timeout ?? DEFAULT_ACTION_TIMEOUT_MS });
+  const holds = await target.evaluate(
+    (el) => {
+      let active: Element | null = document.activeElement;
+      const label = el.closest('label')?.control ?? null;
+      while (active) {
+        if (active === el || el.contains(active) || active === label) return true;
+        active = active.shadowRoot?.activeElement ?? null;
+      }
+      return false;
+    },
+    undefined,
+    { timeout: timeout ?? DEFAULT_ACTION_TIMEOUT_MS },
+  );
   if (!holds) {
     throw actionFailure(
       'not-dispatched',
