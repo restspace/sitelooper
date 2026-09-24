@@ -3,7 +3,7 @@ import type { LocatorCandidate, RecordedEntry, RecordedInstruction, RecordedStep
 import type { Report } from '../agent/report.js';
 import { contractFor, newSkillId, originOf, type Skill, type SkillParam, type SkillStep, type StepExpectation } from './store.js';
 import { MIN_ID_LEN, digitDominant, looksLikeId, skeleton, tokenPattern } from './shape.js';
-import { occursAsToken, replaceAsToken, unseenGotoParts } from './ledger.js';
+import { linkMintedParts, occursAsToken, replaceAsToken, unseenGotoParts } from './ledger.js';
 import { WILDCARD, escapeRe, identityRe, maskVolatile } from '../shared/text.js';
 import { CREDENTIAL_KEY, fillParamsDeep, queryPairs, safeDecode, urlParts, urlShapeOf } from '../execution/url.js';
 import { contextsEqual, framesEqual, stepEffect } from '../execution/context.js';
@@ -670,7 +670,7 @@ export function compileSkills(input: CompileInput): Skill[] {
   // post-nav url). Kept only where they can pay: a later step or a later
   // segment's start url mentions the value — otherwise the marker would just
   // blunt the minting step's own expectation for nothing.
-  const mintedAll = discoverMinted(kept, beginsAt.url, slots);
+  const mintedAll = discoverMinted(kept, beginsAt.url, slots, (s) => linkMintedParts(s, entriesBefore(input, s)));
   // A value the REPORT names pays too: fwec8 02-create was asked for "the
   // record ID from the URL", and its report is the only place the minted id
   // stood (see reportTemplate below).
@@ -956,9 +956,16 @@ export function compileSkills(input: CompileInput): Skill[] {
   // which no replay publishes.
   const reportSlots = new Map([...textSlots].filter(([n]) => keptSlots.has(n)));
   const derivedBound = minted.filter((m) => Object.values(segDerived).some((d) => m.name in d));
+  // A minted id below the id floor names the record only where ONE report
+  // value is exactly it: kanboard fwkb41 minted task_id "4" and reported both
+  // new_task_numeric_id "4" and backlog_column_count_after "4" — the count is
+  // not the id, and nothing in the recording says which of the two is, so
+  // neither is derived (each stays a recorded literal, which no replay
+  // publishes).
+  const wholeCount = (v: string): number => Object.values(reportValues).filter((r) => substitute(String(r ?? ''), reportSlots).trim() === v).length;
   const reportSub = (text: string): string => {
     const slotted = substitute(text, reportSlots);
-    const whole = derivedBound.find((m) => m.value === slotted.trim());
+    const whole = derivedBound.find((m) => m.value === slotted.trim() && (m.value.length >= MIN_ID_LEN || wholeCount(m.value) === 1));
     if (whole) return `{{${whole.name}}}`;
     // In a url, at the position it was minted from (substituteUrlId); in
     // prose, as a whole token of the text floor, as textSlots are.
@@ -991,6 +998,7 @@ export function compileSkills(input: CompileInput): Skill[] {
     identities: new Set(
       [...knownVals, ...minted.map((m) => m.value), ...(input.mintedValues ?? []), ...slots.values()].map((v) => String(v ?? '').replace(/\s+/g, ' ').trim()).filter(Boolean),
     ),
+    minted: mintedAll.map((m) => m.value),
   });
   const of = built.length;
   const chain = of > 1 ? newSkillId(origin, finalTemplate, now) : null;
@@ -1093,6 +1101,12 @@ function deriveGoal(opts: {
   sub: (s: string) => string;
   mutating: boolean;
   identities: Set<string>;
+  /**
+   * Record ids this recording minted: a line that NAMES one ("Task #4") is
+   * the recording's record, never shown on a later run's, so it is no goal
+   * (kanboard fwkb41 s_2977d9 kept requireText ["Task #4"]).
+   */
+  minted?: readonly string[];
 }): { requireText: string[] } | null {
   if (!opts.mutating || !opts.startText || opts.startTextComplete === false) return null;
   const before = opts.startText.replace(/\s+/g, ' ').toLowerCase();
@@ -1105,6 +1119,7 @@ function deriveGoal(opts: {
       if (!/[A-Za-z]/.test(line)) continue; // digits and punctuation are ids and counts, not states
       if (before.includes(line.toLowerCase())) continue;
       if (opts.identities.has(line)) continue;
+      if (opts.minted?.some((v) => occursAsToken(line, v))) continue;
       if (!sawOnPage(line, opts.seen)) continue;
       const subbed = opts.sub(line);
       if (subbed.includes('{{')) continue;
@@ -1353,7 +1368,13 @@ function newStateKeys(before: string, after: string): string[] {
  * source, and the same guards: id-shaped, whole-value match, first
  * appearance wins.
  */
-function discoverMinted(kept: RecordedStep[], startUrl: string, slots: Map<string, string>): MintedValue[] {
+function discoverMinted(
+  kept: RecordedStep[],
+  startUrl: string,
+  slots: Map<string, string>,
+  /** The parts this step's own mutation minted and linked to (ledger.ts linkMintedParts). */
+  linked: (step: RecordedStep) => { label: string; value: string }[] = () => [],
+): MintedValue[] {
   const seen = new Set<string>(urlParts(startUrl).map((p) => p.value));
   const slotVals = new Set(slots.values());
   const out: MintedValue[] = [];
@@ -1394,6 +1415,16 @@ function discoverMinted(kept: RecordedStep[], startUrl: string, slots: Map<strin
       if (out.length >= MAX_MINTED) continue;
       const sole = part.label.startsWith('q.') ? gained.length === 1 && gained[0] === part.label.slice(2) : undefined;
       out.push({ name: `d${out.length + 1}`, value: v, keptIndex: i, at: part.label, ...(sole !== undefined ? { sole } : {}) });
+    }
+    // A part the step's own earlier mutation minted and linked to is minted
+    // by PROVENANCE, at any position and whatever it looks like — kanboard
+    // fwkb41's `task_id=4`, a query value the loop above never enumerates and
+    // a single digit looksLikeId would refuse.
+    for (const part of linked(step)) {
+      if (out.some((m) => m.value === part.value) || slotVals.has(part.value) || out.length >= MAX_MINTED) continue;
+      const sole = part.label.startsWith('q.') ? gained.length === 1 && gained[0] === part.label.slice(2) : undefined;
+      seen.add(part.value);
+      out.push({ name: `d${out.length + 1}`, value: part.value, keptIndex: i, at: part.label, ...(sole !== undefined ? { sole } : {}) });
     }
   });
   return out;
@@ -1477,27 +1508,47 @@ function sourcelessGoto(kept: RecordedStep[], input: CompileInput, notes: Transf
   for (let i = 0; i < kept.length; i++) {
     const s = kept[i];
     if (s.tool !== 'goto' || typeof s.args.url !== 'string') continue;
-    const before = [...(input.before ?? []), ...input.entries.slice(0, Math.max(0, input.entries.indexOf(s)))];
-    const unseen = unseenGotoParts(s.args.url, before).filter((p) => !known.has(p.value));
+    const before = entriesBefore(input, s);
+    // Also a record this instruction's own mutation minted and linked to, at
+    // any position (ledger.ts linkMintedParts): kanboard fwkb41's `goto
+    // …task_id=4` right after the save added `link "#4"` stored the recording's
+    // task, and held only because the reset makes the new task #4 again.
+    const unseen = [...unseenGotoParts(s.args.url, before), ...linkMintedParts(s, before)].filter((p) => !known.has(p.value));
     if (!unseen.length) continue;
-    const click = linkClick(s);
+    const click = linkClick(s, unseen);
     if (click) {
-      notes.push({ name: 'sourcelessGoto', at: i + 1, reason: `goto ${s.args.url} reached a record nothing had shown; replayed as a click on the link that carried it` });
+      linkBefore.set(click, before);
+      notes.push({ name: 'sourcelessGoto', at: i + 1, reason: `goto ${s.args.url} reached a record no step supplies; replayed as a click on the link that carried it` });
       kept = [...kept.slice(0, i), click, ...kept.slice(i + 1)];
       continue;
     }
     notes.push({
       name: 'sourcelessGoto',
       at: i + 1,
-      reason: `goto ${s.args.url} reached a record nothing had shown (${unseen.map((p) => `${p.label}=${p.value}`).join(', ')}) and no step supplies it; the procedure ends before it`,
+      reason: `goto ${s.args.url} reached a record no step supplies (${unseen.map((p) => `${p.label}=${p.value}`).join(', ')}); the procedure ends before it`,
     });
     return kept.slice(0, i);
   }
   return kept;
 }
 
+/**
+ * What the run recorded before `s`: the earlier instructions (`before`) and
+ * this one's entries up to it — or, for the click a goto was rewritten into,
+ * what was before that goto (linkBefore).
+ */
+function entriesBefore(input: CompileInput, s: RecordedStep): RecordedEntry[] {
+  const rewritten = linkBefore.get(s);
+  if (rewritten) return rewritten;
+  const at = input.entries.indexOf(s);
+  return at < 0 ? [] : [...(input.before ?? []), ...input.entries.slice(0, at)];
+}
+
+/** The entries before the goto each rewritten click stands for (sourcelessGoto → entriesBefore). */
+const linkBefore = new WeakMap<RecordedStep, RecordedEntry[]>();
+
 /** A goto recorded with the link that carried its href, as a click on that link (see sourcelessGoto). */
-function linkClick(s: RecordedStep): RecordedStep | null {
+function linkClick(s: RecordedStep, minted: readonly { label: string; value: string }[] = []): RecordedStep | null {
   const url = String(s.args.url);
   let path = '';
   try {
@@ -1505,9 +1556,12 @@ function linkClick(s: RecordedStep): RecordedStep | null {
   } catch {
     return null;
   }
+  // A query-position mint is spelled `key=value` in an href selector
+  // (kanboard fwkb41 `task_id=4`).
+  const pairs = minted.filter((p) => p.label.startsWith('q.')).map((p) => `${p.label.slice(2)}=${p.value}`);
   const spells = (c: LocatorCandidate): boolean => {
     const t = JSON.stringify(c);
-    return t.includes(url) || (path.length > 1 && occursAsToken(t, path));
+    return t.includes(url) || (path.length > 1 && occursAsToken(t, path)) || pairs.some((kv) => occursAsToken(t, kv));
   };
   const chain = (s.linkedFrom?.chain ?? []).filter((c) => !spells(c));
   const named = chain.find((c): c is Extract<LocatorCandidate, { kind: 'role' }> => c.kind === 'role' && Boolean(c.name));

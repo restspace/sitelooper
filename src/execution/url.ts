@@ -399,6 +399,16 @@ export function urlParts(url: string): { label: string; value: string }[] {
   return out;
 }
 
+/**
+ * One labelled part of a url. A `q.<key>` label reads the hash state first,
+ * as urlParts enumerates it, and otherwise the ordinary query string: a
+ * record id minted into `?task_id=4` (kanboard fwkb41, ledger.ts
+ * linkMintedParts) is bound, published and checked by this label in both
+ * runners. urlParts itself still enumerates hash state only, so nothing that
+ * walks every part starts seeing query values.
+ */
 export function urlPart(url: string, label: string): string | undefined {
-  return urlParts(url).find((p) => p.label === label)?.value;
+  const hit = urlParts(url).find((p) => p.label === label)?.value;
+  if (hit !== undefined || !label.startsWith('q.')) return hit;
+  return urlShapeOf(url)?.query.get(label.slice(2));
 }

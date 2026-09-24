@@ -686,6 +686,65 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
   }, 120_000);
 
   /**
+   * Round 57, kanboard fwkb41: a record id minted into the ordinary query
+   * string (`?task_id=4`) is derived at `q.task_id`, which urlPart now reads
+   * from the query when the hash has no such key. Both runners bind the
+   * derived value and publish it with the live id.
+   */
+  it('both runners derive and publish a minted id from a query-string position', async () => {
+    const derived = { d1: { step: 1, at: 'q.rid', example: 'rec-42' } };
+    const values = { record_id: '{{d1}}' };
+    const head: Skill = { ...skillOf([{ tool: 'goto', args: { url: `${origin}/record/current-run?rid=current-run` }, locators: {} }]), id: 's_qmint0', template: 'create a record', derived, contract: 4 };
+    const tail: Skill = { ...skillOf([MARK]), id: 's_qmint1', template: 'create a record', preconditions: { urlPattern: `${origin}/record/{{d1}}` }, reportTemplate: { summary: '', values } };
+    const spec: SpecFlow = {
+      version: 1,
+      name: 'parity-qmint',
+      origin,
+      startUrl: `${origin}/`,
+      vars: [],
+      steps: [
+        {
+          id: '02-create',
+          instruction: 'create a record',
+          params: {},
+          outputs: Object.keys(values),
+          segments: [
+            { id: head.id, template: head.template, params: {}, preconditions: head.preconditions, steps: head.steps, derived },
+            { id: tail.id, template: tail.template, params: {}, preconditions: tail.preconditions, steps: tail.steps, report: { summary: '', values } },
+          ],
+        },
+      ],
+    };
+    reset(0);
+    const session = new BrowserSession({ session: `parity-qmint-${Date.now()}`, persist: false, learn: true });
+    let daemon: Record<string, string> = {};
+    try {
+      const page = await session.getPage();
+      await page.goto(`${origin}/`);
+      session.learn!.put(head);
+      session.learn!.put(tail);
+      const threaded: Record<string, string> = {};
+      let last: ReplayResult | undefined;
+      for (const skill of [head, tail]) {
+        const out = await executeTool(session, 'run_skill', { id: skill.id, params: { ...threaded } }, os.tmpdir());
+        last = out.replay as ReplayResult;
+        expect(last?.ok, last?.reason ?? String(out.result)).toBe(true);
+        Object.assign(threaded, last.derivedValues ?? {});
+      }
+      const r = await replayReport(() => session.getPage(), tail, threaded, last!.values);
+      daemon = r.report.evidence?.values as Record<string, string>;
+    } finally {
+      await session.close();
+    }
+    reset(0);
+    const emitted = await emittedOf(spec, {});
+    expect(emitted.ok, emitted.reason ?? '').toBe(true);
+    const artifact = Object.fromEntries(Object.entries(emitted.outputs).filter(([k]) => k.startsWith('02-create.')).map(([k, v]) => [k.slice('02-create.'.length), v]));
+    expect(daemon).toEqual({ record_id: 'current-run' });
+    expect(artifact).toEqual({ record_id: 'current-run' });
+  }, 120_000);
+
+  /**
    * Round 56: fwgt8-n1 reported `seed_issue_1: "Seed: triage inbox (#1)"` and
    * fwsi8-n1 `asset_1: "Asset Tag SEED-0001 / Name Seed: Reception Laptop"`;
    * no element shows either whole, so no read was recorded and both apps'

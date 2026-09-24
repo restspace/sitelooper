@@ -25,7 +25,7 @@ import { jevMatchSkill, jevPickLiteral } from '../skills/paraphrase-jev.js';
 import { readBackDecider } from '../agent/readback-jev.js';
 import type { ReadBackDecider } from '../agent/readback.js';
 import { setInlineHealer } from '../skills/replay.js';
-import { RunLedger, bindingKey, unseenGotoParts, describeLeaks, evidenced, fatal, navigationLeaks, scanForLeaks, slotKnownRunValues, urlVarianceValues, withoutOwnOutputs, type Leak } from '../skills/ledger.js';
+import { RunLedger, bindingKey, linkMintedParts, unseenGotoParts, describeLeaks, evidenced, fatal, navigationLeaks, scanForLeaks, slotKnownRunValues, urlVarianceValues, withoutOwnOutputs, type Leak } from '../skills/ledger.js';
 import { quarantineLeakedSteps } from '../spec/rerecord.js';
 import { rerecordFix } from '../spec/diagnostics.js';
 import { originOf, type Skill } from '../skills/store.js';
@@ -130,7 +130,10 @@ export class Daemon {
       const all = this.browser.script?.entries ?? [];
       const landedLabels =
         url && e.k === 'step' && e.tool === 'goto' ? unseenGotoParts(url, all.slice(0, Math.max(0, all.indexOf(e)))).map((p) => p.label) : [];
-      if (url) this.ledger.addUrlIds(url, stepId, urlParts(url), { landed: e.k === 'step' && e.tool !== 'goto' && e.tool !== 'back', landedLabels });
+      // …and a part this instruction's own mutation minted and linked to, at
+      // any position (ledger.ts linkMintedParts; kanboard fwkb41 `task_id=4`).
+      const linkMinted = url && e.k === 'step' ? linkMintedParts(e, all.slice(0, Math.max(0, all.indexOf(e)))) : [];
+      if (url) this.ledger.addUrlIds(url, stepId, urlParts(url), { landed: e.k === 'step' && e.tool !== 'goto' && e.tool !== 'back', landedLabels, linkMinted });
       if (e.k === 'report') {
         for (const [name, value] of Object.entries(e.values ?? {})) {
           // No `basis`: a reported value's KIND is settled by looksLikeId
@@ -2764,11 +2767,11 @@ const URL_OUTPUT_POLL_MS = 500;
  * freshly minted id.
  */
 async function captureUrlOutputs(page: Page, wanted: Set<string> | undefined, stepId: string, runSpecific?: RunSpecific): Promise<Record<string, string>> {
-  let urlOuts = urlOutputs(page.url(), runSpecific);
+  let urlOuts = urlOutputs(page.url(), runSpecific, wanted);
   if (!wanted?.size) return urlOuts;
   const deadline = Date.now() + URL_OUTPUT_WAIT_MS;
   const arrived = (url: string) => {
-    urlOuts = urlOutputs(url, runSpecific);
+    urlOuts = urlOutputs(url, runSpecific, wanted);
     return [...wanted].every((k) => k in urlOuts);
   };
   while (!arrived(page.url()) && Date.now() < deadline) {
