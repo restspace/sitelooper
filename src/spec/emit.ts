@@ -4,7 +4,7 @@ import { setsSomething } from '../execution/echo.js';
 import { standingFillRole } from '../execution/refill.js';
 import { DEFAULT_ACTION_TIMEOUT_MS } from '../execution/browser.js';
 import { hideEffectLines, toggleEffectLines } from '../execution/toggle.js';
-import { derivesFromParams, givenPartialReason, givenWarning, reportNeedsPage, templateMarkers, templateSource, typedSlots } from '../execution/report.js';
+import { derivesFromParams, givenPartialReason, givenWarning, reportNeedsPage, templateMarkers, templateSource, typedSlots, typedWarning } from '../execution/report.js';
 import { askedOutputs } from '../daemon/step-verdict.js';
 import { observedNothing } from '../execution/observe.js';
 import { segmentGate } from '../execution/gates.js';
@@ -1387,6 +1387,12 @@ interface Ctx {
   echoes?: string;
   echoUsed?: boolean;
   /**
+   * A line of the body named `typedCommitted`, the step's set of typed slots a
+   * commit showed (expect.ts committedSlots), which its report classifies by
+   * (phase B provenance, stage 1) — replay's ReplayResult.committed, every segment.
+   */
+  committedUsed?: boolean;
+  /**
    * The current segment's record of url positions this run has watched vary
    * (urlEffect's diffs), which a later navigation of the same segment
    * retargets by — replay keeps exactly this list per replayed skill.
@@ -1578,6 +1584,19 @@ function expectationLines(step: SkillStep, ctx: Ctx, out: string[], linesBefore:
   // The verdict is kept: its `confirmed` is what the alert gate after it reads.
   const verdict = `changes${ctx.urls}`;
   out.push(`const ${verdict} = ${call};`);
+  // A click whose effect THIS run's diff showed commits a value one of its
+  // lines shows (echoAt's rule b) and a typed slot a line carries
+  // (committedSlots) — noted after the action ran, from the verdict's inDiff,
+  // as replay notes it. Before phase B the artifact noted the RECORDED lines
+  // ahead of the action, so a Save that did nothing (or was skipped) committed.
+  if (['click', 'dblclick', 'press'].includes(step.tool)) {
+    if (ctx.echoes) {
+      ctx.echoUsed = true;
+      out.push(`noteCommit(${ctx.echoes}, liveLines(${verdict}.inDiff ?? [], p), ${q(`${ctx.segmentId}/${ctx.stepIndex}`)});`);
+    }
+    ctx.committedUsed = true;
+    out.push(`for (const slot of committedSlots(${q(step.tool)}, ${verdict}.inDiff)) typedCommitted.add(slot);`);
+  }
   if (recorded.some((l) => !SLOT_LINE.test(l) && DIALOG_LINE.test(l))) {
     ctx.dialogAbsence = true;
     out.push(`absentDialog = ${verdict}.absentDialog ?? null;`);
@@ -2474,14 +2493,6 @@ function emitSkillAction(step: SkillStep, segment: SpecSegment, index: number, c
   // A filled value or typed text is something the step put on the page, noted
   // ahead of any skip, as replay notes it before it asks about a miss.
   if (setsSomething(step.tool)) out.push(...echoNoteLines([args.value, args.text], ctx));
-  // A click whose recorded effect added lines commits a value one of them
-  // shows (echoAt's rule b), as replay notes it after the click.
-  const committing = (step.expect?.addedContains ?? []).filter((l) => !TRANSIENT_LINE.test(l));
-  if (ctx.echoes && ['click', 'dblclick', 'press'].includes(step.tool) && committing.length) {
-    noteSlots(committing, ctx);
-    ctx.echoUsed = true;
-    out.push(`noteCommit(${ctx.echoes}, [${committing.map(src).join(', ')}], ${q(`${ctx.segmentId}/${ctx.stepIndex}`)});`);
-  }
   out.push(...absentDialogLines(step, args, ctx));
 
   // Steps that act on the page itself, before any locator is needed.
@@ -3191,11 +3202,16 @@ function satisfiedGuard(step: SpecStep, ctx: Ctx, consumed: ReadonlySet<string> 
   if (templated.length) out.push('  const satisfiedShown = await shownForReport(page).catch(() => null);');
   for (const [label, value] of templated) {
     noteSlots(value, ctx);
-    const fn = consumed.has(label) ? 'referenceValue' : 'templateValue';
+    const key = q(`${step.id}.${label}`);
     // Nothing ran, so nothing was typed or read: a param-only value stands on
-    // this page alone (round 60, fwgt11), as the daemon's guard asks it.
-    const given = fn === 'templateValue' ? ', given: { typed: [], live: [] }' : '';
-    out.push(`  { const value = ${fn}(${q(value)}, p, satisfiedShown, { literal: true${given} }); if (value !== null) outputs[${q(`${step.id}.${label}`)}] = value; }`);
+    // this page alone (round 60, fwgt11), as the daemon's guard asks it. A
+    // consumed value the page does not show still gives a later step its one
+    // slot (referenceValue), marked a reference only (phase B), as the daemon
+    // banks it apart from the step's values.
+    const reference = consumed.has(label)
+      ? ` else { const ref = referenceValue(${q(value)}, p, satisfiedShown, { literal: true }); if (ref !== null) { outputs[${key}] = ref; run.referenceOnly.push(${key}); } }`
+      : '';
+    out.push(`  { const value = templateValue(${q(value)}, p, satisfiedShown, { literal: true, given: { typed: [], live: [] } }); if (value !== null) outputs[${key}] = value;${reference} }`);
   }
   out.push('  return;', '}');
   return out;
@@ -3238,8 +3254,11 @@ function reportTemplateLines(step: SpecStep, ctx: Ctx, consumed: ReadonlySet<str
   if (needsPage) out.push('const reportShown = await shownForReport(page).catch(() => null);');
   const shown = needsPage ? 'reportShown' : 'null';
   // What the step's own reads returned, echoes aside: the daemon's confident values.
+  // And the typed slots a commit showed (phase B provenance, stage 1): a value
+  // carrying a slot the step typed is published only where one did.
+  const committed = ctx.committedUsed ? '[...typedCommitted]' : '[]';
   out.push(
-    `const reportGiven = { typed: ${JSON.stringify(typed)}, live: Object.entries(outputs).filter(([k, v]) => k.startsWith(${q(`${step.id}.`)}) && typeof v === 'string' && !run.echoed.includes(k)).map(([, v]) => v as string) };`,
+    `const reportGiven = { typed: ${JSON.stringify(typed)}, live: Object.entries(outputs).filter(([k, v]) => k.startsWith(${q(`${step.id}.`)}) && typeof v === 'string' && !run.echoed.includes(k)).map(([, v]) => v as string), committed: ${committed} };`,
   );
   // Asked for by the instruction (step-verdict.ts askedOutputs, as the flow
   // runner's partialReasons asks it): withheld, the step is partial.
@@ -3250,11 +3269,19 @@ function reportTemplateLines(step: SpecStep, ctx: Ctx, consumed: ReadonlySet<str
     // A consumed key falls back to its one slot (referenceValue): a later
     // step's reference, never a finding — the daemon banks the same, and
     // still says the report withheld it.
-    const value = consumed.has(label) ? `referenceValue(${q(template)}, p, ${shown})` : `templateValue(${q(template)}, p, ${shown}, { given: reportGiven })`;
+    // The one classification (execution/report.ts classifyReportValue), as
+    // the daemon's synthesizeReport asks it. A consumed key the report
+    // withholds still gives a later step its reference (referenceValue), and
+    // is marked in run.referenceOnly: a reference, never a finding (phase B —
+    // it used to sit in `outputs` beside the findings, unmarked).
     const said = [`logWarning(${q(`${step.id}: ${givenWarning(label)}`)});`];
     if (asked.has(label)) said.push(`logWarning(${q(`${step.id}: PARTIAL — ${givenPartialReason(label)}`)});`);
+    const typedSaid = `logWarning(${q(`${step.id}: ${typedWarning(label)}`)});`;
+    const reference = consumed.has(label)
+      ? ` else { const ref = referenceValue(${q(template)}, p, ${shown}); if (ref !== null) { outputs[${key}] = ref; run.referenceOnly.push(${key}); } }`
+      : '';
     out.push(
-      `if (outputs[${key}] === undefined) { if (withheldAsGiven(${q(template)}, p, ${shown}, reportGiven)) { ${said.join(' ')} } const value = ${value}; if (value !== null) outputs[${key}] = value; }`,
+      `if (outputs[${key}] === undefined) { const c = classifyReportValue(${q(template)}, p, ${shown}, reportGiven); if (c.class === 'given') { ${said.join(' ')} } if (c.class === 'echo') { ${typedSaid} } if (c.value !== null) outputs[${key}] = c.value;${reference} }`,
     );
   }
   return out;
@@ -3881,6 +3908,8 @@ export function emitFlowFile(spec: SpecFlow, o: EmitOptions): { source: string; 
       }
       const templated = reportTemplateLines(step, ctx, consumed);
       if (templated.length) lines.push('', ...templated);
+      // The typed slots a commit showed, collected across the body's segments (see committedSlots).
+      if (ctx.committedUsed) lines.unshift('const typedCommitted = new Set<string>();', '');
       const routes = step.urlRoutes;
       const consumedRoutes = (urlRefs.get(step.id) ?? []).some((out) => routes?.[out]);
       const published = urlOutputLines(step.id, urlRefs.get(step.id), routes);
@@ -3956,6 +3985,13 @@ export function emitFlowFile(spec: SpecFlow, o: EmitOptions): { source: string; 
     "   * published, but not proof the app persisted them (replay's echoedValues).",
     '   */',
     '  echoed: string[];',
+  '  /**',
+  "   * Output keys a later step may use but this run never observed: a report",
+  "   * value withheld (given, typed and uncommitted, or its recorded text not",
+  "   * shown) whose one slot a consumer still needs (the daemon's references).",
+  '   * Not findings.',
+  '   */',
+  '  referenceOnly: string[];',
     '  /**',
     "   * Every distinct record identifier a record-creating step minted this run, in",
     "   * order (replay's `created`); a loop body contributes one per pass.",
@@ -3983,7 +4019,7 @@ export function emitFlowFile(spec: SpecFlow, o: EmitOptions): { source: string; 
     '}',
     ...recordedBrowserLines(spec.browser ?? DEFAULT_BROWSER_PROFILE),
     'export function createFlowRun(): FlowRun {',
-    '  return { outputs: {}, drift: [], echoed: [], created: [], warnings: [] };',
+    '  return { outputs: {}, drift: [], echoed: [], referenceOnly: [], created: [], warnings: [] };',
     '}',
     '/**',
     ' * The wall-clock budget one run of this flow needs under a test runner: every',
@@ -4067,6 +4103,7 @@ export function emitFlowFile(spec: SpecFlow, o: EmitOptions): { source: string; 
   out.push('  run.outputs = {};');
   out.push('  run.drift.length = 0;');
   out.push('  run.echoed = [];');
+  out.push('  run.referenceOnly = [];');
   out.push('  run.created = [];');
   out.push('  run.warnings = [];');
   if (followsPages) out.push('  run.page = undefined;');

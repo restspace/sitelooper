@@ -72,7 +72,8 @@ const fold = (s) => String(s ?? '').replace(/\s+/g, ' ').trim().toLowerCase();
 /** One session's script.jsonl, grouped into instructions. */
 function groupsOf(session) {
   const file = path.join(HOME, 'sessions', session, 'script.jsonl');
-  const lines = fs.readFileSync(file, 'utf8').trim().split('\n').map((l) => JSON.parse(l));
+  const lines = fs.readFileSync(file, 'utf8').trim().split('\n').map((l) => JSON.parse(l))
+    .filter((e) => !(e.k === 'step' && e.failed)); // a failed action (RecordedStep.failed) is evidence, never a gesture
   const groups = [];
   let cur = null;
   for (const entry of lines) {

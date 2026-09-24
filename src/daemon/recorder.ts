@@ -13,6 +13,8 @@ import { isRefTarget, refHint, refOf, resolveTarget } from './refs.js';
 import { tagComponent } from '../skills/components.js';
 import { GENERATED_ID_HEX_RUN, skeleton } from '../skills/shape.js';
 import { flattenContainedComposite, type Report } from '../agent/report.js';
+import { evalResultForRecord } from './eval-result.js';
+import type { StepEvidence, StepFailure } from './step-evidence.js';
 
 /**
  * One way of finding an element, in a form that can be rebuilt into a Locator
@@ -285,6 +287,14 @@ export interface RecordedStep {
    * /hardware/4` was the saved asset's "Click here to view" link).
    */
   linkedFrom?: LocatorExpr;
+  /**
+   * For an `eval`: what it returned, bounded and credential-free
+   * (eval-result.ts evalResultForRecord). Audit evidence ONLY — what the model
+   * learned by a step no replay runs. It is deliberately not `result`: ledger
+   * shownIn, flow shownBefore/textMints and the read-back cascade read that,
+   * and an eval's answer is no source a replay has (fwsi7's href).
+   */
+  evalResult?: string;
   /** Set by compile (collapseTogglePairs), never by the recorder: see SkillStep.toggle. */
   toggle?: true;
   /** Set by compile (carryOpener), never by the recorder: see SkillStep.closedBefore. */
@@ -306,6 +316,22 @@ export interface RecordedStep {
    * a guess.
    */
   label?: string;
+  /** This take's running entry number (stage 0 evidence; see step-evidence.ts). Absent on older stores. */
+  seq?: number;
+  /** Epoch ms the entry was written. Absent on older stores. */
+  t?: number;
+  /** What the recorder knew about the action: timing, settle verdict, capture, uncapped diff (step-evidence.ts). */
+  obs?: StepEvidence;
+  /**
+   * The action FAILED (threw). Kept on disk as evidence of what was tried, and
+   * never a gesture: ScriptRecorder keeps these out of `entries` and every
+   * read of this take, and parseScript leaves them out of what it returns, so
+   * no consumer (compile, the ledger, flow export, the supersede and repeat
+   * rules) ever sees one. snipe-it fwsi1's select2 type depended on the
+   * focus a failed, unrecorded fill had left.
+   */
+  failed?: true;
+  failure?: StepFailure;
 }
 
 export interface RecordedInstruction {
@@ -341,6 +367,9 @@ export interface RecordedInstruction {
    * usable precondition). Flow building merges it into its predecessor.
    */
   resume?: true;
+  /** Running entry number and write time (stage 0 evidence). Absent on older stores. */
+  seq?: number;
+  t?: number;
 }
 
 /** How one instruction ended — closes the group opened by the matching `instruction` entry. */
@@ -375,9 +404,48 @@ export interface RecordedReport {
    * intervention that leaves no trace in the artifacts cannot be evaluated.
    */
   namingAsk?: { asked: string[]; named: boolean };
+  /** Running entry number and write time (stage 0 evidence). Absent on older stores. */
+  seq?: number;
+  t?: number;
 }
 
 export type RecordedEntry = RecordedStep | RecordedInstruction | RecordedReport;
+
+/** A step recorded for an action that failed: on disk only, never a gesture (RecordedStep.failed). */
+export function isFailedStep(e: RecordedEntry): boolean {
+  return e.k === 'step' && e.failed === true;
+}
+
+/**
+ * script.jsonl parsed the way every reader must read it: the entries a
+ * consumer may see (failed steps left out), each failed step filed after the
+ * live entry it followed (null: before the first), and whether a torn last
+ * line was dropped. The ONE parse: ScriptRecorder.load and the offline
+ * rebuild (bench/rebuild-flow.mjs) both use it, so no reader sees a failed
+ * action as something the recording did.
+ */
+export function parseScript(raw: string): { entries: RecordedEntry[]; failedAfter: Map<RecordedEntry | null, RecordedStep[]>; torn: boolean } {
+  const entries: RecordedEntry[] = [];
+  const failedAfter = new Map<RecordedEntry | null, RecordedStep[]>();
+  let torn = !raw.endsWith('\n');
+  for (const line of raw.split('\n')) {
+    if (!line.trim()) continue;
+    let e: RecordedEntry;
+    try {
+      e = JSON.parse(line) as RecordedEntry;
+    } catch {
+      torn = true; // a partially written last line after a kill — drop it, keep the rest
+      continue;
+    }
+    if (isFailedStep(e)) {
+      const after = entries.length ? entries[entries.length - 1] : null;
+      failedAfter.set(after, [...(failedAfter.get(after) ?? []), e as RecordedStep]);
+      continue;
+    }
+    entries.push(e);
+  }
+  return { entries, failedAfter, torn };
+}
 
 /** Click tools: their target may be a table row whose durable locator is the record link inside it. */
 const CLICK_TOOLS = new Set(['click', 'dblclick', 'modifier_click', 'right_click']);
@@ -453,23 +521,54 @@ export class ScriptRecorder {
     } catch {
       return; // nothing recorded yet for this session
     }
-    let torn = !raw.endsWith('\n');
-    for (const line of raw.split('\n')) {
-      if (!line.trim()) continue;
-      try {
-        this.entries.push(JSON.parse(line) as RecordedEntry);
-      } catch {
-        torn = true; // a partially written last line after a kill — drop it, keep the rest
-      }
+    const parsed = parseScript(raw);
+    this.entries.push(...parsed.entries);
+    for (const [after, steps] of parsed.failedAfter) this.failedAfter.set(after, steps);
+    for (const e of [...parsed.entries, ...[...parsed.failedAfter.values()].flat()]) {
+      if (typeof e.seq === 'number' && e.seq >= this.nextSeq) this.nextSeq = e.seq + 1;
     }
     // Make the file canonical before the first append: appending after a
     // torn last line glued the next entry onto the fragment, and the NEXT
     // load lost that entry too.
-    if (torn) this.rewrite();
+    if (parsed.torn) this.rewrite();
+  }
+
+  /**
+   * Failed steps (RecordedStep.failed), each filed after the live entry it
+   * followed (null: before the first). They are written to script.jsonl in
+   * place and never enter `entries`, so nothing that reads this take sees one.
+   */
+  private readonly failedAfter = new Map<RecordedEntry | null, RecordedStep[]>();
+
+  /** The next entry's `seq`: one past the highest on disk, so a later take continues the count. */
+  private nextSeq = 0;
+
+  /** Number and time-stamp an entry as it is written (stage 0 evidence). */
+  private stamp<E extends RecordedEntry>(entry: E): E {
+    if (entry.seq === undefined) entry.seq = this.nextSeq++;
+    if (entry.t === undefined) entry.t = Date.now();
+    return entry;
   }
 
   private append(entry: RecordedEntry): void {
-    this.entries.push(entry);
+    this.entries.push(this.stamp(entry));
+    try {
+      fs.appendFileSync(this.file(), JSON.stringify(entry) + '\n');
+    } catch {
+      // recording must never break the run it is observing
+    }
+  }
+
+  /**
+   * Record an action that FAILED, as evidence only (RecordedStep.failed): it is
+   * appended to script.jsonl after whatever was last recorded, and kept out of
+   * `entries` — no read of this take, no compile, no export ever sees it.
+   */
+  fail(step: RecordedStep | null, failure: StepFailure, obs?: StepEvidence): void {
+    if (!step) return;
+    const entry = this.stamp<RecordedStep>({ ...step, failed: true, failure, ...(obs ? { obs } : {}) });
+    const after = this.entries.length ? this.entries[this.entries.length - 1] : null;
+    this.failedAfter.set(after, [...(this.failedAfter.get(after) ?? []), entry]);
     try {
       fs.appendFileSync(this.file(), JSON.stringify(entry) + '\n');
     } catch {
@@ -529,7 +628,11 @@ export class ScriptRecorder {
 
   private rewrite(): void {
     try {
-      fs.writeFileSync(this.file(), this.entries.map((e) => JSON.stringify(e)).join('\n') + '\n');
+      // Failed steps go back where they were recorded: after the live entry
+      // they followed (with none, the file is exactly the entries, as before).
+      const lines: RecordedEntry[] = [...(this.failedAfter.get(null) ?? [])];
+      for (const e of this.entries) lines.push(e, ...(this.failedAfter.get(e) ?? []));
+      fs.writeFileSync(this.file(), lines.map((e) => JSON.stringify(e)).join('\n') + '\n');
     } catch {
       // recording must never break the run it observes
     }
@@ -552,7 +655,7 @@ export class ScriptRecorder {
       this.append(step);
       return;
     }
-    this.entries.splice(at + 1, 0, step);
+    this.entries.splice(at + 1, 0, this.stamp(step));
     this.rewrite();
   }
 
@@ -621,6 +724,8 @@ export class ScriptRecorder {
 
   clear(): void {
     this.entries.length = 0;
+    this.failedAfter.clear();
+    this.nextSeq = 0;
     this.priorCount = 0; // a cleared recording has no previous take to skip
     try {
       fs.rmSync(this.file(), { force: true });
@@ -695,7 +800,7 @@ export class ScriptRecorder {
   commit(
     step: RecordedStep | null,
     result: string,
-    extra: { diff?: StepDiff; via?: RecordedStep['via']; fingerprintAfter?: number[]; page?: number; effect?: PageEffect; afterUrl?: string } = {},
+    extra: { diff?: StepDiff; via?: RecordedStep['via']; fingerprintAfter?: number[]; page?: number; effect?: PageEffect; afterUrl?: string; obs?: StepEvidence } = {},
   ): void {
     if (!step) return;
     // A select is recorded by the option's visible LABEL whatever the caller
@@ -718,8 +823,9 @@ export class ScriptRecorder {
       ...(extra.page !== undefined ? { page: extra.page } : {}),
       ...(extra.effect ? { effect: extra.effect } : {}),
       ...(extra.afterUrl ? { afterUrl: extra.afterUrl } : {}),
+      ...(extra.obs ? { obs: extra.obs } : {}),
     };
-    this.append(RESULT_TOOLS.has(step.tool) ? { ...entry, result } : entry);
+    this.append(RESULT_TOOLS.has(step.tool) ? { ...entry, result } : step.tool === 'eval' ? { ...entry, evalResult: evalResultForRecord(result) } : entry);
   }
 }
 

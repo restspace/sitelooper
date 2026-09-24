@@ -79,6 +79,8 @@ interface Outcome {
   outcome?: string;
   /** The run's warnings (replay's warnings; the artifact's `[sitelooper warn]` lines, prefix stripped). */
   warnings?: string[];
+  /** The artifact's outputs a later step may use but the run never observed (run.referenceOnly, step prefix stripped). */
+  referenceOnly?: string[];
 }
 
 d('execution parity (daemon replay vs emitted artifact)', () => {
@@ -315,7 +317,8 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
       for (const id of mod.flowStepIds) {
         await mod.steps[id](page, params, run.outputs, run);
       }
-      return { ok: true, reason: null, outputs: run.outputs as Record<string, string>, echoed: run.echoed.map((key) => key.slice(key.indexOf('.') + 1)), created: run.created, drift: [...run.drift], warnings };
+      const referenceOnly = ((run as { referenceOnly?: string[] }).referenceOnly ?? []).map((key) => key.slice(key.indexOf('.') + 1));
+      return { ok: true, reason: null, outputs: run.outputs as Record<string, string>, echoed: run.echoed.map((key) => key.slice(key.indexOf('.') + 1)), created: run.created, drift: [...run.drift], warnings, referenceOnly };
     } catch (err) {
       return { ok: false, reason: err instanceof Error ? err.message : String(err), outputs: {}, echoed: [], warnings };
     } finally {
@@ -4386,6 +4389,172 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
         await session.close();
       }
     }, 60_000);
+  });
+
+  /**
+   * Phase B provenance, stage 1: what a run TYPED is not what it OBSERVED.
+   * Four ways a replay reported a value it had only put on the page itself,
+   * each open on c089d419 in both runners (the artifact alone for the last):
+   *
+   *  1. The typed exemption. A report value made of a slot the chain typed
+   *     (`entered_title: "{{v1}}"`) published with no page, read or commit
+   *     check: execution/report.ts unobservedGiven skipped a typed slot as
+   *     "the echo rules' to judge", and the echo rules only ever see reads.
+   *     The census (bench/provenance-census.mjs) found 268 such stored values
+   *     with no hard effect line, among them sign-in passwords published as
+   *     findings (fwrd78/79/83 `password: "bench-pass-1234"`).
+   *  2. Short values. MIN_ECHO_LEN = 5 made a 3-character value read back
+   *     from the very input it was typed into an observation.
+   *  3. Commit evidence. A click "committed" a value when its RECORDED effect
+   *     showed it, whether or not this run's diff did, and any url change
+   *     committed — a debounced search box rewriting its query string too.
+   *  4. The artifact wrote a consumed key's reference-only value into
+   *     `outputs` beside its findings, with nothing marking it.
+   *
+   * Controls: a value a Save committed into a row, and a short value read
+   * from that row, stay published by both runners.
+   */
+  describe('what a run typed is not what it observed (phase B provenance, stage 1)', () => {
+    const at = (selector: string): LocatorCandidate[] => [{ kind: 'css', selector }];
+    const read = (selector: string, label: string, what = 'text'): SkillStep => ({ tool: 'read', args: { target: '(read-back)', what }, label, locators: { target: at(selector) } });
+
+    /** The daemon: run_skill, then the flow runner's own report assembly (echoes withheld, this run's commits passed on). */
+    async function daemonReport(skill: Skill, params: Record<string, string>): Promise<{ values: Record<string, string>; echoed: string[]; references: Record<string, string> }> {
+      const session = new BrowserSession({ session: `parity-typed-${Date.now()}`, persist: false, learn: true });
+      try {
+        const page = await session.getPage();
+        await page.goto(`${origin}/`);
+        session.learn!.put(skill);
+        const out = await executeTool(session, 'run_skill', { id: skill.id, params }, os.tmpdir());
+        const replay = out.replay as ReplayResult;
+        expect(replay?.ok, replay?.reason ?? String(out.result)).toBe(true);
+        const live = Object.fromEntries(Object.entries(replay.values).filter(([k]) => !replay.echoedValues.includes(k)));
+        const committed = (replay as ReplayResult & { committed?: string[] }).committed;
+        const opts = { withhold: replay.echoedValues, chain: [skill], ...(committed ? { committed } : {}) } as Parameters<typeof replayReport>[4];
+        const r = await replayReport(() => session.getPage(), skill, params, live, opts);
+        return { values: Object.fromEntries(Object.entries(r.report.evidence?.values ?? {}).map(([k, v]) => [k, String(v)])), echoed: replay.echoedValues, references: r.references };
+      } finally {
+        await session.close();
+      }
+    }
+
+    /** The artifact's findings for one step: its outputs, less what only echoes and what is only a reference. */
+    const findings = (o: Outcome, stepId: string): Record<string, string> =>
+      Object.fromEntries(
+        Object.entries(o.outputs)
+          .filter(([k, v]) => k.startsWith(`${stepId}.`) && v !== undefined)
+          .map(([k, v]) => [k.slice(stepId.length + 1), v] as const)
+          .filter(([k]) => !(o.echoed ?? []).includes(k) && !(o.referenceOnly ?? []).includes(k)),
+      );
+
+    const typedSteps = (): SkillStep[] => [
+      { tool: 'goto', args: { url: `${origin}/echo-lab` }, locators: {} },
+      { tool: 'fill', args: { target: '@e1', value: '{{v1}}' }, locators: { target: at('#title') } },
+      { tool: 'fill', args: { target: '@e2', value: '{{v2}}' }, locators: { target: at('#part') } },
+      { tool: 'click', args: { target: '@e3' }, locators: { target: at('#save') }, expect: { addedContains: ['- cell "{{v2}}"'], lineDialect: 2 } },
+    ];
+    const typedParams = { v1: 'Bench title n2', v2: 'Widget n2' };
+    const typedSkillParams = (): Record<string, SkillParam> => ({ v1: { example: 'Bench title n1', usedIn: [2] }, v2: { example: 'Widget n1', usedIn: [3, 4] } });
+    const typedValues = { entered_title: '{{v1}}', saved_part: '{{v2}}' };
+    const typedSpec = (): SpecFlow => {
+      const spec = specOf(typedSteps());
+      spec.steps[0].params = { ...typedParams };
+      spec.steps[0].outputs = Object.keys(typedValues);
+      spec.steps[0].segments[0] = { ...spec.steps[0].segments[0], params: typedSkillParams(), report: { summary: '', values: typedValues } };
+      return spec;
+    };
+    const typedSkill = (): Skill => ({ ...skillOf(typedSteps()), params: typedSkillParams(), reportTemplate: { summary: '', values: typedValues } });
+
+    it('hole 1: neither runner reports a typed value nothing committed; both report the one a Save showed in a row', async () => {
+      reset(0);
+      const daemon = await daemonReport(typedSkill(), typedParams);
+      reset(0);
+      const emitted = await emittedOf(typedSpec(), typedParams);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+
+      const want = { saved_part: 'Widget n2' };
+      expect(daemon.values).toEqual(want);
+      expect(findings(emitted, '01-clear')).toEqual(want);
+    }, 120_000);
+
+    it('hole 2: both runners call a short value read back from its own input an echo, and observe it in the row a Save made', async () => {
+      const steps: SkillStep[] = [
+        { tool: 'goto', args: { url: `${origin}/echo-lab` }, locators: {} },
+        { tool: 'fill', args: { target: '@e1', value: '150' }, locators: { target: at('#part') } },
+        read('#part', 'cost_input', 'value'),
+        { tool: 'click', args: { target: '@e2' }, locators: { target: at('#save') }, expect: { addedContains: ['- cell "150"'], lineDialect: 2 } },
+        read('#rows td', 'cost_saved'),
+      ];
+      const { replay, emitted } = await both(steps, 0);
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      expect(replay.outputs.cost_input).toBe('150');
+      expect(emitted.outputs['01-clear.cost_input']).toBe('150');
+      expect(replay.outputs.cost_saved).toBe('150');
+      expect(emitted.outputs['01-clear.cost_saved']).toBe('150');
+      expect(replay.echoed).toEqual(['cost_input']);
+      expect(emitted.echoed).toEqual(['cost_input']);
+    }, 120_000);
+
+    it("hole 3: a Save whose recorded line this run's diff never added commits nothing; both runners keep the live heading an echo", async () => {
+      const steps: SkillStep[] = [
+        { tool: 'goto', args: { url: `${origin}/echo-lab` }, locators: {} },
+        { tool: 'fill', args: { target: '@e1', value: 'Draft note text' }, locators: { target: at('#note') } },
+        // The recording's Save showed the heading; on this run the heading was
+        // there before the click (a live mirror), and the Save does nothing.
+        { tool: 'click', args: { target: '@e2' }, locators: { target: at('#note-save') }, expect: { addedContains: ['- heading "Draft note text"'], lineDialect: 2 } },
+        read('#note-preview', 'note_shown'),
+      ];
+      const { replay, emitted } = await both(steps, 0);
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      expect(replay.outputs.note_shown).toBe('Draft note text');
+      expect(emitted.outputs['01-clear.note_shown']).toBe('Draft note text');
+      expect(replay.echoed).toEqual(['note_shown']);
+      expect(emitted.echoed).toEqual(['note_shown']);
+    }, 120_000);
+
+    it('hole 3: a query string a debounced search box rewrote commits nothing; both runners keep its mirror an echo', async () => {
+      const steps: SkillStep[] = [
+        { tool: 'goto', args: { url: `${origin}/echo-lab` }, locators: {} },
+        { tool: 'fill', args: { target: '@e1', value: 'Bench query text' }, locators: { target: at('#search') } },
+        { tool: 'wait_for', args: { target: '@e2', state: 'text_contains', text: 'Bench query text', timeout_ms: 3000 }, locators: { target: at('#mirror') } },
+        read('#mirror', 'query_shown'),
+      ];
+      const { replay, emitted } = await both(steps, 0);
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      expect(replay.outputs.query_shown).toBe('Bench query text');
+      expect(emitted.outputs['01-clear.query_shown']).toBe('Bench query text');
+      expect(replay.echoed).toEqual(['query_shown']);
+      expect(emitted.echoed).toEqual(['query_shown']);
+    }, 120_000);
+
+    it("hole 4: the artifact marks a consumed key's reference-only value, so its findings are the daemon's report", async () => {
+      const spec = typedSpec();
+      spec.steps.push({
+        id: '02-find',
+        instruction: 'find {{01-clear.entered_title}}',
+        params: {},
+        outputs: ['title_again'],
+        segments: [{ id: 's_find', template: 'find the title', params: {}, preconditions: { urlPattern: `${origin}/echo-lab` }, steps: [read('#title', 'title_again', 'value')] }],
+      });
+      expect(consumedReportedOutputs(spec.steps.map((s) => ({ id: s.id, instruction: s.instruction, params: s.params })), '01-clear')).toEqual(['entered_title']);
+
+      reset(0);
+      const daemon = await daemonReport(typedSkill(), typedParams);
+      reset(0);
+      const emitted = await emittedOf(spec, typedParams);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+
+      // The consumer gets the value on both sides...
+      expect(daemon.references.entered_title).toBe('Bench title n2');
+      expect(emitted.outputs['01-clear.entered_title']).toBe('Bench title n2');
+      // ...and neither calls it a finding.
+      expect(emitted.referenceOnly).toEqual(['entered_title']);
+      expect(findings(emitted, '01-clear')).toEqual(daemon.values);
+      expect(daemon.values).toEqual({ saved_part: 'Widget n2' });
+    }, 120_000);
   });
 
   describe('echo reads', () => {

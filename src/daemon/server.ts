@@ -41,7 +41,7 @@ import { BrowserSession } from './browser.js';
 import { DEFAULT_BROWSER_PROFILE, urlTrail } from '../execution/browser.js';
 import { visitedUrlPart } from '../execution/url.js';
 import { observedChange } from '../execution/lifecycle.js';
-import { givenWarning, referenceValue, shownForReport, templateValue } from '../execution/report.js';
+import { givenWarning, referenceValue, shownForReport, templateValue, typedWarning } from '../execution/report.js';
 import { startPageSettled } from '../execution/action.js';
 import { coverageComplete, recordedValueShown } from '../execution/snapshot.js';
 import { captureSignature } from './diff.js';
@@ -2675,6 +2675,8 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
       evidence: replay.candidateEvidence.map((e) => ({ ...e, skill: match!.skill.id })),
       values: { ...replay.values },
       echoed: [...replay.echoedValues],
+      // The typed slots a commit showed, every segment (phase B provenance, stage 1).
+      committed: [...(replay.committed ?? [])],
       skipped: [...(replay.skippedReads ?? [])],
       segmentsDone: 0,
     };
@@ -2728,6 +2730,7 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
       agg.evidence.push(...r.candidateEvidence.map((e) => ({ ...e, skill: next.id })));
       Object.assign(agg.values, r.values);
       agg.echoed.push(...r.echoedValues);
+      agg.committed.push(...(r.committed ?? []));
       agg.skipped.push(...(r.skippedReads ?? []));
     }
     // The walk records each segment when it advances PAST it, and the
@@ -2813,10 +2816,11 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
     // it — on the page, in a read, or typed by a segment of the chain it
     // walked (round 60, fwgt11 07-add published "bug" beside a live
     // labels_shown of "priority-high").
-    const { report, withheld, unobservedProse, references, given } = await replayReport(() => this.browser.getPage(), last, { ...match.params, ...derived }, confidentValues, {
+    const { report, withheld, unobservedProse, references, given, typed } = await replayReport(() => this.browser.getPage(), last, { ...match.params, ...derived }, confidentValues, {
       withhold: agg.echoed,
       instruction,
       chain: [...earlier.map((e) => e.skill), last],
+      committed: agg.committed,
     });
     if (withheld.length) progress(`[replay] withheld ${withheld.length} report value(s) whose recorded text this run's page did not show: ${withheld.join(', ')}`);
     if (given.length) {
@@ -2824,6 +2828,14 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
       for (const line of said) progress(`[replay] ${line}`);
       record.warnings = [...(record.warnings ?? []), ...said];
       record.given = given;
+    }
+    // A value carrying a slot the chain typed that nothing committed: an echo
+    // of the run's own typing, withheld from the report (phase B provenance,
+    // stage 1), as the artifact withholds it (run.referenceOnly).
+    if (typed.length) {
+      const said = typed.map((key) => `${last.id}: ${typedWarning(key)}`);
+      for (const line of said) progress(`[replay] ${line}`);
+      record.warnings = [...(record.warnings ?? []), ...said];
     }
     if (unobservedProse.length) progress(`[replay] dropped ${unobservedProse.length} summary clause(s) this run did not observe`);
     // Keep the conversation coherent for later instructions: the same one-line

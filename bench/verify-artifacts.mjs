@@ -132,7 +132,7 @@ function sessionUrls() {
     if (!line.trim()) continue;
     try {
       const e = JSON.parse(line);
-      const url = e.k === 'step' ? e.diff?.url : e.k === 'instruction' ? e.url : undefined;
+      const url = e.k === 'step' && !e.failed ? e.diff?.url : e.k === 'instruction' ? e.url : undefined;
       if (url) out.push(url);
     } catch {
       /* a truncated last line is normal */

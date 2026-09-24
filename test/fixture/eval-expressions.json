@@ -1,0 +1,868 @@
+{
+ "_note": "Recorded eval expressions from published n1 scripts (bench/results-published/*-n1-script.jsonl on origin/results/*). blocked: every expression in the 146 published n1 recordings that the phase-A hygiene guard refuses and the round-18 guard let through. alreadyBlocked: a sample of the 73 pre-guard (<= 2026-09-02) mutating evals the round-18 guard refuses. allowed: a per-app sample of the 2,423 others, which must still pass. bench/eval-audit.mjs checks all of them.",
+ "blocked": [
+  {
+   "run": "fwgh8",
+   "expression": "window.open('http://127.0.0.1:8099/fwgh8-n1-bench-post/', '_blank'); 'opened'",
+   "reason": "opens a page with window.open()"
+  },
+  {
+   "run": "fwod82",
+   "expression": "(()=>{const ms=Array.from(document.querySelectorAll('.modal'));const m=ms.find(x=>/Cancel Sales Order/.test(x.innerText));const b=Array.from(m.querySelectorAll('button')).find(x=>x.textContent.trim()==='Send and cancel');b.id='cancel_confirm_btn';return {outer:b.outerHTML.slice(0,300), parentCls:b.parentElement.className, modalCls:m.className};})()",
+   "reason": "assigns .id"
+  },
+  {
+   "run": "fwod82",
+   "expression": "(()=>{const ms=Array.from(document.querySelectorAll('.modal'));const m=ms.find(x=>getComputedStyle(x).zIndex==='1055');const b=Array.from(m.querySelectorAll('button')).find(x=>x.textContent.trim()==='Discard');b.id='edit_discard_btn';return b.outerHTML;})()",
+   "reason": "assigns .id"
+  },
+  {
+   "run": "fwod82",
+   "expression": "(()=>{const ms=Array.from(document.querySelectorAll('.modal'));const m=ms.find(x=>/Cancel Sales Order/.test(x.innerText));const b=Array.from(m.querySelectorAll('button')).find(x=>x.textContent.trim()==='Send and cancel');b.id='cancel_confirm_btn2';b.scrollIntoView();return {ok:!!b, cls:m.className};})()",
+   "reason": "assigns .id"
+  },
+  {
+   "run": "fwop10",
+   "expression": "(() => { const f=[...document.querySelectorAll('op-editable-attribute-field')].find(e=>e.querySelector('[data-field-name=\"combinedDate\"]')); const inp=f.querySelector('input'); inp.id = inp.id || 'wp-new-inline-edit--field-combinedDate'; return {id: inp.id, val: inp.value, visible: inp.offsetParent!==null}; })()",
+   "reason": "assigns .id"
+  },
+  {
+   "run": "fwop10",
+   "expression": "(() => { const form=document.getElementById('work-package-journal-form-element'); const ce=form.querySelector('[contenteditable=\"true\"]'); ce.id='journal-editor'; ce.scrollIntoView({block:'center'}); return {id:ce.id, visible: ce.offsetParent!==null, rect: ce.getBoundingClientRect()}; })()",
+   "reason": "assigns .id"
+  },
+  {
+   "run": "fwop10",
+   "expression": "(() => { const form=document.getElementById('work-package-journal-form-element'); const ce=form.querySelector('[contenteditable=\"true\"]'); ce.id='journal-editor-2'; return {id: ce.id, visible: ce.offsetParent!==null}; })()",
+   "reason": "assigns .id"
+  }
+ ],
+ "alreadyBlocked": [
+  {
+   "run": "fwgr13",
+   "expression": "(() => { const dlg = document.querySelector('[role=\"dialog\"]'); const sub = dlg.querySelector('[data-testid=\"data-testid drawer subtitle\"]'); if (!sub) return 'no subtitle'; sub.click(); return 'clicked'; })()"
+  },
+  {
+   "run": "fwgr15",
+   "expression": "(() => { const btn = [...document.querySelectorAll('button')].find(b => /back to dashboard|exit edit/i.test(b.textContent + ' ' + (b.getAttribute('aria-label') || ''))); if (btn) { btn.click(); return 'clicked: ' + btn.textContent.trim(); } return 'not found'; })()"
+  },
+  {
+   "run": "fwgr17",
+   "expression": "(() => { const menu = document.querySelector('[data-testid=\"Panel menu fwgr17-n1 Availability\"]'); if (menu) { menu.click(); return 'clicked'; } return 'not found'; })()"
+  },
+  {
+   "run": "fwgr17",
+   "expression": "(() => { const el = [...document.querySelectorAll('div')].find(d => d.textContent.trim() === 'Text' && d.className.includes('css-qpkbik')); if (!el) return 'not found'; el.click(); return 'clicked'; })()"
+  },
+  {
+   "run": "fwod19",
+   "expression": "Array.from(document.querySelectorAll('.o_technical_modal.o_inactive_modal .modal-body button, .o_technical_modal.o_inactive_modal .o_dialog_footer button, .o_technical_modal.o_inactive_modal .modal-footer button')).find(b => b.textContent.trim() === 'Ok').click()"
+  },
+  {
+   "run": "fwod20",
+   "expression": "document.querySelector('.modal .btn-primary').click()"
+  },
+  {
+   "run": "fwod21",
+   "expression": "(() => { const opts = document.querySelectorAll('.o-autocomplete--dropdown-content li'); for (const o of opts) { if (o.textContent.includes('Corner Desk Left Sit')) { o.click(); return 'clicked: ' + o.textContent.trim().substring(0,50); } } return 'not found'; })()"
+  },
+  {
+   "run": "fwod22",
+   "expression": "let articles = document.querySelectorAll('article'); let found = null; for(let a of articles) { if(a.textContent.includes('Contacts')) { found = a; break; } } found?.querySelector('button')?.click()"
+  },
+  {
+   "run": "fwod26",
+   "expression": "() => { return new Promise((resolve) => { setTimeout(() => { document.querySelector('button:contains(\\\"Cancel\\\")')?.click(); resolve(); }, 100); window.confirm = () => true; }) }"
+  },
+  {
+   "run": "fwod27",
+   "expression": "[...document.querySelectorAll('[role=\"menuitem\"]')].find(m => m.textContent.trim() === 'Customers')?.click() || 'notfound'"
+  },
+  {
+   "run": "fwod27",
+   "expression": "let dlg = [...document.querySelectorAll('.modal-dialog')].find(d => d.innerText.includes('Edit: fwod27-n1')); let discard = dlg ? [...dlg.querySelectorAll('button')].find(b => b.textContent.trim() === 'Discard') : null; if (discard) { discard.click(); 'clicked Discard on Edit modal'; } else 'no discard found'"
+  },
+  {
+   "run": "fwod28",
+   "expression": "let dlg = document.querySelector('#dialog_2'); let cancelBtn = Array.from(dlg.querySelectorAll('button')).find(b => b.getAttribute('name') === 'action_cancel'); if(cancelBtn) { cancelBtn.click(); 'clicked action_cancel' } else { 'not found' }"
+  }
+ ],
+ "allowed": [
+  {
+   "run": "fwat2",
+   "expression": "(() => {\n  const panel = document.querySelector('[role=\"tabpanel\"]');\n  if (!panel) return 'no tabpanel';\n  const labels = [...panel.querySelectorAll('label, .form-label, [class*=\"label\"]')].map(el => el.textContent.trim()).filter(Boolean);\n  const inputs = [...panel.querySelectorAll('input, select, textarea')].map(el => ({\n    tag: el.tagName,\n    type: el.type,\n    name: el.name,\n    id: el.id,\n    placeholder: el.placeholder,\n    ariaLabel: el.getAttribute('aria-label'),\n    value: el.value,\n    required: el.required\n  }));\n  return JSON.stringify({labels, inputs}, null, 2);\n})()"
+  },
+  {
+   "run": "fwat2",
+   "expression": "(() => {\n  const panel = document.querySelector('#data-tab-panel-bszml17zpd');\n  // Check for required attribute or CSS classes indicating required\n  const fields = [...panel.querySelectorAll('input, select, textarea')];\n  const req = fields.filter(f => f.required || f.hasAttribute('required'));\n  // Also check labels with asterisk in text\n  const labels = [...panel.querySelectorAll('label, span, div')].filter(el => {\n    const t = el.textContent;\n    return t.includes('*') && t.length < 60;\n  });\n  return JSON.stringify({\n    requiredFields: req.map(f => f.name || 'unnamed'),\n    asteriskLabels: labels.map(l => l.textContent.trim())\n  });\n})()"
+  },
+  {
+   "run": "fwat2",
+   "expression": "(() => {\n  const panel = document.querySelector('#data-tab-panel-bszml17zpd');\n  const get = (sel) => panel.querySelector(sel)?.value;\n  return JSON.stringify({\n    projectId: get('#projectId'),\n    status: get('#status'),\n    name: get('#name'),\n    cost: get('[data-testid=\"pricing-editor-cost\"]'),\n    markup: get('[data-testid=\"pricing-editor-markup\"]'),\n    price: get('[data-testid=\"pricing-editor-price\"]'),\n    adjustment: get('[data-testid=\"pricing-editor-adjustment\"]')\n  });\n})()"
+  },
+  {
+   "run": "fwat2",
+   "expression": "(() => {\n  const listbox = document.querySelector('[aria-label=\"Items\"], [role=\"listbox\"]');\n  const options = [...listbox.querySelectorAll('[role=\"option\"]')];\n  const target = options.find(o => o.textContent.includes('fwat2-n1 MTP Item B'));\n  if (!target) return 'not found';\n  // Get the status marker - look for the span with \"P\" or check aria-label\n  const firstCell = target.firstElementChild;\n  const statusEl = firstCell?.querySelector('span, [aria-label]');\n  return JSON.stringify({\n    firstCellHTML: firstCell?.outerHTML?.slice(0, 500),\n    statusAriaLabel: statusEl?.getAttribute('aria-label'),\n    statusText: statusEl?.textContent?.trim()\n  });\n})()"
+  },
+  {
+   "run": "fwat2",
+   "expression": "(() => {\n  const listbox = document.querySelector('[role=\"listbox\"]');\n  const options = [...listbox.querySelectorAll('[role=\"option\"]')];\n  const target = options.find(o => o.textContent.includes('fwat2-n1 MTP Item A'));\n  if (!target) return 'not found';\n  const cells = [...target.children];\n  // cell 6 = Budget Cost, cell 7 = Budget Price\n  return JSON.stringify({\n    budgetCostCell: cells[6]?.innerHTML?.slice(0, 200),\n    budgetPriceCell: cells[7]?.innerHTML?.slice(0, 200),\n    budgetPriceText: cells[7]?.textContent?.trim()\n  });\n})()"
+  },
+  {
+   "run": "fwat2",
+   "expression": "(() => {\n  const sup = document.querySelector('#supplier');\n  return JSON.stringify({\n    tag: sup?.tagName,\n    type: sup?.type,\n    role: sup?.getAttribute('role'),\n    'aria-autocomplete': sup?.getAttribute('aria-autocomplete'),\n    outerHTML: sup?.outerHTML?.slice(0, 400)\n  });\n})()"
+  },
+  {
+   "run": "fwat2",
+   "expression": "(() => {\n  const listbox = document.querySelector('[role=\"listbox\"][aria-label=\"Items\"]');\n  if (!listbox) return 'no listbox';\n  const options = [...listbox.querySelectorAll('[role=\"option\"]')];\n  const matches = options.filter(o => o.textContent.includes('fwat2-n1 MTP Item'));\n  return JSON.stringify({\n    totalOptions: options.length,\n    fwat2Matches: matches.length,\n    allNames: options.map(o => o.getAttribute('aria-label')?.slice(0, 60))\n  });\n})()"
+  },
+  {
+   "run": "fwat3",
+   "expression": "document.querySelector('[role=\"tabpanel\"]')?.innerHTML || 'not found'"
+  },
+  {
+   "run": "fwat3",
+   "expression": "document.querySelector('[data-testid=\"pricing-editor-price\"]')?.outerHTML"
+  },
+  {
+   "run": "fwat3",
+   "expression": "document.querySelector('button[type=\"submit\"]')?.outerHTML || 'not found'"
+  },
+  {
+   "run": "fwat3",
+   "expression": "(() => { const rows = document.querySelectorAll('[role=\"option\"]'); const results = []; for (const r of rows) { if (r.textContent.includes('fwat3-n1 MTP')) { results.push(r.getAttribute('aria-label') || r.textContent.substring(0,100)); } } return JSON.stringify(results); })()"
+  },
+  {
+   "run": "fwat3",
+   "expression": "(() => { const rows = document.querySelectorAll('[role=\"option\"]'); for (const r of rows) { const label = r.getAttribute('aria-label') || ''; if (label.includes('fwat3-n1 MTP Item A')) { return label; } } const texts = []; for (const r of rows) { if (r.textContent.includes('fwat3-n1 MTP Item A')) { texts.push(r.textContent.substring(0,200)); } } return texts.length ? JSON.stringify(texts) : 'no row with that name'; })()"
+  },
+  {
+   "run": "fwat3",
+   "expression": "(() => { const r = document.querySelector('[aria-label=\"fwat3-n1 MTP Item A - 1 - 150\"]'); const marker = r.querySelector('.data-list-check-status-marker'); marker.scrollIntoView({block:'center'}); return marker.outerHTML; })()"
+  },
+  {
+   "run": "fwat3",
+   "expression": "(() => { const r = document.querySelector('[aria-label=\"fwat3-n1 MTP Item A - 1 - 150\"]'); const cells = Array.from(r.querySelectorAll('*')).filter(el => el.children.length === 0 && el.textContent.trim()).map(el => ({tag: el.tagName, text: el.textContent.trim(), cls: el.className})); return JSON.stringify(cells); })()"
+  },
+  {
+   "run": "fwat3",
+   "expression": "(() => { const rows = document.querySelectorAll('[role=\"option\"]'); for (const r of rows) { if (r.textContent.includes('fwat3-n1 MTP Item A')) { r.scrollIntoView({block:'center'}); const marker = r.querySelector('[class*=\"status\"]'); return JSON.stringify({ ariaLabel: r.getAttribute('aria-label'), statusMarkerText: marker?.textContent?.trim() || 'none', statusAriaLabel: marker?.getAttribute('aria-label') || 'none', rowText: r.textContent.substring(0,300) }); } } return 'row not found - scrolling'; })()"
+  },
+  {
+   "run": "fwat3",
+   "expression": "document.querySelector('[role=\"tabpanel\"] .record-form-content > .input-form-panel')?.innerHTML?.substring(10000, 20000) || 'not found - continuing'"
+  },
+  {
+   "run": "fwat3",
+   "expression": "(() => { const listbox = document.querySelector('[role=\"listbox\"]'); if (listbox) { listbox.scrollTop = listbox.scrollHeight; return 'scrolled'; } return 'not found'; })()"
+  },
+  {
+   "run": "fwat3",
+   "expression": "(() => { const r = document.querySelector('[aria-label=\"fwat3-n1 MTP Item A - Supplier One - 1\"]'); if (r) { r.scrollIntoView({block:'center'}); return r.outerHTML.substring(0,500); } return 'not found'; })()"
+  },
+  {
+   "run": "fwec1",
+   "expression": "document.querySelector('[data-name=\"account\"]').outerHTML.slice(0,900)"
+  },
+  {
+   "run": "fwec1",
+   "expression": "(()=>{const el=Array.from(document.querySelectorAll('*')).filter(e=>e.children.length===0&&e.textContent.trim().indexOf('Bench stream post for run fwec1-n1')>=0);return el.map(e=>({tag:e.tagName,cls:e.className,txt:JSON.stringify(e.textContent), parentCls:e.parentElement.className, block:e.closest('li, .stream-post, article, .post')?e.closest('li, .stream-post, article, .post').innerText.trim().slice(0,300):null}));})()"
+  },
+  {
+   "run": "fwec10",
+   "expression": "(() => {const m=Array.from(document.querySelectorAll('meta')).map(x=>x.name+'='+x.content).filter(s=>/date|format/i.test(s)); const m2=document.querySelector('meta[name=\"date-format\"]'); return {metas:m, d: (window.Espo&&Espo.DateTime? JSON.stringify({df:Espo.DateTime.prototype.dateFormat, dateFormat: Espo.DateTime.dateFormat}) : 'noEspo'), bodyDt: document.body.getAttribute('data-date-format')};})()"
+  },
+  {
+   "run": "fwec11",
+   "expression": "(()=>{const s=document.querySelector('select[data-name=\"stage\"]');return JSON.stringify({stage:s.value, item:(document.querySelector('.field[data-name=\"stage\"] .selectize-input .item')||{}).textContent, prob:(document.querySelector('input[data-name=\"probability\"]')||{}).value, name:(document.querySelector('input[data-name=\"name\"]')||{}).value})})()"
+  },
+  {
+   "run": "fwec11",
+   "expression": "JSON.stringify({html:document.querySelector('.detail .field[data-name=\"closeDate\"]').innerHTML.trim(), dataAttrs:Array.from(document.querySelector('.detail .field[data-name=\"closeDate\"]').attributes).map(a=>a.name+'='+a.value)})"
+  },
+  {
+   "run": "fwec12",
+   "expression": "(()=>{const all=[...document.querySelectorAll('div')].filter(e=>/autocomplete|selectize|suggest/i.test(e.className));return JSON.stringify(all.map(e=>({cls:String(e.className).slice(0,80),child:e.children.length,txt:e.innerText.slice(0,150),vis:!!e.offsetParent})))})()"
+  },
+  {
+   "run": "fwec12",
+   "expression": "fetch('http://127.0.0.1:8097/api/v1/Opportunity/6ab55b3616555c747').then(r=>r.json()).then(d=>JSON.stringify({name:d.name,accountId:d.accountId,accountName:d.accountName,assignedUserId:d.assignedUserId,assignedUserName:d.assignedUserName,stage:d.stage,amount:d.amount,closeDate:d.closeDate,description:d.description}))"
+  },
+  {
+   "run": "fwec2",
+   "expression": "({bodyHasAdmin: document.body.innerText.includes('admin'), snippet: document.body.innerText.replace(/\\n+/g,' | ').slice(0,400)})"
+  },
+  {
+   "run": "fwec2",
+   "expression": "({pencils:[...document.querySelectorAll('[class*=\"pencil\"], [class*=\"edit\"]')].map(e=>({tag:e.tagName, cls:e.className, txt:e.textContent.trim().slice(0,20), vis:getComputedStyle(e).display, parent:e.parentElement.dataset.name||e.parentElement.className.slice(0,30)})).slice(0,20)})"
+  },
+  {
+   "run": "fwec3",
+   "expression": "(()=>{const els=[...document.querySelectorAll('div')].filter(e=>/picker|calendar|dropdown/i.test(e.className)&&e.offsetParent!==null);return JSON.stringify(els.slice(0,8).map(e=>({cl:e.className.slice(0,80),id:e.id,txt:(e.textContent||'').replace(/\\s+/g,' ').slice(0,120)})))})()"
+  },
+  {
+   "run": "fwec3",
+   "expression": "(()=>{const b=[...document.querySelectorAll('button')].filter(x=>x.offsetParent!==null&&/Save|Create/i.test(x.textContent.trim()));return JSON.stringify(b.map(x=>({t:x.textContent.trim().slice(0,30),cl:x.className.slice(0,50)})))})()"
+  },
+  {
+   "run": "fwec3",
+   "expression": "(()=>{try{const app=window.app||window.Espo;const registry=app._views||app.views||null;const keys=Object.keys(app).filter(k=>/view/i.test(k));return JSON.stringify({viewKeys:keys});}catch(e){return 'err:'+e.message}})()"
+  },
+  {
+   "run": "fwec3",
+   "expression": "(()=>{const rows=[...document.querySelectorAll('.list .list-body tr')];return JSON.stringify({n:rows.length,n1:rows.slice(0,6).map(r=>({name:r.querySelector('td[data-name=\"name\"]')?r.querySelector('td[data-name=\"name\"]').innerText.trim():null, cls:r.className.slice(0,40)})),pagin:(document.querySelector('.pagination')||{}).innerText})})()"
+  },
+  {
+   "run": "fwec5",
+   "expression": "[...document.querySelectorAll('div.autocomplete-suggestions')].filter(e=>e.offsetParent!==null).map(e=>[...e.querySelectorAll('div,li')].map(i=>i.innerText.trim()).filter(t=>t).slice(0,10))"
+  },
+  {
+   "run": "fwec6",
+   "expression": "(()=>{const c=document.querySelector('div[data-name=\"amount\"]');return c?c.outerHTML.slice(0,1200):'none';})()"
+  },
+  {
+   "run": "fwec7",
+   "expression": "(() => [...document.querySelectorAll('button')].filter(b=>b.offsetParent!==null && /cancel|yes/i.test(b.innerText)).map(b=>({t:b.innerText, cls:b.className, p:b.parentElement.parentElement.className})))()"
+  },
+  {
+   "run": "fwec8",
+   "expression": "(() => { const f = document.querySelector('.field[data-name=\"stage\"]'); return {tag: f.querySelector('.main-element') ? f.querySelector('.main-element').tagName : null, html: f.innerHTML.slice(0,700)}; })()"
+  },
+  {
+   "run": "fwec8",
+   "expression": "(() => { return {url: location.href, hasCreate: !!document.querySelector('.record'), nameField: document.querySelector('.field[data-name=\"name\"] input') ? document.querySelector('.field[data-name=\"name\"] input').value : null, modalOpen: document.querySelectorAll('.modal.show').length, bodyText: document.body.innerText.slice(0,300)}; })()"
+  },
+  {
+   "run": "fwgh1",
+   "expression": "(() => { const items = document.querySelectorAll('main main main h3'); return {scrollHeight: document.scrollingElement.scrollHeight, innerHeight: window.innerHeight, itemCount: items.length, titles: Array.from(items).map(e=>e.textContent)}; })()"
+  },
+  {
+   "run": "fwgh1",
+   "expression": "(() => { const panels = document.querySelectorAll('.gh-publish-settings, [class*=\"review\"], [data-test-setting]'); const out=[]; document.querySelectorAll('[class*=\"publish\"]').forEach(e=>{ if(e.innerText && e.innerText.length<400) out.push(e.className+' :: '+e.innerText.replace(/\\n/g,' | ')); }); return out.slice(0,25); })()"
+  },
+  {
+   "run": "fwgh10",
+   "expression": "JSON.stringify({dropdowns: document.querySelectorAll('.ember-power-select-dropdown').length, options: Array.from(document.querySelectorAll('.ember-power-select-option')).map(e=>e.textContent)})"
+  },
+  {
+   "run": "fwgh11",
+   "expression": "Array.from(document.querySelectorAll('[data-lexical-editor=\"true\"] p')).map((p,i)=>{const r=p.getBoundingClientRect();const ed=p.closest('[data-lexical-editor=\"true\"]');return {i, text:p.textContent, rect:[Math.round(r.x),Math.round(r.y),Math.round(r.width),Math.round(r.height)], offsetParent:!!p.offsetParent, editorVisible: ed? ed.getBoundingClientRect().height: null, editorClass: ed? ed.className : null, editorParentDisplay: ed? getComputedStyle(ed.parentElement).display : null, editorsInPage: document.querySelectorAll('[data-lexical-editor=\"true\"]').length};})"
+  },
+  {
+   "run": "fwgh11",
+   "expression": "new Date().toISOString() + ' | tz offset min: ' + new Date().getTimezoneOffset()"
+  },
+  {
+   "run": "fwgh12",
+   "expression": "(() => { const b = document.querySelector('header .gh-publishmenu, .gh-editor-header button[data-test-button=\"publish-menu\"], button.gh-publishmenu-trigger, .gh-editor-header .gh-btn-group button'); const hdr = document.querySelector('.gh-editor-header, header'); return { btnText: b? b.innerText : null, headerText: hdr? hdr.innerText : null, url: location.href }; })()"
+  },
+  {
+   "run": "fwgh13",
+   "expression": "(function(){const m=document.querySelector('.settings-menu'); if(!m) return 'no menu'; const out=[]; m.querySelectorAll('[data-test-tag], .ember-power-select-multiple-option, .gh-token').forEach(t=>{out.push({cls:t.className, text:t.textContent.trim(), html:t.outerHTML.slice(0,200)});}); return out;})()"
+  },
+  {
+   "run": "fwgh14",
+   "expression": "(() => { const els = [...document.querySelectorAll('*')].filter(e => e.children.length===0 && /fwgh14-n1/.test(e.textContent||'')); const inputs = [...document.querySelectorAll('input')].map(i => ({id:i.id, name:i.name, cls:i.className, val:i.value, type:i.type, aria:i.getAttribute('aria-label')})); return {leafMatches: els.map(e=>[e.tagName,e.className,e.textContent.trim()]), inputs}; })()"
+  },
+  {
+   "run": "fwgh14",
+   "expression": "[...document.querySelectorAll('.gh-post-list-title, .gh-content-entry-title, [class*=\"content-entry\"]')].map(e=>e.innerText).slice(0,20)"
+  },
+  {
+   "run": "fwgh4",
+   "expression": "(() => { const rows = [...document.querySelectorAll('h3.gh-content-entry-title')].map(e => e.textContent.trim()); const body = document.querySelector('.gh-list, ol, table')?.innerText?.slice(0,2000); return {rows, hasMore: !!document.querySelector('.gh-btn-load-more, [data-test-button=\"load-more\"]'), body}; })()"
+  },
+  {
+   "run": "fwgh4",
+   "expression": "(() => { const h = [...document.querySelectorAll('h3, h2, .gh-notification, [data-test-toast]')].map(e=>e.innerText).filter(Boolean); return {texts: h.slice(0,20), url: location.href}; })()"
+  },
+  {
+   "run": "fwgh5",
+   "expression": "(() => { const t=document.querySelector('.gh-contentfilter-menu, header')?.innerText; const whole=document.querySelector('main')?.innerText; return {hasFooterPagination: !!document.querySelector('.gh-pagination, [data-test-pagination]'), text: whole.slice(0,1200)}; })()"
+  },
+  {
+   "run": "fwgh6",
+   "expression": "(()=>{const ps=Array.from(document.querySelectorAll('[data-kg=\"editor\"] p, .koenig-editor__editor p, .gh-koenig-editor p')).map(p=>p.textContent); const body=document.body.innerText; return JSON.stringify({paragraphs:ps, bodyOccurrences:(body.match(/fwgh6-n1/g)||[]).length, paragraphOccurrences:(ps.join(' ').match(/fwgh6-n1/g)||[]).length});})()"
+  },
+  {
+   "run": "fwgh7",
+   "expression": "window.scrollTo(0, document.body.scrollHeight); document.body.scrollHeight"
+  },
+  {
+   "run": "fwgh7",
+   "expression": "(() => { const inputs=[...document.querySelectorAll('input,textarea')].map(e=>({ph:e.placeholder,id:e.id,name:e.name,type:e.type,val:e.value.slice(0,60)})); const btns=[...document.querySelectorAll('button')].map(b=>b.textContent.trim()).filter(Boolean); return {inputs, btns: btns.slice(0,40)}; })()"
+  },
+  {
+   "run": "fwgh7",
+   "expression": "(() => { const d=[...document.querySelectorAll('[role=\"dialog\"], .gh-publish-flow')].map(e=>e.innerText); return d; })()"
+  },
+  {
+   "run": "fwgh7",
+   "expression": "(() => { const a=[...document.querySelectorAll('a')].map(x=>x.href).filter(h=>/fwgh7|bench-post|8099\\/[a-z]/i.test(h)); return {links:[...new Set(a)].slice(0,15)}; })()"
+  },
+  {
+   "run": "fwgh8",
+   "expression": "(() => { const slug = document.querySelector('input[name=\"post-setting-slug\"], [data-test-input=\"slug\"]')?.value; const date = document.querySelector('input[name=\"post-setting-date\"], .gh-date-time-picker-date input')?.value; const time = document.querySelector('.gh-date-time-picker-time input')?.value; const excerpt = document.querySelector('textarea[name=\"post-setting-custom-excerpt\"], [data-test-input=\"custom-excerpt\"]')?.value; const tags = [...document.querySelectorAll('.ember-power-select-multiple-option')].map(e=>e.textContent.trim()); return {slug, date, time, excerpt, tags}; })()"
+  },
+  {
+   "run": "fwgr13",
+   "expression": "(() => { const el = document.querySelector('[role=\"dialog\"] input[aria-label*=\"name\" i], [role=\"dialog\"] input[placeholder*=\"name\" i]'); return el ? el.outerHTML : 'not found'; })()"
+  },
+  {
+   "run": "fwgr14",
+   "expression": "(() => { const el = document.querySelector('[data-testid=\"title-items-container\"]'); if (!el) return 'not found'; return {html: el.outerHTML.slice(0, 2000)}; })()"
+  },
+  {
+   "run": "fwgr14",
+   "expression": "(() => { const group = [...document.querySelectorAll('[data-testid=\"data-testid Options group Text\"]')][0]; const ta = group.querySelector('textarea'); if (!ta) return 'no textarea'; const r = ta.getBoundingClientRect(); return {val: ta.value.slice(0, 100), x: r.x, y: r.y, w: r.width, h: r.height, visible: r.width > 0 && r.height > 0, aria: ta.getAttribute('aria-label')}; })()"
+  },
+  {
+   "run": "fwgr16",
+   "expression": "(() => { const el = document.querySelector('[data-testid=\"toggle-viz-picker\"]'); const items = [...document.querySelectorAll('[data-testid^=\"Plugin visualization item\"]')].map(e => e.getAttribute('data-testid')); const panel = document.querySelector('[data-testid=\"panel content\"]'); return JSON.stringify({toggleViz: el ? el.textContent.trim() : null, items: items.slice(0,5), panelContent: panel ? panel.textContent.trim().slice(0,200) : null}); })()"
+  },
+  {
+   "run": "fwgr17",
+   "expression": "(() => { const el = document.querySelector('[data-testid=\"panel-2-menu\"], [aria-label*=\"panel\"], [class*=\"panel\"]'); const all = [...document.querySelectorAll('[data-testid]')].map(e => e.getAttribute('data-testid')).slice(0, 50); return { testids: all }; })()"
+  },
+  {
+   "run": "fwgr18",
+   "expression": "document.querySelector('input[placeholder*=\"Search\" i]')?.placeholder || document.querySelector('input[type=\"search\"]')?.placeholder || 'not found'"
+  },
+  {
+   "run": "fwgr18",
+   "expression": "(() => {\n  // The right pane truly lacks Panel options. In Grafana 11.x, the panel title input is in the right pane under \"Panel options\" — but this build seems to hide it.\n  // Alternative: the title can be set via the panel's \"Edit\" in the dashboard, or via the panel options in the left pane.\n  // Let's check the LEFT pane (the edit pane with the query/data source). Get its text.\n  const leftPane = document.querySelector('div.css-1keojjo');\n  return leftPane ? leftPane.textContent.slice(0, 500) : 'no left pane';\n})()"
+  },
+  {
+   "run": "fwgr19",
+   "expression": "let dlg = [...document.querySelectorAll('div[role=\"dialog\"]')].filter(el => el.offsetParent !== null); JSON.stringify(dlg.map(d => d.textContent.trim().slice(0,300)))"
+  },
+  {
+   "run": "fwgr20",
+   "expression": "// Find Panel options heading, then look for the title field\nlet headings = document.querySelectorAll('h5, h6, [class*=\"heading\"]');\nlet found = [];\nfor (let h of headings) {\n  if (h.textContent.includes('Panel options')) {\n    let section = h.closest('section') || h.parentElement;\n    found.push(section.innerHTML.substring(0, 1000));\n  }\n}\nfound"
+  },
+  {
+   "run": "fwgr20",
+   "expression": "Array.from(document.querySelectorAll('button')).filter(b => b.textContent.includes('Settings')).map(b => ({text: b.textContent.trim(), visible: !!(b.offsetWidth||b.offsetHeight), y: b.getBoundingClientRect().y}))"
+  },
+  {
+   "run": "fwgr23",
+   "expression": "[...document.querySelectorAll('button')].filter(el => el.textContent.trim()==='Save dashboard')[0].closest('div').outerHTML.slice(0,500)"
+  },
+  {
+   "run": "fwgr25",
+   "expression": "document.querySelectorAll('input[id*=\"title\"]').length"
+  },
+  {
+   "run": "fwgr26",
+   "expression": "(() => { const menu = document.querySelector('[role=\"menu\"]'); if(!menu) return 'no menu'; return [...menu.querySelectorAll('[role=\"menuitemradio\"]')].map(m => ({text: m.textContent.trim().slice(0,40), ariaLabel: m.getAttribute('aria-label'), ariaChecked: m.getAttribute('aria-checked')})); })()"
+  },
+  {
+   "run": "fwgr67",
+   "expression": "(()=>{const all=[...document.querySelectorAll('*')].filter(e=>e.children.length===0 && /Stat/i.test(e.textContent.trim()) && e.textContent.trim().length<30);return JSON.stringify(all.slice(0,15).map(e=>({t:e.textContent.trim(),tag:e.tagName,test:e.getAttribute('data-testid'),cls:String(e.className).slice(0,60)})))})()"
+  },
+  {
+   "run": "fwgr68",
+   "expression": "(() => { const d=Array.from(document.querySelectorAll('div')).find(e=>e.children.length<=1 && e.textContent.trim()==='Stat'); let n=d,out=[]; for(let i=0;i<5&&n;i++){ out.push({lvl:i,tag:n.tagName,cls:(n.className||'').toString().slice(0,60),role:n.getAttribute('role'),tabindex:n.getAttribute('tabindex'),testid:n.getAttribute('data-testid'),txt:(n.textContent||'').trim().slice(0,60)}); n=n.parentElement;} return JSON.stringify(out); })()"
+  },
+  {
+   "run": "fwgr69",
+   "expression": "(()=>{const ta=document.querySelector('.monaco-editor textarea');const v=ta?ta.value:'';const m=v.match(/\"datasource\"[\\s\\S]{0,120}/);return JSON.stringify({textareaLen:v.length, datasourceSnippet:m?m[0]:null})})()"
+  },
+  {
+   "run": "fwgr70",
+   "expression": "(() => { const items=[...document.querySelectorAll('[role=\"menuitem\"],[role=\"menu\"] div')].filter(e=>e.offsetParent&&/JSON|Data|Query|Stats/i.test(e.innerText||'')); return JSON.stringify([...new Set(items.map(e=>e.innerText.trim().slice(0,20)))]); })()"
+  },
+  {
+   "run": "fwgr71",
+   "expression": "(() => {const ms=[...document.querySelectorAll('[aria-label=\"Text Content field property editor\"] .monaco-editor')]; return ms.map((m,i)=>{const r=m.getBoundingClientRect(); return {i, w:r.width, h:r.height, x:r.x, y:r.y, vis:m.offsetParent!==null, hidden:m.closest('[aria-hidden=\"true\"]')!==null};});})()"
+  },
+  {
+   "run": "fwgt1",
+   "expression": "Array.from(document.querySelectorAll('a')).filter(a=>/Open|Closed/.test(a.textContent) && /issues/.test(a.getAttribute('href')||'')).map(a=>({t:a.textContent.trim(), href:a.getAttribute('href'), cls:a.className}))"
+  },
+  {
+   "run": "fwgt1",
+   "expression": "(()=>{const boxes=[...document.querySelectorAll('.issue-sidebar-combo')];return boxes.map(b=>({header:(b.querySelector('.header')||{}).textContent, items:[...b.querySelectorAll('a')].map(a=>a.textContent.trim()+' -> '+a.getAttribute('href'))}))})()"
+  },
+  {
+   "run": "fwgt10",
+   "expression": "JSON.stringify(Array.from(document.querySelectorAll('.ui.labels.list a.item')).map(a=>({href:a.getAttribute('href'),data:Array.from(a.attributes).map(x=>x.name+'='+x.value).join(' ')})))"
+  },
+  {
+   "run": "fwgt10",
+   "expression": "(()=>{const ms=Array.from(document.querySelectorAll('.markup'));return JSON.stringify(ms.map(m=>{const item=m.closest('.timeline-item, .comment, .issue-content, div[id^=issue-]');const head=item?item.querySelector('.author, h3, .header'):null;return {id:item?item.id:null, cls:m.className, txt:m.innerText.replace(/\\s+/g,' ').trim().slice(0,120), head:head?head.innerText.replace(/\\s+/g,' ').trim().slice(0,80):null}}))})()"
+  },
+  {
+   "run": "fwgt11",
+   "expression": "(() => { const d = document.querySelector('.issue-content-right .ui.dropdown.full-width'); const attrs = {}; for (const a of d.attributes) attrs[a.name] = a.value; return attrs; })()"
+  },
+  {
+   "run": "fwgt11",
+   "expression": "(() => { const dd=document.querySelector('.issue-content-right .ui.dropdown'); const cbs=[...document.querySelectorAll('input[type=checkbox],input[type=radio]')].map(i=>({n:i.name,v:i.value,cls:i.className.slice(0,40)})); const hidden=[...document.querySelectorAll('input[type=hidden]')].map(i=>({n:i.name,v:(i.value||'').slice(0,20)})); return {ddCls: dd?dd.className:null, ddAttrs: dd?[...dd.attributes].map(a=>a.name+'='+a.value.slice(0,40)):null, triggerHTML: dd?dd.outerHTML.slice(0,500):null, checkboxes: cbs, hiddenInputs: hidden}; })()"
+  },
+  {
+   "run": "fwgt11",
+   "expression": "(() => { const keys=Object.keys(window).filter(k=>/issue|assign|label|update|sidebar/i.test(k)); return JSON.stringify(keys); })()"
+  },
+  {
+   "run": "fwgt2",
+   "expression": "(() => { const a=[...document.querySelectorAll('a')].filter(x=>x.textContent.trim()==='bug')[0]; return a ? a.outerHTML : 'none'; })()"
+  },
+  {
+   "run": "fwgt2",
+   "expression": "({url: location.href, title: document.title, bodyLen: document.body ? document.body.innerText.length : -1, body: document.body ? document.body.innerText.slice(0,1500) : null})"
+  },
+  {
+   "run": "fwgt3",
+   "expression": "(()=>{const a=[...document.querySelectorAll('a')].find(x=>x.getAttribute('href')&&x.getAttribute('href').includes('labels=1'));const entries=performance.getEntriesByType('resource').filter(e=>e.name.includes('/labels')||e.name.includes('issues')).map(e=>({n:e.name.split('8095')[1],t:e.initiatorType,d:Math.round(e.duration)}));return JSON.stringify({bugAnchorClass:a.className,sidebarLabels:document.querySelector('.issue-sidebar-combo[data-update-url*=\"labels\"]')?.parentElement?.innerText.replace(/\\s+/g,' ').slice(0,200),entries});})()"
+  },
+  {
+   "run": "fwgt4",
+   "expression": "(() => { const segs = Array.from(document.querySelectorAll('#new-issue .ui.attached.segment, #new-issue .issue-sidebar > *')); const el = document.querySelector('input[name=\"assignee_ids\"]'); const cont = el ? el.closest('.ui.dropdown') || el.parentElement : null; return {disp: cont ? cont.textContent.replace(/\\s+/g,' ').trim().slice(0,200) : null, nameAcc: document.querySelector('input[name=\"assignee_ids\"]').getAttribute('data-name')}; })()"
+  },
+  {
+   "run": "fwgt5",
+   "expression": "(()=>{const t=document.querySelector('.issue-content-right, #issue-sidebar, .ui.attached.segment')?.innerText||'';return {sidebar_text: t.replace(/\\s+/g,' ').trim().slice(0,600), labels_in_page: Array.from(document.querySelectorAll('.ui.label')).map(e=>e.innerText.trim()).slice(0,20)}})()"
+  },
+  {
+   "run": "fwgt5",
+   "expression": "(()=>{const c=document.querySelector('div[data-update-url*=\"/assignee\"]');const p=c.parentElement;return {parent_cls:p.className, parent_html_head:p.outerHTML.slice(0,300), combo_tail:c.outerHTML.slice(c.outerHTML.indexOf('<div class=\"menu')>=0?c.outerHTML.indexOf('<div class=\"menu'):1200, 3000).slice(0,1500)}})()"
+  },
+  {
+   "run": "fwgt6",
+   "expression": "Array.from(document.querySelectorAll('.ui.dropdown.full-width')).map((e,i)=>i+'|'+(e.querySelector('.text')?.textContent.trim()||e.textContent.trim().slice(0,40)))"
+  },
+  {
+   "run": "fwgt7",
+   "expression": "(()=>{const m=document.querySelector('#_aria_dropdown_menu_15');return Array.from(m.querySelectorAll('a.item[data-value]')).map(a=>a.getAttribute('data-value')+'='+a.textContent.trim()+' sel:'+a.classList.contains('selected')+' active:'+a.classList.contains('active'))})()"
+  },
+  {
+   "run": "fwgt8",
+   "expression": "(() => { const a=[...document.querySelectorAll('a')].find(x=>x.getAttribute('href')==='/bench/bench-repo/issues?labels=1'); const dd=a.closest('.ui.dropdown'); const menu=dd.querySelector('.menu'); const forms=[...document.querySelectorAll('form')].map(f=>({action:f.getAttribute('action'), method:f.method, cls:f.className})); return {menuCls: menu.className, menuHTML: menu.outerHTML.slice(0,300), forms}; })()"
+  },
+  {
+   "run": "fwgt8",
+   "expression": "(() => { const cs=[...document.querySelectorAll('.timeline-item.comment')].map(c=>{const b=c.querySelector('.render-content, .comment-body, .markup, article'); return b? b.innerText.trim() : c.innerText.trim().slice(-150)}); return {comments: cs}; })()"
+  },
+  {
+   "run": "fwgt9",
+   "expression": "[...document.scripts].map(s=>s.src).filter(Boolean)"
+  },
+  {
+   "run": "fwkb1",
+   "expression": "Array.from(document.querySelectorAll('*')).filter(el => el.children.length === 0 && /due/i.test(el.textContent)).map(el => el.textContent.trim()).slice(0, 20)"
+  },
+  {
+   "run": "fwkb1",
+   "expression": "document.querySelector('form').outerHTML.slice(-1500)"
+  },
+  {
+   "run": "fwkb1",
+   "expression": "(() => { const els = Array.from(document.querySelectorAll('*')).filter(el => el.children.length===0 && (el.textContent||'').trim()==='Save'); return els.map(e=>e.outerHTML.slice(0,200)); })()"
+  },
+  {
+   "run": "fwkb3",
+   "expression": "document.querySelector('input[name=date_due]') ? document.querySelector('input[name=date_due]').outerHTML : 'not found'"
+  },
+  {
+   "run": "fwkb3",
+   "expression": "Array.from(document.querySelectorAll('.comments-list li')).map(el => el.textContent.trim())"
+  },
+  {
+   "run": "fwkb37",
+   "expression": "(() => { const lists = [...document.querySelectorAll('ul')].map(u => u.innerText.trim()).filter(t => /Due date/.test(t)); const title = document.querySelector('.task-summary-container h2, #task-summary h2, .page-header h2'); return {detailLists: lists, heading: title && title.innerText, headings: [...document.querySelectorAll('h2')].map(h=>h.innerText)}; })()"
+  },
+  {
+   "run": "fwkb38",
+   "expression": "(() => { const out={}; document.querySelectorAll('ul.sidebar li, #task-summary li, .task-summary-container li').forEach(li=>{const s=li.querySelector('strong'); if(s) out[s.textContent.replace(':','').trim()]=li.textContent.replace(s.textContent,'').trim();}); return out; })()"
+  },
+  {
+   "run": "fwkb39",
+   "expression": "(()=>{const c=document.querySelector('#comments, .comments'); return c? c.innerText.trim().slice(0,500) : 'no comments container';})()"
+  },
+  {
+   "run": "fwkb4",
+   "expression": "document.querySelectorAll('#main .sidebar + div .task-info li')?.[4]?.textContent?.trim() || 'not found'"
+  },
+  {
+   "run": "fwkb4",
+   "expression": "[...document.querySelectorAll('li strong')].filter(s => s.textContent.includes('Column')).map(s => s.parentElement.textContent.trim())"
+  },
+  {
+   "run": "fwkb41",
+   "expression": "(()=>{const ins=[...document.querySelectorAll('input,textarea,button,select')].map(e=>({t:e.tagName,type:e.type,id:e.id,cls:(e.className||'').toString().slice(0,60),ph:e.placeholder,txt:(e.innerText||'').trim().slice(0,30),vis:!!e.offsetParent}));return JSON.stringify(ins)})()"
+  },
+  {
+   "run": "fwkb41",
+   "expression": "(()=>{const f=[...document.querySelectorAll('input,select,textarea,button,a.btn')].filter(e=>e.offsetParent).map(e=>({t:e.tagName,type:e.type,id:e.id,name:e.name,cls:(e.className||'').toString().slice(0,50),val:(e.value||'').slice(0,40),ph:e.placeholder,txt:(e.innerText||'').replace(/\\s+/g,' ').trim().slice(0,35)}));return JSON.stringify(f)})()"
+  },
+  {
+   "run": "fwkb41",
+   "expression": "(()=>{const s=document.querySelector('.task-details, .js-task-details, .sidebar, .task-summary');const all=[...document.querySelectorAll('li,div,span')].filter(e=>e.children.length===0 && /12\\/31\\/2026|Due/i.test(e.textContent)).map(e=>e.textContent.replace(/\\s+/g,' ').trim().slice(0,60));return JSON.stringify({sidebarText:s?s.innerText.replace(/\\s+/g,' ').trim().slice(0,600):'no sidebar', matches:[...new Set(all)].slice(0,15)})})()"
+  },
+  {
+   "run": "fwkb41",
+   "expression": "(()=>{const card=document.querySelector('.task-board[data-task-id=\"4\"]');const list=card&&card.closest('.board-task-list');const cols=[...document.querySelectorAll('tr.board-swimlane-columns-1 th')].map(t=>t.innerText.replace(/\\s+/g,' ').trim().slice(0,40));const perCol=[...document.querySelectorAll('.board-swimlane-tasks-1 .board-task-list')].filter(e=>e.offsetParent).map(l=>({col:l.getAttribute('data-column-id'),tasks:[...l.querySelectorAll('.task-board')].map(c=>c.getAttribute('data-task-id'))}));return JSON.stringify({card4Column:list&&list.getAttribute('data-column-id'),perCol})})()"
+  },
+  {
+   "run": "fwkb42",
+   "expression": "(() => { const els = Array.from(document.querySelectorAll('div,section,article')).filter(e=>/fwkb42-n1 Bench task/i.test(e.textContent||'')); const smallest = els.sort((a,b)=>a.textContent.length-b.textContent.length)[0]; return {found: els.length, text: smallest ? smallest.innerText.slice(0,500) : null, cls: smallest?smallest.className:null}; })()"
+  },
+  {
+   "run": "fwkb42",
+   "expression": "(() => { const m = document.querySelector('#modal-content'), c = document.querySelector('#comments'); const info = el => el ? {display:getComputedStyle(el).display, pos:getComputedStyle(el).position, vis:getComputedStyle(el).visibility, z:getComputedStyle(el).zIndex, cls:el.className, parentTag: el.parentElement.tagName, parentId: el.parentElement.id, parentCls: el.parentElement.className} : null; return {modal: info(m), comments: info(c), modalParent: m? info(m.parentElement):null}; })()"
+  },
+  {
+   "run": "fwkb43",
+   "expression": "Array.from(document.querySelectorAll('input')).map(i=>({type:i.type,name:i.name,id:i.id,valueLen:i.value.length,value:i.value,autocomplete:i.autocomplete}))"
+  },
+  {
+   "run": "fwkb43",
+   "expression": "(()=>{const c=document.querySelector('[data-task-id=\"4\"]');const th=c.closest('table')?.querySelector('th[class*=\"column-header\"], th .board-column-title a, th a[href*=\"column\"]');const td=c.closest('td');return {columnHeaderTh: th? th.innerText.replace(/\\s+/g,' ').trim():null, tdClass: td? td.className : null};})()"
+  },
+  {
+   "run": "fwod19",
+   "expression": "document.querySelectorAll('.modal, .o_technical_modal, [role=\"dialog\"], .o_dialog').length"
+  },
+  {
+   "run": "fwod20",
+   "expression": "(() => { const opts = document.querySelectorAll('ul[role=\"listbox\"] li, [role=\"option\"]'); return Array.from(opts).map(o => o.textContent.trim() + ' | ' + (o.id || 'noid')); })()"
+  },
+  {
+   "run": "fwod20",
+   "expression": "(() => { const modal = document.querySelector('.modal'); const inputs = modal.querySelectorAll('input'); return Array.from(inputs).map(i => (i.name || i.id || 'noname') + ' = \"' + i.value + '\"'); })()"
+  },
+  {
+   "run": "fwod21",
+   "expression": "(() => { const rows = document.querySelectorAll('.o_field_x2many .o_list_table tbody tr, .o_list_renderer table tbody tr'); if (rows.length < 2) return 'only ' + rows.length + ' rows'; const r = rows[1]; const inputs = r.querySelectorAll('input'); return Array.from(inputs).map((inp,i) => i + ': name=' + (inp.name||'?') + ' val=[' + inp.value + '] placeholder=[' + (inp.placeholder||'') + ']').join(' | '); })()"
+  },
+  {
+   "run": "fwod22",
+   "expression": "document.querySelector('.o_content').scrollTop = 5000"
+  },
+  {
+   "run": "fwod22",
+   "expression": "Array.from(document.querySelectorAll('tr')).filter(tr => tr.textContent.includes('Conference Chair')).map(tr => ({html: tr.outerHTML.substring(0,300)}))"
+  },
+  {
+   "run": "fwod23",
+   "expression": "// Check all field names in the form\nArray.from(document.querySelectorAll('[name]')).map(el => el.getAttribute('name')).filter(Boolean).join(', ')"
+  },
+  {
+   "run": "fwod26",
+   "expression": "document.querySelector('.oe_subtotal_footer')?.textContent || document.querySelector('.o_group')?.textContent || 'not found'"
+  },
+  {
+   "run": "fwod27",
+   "expression": "[...document.querySelectorAll('span, div, h1, h2')].filter(el => el.children.length === 0 && el.textContent.trim() === 'fwod27-n1 Bench Customer').map(el => el.tagName + '.' + el.className).join(', ')"
+  },
+  {
+   "run": "fwod27",
+   "expression": "document.querySelector('.o_statusbar_status')?.textContent?.trim(); document.querySelectorAll('.o_statusbar_status [role=\"radio\"]').length"
+  },
+  {
+   "run": "fwod29",
+   "expression": "const dialog = document.querySelector('.modal-dialog'); dialog && Array.from(dialog.querySelectorAll('button')).map(b => ({text: b.textContent.trim(), classes: b.className, visible: b.offsetParent !== null}))"
+  },
+  {
+   "run": "fwod30",
+   "expression": "const dialogs = document.querySelectorAll('[role=\"dialog\"], .modal'); \nArray.from(dialogs).map(d => ({text: d.textContent.substring(0,300), visible: d.offsetParent !== null, class: d.className.substring(0,60)}))"
+  },
+  {
+   "run": "fwod34",
+   "expression": "document.querySelector('div.o_radiogroup_checked')?.textContent || document.querySelector('[aria-label=\"Statusbar\"] input:checked')?.value || document.querySelector('input.o_radio_input:checked')?.closest('label')?.textContent?.trim() || 'not found'"
+  },
+  {
+   "run": "fwod34",
+   "expression": "(() => { const m = document.querySelector('.modal'); return { title: m?.querySelector('.modal-title, h4, h5')?.textContent?.trim(), body: m?.querySelector('.modal-body')?.innerText?.slice(0, 300), footer: m?.querySelector('.modal-footer')?.innerText, cls: m?.className }; })()"
+  },
+  {
+   "run": "fwod77",
+   "expression": "(()=>{const rows=[...document.querySelectorAll('.o_list_table tbody tr')].map(r=>r.textContent.replace(/\\s+/g,' ').trim());return rows.filter(r=>r.startsWith('S00021'));})()"
+  },
+  {
+   "run": "fwod79",
+   "expression": "Array.from(document.querySelectorAll('.o_technical_modal footer button, .o_technical_modal .modal-footer button')).map(b => ({text: b.textContent.trim(), name: b.getAttribute('name'), cls: b.className, special: b.getAttribute('special')}))"
+  },
+  {
+   "run": "fwod81",
+   "expression": "Array.from(document.querySelectorAll('.o_list_renderer tbody tr')).map((tr,i)=>i+': '+Array.from(tr.querySelectorAll('input')).map(e=>'['+(e.closest('td')?.getAttribute('name')||'?')+']='+e.value).join(' , '))"
+  },
+  {
+   "run": "fwod83",
+   "expression": "Array.from(document.querySelectorAll('button')).map(b=>b.className+' | '+(b.getAttribute('title')||'')+' | '+b.textContent.trim().slice(0,30)).filter(s=>/edit|save|discard/i.test(s))"
+  },
+  {
+   "run": "fwop10",
+   "expression": "document.querySelectorAll('table tr').length + ' rows; classes: ' + [...document.querySelectorAll('table tr')].slice(0,5).map(r=>r.className).join(' | ')"
+  },
+  {
+   "run": "fwop10",
+   "expression": "(() => { const f=[...document.querySelectorAll('op-editable-attribute-field')].find(e=>e.querySelector('[data-field-name=\"assignee\"]')); const ng=f.querySelector('ng-select'); return {expanded: ng.querySelector('input[role=\"combobox\"]').getAttribute('aria-expanded'), panelOpen: !!ng.querySelector('.ng-dropdown-panel'), value: (ng.querySelector('.ng-value')||{}).innerText, txt: f.innerText.trim().replace(/\\n/g,' / ')}; })()"
+  },
+  {
+   "run": "fwop10",
+   "expression": "(() => { const statusEl=[...document.querySelectorAll('[data-field-name=\"status\"], .work-package--status, [class*=\"status\"]')].filter(e=>e.offsetParent!==null && e.innerText.trim().length>0 && e.innerText.trim().length<40).slice(0,8).map(e=>e.className.toString().slice(0,50)+' :: '+e.innerText.trim()); const commentArea=[...document.querySelectorAll('[contenteditable=\"true\"], textarea, [class*=\"comment\"], [class*=\"journal\"]')].filter(e=>e.offsetParent!==null).map(e=>({tag:e.tagName, cls:e.className.toString().slice(0,60), aria:e.getAttribute('aria-label')})).slice(0,15); return {statusEl, commentArea}; })()"
+  },
+  {
+   "run": "fwop10",
+   "expression": "(() => { const main=document.querySelector('main'); const txt=main.innerText; const grab=(re)=>{const m=txt.match(re); return m? m[0]:null;}; return {title: document.title, status: grab(/Status\\s*\\n\\s*(\\S[^\\n]*)/), assignee: grab(/Assignee\\s*\\n\\s*([^\\n]+)/), finish: grab(/Finish date\\s*\\n\\s*([^\\n]+)/), start: grab(/Start date\\s*\\n\\s*([^\\n]+)/), id: grab(/#\\d+/)}; })()"
+  },
+  {
+   "run": "fwop11",
+   "expression": "(()=>{const els=Array.from(document.querySelectorAll('[data-field-name=\"assignee\"]')); return els.map(e=>{const r=e.getBoundingClientRect(); const cs=getComputedStyle(e); return {cls:(e.className||'').toString().slice(0,60), t:r.top,l:r.left,w:r.width,h:r.height, disp:cs.display, vis:cs.visibility, inDetails: !!e.closest('.work-packages--details')};});})()"
+  },
+  {
+   "run": "fwop11",
+   "expression": "(()=>{const els=Array.from(document.querySelectorAll('[data-field-name]')).map(e=>[e.getAttribute('data-field-name'), e.innerText.trim().replace(/\\s+/g,' ').slice(0,50)]); const d=document.querySelector('.work-packages--details'); return {fields:els, detailsText: d? d.innerText.trim().replace(/\\n+/g,' | ').slice(0,900):'no details'};})()"
+  },
+  {
+   "run": "fwop12",
+   "expression": "(() => { const els=[...document.querySelectorAll('[id^=\"wp-new-inline-edit--field-\"]')].map(e=>({tag:e.tagName, id:e.id, aria:e.getAttribute('aria-label'), role:e.getAttribute('role')})); return els; })()"
+  },
+  {
+   "run": "fwop13",
+   "expression": "document.querySelectorAll('.wp-table--cell-td.subject')[0].outerHTML"
+  },
+  {
+   "run": "fwop13",
+   "expression": "JSON.stringify({html:document.querySelector('[contenteditable=true]').innerHTML.slice(0,200), active:document.activeElement.tagName+'.'+(document.activeElement.className||'').toString().slice(0,60)})"
+  },
+  {
+   "run": "fwop14",
+   "expression": "(()=>{const q=s=>document.querySelector(s);const sub=q('.work-packages--details--subject')||q('.work-package--details--title')||q('h2');const des=q('.work-package--details--description .op-uc-container')||q('.document-editor__editable')||q('.work-packages--details--description');return {subject:sub?sub.textContent.trim():null, description:des?des.textContent.trim():null, h1:q('h1')?q('h1').textContent.trim():null, title:document.title};})()"
+  },
+  {
+   "run": "fwop5",
+   "expression": "Array.from(document.querySelectorAll('input,textarea,select')).filter(e=>e.offsetParent!==null).map(e=>({tag:e.tagName,name:e.name,id:e.id,ph:e.placeholder,al:e.getAttribute('aria-label'),cls:e.className.slice(0,80)}))"
+  },
+  {
+   "run": "fwop5",
+   "expression": "(()=>{const sub=document.querySelectorAll('td.subject')[0];const kids=Array.from(sub.querySelectorAll('*')).slice(0,6).map(e=>({tag:e.tagName,cls:String(e.className).slice(0,80),t:e.textContent.trim().slice(0,40)}));const cs=getComputedStyle(sub.querySelector('.sr-only, [class*=\"hidden\"]')||sub);return {kids, srOnlyFound: !!sub.querySelector('.sr-only'), ariaHiddenEls: sub.querySelectorAll('[aria-hidden=\"true\"]').length};})()"
+  },
+  {
+   "run": "fwop6",
+   "expression": "(()=>{const t=document.querySelector('wp-activity-tab')||document.querySelector('op-wp-tab');if(!t)return 'no tab elt';return JSON.stringify({txt:t.innerText.slice(0,600),btns:Array.from(t.querySelectorAll('button')).map(b=>b.textContent.trim().slice(0,30)),rect:t.getBoundingClientRect().width+'x'+t.getBoundingClientRect().height});})()"
+  },
+  {
+   "run": "fwop7",
+   "expression": "(() => {\n  return [...document.querySelectorAll('[class*=\"assignee\"], [data-test-selector*=\"assignee\"]')].map(e => ({tag:e.tagName, cls:(e.className||'').toString().slice(0,120), id:e.id||null, txt:(e.innerText||'').trim().slice(0,80)}));\n})()"
+  },
+  {
+   "run": "fwop7",
+   "expression": "(() => {\n  const rows = [...document.querySelectorAll('tr.wp-table--row')].map(r => r.innerText.replace(/\\n/g,' ').replace(/\\t/g,' | ').replace(/\\s+/g,' ').trim()).filter(Boolean);\n  const pag = document.querySelector('nav[aria-label=\"Pagination navigation\"]');\n  const ths = [...document.querySelectorAll('th')].map(t=>t.innerText.replace(/\\s+/g,' ').trim()).filter(Boolean);\n  const emptyMsg = (document.body.innerText.match(/[^\\n]*(no work packages|No results|to display)[^\\n]*/i)||[])[0]||null;\n  return {totalHeader: ths[0]||null, headers: ths.slice(0,10), pagination: pag?pag.innerText.replace(/\\s+/g,' ').trim():null, rowCount: rows.length, rows, emptyMsg};\n})()"
+  },
+  {
+   "run": "fwop8",
+   "expression": "(()=>{const s=document.querySelector('#wp-new-inline-edit--field-subject'); let el=s; const out=[]; for(let i=0;i<7&&el;i++){el=el.parentElement; if(el) out.push({i,tag:el.tagName,id:el.id,cls:el.className.toString().slice(0,90),txt:el.innerText.replace(/\\s+/g,' ').slice(0,300)});} return JSON.stringify(out);})()"
+  },
+  {
+   "run": "fwop8",
+   "expression": "(()=>{const p=document.querySelector('.work-packages--details'); const g=(f)=>{const e=p.querySelector('[data-field-name=\"'+f+'\"]'); return e?{t:e.innerText.replace(/\\s+/g,' ').trim(), al:e.getAttribute('aria-label')}:null;}; const st=p.querySelector('.op-wp-status-button--button'); return JSON.stringify({title:document.title, assignee:g('assignee'), status:st?st.innerText.trim():null, date:g('combinedDate'), subject:g('subject')});})()"
+  },
+  {
+   "run": "fwop9",
+   "expression": "Array.from(document.querySelectorAll('tr')).map(r=>r.innerText.replace(/\\n/g,' | ')).filter(t=>t.includes('Seed:')).concat(['TOTAL: '+(document.querySelector('.pagination--page-info, [data-test-selector=\"pagination--page-info\"]')?.innerText||document.body.innerText.match(/\\(\\d+ - \\d+\\/\\d+\\)/)?.[0])])"
+  },
+  {
+   "run": "fwrd37",
+   "expression": "document.querySelector('[class*=\"status\"]')?.textContent || document.evaluate(\"//p[contains(text(),'Status')]/following-sibling::*[1]\", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE).singleNodeValue?.textContent"
+  },
+  {
+   "run": "fwrd39",
+   "expression": "document.querySelector('[class*=\"status\"]')?.textContent || document.querySelectorAll('p, span, strong, b')"
+  },
+  {
+   "run": "fwrd83",
+   "expression": "(()=>{const d=document.querySelector('dialog')||document.querySelector('[class*=dialog]');const ins=[...document.querySelectorAll('dialog input, form input')];return {dlg:d?d.outerHTML.slice(0,300):null, inputs:ins.map(x=>x.outerHTML)}})()"
+  },
+  {
+   "run": "fwrd83",
+   "expression": "[...document.querySelectorAll('p')].map(p=>p.textContent).filter(t=>/Showing|match|No tickets/i.test(t))"
+  },
+  {
+   "run": "fwrd84",
+   "expression": "(() => { const el = [...document.querySelectorAll('input')].find(i => i.getAttribute('aria-label')==='Supplier' || (i.id||'').includes('supplier')); if(!el) return 'not found'; return {outer: el.outerHTML, listAttr: el.getAttribute('list'), datalists: [...document.querySelectorAll('datalist')].map(d=>({id:d.id, opts:[...d.options].map(o=>o.value)}))}; })()"
+  },
+  {
+   "run": "fwsi1",
+   "expression": "Array.from(document.querySelectorAll('aside a, .sidebar a, #sidebar a')).slice(0,40).map(a=>a.getAttribute('href')+' | '+a.textContent.trim().replace(/\\s+/g,' ')+' | title='+(a.getAttribute('title')||'')+' | data-tooltip='+(a.getAttribute('data-tooltip')||''))"
+  },
+  {
+   "run": "fwsi1",
+   "expression": "(()=>{const d=new Date(); const p=n=>String(n).padStart(2,'0'); return {serverLocal: d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes())+':'+p(d.getSeconds()), pageDate: document.body.innerText.match(/\\d{4}-\\d{2}-\\d{2}/g)}})()"
+  },
+  {
+   "run": "fwsi1",
+   "expression": "(()=>{const out=[]; document.querySelectorAll('button,a,i,span').forEach(e=>{const t=(e.textContent||'').trim(); const ti=(e.getAttribute('title')||''); const dt=(e.getAttribute('data-tooltip')||''); const ar=(e.getAttribute('aria-label')||''); const s=(t+' '+ti+' '+dt+' '+ar).trim(); if(/more information/i.test(s)) out.push({tag:e.tagName, cls:(e.className||'').toString().slice(0,80), txt:t.slice(0,40), title:ti, outer:e.outerHTML.slice(0,300)});}); return out.slice(0,6)})()"
+  },
+  {
+   "run": "fwsi10",
+   "expression": "(() => { const a=Array.from(document.querySelectorAll('a')).filter(x=>/history/i.test(x.innerText)); return a.map(x=>({txt:x.innerText.trim(), href:x.getAttribute('href'), id:x.id})); })()"
+  },
+  {
+   "run": "fwsi11",
+   "expression": "(() => { const sels = document.querySelectorAll('select'); return Array.from(sels).map(s=>({id:s.id, name:s.name, cls:s.className, selectedText: s.selectedIndex>=0? s.options[s.selectedIndex].text : null, optionCount:s.options.length, firstOptions: Array.from(s.options).slice(0,5).map(o=>o.text)})); })()"
+  },
+  {
+   "run": "fwsi11",
+   "expression": "(() => { const t=document.body.innerText; const i=t.toLowerCase().indexOf('checked out to'); const j=t.toLowerCase().indexOf('deployed'); return {checkedOutBlock: i<0?null:t.slice(i, i+200).replace(/\\n{2,}/g,'\\n'), deployedBlock: j<0?null:t.slice(Math.max(0,j-120), j+180).replace(/\\n{2,}/g,'\\n')}; })()"
+  },
+  {
+   "run": "fwsi2",
+   "expression": "(()=>{const el=document.querySelector('#main');let t=el.innerText;return t.slice(0,1500);})()"
+  },
+  {
+   "run": "fwsi2",
+   "expression": "(()=>{const el=document.querySelector('.box-body.box-profile');return el.outerHTML.replace(/<i class=\"[^\"]*\"[^>]*><\\/i>/g,'[icon]').replace(/\\s+/g,' ').slice(0,2500);})()"
+  },
+  {
+   "run": "fwsi3",
+   "expression": "Array.from(document.querySelectorAll('#create-form button, #create-form a.btn, form.form-horizontal button[type=submit]')).filter(b=>b.getBoundingClientRect().width>0).map(b=>({tag:b.tagName, type:b.type, text:b.textContent.trim().slice(0,40), cls:b.className.slice(0,50), id:b.id}))"
+  },
+  {
+   "run": "fwsi4",
+   "expression": "(() => { const d=document.getElementById('optional_details'); return d.parentElement.outerHTML.slice(0,800); })()"
+  },
+  {
+   "run": "fwsi4",
+   "expression": "(() => { const el=[...document.querySelectorAll('span,div,p,td')].find(e=> e.childElementCount===0 && /^Purchased\\s+2026-03-15/.test(e.textContent.trim())); return el ? {tag:el.tagName, cls:el.className, text:el.textContent.replace(/\\s+/g,' ').trim()} : 'not found as leaf'; })()"
+  },
+  {
+   "run": "fwsi5",
+   "expression": "(()=>{const m=document.querySelector('main')||document.body;return m.innerText.replace(/\\n{2,}/g,'\\n').slice(0,1800);})()"
+  },
+  {
+   "run": "fwsi6",
+   "expression": "(()=>{const m=document.querySelector('[role=\"main\"], .content-wrapper, #app');return m?m.innerText.replace(/\\n{2,}/g,'\\n').slice(0,2500):document.body.innerText.slice(0,2500)})()"
+  },
+  {
+   "run": "fwsi7",
+   "expression": "(() => ({models: Array.from(document.querySelectorAll('#model_select_id option')).map(o=>o.text), statuses: Array.from(document.querySelectorAll('#status_select_id option')).map(o=>o.text)}))()"
+  },
+  {
+   "run": "fwsi8",
+   "expression": "Array.from(document.querySelectorAll('a,button')).filter(e=>/check/i.test(e.textContent)||/checkout/i.test(e.getAttribute('href')||'')).map(e=>({tag:e.tagName,text:e.textContent.trim().slice(0,40),href:e.getAttribute('href')}))"
+  },
+  {
+   "run": "fwsi8",
+   "expression": "(() => { const res={}; const badge=document.querySelector('main .badge, main span.label'); res.statusBadge = badge?badge.innerText.trim():null; res.assignedToLink = [...document.querySelectorAll('a[href*=\"/users/\"]')].map(a=>({t:a.innerText.trim(), href:a.getAttribute('href'), title:a.getAttribute('title')})); res.locationLinks=[...document.querySelectorAll('a[href*=\"/locations/\"]')].map(a=>({t:a.innerText.trim(),href:a.getAttribute('href')})); return res; })()"
+  },
+  {
+   "run": "fwsi9",
+   "expression": "(() => { const links=[...document.querySelectorAll('a')].filter(a=>/Bench Admin|Alerts|Create New/.test(a.innerText)); return links.map(a=>a.outerHTML.slice(0,400)); })()"
+  },
+  {
+   "run": "fwsi9",
+   "expression": "(() => [...document.querySelectorAll('form')].map((f,i)=>({i, action:f.getAttribute('action'), id:f.id, cls:f.className, fields:[...f.querySelectorAll('input,select,textarea')].map(e=>({tag:e.tagName,type:e.type,name:e.name,id:e.id,val:e.value,sel:e.closest('.form-group')?.querySelector('label')?.innerText?.trim().slice(0,35)}))})))()"
+  },
+  {
+   "run": "fwvk1",
+   "expression": "Array.from(document.querySelectorAll('[contenteditable], textarea, [role=\"textbox\"], .tiptap, .ProseMirror')).map((e,i)=>({i, tag:e.tagName, cls:e.className && e.className.toString().slice(0,80), ce:e.getAttribute('contenteditable'), ph:e.getAttribute('placeholder')||e.getAttribute('data-placeholder'), txt:(e.innerText||e.value||'').slice(0,60)}))"
+  },
+  {
+   "run": "fwvk1",
+   "expression": "(()=>{return Array.from(document.querySelectorAll('*')).filter(e=>e.children.length===0 && /2026/.test(e.innerText||'')).map(e=>({tag:e.tagName,cls:(e.className||'').toString().slice(0,70),txt:e.innerText}))})()"
+  },
+  {
+   "run": "fwvk1",
+   "expression": "(()=>{const names=Array.from(document.querySelectorAll('*')).filter(e=>e.children.length===0&&(e.innerText||'').trim()==='Backend').map(e=>({tag:e.tagName,cls:(e.className||'').toString()}));const wrap=document.querySelector('.task-labels')||document.querySelector('.labels');const chips=wrap?wrap.querySelectorAll('a, .label, [class*=\"label\"]'):[];return {wrapCls:wrap?wrap.className:null, wrapHtml:wrap?wrap.outerHTML.slice(0,700):null, backendNodes:names}})()"
+  },
+  {
+   "run": "fwvk1",
+   "expression": "Array.from(document.querySelectorAll('[contenteditable=\"true\"], textarea')).map((e,i)=>({i,tag:e.tagName,cls:(e.className||'').toString().slice(0,90),ph:e.getAttribute('data-placeholder')||e.placeholder||'',txt:(e.innerText||'').slice(0,50),vis:!!e.offsetParent}))"
+  },
+  {
+   "run": "fwvk10",
+   "expression": "JSON.stringify([...document.querySelectorAll('input')].map(i=>({t:i.type,cls:i.className,val:i.value,ph:i.placeholder})))"
+  },
+  {
+   "run": "fwvk10",
+   "expression": "JSON.stringify([...document.querySelectorAll('button')].map((b,i)=>[i,b.className.slice(0,60),b.innerText.trim().slice(0,60)]).slice(0,70))"
+  },
+  {
+   "run": "fwvk10",
+   "expression": "JSON.stringify({monthSelLabel: document.querySelector('.flatpickr-calendar.open select.flatpickr-monthDropdown-months')?.selectedOptions[0]?.textContent, days: [...document.querySelectorAll('.flatpickr-calendar.open .flatpickr-day')].map(d=>d.getAttribute('aria-label')).slice(0,40)})"
+  },
+  {
+   "run": "fwvk2",
+   "expression": "(() => {\n  const heads = Array.from(document.querySelectorAll('h1')).map(h => h.textContent.trim());\n  const descBlock = document.querySelector('.task-description, [class*=\"description\"]');\n  const body = document.body.innerText;\n  const m = body.match(/Description[\\s\\S]{0,200}/);\n  return {heads, descText: descBlock ? descBlock.innerText.trim() : null, snippet: m ? m[0] : null};\n})()"
+  },
+  {
+   "run": "fwvk2",
+   "expression": "(() => {\n  const dueBtn = Array.from(document.querySelectorAll('button')).find(b=>/Set Due Date|Due Date/i.test(b.textContent) && b.closest('main'));\n  const prio = Array.from(document.querySelectorAll('button')).filter(b=>b.closest('main')).map(b=>b.textContent.trim());\n  // find date/time section\n  const main = document.querySelector('main');\n  return {\n    buttonsWithDateOrPrio: prio.filter(t=>/Date|Priorit|High|Medium|Low|Urgent|Unset|Dec/i.test(t)),\n    mainText: main.innerText\n  };\n})()"
+  },
+  {
+   "run": "fwvk2",
+   "expression": "(() => {\n  const c = document.querySelector('#comments, .comments, [class*=\"comment\"]');\n  const all = Array.from(document.querySelectorAll('main *')).filter(el => el.children.length===0 && el.textContent.includes('fwvk2-n1'));\n  return {commentRegion: c ? c.innerText.slice(0,600) : null, matches: all.map(e=>e.textContent.trim())};\n})()"
+  },
+  {
+   "run": "fwvk4",
+   "expression": "(() => { const els = Array.from(document.querySelectorAll('input, [role=\"textbox\"], [contenteditable=\"true\"]')).filter(e=>e.offsetParent!==null); return els.map((e,i)=>({i, tag:e.tagName, cls:(e.className||'').toString().slice(0,100), type:e.type, val:e.value, ph:e.placeholder, aria:e.getAttribute('aria-label')})); })()"
+  },
+  {
+   "run": "fwvk4",
+   "expression": "(() => { const btn = document.querySelector('button[title*=\"2026\"], button[aria-label*=\"2026\"]') ; const els = Array.from(document.querySelectorAll('main button')).filter(b=>/2026|due|Save|Remind/i.test((b.getAttribute('title')||'')+(b.getAttribute('aria-label')||'')+b.innerText)); return els.map(b=>({t:(b.innerText||'').slice(0,40), title:b.getAttribute('title'), aria:b.getAttribute('aria-label'), cls:(b.className||'').toString().slice(0,120), vis:b.offsetParent!==null})); })()"
+  },
+  {
+   "run": "fwvk6",
+   "expression": "JSON.stringify({taskLinks: Array.from(document.querySelectorAll(\"a[href*='/tasks/']\")).map(a=>a.getAttribute('href')+\" | \"+a.textContent.trim()), listItems: document.querySelectorAll(\"[data-task-id], .task\").length, pagination: !!document.querySelector('.pagination, [class*=pagination], [class*=load-more]')})"
+  },
+  {
+   "run": "fwvk6",
+   "expression": "(()=>{const els=Array.from(document.querySelectorAll('*')).filter(e=>/Created/.test(e.textContent)&&e.children.length<=3);return JSON.stringify(els.slice(-8).map(e=>({tag:e.tagName,cls:(e.className||'').toString().slice(0,80),txt:e.textContent.trim().slice(0,120),n:e.children.length})))})()"
+  },
+  {
+   "run": "fwvk6",
+   "expression": "(()=>{const c=document.querySelector('p.created');return JSON.stringify({html:c.outerHTML.slice(0,1500), attrs:Array.from(c.querySelectorAll('*')).map(e=>Array.from(e.attributes).map(a=>a.name+'='+a.value).join(' ')).slice(0,6)})})()"
+  },
+  {
+   "run": "fwvk7",
+   "expression": "(() => { const t = document.body.innerText; return {backendLabelChips: document.querySelectorAll('.task-view .tag, .tag').length, backendTexts: Array.from(document.querySelectorAll('.tag, .label')).map(e=>e.innerText.trim())}; })()"
+  },
+  {
+   "run": "fwvk9",
+   "expression": "JSON.stringify({docH:document.documentElement.scrollHeight, winH:outerHeight, listItems: document.querySelectorAll('[data-task-id]').length})"
+  },
+  {
+   "run": "fwvk9",
+   "expression": "Array.from(document.querySelectorAll('.tiptap')).map((e,i)=>[i,e.className, e.closest('form')?true:false, e.innerText.slice(0,40)])"
+  },
+  {
+   "run": "fwat3",
+   "expression": "(function() { const listbox = document.querySelector('[role=\"listbox\"]') || document.querySelector('#Items') || document.querySelector('.data-list'); if (listbox) { listbox.scrollTop = listbox.scrollHeight; return 'scrolled'; } return 'not found'; })()"
+  },
+  {
+   "run": "fwat3",
+   "expression": "(() => { const listbox = document.querySelector('#Items') || document.querySelector('[role=\"listbox\"]'); if (listbox) { listbox.scrollTop = listbox.scrollHeight; return 'scrolled'; } return 'not found'; })()"
+  },
+  {
+   "run": "fwat3",
+   "expression": "(() => { const listbox = document.querySelector('[role=\"listbox\"]'); if (listbox) { listbox.scrollTop = listbox.scrollHeight; return 'scrolled to bottom'; } return 'not found'; })()"
+  },
+  {
+   "run": "fwat3",
+   "expression": "(() => { const listbox = document.querySelector('[role=\"listbox\"]'); if (listbox) { listbox.scrollTop = listbox.scrollHeight; return 'scrolled'; } return 'not found'; })()"
+  },
+  {
+   "run": "fwat3",
+   "expression": "(() => { const listbox = document.getElementById('Items') || document.querySelector('[role=\"listbox\"]'); if (listbox) { listbox.scrollTop = 0; return 'scrolled to top'; } return 'not found'; })()"
+  },
+  {
+   "run": "fwat3",
+   "expression": "(() => { const listbox = document.querySelector('[role=\"listbox\"]'); if (listbox) { listbox.scrollTop = 0; } const rows = document.querySelectorAll('[role=\"option\"]'); for (const r of rows) { if (r.textContent.includes('fwat3-n1 MTP Item A')) { r.scrollIntoView({block:'center'}); return r.getAttribute('aria-label'); } } return 'not found'; })()"
+  },
+  {
+   "run": "fwat3",
+   "expression": "(() => { const listbox = document.querySelector('[role=\"listbox\"]'); if (listbox) { listbox.scrollTop = listbox.scrollHeight; return 'scrolled to bottom, scrollTop=' + listbox.scrollTop; } return 'not found'; })()"
+  },
+  {
+   "run": "fwec12",
+   "expression": "fetch('http://127.0.0.1:8097/api/v1/Opportunity/6ab55b3616555c747').then(r=>r.json()).then(d=>JSON.stringify({name:d.name,accountId:d.accountId,accountName:d.accountName,assignedUserId:d.assignedUserId,assignedUserName:d.assignedUserName,stage:d.stage,amount:d.amount,closeDate:d.closeDate,description:d.description}))"
+  },
+  {
+   "run": "fwec12",
+   "expression": "fetch('http://127.0.0.1:8097/api/v1/Opportunity/6ab55b3616555c747').then(r=>r.json()).then(d=>JSON.stringify({closeDate:d.closeDate, amount:d.amount, stage:d.stage, accountId:d.accountId, assignedUserId:d.assignedUserId}))"
+  }
+ ]
+}

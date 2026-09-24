@@ -21,6 +21,7 @@ import { controlFromTarget, siteModel } from '../skills/sitemap.js';
 import { settleDom, settlePage } from '../daemon/settle.js';
 import { fingerprintPage } from '../daemon/fingerprint.js';
 import { isRecordable, type StepDiff } from '../daemon/recorder.js';
+import { diffTotals, settleEvidence, stepFailure, type StepEvidence } from '../daemon/step-evidence.js';
 import { contractWeakening } from '../skills/contract.js';
 import { urlPattern as compiledUrlPattern } from '../skills/compile.js';
 import { renderReplay, replaySkill, type ReplayResult } from '../skills/replay.js';
@@ -266,7 +267,7 @@ export const TOOL_DEFS: ToolDef[] = [
   {
     name: 'eval',
     description:
-      'Escape hatch: run a JavaScript expression in the page and return its JSON-serialised result. Prefer the dedicated tools.',
+      'Escape hatch: run a read-only JavaScript expression in the page and return its JSON-serialised result. Prefer the dedicated tools. Nothing an eval does or returns is replayed: never act through it or give elements ids, and never report or navigate by a value only an eval returned: read it with read/read_all, or click its link.',
     parameters: {
       type: 'object',
       required: ['expression'],
@@ -505,7 +506,7 @@ export async function executeTool(
       }
     }
     return {
-      result: truncate(result + scrubSecrets(observed.note) + landed + dialogNote(session), TOOL_RESULT_BUDGET + 8200),
+      result: truncate(withEmptyReadHint(name, args, result) + scrubSecrets(observed.note) + landed + dialogNote(session), TOOL_RESULT_BUDGET + 8200),
       isError: false,
       snapshotIncluded: observed.snapshotIncluded || Boolean(landed),
       ...(outcome ? { outcome } : {}),
@@ -520,6 +521,24 @@ export async function executeTool(
     }
     return { result: truncate(`ERROR: ${explainError(err, args)}`, TOOL_RESULT_BUDGET), isError: true };
   }
+}
+
+/**
+ * The model's copy of an empty read_all, with what to do next. A bare `[]` is
+ * where the recording model most often reached for eval: 237 of 1,707 reads in
+ * the rounds 36-60 recordings returned nothing, and in 60 of them the next
+ * step was an eval (gitea fwgt10 read `.issue-title`, got `[]` twice, and took
+ * the seed titles by an eval no compiled read reproduces). A class name is a
+ * guess; a snapshot, a role or a text is what the page offers. Model-facing
+ * only: the recorder has already filed `[]`, which is the value compile, the
+ * read-back cascade and readsThisInstruction parse.
+ */
+export function withEmptyReadHint(name: string, args: Record<string, unknown>, result: string): string {
+  if (name !== 'read_all' || args.what === 'count' || result !== '[]') return result;
+  return (
+    `[] — 0 elements match ${JSON.stringify(String(args.target ?? ''))}. A class name is a guess: take a snapshot (full:true shows static text) and target what it shows, ` +
+    `or target by role or text (role=link[name=/…/], a:has-text("…")). Do not switch to eval for it: an eval's result is never replayed.`
+  );
 }
 
 /**
@@ -739,6 +758,10 @@ async function runStep(
   // what the agent's state diff is taken after, too.
   const actionPage = STATE_CHANGING.has(name) ? (page ?? (await session.getPage().catch(() => null))) : null;
   let obs: ActionObservation | null = null;
+  // When the action went out, and whether the recorder took it: a step that
+  // throws before commit is recorded as FAILED (stage 0 evidence, never a gesture).
+  let dispatchAt: number | undefined;
+  let committed = false;
   try {
     // Secrets ({{env:NAME}}) resolve HERE and only here — after the recorder
     // captured the marker-bearing args above, immediately before the browser
@@ -756,6 +779,7 @@ async function runStep(
           expect: opts.expect,
         })
       : null;
+    dispatchAt = Date.now();
     let result = scrubSecrets(await dispatch(session, name, live, screenshotDir, signal, opts.resolved, obs));
     // A secret typed into a PASSWORD field: that field's own line is where an
     // ambiguous secret (a value some non-credential variable holds too) may be
@@ -781,6 +805,13 @@ async function runStep(
     // compiler cut a segment boundary at a page the procedure was only passing
     // through. Both are the observation's url wait now (urlHeldStill inside it).
     const verdict: SettleVerdict | null = obs ? await obs.settle() : null;
+    const settledAt = Date.now();
+    // What the recorder knew and used to drop (daemon/step-evidence.ts): the
+    // uncapped diff counts, and the removals the diff itself keeps only for a
+    // dialog or an add-less step. Never read by compile, export or replay.
+    let totals: StepEvidence['totals'];
+    let removedAll: string[] | undefined;
+    let capturedAt: number | undefined;
     // A link whose navigation had still not committed when the settle ran out
     // (action.ts LINK_NAV_WAIT_MS) is said to the model, because the page it
     // sees next is the old one. fwop2-n1's agent found the url unmoved, clicked
@@ -801,7 +832,9 @@ note: this link points to ${verdict.link.href}, and its navigation had not commi
     if (wantDiff && !before) captureFailed = true;
     if (wantDiff && before) {
       const after = verdict ? await captureSignature(page!) : await settledSignature(page!);
+      capturedAt = Date.now();
       if (after) {
+        totals = diffTotals(before.lines, after.lines);
         // Recorded in CURRENT_DIALECT (the signature's lines), and tagged so:
         // compile carries the tag onto the step's expectation, and every runner
         // renders the live page in the dialect the expectation was written in.
@@ -811,6 +844,7 @@ note: this link points to ${verdict.link.href}, and its navigation had not commi
         // evidence. Every other removal would be store weight nothing reads.
         const removed = removedLines(before.lines, after.lines) ?? [];
         const added = addedLines(before.lines, after.lines) ?? [];
+        removedAll = scrubSecretsDeep(removed);
         diff = scrubSecretsDeep({
           url: after.url,
           alerts: after.alerts.filter((a) => !before.alerts.includes(a)),
@@ -849,8 +883,19 @@ note: this link points to ${verdict.link.href}, and its navigation had not commi
     if (context.effect && context.effect.kind !== 'navigate' && context.afterPage) {
       fingerprintAfter = (await fingerprintPage(context.afterPage)) ?? undefined;
     }
+    const evidence: StepEvidence | undefined = pending
+      ? {
+          at: { d: dispatchAt ?? settledAt, s: settledAt, ...(capturedAt !== undefined ? { c: capturedAt } : {}) },
+          ...(verdict ? { settle: settleEvidence(verdict) } : {}),
+          ...(captureFailed ? { captureFailed: true as const } : {}),
+          ...(totals ? { totals } : {}),
+          ...(removedAll?.length && !diff?.removed ? { removed: removedAll } : {}),
+        }
+      : undefined;
+    committed = true;
     recorder?.commit(pending, result, {
       diff,
+      ...(evidence ? { obs: evidence } : {}),
       via: opts.via,
       fingerprintAfter,
       ...(context.page !== undefined ? { page: context.page } : {}),
@@ -864,6 +909,11 @@ note: this link points to ${verdict.link.href}, and its navigation had not commi
       ...(verdict ? { outcome: verdict.outcome, settled: true as const } : {}),
       ...(verdict?.link ? { link: verdict.link } : {}),
     };
+  } catch (err) {
+    // A failed action is evidence, not a gesture: on disk as `failed: true`,
+    // out of every read of the take (ScriptRecorder.fail).
+    if (!committed && pending && recorder) recorder.fail(pending, stepFailure(err), { at: { d: dispatchAt ?? Date.now() } });
+    throw err;
   } finally {
     obs?.cancel();
     if (watchPopup) page!.off('popup', onPopup);
@@ -1451,12 +1501,8 @@ async function dispatch(
 
     case 'eval': {
       const expression = String(args.expression ?? '');
-      const mutation = evalMutation(expression);
-      if (mutation) {
-        throw new Error(
-          `eval is read-only: the expression ${mutation}. That would run, but could never be replayed — only the dedicated tools are recorded. Use click / fill / press / select / goto instead (locate the element first if you only know its text).`,
-        );
-      }
+      const refusal = evalRefusal(expression);
+      if (refusal) throw new Error(refusal);
       const value = await page.evaluate((expr) => {
         // eslint-disable-next-line no-eval
         return (0, eval)(expr);
@@ -1560,8 +1606,25 @@ async function dispatch(
  * hole in the recording, so it is refused at the source, naming the tool to
  * use instead. Read expressions are untouched: a comparison (`el.value ===
  * x`) is not an assignment, and querying, filtering and serialising are fine.
+ *
+ * Phase A closed what the first list let through. Across the 146 published n1
+ * recordings (2,503 distinct eval expressions) it passed exactly seven state
+ * changes, all after it shipped: fwop10 and fwod82 gave elements ids of their
+ * own (`ce.id='journal-editor-2'`, `b.id='edit_discard_btn'`) and then acted
+ * on `#journal-editor-2`, which no replay has; fwgh8 opened the public post
+ * with `window.open(…)`, and creditUncreditedPopups later had to drop every
+ * step it ran there. So identity (`.id/.name/.className =`, `dataset`,
+ * `classList`), opening or rewriting a page (`window.open`, a bare
+ * `location =`, `document.write`) and showing or enabling an element
+ * (`.style.x =`, `.hidden =`, `.disabled =`) are refused too. Over all 2,503
+ * the additions refuse those seven and nothing else (bench/eval-audit.mjs).
+ *
+ * The patterns read the CODE: string literals are blanked first, so
+ * `innerText.includes('window.open(')` is a read. A plain object built with
+ * `o.id = …` is refused as well; the message says to write it as a literal.
  */
 export function evalMutation(expression: string): string | null {
+  const code = withoutStringLiterals(expression);
   const patterns: Array<[RegExp, string]> = [
     [/\.(click|submit|requestSubmit)\s*\(/, 'calls .$1()'],
     [/\.dispatchEvent\s*\(/, 'dispatches a synthetic event'],
@@ -1573,12 +1636,103 @@ export function evalMutation(expression: string): string | null {
     [/\.(remove|removeChild|appendChild|insertBefore|replaceChild|replaceWith)\s*\(/, 'edits the DOM with .$1()'],
     [/\.(setAttribute|removeAttribute)\s*\(/, 'edits the DOM with .$1()'],
     [/\b(localStorage|sessionStorage)\.(setItem|removeItem|clear)\s*\(/, 'writes $1'],
+    // Identity the replay never has (fwop10, fwod82).
+    [/\.(id|name|className)\s*=(?!=)/, 'assigns .$1'],
+    [/\.(dataset\.[\w$]+)\s*=(?!=)/, 'assigns .$1'],
+    [/\.classList\.(add|remove|toggle|replace)\s*\(/, 'edits the DOM with .classList.$1()'],
+    // A page the replay never opens (fwgh8), or a document it never has.
+    [/(?<![.\w$])(?:window\.)?open\s*\(/, 'opens a page with window.open()'],
+    [/(?<![.\w$])(?<!(?:const|let|var)\s+)(?:window\.|document\.)?location\s*=(?![=>])/, 'assigns location'],
+    [/\bdocument\.(open|write|writeln)\s*\(/, 'rewrites the document with document.$1()'],
+    // An element shown or enabled for the recording alone.
+    [/\.(style\.[\w$]+)\s*=(?!=)/, 'assigns .$1'],
+    [/\.style\.(setProperty|removeProperty)\s*\(/, 'edits the DOM with .style.$1()'],
+    [/\.(hidden|disabled)\s*=(?!=)/, 'assigns .$1'],
   ];
   for (const [re, why] of patterns) {
-    const m = re.exec(expression);
+    const m = re.exec(code);
     if (m) return why.replace('$1', m[1] ?? '');
   }
   return null;
+}
+
+/** `expression` with the contents of its string literals blanked, so a pattern sees only code. */
+function withoutStringLiterals(expression: string): string {
+  return expression.replace(/(['"`])(?:\\.|(?!\1)[^\\\n])*\1/g, (m) => m[0] + m[0]);
+}
+
+const LOOKUP_CALLBACK = String.raw`\.(?:find|filter|some)\(\s*\(?\s*[\w$]+\s*\)?\s*=>\s*`;
+/** One lookup of an eval expression, in the order evalTarget reads them. */
+const EVAL_LOOKUPS = new RegExp(
+  [
+    // 1,2: a filter on a child lookup → :has(…)
+    LOOKUP_CALLBACK + String.raw`[\w$]+\.querySelector\(\s*(['"])((?:(?!\1).)+)\1\s*\)`,
+    // 3,4: a filter on exact text → :text-is(…)
+    LOOKUP_CALLBACK + String.raw`[\w$]+\.(?:textContent|innerText)(?:\.trim\(\))?\s*===?\s*(['"])((?:(?!\3).)*)\3`,
+    // 5: a filter on a plain regex → :has-text(…)
+    LOOKUP_CALLBACK + String.raw`\/((?:[^/\\\[\](){}.*+?^$|]|\\.)+)\/i?\.test\(`,
+    // 6,7: a filter on contained text → :has-text(…)
+    LOOKUP_CALLBACK + String.raw`[\w$]+\.(?:textContent|innerText)(?:\.trim\(\))?\.includes\(\s*(['"])((?:(?!\6).)+)\6`,
+    // 8,9: getElementById → #id
+    String.raw`getElementById\(\s*(['"])((?:(?!\8).)+)\8\s*\)`,
+    // 10,11: querySelector(All) → its selector
+    String.raw`querySelector(?:All)?\(\s*(['"])((?:(?!\10).)+)\10\s*\)`,
+  ].join('|'),
+  'g',
+);
+
+/**
+ * The element an eval expression reaches, written as a target the dedicated
+ * tools take, or null when the expression names none. Read off the
+ * expression's own lookups, in order: `getElementById('x')` → `#x`,
+ * `querySelector(All)('s')` → `s`, each one inside the last (`>>`); a
+ * `.find/.filter` on text equality narrows the last to `:text-is("…")`, on a
+ * plain regex or `includes` to `:has-text("…")`, and on a child lookup to
+ * `:has(…)`. A hint for the refusal message, never a recorded locator.
+ * fwop10's `ce.id='journal-editor-2'` followed
+ * `getElementById('work-package-journal-form-element')` and
+ * `querySelector('[contenteditable="true"]')`: the target it wanted was
+ * `#work-package-journal-form-element >> [contenteditable="true"]`.
+ */
+export function evalTarget(expression: string): string | null {
+  const parts: string[] = [];
+  const narrow = (suffix: string) => {
+    if (parts.length) parts[parts.length - 1] += suffix;
+  };
+  for (const m of expression.matchAll(EVAL_LOOKUPS)) {
+    if (m[2] !== undefined) narrow(`:has(${m[2]})`);
+    else if (m[4] !== undefined) narrow(`:text-is(${JSON.stringify(m[4])})`);
+    else if (m[5] !== undefined) narrow(`:has-text(${JSON.stringify(m[5].replace(/\\(.)/g, '$1'))})`);
+    else if (m[7] !== undefined) narrow(`:has-text(${JSON.stringify(m[7])})`);
+    else if (m[9] !== undefined) parts.push(/^[A-Za-z][\w-]*$/.test(m[9]) ? `#${m[9]}` : `[id=${JSON.stringify(m[9])}]`);
+    else if (m[11] !== undefined) parts.push(m[11]);
+  }
+  return parts.length ? parts.join(' >> ') : null;
+}
+
+/** What the model is told when an eval is refused, or null when it is not. */
+export function evalRefusal(expression: string): string | null {
+  const mutation = evalMutation(expression);
+  if (!mutation) return null;
+  const target = evalTarget(expression);
+  const where = target ? ` The element this expression reaches, as a target the tools take: \`${target}\` (or a snapshot @ref).` : '';
+  if (mutation.startsWith('opens a page') || mutation === 'assigns location' || mutation.startsWith('rewrites the document')) {
+    const url = /(?:open|location)\s*(?:\(|=)\s*(['"`])((?:(?!\1).)+)\1/.exec(expression)?.[2];
+    return (
+      `eval is read-only: the expression ${mutation}. A replay never runs this eval, so it can never reach that page, and every step you take there would be dropped. ` +
+      `Click the link or button that opens it, or navigate this tab${url ? ` (goto '${url}')` : ' with goto'}; tabs lists and switches pages.`
+    );
+  }
+  if (/^assigns \.(id|name|className|dataset)/.test(mutation) || mutation.startsWith('edits the DOM with .classList')) {
+    return (
+      `eval is read-only: the expression ${mutation}. An id, name or class you give an element exists only in this browser: a replay never runs this eval, so a step that targets it can never find it.` +
+      `${where || ' Target the element the way you found it: its selector, its role and name, or a snapshot @ref.'} If you were only building a result object, write it as an object literal ({ id: el.id }) instead.`
+    );
+  }
+  return (
+    `eval is read-only: the expression ${mutation}. That would run, but could never be replayed — a replay never runs this eval; only the dedicated tools are recorded. ` +
+    `Use click / fill / press / select / goto instead (locate the element first if you only know its text).${where}`
+  );
 }
 
 async function waitFor(

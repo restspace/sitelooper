@@ -24,9 +24,12 @@
  *      an option by the combobox or opener that owns it, and a widget as the
  *      nearest field wrapper (a display span beside a combobox input, a chip);
  *  (b) something COMMITTED the value between the set and the read: a
- *      navigation or reload, a url change, the control detaching with nothing
- *      matching its locator in its place, or a later click whose recorded
- *      effect shows the value appearing (a Save that adds the row).
+ *      navigation or reload, a route change (routeOf: a rewritten query string
+ *      is not one), the control detaching with nothing matching its locator
+ *      in its place, or a later click whose effect, as THIS run's diff added
+ *      it, shows the value appearing (a Save that adds the row). Phase B
+ *      (provenance, stage 1): the recorded effect alone used to count, so a
+ *      Save that did nothing still "committed" a live preview's text.
  * Anything else stays an echo, as before: grafana's picker opener after
  * "Last 6 hours", ghost fwgh13's Excerpt textbox, a live preview mirroring a
  * field that was never saved.
@@ -37,9 +40,12 @@ import type { Locator, Page } from 'playwright-core';
 import { clip } from './text.js';
 
 /**
- * Shortest interacted/read value worth treating as an echo. Below this the
- * coincidence rate is too high (a "1m" refresh, a "3" quantity) — a false echo
- * would wrongly drop a legitimate finding, so only substantial values qualify.
+ * Shortest value the TEXT rule treats as an echo. Below this the coincidence
+ * rate is too high (a "1m" refresh, a "3" quantity) — a false echo would
+ * wrongly drop a legitimate finding — so a shorter value is an echo only on
+ * ELEMENT evidence: the read is the very control that set it, or its widget.
+ * Until phase B (provenance, stage 1) a short value was never an echo at all,
+ * so "150" read back from the input it was typed into was reported as observed.
  */
 export const MIN_ECHO_LEN = 5;
 
@@ -71,8 +77,28 @@ export function echoKey(text: string): string {
  */
 export function noteInteraction(ledger: Set<string>, texts: readonly unknown[]): void {
   for (const text of texts) {
-    if (typeof text === 'string' && text.length >= MIN_ECHO_LEN) ledger.add(echoKey(text));
+    // Every length: a short value is judged by its element (echoAt), not dropped here.
+    const key = typeof text === 'string' ? echoKey(text) : '';
+    if (key) ledger.add(key);
   }
+}
+
+/** Whether `value` is short enough that only element evidence makes it an echo (see MIN_ECHO_LEN). */
+function shortEcho(value: string): boolean {
+  return value.trim().length < MIN_ECHO_LEN;
+}
+
+/**
+ * Where a url points, for the commit rule (echoAt's rule b): origin, path and
+ * the hash's path — never the query string. A debounced search box rewrites
+ * `?q=` as it is typed into; nothing was saved, and the value it mirrors is
+ * still an echo (phase B provenance, stage 1). A route change — a save that
+ * navigates, an editor that lands on its new record's `#/editor/post/<id>` —
+ * still commits.
+ */
+export function routeOf(url: string): string {
+  const [beforeHash, hash = ''] = url.split('#', 2);
+  return `${beforeHash.split('?')[0]}#${hash.split('?')[0]}`;
 }
 
 /** The name, else the label, of each candidate: what a resolved target is known by. */
@@ -86,7 +112,7 @@ export function candidateNames(candidates: readonly { name?: unknown; label?: un
  * "<stepId> <segmentId>/<n>" in the artifact); `label` is the read's own key.
  */
 export function echoVerdict(ledger: Set<string>, label: string, value: string, where: string): string | null {
-  if (!value || value.length < MIN_ECHO_LEN || !ledger.has(echoKey(value))) return null;
+  if (!value || !echoKey(value) || !ledger.has(echoKey(value))) return null;
   return `${where}: read '${label}' returned a value the skill itself set/selected ('${clip(value, 60)}') — confirms the control, not persistence; dropped from the report's confident values`;
 }
 
@@ -147,7 +173,7 @@ function echoMeta(ledger: Set<string>): EchoMeta {
  */
 export async function markActed(page: Page, loc: Locator, ledger: Set<string>, texts: readonly unknown[], step: string): Promise<void> {
   const meta = echoMeta(ledger);
-  const keys = new Set(texts.filter((t): t is string => typeof t === 'string' && t.length >= MIN_ECHO_LEN).map(echoKey).filter(Boolean));
+  const keys = new Set(texts.filter((t): t is string => typeof t === 'string').map(echoKey).filter(Boolean));
   // Best-effort, never a reason for a step to fail: whatever throws here — a
   // detached element, a closed page, a locator double — leaves the set
   // unmarked (index -1), which echoAt reads as "no element evidence".
@@ -194,9 +220,11 @@ async function markInPage(loc: Locator, key: string): Promise<number> {
 }
 
 /**
- * A click (or press) whose RECORDED effect added `lines`: if one of them shows
- * a value an earlier step set, the app took the value and displayed it — a
- * commit (echoAt's rule b). The step that set the value is never its own commit.
+ * A click (or press) whose effect added `lines` — the recorded lines THIS
+ * run's diff added (expect.ts ChangeVerdict.inDiff), filled, noted after the
+ * action ran: if one of them shows a value an earlier step set, the app took
+ * the value and displayed it — a commit (echoAt's rule b). The step that set
+ * the value is never its own commit.
  */
 export function noteCommit(ledger: Set<string>, lines: readonly string[], step: string): void {
   const meta = echoMeta(ledger);
@@ -215,26 +243,34 @@ export function noteCommit(ledger: Set<string>, lines: readonly string[], step: 
  * this only ever relaxes the rule on positive evidence.
  */
 export async function echoAt(page: Page, ledger: Set<string>, value: string, read: Locator | null): Promise<boolean> {
-  if (!value || value.length < MIN_ECHO_LEN) return false;
+  if (!value) return false;
   const want = echoKey(value);
-  if (!ledger.has(want)) return false;
+  if (!want || !ledger.has(want)) return false;
+  // A short value has no text rule (MIN_ECHO_LEN): it is an echo only where
+  // the element says so, and anything the page cannot answer leaves it observed.
+  const short = shortEcho(value);
   // Past the text rule, anything that throws is no evidence: an echo.
   try {
-    return await echoByElement(page, ledger, want, read);
+    return await echoByElement(page, ledger, want, read, short);
   } catch {
-    return true;
+    return !short;
   }
 }
 
-/** echoAt past the text rule: true (an echo) unless both of the module comment's conditions hold for every source. */
-async function echoByElement(page: Page, ledger: Set<string>, want: string, read: Locator | null): Promise<boolean> {
+/**
+ * echoAt past the text rule: true (an echo) unless both of the module
+ * comment's conditions hold for every source. For a `short` value only
+ * condition (a) speaks: a read of the control that set it, or of its widget,
+ * is an echo; anything else, or no evidence, is not.
+ */
+async function echoByElement(page: Page, ledger: Set<string>, want: string, read: Locator | null, short = false): Promise<boolean> {
   const meta = ECHO_META.get(ledger);
   const sets = meta ? meta.sets.filter((s) => s.texts.has(want)) : [];
-  if (!meta || !sets.length || !read) return true;
+  if (!meta || !sets.length || !read) return !short;
   // A source that could not be marked keeps the text rule for itself.
-  if (sets.some((s) => s.index < 0)) return true;
+  if (sets.some((s) => s.index < 0)) return !short;
   const readEl = await read.first().elementHandle({ timeout: 1_000 }).catch(() => null);
-  if (!readEl) return true;
+  if (!readEl) return !short;
   try {
     for (const set of sets) {
       const current = await set.locator.first().elementHandle({ timeout: 250 }).catch(() => null);
@@ -270,12 +306,14 @@ async function echoByElement(page: Page, ledger: Set<string>, want: string, read
             { key: meta.id, index: set.index, current },
           )
           .catch(() => null);
-        if (!seen) return true;
+        if (!seen) return !short;
         if (seen.isControl) return true;
+        if (short) continue;
         const committed =
           seen.replaced ||
           seen.detached ||
-          (set.url !== '' && page.url() !== set.url) ||
+          // A route change, not a rewritten query string (routeOf).
+          (set.url !== '' && routeOf(page.url()) !== routeOf(set.url)) ||
           meta.commits.some((c) => c.seq > set.seq && c.step !== set.step && c.lines.some((l) => ` ${echoKey(l)} `.includes(` ${want} `)));
         if (!committed) return true;
       } finally {

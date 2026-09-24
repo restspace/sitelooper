@@ -220,7 +220,23 @@ const ECHO_LAB = `<!doctype html><html><head><meta charset="utf-8"><title>Echo l
 <div id="preview"></div>
 <form id="parts" onsubmit="return false"><label>Part name <input id="part"></label> <button id="save" type="button">Save</button></form>
 <table><tbody id="rows"></tbody></table>
+<textarea id="note" aria-label="Note"></textarea> <h3 id="note-preview"></h3> <button id="note-save" type="button">Save note</button>
+<div id="q"><input id="search" aria-label="Search"></div> <h4 id="mirror"></h4>
 <script>
+// Provenance stage 1 (phase B): a live heading mirrors the note, and its Save
+// does nothing — the recording's Save showed the heading, this run's did not
+// add it (it was already there). A search box whose debounced input rewrites
+// the query string and mirrors the text: a url change nothing committed.
+const note = document.getElementById('note');
+note.addEventListener('input', () => { document.getElementById('note-preview').textContent = note.value; });
+const search = document.getElementById('search');
+search.addEventListener('input', () => {
+  const v = search.value;
+  setTimeout(() => {
+    history.replaceState(null, '', '/echo-lab?q=' + encodeURIComponent(v));
+    document.getElementById('mirror').textContent = v;
+  }, 50);
+});
 document.getElementById('rerender').addEventListener('click', () => {
   const old = document.getElementById('title');
   const fresh = document.createElement('input');
@@ -1662,7 +1678,7 @@ export async function createFixtureServer(initialCount = 10): Promise<FixtureSer
       res.end(PAGE);
       return;
     }
-    if (url === '/echo-lab') {
+    if (url === '/echo-lab' || url.startsWith('/echo-lab?')) {
       res.writeHead(200, { 'content-type': 'text/html' });
       res.end(ECHO_LAB);
       return;
