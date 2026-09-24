@@ -1999,6 +1999,31 @@ function positional(c: LocatorCandidate): boolean {
   return c.kind === 'css' || c.kind === 'point' || c.nth !== undefined;
 }
 
+/**
+ * Export's strip (server.ts stripLeakedCandidates): the chain less every
+ * candidate `stranded` by one of the ledger's run values — with a BACKSTOP.
+ * The last NAMED candidate (a role, text, label or scoped name) is never
+ * stripped for values only their SHAPE called run values (`evidence: false`,
+ * ledger basis `shape`) when everything left would be positional or
+ * bookmarked (css paths, points, ids that read as counters). odoo
+ * fwod84-n1's pick of `option "[FURN_7777] Office Chair"` lost its name to a
+ * shape guess and kept only `#autocomplete_0_2`, Odoo's render counter, and
+ * a point; n2 missed it. A value with evidence behind it (a url position, a
+ * declared var, a change a later run watched) strips as before, and a chain
+ * is never emptied.
+ */
+export function stripRunValueCandidates(chain: LocatorCandidate[], runValues: readonly { value: string; evidence: boolean }[]): LocatorCandidate[] {
+  const all = runValues.map((r) => r.value);
+  const strong = runValues.filter((r) => r.evidence).map((r) => r.value);
+  const kept = chain.filter((c) => !stranded(c, all));
+  if (!kept.length) return chain;
+  const named = (c: LocatorCandidate) => c.kind === 'role' || c.kind === 'text' || c.kind === 'label' || c.kind === 'scoped';
+  if (kept.some((c) => named(c) || !(positional(c) || bookmarked(c)))) return kept;
+  const rescued = chain.filter((c) => named(c) && stranded(c, all) && !stranded(c, strong));
+  if (!rescued.length) return kept;
+  return chain.filter((c) => kept.includes(c) || rescued.includes(c));
+}
+
 export function stranded(c: LocatorCandidate, runValues: string[]): boolean {
   const fields: string[] = [];
   if (c.kind === 'scoped') fields.push(c.hasText);
