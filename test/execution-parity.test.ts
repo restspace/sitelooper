@@ -4557,6 +4557,121 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
     }, 120_000);
   });
 
+  /**
+   * Round 61, EspoCRM fwec13 03-create: ELEMENT BEFORE TEXT. The Amount input
+   * typed with 12500 read back "12,500" (the app formats on blur), and the
+   * Close Date input read "2018-01-16" once its picker put its own default in.
+   * Neither text is one the step set, so the text rule never reached the
+   * element and both went out as observed, on n2, n3 and the compiled script.
+   * A read of a control this chain put a value into, with nothing committed
+   * since, is an echo whatever its text says; the same value in the row a Save
+   * added is observed. The ledger spans the flow step's chain: a later segment
+   * reading a control an earlier one filled is judged too, and a Save plus a
+   * reopen still makes it observed (odoo fwod86 02-create).
+   */
+  describe('element before text: a control the chain set shows its value, not the app’s (round 61, fwec13)', () => {
+    const at = (selector: string): LocatorCandidate[] => [{ kind: 'css', selector }];
+    const readValue = (selector: string, label: string): SkillStep => ({ tool: 'read', args: { target: '(read-back)', what: 'value' }, label, locators: { target: at(selector) } });
+    const AMOUNT = 'input[data-name="amount"]';
+    const CLOSE = 'input[data-name="closeDate"]';
+    const open: SkillStep = { tool: 'goto', args: { url: '' }, locators: {} };
+    const goto = (): SkillStep => ({ ...open, args: { url: `${origin}/espo-form` } });
+    const typeAmount = (): SkillStep[] => [
+      { tool: 'fill', args: { target: '@e1', value: '12500' }, locators: { target: at(AMOUNT) } },
+      { tool: 'press', args: { target: '@e1', key: 'Tab' }, locators: { target: at(AMOUNT) } },
+    ];
+    const save: SkillStep = { tool: 'click', args: { target: '@e3' }, locators: { target: at('#save') }, expect: { addedContains: ['- cell "12,500"'], lineDialect: 2 } };
+
+    it('both runners withhold a reformatted or defaulted value read at the control the step set, and observe it in the saved row', async () => {
+      const steps: SkillStep[] = [
+        goto(),
+        ...typeAmount(),
+        readValue(AMOUNT, 'amount_typed_value'),
+        { tool: 'fill', args: { target: '@e2', value: '12/31/2026' }, locators: { target: at(CLOSE) } },
+        { tool: 'click', args: { target: '@e4' }, locators: { target: at('#pick') } },
+        readValue(CLOSE, 'close_date_after_toggle'),
+        save,
+        { tool: 'read', args: { target: '(read-back)', what: 'text' }, label: 'amount_saved', locators: { target: at('#saved td') } },
+      ];
+      const { replay, emitted } = await both(steps, 0);
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      // Still given to later steps, on both sides.
+      expect(replay.outputs.amount_typed_value).toBe('12,500');
+      expect(emitted.outputs['01-clear.amount_typed_value']).toBe('12,500');
+      expect(replay.outputs.close_date_after_toggle).toBe('2018-01-16');
+      expect(emitted.outputs['01-clear.close_date_after_toggle']).toBe('2018-01-16');
+      // Echoes, whatever their text; the saved row is observed.
+      expect([...(replay.echoed ?? [])].sort()).toEqual(['amount_typed_value', 'close_date_after_toggle']);
+      expect([...(emitted.echoed ?? [])].sort()).toEqual(['amount_typed_value', 'close_date_after_toggle']);
+      expect(replay.outputs.amount_saved).toBe('12,500');
+      expect(emitted.outputs['01-clear.amount_saved']).toBe('12,500');
+    }, 120_000);
+
+    /** Daemon: the segments through run_skill in order, one echo ledger for the chain, as the flow runner passes it. */
+    async function chainOf(skills: Skill[]): Promise<Outcome> {
+      const session = new BrowserSession({ session: `parity-echo-chain-${Date.now()}`, persist: false, learn: true });
+      try {
+        const page = await session.getPage();
+        await page.goto(`${origin}/`);
+        for (const skill of skills) session.learn!.put(skill);
+        const echoLedger = new Set<string>();
+        const outputs: Record<string, string> = {};
+        const echoed: string[] = [];
+        for (const skill of skills) {
+          const out = await executeTool(session, 'run_skill', { id: skill.id, params: {}, echoLedger }, os.tmpdir());
+          const r = out.replay as ReplayResult | undefined;
+          if (!r?.ok) return { ok: false, reason: r?.reason ?? String(out.result), outputs };
+          Object.assign(outputs, r.values);
+          echoed.push(...r.echoedValues);
+        }
+        return { ok: true, reason: null, outputs, echoed };
+      } finally {
+        await session.close();
+      }
+    }
+    const segmentsOf = (parts: SkillStep[][]): { skills: Skill[]; spec: SpecFlow } => {
+      const skills = parts.map((steps, i): Skill => ({
+        ...skillOf(steps),
+        id: `s_part${i}`,
+        template: 'enter the amount',
+        preconditions: { urlPattern: i === 0 ? `${origin}/` : `${origin}/espo-form` },
+        seq: { chain: 's_parts', index: i, of: parts.length },
+      }));
+      const spec = specOf(parts[0]);
+      spec.steps[0].segments = skills.map((s) => ({ id: s.id, template: s.template, params: {}, preconditions: s.preconditions, steps: s.steps }));
+      return { skills, spec };
+    };
+
+    it('both runners judge a control an EARLIER segment of the chain set: an echo with nothing committed between', async () => {
+      const { skills, spec } = segmentsOf([[goto(), ...typeAmount()], [readValue(AMOUNT, 'amount_shown')]]);
+      reset(0);
+      const replay = await chainOf(skills);
+      reset(0);
+      const emitted = await emittedOf(spec);
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      expect(replay.outputs.amount_shown).toBe('12,500');
+      expect(emitted.outputs['01-clear.amount_shown']).toBe('12,500');
+      expect(replay.echoed).toEqual(['amount_shown']);
+      expect(emitted.echoed).toEqual(['amount_shown']);
+    }, 120_000);
+
+    it('both runners observe the value a Save stored once the record is reopened in a later segment (odoo fwod86)', async () => {
+      const { skills, spec } = segmentsOf([[goto(), ...typeAmount(), save], [goto(), readValue(AMOUNT, 'amount_reopened')]]);
+      reset(0);
+      const replay = await chainOf(skills);
+      reset(0);
+      const emitted = await emittedOf(spec);
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      expect(replay.outputs.amount_reopened).toBe('12,500');
+      expect(emitted.outputs['01-clear.amount_reopened']).toBe('12,500');
+      expect(replay.echoed).toEqual([]);
+      expect(emitted.echoed).toEqual([]);
+    }, 120_000);
+  });
+
   describe('echo reads', () => {
     it('both runners flag a read that echoes the filled value, and only that read', async () => {
       const steps: SkillStep[] = [

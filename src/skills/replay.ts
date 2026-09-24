@@ -46,7 +46,7 @@ import { committedSlots, dismissalAlreadyInEffect, effectExpectation, expectedCh
 // Re-exported so this module's callers need not know which owns the source.
 export { lineShows, type LineShowsOptions } from '../execution/snapshot.js';
 export { consequentialExpectations, isEchoLine } from '../execution/expect.js';
-import { candidateNames, echoAt, echoVerdict, markActed, noteCommit, noteInteraction, setsSomething } from '../execution/echo.js';
+import { candidateNames, judgeEcho, markActed, noteCommit, noteInteraction, setsSomething } from '../execution/echo.js';
 import { documentOf, fillLost, guardedTyping, noteFill, rearmStandingFills, restoreStandingFills, standingFills, standingFillsLost } from '../execution/refill.js';
 import { hasTotpMarker, resolveSecrets, resolveSecretsAsync } from '../shared/secrets.js';
 import { closeBeforeReopen, hideBefore, hideEffectLines, hideVerdict, pressHadNoEffect, toggleAlreadyShown, toggleEffectLines } from '../execution/toggle.js';
@@ -104,6 +104,13 @@ export interface ReplayOptions {
    * segment alone.
    */
   chain?: ReadonlyArray<Pick<Skill, 'params' | 'preconditions'>>;
+  /**
+   * The echo ledger of the flow step's whole chain (round 61): what every
+   * segment so far set, and where, so a read of a control an EARLIER segment
+   * filled is judged too. The flow runner passes one per chain; absent, this
+   * segment keeps its own, as before.
+   */
+  echoLedger?: Set<string>;
   /**
    * Inline healing for a step whose whole chain missed (site B of notes/PLAN-jev.md).
    * Per call, so a test supplies its own; the daemon registers one for the
@@ -469,7 +476,7 @@ export async function replaySkill(
   // names of options it clicks. A later read that returns one of these is an
   // echo (confirming the control, not app persistence); see echoedValues and
   // the shared rule, src/execution/echo.ts, which the artifact embeds.
-  const interacted = new Set<string>();
+  const interacted = opts.echoLedger ?? new Set<string>();
   // The fills this segment made that must still stand when the action that
   // submits them goes (the shared src/execution/refill.ts, which the artifact
   // embeds and keeps per segment too): fwvk1 n3 01-open's login form was
@@ -972,7 +979,7 @@ export async function replaySkill(
           resolved[key] = healedLocator;
           if (setsSomething(step.tool)) {
             noteInteraction(interacted, candidateNames(chain as { name?: unknown; label?: unknown }[]));
-            await markActed(page, healedLocator, interacted, [...candidateNames(chain as { name?: unknown; label?: unknown }[]), args.value, args.text], tag);
+            await markActed(page, healedLocator, interacted, [...candidateNames(chain as { name?: unknown; label?: unknown }[]), args.value, args.text], tag, step.tool);
           }
           continue;
         }
@@ -1001,7 +1008,7 @@ export async function replaySkill(
         noteInteraction(interacted, candidateNames(chain as { name?: unknown; label?: unknown }[]));
         // …and the element itself: an echo is judged by the control, not only
         // the text (echoAt, round 59).
-        await markActed(page, hit.locator, interacted, [...candidateNames(chain as { name?: unknown; label?: unknown }[]), args.value, args.text], tag);
+        await markActed(page, hit.locator, interacted, [...candidateNames(chain as { name?: unknown; label?: unknown }[]), args.value, args.text], tag, step.tool);
       }
       // Drift only when a candidate tried ahead of the winner FAILED (the shared
       // isDrift): a positional primary ranked behind a name that won was never missed.
@@ -1475,8 +1482,11 @@ export async function replaySkill(
       // Round 59: the text alone is not an echo — a read of an element that is
       // not the control, after the value was committed, is observed (EspoCRM
       // fwec11's "Admin" display name after the sign-in form was submitted).
-      const echo = echoVerdict(interacted, key, value, `step ${tag}`);
-      if (echo && (await echoAt(page, interacted, value, (resolved.target as Locator | undefined) ?? null))) {
+      // Round 61: the element first — a read of a control this chain put a
+      // value into, nothing committed since, is an echo whatever its text
+      // (EspoCRM fwec13's "12,500" for the 12500 typed) — then the text rule.
+      const echo = await judgeEcho(page, interacted, key, value, (resolved.target as Locator | undefined) ?? null, `step ${tag}`);
+      if (echo) {
         res.echoedValues.push(key);
         res.warnings.push(echo);
       }

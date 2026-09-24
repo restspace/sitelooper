@@ -132,7 +132,7 @@ describe('standalone execution source', () => {
     expect(source).toMatch(/const hit\d+ = await pick\(page, \[/);
     // ...a text wait's held-elsewhere fallback over its hoisted observations, and the echo ledger.
     expect(source).toMatch(/await textHeldOrThrow\(err, observations\d+, 'text_contains', 'Saved', '01-actions s_runtime\/\d+', run\.drift\);/);
-    expect(source).toContain('const typed1 = new Set<string>();');
+    expect(source).toContain('const echoLedger = new Set<string>();');
     expect(source).toContain('if (!run.created.includes(minted2)) run.created.push(minted2);');
     expect(source).toContain('const hit = await resolveCandidates(page, candidates, policy);');
     expect(source).toContain('let absentDialog: { name: string; lines: string[] } | null = null;');

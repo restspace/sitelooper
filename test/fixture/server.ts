@@ -212,6 +212,36 @@ document.getElementById('go').addEventListener('click', () => {
  * option chosen from its listbox; a live preview mirroring a textarea with no
  * save; and a part name that a Save commits into a table row.
  */
+/**
+ * EspoCRM fwec13 03-create, in miniature (round 61): an Amount input that
+ * formats what it is given when it loses focus ("12500" → "12,500"), a Close
+ * Date input whose picker button puts its own default in ("2018-01-16"), and a
+ * Save that stores the amount (localStorage, so a reopen shows it) and adds a
+ * row showing it.
+ */
+const ESPO_FORM = `<!doctype html><html><head><meta charset="utf-8"><title>Opportunity</title></head><body>
+<div class="field" data-name="amount"><label>Amount <input data-name="amount"></label></div>
+<div class="field" data-name="closeDate"><label>Close Date <input data-name="closeDate"></label> <button type="button" id="pick">Pick a date</button></div>
+<button type="button" id="save">Save</button>
+<table><tbody id="saved"></tbody></table>
+<script>
+const amount = document.querySelector('input[data-name="amount"]');
+const fmt = (v) => { const n = Number(String(v).replace(/,/g, '')); return String(v).trim() !== '' && Number.isFinite(n) ? n.toLocaleString('en-US') : v; };
+amount.addEventListener('blur', () => { amount.value = fmt(amount.value); });
+const stored = localStorage.getItem('espo-amount');
+if (stored) amount.value = fmt(stored);
+document.getElementById('pick').addEventListener('click', () => { document.querySelector('input[data-name="closeDate"]').value = '2018-01-16'; });
+document.getElementById('save').addEventListener('click', () => {
+  localStorage.setItem('espo-amount', amount.value.replace(/,/g, ''));
+  const row = document.createElement('tr');
+  const cell = document.createElement('td');
+  cell.textContent = fmt(amount.value);
+  row.appendChild(cell);
+  document.getElementById('saved').appendChild(row);
+});
+</script>
+</body></html>`;
+
 const ECHO_LAB = `<!doctype html><html><head><meta charset="utf-8"><title>Echo lab</title></head><body>
 <div id="a"><label>Title <input id="title"></label> <button id="rerender" type="button">Re-render</button></div>
 <div class="field"><input id="fruit2" role="combobox" aria-label="Fruit" aria-controls="fruit-list" autocomplete="off"><span id="chosen"></span></div>
@@ -1681,6 +1711,11 @@ export async function createFixtureServer(initialCount = 10): Promise<FixtureSer
     if (url === '/echo-lab' || url.startsWith('/echo-lab?')) {
       res.writeHead(200, { 'content-type': 'text/html' });
       res.end(ECHO_LAB);
+      return;
+    }
+    if (url === '/espo-form') {
+      res.writeHead(200, { 'content-type': 'text/html' });
+      res.end(ESPO_FORM);
       return;
     }
     if (url === '/signin') {
