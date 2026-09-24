@@ -876,7 +876,7 @@ describe('expectations', () => {
     // tag for the reason text, and the pre-action capture as the diff leg.
     expect(out).toContain(
       "await expectChanges(page, ['- heading \"{{v1}} Widget\"', '- generic \"sidebar\"', '- tab \"New Project\"'], p, " +
-        "{ tag: '01-do s_test1/1', tool: 'click', positionalResolution: positional1 }, linesBefore1);",
+        "{ tag: '01-do s_test1/1', tool: 'click', positionalResolution: positional1 }, linesBefore1, 1, linesAfter1);",
     );
     // a transient line never reaches the gate (the FLOW constant still records it)
     expect(out).not.toContain("'- status \"Loading…\"'");
@@ -890,7 +890,7 @@ describe('expectations', () => {
     expect(captured).toBeLessThan(lines.indexOf('act: async () => {', prepare));
     expect(out).toContain('let linesBefore1: string[] | null = null;');
     // the gate runs in verify, and it is the daemon's own — embedded, not restated
-    expect(lines.indexOf("const changes1 = await expectChanges(page, ['- heading \"{{v1}} Widget\"', '- generic \"sidebar\"', '- tab \"New Project\"'], p, { tag: '01-do s_test1/1', tool: 'click', positionalResolution: positional1 }, linesBefore1);")).toBeGreaterThan(lines.indexOf('verify: async () => {'));
+    expect(lines.indexOf("const changes1 = await expectChanges(page, ['- heading \"{{v1}} Widget\"', '- generic \"sidebar\"', '- tab \"New Project\"'], p, { tag: '01-do s_test1/1', tool: 'click', positionalResolution: positional1 }, linesBefore1, 1, linesAfter1);")).toBeGreaterThan(lines.indexOf('verify: async () => {'));
     expect(out).toContain('// Shared execution source: expect.ts. Regenerate to update.');
     expect(out).toContain('// Shared execution source: snapshot.ts. Regenerate to update.');
     expect(out).toContain('async function expectedChangesVerdict(');
@@ -918,7 +918,7 @@ describe('expectations', () => {
   it('checks the value after the colon, not only the control\'s name (the false-success shape)', async () => {
     const out = withExpect({ addedContains: ['- combobox "Project": {{v1}}'] }, 'select', { target: '@e1', option: '{{v1}}' });
     expect(out).toContain(
-      "await expectChanges(page, ['- combobox \"Project\": {{v1}}'], p, { tag: '01-do s_test1/1', tool: 'select', positionalResolution: positional1 }, linesBefore1);",
+      "await expectChanges(page, ['- combobox \"Project\": {{v1}}'], p, { tag: '01-do s_test1/1', tool: 'select', positionalResolution: positional1 }, linesBefore1, 1, linesAfter1);",
     );
     const { expectedChangesVerdict } = runnableHelpers(out);
     const ctx = { tag: '01-do s_test1/1', tool: 'select', positionalResolution: false };
@@ -959,7 +959,7 @@ describe('expectations', () => {
   it("passes a fill's value to the verdict, and says whether the target may be positional", () => {
     const named = withExpect({ addedContains: ['- textbox "": {{v1}}', '- heading "{{v1}}"'] }, 'fill', { target: '@e1', value: '{{v1}}' });
     expect(named).toContain(
-      "await expectChanges(page, ['- textbox \"\": {{v1}}', '- heading \"{{v1}}\"'], p, { tag: '01-do s_test1/1', tool: 'fill', value: `${p.v1}`, positionalResolution: positional1 }, linesBefore1);",
+      "await expectChanges(page, ['- textbox \"\": {{v1}}', '- heading \"{{v1}}\"'], p, { tag: '01-do s_test1/1', tool: 'fill', value: `${p.v1}`, positionalResolution: positional1 }, linesBefore1, 1, linesAfter1);",
     );
     // the echo rule is the verdict's own, applied at run time and only to a
     // positional resolution — exactly as replay applies it; the compiler no
@@ -971,6 +971,7 @@ describe('expectations', () => {
     expect(
       sequenceAt(named, [
         'let linesBefore1: string[] | null = null;',
+        'let linesAfter1: string[] | null = null;',
         'let positional1 = false;',
       ]),
     ).toBeGreaterThan(-1);
@@ -1039,7 +1040,7 @@ describe('expectations', () => {
     expect(lines.indexOf('let absentDialog: { name: string; lines: string[] } | null = null;')).toBeLessThan(lines.indexOf('// @step 01-do s_test1/1'));
     // set by the verdict of the step that recorded the dialog
     expect(source).toContain(
-      "const changes1 = await expectChanges(page, ['- dialog \"Discard changes?\"', '- button \"Discard\"'], p, { tag: '01-do s_test1/1', tool: 'click', positionalResolution: positional1 }, linesBefore1);",
+      "const changes1 = await expectChanges(page, ['- dialog \"Discard changes?\"', '- button \"Discard\"'], p, { tag: '01-do s_test1/1', tool: 'click', positionalResolution: positional1 }, linesBefore1, 1, linesAfter1);",
     );
     expect(source).toContain('absentDialog = changes1.absentDialog ?? null;');
     // the step before it consults nothing (there is no dialog to be absent yet)

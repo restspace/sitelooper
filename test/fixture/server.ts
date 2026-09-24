@@ -994,6 +994,44 @@ document.getElementById('save').addEventListener('click', () => {
 </body></html>`;
 
 /**
+ * A Save that adds the new record's row, whose accessible name then changes
+ * (round 60, openproject fwop14 02-create s_459e98/3): OpenProject's list
+ * showed `- row "<id> … TASK New - Normal"` as the save settled, and a moment
+ * later the app routed to the record and re-rendered it. `/row-save/<ms>`: the
+ * row reads "47 <subject> New", and <ms> later its last cell becomes "Open".
+ * `/row-save/url-<ms>`: the same, and the app routes to `…/details/47` as it
+ * renames the row. `/row-save/never`: Save posts but adds no row. Save posts
+ * `commit:row:<subject>`.
+ */
+const ROW_SAVE = (mode: string) => `<!doctype html><html><head><meta charset="utf-8"><title>Records</title></head><body>
+<h1>Records</h1>
+<label for="subject">Subject</label><input id="subject">
+<button id="save" type="button">Save</button>
+<table><tbody id="rows"></tbody></table>
+<script>
+const MODE = ${JSON.stringify(mode)};
+document.getElementById('save').addEventListener('click', () => {
+  const subject = document.getElementById('subject').value;
+  fetch('/commit/row/' + encodeURIComponent(subject), { method: 'POST' });
+  if (MODE === 'never') return;
+  const tr = document.createElement('tr');
+  tr.innerHTML = '<td>47</td><td></td><td>New</td>';
+  tr.children[1].textContent = subject;
+  document.getElementById('rows').appendChild(tr);
+  // 'url-<ms>': <ms> later the app routes to the record's own view
+  // (history.pushState to <this url>/details/47) and re-renders the row as it
+  // does — the save's url is where the recording expected it to end.
+  const routed = /^url-([0-9]+)$/.exec(MODE);
+  const after = routed ? Number(routed[1]) : Number(MODE);
+  setTimeout(() => {
+    if (routed) history.pushState({}, '', location.pathname + '/details/47');
+    tr.children[2].textContent = 'Open';
+  }, after);
+});
+</script>
+</body></html>`;
+
+/**
  * A part row and its cost field (round 51, repairdesk fwrd84 05-edit): Save
  * posts `/commit/cost/<value>` and redraws the row with the saved cost and
  * its price (cost × 1.25). `/price?stuck=1` is the same form whose Save
@@ -1753,6 +1791,7 @@ export async function createFixtureServer(initialCount = 10): Promise<FixtureSer
       if (url === '/picker' || url.startsWith('/picker?')) return html(PICKER(url.includes('open=1')));
       if (url === '/price' || url === '/price?stuck=1') return html(PRICE(url.endsWith('stuck=1')));
       if (url === '/imagelink') return html(IMAGE_LINK);
+      if (url.startsWith('/row-save/')) return html(ROW_SAVE(tail('/row-save/')));
       if (url === '/typed-amount' || url === '/typed-amount?sticky=1') return html(TYPED_AMOUNT(url.endsWith('sticky=1')));
       if (url === '/hover-menu') return html(HOVER_MENU);
       if (url === '/counts' || url === '/counts?nolist=1') return html(COUNTS(!url.endsWith('nolist=1')));

@@ -5818,4 +5818,55 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
       expect(emittedLog).toEqual([]);
     }, 120_000);
   });
+
+  /**
+   * Round 60, openproject fwop14 02-create s_459e98/3: the Save's recorded
+   * effect is the new record's row, `- row "{{d1}} … {{v3}} TASK New - Normal"`
+   * (hard). The daemon judges the diff between its action's before capture and
+   * the capture it takes the moment the action settles (tools.ts runStep); the
+   * artifact re-captured the page in verify, after its alert settle, and the
+   * row had by then been re-rendered under another name. The daemon passed n2
+   * and n3; the compiled run stopped on both attempts. Both runners now judge
+   * the capture taken as the action settled, with the live page as fallback.
+   */
+  describe('a recorded change the action showed as it settled (round 60, fwop14)', () => {
+    const run = (mode: string) => {
+      const steps: SkillStep[] = [
+        { tool: 'goto', args: { url: `${origin}/row-save/${mode}` }, locators: {} },
+        { tool: 'fill', args: { target: '@e1', value: '{{v1}}' }, locators: { target: [{ kind: 'label', label: 'Subject' }] } },
+        {
+          tool: 'click',
+          args: { target: '@e2' },
+          locators: { target: [{ kind: 'role', role: 'button', name: 'Save' }] },
+          expect: {
+            addedContains: ['- row "47 {{v1}} New"'],
+            lineDialect: 2,
+            ...(mode.startsWith('url-') ? { urlPattern: `${origin}/row-save/${mode}/details/47` } : {}),
+          },
+        },
+      ];
+      const params: Record<string, SkillParam> = { v1: { example: 'rec-1 Bench Record', usedIn: [2] } };
+      const skill: Skill = { ...skillOf(steps), params };
+      const base = specOf(steps);
+      const spec: SpecFlow = { ...base, steps: [{ ...base.steps[0], params: { v1: 'rec-2 Bench Record' }, segments: [{ ...base.steps[0].segments[0], params }] }] };
+      return bothOf(skill, spec, { v1: 'rec-2 Bench Record' });
+    };
+
+    it('both runners accept the row the Save showed as it settled, although it was renamed a moment later', async () => {
+      const { replay, emitted, replayLog, emittedLog } = await run('url-1500');
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      expect(replayLog).toEqual(['commit:row:rec-2 Bench Record']);
+      expect(emittedLog).toEqual(['commit:row:rec-2 Bench Record']);
+    }, 120_000);
+
+    it('both runners still stop when the row never appears', async () => {
+      const { replay, emitted } = await run('never');
+      expect(replay.ok).toBe(false);
+      expect(emitted.ok).toBe(false);
+      const said = /did not show "- row \\"47 rec-2 Bench Record New\\"" as it did when recorded/;
+      expect(replay.reason).toMatch(said);
+      expect(emitted.reason ?? '').toMatch(/the recorded page change did not appear|did not show "- row/);
+    }, 120_000);
+  });
 });
