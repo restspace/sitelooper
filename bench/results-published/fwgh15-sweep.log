@@ -1,0 +1,117 @@
+
+[sweep] run 1/3: fwgh15-n1 (store: /home/user/sitelooper/bench/results/fwgh15-skills)
+[harness] ghost: defaulting APP_URL
+[harness] ghost: defaulting APP_EMAIL
+[harness] ghost: defaulting APP_PASSWORD
+[reset] ghost: no posts to delete
+[harness] ghost responded 200 at http://127.0.0.1:8099/
+stopped: fwgh15-n1
+  flow "fwgh15" saved: 5 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwgh15.json
+  warning: note: 01-open no longer publishes scheduled_posts_count — no replay reads it from the page and the recording showed no line to read
+  warning: note: 02-create no longer publishes editor_status_indicator — no replay reads it from the page and the recording showed no line to read
+  warning: note: 03-open no longer publishes publish_time — no replay reads it from the page and the recording showed no line to read
+  warning: warning: 05-open's instruction asks to report publish_date_in_settings, and no replay can publish it: nothing in its procedure reads it from the page, so export dropped it — re-record the step so the value is read, not only reported
+  warning: note: 05-open no longer publishes site_host — no replay reads it from the page and the recording showed no line to read
+  warning: note: 01-open: added a read for seed_post_1_status to s_025e48 (page.getByRole('link', { name: 'Published', exact: true }); seen on the next instruction's start page)
+  warning: note: 01-open: added a read for seed_post_2_status to s_025e48 (page.getByRole('link', { name: 'Published', exact: true }); seen on the next instruction's start page)
+  warning: note: 01-open: added a read for seed_post_3_status to s_025e48 (page.getByRole('link', { name: 'Published', exact: true }); seen on the next instruction's start page)
+  warning: warning: 196 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.origin: "127.0.0.1" (output) in "http://127.0.0.1:8099"
+  flow.startUrl: "127.0.0.1" (output) in "http://127.0.0.1:8099/ghost/"
+  flow.steps[0].instruction: "127.0.0.1" (output) in "Open http://127.0.0.1:8099/ghost/ and sign in with email admin@bench.local and password {{env:APP_PASSWORD}} — type the password into the password field exactly"
+  flow.steps[0].params.v1: "127.0.0.1" (output) in "http://127.0.0.1:8099/ghost/"
+  flow.steps[0].route: "127.0.0.1" (output) in "http://127.0.0.1:8099/ghost/#/posts/"
+arm=sitelooper model=z-ai/glm-5.3 runid=fwgh15-n1 stop=completed
+turns=6 wall=250.8s
+commands=5 cmdTime=226.3s cmdBytes=10252 timeouts=0
+orchestrator in=6130 cw=0 cr=20032 out=3840
+inner prompt=1299729 cached=1224192 completion=18464
+spend=$0.0569 maxUsd=3
+learn: A_n=0 replayed=0/5 full=0 repaired=0 compiled=5 variants=0
+-> /home/user/sitelooper/bench/results/fwgh15-n1-sitelooper-result.json
+
+fwgh15-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — fwgh15-n1-bench-post, body includes runid=true
+  obj 3: PASS — tags=Bench News (bench-news), want only the seeded Bench News (bench-news)
+  obj 4: PASS — custom excerpt="Bench post for run fwgh15-n1"
+  obj 5: PASS — status=published, visibility=public
+  obj 6: PASS — published_at=2026-09-01T00:00:00.000Z, want 2026-09-01
+  obj 7: PASS — slug fwgh15-n1-bench-post reported
+
+[sweep] run 2/3: fwgh15-n2 (replay flow fwgh15, no orchestrator)
+[reset] ghost: deleted 1 post(s) (earlier runs' and non-seed)
+[sweep] fwgh15-n2: 3 drift ticket(s) → fwgh15-n2-drift.json
+
+fwgh15-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — fwgh15-n2-bench-post, body includes runid=true
+  obj 3: PASS — tags=Bench News (bench-news), want only the seeded Bench News (bench-news)
+  obj 4: PASS — custom excerpt="Bench post for run fwgh15-n2"
+  obj 5: PASS — status=published, visibility=public
+  obj 6: PASS — published_at=2026-09-01T00:00:00.000Z, want 2026-09-01
+  obj 7: PASS — slug fwgh15-n2-bench-post reported
+
+[sweep] run 3/3: fwgh15-n3 (replay flow fwgh15, no orchestrator)
+[reset] ghost: deleted 1 post(s) (earlier runs' and non-seed)
+[sweep] fwgh15-n3: 3 drift ticket(s) → fwgh15-n3-drift.json
+
+fwgh15-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — fwgh15-n3-bench-post, body includes runid=true
+  obj 3: PASS — tags=Bench News (bench-news), want only the seeded Bench News (bench-news)
+  obj 4: PASS — custom excerpt="Bench post for run fwgh15-n3"
+  obj 5: PASS — status=published, visibility=public
+  obj 6: PASS — published_at=2026-09-01T00:00:00.000Z, want 2026-09-01
+  obj 7: PASS — slug fwgh15-n3-bench-post reported
+
+Learning sweep fwgh15 (K=3)
+┌─────────┬───┬─────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid       │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼─────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwgh15-n1' │ '7/7'    │ 'completed' │ 6     │ 5    │ 0.0569    │ 0   │ '0/5'        │ 251    │
+│ 1       │ 2 │ 'fwgh15-n2' │ '7/7'    │ 'success'   │ 0     │ 5    │ 0         │ 1   │ '5/5 (flow)' │ 75     │
+│ 2       │ 3 │ 'fwgh15-n3' │ '7/7'    │ 'success'   │ 0     │ 5    │ 0         │ 1   │ '5/5 (flow)' │ 67     │
+└─────────┴───┴─────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:8099
+  s_025e48  validated    6 steps  3/3 (100%)
+           Open {{v1}} and sign in with email {{v2}} and password {{env:APP_PASSWORD}} — type the password into the passw…
+  s_3d1429  validated    2 steps  3/3 (100%)
+           Open {{v1}} and sign in with email {{v2}} and password {{env:APP_PASSWORD}} — type the password into the passw…
+  s_3dae6d  validated    1 steps  3/3 (100%)
+           In the Ghost admin, open the draft post titled '{{v1}}' and publish it using the app's publish confirmation fl…
+  s_4977eb  validated    4 steps  3/3 (100%)
+           In the Ghost admin, open the draft post titled '{{v1}}' and publish it using the app's publish confirmation fl…
+  s_4d82f5  validated   17 steps  3/3 (100%)
+           In the Ghost admin, open the existing draft post titled '{{v1}}' (NOT any 'Seed:' post) and open its post sett…
+  s_52f1ec  validated    1 steps  3/3 (100%)
+           In the Ghost admin, open the draft post titled '{{v1}}' and publish it using the app's publish confirmation fl…
+  s_538d7f  validated    6 steps  3/3 (100%)
+           In the Ghost admin at http://127.0.0.1:8099/ghost/, create a NEW post (do not touch any post whose title start…
+  s_5c6f81  validated    2 steps  3/3 (100%)
+           In the Ghost admin at http://127.0.0.1:8099/ghost/, create a NEW post (do not touch any post whose title start…
+  s_6d7aca  validated    1 steps  3/3 (100%)
+           Open {{v1}} and sign in with email {{v2}} and password {{env:APP_PASSWORD}} — type the password into the passw…
+  s_74f0ce  validated    2 steps  3/3 (100%)
+           In the Ghost admin at http://127.0.0.1:8099/ghost/, create a NEW post (do not touch any post whose title start…
+  s_768b5d  validated    3 steps  3/3 (100%)
+           In the Ghost admin, open the draft post titled '{{v1}}' and publish it using the app's publish confirmation fl…
+  s_856c99  validated    3 steps  3/3 (100%)
+           In the Ghost admin, open the draft post titled '{{v1}}' and publish it using the app's publish confirmation fl…
+  s_87d04b  validated    1 steps  3/3 (100%)
+           In the Ghost admin, open the existing draft post titled '{{v1}}' (NOT any 'Seed:' post) and open its post sett…
+  s_938069  validated    1 steps  3/3 (100%)
+           In the Ghost admin at http://127.0.0.1:8099/ghost/, create a NEW post (do not touch any post whose title start…
+  s_a7717c  validated    6 steps  3/3 (100%)
+           Final verification of the published post '{{v1}}' in the Ghost admin at http://127.0.0.1:8099/ghost/. Open the…
+  s_d1f20e  validated    9 steps  3/3 (100%)
+           Final verification of the published post '{{v1}}' in the Ghost admin at http://127.0.0.1:8099/ghost/. Open the…
+  s_d7a586  validated    1 steps  3/3 (100%)
+           Open {{v1}} and sign in with email {{v2}} and password {{env:APP_PASSWORD}} — type the password into the passw…
+  s_def56e  validated    9 steps  3/3 (100%)
+           Open {{v1}} and sign in with email {{v2}} and password {{env:APP_PASSWORD}} — type the password into the passw…
+  s_f21fb4  validated    3 steps  3/3 (100%)
+           Open {{v1}} and sign in with email {{v2}} and password {{env:APP_PASSWORD}} — type the password into the passw…
+store: /home/user/sitelooper/bench/results/fwgh15-skills
+
+summary: /home/user/sitelooper/bench/results/fwgh15-sweep.json
