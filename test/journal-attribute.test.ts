@@ -66,13 +66,14 @@ describe('journal attribution', () => {
     const windows = [win(13, 'gesture', 1_000, 1_100, true), win(14, 'observe', 1_200, 1_300)];
     const out = attribute([req(1_600, 1_700, { m: 'GET', e: 'http://app/hardware' }), ev(1_650, 'nav', { url: 'http://app/hardware?search=Seed' })], windows);
     expect(out[0].c).toEqual(['late', 13, 'debounce']);
-    expect(out[1].c).toEqual(['late', 13, 'debounce']);
+    // The url push lands with the search's answer: the same input's, by lineage.
+    expect([out[1].c?.[0], out[1].c?.[1]]).toEqual(['late', 13]);
     // Another gesture in between breaks the debounce.
     const broken = attribute([req(1_600, 1_700)], [...windows, win(15, 'gesture', 1_400, 1_450)]);
     expect(broken[0].c).not.toEqual(['late', 13, 'debounce']);
     // Too late to be the input's.
     const late = attribute([req(1_100 + DEBOUNCE_MS + 1, 1_100 + DEBOUNCE_MS + 50)], [win(13, 'gesture', 1_000, 1_100, true)]);
-    expect(late[0].c?.[0]).not.toBe('late');
+    expect(late[0].c).toEqual(['app', 'timer']);
   });
 
   it('rule 5: a page that appears after the last gesture is that gesture\'s popup (ghost fwgh6: the late tab)', () => {
@@ -95,6 +96,12 @@ describe('journal attribution', () => {
     const out = attribute([ev(1_050, 'foc', { dir: 'in' }), ev(2_050, 'state', { d: 'x' })], [win(9, 'daemon', 1_000, 1_100), win(10, 'observe', 2_000, 2_100)]);
     expect(out[0].c).toEqual(['daemon', 9]);
     expect(out[1].c).toEqual(['in', 10, 'observe']);
+  });
+
+  it("a request outside every window, chained on nothing, is the app's own; what its answer changes is too (vikunja fwvk12: the autosave flash)", () => {
+    const out = attribute([req(5_000, 5_050, { e: 'http://app/api/autosave' }), ev(5_040, 'txt', { d: 'heading', x: 'Description Saved!' })], [win(1, 'gesture', 1_000, 1_200)]);
+    expect(out[0].c).toEqual(['app', 'timer']);
+    expect(out[1].c).toEqual(['app', 'req']);
   });
 
   it('rule 8: otherwise unknown', () => {

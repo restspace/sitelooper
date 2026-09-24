@@ -72,7 +72,7 @@ menu.addEventListener('focusout', () => setTimeout(async () => {
 const FLASH = `<!doctype html><html><head><title>Flash</title></head><body>
 <h2 id="h">Description</h2><button id="save" type="button">Save</button><p id="desc" contenteditable="true">Enter a description</p>
 <script>
-const flash = () => { document.getElementById('h').textContent = 'Description Saved!'; setTimeout(() => { document.getElementById('h').textContent = 'Description'; }, 900); };
+const flash = () => { document.getElementById('h').textContent = 'Description Saved!'; setTimeout(() => { document.getElementById('h').textContent = 'Description'; }, 300); };
 setTimeout(async () => { await fetch('/api/autosave', { method: 'POST', body: 'x' }); flash(); }, 600);
 document.getElementById('save').onclick = async () => { await fetch('/api/describe', { method: 'POST', body: document.getElementById('desc').textContent }); flash(); };
 </script></body></html>`;

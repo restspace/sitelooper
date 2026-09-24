@@ -16,7 +16,8 @@
  * the id-shaped fields a create/update answered with (`mint`), scrubbed.
  */
 import type { BrowserContext, Frame, Page, Request } from 'playwright-core';
-import { hasSecretMarker, scrubSecrets, scrubSecretsDeep } from '../shared/secrets.js';
+import { credentialVars, hasSecretMarker, scrubSecrets, scrubSecretsDeep } from '../shared/secrets.js';
+import { JOURNAL_PAGE_SCRIPT } from './journal-page.js';
 import {
   attribute,
   capEvents,
@@ -142,8 +143,68 @@ export class Journal {
     this.pages = list;
   }
 
-  async attachContext(_context: BrowserContext): Promise<void> {
-    // Stage 2 installs the in-page journal here.
+  /** Install the in-page journal (journal-page.ts) in every document the context loads from now on. */
+  async attachContext(context: BrowserContext): Promise<void> {
+    if (process.env.SITELOOPER_JOURNAL_PAGE === '0') return;
+    await context.addInitScript({ content: JOURNAL_PAGE_SCRIPT });
+    this.pageDrain = (page) => this.drainPages(page);
+  }
+
+  /** Hashes of the credential variables' values (credentialVars), computed once. */
+  private secretHashes?: Set<string>;
+
+  /** Events the in-page journals dropped (their buffers overflowed) since the session began. */
+  inPageDropped = 0;
+
+  /** Drain every open page's in-page journal (its own frames and a few children): one evaluate per frame. */
+  private async drainPages(current: Page): Promise<JournalEvent[]> {
+    const pages = this.pages();
+    const list = (pages.includes(current) ? pages : [current, ...pages]).slice(0, 4);
+    const out: JournalEvent[] = [];
+    for (const page of list) {
+      const pg = this.pageIndex(page);
+      const frames = drainFrames(page);
+      const results = await Promise.all(
+        frames.map((f) =>
+          f
+            .evaluate(() => {
+              const j = (window as unknown as { __slj?: { drain(): { ev: JournalEvent[]; dropped: number } } }).__slj;
+              return j ? j.drain() : null;
+            })
+            .catch(() => null),
+        ),
+      );
+      results.forEach((r, i) => {
+        if (!r) return;
+        this.inPageDropped += r.dropped;
+        for (const e of r.ev) {
+          if (i > 0) e.fr = 1;
+          if (pg) e.pg = pg;
+          out.push(e);
+        }
+      });
+    }
+    return out;
+  }
+
+  /**
+   * Tell the in-page journal which element a click is aimed at, so its hit
+   * record can say whether the click landed there or on something covering
+   * it. Bounded to 100 ms; a target not yet there is simply not marked.
+   */
+  async intend(target: { first(): { evaluate(fn: (el: Element) => void, arg?: undefined, opts?: { timeout: number }): Promise<void> } } | null): Promise<void> {
+    if (!target || !this.pageDrain) return;
+    await target
+      .first()
+      .evaluate(
+        (el) => {
+          const j = (window as unknown as { __slj?: { intend(e: Element): void } }).__slj;
+          if (j) j.intend(el);
+        },
+        undefined,
+        { timeout: 100 },
+      )
+      .catch(() => {});
   }
 
   attachPage(page: Page): void {
@@ -264,7 +325,14 @@ export class Journal {
    */
   async collect(page: Page | null): Promise<JournalEvent[]> {
     const fromPage = page && this.pageDrain ? await this.pageDrain(page).catch(() => [] as JournalEvent[]) : [];
+    // A field holding a credential keeps no hash: a short secret's hash is as good as the secret.
+    this.secretHashes ??= new Set(credentialVars().map((c) => valueHash(c.value)));
+    const secret = this.secretHashes;
     for (const e of fromPage) {
+      if (e.k === 'val' && typeof e.h === 'string' && secret.has(e.h)) {
+        delete e.h;
+        e.pw = 1;
+      }
       if (e.k === 'val' && typeof e.h === 'string') {
         const eq = this.typedWindow(e.h);
         if (eq !== undefined) e.eq = eq;

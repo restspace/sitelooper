@@ -182,7 +182,7 @@ export function learnFromInstruction(
   const skills = compile(variantOf);
   // SHADOW (skills/shadow.ts): what the journal's facts say beside what the
   // heuristics decided, to a report next to the store. Changes nothing learned.
-  if (skills.length) writeShadow(store.dir, { session: input.session, instruction: input.instruction }, shadowVerdicts(input.entries, skills));
+  if (skills.length) writeShadow(store.dir, { session: input.session, instruction: input.instruction }, shadowVerdicts(input.entries, skills, input.before ?? []));
   // A variant that starts AFTER steps this recording replayed through other
   // skills (an earlier segment of the chain it repaired) covers the tail of
   // the instruction, not the instruction: replay composes a chain by its own

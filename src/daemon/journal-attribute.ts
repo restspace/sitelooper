@@ -23,7 +23,7 @@ export type Cause =
   | ['in', number, WindowKind]
   | ['late', number, 'req' | 'debounce' | 'page']
   | ['undo', number, 'blur' | 'req' | 'timer']
-  | ['app', 'poll']
+  | ['app', 'poll' | 'timer' | 'req']
   | ['daemon', number]
   | ['unknown'];
 
@@ -41,7 +41,7 @@ export interface JournalWindow {
 /** One journal event. `t` is epoch ms; the other fields depend on `k`. */
 export interface JournalEvent {
   t: number;
-  k: 'req' | 'nav' | 'page+' | 'page-' | 'dlg' | 'show' | 'hide' | 'state' | 'val' | 'foc' | 'hit';
+  k: 'req' | 'nav' | 'page+' | 'page-' | 'dlg' | 'show' | 'hide' | 'txt' | 'state' | 'val' | 'foc' | 'hit';
   c?: Cause;
   /** Another window that could equally have caused it. */
   also?: number;
@@ -52,6 +52,12 @@ export interface JournalEvent {
 export const WINDOW_SLACK_MS = 20;
 /** A change within this long after a request's answer is that request's consequence. */
 export const LINEAGE_MS = 300;
+/**
+ * How much earlier than the daemon hears of it a page may already act on an
+ * answer: Playwright's requestfinished reaches node tens of ms after the page
+ * ran the response handler (the page's clock and ours are the same clock).
+ */
+export const ANSWER_SLOP_MS = 150;
 /** A request or url change within this long after an input window may be its debounced save. */
 export const DEBOUNCE_MS = 1_500;
 /** An endpoint asked this many times outside any gesture, within POLL_SPAN_MS, is the app polling. */
@@ -148,15 +154,17 @@ function requestCause(r: JournalEvent, windows: readonly JournalWindow[], state:
   // in between. Only one link deep: a chain of chains is how a poll loop looks.
   const parent = [...state.requests]
     .reverse()
-    .find((p) => typeof p.t1 === 'number' && (p.t1 as number) <= r.t && r.t - (p.t1 as number) <= LINEAGE_MS && directOwner(p) !== undefined && endpointKey(p) !== key);
+    .find((p) => typeof p.t1 === 'number' && (p.t1 as number) - ANSWER_SLOP_MS <= r.t && r.t - (p.t1 as number) <= LINEAGE_MS && directOwner(p) !== undefined && endpointKey(p) !== key);
   if (parent && !activeStartedBetween(windows, parent.t, r.t)) return ['late', directOwner(parent)!, 'req'];
   const debounced = debounceWindow(windows, r.t);
   if (debounced) return ['late', debounced.w, 'debounce'];
   const quiet = windowAt(windows, r.t, new Set<WindowKind>(['observe']));
   if (quiet) return ['in', quiet.w, 'observe'];
-  const daemon = windowAt(windows, r.t, new Set<WindowKind>(['daemon']));
-  if (daemon) return ['daemon', daemon.w];
-  return ['unknown'];
+  // The daemon's own looks (captures, snapshots) ask the server nothing: a
+  // request during one is the app's, like any other outside a gesture.
+  // Outside every window, chained on nothing, debounced from nothing: the
+  // app asked on its own (a timer, an autosave, a push).
+  return ['app', 'timer'];
 }
 
 /** Whether an endpoint has been asked POLL_COUNT times outside any gesture within POLL_SPAN_MS of t. */
@@ -185,18 +193,23 @@ function debounceWindow(windows: readonly JournalWindow[], t: number): JournalWi
 }
 
 function eventCause(e: JournalEvent, windows: readonly JournalWindow[], state: AttributionState, focus: readonly JournalEvent[]): { c: Cause; also?: number } {
-  // A late answer to an earlier window's request, landing inside this one: the overlap.
-  const answered = [...state.requests].reverse().find((r) => typeof r.t1 === 'number' && (r.t1 as number) <= e.t && e.t - (r.t1 as number) <= LINEAGE_MS && reqOwner(r) !== undefined);
+  // A late answer to an earlier window's request: its consequence, when no window holds the change.
+  const answered = [...state.requests].reverse().find((r) => typeof r.t1 === 'number' && (r.t1 as number) - ANSWER_SLOP_MS <= e.t && e.t - (r.t1 as number) <= LINEAGE_MS && reqOwner(r) !== undefined);
   const active = windowAt(windows, e.t, ACTIVE);
   if (active) {
-    const other = answered ? reqOwner(answered) : undefined;
+    // Any answer this window did not ask for, landing with the change, makes it
+    // ambiguous: `also` names that request's window, or 0 when the app asked
+    // on its own (an autosave's answer inside a click: vikunja fwvk12 #23).
+    const landed = (r: JournalEvent) => typeof r.t1 === 'number' && (r.t1 as number) - ANSWER_SLOP_MS <= e.t && e.t - (r.t1 as number) <= LINEAGE_MS;
+    const foreign = [...state.requests].reverse().find((r) => landed(r) && !(r.c?.[0] === 'app' && r.c[1] === 'poll') && reqOwner(r) !== active.w);
+    const other = foreign ? (reqOwner(foreign) ?? 0) : undefined;
     return { c: ['in', active.w, active.kind], ...(other !== undefined && other !== active.w && e.k !== 'hit' && e.k !== 'foc' ? { also: other } : {}) };
   }
   if (e.k === 'hide' && typeof e.sa === 'number') {
     const shower = windowAt(windows, e.sa as number, ACTIVE) ?? windowAt(windows, e.sa as number, new Set<WindowKind>(['observe', 'daemon']));
     if (shower) {
       const blur = focus.some((f) => f.dir === 'out' && f.t <= e.t && e.t - f.t <= LINEAGE_MS);
-      const req = state.requests.some((r) => typeof r.t1 === 'number' && (r.t1 as number) <= e.t && e.t - (r.t1 as number) <= LINEAGE_MS);
+      const req = state.requests.some((r) => typeof r.t1 === 'number' && (r.t1 as number) - ANSWER_SLOP_MS <= e.t && e.t - (r.t1 as number) <= LINEAGE_MS);
       return { c: ['undo', shower.w, blur ? 'blur' : req ? 'req' : 'timer'] };
     }
   }
@@ -213,8 +226,9 @@ function eventCause(e: JournalEvent, windows: readonly JournalWindow[], state: A
     const last = [...windows].filter((w) => ACTIVE.has(w.kind) && w.end !== undefined && w.end <= e.t).sort((a, b) => b.end! - a.end!)[0];
     if (last && !activeStartedBetween(windows, last.end!, e.t)) return { c: ['late', last.w, 'page'] };
   }
-  const polled = [...state.requests].reverse().find((r) => r.c?.[0] === 'app' && typeof r.t1 === 'number' && (r.t1 as number) <= e.t && e.t - (r.t1 as number) <= LINEAGE_MS);
-  if (polled) return { c: ['app', 'poll'] };
+  // What follows an answer the app asked for itself (a poll, a timer's save) is the app's.
+  const appAnswer = [...state.requests].reverse().find((r) => r.c?.[0] === 'app' && typeof r.t1 === 'number' && (r.t1 as number) - ANSWER_SLOP_MS <= e.t && e.t - (r.t1 as number) <= LINEAGE_MS);
+  if (appAnswer) return { c: ['app', appAnswer.c![1] === 'poll' ? 'poll' : 'req'] };
   const quiet = windowAt(windows, e.t, new Set<WindowKind>(['observe']));
   if (quiet) return { c: ['in', quiet.w, 'observe'] };
   const daemon = windowAt(windows, e.t, new Set<WindowKind>(['daemon']));
@@ -223,7 +237,7 @@ function eventCause(e: JournalEvent, windows: readonly JournalWindow[], state: A
 }
 
 /** Relative importance when a step's events must be capped: facts first, focus and hit-tests last. */
-const PRIORITY: Record<string, number> = { req: 0, nav: 0, 'page+': 0, 'page-': 0, dlg: 0, show: 1, hide: 1, state: 1, val: 1, hit: 2, foc: 3 };
+const PRIORITY: Record<string, number> = { req: 0, nav: 0, 'page+': 0, 'page-': 0, dlg: 0, show: 1, hide: 1, txt: 1, state: 1, val: 1, hit: 2, foc: 3 };
 
 /** At most `max` events, the least important dropped first, time order kept. */
 export function capEvents(events: readonly JournalEvent[], max: number): { kept: JournalEvent[]; dropped: number } {

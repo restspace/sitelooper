@@ -787,6 +787,8 @@ async function runStep(
           expect: opts.expect,
         })
       : null;
+    // Where a click is aimed, for the in-page hit record (bounded, 100 ms).
+    if (journal && CLICK_TOOLS_AIMED.has(name) && page) await journal.intend(opts.resolved?.target ?? (typeof args.target === 'string' ? resolveTarget(page, args.target) : null));
     dispatchAt = Date.now();
     // The journal's window for this action (daemon/journal.ts, SHADOW MODE):
     // dispatch to settle. A value it types is noted, marker-bearing args only,
@@ -944,6 +946,9 @@ note: this link points to ${verdict.link.href}, and its navigation had not commi
     pageContext?.off('page', onPage);
   }
 }
+
+/** Clicks whose target the journal marks before dispatch (Journal.intend). */
+const CLICK_TOOLS_AIMED = new Set(['click', 'dblclick', 'modifier_click', 'right_click']);
 
 /** Tools whose action can open a popup. */
 const POPUP_TOOLS = new Set(['click', 'dblclick', 'modifier_click', 'press', 'select', 'check']);
