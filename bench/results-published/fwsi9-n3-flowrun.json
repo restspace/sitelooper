@@ -1,0 +1,244 @@
+{
+  "flow": "fwsi9",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Signed in to Bench Assets at http://127.0.0.1:8098/ as admin. After the login submit (already performed by the replayed segment), the browser landed on the Dashboard (page_title \"Dashboard :: Bench Assets\", page_heading \"Dashboard\") and the header account link reads \"Bench Admin\", confirming the admin session. No further state-changing action was needed; only read-backs and a screenshot were taken.",
+      "values": {
+        "landing_page_url": "http://127.0.0.1:8098/",
+        "logged_in_display_name": "Bench Admin",
+        "page_heading": "Dashboard",
+        "title": "Dashboard\n                :: Bench Assets",
+        "page_title_1": "Dashboard",
+        "page_title_2": "Bench Assets"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_24e7fd stopped at step 3 — step 3 was recorded opening a popup, and none opened within 5000ms",
+      "replayed": "2/3",
+      "repaired": false,
+      "turns": 3,
+      "unreported": [
+        "logged_in_username",
+        "email"
+      ]
+    },
+    {
+      "id": "02-find",
+      "status": "success",
+      "summary": "Replayed stored procedure s_2a89ec; observed matching_row_count=3, asset_1_1=SEED-0001, asset_1_2=Seed: Reception Laptop, asset_2_1=SEED-0002, asset_2_2=Seed: Training Laptop, asset_3_1=SEED-0003, asset_3_2=Seed: Spare Laptop.",
+      "values": {
+        "matching_row_count": "3",
+        "asset_1_1": "SEED-0001",
+        "asset_1_2": "Seed: Reception Laptop",
+        "asset_2_1": "SEED-0002",
+        "asset_2_2": "Seed: Training Laptop",
+        "asset_3_1": "SEED-0003",
+        "asset_3_2": "Seed: Spare Laptop"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "10/10",
+      "repaired": false,
+      "turns": 0,
+      "repinned": "s_8b2e1f",
+      "repinParams": {
+        "v1": "Seed:"
+      },
+      "unreported": [
+        "asset_list_url",
+        "seed_asset_count",
+        "seed_asset_tag_1",
+        "seed_asset_tag_2",
+        "seed_asset_tag_3",
+        "seed_asset_name_1",
+        "seed_asset_name_2",
+        "seed_asset_name_3"
+      ]
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "The asset was already created by the earlier attempt (no duplicate was made): the browser is on its view page at http://127.0.0.1:8098/hardware/6, titled \"View Asset BA-00006 :: Bench Assets\". Read back from the live page: asset tag BA-00006, name \"fwsi9-n3 Bench Asset\", model \"Bench Laptop Model\", status label \"Ready to Deploy\", default location \"Bench Office\", and purchase date displayed as \"Purchased 2026-03-15\". All requested values verified on the asset page; nothing was modified in this run.",
+      "values": {
+        "asset_name": "fwsi9-n3 Bench Asset",
+        "asset_tag": "BA-00006",
+        "default_location": "Bench Office",
+        "model_name": "Bench Laptop Model",
+        "purchase_date": "2026-03-15",
+        "status_label": "Ready to Deploy",
+        "asset_tag_2": "Copy to Clipboard\nBA-00006",
+        "asset_name_2": "Copy to Clipboard\nfwsi9-n3 Bench Asset",
+        "ref": "fwsi9-n3"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_5b5189 stopped at step 2 — after step 2 expected url http://127.0.0.1:8098/hardware?order=asc&page=:id&search=Seed:&size=:id&sort=created_at but browser is at http://127.0.0.1:8098/hardware?order=asc&page=1&search=fwsi9-n3&size=20&sort=created_at",
+      "replayed": "1/3",
+      "repaired": false,
+      "turns": 39,
+      "unreported": [
+        "model",
+        "model_category",
+        "model_manufacturer",
+        "status",
+        "created_at",
+        "asset_page_url",
+        "bench_run_ref",
+        "model_selected_option_text_1",
+        "model_selected_option_text_2"
+      ]
+    },
+    {
+      "id": "04-report",
+      "status": "success",
+      "summary": "Replayed stored procedure s_5b5878; observed asset_url=http://127.0.0.1:8098/hardware/6, assignee_displayed_on_asset_page=Bench Assignee, ref=fwsi9-n3, asset_tag=BA-00006, checkout_note_text=Checked out for bench run fwsi9-n3, history_tbody_tr_nth_chi=2026-09-24 07:29 AM, history_tbody_tr_nth_chi_2=checkout.",
+      "unanswered": [
+        "note_text_shown",
+        "status_label_displayed",
+        "confirmation_message"
+      ],
+      "values": {
+        "asset_url": "http://127.0.0.1:8098/hardware/6",
+        "assignee_displayed_on_asset_page": "Bench Assignee",
+        "ref": "fwsi9-n3",
+        "asset_tag": "BA-00006",
+        "checkout_note_text": "Checked out for bench run fwsi9-n3",
+        "history_tbody_tr_nth_chi": "2026-09-24 07:29 AM",
+        "history_tbody_tr_nth_chi_2": "checkout"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "14/14",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_5b5878: step 3: skipped read — no element matched any known locator for target (none recorded)"
+      ],
+      "unreported": [
+        "assignee_displayed",
+        "assigned_user_select_id",
+        "checkouts_count",
+        "last_checkout",
+        "asset_page_url",
+        "checkout_url",
+        "assigned_user_displayed",
+        "bench_run_ref"
+      ]
+    },
+    {
+      "id": "05-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_d005fc; observed ref=fwsi9-n3, asset_tag=BA-00006, asset_name=fwsi9-n3 Bench Asset, model=Bench Laptop Model, default_location=Bench Office, checkout_note_in_history=Checked out for bench run fwsi9-n3, page_heading=Assets  fwsi9-n3 Bench Asset #BA-00006 - Bench Laptop Model, last_checkout=2026-09-24 07:29 AM, checked_out_to_user=Bench Assignee.",
+      "unanswered": [
+        "status_label",
+        "purchase_date"
+      ],
+      "values": {
+        "ref": "fwsi9-n3",
+        "asset_tag": "BA-00006",
+        "asset_name": "fwsi9-n3 Bench Asset",
+        "model": "Bench Laptop Model",
+        "default_location": "Bench Office",
+        "checkout_note_in_history": "Checked out for bench run fwsi9-n3",
+        "page_heading": "Assets  fwsi9-n3 Bench Asset #BA-00006 - Bench Laptop Model",
+        "last_checkout": "2026-09-24 07:29 AM",
+        "checked_out_to_user": "Bench Assignee"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "9/9",
+      "repaired": false,
+      "turns": 0,
+      "repinned": "s_d005fc",
+      "repinParams": {
+        "v1": "{{03-create.url}}",
+        "v2": "checkout"
+      },
+      "unreported": [
+        "checkouts_count",
+        "verified_page_url"
+      ]
+    }
+  ],
+  "passed": 5,
+  "total": 5,
+  "repinned": 2,
+  "drift": 3,
+  "driftTickets": [
+    {
+      "flow": "fwsi9",
+      "step": "01-open",
+      "skill": "s_24e7fd",
+      "similarity": 0.978,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_24e7fd stopped at step 3 — step 3 was recorded opening a popup, and none opened within 5000ms",
+      "reason": "step 3 was recorded opening a popup, and none opened within 5000ms",
+      "pageUrlPattern": "http://127.0.0.1:8098/",
+      "pageUrl": "http://127.0.0.1:8098/"
+    },
+    {
+      "flow": "fwsi9",
+      "step": "03-create",
+      "skill": "s_5b5189",
+      "similarity": null,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_5b5189 stopped at step 2 — after step 2 expected url http://127.0.0.1:8098/hardware?order=asc&page=:id&search=Seed:&size=:id&sort=created_at but browser is at http://127.0.0.1:8098/hardware?order=asc&page=1&search=fwsi9-n3&size=20&sort=created_at",
+      "reason": "after step 2 expected url http://127.0.0.1:8098/hardware?order=asc&page=:id&search=Seed:&size=:id&sort=created_at but browser is at http://127.0.0.1:8098/hardware?order=asc&page=1&search=fwsi9-n3&size=20&sort=created_at",
+      "pageUrlPattern": "http://127.0.0.1:8098/hardware?order=asc&page=:id&search=:id&size=:id&sort=created_at",
+      "pageUrl": "http://127.0.0.1:8098/hardware?page=1&size=20&order=asc&sort=created_at&search=fwsi9-n3"
+    },
+    {
+      "flow": "fwsi9",
+      "step": "04-report",
+      "skill": "s_5b5878",
+      "atStep": "3",
+      "key": "target",
+      "similarity": 0.999,
+      "missedLocator": "(none recorded)",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8098/hardware/:id#history",
+      "pageUrl": "http://127.0.0.1:8098/hardware/6#history"
+    }
+  ],
+  "wallMs": 162799,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 753850,
+    "completionTokens": 9410,
+    "cachedTokens": 693120
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 585652,
+      "completionTokens": 8003,
+      "cachedTokens": 544640
+    },
+    "z-ai/glm-5.3": {
+      "promptTokens": 168198,
+      "completionTokens": 1407,
+      "cachedTokens": 148480
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ],
+    "z-ai/glm-5.3": [
+      "Mistral"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

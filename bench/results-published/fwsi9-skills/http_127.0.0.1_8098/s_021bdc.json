@@ -1,0 +1,145 @@
+{
+ "id": "s_021bdc",
+ "origin": "http://127.0.0.1:8098",
+ "template": "Create a new asset in Snipe-IT (Assets -> Create New / Create Asset) with these values: Asset Name = '{{v2}}', Model = '{{v3}}' (must be selected from the searchable dropdown's suggestion list, not just typed), Status = 'Ready to Deploy' (select the status label from the dropdown), Default Location = 'Bench Office' (select from the dropdown), Purchase Date = {{v4}}. Fill any other required fields as needed but do not create new models, locations, or users. Save the asset, then open the asset's page and report the asset tag Snipe-IT assigned (format like BA-00012), plus the name, model, status, location and purchase date as displayed.",
+ "params": {
+  "v1": {
+   "example": "fwsi9-n3",
+   "usedIn": [
+    1
+   ],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v2": {
+   "example": "fwsi9-n3 Bench Asset",
+   "usedIn": [],
+   "known": true
+  },
+  "v3": {
+   "example": "Bench Laptop Model",
+   "usedIn": []
+  },
+  "v4": {
+   "example": "2026-03-15",
+   "usedIn": []
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8098/hardware?order=asc&page=:id&search=Seed:&size=:id&sort=created_at"
+ },
+ "steps": [
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e160",
+    "value": "{{v1}}"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "searchbox",
+      "name": "Search"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "Search"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(3) > div > input"
+     },
+     {
+      "kind": "point",
+      "x": 1115,
+      "y": 258,
+      "w": 207,
+      "h": 34,
+      "role": "searchbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "page": 0,
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8098/hardware",
+    "addedContains": [
+     "- searchbox \"Search\": {{v1}}"
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_5b5189",
+    "step": 1
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e138"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "button[name=\"btnAdd\"]"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(2) > button:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 915,
+      "y": 206,
+      "w": 38.3,
+      "h": 34,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "page": 0,
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8098/hardware/create",
+    "addedContains": [
+     "- heading \"Assets Create New\"",
+     "- button \"Save\"",
+     "- combobox \"Company\"",
+     "- combobox \"Select Company\"",
+     "- textbox \"Select Company\""
+    ],
+    "lineDialect": 2
+   }
+  }
+ ],
+ "contract": 3,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-24T07:29:36.002Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 3
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_62e46c",
+  "index": 0,
+  "of": 4
+ },
+ "variantOf": "s_5b5189",
+ "provenance": {
+  "session": "fwsi9-n3",
+  "instruction": "Create a new asset in Snipe-IT (Assets -> Create New / Create Asset) with these values: Asset Name = 'fwsi9-n3 Bench Asset', Model = 'Bench Laptop Model' (must be selected from the searchable dropdown's suggestion list, not just typed), Status = 'Ready to Deploy' (select the status label from the dropdown), Default Location = 'Bench Office' (select from the dropdown), Purchase Date = 2026-03-15. Fill any other required fields as needed but do not create new models, locations, or users. Save the asset, then open the asset's page and report the asset tag Snipe-IT assigned (format like BA-00012), plus the name, model, status, location and purchase date as displayed.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-24T07:29:36.002Z"
+ },
+ "revision": 1
+}

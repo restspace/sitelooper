@@ -1,0 +1,224 @@
+{
+  "flow": "fwsi9",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Signed in to http://127.0.0.1:8098/ with username admin and the supplied password (the earlier replayed segments already performed the login, so no second sign-in was issued). The live page confirms the session: the header account link reads \"Bench Admin\" and the URL is http://127.0.0.1:8098/, so the login landed on the Dashboard. A screenshot of the logged-in Dashboard was captured.",
+      "values": {
+        "logged_in_display_name": "Bench Admin",
+        "landing_page_url": "http://127.0.0.1:8098/",
+        "page_heading": "Dashboard",
+        "page_title_1": "Dashboard",
+        "page_title_2": "Bench Assets"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_24e7fd stopped at step 3 — step 3 was recorded opening a popup, and none opened within 5000ms",
+      "replayed": "2/3",
+      "repaired": false,
+      "turns": 2,
+      "unreported": [
+        "logged_in_username",
+        "email"
+      ]
+    },
+    {
+      "id": "02-find",
+      "status": "success",
+      "summary": "Opened Assets -> Asset List at http://127.0.0.1:8098/hardware (the \"Assets\" table). Filtering the list's Search box with \"Seed:\" returns a single page — the footer reads \"Showing 1 to 3 of 3 rows\" — so exactly three assets have names starting with \"Seed:\", all three listed with their tags below. Nothing was modified (read-only search). A screenshot of the filtered list was captured.",
+      "values": {
+        "matching_row_count": "3",
+        "pagination_footer": "Showing 1 to 3 of 3 rows",
+        "asset_1_1": "SEED-0001",
+        "asset_1_2": "Seed: Reception Laptop",
+        "asset_2_1": "SEED-0002",
+        "asset_2_2": "Seed: Training Laptop",
+        "asset_3_1": "SEED-0003",
+        "asset_3_2": "Seed: Spare Laptop"
+      },
+      "tier": null,
+      "recovered": true,
+      "fellBack": "every candidate refused — s_15bbcf: failed at step 1 before touching the page — step 1 was recorded on page 1 of the browser, but the procedure is on page 0 of 2 — the page it expects (a popup or tab opened earlier) is not open here",
+      "replayed": null,
+      "repaired": false,
+      "turns": 10,
+      "unreported": [
+        "asset_list_url",
+        "seed_asset_count",
+        "seed_asset_tag_1",
+        "seed_asset_tag_2",
+        "seed_asset_tag_3",
+        "seed_asset_name_1",
+        "seed_asset_name_2",
+        "seed_asset_name_3"
+      ]
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "Created the asset at Assets -> Create New with Name \"fwsi9-n2 Bench Asset\", Model \"Bench Laptop Model\" (chosen from the select2 suggestion list — the control then rendered \"Bench Laptops - Bench Manufacturer Bench Laptop Model\", underlying value model_id=1), Status \"Ready to Deploy\" (value 2), Default Location \"Bench Office\" (rtd_location_id=1) and Purchase Date 2026-03-15, then saved. No new model/location/user was created. I opened the new asset's page (http://127.0.0.1:8098/hardware/5) and read its details from the live DOM: Asset Tag BA-00005, Asset Name \"fwsi9-n2 Bench Asset\", model \"Bench Laptop Model\", status \"Ready to Deploy deployable\", Default Location \"Bench Office\", and \"Purchased 2026-03-15\".",
+      "values": {
+        "asset_tag": "BA-00005",
+        "asset_name": "fwsi9-n2 Bench Asset",
+        "model": "Bench Laptop Model",
+        "status": "Ready to Deploy (deployable)",
+        "default_location": "Bench Office",
+        "purchase_date": "2026-03-15",
+        "asset_url": "http://127.0.0.1:8098/hardware/5",
+        "created_by": "Bench Admin",
+        "create_form_select2_sele": "Ready to Deploy",
+        "ref": "fwsi9-n2"
+      },
+      "tier": null,
+      "recovered": true,
+      "fellBack": "every candidate refused — s_7ed788: failed at step 1 before touching the page — step 1 was recorded on page 1 of the browser, but the procedure is on page 0 of 2 — the page it expects (a popup or tab opened earlier) is not open here",
+      "replayed": null,
+      "repaired": false,
+      "turns": 21,
+      "unreported": [
+        "model_category",
+        "model_manufacturer",
+        "created_at",
+        "asset_page_url",
+        "bench_run_ref",
+        "model_selected_option_text_1",
+        "model_selected_option_text_2"
+      ]
+    },
+    {
+      "id": "04-report",
+      "status": "success",
+      "summary": "Opened the Checkout action from asset BA-00005's page, picked \"Bench Assignee (bench-assignee)\" from the user select2 suggestion list (the control then rendered the chosen user with a remove \"×\"), entered the note \"Checked out for bench run fwsi9-n2\" and submitted; the app replied \"Success: Asset checked out successfully.\" Back on http://127.0.0.1:8098/hardware/5 the page shows the status label \"Ready to Deploy\" with the \"Deployed\" badge and assignee \"Bench Assignee\", Last Checkout 2026-09-24 07:26 AM, Checkouts 1. The History tab's checkout row displays the assignee \"Bench Assignee\" and the note text \"Checked out for bench run fwsi9-n2\" exactly as saved.",
+      "values": {
+        "asset_tag": "BA-00005",
+        "asset_url": "http://127.0.0.1:8098/hardware/5",
+        "confirmation_message": "Success: × Asset checked out successfully.",
+        "assignee_displayed_on_asset_page": "Bench Assignee",
+        "checkout_note_text": "Checked out for bench run fwsi9-n2",
+        "status_label_as_displayed": "Ready to Deploy (Deployed)",
+        "last_checkout": "2026-09-24 07:26 AM (\"34 seconds ago\")",
+        "expected_checkin": "N/A",
+        "history_row": "2026-09-24 07:26 AM | Bench Admin | checkout | fwsi9-n2 Bench Asset #BA-00005 - Bench Laptop Model | Bench Assignee | Checked out for bench run fwsi9-n2",
+        "history_tbody_tr_nth_chi": "2026-09-24 07:26 AM",
+        "history_tbody_tr_nth_chi_2": "checkout",
+        "ref": "fwsi9-n2"
+      },
+      "tier": "B",
+      "recovered": true,
+      "fellBack": "every candidate refused — s_a90093: failed at step 1 before touching the page — step 1 was recorded on page 1 of the browser, but the procedure is on page 0 of 2 — the page it expects (a popup or tab opened earlier) is not open here",
+      "replayed": "0/1",
+      "repaired": true,
+      "turns": 23,
+      "unreported": [
+        "assignee_displayed",
+        "assigned_user_select_id",
+        "checkouts_count",
+        "asset_page_url",
+        "checkout_url",
+        "assigned_user_displayed",
+        "bench_run_ref"
+      ]
+    },
+    {
+      "id": "05-open",
+      "status": "success",
+      "summary": "Read-only verification of http://127.0.0.1:8098/hardware/5 completed and all eight values were read from the live page; nothing was changed. The page displays: (1) Asset Tag BA-00005, (2) Asset Name \"fwsi9-n2 Bench Asset\", (3) Model \"Bench Laptop Model\" (page heading \"Assets fwsi9-n2 Bench Asset #BA-00005 - Bench Laptop Model\"; maker \"Bench Manufacturer\", model group \"Bench Laptops\"), (4) Status label \"Ready to Deploy\" together with the \"Deployed\" badge, (5) Default Location \"Bench Office\", (6) purchase date shown as \"Purchased 2026-03-15 - 6 months 1 week ago\", (7) checked out to \"Bench Assignee\" (with Last Checkout 2026-09-24 07:26 AM and Checkouts 1), and (8) the History section's checkout row (Showing 1 to 2 of 2 rows) carries the note \"Checked out for bench run fwsi9-n2\". The stored skill was not replayable in this tab, so the values were read directly from the page's DOM, and a screenshot of the details page was captured.",
+      "values": {
+        "asset_tag": "BA-00005",
+        "asset_name": "fwsi9-n2 Bench Asset",
+        "model": "Bench Laptop Model",
+        "status_label": "Ready to Deploy (badge also shows \"Deployed\")",
+        "default_location": "Bench Office",
+        "purchase_date": "2026-03-15 (displayed as \"Purchased 2026-03-15 - 6 months 1 week ago\")",
+        "checked_out_to_user": "Bench Assignee",
+        "checkout_note_in_history": "Checked out for bench run fwsi9-n2",
+        "page_heading": "Assets fwsi9-n2 Bench Asset #BA-00005 - Bench Laptop Model",
+        "checkouts_count": "1",
+        "last_checkout": "2026-09-24 07:26 AM",
+        "history_rows_shown": "Showing 1 to 2 of 2 rows",
+        "ref": "fwsi9-n2"
+      },
+      "tier": "B",
+      "recovered": true,
+      "fellBack": "every candidate refused — s_72aa4e: failed at step 1 before touching the page — step 1 was recorded on page 1 of the browser, but the procedure is on page 0 of 2 — the page it expects (a popup or tab opened earlier) is not open here",
+      "replayed": "0/7",
+      "repaired": true,
+      "turns": 11,
+      "unreported": [
+        "verified_page_url"
+      ]
+    }
+  ],
+  "passed": 5,
+  "total": 5,
+  "repinned": 0,
+  "drift": 3,
+  "driftTickets": [
+    {
+      "flow": "fwsi9",
+      "step": "01-open",
+      "skill": "s_24e7fd",
+      "similarity": 0.993,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_24e7fd stopped at step 3 — step 3 was recorded opening a popup, and none opened within 5000ms",
+      "reason": "step 3 was recorded opening a popup, and none opened within 5000ms",
+      "pageUrlPattern": "http://127.0.0.1:8098/",
+      "pageUrl": "http://127.0.0.1:8098/"
+    },
+    {
+      "flow": "fwsi9",
+      "step": "04-report",
+      "skill": "s_a90093",
+      "similarity": 1.001,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "every candidate refused — s_a90093: failed at step 1 before touching the page — step 1 was recorded on page 1 of the browser, but the procedure is on page 0 of 2 — the page it expects (a popup or tab opened earlier) is not open here",
+      "reason": "step 1 was recorded on page 1 of the browser, but the procedure is on page 0 of 2 — the page it expects (a popup or tab opened earlier) is not open here",
+      "pageUrlPattern": "http://127.0.0.1:8098/hardware/:id",
+      "pageUrl": "http://127.0.0.1:8098/hardware/5"
+    },
+    {
+      "flow": "fwsi9",
+      "step": "05-open",
+      "skill": "s_72aa4e",
+      "similarity": null,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "every candidate refused — s_72aa4e: failed at step 1 before touching the page — step 1 was recorded on page 1 of the browser, but the procedure is on page 0 of 2 — the page it expects (a popup or tab opened earlier) is not open here",
+      "reason": "step 1 was recorded on page 1 of the browser, but the procedure is on page 0 of 2 — the page it expects (a popup or tab opened earlier) is not open here",
+      "pageUrlPattern": "http://127.0.0.1:8098/hardware/:id#history",
+      "pageUrl": "http://127.0.0.1:8098/hardware/5#history"
+    }
+  ],
+  "wallMs": 234271,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 1398825,
+    "completionTokens": 16814,
+    "cachedTokens": 1287424
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 1398825,
+      "completionTokens": 16814,
+      "cachedTokens": 1287424
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

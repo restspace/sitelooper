@@ -1,0 +1,199 @@
+{
+ "id": "s_5b5189",
+ "origin": "http://127.0.0.1:8098",
+ "template": "Create a new asset in Snipe-IT (Assets -> Create New / Create Asset) with these values: Asset Name = '{{v2}}', Model = '{{v3}}' (must be selected from the searchable dropdown's suggestion list, not just typed), Status = '{{v4}}' (select the status label from the dropdown), Default Location = '{{v5}}' (select from the dropdown), Purchase Date = {{v6}}. Fill any other required fields as needed but do not create new models, locations, or users. Save the asset, then open the asset's page and report the asset tag Snipe-IT assigned (format like BA-00012), plus the name, model, status, location and purchase date as displayed.",
+ "params": {
+  "v1": {
+   "example": "fwsi9-n2",
+   "usedIn": [
+    1
+   ],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v2": {
+   "example": "fwsi9-n2 Bench Asset",
+   "usedIn": [],
+   "known": true
+  },
+  "v3": {
+   "example": "Bench Laptop Model",
+   "usedIn": []
+  },
+  "v4": {
+   "example": "Ready to Deploy",
+   "usedIn": []
+  },
+  "v5": {
+   "example": "Bench Office",
+   "usedIn": []
+  },
+  "v6": {
+   "example": "2026-03-15",
+   "usedIn": []
+  },
+  "v7": {
+   "example": "5",
+   "usedIn": [],
+   "known": true,
+   "binding": "url:i3:p1"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8098/hardware?order=asc&page=:id&search=Seed:&size=:id&sort=created_at"
+ },
+ "steps": [
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e160",
+    "value": "{{v1}}"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "searchbox",
+      "name": "Search"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "Search"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(3) > div > input"
+     },
+     {
+      "kind": "point",
+      "x": 1115,
+      "y": 258,
+      "w": 207,
+      "h": 34,
+      "role": "searchbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "page": 0,
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8098/hardware",
+    "addedContains": [
+     "- searchbox \"Search\": {{v1}}"
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "press",
+   "args": {
+    "key": "Enter",
+    "target": "@e160"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "searchbox",
+      "name": "Search"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "Search"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(3) > div > input"
+     },
+     {
+      "kind": "point",
+      "x": 1115,
+      "y": 258,
+      "w": 207,
+      "h": 34,
+      "role": "searchbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "page": 0,
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8098/hardware?order=asc&page=:id&search=Seed:&size=:id&sort=created_at",
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e138"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "button[name=\"btnAdd\"]"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(2) > button:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 915,
+      "y": 206,
+      "w": 38.3,
+      "h": 34,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "page": 0,
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8098/hardware/create",
+    "addedContains": [
+     "- heading \"Assets Create New\"",
+     "- button \"Save\"",
+     "- combobox \"Company\"",
+     "- combobox \"Select Company\"",
+     "- textbox \"Select Company\""
+    ],
+    "lineDialect": 2
+   }
+  }
+ ],
+ "contract": 3,
+ "stats": {
+  "uses": 2,
+  "successes": 1,
+  "partial": 1,
+  "created": "2026-09-24T07:25:21.279Z",
+  "failedAtStep": {
+   "2": 1
+  },
+  "fallthroughs": 0,
+  "verifiedContract": 3,
+  "lastUsed": "2026-09-24T07:29:35.957Z",
+  "recoveredStops": 1,
+  "lastFailedAt": 2
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_32fee0",
+  "index": 0,
+  "of": 4
+ },
+ "provenance": {
+  "session": "fwsi9-n2",
+  "instruction": "Create a new asset in Snipe-IT (Assets -> Create New / Create Asset) with these values: Asset Name = 'fwsi9-n2 Bench Asset', Model = 'Bench Laptop Model' (must be selected from the searchable dropdown's suggestion list, not just typed), Status = 'Ready to Deploy' (select the status label from the dropdown), Default Location = 'Bench Office' (select from the dropdown), Purchase Date = 2026-03-15. Fill any other required fields as needed but do not create new models, locations, or users. Save the asset, then open the asset's page and report the asset tag Snipe-IT assigned (format like BA-00012), plus the name, model, status, location and purchase date as displayed.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-24T07:25:21.279Z"
+ },
+ "revision": 2
+}

@@ -1,0 +1,267 @@
+{
+ "id": "s_d005fc",
+ "origin": "http://127.0.0.1:8098",
+ "template": "Open {{v1}} and verify, reporting exactly what the page displays for each of: (1) the asset tag, (2) the asset name, (3) the model, (4) the status label, (5) the default location, (6) the purchase date, (7) the user it is checked out to, and (8) the note text on the {{v2}} shown in the history/checkouts section. Read-only, do not change anything.",
+ "params": {
+  "v1": {
+   "example": "http://127.0.0.1:8098/hardware/5",
+   "usedIn": [],
+   "known": true,
+   "binding": "03-create.url"
+  },
+  "v2": {
+   "example": "checkout",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i4:history_tbody_tr_nth_chi_2"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8098/hardware/:id#history"
+ },
+ "steps": [
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "value"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "placeholder",
+      "placeholder": "Search",
+      "nth": 3
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(3) > div > input",
+      "nth": 0
+     }
+    ]
+   },
+   "label": "ref"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(6) > div > div > dl > dd:nth-of-type(1) > span"
+     }
+    ]
+   },
+   "label": "asset_tag"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(6) > div > div > dl > dd:nth-of-type(2) > span"
+     }
+    ]
+   },
+   "label": "asset_name"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#model > span > a"
+     },
+     {
+      "kind": "point",
+      "x": 1088,
+      "y": 229,
+      "w": 119.3,
+      "h": 15,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "model"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div > dl > dd:nth-of-type(6) > span > a"
+     }
+    ]
+   },
+   "label": "default_location"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#historyListingTable > tbody > tr:nth-of-type(2) > td:nth-of-type(10)"
+     },
+     {
+      "kind": "point",
+      "x": 1242,
+      "y": 449,
+      "w": 73.6,
+      "h": 109.8,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "checkout_note_in_history"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#setting-list > section:nth-of-type(1) > div > div > h1 > ul"
+     },
+     {
+      "kind": "point",
+      "x": 410,
+      "y": 82,
+      "w": 690.7,
+      "h": 24.2,
+      "role": null,
+      "tag": "ul",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "page_heading"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#historyListingTable > tbody > tr:nth-of-type(2) > td:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 193,
+      "y": 449,
+      "w": 102.8,
+      "h": 109.8,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "last_checkout"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#historyListingTable > tbody > tr:nth-of-type(2) > td:nth-of-type(6) > nobr > a"
+     },
+     {
+      "kind": "point",
+      "x": 852,
+      "y": 448,
+      "w": 113.1,
+      "h": 15,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "checked_out_to_user"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "Read-only verification of {{v1}} completed and all eight values were read from the live page; nothing was changed. The page displays: (1) Asset Tag BA-00005, (2) Asset Name \"fwsi9-n2 Bench Asset\", (3) Model \"Bench Laptop Model\" (page heading \"Assets fwsi9-n2 Bench Asset #BA-00005 - Bench Laptop Model\"; maker \"Bench Manufacturer\", model group \"Bench Laptops\"), (4) Status label \"Ready to Deploy\" together with the \"Deployed\" badge, (5) Default Location \"Bench Office\", (6) purchase date shown as \"Purchased 2026-03-15 - 6 months 1 week ago\", (7) checked out to \"Bench Assignee\" (with Last Checkout 2026-09-24 07:26 AM and Checkouts 1), and (8) the History section's {{v2}} row (Showing 1 to 2 of 2 rows) carries the note \"Checked out for bench run fwsi9-n2\". The stored skill was not replayable in this tab, so the values were read directly from the page's DOM, and a screenshot of the details page was captured.",
+  "values": {
+   "asset_tag": "BA-00005",
+   "asset_name": "fwsi9-n2 Bench Asset",
+   "model": "Bench Laptop Model",
+   "status_label": "Ready to Deploy (badge also shows \"Deployed\")",
+   "default_location": "Bench Office",
+   "purchase_date": "2026-03-15 (displayed as \"Purchased 2026-03-15 - 6 months 1 week ago\")",
+   "checked_out_to_user": "Bench Assignee",
+   "checkout_note_in_history": "Checked out for bench run fwsi9-n2",
+   "page_heading": "Assets fwsi9-n2 Bench Asset #BA-00005 - Bench Laptop Model",
+   "checkouts_count": "1",
+   "last_checkout": "2026-09-24 07:26 AM",
+   "history_rows_shown": "Showing 1 to 2 of 2 rows",
+   "ref": "fwsi9-n2"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 2,
+  "successes": 2,
+  "partial": 0,
+  "created": "2026-09-24T07:27:06.499Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2,
+  "lastUsed": "2026-09-24T07:29:52.835Z"
+ },
+ "status": "validated",
+ "variantOf": "s_72aa4e",
+ "provenance": {
+  "session": "fwsi9-n2",
+  "instruction": "Open http://127.0.0.1:8098/hardware/5 and verify, reporting exactly what the page displays for each of: (1) the asset tag, (2) the asset name, (3) the model, (4) the status label, (5) the default location, (6) the purchase date, (7) the user it is checked out to, and (8) the note text on the checkout shown in the history/checkouts section. Read-only, do not change anything.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-24T07:27:06.499Z"
+ },
+ "revision": 2
+}

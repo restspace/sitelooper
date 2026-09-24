@@ -1,0 +1,83 @@
+{
+ "id": "s_8b2e1f",
+ "origin": "http://127.0.0.1:8098",
+ "template": "Go to Assets -> Asset List and find all assets whose name starts with '{{v1}}'. For each, report its name and asset tag exactly as displayed in the list. Use search/pagination as needed to capture all of them. Do not modify anything.",
+ "params": {
+  "v1": {
+   "example": "Seed:",
+   "usedIn": []
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8098/"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e14"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "header > nav > div:nth-of-type(2) > ul > li:nth-of-type(2) > a"
+     },
+     {
+      "kind": "point",
+      "x": 368,
+      "y": 25,
+      "w": 46.3,
+      "h": 50,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "page": 0,
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8098/hardware",
+    "addedContains": [
+     "- heading \"Assets\"",
+     "- combobox \"bulk_actions\"",
+     "- combobox \"Select rows to see available actions\"",
+     "- textbox \"Select rows to see available actions\""
+    ],
+    "lineDialect": 2
+   }
+  }
+ ],
+ "contract": 3,
+ "stats": {
+  "uses": 2,
+  "successes": 2,
+  "partial": 0,
+  "created": "2026-09-24T07:24:00.946Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 3,
+  "lastUsed": "2026-09-24T07:27:34.448Z"
+ },
+ "status": "validated",
+ "seq": {
+  "chain": "s_fd8110",
+  "index": 0,
+  "of": 2
+ },
+ "provenance": {
+  "session": "fwsi9-n2",
+  "instruction": "Go to Assets -> Asset List and find all assets whose name starts with 'Seed:'. For each, report its name and asset tag exactly as displayed in the list. Use search/pagination as needed to capture all of them. Do not modify anything.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-24T07:24:00.946Z",
+  "transforms": [
+   {
+    "name": "unfreezeExpectations",
+    "at": 1,
+    "reason": "recorded page change(s) only the recording run could produce: [\"- heading \\\"Assets\\\"\",\"- heading \\\"Assets\\\"\",\"- combobox \\\"bulk_actions\\\"\",\"- combobox \\\"Select rows to see available actions\\\"\",\"- textbox \\\"Select rows to see available actions\\\"\"] → [\"- heading \\\"Assets\\\"\",\"- combobox \\\"bulk_actions\\\"\",\"- combobox \\\"Select rows to see available actions\\\"\",\"- textbox \\\"Select rows to see available actions\\\"\"]"
+   }
+  ]
+ },
+ "revision": 2
+}
