@@ -98,7 +98,8 @@ d('recorder journal: in-page (stage 2)', () => {
     const emptied = since(steps().length - 1).find((e) => e.k === 'val' && e.len === 0);
     expect(emptied, JSON.stringify(last('click').journal)).toMatchObject({ f: 'textbox "Title"', src: 'd' });
     // Never the text itself.
-    expect(JSON.stringify(steps().map((s) => s.journal))).not.toContain('Bench Title 9');
+    // No journal EVENT holds the text. (The gap diff's page lines show a field's value as every step diff does, scrubbed of secrets.)
+    expect(JSON.stringify(steps().flatMap((s) => [...(s.journal?.ev ?? []), ...(s.journal?.gap?.ev ?? [])]))).not.toContain('Bench Title 9');
   }, 90_000);
 
   it('a click that landed on an overlay says so', async () => {

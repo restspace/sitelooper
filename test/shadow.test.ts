@@ -278,3 +278,55 @@ describe('shadow: hides and superseded sets (synthetic)', () => {
     expect(rows.find((r) => r.seq === 1)!.fact).toMatch(/replaced by fill #name before any request carried it/);
   });
 });
+
+describe('shadow: tabs, link clicks and toggle pairs (synthetic, stage 3)', () => {
+  const chain = (sel: string, role?: { role: string; name: string }) => ({
+    target: { expr: `page.locator('${sel}')`, verified: true, raw: sel, chain: [...(role ? [{ kind: 'role' as const, ...role }] : []), { kind: 'css' as const, selector: sel }] },
+  });
+  const step = (tool: string, sel: string, extra: Partial<RecordedStep> = {}, role?: { role: string; name: string }): RecordedStep => ({
+    k: 'step',
+    tool,
+    args: { target: sel },
+    locators: chain(sel, role),
+    diff: { url: 'http://app/p', alerts: [], added: [], removed: [], dialect: 2 },
+    ...extra,
+  });
+  const base = (steps: RecordedStep[]): RecordedEntry[] => [{ k: 'instruction', text: 'do it', url: 'http://app/p' }, ...steps, { k: 'report', status: 'success', summary: 'done', values: {} }];
+
+  it('a late tab is credited by the journal to the click before it (ghost fwgh6); the recording credited none', () => {
+    const e = annotate(base([step('click', '.card'), step('read', 'h1', { page: 1 }), step('click', 'a.back', { page: 1 })]), {
+      1: [{ dt: 1_400, k: 'page+', pg: 1, op: 0, url: 'http://app/post' }],
+    });
+    const rows = rowsFor(compileSpan(e, 'syn'), 'popupCredit');
+    expect(rows[0].fact).toMatch(/^click \.card opened the tab http:\/\/app\/post \(late:1:page\)/);
+    // creditUncreditedPopups credits the same click here: agreement.
+    expect(rows[0].heuristic).toBe('credited with a popup');
+    expect(rows[0].agree).toBe(true);
+  });
+
+  it('a link click that navigated late is kept; one that was inert is dropped', () => {
+    const link = { role: 'link', name: 'Bench Project' };
+    const went = annotate(base([step('click', 'a.proj', {}, link), step('read', 'h1'), step('goto', '', { args: { url: 'http://app/proj' } })]), {
+      // A Turbo visit: the click asked for the page in its window, and the url moved when the answer landed (openproject fwop2).
+      1: [{ dt: 50, dt1: 850, k: 'req', m: 'GET', e: 'http://app/proj', rt: 'fetch', s: 200 }, { dt: 900, k: 'nav', url: 'http://app/proj' }],
+    });
+    const [row] = rowsFor(compileSpan(went, 'syn'), 'linkClick');
+    expect(row.fact).toMatch(/^it navigated/);
+    const inert = annotate(base([step('click', 'a.proj', {}, link), step('read', 'h1'), step('goto', '', { args: { url: 'http://app/proj' } })]), {
+      1: [{ dt: 5, k: 'hit', ty: 'pd', d: 'link "Bench Project"', on: 1, tr: 1 }],
+    });
+    const [row2] = rowsFor(compileSpan(inert, 'syn'), 'linkClick');
+    expect(row2.fact).toMatch(/^inert/);
+    expect(row2.agree).toBe(row2.heuristic === 'dropped as an abandoned link click');
+  });
+
+  it('a collapse undone by the same control is a toggle pair (grafana fwgr69)', () => {
+    const heading = { role: 'button', name: 'Panel options' };
+    const e = annotate(base([step('click', 'h6.panel', {}, heading), step('click', 'h6.panel', {}, heading)]), {
+      1: [{ dt: 20, k: 'state', d: 'button "Panel options"', a: 'aria-expanded', on: false }],
+      2: [{ dt: 20, k: 'state', d: 'button "Panel options"', a: 'aria-expanded', on: true }],
+    });
+    const [row] = rowsFor(compileSpan(e, 'syn'), 'togglePair');
+    expect(row.fact).toMatch(/aria-expanded false then true\): a toggle pair/);
+  });
+});

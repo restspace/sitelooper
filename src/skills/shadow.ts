@@ -16,7 +16,8 @@ import type { RecordedEntry, RecordedStep } from '../daemon/recorder.js';
 import type { JournalEvent } from '../daemon/journal-attribute.js';
 import type { LocatorCandidate } from '../daemon/recorder.js';
 import type { Skill, SkillStep } from './store.js';
-import { dropSupersededSets } from './toggles.js';
+import { collapseTogglePairs, dropSupersededSets } from './toggles.js';
+import { creditUncreditedPopups } from './compile.js';
 
 export interface ShadowRow {
   /** The heuristic (or round-61 question) this row shadows. */
@@ -430,6 +431,115 @@ export function supersededSets(steps: readonly RecordedStep[]): ShadowRow[] {
 }
 
 /**
+ * Which step opened each tab (creditUncreditedPopups; ghost fwgh6's late tab,
+ * fwgh8's eval-opened one, snipe-it fwsi9's opener-less one). Fact: the
+ * window a `page+` event is attributed to (in it, or the last gesture before
+ * it). Beside: the popup effect the recording or the heuristic credits.
+ */
+export function popupCredit(steps: readonly RecordedStep[]): ShadowRow[] {
+  const events = eventsOf(steps).filter((e) => e.k === 'page+');
+  if (!events.length) return [];
+  const credited = creditUncreditedPopups(steps);
+  const creditedW = new Set(credited.filter((s) => s.effect?.kind === 'popup' && s.journal).map((s) => s.journal!.w));
+  const rows: ShadowRow[] = [];
+  const factW = new Set<number>();
+  for (const e of events) {
+    const opener = stepOfWindow(steps, causeWindowOf(e));
+    if (opener?.journal) factW.add(opener.journal.w);
+    rows.push({
+      rule: 'popupCredit',
+      ...(opener?.journal ? { w: opener.journal.w } : {}),
+      ...(opener?.seq !== undefined ? { seq: opener.seq } : {}),
+      ...(opener ? { step: label(opener) } : {}),
+      fact: opener ? `${label(opener)} opened the tab ${String(e.url ?? '')} (${e.c?.join(':')}${e.op === null ? ', no opener' : ''})` : `a tab opened that no step explains (${e.c?.join(':') ?? 'unknown'})`,
+      heuristic: opener ? (creditedW.has(opener.journal!.w) ? 'credited with a popup' : opener.tool === 'eval' ? 'an eval: dropped with its page' : 'not credited') : `credited to ${[...creditedW].map((w) => `#${w}`).join(', ') || 'nothing'}`,
+      agree: opener ? creditedW.has(opener.journal!.w) || opener.tool === 'eval' : creditedW.size === 0,
+      evidence: [short(e)],
+    });
+  }
+  for (const w of creditedW) {
+    if (factW.has(w)) continue;
+    const s = stepOfWindow(steps, w)!;
+    rows.push({ rule: 'popupCredit', w, ...(s.seq !== undefined ? { seq: s.seq } : {}), step: label(s), fact: 'no tab was opened by this step', heuristic: 'credited with a popup', agree: false });
+  }
+  return rows;
+}
+
+/**
+ * A link click that recorded no consequence (abandonedLinkClick,
+ * observesOnly; openproject fwop6, fwop13): whether the click did start its
+ * navigation (a document request or url change it caused, in its window or
+ * late) or was inert. Beside: whether compile dropped it.
+ */
+export function linkClicks(steps: readonly RecordedStep[], skills: readonly Skill[]): ShadowRow[] {
+  const events = eventsOf(steps);
+  const rows: ShadowRow[] = [];
+  for (const s of steps) {
+    if (!s.journal || s.tool !== 'click') continue;
+    const isLink = (s.locators.target?.chain ?? []).some((c) => (c.kind === 'role' && c.role === 'link') || (c.kind === 'point' && c.tag === 'a'));
+    const quiet = s.diff && !s.diff.added.length && !(s.diff.removed ?? []).length;
+    if (!isLink || !quiet) continue;
+    const mine = causedBy(s, events);
+    const went = mine.filter((e) => e.k === 'nav' || (e.k === 'req' && e.rt === 'document'));
+    const occ = keptOccurrence(s, steps, skills);
+    rows.push({
+      rule: 'linkClick',
+      w: s.journal.w,
+      ...(s.seq !== undefined ? { seq: s.seq } : {}),
+      step: label(s),
+      fact: went.length ? `it navigated (${went.map((e) => e.c?.join(':')).join(', ')})` : 'inert: no request and no url change followed it',
+      heuristic: occ.kept ? 'kept' : 'dropped as an abandoned link click',
+      agree: went.length ? occ.kept : !occ.kept,
+      evidence: went.slice(0, 3).map(short),
+    });
+  }
+  return rows;
+}
+
+/**
+ * Two clicks on one control that toggle something back (collapseTogglePairs;
+ * snipe-it fwsi1, grafana fwgr69): from aria-expanded, or a landmark the first
+ * hid and the second showed again. Fact: a toggle pair (the first undone by
+ * the second). Beside: whether collapseTogglePairs collapsed them.
+ */
+export function togglePairs(steps: readonly RecordedStep[]): ShadowRow[] {
+  const events = eventsOf(steps);
+  const collapsed = collapseTogglePairs(steps);
+  const rows: ShadowRow[] = [];
+  for (let i = 0; i + 1 < steps.length; i++) {
+    const a = steps[i];
+    if (!a.journal || a.tool !== 'click') continue;
+    let j = i + 1;
+    while (j < steps.length && observesOnly(steps[j])) j++;
+    const b = steps[j];
+    if (!b?.journal || b.tool !== 'click') continue;
+    const mine = candidateKeys(a.locators.target?.chain);
+    if (![...candidateKeys(b.locators.target?.chain)].some((k) => mine.has(k))) continue;
+    const ea = causedBy(a, events);
+    const eb = causedBy(b, events);
+    const expandedA = ea.find((e) => e.k === 'state' && e.a === 'aria-expanded');
+    const expandedB = eb.find((e) => e.k === 'state' && e.a === 'aria-expanded');
+    const hidA = ea.filter((e) => e.k === 'hide').map((e) => e.lm);
+    const reshown = eb.some((e) => e.k === 'show' && hidA.includes(e.lm));
+    const undone = (expandedA && expandedB && expandedA.on !== expandedB.on) || reshown;
+    if (!undone) continue;
+    const dropped = !collapsed.includes(a);
+    const marked = collapsed.find((s) => s.journal?.w === b.journal!.w)?.toggle === true;
+    rows.push({
+      rule: 'togglePair',
+      w: a.journal.w,
+      ...(a.seq !== undefined ? { seq: a.seq } : {}),
+      step: label(a),
+      fact: `${label(b)} undid it (${expandedA ? `aria-expanded ${String(expandedA.on)} then ${String(expandedB?.on)}` : 'what it hid was shown again'}): a toggle pair`,
+      heuristic: dropped && marked ? 'collapsed into one idempotent toggle' : 'both clicks kept as they are',
+      agree: dropped && marked,
+      evidence: [...ea, ...eb].filter((e) => e.k === 'state' || e.k === 'show' || e.k === 'hide').slice(0, 4).map(short),
+    });
+  }
+  return rows;
+}
+
+/**
  * The instructions just before this one that did not succeed (back to the
  * last successful report): their page effects are part of what this one
  * started from.
@@ -464,7 +574,7 @@ export function shadowVerdicts(entries: readonly RecordedEntry[], skills: readon
 
 type ShadowRule = (steps: readonly RecordedStep[], skills: readonly Skill[], prior: readonly RecordedStep[]) => ShadowRow[];
 
-const RULES: ShadowRule[] = [abandonedEdits, pickerNetState, flashCause, repeatClicks, hideRequired, supersededSets];
+const RULES: ShadowRule[] = [abandonedEdits, pickerNetState, flashCause, repeatClicks, hideRequired, supersededSets, popupCredit, linkClicks, togglePairs];
 
 /**
  * Append one instruction's rows to `<storeDir>/shadow.jsonl`. Best effort: a

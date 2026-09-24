@@ -102,10 +102,15 @@ export interface AttributionState {
   requests: JournalEvent[];
   /** How often each endpoint (method + path) was asked outside any gesture or eval window. */
   idleAsks: Map<string, number[]>;
+  /** Each tab's arrival and the window it is attributed to: the tab's first moments are that window's too. */
+  pages: Map<number, { t: number; w?: number }>;
 }
 
+/** How long after a tab arrives its own loading (navigations, requests) is still the arrival's consequence. */
+export const PAGE_ARRIVAL_MS = 3_000;
+
 export function newAttributionState(): AttributionState {
-  return { requests: [], idleAsks: new Map() };
+  return { requests: [], idleAsks: new Map(), pages: new Map() };
 }
 
 const MAX_REMEMBERED_REQUESTS = 300;
@@ -129,6 +134,7 @@ export function attribute(events: JournalEvent[], windows: readonly JournalWindo
     const { c, also } = eventCause(e, windows, state, focus);
     e.c = c;
     if (also !== undefined) e.also = also;
+    if (e.k === 'page+' && typeof e.pg === 'number') state.pages.set(e.pg, { t: e.t, ...(c[0] === 'in' || c[0] === 'late' ? { w: c[1] as number } : {}) });
   }
   return sorted;
 }
@@ -221,6 +227,12 @@ function eventCause(e: JournalEvent, windows: readonly JournalWindow[], state: A
   if (e.k === 'nav') {
     const debounced = debounceWindow(windows, e.t);
     if (debounced) return { c: ['late', debounced.w, 'debounce'] };
+  }
+  // A new tab's own loading is its arrival's consequence (ghost fwgh6: the
+  // public post the card opened), not whatever the daemon was doing then.
+  if (e.k !== 'page+' && typeof e.pg === 'number') {
+    const arrived = state.pages.get(e.pg);
+    if (arrived?.w !== undefined && e.t >= arrived.t && e.t - arrived.t <= PAGE_ARRIVAL_MS) return { c: ['late', arrived.w, 'page'] };
   }
   if (e.k === 'page+') {
     const last = [...windows].filter((w) => ACTIVE.has(w.kind) && w.end !== undefined && w.end <= e.t).sort((a, b) => b.end! - a.end!)[0];

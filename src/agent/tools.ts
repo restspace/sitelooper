@@ -3,7 +3,7 @@ import path from 'node:path';
 import type { Locator, Page } from 'playwright-core';
 import { actionFailure, NAVIGATING_ACTIONS, outcomeLabel, outcomeOfError, robustClick, type ActionOutcome } from '../execution/browser.js';
 import { beginAction, type ActionExpectation, type ActionObservation, type LinkNavigation, type SettleVerdict } from '../execution/action.js';
-import { CURRENT_DIALECT, addedLines, removedLines, type PageObservation } from '../execution/snapshot.js';
+import { CURRENT_DIALECT, MAX_ADDED_LINES, addedLines, removedLines, type PageObservation } from '../execution/snapshot.js';
 import { DIALOG_LINE } from '../execution/expect.js';
 import { POPUP_WAIT_MS, type PageEffect } from '../execution/context.js';
 import { isElementRead, readElements } from '../execution/observe.js';
@@ -828,6 +828,7 @@ async function runStep(
     // uncapped diff counts, and the removals the diff itself keeps only for a
     // dialog or an add-less step. Never read by compile, export or replay.
     let totals: StepEvidence['totals'];
+    let gapAfter: { lines: string[]; url: string } | undefined;
     let removedAll: string[] | undefined;
     let capturedAt: number | undefined;
     // A link whose navigation had still not committed when the settle ran out
@@ -853,6 +854,7 @@ note: this link points to ${verdict.link.href}, and its navigation had not commi
       capturedAt = Date.now();
       if (after) {
         totals = diffTotals(before.lines, after.lines);
+        gapAfter = { lines: after.lines, url: after.url };
         // Recorded in CURRENT_DIALECT (the signature's lines), and tagged so:
         // compile carries the tag onto the step's expectation, and every runner
         // renders the live page in the dialect the expectation was written in.
@@ -913,6 +915,13 @@ note: this link points to ${verdict.link.href}, and its navigation had not commi
     // Everything the journal saw since the last recorded step, attributed: this
     // window's share on the step, the rest in its gap. Never shown to the model.
     const journaled: StepJournal | undefined = journal && jw && pending ? splitForStep(jw, await journal.collect(page)) : undefined;
+    // Stage 3: what changed on this page BETWEEN the last diffed step's
+    // after-capture and this one's before-capture (both already taken).
+    if (journaled && journal && before && journal.lastAfter?.page === page && !journal.lastAfter.page.isClosed()) {
+      const gap = gapDiff(journal.lastAfter, before);
+      if (gap) journaled.gap = { ...journaled.gap, ...gap };
+    }
+    if (journal && jw && pending && page && gapAfter) journal.lastAfter = { page, lines: gapAfter.lines, url: gapAfter.url, w: jw };
     committed = true;
     recorder?.commit(pending, result, {
       diff,
@@ -945,6 +954,27 @@ note: this link points to ${verdict.link.href}, and its navigation had not commi
     if (watchPopup) page!.off('popup', onPopup);
     pageContext?.off('page', onPage);
   }
+}
+
+/**
+ * The gap diff (stage 3): what the page gained and lost between the previous
+ * diffed step's after-capture and this step's before-capture, capped like a
+ * step diff, with uncapped totals. Null when nothing changed.
+ */
+function gapDiff(last: { lines: readonly string[]; url: string; w: number }, before: PageSignature): NonNullable<StepJournal['gap']> | null {
+  const was = new Set(last.lines);
+  const now = new Set(before.lines);
+  const added = before.lines.filter((l) => !was.has(l));
+  const removed = last.lines.filter((l) => !now.has(l));
+  const moved = before.url !== last.url;
+  if (!added.length && !removed.length && !moved) return null;
+  return scrubSecretsDeep({
+    since: last.w,
+    ...(moved ? { url: before.url } : {}),
+    ...(added.length ? { added: added.slice(0, MAX_ADDED_LINES) } : {}),
+    ...(removed.length ? { removed: removed.slice(0, MAX_ADDED_LINES) } : {}),
+    totals: { added: added.length, removed: removed.length },
+  });
 }
 
 /** Clicks whose target the journal marks before dispatch (Journal.intend). */

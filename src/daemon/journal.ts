@@ -213,7 +213,47 @@ export class Journal {
     page.on('request', (req) => this.onRequest(page, req));
     page.on('requestfinished', (req) => this.onRequestDone(req, false));
     page.on('requestfailed', (req) => this.onRequestDone(req, true));
+    // Stage 3: the page's own events, time-stamped. A url change of the main
+    // frame (same-document ones included: pushState, hash), a new document, a
+    // dialog, the page closing; and, for every page after the first, its
+    // arrival with its opener (null: a Ctrl+click or noopener tab, snipe-it fwsi9).
+    page.on('framenavigated', (frame) => {
+      if (frame !== page.mainFrame()) return;
+      this.pageEvent(page, { k: 'nav', url: scrubSecrets(frame.url()).slice(0, 300) });
+    });
+    page.on('domcontentloaded', () => this.pageEvent(page, { k: 'nav', url: scrubSecrets(page.url()).slice(0, 300), doc: 1 }));
+    page.on('dialog', (d) => this.pageEvent(page, { k: 'dlg', type: d.type(), msg: scrubSecrets(d.message()).slice(0, 120) }));
+    page.on('close', () => this.pageEvent(page, { k: 'page-' }));
+    if (this.seenFirstPage) {
+      const e: JournalEvent = { t: Date.now(), k: 'page+', url: scrubSecrets(page.url()).slice(0, 300), _open: 1 };
+      const pg = this.pageIndex(page);
+      if (pg !== undefined) e.pg = pg;
+      this.push(e);
+      page
+        .opener()
+        .then((op) => {
+          const i = op ? this.pageIndex(op) : undefined;
+          e.op = i === undefined ? null : i;
+        })
+        .catch(() => {})
+        .finally(() => delete e._open);
+    }
+    this.seenFirstPage = true;
   }
+
+  private seenFirstPage = false;
+
+  private pageEvent(page: Page, e: Omit<JournalEvent, 't'>): void {
+    const pg = this.pageIndex(page);
+    this.push({ t: Date.now(), ...e, ...(pg ? { pg } : {}) } as JournalEvent);
+  }
+
+  /**
+   * The last after-capture a recorded step took, per page: the next diffed
+   * step's before-capture is diffed against it (the gap diff), at no extra
+   * capture. Never read back as anything but that diff.
+   */
+  lastAfter: { page: Page; lines: readonly string[]; url: string; w: number } | null = null;
 
   private push(e: JournalEvent): void {
     this.pending.push(e);
