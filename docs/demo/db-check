@@ -1,0 +1,3 @@
+#!/bin/bash
+# Ask the demo app's own database which Bench tickets exist, and their parts.
+curl -s http://127.0.0.1:4180/__state | jq -c '. as $s | .tickets[] | select(.title|test("Bench")) | . as $t | {ref,title,status,parts:[$s.parts[]|select(.ticketId==$t.id)|{name,price}]}'

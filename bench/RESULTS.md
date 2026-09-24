@@ -1,24 +1,10 @@
 # Ten real apps, one browser agent, and what the database said
 
-sitelooper is asked to do a job in a web app it has never seen, once, with a model in the
-loop. It records what it did as a procedure. Then the app is reset and the same job is run
-twice more with **no model at all**, and once more as a compiled `@playwright/test` file with
-no sitelooper runtime either. Every run is scored by reading the app's own database or API
-after the fact. The tool's own report of success is never counted.
+sitelooper is asked to do a job in a web app it has never seen, once, with a model in the loop. It records what it did as a procedure. Then the app is reset and the same job is run twice more with **no model at all**, and once more as a compiled `@playwright/test` file with no sitelooper runtime either. Every run is scored by reading the app's own database or API after the fact. The tool's own report of success is never counted.
 
-The finding that started this benchmark: the strongest static script an agent wrote from its
-own run verified **14 of 48** objectives across the first four apps, and on Odoo it
-**confirmed a sales order with zero lines**, left it active, printed FAILED and exited 1. The
-wrong record was already in the database. Codegen replays report green while the app is
-untouched, or mutate the wrong thing and regret it afterwards. Those two failure shapes, not
-model quality, are why agent-driven automation does not rerun. Detail:
-[MATRIX-v0.2.md](MATRIX-v0.2.md), "static incumbents".
+The finding that started this benchmark: the strongest static script an agent wrote from its own run verified **14 of 48** objectives across the first four apps, and on Odoo it **confirmed a sales order with zero lines**, left it active, printed FAILED and exited 1. The wrong record was already in the database. Codegen replays report green while the app is untouched, or mutate the wrong thing and regret it afterwards. Those two failure shapes, not model quality, are why agent-driven automation does not rerun. Detail: [MATRIX-v0.2.md](MATRIX-v0.2.md), "static incumbents".
 
-![record once, replay for free](../docs/demo/record-once-replay-free.gif)
-
-*Three instructions recorded against the in-repo repair-desk app in 24s, 28s and 42s with the
-agent driving; the app reset; the same flow replayed in 16s at zero model calls, then the app's
-state endpoint queried. Source: [docs/demo](../docs/demo).*
+![record once, replay for free](../docs/demo/record-once-replay-free.gif)*Three instructions recorded against the in-repo repair-desk app in 24s, 28s and 42s with the agent driving; the app reset; the same flow replayed in 16s at zero model calls, then the app's state endpoint queried. Source: [docs/demo](../docs/demo).*
 
 ## The targets
 

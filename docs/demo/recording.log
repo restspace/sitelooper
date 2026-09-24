@@ -1,0 +1,70 @@
+
+$ sitelooper --session demo --learn open http://127.0.0.1:4180/
+Repair Desk — http://127.0.0.1:4180/#/tickets
+[exit 0 after 2s]
+
+$ sitelooper --session demo var runid=k7
+vars: runid=k7
+[exit 0 after 0s]
+
+$ sitelooper --session demo do Sign in as bench@example.com with password bench-pass-1234 and verify the ticket list opens
+[OK] Signed in as bench@example.com with the provided password. The browser navigated from /#/login to /#/tickets, which displays the ticket list with heading "Repair tickets", a table of 13 tickets (showing 1–10), filter controls, and a "New ticket" button. The ticket list is open and verified.
+  learned: stored s_e54895
+  signed_in_user: bench@example.com
+  ticket_count: 13
+  page_heading: Repair tickets
+  screenshots: 1
+    C:\Users\james\AppData\Local\Temp\claude\C--dev-sitelooper\9435309e-c01e-4211-aa16-3fcec518a743\scratchpad\gif\ticket_list.png
+[exit 0 after 24s]
+
+$ sitelooper --session demo do Create a ticket titled 'k7 Bench Ticket' for customer 'Demo Customer'; verify it appears in the list and report its ticket id
+[OK] Created ticket 'k7 Bench Ticket' for 'Demo Customer'. It appears in the ticket list as row RD-1048 with status Draft, 0 parts, created 2026-09-22. Verified the ticket is present in the list.
+  learned: stored s_7d2f26
+  ticket_reference: RD-1048
+  ticket_title: k7 Bench Ticket
+  ticket_customer: Demo Customer
+  ticket_status: Draft
+  ticket_parts_count: 0
+  ticket_created: 2026-09-22
+  screenshots: 1
+    C:\Users\james\AppData\Local\Temp\claude\C--dev-sitelooper\9435309e-c01e-4211-aa16-3fcec518a743\scratchpad\gif\ticket_created.png
+[exit 0 after 28s]
+
+$ sitelooper --session demo do Open ticket 'k7 Bench Ticket' and add a part named 'k7 Part A' with cost 100 and markup 25; report the price the app computes
+[OK] Opened ticket RD-1048 'k7 Bench Ticket', added part 'k7 Part A' with cost $100.00 and 25% markup. The app computed a price of $125.00 per unit, with a total of $125.00 (qty 1).
+  learned: stored s_3b9291
+  ticket_reference: RD-1048
+  part_name: k7 Part A
+  part_cost: $100.00
+  part_markup: 25%
+  part_price: $125.00
+  part_total: $125.00
+  part_quantity: 1
+  screenshots: 1
+    C:\Users\james\AppData\Local\Temp\claude\C--dev-sitelooper\9435309e-c01e-4211-aa16-3fcec518a743\scratchpad\gif\part_added.png
+[exit 0 after 42s]
+
+$ sitelooper --session demo stop --save-flow ticket
+stopped: demo
+  flow "ticket" saved: 3 step(s), vars runid → C:\Users\james\AppData\Local\Temp\claude\C--dev-sitelooper\9435309e-c01e-4211-aa16-3fcec518a743\scratchpad\gif\home\flows\ticket.json
+  warning: note: dropped 10 locator candidate(s) carrying a value this run minted (known only by export time)
+  warning: note: 03-open no longer publishes part_total — no replay reads it from the page and the recording showed no line to read
+  warning: warning: 20 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[0].instruction: "bench@example.com" (output) in "Sign in as bench@example.com with password bench-pass-1234 and verify the ticket list opens"
+  flow.steps[0].params.v1: "bench@example.com" (output) in "bench@example.com"
+  flow.steps[1].instruction: "Demo Customer" (output) in "Create a ticket titled '{{runid}} Bench Ticket' for customer 'Demo Customer'; verify it appears in the list and report its ticket id"
+  flow.steps[1].params.v3: "Demo Customer" (output) in "Demo Customer"
+  s_1b645b.reportTemplate.summary: "Repair tickets" (output) in "Signed in as {{v1}} with the provided password. The browser navigated from /#/login to /#/tickets, which displays the ticket list with heading \"Repair tickets\","
+[exit 0 after 2s]
+
+$ sitelooper flow show ticket
+ticket  http://127.0.0.1:4180  (recorded 2026-09-22T11:09:41.542Z in session demo)
+starts at: http://127.0.0.1:4180/
+vars: runid
+  01-signin [s_e54895] → signed_in_email, ticket_count, page_heading
+     Sign in as bench@example.com with password bench-pass-1234 and verify the ticket list opens
+  02-create [s_7d2f26] → ticket_id, ticket_title, ticket_customer, ticket_status, ticket_parts_count, ticket_created
+     Create a ticket titled '{{runid}} Bench Ticket' for customer 'Demo Customer'; verify it appears in the list and report i…
+  03-open [s_3b9291] → ticket_id, part_name, part_cost, part_markup, part_price, part_quantity
+     Open ticket '{{runid}} Bench Ticket' and add a part named '{{runid}} Part A' with cost 100 and markup 25; report the pri…
+[exit 0 after 0s]
