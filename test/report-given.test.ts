@@ -133,11 +133,22 @@ describe('a report value made only of params is published only where this run ob
     expect(report.evidence?.values?.issue_content_right_a_it_2).toBe('priority-high');
   });
 
-  it('a value the chain TYPED keeps today’s rule: the comment is published where no read or page line shows it', () => {
+  /**
+   * Phase B provenance, stage 1: a slot the chain TYPED is no longer exempt.
+   * The comment is published only where this run committed it — the Comment
+   * click's own diff showed it outside the textarea (ReplayResult.committed) —
+   * or a read returned it. Round 60 published it on the typing alone.
+   */
+  it('a value the chain TYPED is published only where this run committed it or read it', () => {
     const { comment_text: _read, ...live } = n2Live;
     const page = n2Page.filter((l) => !l.startsWith('Comment for run'));
-    const report = synthesizeReport(readSegment, n2Params, live, page, { chain: [commentSegment, readSegment] });
-    expect(report.evidence?.values?.comment_text).toBe('Comment for run fwgt11-n2.');
+    const typedOnly = synthesizeReport(readSegment, n2Params, live, page, { chain: [commentSegment, readSegment] });
+    expect(typedOnly.evidence?.values?.comment_text).toBeUndefined();
+    const committed = synthesizeReport(readSegment, n2Params, live, page, { chain: [commentSegment, readSegment], committed: ['v11'] });
+    expect(committed.evidence?.values?.comment_text).toBe('Comment for run fwgt11-n2.');
+    // A read of this run that returned it is observation enough.
+    const read = synthesizeReport(readSegment, n2Params, { ...live, timeline: 'admin commented: Comment for run fwgt11-n2.' }, page, { chain: [commentSegment, readSegment] });
+    expect(read.evidence?.values?.comment_text).toBe('Comment for run fwgt11-n2.');
     // Not typed by the tail alone: judged on the page, and withheld.
     const alone = synthesizeReport(readSegment, n2Params, live, page, { chain: [readSegment] });
     expect(alone.evidence?.values?.comment_text).toBeUndefined();

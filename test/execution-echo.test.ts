@@ -1,6 +1,6 @@
 import ts from 'typescript';
 import { describe, expect, it } from 'vitest';
-import { MIN_ECHO_LEN, candidateNames, echoAt, echoKey, echoVerdict, markActed, noteInteraction, setsSomething } from '../src/execution/echo.js';
+import { MIN_ECHO_LEN, candidateNames, echoAt, echoKey, echoVerdict, markActed, noteInteraction, routeOf, setsSomething } from '../src/execution/echo.js';
 import type { SkillStep } from '../src/skills/store.js';
 import { emitFlowFile } from '../src/spec/emit.js';
 import type { SpecFlow } from '../src/spec/ir.js';
@@ -18,11 +18,25 @@ describe('the shared echo rule', () => {
     expect(echoKey('notes for run')).toBe('notes for run');
   });
 
-  it('remembers only substantial strings, at the floor', () => {
+  /**
+   * Phase B provenance, stage 1: every string is remembered, short ones too.
+   * Below MIN_ECHO_LEN the TEXT alone never makes an echo (a "1m" refresh
+   * elsewhere on the page is a coincidence); echoAt asks the element instead —
+   * "150" read back from the input it was typed into is an echo.
+   */
+  it('remembers every string it set, short ones too; the floor now only decides which rule judges', () => {
     const ledger = new Set<string>();
-    noteInteraction(ledger, ['1m', 'abcd', 'abcde', undefined, 42, null]);
-    expect([...ledger]).toEqual(['abcde']);
+    noteInteraction(ledger, ['1m', 'abcd', 'abcde', undefined, 42, null, '', ' - ']);
+    expect([...ledger]).toEqual(['1m', 'abcd', 'abcde']);
     expect(MIN_ECHO_LEN).toBe(5);
+    expect(echoVerdict(ledger, 'refresh', '1m', 'step 2')).toContain("read 'refresh' returned a value the skill itself set");
+  });
+
+  it('a route is origin, path and hash path: a rewritten query string is no commit', () => {
+    expect(routeOf('http://a.test/echo-lab?q=Bench')).toBe(routeOf('http://a.test/echo-lab'));
+    expect(routeOf('http://a.test/#/search?q=x')).toBe(routeOf('http://a.test/#/search?q=y'));
+    expect(routeOf('http://a.test/#/editor/post')).not.toBe(routeOf('http://a.test/#/editor/post/6ab5'));
+    expect(routeOf('http://a.test/tickets')).not.toBe(routeOf('http://a.test/tickets/7'));
   });
 
   it('names a candidate by its name, else its label', () => {

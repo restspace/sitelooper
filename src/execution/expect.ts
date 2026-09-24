@@ -325,6 +325,14 @@ export interface ChangeVerdict {
    * alertVerdict): the step demonstrably did what it was recorded doing.
    */
   confirmed?: true;
+  /**
+   * The recorded lines (markers intact) whose filled form THIS run's diff
+   * added: what the action itself put on the page, not what the page already
+   * showed. The evidence a commit is judged on (phase B provenance, stage 1):
+   * a Save whose recorded row line this run's diff never added committed
+   * nothing, however the live page looks. Absent when the diff was not captured.
+   */
+  inDiff?: string[];
 }
 
 /**
@@ -343,6 +351,58 @@ export interface ChangeVerdict {
  * with nothing to say.
  */
 export async function expectedChangesVerdict(
+  recorded: readonly string[] | undefined,
+  params: Record<string, string>,
+  ctx: ChangeContext,
+  obs: ChangeObservation,
+): Promise<ChangeVerdict> {
+  const verdict = await changesVerdict(recorded, params, ctx, obs);
+  if (verdict.stop || obs.added === null || !recorded?.length) return verdict;
+  const inDiff = linesInDiff(recorded, params, obs.added);
+  return inDiff.length ? { ...verdict, inDiff } : verdict;
+}
+
+/**
+ * The recorded lines whose filled form is in `added`, the lines this step's
+ * own action added — transient lines, lines identifying nothing and lines this
+ * run could not fill left out, as the verdict leaves them out.
+ */
+export function linesInDiff(recorded: readonly string[], params: Record<string, string>, added: readonly string[]): string[] {
+  return recorded.filter((line) => {
+    if (TRANSIENT_LINE.test(line) || boundToNothing(line, params)) return false;
+    const [filled] = liveLines([line], params);
+    return !identifiesNothing(filled) && !unfilledSlot(filled) && lineShows(added as string[], [filled]);
+  });
+}
+
+/**
+ * A control's own line: the field showing what was typed into it, a picked
+ * option, a ticked box. The line an input renders is the input, not something
+ * the app did with the value.
+ */
+const CONTROL_LINE = /^-?\s*(textbox|searchbox|spinbutton|combobox|listbox|option|checkbox|radio|switch|slider|menuitem\w*)\b/;
+
+/**
+ * The `{{vN}}` slots a commit showed (phase B provenance, stage 1): named in a
+ * line this run's diff added (ChangeVerdict.inDiff) after a click or press,
+ * where the line is neither a popup item (the environment answering
+ * keystrokes) nor a control's own line (the field still holding what was
+ * typed). Such a slot's value is on the page because the app took it — the
+ * saved row, the heading that renders the new title — so a report value made
+ * of it is COMMITTED, not merely typed. Both runners collect it after the
+ * action, from the same verdict.
+ */
+export function committedSlots(tool: string, inDiff: readonly string[] | undefined): string[] {
+  if (!inDiff?.length || !['click', 'dblclick', 'press'].includes(tool)) return [];
+  const out = new Set<string>();
+  for (const line of inDiff) {
+    if (popupItem(line) || CONTROL_LINE.test(line.trim())) continue;
+    for (const m of line.matchAll(/\{\{(v\d+)\}\}/g)) out.add(m[1]);
+  }
+  return [...out];
+}
+
+async function changesVerdict(
   recorded: readonly string[] | undefined,
   params: Record<string, string>,
   ctx: ChangeContext,
