@@ -229,3 +229,24 @@ verdict would flip steps of GREEN apps (Ghost tags/publish date, Grafana time ra
 Gitea labels, RepairDesk parts total). Those apps pass because verifiers read the app database, not
 the report. Shipped as a per-step warning (4dc62d6), not a verdict; to be reported as a separate
 benchmark measure, "asked facts published", beside green.
+
+## Round 56 fixes (2aa57e8, merged to main)
+
+Cloud verify of a08138d: 2333 main / 2519 browser / 140 parity; the ONLY failure (in both suites) was
+test/execution-gates "alertVerdict … same live-region capture", a source guard that observe.ts holds no
+alert selector: two comments in the new count-read code named `role=alert`. Reworded (2aa57e8); the
+guard and execution-source pass locally. Merged on that basis; a full cloud re-verify of main runs
+alongside round 57's first batch. Corpus: 0 status changes against r55.
+
+- **ids** — a collapse/expand pair split by a query-string change is one toggle (consequence judged from
+  the recording, not the compiled expect); a click whose whole effect was a removal checks it
+  (`removedContains`), skipping when already in effect — but a click that submits this segment's work
+  or closes what this segment opened is REQUIRED: never skipped, and it stops if there is nothing to close.
+- **report** — a reported value made of page element texts plus the model's labels is split into one
+  live read per element (all-or-nothing coverage); a step's own dropdown selection is a source (read
+  back after the click); an ambiguous text match inside one row pins, scoped to that row.
+- **honesty** — an unproven (never-resolved, synthesized) read never makes a step partial (fwop11,
+  fwkb40); "the instruction asked to report X and nothing publishes it" is a per-step WARNING
+  (`unanswered`) and an export warning, not a verdict.
+- **runners** — a count read that matches nothing, with its scope on the page, publishes "0"; a fill whose
+  document was replaced under its own check is refilled once.
