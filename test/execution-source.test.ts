@@ -79,7 +79,11 @@ describe('standalone execution source', () => {
           params: { v1: { example: 'Widget A', usedIn: [] } },
           preconditions: { urlPattern: 'http://app.test/', fingerprint: Array.from({ length: FINGERPRINT_DIMS }, (_, i) => (i % 9 === 0 ? 0.333 : 0)) },
           // A disclosure toggle (a hide-then-show pair, compiled to one click): the shared toggle rule.
-          steps: [{ tool: 'click', args: { target: '@e1' }, locators: { target }, toggle: true, expect: { addedContains: ['- link "More details"'] } }],
+          steps: [
+            { tool: 'click', args: { target: '@e1' }, locators: { target }, toggle: true, expect: { addedContains: ['- link "More details"'] } },
+            // A click that names its button and could fall back by position: the shared positional rule (R2, fwgr73).
+            { tool: 'click', args: { target: '@e2' }, locators: { target: [{ kind: 'role' as const, role: 'button', name: 'Edit' }, { kind: 'css' as const, selector: '#bar > button:nth-of-type(1)' }] }, expect: { addedContains: ['- button "Exit edit"'] } },
+          ],
         }],
       }],
     };

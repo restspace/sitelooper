@@ -1083,6 +1083,70 @@ document.getElementById('save').addEventListener('click', () => {
 </body></html>`;
 
 /**
+ * An editor that DOUBLES what is typed into it (round 61, grafana fwgr73
+ * 04-open line 125): monaco's auto-closing turned a typed `"tags"` into
+ * `"tags""tags""`, and the recording carried on from that. `/code-editor`:
+ * the Code field, on an input that leaves it reading "tags", appends a second
+ * "tags". Save posts `commit:code:<value>`.
+ */
+const CODE_EDITOR = `<!doctype html><html><head><meta charset="utf-8"><title>Code</title></head><body>
+<h1>JSON model</h1>
+<label for="code">Code</label><textarea id="code"></textarea>
+<button id="save" type="button">Save</button>
+<script>
+const code = document.getElementById('code');
+code.addEventListener('input', () => { if (code.value === 'tags') code.value = 'tagstags'; });
+document.getElementById('save').addEventListener('click', () => {
+  fetch('/commit/code/' + encodeURIComponent(code.value), { method: 'POST' });
+});
+</script>
+</body></html>`;
+
+/**
+ * A toolbar whose EDIT MODE swaps its buttons (round 61, grafana fwgr73
+ * 05-open step 3). `/edit-mode/view`: Edit (testid edit-btn) and Share;
+ * clicking Edit enters edit mode. `/edit-mode/edit`: already in edit mode —
+ * Exit edit sits where Edit sat, then Add, Settings, Save dashboard.
+ * `/edit-mode/twin`: two buttons both named Edit and no testid; either
+ * enters edit mode. Exit edit posts `commit:dashboard:exit` and leaves edit
+ * mode; Save dashboard posts `commit:dashboard:saved`. A Title field is on
+ * every mode.
+ */
+const EDIT_MODE = (mode: string) => `<!doctype html><html><head><meta charset="utf-8"><title>Dashboard</title></head><body>
+<h1>Dashboard</h1>
+<label for="title">Title</label><input id="title">
+<div id="bar"></div>
+<script>
+const bar = document.getElementById('bar');
+const post = (what) => fetch('/commit/dashboard/' + what, { method: 'POST' });
+function button(name, onClick, testid) {
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.textContent = name;
+  if (testid) b.dataset.testid = testid;
+  b.addEventListener('click', onClick);
+  bar.appendChild(b);
+}
+function render(mode) {
+  bar.innerHTML = '';
+  if (mode === 'edit') {
+    button('Exit edit', () => { post('exit'); render('view'); });
+    button('Add', () => {});
+    button('Settings', () => {});
+    button('Save dashboard', () => post('saved'));
+  } else if (mode === 'twin') {
+    button('Edit', () => render('edit'));
+    button('Edit', () => render('edit'));
+  } else {
+    button('Edit', () => render('edit'), 'edit-btn');
+    button('Share', () => {});
+  }
+}
+render(${JSON.stringify(mode)});
+</script>
+</body></html>`;
+
+/**
  * A Save that adds the new record's row, whose accessible name then changes
  * (round 60, openproject fwop14 02-create s_459e98/3): OpenProject's list
  * showed `- row "<id> … TASK New - Normal"` as the save settled, and a moment
@@ -1949,6 +2013,8 @@ export async function createFixtureServer(initialCount = 10): Promise<FixtureSer
       if (url === '/hashposts') return html(HASH_POSTS);
       if (url.startsWith('/row-save/')) return html(ROW_SAVE(tail('/row-save/')));
       if (url === '/typed-amount' || url === '/typed-amount?sticky=1') return html(TYPED_AMOUNT(url.endsWith('sticky=1')));
+      if (url === '/code-editor') return html(CODE_EDITOR);
+      if (url.startsWith('/edit-mode/')) return html(EDIT_MODE(tail('/edit-mode/')));
       if (url === '/hover-menu') return html(HOVER_MENU);
       if (url === '/counts' || url === '/counts?nolist=1') return html(COUNTS(!url.endsWith('nolist=1')));
       if (url === '/transform') return html(TRANSFORM);

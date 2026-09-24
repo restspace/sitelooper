@@ -12,7 +12,7 @@ import fs from 'node:fs';
  * needs it. Anything else is rejected instead of silently producing an
  * incomplete artifact. This is deliberately not a general TypeScript bundler.
  */
-export const EXECUTION_MODULES = ['text', 'url', 'gates', 'observe', 'browser', 'action', 'lifecycle', 'loop', 'snapshot', 'expect', 'point', 'resolve', 'recipes', 'fingerprint', 'echo', 'recover', 'context', 'refill', 'toggle', 'report', 'totp'] as const;
+export const EXECUTION_MODULES = ['text', 'url', 'gates', 'observe', 'browser', 'action', 'lifecycle', 'loop', 'snapshot', 'expect', 'point', 'resolve', 'recipes', 'fingerprint', 'echo', 'recover', 'context', 'refill', 'toggle', 'positional', 'report', 'totp'] as const;
 export type ExecutionModule = (typeof EXECUTION_MODULES)[number];
 
 /** One shared module as the artifact carries it. */
