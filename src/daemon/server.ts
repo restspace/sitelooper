@@ -1948,6 +1948,8 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
         skippedReads: result.skill?.skippedReads,
         declaredOutputs: step.outputs,
         values: result.report.evidence?.values ?? {},
+        // Only an ASKED output's skipped read makes the step partial (fwec11 01-signin).
+        instruction: step.instruction,
       });
       const judged: InstructionResult = partial.length ? { ...result, report: { ...result.report, status: 'failure' } } : result;
       for (const why of partial) opts.progress(`[flow ${flow.name}] ${step.id}: PARTIAL — ${why}`);

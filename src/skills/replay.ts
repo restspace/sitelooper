@@ -46,7 +46,7 @@ import { dismissalAlreadyInEffect, effectExpectation, expectedChangesVerdict, li
 // Re-exported so this module's callers need not know which owns the source.
 export { lineShows, type LineShowsOptions } from '../execution/snapshot.js';
 export { consequentialExpectations, isEchoLine } from '../execution/expect.js';
-import { candidateNames, echoVerdict, noteInteraction, setsSomething } from '../execution/echo.js';
+import { candidateNames, echoAt, echoVerdict, markActed, noteCommit, noteInteraction, setsSomething } from '../execution/echo.js';
 import { documentOf, fillLost, guardedTyping, noteFill, rearmStandingFills, restoreStandingFills, standingFills, standingFillsLost } from '../execution/refill.js';
 import { hasTotpMarker, resolveSecrets, resolveSecretsAsync } from '../shared/secrets.js';
 import { hideBefore, hideEffectLines, hideVerdict, pressHadNoEffect, toggleAlreadyShown, toggleEffectLines } from '../execution/toggle.js';
@@ -940,7 +940,10 @@ export async function replaySkill(
         const healedLocator = await tryHeal(step, tag, key, chain, dead);
         if (healedLocator) {
           resolved[key] = healedLocator;
-          if (setsSomething(step.tool)) noteInteraction(interacted, candidateNames(chain as { name?: unknown; label?: unknown }[]));
+          if (setsSomething(step.tool)) {
+            noteInteraction(interacted, candidateNames(chain as { name?: unknown; label?: unknown }[]));
+            await markActed(page, healedLocator, interacted, [...candidateNames(chain as { name?: unknown; label?: unknown }[]), args.value, args.text], tag);
+          }
           continue;
         }
         resolveError = dead;
@@ -964,7 +967,12 @@ export async function replaySkill(
       // non-read steps: a read observes, it does not set. The accessible name
       // of a clicked option ("Last 6 hours") is the value it selects.
       // Only a step that can SET or SELECT something counts (setsSomething).
-      if (setsSomething(step.tool)) noteInteraction(interacted, candidateNames(chain as { name?: unknown; label?: unknown }[]));
+      if (setsSomething(step.tool)) {
+        noteInteraction(interacted, candidateNames(chain as { name?: unknown; label?: unknown }[]));
+        // …and the element itself: an echo is judged by the control, not only
+        // the text (echoAt, round 59).
+        await markActed(page, hit.locator, interacted, [...candidateNames(chain as { name?: unknown; label?: unknown }[]), args.value, args.text], tag);
+      }
       // Drift only when a candidate tried ahead of the winner FAILED (the shared
       // isDrift): a positional primary ranked behind a name that won was never missed.
       if (isDrift(hit)) {
@@ -1417,14 +1425,22 @@ export async function replaySkill(
       res.values[key] = value;
       // An echo read: this value is only what the skill itself set or chose,
       // so it confirms the control's display, not that the app persisted it.
+      // Round 59: the text alone is not an echo — a read of an element that is
+      // not the control, after the value was committed, is observed (EspoCRM
+      // fwec11's "Admin" display name after the sign-in form was submitted).
       const echo = echoVerdict(interacted, key, value, `step ${tag}`);
-      if (echo) {
+      if (echo && (await echoAt(page, interacted, value, (resolved.target as Locator | undefined) ?? null))) {
         res.echoedValues.push(key);
         res.warnings.push(echo);
       }
       res.lines.push(`${head} → ${key} = ${clip(outcome.result, MAX_LINE)}`);
     } else {
       res.lines.push(`${head} → ${clip(outcome.result.split('\n')[0], MAX_LINE)}`);
+      // A click whose recorded effect added lines: a later read of a value one
+      // of them shows was committed by it (echoAt's rule b — a Save adding the row).
+      if (['click', 'dblclick', 'press'].includes(step.tool) && step.expect?.addedContains?.length) {
+        noteCommit(interacted, step.expect.addedContains.filter((l) => !TRANSIENT_LINE.test(l)).map((l) => fillParams(l, params)), tag);
+      }
       // The ledger refills with what the field was GIVEN: a `{{env:NAME}}`
       // secret resolved (the fill just dispatched with it, so it resolves), or
       // a rebuilt sign-in form is refilled with the marker text. In memory

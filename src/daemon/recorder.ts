@@ -944,6 +944,26 @@ function foldedTextRe(v: string): RegExp {
  * value stays un-threadable and the caller falls back to recovery.
  */
 /**
+ * A reported value that IS the document title, read as the title.
+ *
+ * EspoCRM fwec11 01-signin reported `page_title: "EspoCRM"` — the tab's
+ * title. No element shows it whole, so the read-back cascade pinned it by
+ * containment to the footer's "EspoCRM, Inc." link (frame "{{=}}, Inc."), a
+ * credit line that merely contains the word; no replay found that link, and
+ * both n2 and n3 ended partial on it. The page's own title is the provenance:
+ * a `read` of `what: 'title'`, which both runners take from `page.title()`.
+ * Null unless the value equals the live title exactly (whitespace collapsed).
+ */
+export async function titleReadBack(page: Page, value: string, label: string): Promise<RecordedStep | null> {
+  const want = value.replace(/\s+/g, ' ').trim();
+  if (!want) return null;
+  const title = ((await page.title().catch(() => '')) ?? '').replace(/\s+/g, ' ').trim();
+  if (title !== want) return null;
+  // No target, as a url read has none: nothing on the page is resolved for it.
+  return { k: 'step', tool: 'read', args: { what: 'title' }, locators: {}, result: JSON.stringify(want), label };
+}
+
+/**
  * THE FIELD THE KEY NAMES. EspoCRM fwec10 02-create reported `stage:
  * "Negotiation"`; the saved record shows it in its stage field and again in
  * the Stream entry that narrates the save ("… assigned to Bench Assignee /

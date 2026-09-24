@@ -252,6 +252,13 @@ const HELPERS: { token: string; source: string[] }[] = [
     ],
   },
   {
+    token: 'lastReadHit',
+    source: [
+      '/** The element the latest labelled read resolved to (readOptional), for echoRead: an echo is judged by the element (echoAt). */',
+      'let lastReadHit: Locator | null = null;',
+    ],
+  },
+  {
     token: 'echoRead(',
     source: [
       '/**',
@@ -260,10 +267,12 @@ const HELPERS: { token: string; source: string[] }[] = [
       ' * (src/execution/echo.ts, embedded). It confirms the control, not that the',
       ' * app persisted anything, so the label is listed in `run.echoed` and warned;',
       ' * the value is still published, as replay still carries it to later steps.',
+      ' * Judged by the element, not only the text (the shared echoAt, round 59:',
+      " * fwec11's display name \"Admin\" after the sign-in form was submitted).",
       ' */',
-      'function echoRead(ledger: Set<string>, run: FlowRun, label: string, key: string, value: string | undefined, where: string): void {',
+      'async function echoRead(ledger: Set<string>, run: FlowRun, label: string, key: string, value: string | undefined, where: string, page: Page, at: Locator | null): Promise<void> {',
       "  const echo = echoVerdict(ledger, label, value ?? '', where);",
-      '  if (!echo) return;',
+      "  if (!echo || !(await echoAt(page, ledger, value ?? '', at))) return;",
       '  run.echoed.push(key);',
       '  logWarning(echo);',
       '}',
@@ -850,6 +859,7 @@ const HELPERS: { token: string; source: string[] }[] = [
       '    count?: { root: { locator(selector: string, options?: { hasText?: string | RegExp }): Locator }; scopes: CountScope[] | null };',
       '  } = {},',
       '): Promise<string> {',
+      '  lastReadHit = null;',
       '  const hit = await resolveForRead(page, (again) => resolveTarget(page, candidates, where, again ? { ...policy, waitMs: 0 } : policy, opts));',
       '  // A COUNT read (opts.count) that resolved nothing on a settled page with',
       '  // its scope on it observed "0", as replay publishes it (the shared',
@@ -860,6 +870,7 @@ const HELPERS: { token: string; source: string[] }[] = [
       '    console.log(`[sitelooper skip] ${where}: read target not found — value left empty`);',
       "    return '';",
       '  }',
+      '  lastReadHit = hit.locator;',
       '  const taken = await takeRead(() => read(hit.locator));',
       '  if (taken.ok) return taken.value;',
       '  skippedReads.push(where);',
@@ -1858,6 +1869,14 @@ function actionTarget(step: SkillStep, key: 'target' | 'source', ctx: Ctx, out: 
   // clicked option is the value it selects (replay notes them here too).
   if (setsSomething(step.tool)) {
     out.push(...echoNoteLines(chain.map((c) => (c as { name?: unknown; label?: unknown }).name ?? (c as { name?: unknown; label?: unknown }).label), ctx));
+    // …and the element itself, as replay marks it: an echo is judged by the
+    // control, not only the text (the shared markActed / echoAt, round 59).
+    const echoTexts = [...chain.map((c) => (c as { name?: unknown; label?: unknown }).name ?? (c as { name?: unknown; label?: unknown }).label), step.args?.value, step.args?.text].filter((t): t is string => typeof t === 'string' && t.length > 0);
+    if (ctx.echoes) {
+      noteSlots(echoTexts, ctx);
+      ctx.echoUsed = true;
+      out.push(`await markActed(page, ${name}.locator, ${ctx.echoes}, [${echoTexts.map(src).join(', ')}], ${q(`${ctx.segmentId}/${ctx.stepIndex}`)});`);
+    }
   }
   return `${name}.locator`;
 }
@@ -1929,11 +1948,11 @@ function echoNoteLines(texts: unknown[], ctx: Ctx): string[] {
  * replay's echoedValues. The value is still published (as replay still
  * carries it); the label goes into `run.echoed` with one warning line.
  */
-function echoReadLines(step: SkillStep, ctx: Ctx): string[] {
+function echoReadLines(step: SkillStep, ctx: Ctx, readAt = 'null'): string[] {
   if (!ctx.echoes || !step.label) return [];
   ctx.echoUsed = true;
   const key = `${ctx.stepId}.${step.label}`;
-  return [`echoRead(${ctx.echoes}, run, ${q(step.label)}, ${q(key)}, outputs[${q(key)}], ${q(`${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex}`)});`];
+  return [`await echoRead(${ctx.echoes}, run, ${q(step.label)}, ${q(key)}, outputs[${q(key)}], ${q(`${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex}`)}, page, ${readAt});`];
 }
 
 /** The names this step mints, in the order the segment declares them. */
@@ -2422,6 +2441,14 @@ function emitSkillAction(step: SkillStep, segment: SpecSegment, index: number, c
   // A filled value or typed text is something the step put on the page, noted
   // ahead of any skip, as replay notes it before it asks about a miss.
   if (setsSomething(step.tool)) out.push(...echoNoteLines([args.value, args.text], ctx));
+  // A click whose recorded effect added lines commits a value one of them
+  // shows (echoAt's rule b), as replay notes it after the click.
+  const committing = (step.expect?.addedContains ?? []).filter((l) => !TRANSIENT_LINE.test(l));
+  if (ctx.echoes && ['click', 'dblclick', 'press'].includes(step.tool) && committing.length) {
+    noteSlots(committing, ctx);
+    ctx.echoUsed = true;
+    out.push(`noteCommit(${ctx.echoes}, [${committing.map(src).join(', ')}], ${q(`${ctx.segmentId}/${ctx.stepIndex}`)});`);
+  }
   out.push(...absentDialogLines(step, args, ctx));
 
   // Steps that act on the page itself, before any locator is needed.
@@ -2492,6 +2519,13 @@ function emitSkillAction(step: SkillStep, segment: SpecSegment, index: number, c
   const isRead = isReadAction(step.tool);
   if (isRead && str('what') === 'url') {
     if (step.label) out.push(`outputs[${q(`${ctx.stepId}.${step.label}`)}] = page.url();`, ...echoReadLines(step, ctx));
+    return out;
+  }
+  // The document title, like the url, has no element behind it (round 59,
+  // fwec11: n1's page_title was pinned by containment to the footer's
+  // "EspoCRM, Inc."). Replay reads it through the read tool's what=title.
+  if (isRead && str('what') === 'title') {
+    if (step.label) out.push(`outputs[${q(`${ctx.stepId}.${step.label}`)}] = (await page.title()).trim();`, ...echoReadLines(step, ctx));
     return out;
   }
   // An unlabelled read published nothing — it was the agent orienting itself —
@@ -2936,11 +2970,11 @@ function readLines(step: SkillStep, ctx: Ctx): string[] {
       `${out} = 'root' in ${framed} ? await readOptional(page, [`,
       ...r.open,
       `], ${r.where}, ${r.policy}, ${read}, ${countOpts(step, chain, r.opts, `${framed}.root`)}) : '';`,
-      ...echoReadLines(step, ctx),
+      ...echoReadLines(step, ctx, 'lastReadHit'),
     ];
   }
   const { open, where, policy, opts } = resolutionLines(chain, step, 'target', ctx, { allowMultiple: spansEveryMatch(step.tool, step.args ?? {}), waitMs: 'RESOLVE_WAIT_MS' });
-  return [`${out} = await readOptional(page, [`, ...open, `], ${where}, ${policy}, ${read}, ${countOpts(step, chain, opts, 'page')});`, ...echoReadLines(step, ctx)];
+  return [`${out} = await readOptional(page, [`, ...open, `], ${where}, ${policy}, ${read}, ${countOpts(step, chain, opts, 'page')});`, ...echoReadLines(step, ctx, 'lastReadHit')];
 }
 
 /**
@@ -3503,7 +3537,7 @@ function unsourcedRef(spec: SpecFlow, ref: string): { sid: string; output: strin
         // the absent-only retirement) publishes '' on every run, and `need`
         // treats '' as missing — so an empty chain is no more a source than
         // an unproven one. A url read is the exception: it needs no locator.
-        const empty = !(s.locators?.target ?? []).length && s.args?.what !== 'url';
+        const empty = !(s.locators?.target ?? []).length && s.args?.what !== 'url' && s.args?.what !== 'title';
         if (!s.unproven && !empty) proven += 1;
       }
       if (s.body) walk(s.body);
