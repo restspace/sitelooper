@@ -749,6 +749,7 @@ export function compileSkills(input: CompileInput): Skill[] {
     }
   }
   kept = sourcelessGoto(kept, input, recordingNotes);
+  kept = mintedFill(kept, input, slots, recordingNotes);
   if (!kept.length) return [];
   // A url id this span minted is its OUTPUT: derived ({{dN}}, discoverMinted),
   // never a param — even when the ledger, which banked it before this compile,
@@ -1740,6 +1741,84 @@ function sourcelessGoto(kept: RecordedStep[], input: CompileInput, notes: Transf
     return kept.slice(0, i);
   }
   return kept;
+}
+
+/**
+ * A fill or type of a value the APP minted in the recording's run is never
+ * replayed as a literal: another run's minted value names another run's record.
+ *
+ * snipeit fwsi14-n1 02-create: the create form came PRE-FILLED with the new
+ * asset's tag (#26: `- textbox "Asset Tag": BA-00004`) and the save's alert
+ * repeated it ("Asset with tag BA-00004 was created successfully"); #41 typed
+ * it into "Lookup by Asset Tag" and #42 pressed Enter. s_bc3a9e typed
+ * BA-00004 on every replay: n2's asset was BA-00005, so its lookup missed —
+ * and one that hit would have opened, and the next segments checked out, the
+ * RECORDING's asset.
+ *
+ * Minted, by provenance (appMinted): before this step, an alert — the app's
+ * answer — named the value, and no step had typed it and no instruction
+ * stated it; nor does this instruction state it, nor is it (or does it carry)
+ * a slot, nor is it a task constant. Then:
+ *  - a published source binds it (a known value: an earlier output or url
+ *    part) → a slot, bound by origin by the usual `bindings` pass;
+ *  - otherwise the procedure ENDS before it, as sourcelessGoto's does: replay
+ *    recovers there, and the artifact stops there, with this note saying why.
+ * Reading this run's value off the page (a derived value from page text) is
+ * the richer answer, and is not built.
+ */
+function mintedFill(kept: RecordedStep[], input: CompileInput, slots: Map<string, string>, notes: TransformNote[]): RecordedStep[] {
+  const slotted = new Set([...slots.values()].map((v) => v.trim()));
+  const known = new Map(Object.entries(input.knownValues ?? {}).map(([k, v]) => [String(v ?? '').trim(), k] as const));
+  const constants = new Set((input.taskConstants ?? []).map((v) => v.trim()));
+  for (let i = 0; i < kept.length; i++) {
+    const s = kept[i];
+    const raw = s.tool === 'fill' ? s.args.value : s.tool === 'type' ? s.args.text : undefined;
+    if (typeof raw !== 'string') continue;
+    const v = raw.trim();
+    if (v.length < 2 || v.includes('{{') || slotted.has(v) || constants.has(v) || occursAsToken(input.instruction, v)) continue;
+    // A value carrying a task value (the runid in "fwod19-n1 Bench Customer") is the task's.
+    if ([...slotted].some((x) => x.length >= 2 && occursAsToken(v, x))) continue;
+    if (!appMinted(v, entriesBefore(input, s))) continue;
+    const origin = known.get(v);
+    if (origin !== undefined) {
+      slots.set(`v${slots.size + 1}`, v);
+      slotted.add(v);
+      notes.push({ name: 'mintedFill', at: i + 1, reason: `${s.tool} typed ${JSON.stringify(v)}, a value the app minted; slotted to its published source ${origin}` });
+      continue;
+    }
+    notes.push({
+      name: 'mintedFill',
+      at: i + 1,
+      reason: `${s.tool} typed ${JSON.stringify(v)}, a value the app minted in the recording's run (an alert named it before any step typed it; no instruction states it and no published source supplies it): the procedure ends before it`,
+    });
+    return kept.slice(0, i);
+  }
+  return kept;
+}
+
+/**
+ * Whether the recording, in `before`, shows `value` minted by the app: an alert
+ * named it before any step typed it, and no instruction stated it.
+ */
+function appMinted(value: string, before: readonly RecordedEntry[]): boolean {
+  let shown = false;
+  for (const e of before) {
+    if (e.k === 'instruction') {
+      if (occursAsToken(e.text, value)) return false;
+      continue;
+    }
+    if (e.k !== 'step') continue;
+    if (!shown && Object.values(e.args ?? {}).some((a) => typeof a === 'string' && occursAsToken(a, value))) return false;
+    const d = e.diff;
+    if (!d) continue;
+    // The app's ANSWER named it. A field's pre-filled value alone does not
+    // tell a minted value from an app default: the scan of the published
+    // recordings found Ghost's pre-filled publish time ("17:56", fwgh6/11)
+    // and Grafana's default refresh intervals (fwgr71) typed back — the
+    // app's defaults, not another run's record.
+    if (d.alerts.some((a) => occursAsToken(a, value))) shown = true;
+  }
+  return shown;
 }
 
 /**
