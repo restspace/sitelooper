@@ -993,6 +993,59 @@ const PARTS = `<!doctype html><html><head><meta charset="utf-8"><title>Ticket</t
 </body></html>`;
 
 /**
+ * A picker driven by the KEYBOARD (round 62, gitea fwgt13): clicking "Labels"
+ * opens the listbox; ArrowDown/ArrowUp move the highlight (none at first, as
+ * Fomantic's menu starts); Enter clicks the highlighted item, which toggles
+ * it; Escape shuts the picker and posts `commit:labels:<applied>`.
+ * `?shifted=1` lists one more label first ("good first issue"), so the same
+ * arrow presses land one item earlier — the page a fresh app shows where the
+ * recording's did not.
+ */
+const KBD_PICKER = (shifted: boolean) => `<!doctype html><html><head><meta charset="utf-8"><title>New issue</title></head><body>
+<h1>New issue</h1>
+<div id="labels" role="combobox" aria-label="Labels" aria-expanded="false" tabindex="0">Labels</div>
+<div id="menu" role="listbox" aria-label="Label choices" hidden>
+  ${shifted ? '<a href="#" class="item">good first issue</a>' : ''}
+  <a href="#" class="item">bug</a>
+  <a href="#" class="item">documentation</a>
+  <a href="#" class="item">enhancement</a>
+  <a href="#" class="item">priority-high</a>
+</div>
+<script>
+const menu = document.getElementById('menu');
+const box = document.getElementById('labels');
+const items = () => Array.from(menu.querySelectorAll('a.item'));
+let active = -1;
+const picked = new Set();
+box.addEventListener('click', () => {
+  menu.hidden = !menu.hidden;
+  box.setAttribute('aria-expanded', String(!menu.hidden));
+  active = -1;
+});
+menu.addEventListener('click', (e) => {
+  const a = e.target.closest('a.item');
+  if (!a) return;
+  e.preventDefault();
+  const name = a.textContent.trim();
+  if (picked.has(name)) picked.delete(name); else picked.add(name);
+});
+document.addEventListener('keydown', (e) => {
+  if (menu.hidden) return;
+  const list = items();
+  if (e.key === 'ArrowDown') { active = Math.min(active + 1, list.length - 1); e.preventDefault(); }
+  else if (e.key === 'ArrowUp') { active = Math.max(active - 1, 0); e.preventDefault(); }
+  else if (e.key === 'Enter' && active >= 0) { list[active].click(); e.preventDefault(); }
+  else if (e.key === 'Escape') {
+    menu.hidden = true;
+    box.setAttribute('aria-expanded', 'false');
+    fetch('/commit/labels/' + encodeURIComponent([...picked].sort().join(',')), { method: 'POST' });
+  }
+  list.forEach((a, i) => a.classList.toggle('active', i === active));
+});
+</script>
+</body></html>`;
+
+/**
  * A label picker that commits on CLOSE (round 60, gitea fwgt11 04-set):
  * clicking "Labels" opens or shuts the listbox; a click on an item toggles it
  * in the pending selection; shutting the picker (the Labels click again, or
@@ -2040,6 +2093,7 @@ export async function createFixtureServer(initialCount = 10): Promise<FixtureSer
       if (url === '/stamp') return html(STAMP);
       if (url === '/hash') return html(HASH);
       if (url.startsWith('/menu/')) return html(MENU(tail('/menu/')));
+      if (url === '/kbd-picker' || url.startsWith('/kbd-picker?')) return html(KBD_PICKER(url.includes('shifted=1')));
       if (url === '/labels-picker' || url.startsWith('/labels-picker?')) return html(LABEL_PICKER({ escape: !url.includes('escape=0'), stuck: url.includes('stuck=1'), furniture: url.includes('furniture=1') }));
       if (url === '/create/form') return html(CREATE);
       if (url === '/hopper') return html(HOPPER);

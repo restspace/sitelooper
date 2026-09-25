@@ -49,7 +49,7 @@ export { consequentialExpectations, isEchoLine } from '../execution/expect.js';
 import { candidateNames, judgeEcho, markActed, noteCommit, noteInteraction, setsSomething } from '../execution/echo.js';
 import { documentOf, fillLost, guardedTyping, noteFill, rearmStandingFills, restoreStandingFills, standingFills, standingFillsLost } from '../execution/refill.js';
 import { hasTotpMarker, resolveSecrets, resolveSecretsAsync } from '../shared/secrets.js';
-import { appliedPickCandidates, closeBeforeReopen, isNavigation, pickAlreadyApplied, pickBaseline, hideBefore, hideEffectLines, hideVerdict, pressHadNoEffect, toggleAlreadyShown, toggleEffectLines } from '../execution/toggle.js';
+import { appliedPickCandidates, armKeyboardPick, closeBeforeReopen, keyboardPickVerdict, isNavigation, pickAlreadyApplied, pickBaseline, hideBefore, hideEffectLines, hideVerdict, pressHadNoEffect, toggleAlreadyShown, toggleEffectLines } from '../execution/toggle.js';
 import { alreadyAddedLines, positionalClickVerdict, recordedAccessibleName } from '../execution/positional.js';
 import { mayNavigateToDestination, navigateToDestination, textHeldElsewhere } from '../execution/recover.js';
 import { CONTEXT_CONTRACT, contractOf, contractVerdict, isVerified, originOf, stepsCarryContext, type Skill, type SkillStep } from './store.js';
@@ -1387,6 +1387,10 @@ export async function replaySkill(
           // guardedTyping, which the artifact calls around its own dispatch;
           // espocrm fwec10 saved 1,250,012,500 for 12500).
           const typed = step.tool === 'type' ? args.text : step.tool === 'fill' ? args.value : undefined;
+          // A key press that picked an item is verified by the item's NAME
+          // (the shared keyboardPickVerdict, gitea fwgt13), never by position.
+          const picks = step.tool === 'press' && step.picks ? { role: step.picks.role, name: fillParams(step.picks.name, params) } : null;
+          if (picks) await armKeyboardPick(page);
           let value =
             typeof typed === 'string' && resolved.target
               ? await guardedTyping(standing, resolved.target, typed, step.tool, (w) => res.warnings.push(`step ${tag}: ${w}`), dispatch, step.doubledAsRecorded ? { doubledAsRecorded: true } : {})
@@ -1404,6 +1408,15 @@ export async function replaySkill(
           ) {
             res.warnings.push(`step ${tag}: the first press changed nothing — pressed again, as the recording had to`);
             value = await dispatch();
+          }
+          if (picks) {
+            const wrong = await keyboardPickVerdict(page, picks);
+            if (wrong) {
+              res.failedAt = failIndex;
+              res.reason = wrong;
+              res.lines.push(`${head} → FAILED: ${wrong}`);
+              return { status: 'stopped' };
+            }
           }
           if (value.outcome) res.outcome = value.outcome;
           const landed = await landing();

@@ -273,3 +273,78 @@ export async function pickAlreadyApplied(page: Page, role: string, name: string,
   }
   return inside >= 1 && outside >= 1;
 }
+
+/**
+ * The KEYBOARD-PICK rule both execution targets share (round 62, gitea
+ * fwgt13). A key press that picks (Enter on a highlighted item) picks by
+ * POSITION: whatever the arrow keys left highlighted. fwgt13-n1 walked each
+ * picker with ArrowDown/ArrowUp and Enter; on n2, n3 and the compiled script
+ * every press landed one or more items off ("admin" for "bench-assignee",
+ * "Backlog" for "Bench Milestone", enhancement for priority-high), the issue
+ * was created with them, and every runner reported success.
+ *
+ * The recording's journal names the element each pick's own synthetic click
+ * hit (compile.ts keyboardPick → SkillStep.picks). Before such a press both
+ * runners arm a one-shot listener for that click (armKeyboardPick); after it,
+ * keyboardPickVerdict compares what the click hit with the recorded NAME —
+ * by accessible role and name where the element is still on the page, else
+ * by the text it carried when it was clicked — and returns the stop reason
+ * when it hit another item, or nothing at all. Never judged by position.
+ */
+
+const PICK_ATTR = 'data-sitelooper-picked';
+
+/** Arm the one-shot listener that notes what the next click hits (keyboardPickVerdict reads it). */
+export async function armKeyboardPick(page: Page): Promise<void> {
+  await page
+    .evaluate((attr) => {
+      for (const el of Array.from(document.querySelectorAll(`[${attr}]`))) el.removeAttribute(attr);
+      const w = window as unknown as { __slPickArmed?: boolean; __slPicked?: { text: string; label: string } | null };
+      w.__slPickArmed = true;
+      w.__slPicked = null;
+      document.addEventListener(
+        'click',
+        (ev) => {
+          const t = ev.target;
+          if (!w.__slPickArmed || !(t instanceof Element)) return;
+          w.__slPickArmed = false;
+          const item = (t.closest('a, button, option, li, [role]') ?? t) as HTMLElement;
+          item.setAttribute(attr, '');
+          w.__slPicked = { text: item.innerText || item.textContent || '', label: item.getAttribute('aria-label') ?? '' };
+        },
+        { capture: true, once: true },
+      );
+    }, PICK_ATTR)
+    .catch(() => {});
+}
+
+/** Null when the armed press's click hit an element named `want.name`; otherwise why the step stops. */
+export async function keyboardPickVerdict(page: Page, want: { role: string; name: string }): Promise<string | null> {
+  const fold = (s: string) => s.replace(/\s+/g, ' ').trim();
+  const picked = await page
+    .evaluate(() => {
+      const w = window as unknown as { __slPickArmed?: boolean; __slPicked?: { text: string; label: string } | null };
+      w.__slPickArmed = false;
+      return w.__slPicked ?? null;
+    })
+    .catch(() => null);
+  const recorded = `${want.role} ${JSON.stringify(want.name)}`;
+  if (!picked) return `the press was recorded picking ${recorded} and picked nothing — stopped rather than go on without that pick`;
+  const marked = page.locator(`[${PICK_ATTR}]`);
+  let named = false;
+  try {
+    const byName = page.getByRole(want.role as Parameters<Page['getByRole']>[0], { name: want.name, exact: true });
+    named = (await byName.and(marked).count()) > 0;
+  } catch {
+    named = false;
+  }
+  if (!named) named = fold(picked.text) === fold(want.name) || (picked.label !== '' && fold(picked.label) === fold(want.name));
+  await page
+    .evaluate((attr) => {
+      for (const el of Array.from(document.querySelectorAll(`[${attr}]`))) el.removeAttribute(attr);
+    }, PICK_ATTR)
+    .catch(() => {});
+  if (named) return null;
+  const got = fold(picked.label || picked.text).slice(0, 80);
+  return `the press was recorded picking ${recorded} and picked ${JSON.stringify(got)} — a key press picks by position, and this position holds another item; stopped rather than keep the wrong pick`;
+}
