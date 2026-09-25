@@ -1,0 +1,303 @@
+{
+  "flow": "fwvk15",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_9e6344; observed visible_projects_1=Inbox, landing_page_title=Current Tasks | Vikunja, logged_in_user=admin, greeting_heading=Good Morning admin!, visible_tasks_1=Seed: ship repaired device, visible_tasks_2=Seed: order missing parts, visible_tasks_3=Seed: triage inbox.",
+      "unanswered": [
+        "login_page"
+      ],
+      "values": {
+        "visible_projects_1": "Inbox",
+        "landing_page_title": "Current Tasks | Vikunja",
+        "logged_in_user": "admin",
+        "greeting_heading": "Good Morning admin!",
+        "visible_tasks_1": "Seed: ship repaired device",
+        "visible_tasks_2": "Seed: order missing parts",
+        "visible_tasks_3": "Seed: triage inbox"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "11/11",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_9e6344: step 2: skipped read — no element matched any known locator for target (tried 1: page.getByRole('link', { name: 'Bench Project', exact: true }))"
+      ],
+      "unreported": [
+        "visible_projects_2"
+      ]
+    },
+    {
+      "id": "02-open",
+      "status": "success",
+      "summary": "Opened the project named \"Bench Project\" from the sidebar (it exists under that exact name on this run's page, alongside the Inbox project), landing on http://127.0.0.1:8096/projects/2/5 — \"Bench Project | Vikunja\". In the List view, three tasks whose titles start with \"Seed:\" are displayed; their exact titles were read from the live DOM and nothing was modified.",
+      "values": {
+        "project_name": "Bench Project",
+        "project_url": "http://127.0.0.1:8096/projects/2/5",
+        "seed_task_title_1": "Seed: triage inbox",
+        "seed_task_title_2": "Seed: order missing parts",
+        "seed_task_title_3": "Seed: ship repaired device",
+        "seed_task_count": "3",
+        "seed_task_titles_1": "Seed: triage inbox",
+        "seed_task_titles_2": "Seed: order missing parts",
+        "seed_task_titles_3": "Seed: ship repaired device"
+      },
+      "tier": "B",
+      "recovered": true,
+      "fellBack": "unresolved reference(s): 01-signin.visible_projects_2, 01-signin.visible_projects_2",
+      "replayed": "1/1",
+      "repaired": false,
+      "turns": 4,
+      "unreported": [
+        "task_title_1",
+        "task_title_2",
+        "task_title_3"
+      ]
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "Created a new task in the \"Bench Project\" via the inline \"Add a task…\" form with the exact title 'fwvk15-n3 Bench Task', then opened its own detail page at http://127.0.0.1:8096/tasks/8. The recorded procedure created the task but left the description empty (its placeholder \"Enter a description, hit '/' for more options…\" was still showing), so I clicked into the description editor, entered 'Bench task created for run fwvk15-n3' and clicked Save; the page then rendered the saved description text with an \"Edit\" button (live DOM: \"Description Saved! / Bench task created for run fwvk15-n3 / Edit\"). The task's own page shows the identifier BENCH-6. No 'Seed:' task was touched.",
+      "values": {
+        "task_identifier": "BENCH-6",
+        "task_title": "fwvk15-n3 Bench Task",
+        "task_description": "Bench task created for run fwvk15-n3",
+        "task_url": "http://127.0.0.1:8096/tasks/8",
+        "project": "Bench Project",
+        "ref": "fwvk15-n3"
+      },
+      "tier": "B",
+      "recovered": true,
+      "fellBack": "unresolved reference(s): 01-signin.visible_projects_2, 01-signin.visible_projects_2",
+      "replayed": "6/6",
+      "repaired": false,
+      "turns": 7,
+      "unreported": [
+        "task_detail_url",
+        "save_confirmation"
+      ]
+    },
+    {
+      "id": "04-set",
+      "status": "success",
+      "summary": "Replayed stored procedure s_d85c10; observed dp_month=8, dp_year=2026, dec31_cell=31, task_identifier=BENCH-6, task_title=fwvk15-n3 Bench Task, due_date_displayed=31 Dec 2026, 00:00:00, dp_selected_day_before_confirm_1=31 Dec 2026, dp_selected_day_before_confirm_2=00:00.",
+      "values": {
+        "dp_month": "8",
+        "dp_year": "2026",
+        "dec31_cell": "31",
+        "task_identifier": "BENCH-6",
+        "task_title": "fwvk15-n3 Bench Task",
+        "due_date_displayed": "31 Dec 2026, 00:00:00",
+        "dp_selected_day_before_confirm_1": "31 Dec 2026",
+        "dp_selected_day_before_confirm_2": "00:00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "21/21",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_d85c10: step 10: read 'dp_input_after_month' returned '1 Jan 2026, 00:00' from a control this step set, and nothing committed it since — it shows the control, however the app formats it, not what the app stored; dropped from the report's confident values",
+        "s_d85c10: step 15: read 'priority_select_value' returned '3' from a control this step set, and nothing committed it since — it shows the control, however the app formats it, not what the app stored; dropped from the report's confident values",
+        "s_d85c10: step 16: read 'priority_displayed' returned 'High' from a control this step set, and nothing committed it since — it shows the control, however the app formats it, not what the app stored; dropped from the report's confident values"
+      ],
+      "unreported": [
+        "priority_displayed",
+        "priority_select_value",
+        "dp_input_after_month"
+      ]
+    },
+    {
+      "id": "05-add",
+      "status": "success",
+      "summary": "Replayed stored procedure s_c5be84; observed task_identifier=BENCH-6, task_title=fwvk15-n3 Bench Task.",
+      "values": {
+        "task_identifier": "BENCH-6",
+        "task_title": "fwvk15-n3 Bench Task"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "9/9",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_c5be84: step 5: read 'labels_displayed' returned a value the skill itself set/selected ('Backend') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_c5be84: step 6: read 'label_chip_text' returned a value the skill itself set/selected ('Backend') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_c5be84: step 9: read 'labels_displayed' returned a value the skill itself set/selected ('Backend') — confirms the control, not persistence; dropped from the report's confident values"
+      ],
+      "unreported": [
+        "labels_displayed",
+        "label_chip_text"
+      ]
+    },
+    {
+      "id": "06-add",
+      "status": "success",
+      "summary": "Replayed stored procedure s_77f155; observed ref=fwvk15-n3, task_identifier=BENCH-6, task_title=fwvk15-n3 Bench Task, comment_author=admin.",
+      "values": {
+        "ref": "fwvk15-n3",
+        "task_identifier": "BENCH-6",
+        "task_title": "fwvk15-n3 Bench Task",
+        "comment_author": "admin"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "6/6",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_77f155: step 2: read 'comment_text' returned a value the skill itself set/selected ('Comment for run fwvk15-n3') — confirms the control, not persistence; dropped from the report's confident values"
+      ],
+      "unreported": [
+        "comment_text"
+      ]
+    },
+    {
+      "id": "07-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_0843d6; observed ref=fwvk15-n3, task_title=fwvk15-n3 Bench Task, task_identifier=BENCH-6, task_description=Bench task created for run fwvk15-n3, due_date_displayed=31 Dec 2026, 00:00:00, priority_displayed=Unset\nLow\nMedium\nHigh\nUrgent\nDO NOW, labels_displayed=Backend, comment_author=admin, comment_text=Comment for run fwvk15-n3, comment_time=less than a minute ago, priority_selected_option=High, project=Bench Project, priority_full_option_list_1=Unset, priority_full_option_list_2=Low, priority_full_option_list_3=Medium, priority_full_option_list_4=High, priority_full_option_list_5=Urgent, priority_full_option_list_6=DO NOW.",
+      "values": {
+        "ref": "fwvk15-n3",
+        "task_title": "fwvk15-n3 Bench Task",
+        "task_identifier": "BENCH-6",
+        "task_description": "Bench task created for run fwvk15-n3",
+        "due_date_displayed": "31 Dec 2026, 00:00:00",
+        "priority_displayed": "Unset\nLow\nMedium\nHigh\nUrgent\nDO NOW",
+        "labels_displayed": "Backend",
+        "comment_author": "admin",
+        "comment_text": "Comment for run fwvk15-n3",
+        "comment_time": "less than a minute ago",
+        "priority_selected_option": "High",
+        "project": "Bench Project",
+        "priority_full_option_list_1": "Unset",
+        "priority_full_option_list_2": "Low",
+        "priority_full_option_list_3": "Medium",
+        "priority_full_option_list_4": "High",
+        "priority_full_option_list_5": "Urgent",
+        "priority_full_option_list_6": "DO NOW"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "17/17",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "08-open",
+      "status": "success",
+      "summary": "Opened \"Bench Project\" list view (http://127.0.0.1:8096/projects/2/5 — \"Bench Project | Vikunja\", read-only, nothing changed). The task list contains exactly four tasks, in this order: \"fwvk15-n3 Bench Task\", \"Seed: triage inbox\", \"Seed: order missing parts\", \"Seed: ship repaired device\" — read via read_all on the list links and matching the rendered rows in the live DOM. The three 'Seed:' titles are present and unmodified, and the new 'fwvk15-n3 Bench Task' is listed first (with High priority, Backend label and \"– Due in 3 months\" showing on its row).",
+      "values": {
+        "project": "Bench Project",
+        "task_count": "4",
+        "new_task_title": "fwvk15-n3 Bench Task",
+        "new_task_row_flags": "High priority, Backend label, – Due in 3 months",
+        "main_tasks_task_a_task_l": "Seed: triage inbox",
+        "main_tasks_task_a_task_l_2": "Seed: order missing parts",
+        "main_tasks_task_a_task_l_3": "Seed: ship repaired device",
+        "ref": "fwvk15-n3",
+        "task_titles_in_order_1": "fwvk15-n3 Bench Task",
+        "task_titles_in_order_2": "Seed: triage inbox",
+        "task_titles_in_order_3": "Seed: order missing parts",
+        "task_titles_in_order_4": "Seed: ship repaired device",
+        "seed_task_titles_1": "Seed: triage inbox",
+        "seed_task_titles_2": "Seed: order missing parts",
+        "seed_task_titles_3": "Seed: ship repaired device"
+      },
+      "tier": "B",
+      "recovered": true,
+      "fellBack": "unresolved reference(s): 01-signin.visible_projects_2, 01-signin.visible_projects_2",
+      "replayed": "1/1",
+      "repaired": false,
+      "turns": 4,
+      "unreported": [
+        "task_1_title",
+        "task_2_title",
+        "task_3_title",
+        "task_4_title"
+      ]
+    }
+  ],
+  "passed": 8,
+  "total": 8,
+  "repinned": 0,
+  "drift": 4,
+  "driftTickets": [
+    {
+      "flow": "fwvk15",
+      "step": "01-signin",
+      "skill": "s_9e6344",
+      "atStep": "2",
+      "key": "target",
+      "similarity": 1.002,
+      "missedLocator": "page.getByRole('link', { name: 'Bench Project', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8096/",
+      "pageUrl": "http://127.0.0.1:8096/"
+    },
+    {
+      "flow": "fwvk15",
+      "step": "02-open",
+      "skill": "s_3f56c3",
+      "similarity": 1.002,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "unresolved reference(s): 01-signin.visible_projects_2, 01-signin.visible_projects_2",
+      "pageUrlPattern": "http://127.0.0.1:8096/projects/:id/:id",
+      "pageUrl": "http://127.0.0.1:8096/projects/2/5"
+    },
+    {
+      "flow": "fwvk15",
+      "step": "03-create",
+      "skill": "s_919c20",
+      "similarity": 0.999,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "unresolved reference(s): 01-signin.visible_projects_2, 01-signin.visible_projects_2",
+      "pageUrlPattern": "http://127.0.0.1:8096/tasks/:id",
+      "pageUrl": "http://127.0.0.1:8096/tasks/8"
+    },
+    {
+      "flow": "fwvk15",
+      "step": "08-open",
+      "skill": "s_1f3718",
+      "similarity": 0.999,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "unresolved reference(s): 01-signin.visible_projects_2, 01-signin.visible_projects_2",
+      "pageUrlPattern": "http://127.0.0.1:8096/projects/:id/:id",
+      "pageUrl": "http://127.0.0.1:8096/projects/2/5"
+    }
+  ],
+  "wallMs": 77312,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 204843,
+    "completionTokens": 4070,
+    "cachedTokens": 175744
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 204843,
+      "completionTokens": 4070,
+      "cachedTokens": 175744
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

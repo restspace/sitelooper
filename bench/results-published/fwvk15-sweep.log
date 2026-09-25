@@ -1,0 +1,107 @@
+
+[sweep] run 1/3: fwvk15-n1 (store: /home/user/sitelooper/bench/results/fwvk15-skills)
+[harness] vikunja: defaulting APP_URL
+[harness] vikunja: defaulting APP_EMAIL
+[harness] vikunja: defaulting APP_PASSWORD
+[reset] vikunja: no leftover bench tasks
+[harness] vikunja responded 200 at http://127.0.0.1:8096/
+stopped: fwvk15-n1
+  flow "fwvk15" saved: 8 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwvk15.json
+  warning: warning: 01-signin's instruction asks to report login_page, and no replay can publish it: nothing in its procedure reads it from the page, so export dropped it — re-record the step so the value is read, not only reported
+  warning: note: 01-signin no longer publishes landing_page_url — no replay reads it from the page and the recording showed no line to read
+  warning: note: 02-open no longer publishes seed_task_count — no replay reads it from the page and the recording showed no line to read
+  warning: note: 05-add no longer publishes label_chip_css_class — no replay reads it from the page and the recording showed no line to read
+  warning: note: 06-add no longer publishes comment_timestamp — no replay reads it from the page and the recording showed no line to read
+  warning: warning: 08-open's instruction asks to report seed_tasks_present, and no replay can publish it: nothing in its procedure reads it from the page, so export dropped it — re-record the step so the value is read, not only reported
+  warning: note: 08-open no longer publishes task_count_shown — no replay reads it from the page and the recording showed no line to read
+  warning: note: 03-create: added a read for save_confirmation to s_a54352 (page.getByRole('heading', { name: 'Description Saved!', exact: true }); seen on the instruction's own page)
+  warning: note: 06-add: added a read for comment_author to s_77f155 (page.getByRole('button', { name: 'admin', exact: true }); seen on the next instruction's start page)
+  warning: warning: 178 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.startUrl: "http://127.0.0.1:8096/" (output) in "http://127.0.0.1:8096/"
+  flow.steps[0].instruction: "admin" (output) in "Sign in to Vikunja with username 'admin' and password '{{env:APP_PASSWORD}}' (type the password text exactly as given, it will be filled in automatically). Afte"
+  flow.steps[0].params.v1: "admin" (output) in "admin"
+  flow.steps[0].route: "http://127.0.0.1:8096/" (output) in "http://127.0.0.1:8096/"
+  flow.steps[3].instruction: "High" (output) in "On the task detail page for the task titled '{{runid}} Bench Task' (identifier {{03-create.task_identifier}}, url {{03-create.url}}), set the due date to 2026-1"
+arm=sitelooper model=z-ai/glm-5.3 runid=fwvk15-n1 stop=completed
+turns=10 wall=223.0s
+commands=9 cmdTime=198.6s cmdBytes=7574 timeouts=0
+orchestrator in=5799 cw=0 cr=34752 out=1890
+inner prompt=1339895 cached=1246080 completion=14071
+spend=$0.0519 maxUsd=3
+learn: A_n=0 replayed=0/8 full=0 repaired=0 compiled=8 variants=0
+-> /home/user/sitelooper/bench/results/fwvk15-n1-sitelooper-result.json
+
+fwvk15-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — project=Bench Project, description includes runid=true
+  obj 3: PASS — due date=2026-12-31T00:00:00Z, want 2026-12-31
+  obj 4: PASS — priority=3 (want 3 = High)
+  obj 5: PASS — labels=Backend#1; seeded Backend is #1
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — identifier BENCH-4 reported
+
+[sweep] run 2/3: fwvk15-n2 (replay flow fwvk15, no orchestrator)
+[reset] vikunja: deleted 1 leftover bench task(s)
+[reset] vikunja: re-created "Seed: ship repaired device" as BENCH-4 so the next task is BENCH-5
+[sweep] fwvk15-n2: 4 drift ticket(s) → fwvk15-n2-drift.json
+
+fwvk15-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — project=Bench Project, description includes runid=true
+  obj 3: PASS — due date=2026-12-31T00:00:00Z, want 2026-12-31
+  obj 4: PASS — priority=3 (want 3 = High)
+  obj 5: PASS — labels=Backend#1; seeded Backend is #1
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — identifier BENCH-5 reported
+
+[sweep] run 3/3: fwvk15-n3 (replay flow fwvk15, no orchestrator)
+[reset] vikunja: deleted 1 leftover bench task(s)
+[reset] vikunja: re-created "Seed: ship repaired device" as BENCH-5 so the next task is BENCH-6
+[sweep] fwvk15-n3: 4 drift ticket(s) → fwvk15-n3-drift.json
+
+fwvk15-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — project=Bench Project, description includes runid=true
+  obj 3: PASS — due date=2026-12-31T00:00:00Z, want 2026-12-31
+  obj 4: PASS — priority=3 (want 3 = High)
+  obj 5: PASS — labels=Backend#1; seeded Backend is #1
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — identifier BENCH-6 reported
+
+Learning sweep fwvk15 (K=3)
+┌─────────┬───┬─────────────┬──────────┬─────────────┬───────┬──────┬───────────┬──────┬──────────────┬────────┐
+│ (index) │ n │ runid       │ verified │ stop        │ turns │ cmds │ total_usd │ A_n  │ replayed     │ wall_s │
+├─────────┼───┼─────────────┼──────────┼─────────────┼───────┼──────┼───────────┼──────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwvk15-n1' │ '7/7'    │ 'completed' │ 10    │ 9    │ 0.0519    │ 0    │ '0/8'        │ 223    │
+│ 1       │ 2 │ 'fwvk15-n2' │ '7/7'    │ 'success'   │ 18    │ 8    │ 0.0091    │ 0.63 │ '8/8 (flow)' │ 84     │
+│ 2       │ 3 │ 'fwvk15-n3' │ '7/7'    │ 'success'   │ 15    │ 8    │ 0.0073    │ 0.63 │ '8/8 (flow)' │ 77     │
+└─────────┴───┴─────────────┴──────────┴─────────────┴───────┴──────┴───────────┴──────┴──────────────┴────────┘
+http://127.0.0.1:8096
+  s_0843d6  validated   17 steps  3/3 (100%)
+           Open the task detail page at {{v1}} (task titled '{{v2}}') and read-only verify all of the following, reportin…
+  s_1f3718  validated    1 steps  3/3 (100%)
+           Open the '{{v1}}' project list view (read-only) and report the exact titles of all tasks listed, in order, con…
+  s_38950d  validated    3 steps  3/3 (100%)
+           Sign in to Vikunja with username '{{v1}}' and password '{{v2}}' (type the password text exactly as given, it w…
+  s_3f56c3  validated    1 steps  3/3 (100%)
+           Open the project named '{{v1}}' from the sidebar and list the titles of all tasks in it whose title starts wit…
+  s_77f155  validated    6 steps  3/3 (100%)
+           On the task detail page for the task titled '{{v1}}' (identifier {{v3}}, url {{v4}}), add a comment whose text…
+  s_919c20  validated    6 steps  3/3 (100%)
+           In the '{{v1}}' project, create a new task with the exact title '{{v3}}' and a description that includes the t…
+  s_9e6344  validated    8 steps  3/3 (100%)
+           Sign in to Vikunja with username '{{v1}}' and password '{{v2}}' (type the password text exactly as given, it w…
+  s_c5be84  validated    9 steps  3/3 (100%)
+           On the task detail page for the task titled '{{v1}}' (identifier {{v3}}, url {{v4}}), add the EXISTING label n…
+  s_d85c10  validated   21 steps  3/3 (100%)
+           On the task detail page for the task titled '{{v1}}' (identifier {{v3}}, url {{v4}}), set the due date to 2026…
+  s_a54352  provisional 10 steps  1/1 (100%)
+           In the '{{v1}}' project, create a new task with the exact title '{{v3}}' and a description that includes the t…
+  s_c65f4c  provisional 10 steps  1/1 (100%)
+           Open the '{{v1}}' project list view (read-only) and report the exact titles of all tasks listed, in order, con…
+  s_f395db  provisional  7 steps  1/1 (100%)
+           Open the project named '{{v1}}' from the sidebar and list the titles of all tasks in it whose title starts wit…
+store: /home/user/sitelooper/bench/results/fwvk15-skills
+
+summary: /home/user/sitelooper/bench/results/fwvk15-sweep.json
+SWEEP_EXIT:0
