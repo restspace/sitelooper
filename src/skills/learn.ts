@@ -824,6 +824,8 @@ export interface ReportOptions {
    * did, or a read returned it (phase B provenance, stage 1).
    */
   committed?: readonly string[];
+  /** The urls the replay's page landed on while the chain ran (GivenEvidence.visited, round 63). */
+  visited?: readonly string[];
 }
 
 /** What a zero-model replay reports, and what a later step's reference may use beyond it. */
@@ -867,7 +869,7 @@ function synthesize(skill: Skill, params: Record<string, string>, liveValues: Re
   const given: string[] = [];
   // What this run observed besides the page: the slots its chain typed and
   // the values its reads returned — the artifact's reportGiven.
-  const evidence: GivenEvidence = { typed: typedSlots((opts.chain ?? [skill]).flatMap((s) => s.steps)), live: Object.values(liveValues), committed: opts.committed ?? [] };
+  const evidence: GivenEvidence = { typed: typedSlots((opts.chain ?? [skill]).flatMap((s) => s.steps)), live: Object.values(liveValues), committed: opts.committed ?? [], visited: opts.visited ?? [] };
   /** Values withheld as echoes of this run's own typing (phase B). */
   const typedEchoes: string[] = [];
   for (const [k, v] of Object.entries(template.values)) {

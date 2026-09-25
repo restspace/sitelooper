@@ -1113,7 +1113,7 @@ const HELPERS: { token: string; source: string[] }[] = [
       '      async () => {',
       '        last = await expectedChangesVerdict(recorded, p, ctx, {',
       '          added: addedLines(linesBefore, linesAfter ?? (await capturePageLines(page, dialect))),',
-      '          live: () => captureLines(page, dialect),',
+      '          live: (look) => captureLines(page, dialect, look),',
       '        });',
       '        return last.stop ?? null;',
       '      },',
@@ -3393,7 +3393,8 @@ function reportTemplateLines(step: SpecStep, ctx: Ctx, consumed: ReadonlySet<str
   // carrying a slot the step typed is published only where one did.
   const committed = ctx.committedUsed ? '[...typedCommitted]' : '[]';
   out.push(
-    `const reportGiven = { typed: ${JSON.stringify(typed)}, live: Object.entries(outputs).filter(([k, v]) => k.startsWith(${q(`${step.id}.`)}) && typeof v === 'string' && !run.echoed.includes(k)).map(([, v]) => v as string), committed: ${committed} };`,
+    `const reportGiven = { typed: ${JSON.stringify(typed)}, live: Object.entries(outputs).filter(([k, v]) => k.startsWith(${q(`${step.id}.`)}) && typeof v === 'string' && !run.echoed.includes(k)).map(([, v]) => v as string), committed: ${committed}, visited: reportTrail.urls };`,
+    'reportTrail.stop();',
   );
   // Asked for by the instruction (step-verdict.ts askedOutputs, as the flow
   // runner's partialReasons asks it): withheld, the step is partial.
@@ -4056,6 +4057,9 @@ export function emitFlowFile(spec: SpecFlow, o: EmitOptions): { source: string; 
       }
       const templated = reportTemplateLines(step, ctx, consumed);
       if (templated.length) lines.push('', ...templated);
+      // The urls the step's page lands on, for its report: a given url the chain loaded in any segment
+      // is observed (round 63, fwgh17), as the daemon's replay keeps the same trail.
+      if (templated.length) lines.splice(ledgerAt, 0, '// The urls this step loads, for its report values (a given url it loaded was observed).', 'const reportTrail = urlTrail(page);', '');
       // What the step's segments type, select or name: a read that returns only that, or reads a control
       // one of them set, is an echo (see echoRead). One for the whole chain (round 61).
       if (ctx.stepEchoUsed) lines.splice(ledgerAt, 0, '// What this step types, selects or names, across its segments (see echoRead).', 'const echoLedger = new Set<string>();', '');

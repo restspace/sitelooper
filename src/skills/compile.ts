@@ -749,6 +749,7 @@ export function compileSkills(input: CompileInput): Skill[] {
     }
   }
   kept = sourcelessGoto(kept, input, recordingNotes);
+  kept = mintedFill(kept, input, slots, recordingNotes);
   if (!kept.length) return [];
   // A url id this span minted is its OUTPUT: derived ({{dN}}, discoverMinted),
   // never a param — even when the ledger, which banked it before this compile,
@@ -1743,6 +1744,84 @@ function sourcelessGoto(kept: RecordedStep[], input: CompileInput, notes: Transf
 }
 
 /**
+ * A fill or type of a value the APP minted in the recording's run is never
+ * replayed as a literal: another run's minted value names another run's record.
+ *
+ * snipeit fwsi14-n1 02-create: the create form came PRE-FILLED with the new
+ * asset's tag (#26: `- textbox "Asset Tag": BA-00004`) and the save's alert
+ * repeated it ("Asset with tag BA-00004 was created successfully"); #41 typed
+ * it into "Lookup by Asset Tag" and #42 pressed Enter. s_bc3a9e typed
+ * BA-00004 on every replay: n2's asset was BA-00005, so its lookup missed —
+ * and one that hit would have opened, and the next segments checked out, the
+ * RECORDING's asset.
+ *
+ * Minted, by provenance (appMinted): before this step, an alert — the app's
+ * answer — named the value, and no step had typed it and no instruction
+ * stated it; nor does this instruction state it, nor is it (or does it carry)
+ * a slot, nor is it a task constant. Then:
+ *  - a published source binds it (a known value: an earlier output or url
+ *    part) → a slot, bound by origin by the usual `bindings` pass;
+ *  - otherwise the procedure ENDS before it, as sourcelessGoto's does: replay
+ *    recovers there, and the artifact stops there, with this note saying why.
+ * Reading this run's value off the page (a derived value from page text) is
+ * the richer answer, and is not built.
+ */
+function mintedFill(kept: RecordedStep[], input: CompileInput, slots: Map<string, string>, notes: TransformNote[]): RecordedStep[] {
+  const slotted = new Set([...slots.values()].map((v) => v.trim()));
+  const known = new Map(Object.entries(input.knownValues ?? {}).map(([k, v]) => [String(v ?? '').trim(), k] as const));
+  const constants = new Set((input.taskConstants ?? []).map((v) => v.trim()));
+  for (let i = 0; i < kept.length; i++) {
+    const s = kept[i];
+    const raw = s.tool === 'fill' ? s.args.value : s.tool === 'type' ? s.args.text : undefined;
+    if (typeof raw !== 'string') continue;
+    const v = raw.trim();
+    if (v.length < 2 || v.includes('{{') || slotted.has(v) || constants.has(v) || occursAsToken(input.instruction, v)) continue;
+    // A value carrying a task value (the runid in "fwod19-n1 Bench Customer") is the task's.
+    if ([...slotted].some((x) => x.length >= 2 && occursAsToken(v, x))) continue;
+    if (!appMinted(v, entriesBefore(input, s))) continue;
+    const origin = known.get(v);
+    if (origin !== undefined) {
+      slots.set(`v${slots.size + 1}`, v);
+      slotted.add(v);
+      notes.push({ name: 'mintedFill', at: i + 1, reason: `${s.tool} typed ${JSON.stringify(v)}, a value the app minted; slotted to its published source ${origin}` });
+      continue;
+    }
+    notes.push({
+      name: 'mintedFill',
+      at: i + 1,
+      reason: `${s.tool} typed ${JSON.stringify(v)}, a value the app minted in the recording's run (an alert named it before any step typed it; no instruction states it and no published source supplies it): the procedure ends before it`,
+    });
+    return kept.slice(0, i);
+  }
+  return kept;
+}
+
+/**
+ * Whether the recording, in `before`, shows `value` minted by the app: an alert
+ * named it before any step typed it, and no instruction stated it.
+ */
+function appMinted(value: string, before: readonly RecordedEntry[]): boolean {
+  let shown = false;
+  for (const e of before) {
+    if (e.k === 'instruction') {
+      if (occursAsToken(e.text, value)) return false;
+      continue;
+    }
+    if (e.k !== 'step') continue;
+    if (!shown && Object.values(e.args ?? {}).some((a) => typeof a === 'string' && occursAsToken(a, value))) return false;
+    const d = e.diff;
+    if (!d) continue;
+    // The app's ANSWER named it. A field's pre-filled value alone does not
+    // tell a minted value from an app default: the scan of the published
+    // recordings found Ghost's pre-filled publish time ("17:56", fwgh6/11)
+    // and Grafana's default refresh intervals (fwgr71) typed back — the
+    // app's defaults, not another run's record.
+    if (d.alerts.some((a) => occursAsToken(a, value))) shown = true;
+  }
+  return shown;
+}
+
+/**
  * What the run recorded before `s`: the earlier instructions (`before`) and
  * this one's entries up to it — or, for the click a goto was rewritten into,
  * what was before that goto (linkBefore).
@@ -2234,6 +2313,40 @@ export function stripRunValueCandidates(chain: LocatorCandidate[], runValues: re
   return chain.filter((c) => kept.includes(c) || rescued.includes(c));
 }
 
+/**
+ * A READ's chain less the rungs that NAME the value the read returned — a
+ * role, text or label whose whole name is that value (round 63, odoo fwod88
+ * 03-create: `heading "S00021"` reading the quotation reference S00021).
+ * Such a rung finds the element only on the run whose value it names; every
+ * later run misses it and falls through, and once a run shows the value
+ * changing dropDeadReadLocators drops it and, with only positional rungs
+ * left, EMPTIES the read (n3 published nothing). Asked at export, of reads a
+ * later step references (flow.ts selfNamingReadDrops), and never of a value
+ * the task holds constant.
+ *
+ * When what is left is position-only it drops only when a recorded POINT of
+ * the dropped rung's own role remains (the heading's h1): the point checks
+ * the element's kind and where it sits. Otherwise the chain is returned as
+ * it was — a list cell read by row index (repair-desk fwrd16) keeps today's
+ * behaviour, and dropDeadReadLocators' protection with it. Never empties.
+ */
+export function dropSelfNamingCandidates(chain: LocatorCandidate[], value: string): LocatorCandidate[] {
+  const norm = (t: unknown) => String(t ?? '').replace(/\s+/g, ' ').trim();
+  const v = norm(value);
+  if (!v) return chain;
+  const nameOf = (c: LocatorCandidate): string | undefined => (c.kind === 'role' ? c.name : c.kind === 'text' ? c.text : c.kind === 'label' ? c.label : undefined);
+  const self = chain.filter((c) => nameOf(c) !== undefined && norm(nameOf(c)) === v);
+  if (!self.length) return chain;
+  const rest = chain.filter((c) => !self.includes(c));
+  if (!rest.length) return chain;
+  if (rest.every(positional)) {
+    const roles = new Set(self.flatMap((c) => (c.kind === 'role' ? [c.role] : [])));
+    const matched = rest.some((c) => c.kind === 'point' && typeof c.role === 'string' && roles.has(c.role));
+    if (!matched) return chain;
+  }
+  return rest;
+}
+
 export function stranded(c: LocatorCandidate, runValues: string[]): boolean {
   const fields: string[] = [];
   if (c.kind === 'scoped') fields.push(c.hasText);
@@ -2574,7 +2687,16 @@ function expectationFor(step: RecordedStep, slots: Map<string, string>, popupHid
   // A navigation's diff is its LANDING — the next segment's start url,
   // fingerprint and startText — not an effect to assert: none of it becomes
   // an expectation, exactly as when goto/back were never diffed.
-  if (!step.diff || NAVIGATION_TOOLS.has(step.tool)) return undefined;
+  //
+  // Except the alert the landing raised. Both runners stop a navigation whose
+  // landing raises an alert the step does not expect, and the recording SAW
+  // this one: snipeit fwsi14-n1 #95 `goto /hardware/4/edit` landed on the edit
+  // form, whose status help ("This asset can be checked out.") is a live
+  // region, and both replays stopped on "raised an alert the recording never
+  // saw". Kept as the step's expected alert only; one a replay's landing does
+  // not raise stays soft, as every recorded alert does.
+  if (!step.diff) return undefined;
+  if (NAVIGATION_TOOLS.has(step.tool)) return step.diff.alerts[0] ? { alertContains: substitute(step.diff.alerts[0], slots).slice(0, 120) } : undefined;
   const out: StepExpectation = {};
   // A fill or a type never navigates: a url seen after one is where the page
   // happened to be while it settled, so only its path is evidence. snipeit

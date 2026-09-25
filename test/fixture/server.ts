@@ -1387,6 +1387,17 @@ document.getElementById('add').addEventListener('click', () => fetch('/commit/ad
  * replay whose picker closed after its fill); `/picker?open=1` with it open.
  */
 /**
+ * An edit form whose landing shows a status notice (round 63, snipeit fwsi14
+ * 03-open): Snipe-IT's asset edit form renders the status help "This asset can
+ * be checked out." in a live region as it loads. Save posts `/commit/save/ok`.
+ */
+const EDIT_NOTICE = `<!doctype html><html><head><meta charset="utf-8"><title>Edit asset</title></head><body>
+<h1>Edit asset</h1>
+<p role="status">This asset can be checked out.</p>
+<button id="save" type="button" onclick="fetch('/commit/save/ok', { method: 'POST' })">Save</button>
+</body></html>`;
+
+/**
  * A form whose app pre-fills the next asset tag (round 62, snipeit fwsi13
  * 03-create): each load of `/prefilled-tag` pre-fills a NEW tag (BA-00100,
  * BA-00101, …). Save with the tag empty shows "This field is required" and
@@ -2203,6 +2214,7 @@ export async function createFixtureServer(initialCount = 10): Promise<FixtureSer
       if (url === '/picker' || url.startsWith('/picker?')) return html(PICKER(url.includes('open=1')));
       if (url === '/select-late' || url.startsWith('/select-late?')) return html(SELECT_LATE());
       if (url === '/prefilled-tag') return html(PREFILLED_TAG(`BA-00${assetTag.next++}`));
+      if (url === '/edit-notice') return html(EDIT_NOTICE);
       if (url === '/price' || url === '/price?stuck=1') return html(PRICE(url.endsWith('stuck=1')));
       if (url === '/imagelink') return html(IMAGE_LINK);
       if (url === '/hashposts') return html(HASH_POSTS);

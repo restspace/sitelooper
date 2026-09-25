@@ -26,7 +26,7 @@ import { jevMatchSkill, jevPickLiteral } from '../skills/paraphrase-jev.js';
 import { readBackDecider } from '../agent/readback-jev.js';
 import type { ReadBackDecider } from '../agent/readback.js';
 import { setInlineHealer } from '../skills/replay.js';
-import { RunLedger, bindingKey, linkMintedParts, unseenGotoParts, describeLeaks, evidenced, fatal, navigationLeaks, scanForLeaks, slotKnownRunValues, urlVarianceValues, withoutOwnOutputs, type Leak } from '../skills/ledger.js';
+import { RunLedger, linkMintedParts, unseenGotoParts, describeLeaks, evidenced, fatal, navigationLeaks, scanForLeaks, slotKnownRunValues, urlVarianceValues, withoutOwnOutputs, type Leak } from '../skills/ledger.js';
 import { quarantineLeakedSteps } from '../spec/rerecord.js';
 import { rerecordFix } from '../spec/diagnostics.js';
 import { originOf, type Skill } from '../skills/store.js';
@@ -45,7 +45,7 @@ import { givenWarning, referenceValue, shownForReport, templateValue, typedWarni
 import { startPageSettled } from '../execution/action.js';
 import { coverageComplete, recordedValueShown } from '../execution/snapshot.js';
 import { captureSignature } from './diff.js';
-import { recordedStandIn, referencableOutputs } from '../skills/flow.js';
+import { recordedStandIn, referencableOutputs, selfNamingReadDrops } from '../skills/flow.js';
 import { SessionState } from './state.js';
 
 interface DaemonOptions {
@@ -194,12 +194,35 @@ ${describeLeaks(leaks.slice(0, 6))}`);
     // carries whether evidence, not only its shape, made it an identifier —
     // the backstop in stripRunValueCandidates reads it.
     const constants = new Set(this.taskConstants());
+    // A read located by the value it read, whose output a later step
+    // references (flow.ts selfNamingReadDrops, round 63 odoo fwod88): that
+    // rung finds the element on this run only. Dropped here, ahead of the run
+    // values below and without the round-59 backstop; a position-only rest
+    // is kept only with a point of the dropped rung's role. The task's
+    // constants and the run's vars (the runid) keep their rungs.
+    const session = new Set(this.sessionSkills(flow, store).map((s) => s.id));
+    const vars = Object.values(this.state.vars ?? {}).filter((v): v is string => typeof v === 'string' && v.length > 0);
+    const chainOf = (id: string): Skill[] | null => {
+      const head = store.get(id);
+      if (!head || !session.has(head.id)) return null;
+      return (head.seq ? store.list(head.origin).filter((s) => s.seq?.chain === head.seq!.chain) : [head]).filter((s) => session.has(s.id));
+    };
     const runValues = this.ledger
       .all()
       .filter((e) => e.kind === 'identifier' && e.value.length >= 3 && !constants.has(e.value))
       .map((e) => ({ value: e.value, evidence: e.basis !== 'shape' }));
-    if (!runValues.length) return 0;
-    let removed = 0;
+    // Only a RUN VALUE — an identifier the ledger banked, less the task's
+    // constants — is dropped: a board column's "Backlog" or a nav link's
+    // "Tickets" is referenced by later steps too (the export references every
+    // reported value) and names the same element on every run.
+    const identifiers = new Set(runValues.map((r) => r.value));
+    let selfNamed = 0;
+    for (const t of selfNamingReadDrops(flow, chainOf, (v) => !identifiers.has(v) || constants.has(v) || vars.some((x) => v.includes(x)))) {
+      store.put(t.skill);
+      selfNamed += t.removed;
+    }
+    if (!runValues.length) return selfNamed;
+    let removed = selfNamed;
     for (const skill of this.sessionSkills(flow, store)) {
       let touched = false;
       const walk = (steps: Skill['steps']): void => {
@@ -446,9 +469,8 @@ ${describeLeaks(leaks.slice(0, 6))}`);
 
   /** The run's values keyed by their ORIGIN, so a param can bind to where a value comes from. */
   private knownValues(): Record<string, string> {
-    const out: Record<string, string> = {};
-    for (const e of this.ledger.all()) out[bindingKey(e.binding)] = e.value;
-    return out;
+    // Two values one origin showed: the latest sighting (ledger.ts byOrigin).
+    return this.ledger.byOrigin();
   }
 
   /**
@@ -2507,12 +2529,39 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
    * involved at all. Returns a finished result when the replay completed, a
    * prelude for the agent when it stopped part-way, or nothing when no skill
    * matched (the common case, and free: one store read, no page round trip).
+   *
+   * The urls the replay's page lands on are kept for its report (round 63,
+   * Ghost fwgh17 04-open): a given url the chain LOADED — in any segment, not
+   * only the page it ends on — was observed there (execution/report.ts
+   * GivenEvidence.visited), as the artifact's step body keeps the same trail.
    */
   private async replayDirect(
     instruction: string,
     screenshotDir: string,
     signal: AbortSignal,
     progress: (m: string) => void,
+    chosen?: { id: string; params?: Record<string, string> },
+  ) {
+    let trail: ReturnType<typeof urlTrail> | null = null;
+    try {
+      trail = urlTrail(await this.browser.getPage());
+    } catch {
+      trail = null;
+    }
+    try {
+      return await this.replayDirectOnce(instruction, screenshotDir, signal, progress, trail?.urls ?? [], chosen);
+    } finally {
+      trail?.stop();
+    }
+  }
+
+  private async replayDirectOnce(
+    instruction: string,
+    screenshotDir: string,
+    signal: AbortSignal,
+    progress: (m: string) => void,
+    /** The urls the page has landed on since this replay began (urlTrail): what a given url is observed by. */
+    visited: readonly string[],
     /** Flow replay pins the skill (and may supply its params); without it, fall back to a validated template match. */
     chosen?: { id: string; params?: Record<string, string> },
     /**
@@ -2826,6 +2875,7 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
       instruction,
       chain: [...earlier.map((e) => e.skill), last],
       committed: agg.committed,
+      visited,
     });
     if (withheld.length) progress(`[replay] withheld ${withheld.length} report value(s) whose recorded text this run's page did not show: ${withheld.join(', ')}`);
     if (given.length) {

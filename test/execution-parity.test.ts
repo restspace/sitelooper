@@ -4177,6 +4177,38 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
     }, 240_000);
   });
 
+  describe('a navigation whose landing raised the alert the recording saw goes on (round 63, fwsi14 03-open)', () => {
+    /**
+     * snipeit fwsi14-n1 #95 `goto …/hardware/4/edit` landed on the edit form,
+     * whose status help "This asset can be checked out." renders in a live
+     * region. Compiled with no expectation (a navigation's diff is its
+     * landing), both replays stopped: "step 1 raised an alert the recording
+     * never saw". The goto now expects the alert its landing raised.
+     */
+    it('both runners take the landing\'s recorded alert as expected and save', async () => {
+      const url = `${origin}/edit-notice`;
+      const entries: RecordedEntry[] = [
+        { k: 'instruction', text: 'open the edit form and save it', url: `${origin}/` },
+        { k: 'step', tool: 'goto', args: { url }, locators: {}, diff: { url, alerts: ['This asset can be checked out.'], added: ['- heading "Edit asset"', '- status "This asset can be checked out."'], dialect: 2 } },
+        {
+          k: 'step',
+          tool: 'click',
+          args: { target: '#save' },
+          locators: { target: { expr: 'x', verified: true, raw: '#save', chain: [{ kind: 'css', selector: '#save' }, { kind: 'role', role: 'button', name: 'Save' }] } },
+          diff: { url, alerts: [], added: [], dialect: 2 },
+        },
+      ];
+      const steps = compileSkills({ entries, instruction: 'open the edit form and save it', report: { status: 'success', summary: 'saved' }, session: 's' }).flatMap((sk) => sk.steps);
+      expect(steps[0].expect?.alertContains).toBe('This asset can be checked out.');
+      const run = await both(steps, 0);
+      expect(run.replay.ok, run.replay.reason ?? '').toBe(true);
+      expect(run.emitted.ok, run.emitted.reason ?? '').toBe(true);
+      await new Promise((r) => setTimeout(r, 300));
+      expect(run.replayLog).toEqual(['commit:save:ok']);
+      expect(run.emittedLog).toEqual(['commit:save:ok']);
+    }, 240_000);
+  });
+
   describe('a picker click whose target went with the picker its entry opened (round 59, fwsi10 03-create)', () => {
     /**
      * snipeit fwsi10-n1 03-create filled the purchase date (opening the date
@@ -4882,6 +4914,105 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
       } finally {
         setInlineHealer(null);
       }
+    }, 120_000);
+  });
+
+  /**
+   * Round 63, Ghost fwgh17 04-open: a GIVEN url this run LOADED. The
+   * instruction gave the post's public URL (v5) and asked for it; the recorded
+   * chain loads it in one segment (goto {{v5}}, reading the page title) and
+   * goes back to the admin list in the last. The report is judged on the page
+   * the chain ENDS on, which is not that url, so round 60's given rule withheld
+   * public_url as "only the step's own parameter" and both replays were
+   * partial — though the run had gone there and read it. A url the chain's
+   * page landed on is observed, in both runners; one it never loaded stays
+   * given (the control).
+   */
+  describe('a given url the chain loaded is observed (round 63, fwgh17 04-open)', () => {
+    const instruction = 'Publish the post, then load its public URL {{v5}} and report the public URL and the page title.';
+    const values = { public_url: '{{v5}}' };
+    const read = (selector: string, label: string): SkillStep => ({ tool: 'read', args: { target: '(read-back)', what: 'text' }, label, locators: { target: [{ kind: 'css', selector }] } });
+    const skillParams = (): Record<string, SkillParam> => ({ v5: { example: 'http://127.0.0.1:8099/fwgh17-n1-bench-post/', usedIn: [1], known: true } });
+    const partsOf = (visit: string): SkillStep[][] => [
+      [{ tool: 'goto', args: { url: visit }, locators: {} }, read('.sidebar h4', 'public_page_title')],
+      [{ tool: 'goto', args: { url: `${origin}/echo-lab` }, locators: {} }, read('#rerender', 'admin_status')],
+    ];
+    const chainOf = (visit: string): { skills: Skill[]; spec: SpecFlow } => {
+      const parts = partsOf(visit);
+      const skills = parts.map((steps, i): Skill => ({
+        ...skillOf(steps),
+        id: `s_pub${i}`,
+        template: instruction,
+        params: skillParams(),
+        preconditions: { urlPattern: i === 0 ? `${origin}/` : `${origin}/assignee` },
+        seq: { chain: 's_pub', index: i, of: parts.length },
+        ...(i === parts.length - 1 ? { reportTemplate: { summary: '', values } } : {}),
+      }));
+      const spec = specOf(parts[0]);
+      spec.steps[0].instruction = instruction;
+      spec.steps[0].outputs = ['public_page_title', 'admin_status', 'public_url'];
+      spec.steps[0].segments = skills.map((s, i) => ({
+        id: s.id,
+        template: s.template,
+        params: skillParams(),
+        preconditions: s.preconditions,
+        steps: s.steps,
+        ...(i === skills.length - 1 ? { report: { summary: '', values } } : {}),
+      }));
+      return { skills, spec };
+    };
+
+    /** The daemon: the chain's segments through run_skill, the url trail the flow runner keeps, then its report assembly. */
+    async function daemonOf(skills: Skill[], params: Record<string, string>): Promise<{ values: Record<string, string>; given: string[] }> {
+      const session = new BrowserSession({ session: `parity-visited-${Date.now()}`, persist: false, learn: true });
+      try {
+        const page = await session.getPage();
+        await page.goto(`${origin}/`);
+        for (const skill of skills) session.learn!.put(skill);
+        const trail = urlTrail(page);
+        const live: Record<string, string> = {};
+        for (const skill of skills) {
+          const out = await executeTool(session, 'run_skill', { id: skill.id, params }, os.tmpdir());
+          const r = out.replay as ReplayResult;
+          expect(r?.ok, r?.reason ?? String(out.result)).toBe(true);
+          Object.assign(live, r.values);
+        }
+        trail.stop();
+        const opts = { chain: skills, instruction, visited: trail.urls } as Parameters<typeof replayReport>[4];
+        const r = await replayReport(() => session.getPage(), skills[skills.length - 1], params, live, opts);
+        return { values: Object.fromEntries(Object.entries(r.report.evidence?.values ?? {}).map(([k, v]) => [k, String(v)])), given: r.given };
+      } finally {
+        await session.close();
+      }
+    }
+
+    it('both runners publish the public url the chain loaded in an earlier segment', async () => {
+      const { skills, spec } = chainOf('{{v5}}');
+      const params = { v5: `${origin}/assignee` };
+      reset(0);
+      const daemon = await daemonOf(skills, params);
+      reset(0);
+      const emitted = await emittedOf(spec, params);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      expect(daemon.values.public_url).toBe(`${origin}/assignee`);
+      expect(daemon.given).toEqual([]);
+      expect(emitted.outputs['01-clear.public_url']).toBe(`${origin}/assignee`);
+      expect((emitted.referenceOnly ?? []).includes('public_url')).toBe(false);
+      expect(emitted.warnings?.filter((w) => /public_url is given/.test(w))).toEqual([]);
+    }, 120_000);
+
+    it('neither runner publishes a given url the chain never loaded (it stays given)', async () => {
+      const { skills, spec } = chainOf(`${origin}/assignee`);
+      const params = { v5: `${origin}/never-loaded` };
+      reset(0);
+      const daemon = await daemonOf(skills, params);
+      reset(0);
+      const emitted = await emittedOf(spec, params);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      expect(daemon.values.public_url).toBeUndefined();
+      expect(daemon.given).toEqual(['public_url']);
+      expect(emitted.outputs['01-clear.public_url']).toBeUndefined();
+      expect(emitted.warnings?.some((w) => /public_url is given, not observed/.test(w)), emitted.warnings?.join('\n')).toBe(true);
     }, 120_000);
   });
 
@@ -6913,6 +7044,56 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
       expect(emitted.ok).toBe(false);
       const said = /did not show "- row \\"47 rec-2 Bench Record New\\"" as it did when recorded/;
       expect(replay.reason).toMatch(said);
+      expect(emitted.reason ?? '').toMatch(/the recorded page change did not appear|did not show "- row/);
+    }, 120_000);
+  });
+
+  /**
+   * Round 63, openproject fwop17 04-create s_9e1cdb/5: the Save's recorded
+   * effect is the new row, `- row "{{d1}} Work package leaf at level 0. {{v3}}
+   * {{*}} {{*}} - Normal"`. The observation names an element by its text only
+   * while that text is at most 80 characters (snapshot.ts namesOf). n1's row
+   * read 79 with subject "fwop17-n1 Bench Work Package"; the compiled run's
+   * "fwop17-spec …" made it 81, the row was observed with no name at all, and
+   * the step stopped ("did not show … as it did when recorded") with the work
+   * package saved. n2 and n3 carried a runid as long as n1's. Either runner
+   * stops on a value that long; both now look again, with the full name of
+   * each element of a role the unmatched line names, before judging.
+   */
+  describe('a recorded row whose name this run’s value takes past the name cap (round 63, fwop17)', () => {
+    const LONG = 'rec-2 Bench Record with a subject long enough to take its row past the cap';
+    const run = (mode: string, value: string) => {
+      const steps: SkillStep[] = [
+        { tool: 'goto', args: { url: `${origin}/row-save/${mode}` }, locators: {} },
+        { tool: 'fill', args: { target: '@e1', value: '{{v1}}' }, locators: { target: [{ kind: 'label', label: 'Subject' }] } },
+        {
+          tool: 'click',
+          args: { target: '@e2' },
+          locators: { target: [{ kind: 'role', role: 'button', name: 'Save' }] },
+          expect: { addedContains: ['- row "47 {{v1}} {{*}}"'], lineDialect: 2 },
+        },
+      ];
+      const params: Record<string, SkillParam> = { v1: { example: 'rec-1 Bench Record', usedIn: [2] } };
+      const skill: Skill = { ...skillOf(steps), params };
+      const base = specOf(steps);
+      const spec: SpecFlow = { ...base, steps: [{ ...base.steps[0], params: { v1: value }, segments: [{ ...base.steps[0].segments[0], params }] }] };
+      return bothOf(skill, spec, { v1: value });
+    };
+
+    it('both runners find the row whose full name is past the cap', async () => {
+      expect(`47 ${LONG} New`.length).toBeGreaterThan(80);
+      const { replay, emitted, replayLog, emittedLog } = await run('600000', LONG);
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      expect(replayLog).toEqual([`commit:row:${LONG}`]);
+      expect(emittedLog).toEqual([`commit:row:${LONG}`]);
+    }, 120_000);
+
+    it('both runners still stop when no such row appears, however long the value', async () => {
+      const { replay, emitted } = await run('never', LONG);
+      expect(replay.ok).toBe(false);
+      expect(emitted.ok).toBe(false);
+      expect(replay.reason).toMatch(/did not show "- row .* as it did when recorded/);
       expect(emitted.reason ?? '').toMatch(/the recorded page change did not appear|did not show "- row/);
     }, 120_000);
   });
