@@ -1,5 +1,5 @@
 import type { Page } from 'playwright-core';
-import { WILDCARD, escapeRe, maskVolatile } from './text.js';
+import { WILDCARD, escapeRe, maskCounters, maskVolatile } from './text.js';
 import { fillParams } from './url.js';
 import { captureLines, describeCoverage, lineShows, NAME_CAP, type FullNameLook, type LineDialect, type ObservationCoverage } from './snapshot.js';
 
@@ -238,7 +238,7 @@ export function liveLines(lines: readonly string[], params: Record<string, strin
   // kanboard fwkb39's read published "Backlog ", and `- link "{{v5}}"` became
   // `- link "Backlog "`, which no snapshot name ever shows.
   const rendered = Object.fromEntries(Object.entries(params).map(([k, v]) => [k, typeof v === 'string' ? v.replace(/\s+/g, ' ').trim() : v]));
-  return lines.map((l) => fillParams(maskMinted(maskVolatile(l)), rendered).replace(/\{\{(?:env|totp):\w+\}\}/g, WILDCARD));
+  return lines.map((l) => fillParams(maskMinted(maskCounters(maskVolatile(l))), rendered).replace(/\{\{(?:env|totp):\w+\}\}/g, WILDCARD));
 }
 
 /**

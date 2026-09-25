@@ -65,6 +65,13 @@ describe('decideRepin', () => {
     expect(decideRepin({ ...base, outcome: validated })).toEqual({ skill: 's_new', graduated: false });
   });
 
+  it('falls back to the whole recording this run compiled when the replay did not carry the step (fwop15-cv 01-open)', () => {
+    const d = decideRepin({ ...base, outcome: validated, stray: 7, compiled: { skill: 's_whole', status: 'validated' } });
+    expect(d).toEqual({ skill: 's_whole', graduated: false });
+    // …but never the replayed skill itself, and nothing when there is no whole recording.
+    expect(decideRepin({ ...base, outcome: validated, stray: 7, compiled: { skill: validated.skill, status: 'validated' } })).toEqual({ refused: expect.stringContaining('did not carry the step') });
+  });
+
   it('refuses when the model drove the step beyond the replay (rpgr3 s_567dd1)', () => {
     const d = decideRepin({ ...base, outcome: validated, stray: 3 });
     expect(d && 'refused' in d ? d.refused : null).toMatch(/drove 3 gesture/);
