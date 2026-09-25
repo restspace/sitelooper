@@ -208,6 +208,23 @@ export type RerecordVerdict =
   | { ok: false; pinned?: string; diagnostic: RerecordDiagnostic };
 
 /**
+ * The values a re-record leaves as the step's record: the run with the most
+ * reported values (the recording run, usually run 1 — a replay drops what it
+ * could not re-read), or null when no run reported any. unpinStep empties
+ * `recorded` and only export ever fills it; without this a compile rule keyed
+ * on the recorded value (a url part a later step references) had nothing to
+ * read after a re-record (fwgr74-cv: four re-records, four identical refusals).
+ */
+export function recordedFromRuns(runs: readonly RerecordRun[]): Record<string, string> | null {
+  let best: Record<string, string> | null = null;
+  for (const r of runs) {
+    const values = r.step?.values;
+    if (values && Object.keys(values).length > Object.keys(best ?? {}).length) best = { ...values };
+  }
+  return best;
+}
+
+/**
  * Did the re-recording take?
  *
  * The bar is the one the compiled spec has to clear, not "the run passed":

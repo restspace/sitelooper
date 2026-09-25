@@ -167,14 +167,23 @@ function artifact(k) {
     failLines = (v.stdout ?? '').split('\n').filter((l) => /\bFAIL\b/.test(l)).slice(0, 12);
   }
   const errors = (res?.tests ?? []).filter((t) => !t.ok).map((t) => t.error ?? '').filter(Boolean);
-  const anchors = [...new Set([...errors, ...(res?.drift ?? []).map(String)].flatMap((e) => [...String(e).matchAll(/@step\s+([\w-]+)/g)].map((m) => m[1])))];
+  // The step a failure names: the artifact's own message ("01-signin s_5fccd8/2: …"),
+  // or a `@step <id>` anchor in a stack.
+  const anchors = [...new Set([...errors, ...(res?.drift ?? []).map(String)].flatMap((e) => [
+    ...[...String(e).matchAll(/@step\s+([\w-]+)/g)].map((m) => m[1]),
+    ...[...String(e).matchAll(/(?:^|\n|: )([\w-]+) s_[0-9a-f]{6}\/\d+:/g)].map((m) => m[1]),
+  ]))];
   const passed = Boolean(res) && res.exitCode === 0 && (res.stats?.failed ?? 1) === 0 && !failLines.length && (verified === 'n/a' || !verified.includes('FAIL'));
   return { tag, exitCode: res?.exitCode ?? null, stats: res?.stats ?? null, driftCount: res?.driftCount ?? null, verified, failLines, errors: errors.map((e) => e.slice(0, 400)), anchors, passed, dry: args.dry };
 }
 
 function repair(k, flowFile) {
-  const repaired = flowFile.replace(/\.flow\.ts$/, '.repaired.flow.ts');
-  const r = run(`round ${k} repair`, process.execPath, [cli, 'repair', flowFile, '--var', `runid=${args.tag}-p${k}n{n}`, '--converge', '1', '--reset-cmd', resetCmd, '--out', repaired, '--json'], { json: true, live: true });
+  // In place: repair's compiled-spec check runs the .spec.ts BESIDE the flow
+  // file it wrote (it never rewrites the spec), so a renamed --out has no spec
+  // and the check reports "unavailable" (fwod88-cv round 3). The compile dir is
+  // per round, so nothing else is lost by rewriting the file there.
+  const repaired = flowFile;
+  const r = run(`round ${k} repair`, process.execPath, [cli, 'repair', flowFile, '--var', `runid=${args.tag}-p${k}n{n}`, '--converge', '1', '--reset-cmd', resetCmd, '--json'], { json: true, live: true });
   const j = r.json ?? {};
   const runs = (j.runs ?? []).map((x) => ({ label: x.label, passed: x.passed, total: x.total, status: x.status, tickets: x.tickets }));
   report.flowRuns += runs.length + (j.specCheck?.ran ? 1 : 0);

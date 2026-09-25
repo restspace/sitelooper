@@ -16,8 +16,7 @@ import {
   stepLine,
   stepOf,
   unpinStep,
-  type RerecordRun,
-} from '../src/spec/rerecord.js';
+  type RerecordRun, recordedFromRuns } from '../src/spec/rerecord.js';
 
 // `rerecord` is one pure decision wrapped in a flow run: which fields of a step
 // survive being unpinned, and whether the runs that followed prove the new
@@ -109,6 +108,15 @@ describe('quarantineLeakedSteps', () => {
   it('returns the flow untouched when nothing is poisoned', () => {
     const fixture = flowFixture();
     expect(quarantineLeakedSteps(fixture, skills, new Map()).flow).toBe(fixture);
+  });
+});
+
+describe('recordedFromRuns', () => {
+  it('takes the run that reported the most values, and null when none did', () => {
+    const run = (values?: Record<string, string>) => ({ label: 'r', step: { id: '01-open', status: 'success', ...(values ? { values } : {}) } as never });
+    expect(recordedFromRuns([run({ dashboard_uid_from_url: 'abc123', dashboard_title: 'Service health' }), run({ dashboard_title: 'Service health' })])).toEqual({ dashboard_uid_from_url: 'abc123', dashboard_title: 'Service health' });
+    expect(recordedFromRuns([run(), run({})])).toBeNull();
+    expect(recordedFromRuns([])).toBeNull();
   });
 });
 
