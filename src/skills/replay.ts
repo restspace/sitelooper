@@ -46,6 +46,7 @@ import { committedSlots, dismissalAlreadyInEffect, effectExpectation, expectedCh
 // Re-exported so this module's callers need not know which owns the source.
 export { lineShows, type LineShowsOptions } from '../execution/snapshot.js';
 export { consequentialExpectations, isEchoLine } from '../execution/expect.js';
+import { offRecordReadReason, readsRecordedKind, recordedKinds } from '../execution/positional.js';
 import { candidateNames, judgeEcho, markActed, noteCommit, noteInteraction, setsSomething } from '../execution/echo.js';
 import { documentOf, fillLost, guardedTyping, noteFill, rearmStandingFills, restoreStandingFills, standingFills, standingFillsLost } from '../execution/refill.js';
 import { hasTotpMarker, resolveSecrets, resolveSecretsAsync } from '../shared/secrets.js';
@@ -932,6 +933,8 @@ export async function replaySkill(
 
     // Resolve every target through its chain before touching the page.
     const resolved: Record<string, Locator> = {};
+    /** How a read's target was resolved when it was NOT by the recording's own better names: an inline heal, or a positional fallback (round 62). */
+    let offRecord: string | null = null;
     let resolveError: string | null = null;
     // Whether ANY target of this step resolved through a structural candidate
     // — position, not identity. Sharpens the effect gate below: a positional
@@ -1050,6 +1053,7 @@ export async function replaySkill(
         const healedLocator = await tryHeal(step, tag, key, chain, dead);
         if (healedLocator) {
           resolved[key] = healedLocator;
+          if (key === 'target') offRecord = 'an inline heal';
           if (setsSomething(step.tool)) {
             noteInteraction(interacted, candidateNames(chain as { name?: unknown; label?: unknown }[]));
             await markActed(page, healedLocator, interacted, [...candidateNames(chain as { name?: unknown; label?: unknown }[]), args.value, args.text], tag, step.tool);
@@ -1062,6 +1066,7 @@ export async function replaySkill(
       }
       resolved[key] = hit.locator;
       if (key === 'target') targetHit = hit;
+      if (key === 'target' && hit.index > 0 && structural(hit.candidate)) offRecord = 'a positional fallback';
       if (structural(hit.candidate)) positionalResolution = true;
       // Evidence ONLY from a pass whose winner names something. When a
       // structural path won, that is precisely the resolution we distrust —
@@ -1125,6 +1130,14 @@ export async function replaySkill(
         res.lines.push(`${head} → FAILED: ${verdict.stop}`);
         return 'stop';
       }
+    }
+    // A read resolved off its recorded element reads what the recording read
+    // only if the element is the KIND it read (point.ts readsRecordedKind,
+    // round 62: gitea fwgt13's heal to the "Add a link" BUTTON for the
+    // assignee LINK); otherwise it is skipped, as the artifact skips it.
+    if (!resolveError && isRead && offRecord && resolved.target) {
+      const kinds = recordedKinds(step.locators.target);
+      if ((await readsRecordedKind(resolved.target, kinds)) === false) resolveError = offRecordReadReason(step.label ?? `read${tag}`, offRecord, kinds);
     }
     if (!resolveError) absentDialog = null;
     if (resolveError) {

@@ -219,6 +219,15 @@ document.getElementById('go').addEventListener('click', () => {
  * Save that stores the amount (localStorage, so a reopen shows it) and adds a
  * row showing it.
  */
+/**
+ * Gitea fwgt13 02-create, in miniature (round 62): an issue sidebar whose
+ * assignee was a LINK when recorded. `?button=1` is the page n2 and n3 met:
+ * nothing assigned, and in the link's place the sidebar's "Add a link" BUTTON.
+ */
+const ASSIGNEE = (button: boolean) => `<!doctype html><html><head><meta charset="utf-8"><title>Issue</title></head><body>
+<div class="sidebar"><h4>Assignee</h4>${button ? '<button type="button">Add a link</button>' : '<a href="/u/bench-assignee">bench-assignee</a>'}</div>
+</body></html>`;
+
 const ESPO_FORM = `<!doctype html><html><head><meta charset="utf-8"><title>Opportunity</title></head><body>
 <div class="field" data-name="amount"><label>Amount <input data-name="amount"></label></div>
 <div class="field" data-name="closeDate"><label>Close Date <input data-name="closeDate"></label> <button type="button" id="pick">Pick a date</button></div>
@@ -1919,6 +1928,11 @@ export async function createFixtureServer(initialCount = 10): Promise<FixtureSer
     if (url === '/echo-lab' || url.startsWith('/echo-lab?')) {
       res.writeHead(200, { 'content-type': 'text/html' });
       res.end(ECHO_LAB);
+      return;
+    }
+    if (url === '/assignee' || url === '/assignee?button=1') {
+      res.writeHead(200, { 'content-type': 'text/html' });
+      res.end(ASSIGNEE(url.endsWith('button=1')));
       return;
     }
     if (url === '/espo-form') {

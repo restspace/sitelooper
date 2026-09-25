@@ -35,7 +35,7 @@ import { routeAt, visitedUrlPart } from '../src/execution/url.js';
 import { SOFT_MATCH_MIN_SIMILARITY, fillableChain, unfilledStepVerdict } from '../src/execution/gates.js';
 import { emitFlowFile } from '../src/spec/emit.js';
 import type { SpecFlow } from '../src/spec/ir.js';
-import { goalSatisfied, type ReplayResult } from '../src/skills/replay.js';
+import { goalSatisfied, setInlineHealer, type InlineHealer, type ReplayResult } from '../src/skills/replay.js';
 import { replayReport } from '../src/skills/learn.js';
 import { givenPartialReason, givenWarning } from '../src/execution/report.js';
 import { partialReasons } from '../src/daemon/step-verdict.js';
@@ -4733,6 +4733,85 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
       expect(emitted.outputs['01-clear.amount_reopened']).toBe('12,500');
       expect(replay.echoed).toEqual([]);
       expect(emitted.echoed).toEqual([]);
+    }, 120_000);
+  });
+
+  /**
+   * Round 62, gitea fwgt13 02-create: a READ OFF ITS RECORDED ELEMENT. The
+   * recording read the assignee LINK ("bench-assignee"). On n2 and n3 its
+   * candidates missed, an inline heal proposed the sidebar's "Add a link"
+   * BUTTON, and its text was published as the assignee. A read resolved by an
+   * inline heal, or by a positional fallback behind a better candidate that
+   * missed, is published only where the element is the KIND the recording
+   * read (the role its point or role candidate recorded); otherwise it is
+   * skipped, in both runners. Controls: the same fallback, and the same kind
+   * of heal, landing on the link are published.
+   */
+  describe('a read off its recorded element (round 62, fwgt13 02-create)', () => {
+    // Where the link was, recorded as a point of role link (the sidebar's
+    // second child, as the fixture lays it out at 1280×900).
+    const POINT: LocatorCandidate = { kind: 'point', x: 56, y: 69, w: 98, h: 17, role: 'link', tag: 'a', vw: 1280, vh: 900 } as LocatorCandidate;
+    // For the heal cases: the link named as it was recorded (someone else's
+    // name here, so it misses) — the chain's recorded kind, and nothing resolves.
+    const NAMED: LocatorCandidate = { kind: 'role', role: 'link', name: 'recorded-assignee' } as LocatorCandidate;
+    const assigneeRead = (fallback: boolean): SkillStep => ({
+      tool: 'read',
+      args: { target: '(read-back)', what: 'text' },
+      label: 'assignee_applied',
+      locators: { target: fallback ? [{ kind: 'css', selector: '#assignee-link' }, { kind: 'css', selector: '.sidebar > :nth-child(2)' } as LocatorCandidate, POINT] : [{ kind: 'css', selector: '#assignee-link' }, NAMED] },
+    });
+    // A second read that resolves, as s_71a916 read the issue number beside it: the segment observed something.
+    const heading: SkillStep = { tool: 'read', args: { target: '(read-back)', what: 'text' }, label: 'sidebar_heading', locators: { target: [{ kind: 'css', selector: '.sidebar h4' }] } };
+    const steps = (mode: string, fallback: boolean): SkillStep[] => [{ tool: 'goto', args: { url: `${origin}/assignee${mode}` }, locators: {} }, assigneeRead(fallback), heading];
+
+    it('both runners skip a positional fallback that lands on a button where the recording read a link', async () => {
+      const { replay, emitted } = await both(steps('?button=1', true), 0);
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      expect(replay.outputs.assignee_applied).toBeUndefined();
+      expect(emitted.outputs['01-clear.assignee_applied'] ?? '').toBe('');
+      expect(replay.warnings?.some((w) => /assignee_applied' resolved by a positional fallback to an element that is not a link/.test(w)), replay.warnings?.join('\n')).toBe(true);
+    }, 120_000);
+
+    it('both runners publish the same fallback where it lands on the link', async () => {
+      const { replay, emitted } = await both(steps('', true), 0);
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      expect(replay.outputs.assignee_applied).toBe('bench-assignee');
+      expect(emitted.outputs['01-clear.assignee_applied']).toBe('bench-assignee');
+    }, 120_000);
+
+    /** A healer proposing one candidate for whatever missed, as the Jev healer proposes from the live page. */
+    const healWith = (candidate: LocatorCandidate): InlineHealer =>
+      (async () => ({ candidate, note: `healed inline: the step ran on ${JSON.stringify(candidate)}`, rows: [], settled: () => {} })) as InlineHealer;
+
+    it("replay skips an inline heal onto the 'Add a link' button, as the artifact (which never heals) reads nothing there", async () => {
+      setInlineHealer(healWith({ kind: 'role', role: 'button', name: 'Add a link' } as LocatorCandidate));
+      try {
+        reset(0);
+        const replay = await replayOf(skillOf(steps('?button=1', false)));
+        reset(0);
+        const emitted = await emittedOf(specOf(steps('?button=1', false)));
+        expect(replay.ok, replay.reason ?? '').toBe(true);
+        expect(replay.outputs.assignee_applied).toBeUndefined();
+        expect(replay.warnings?.some((w) => /assignee_applied' resolved by an inline heal to an element that is not a link/.test(w)), replay.warnings?.join('\n')).toBe(true);
+        expect(emitted.ok, emitted.reason ?? '').toBe(true);
+        expect(emitted.outputs['01-clear.assignee_applied'] ?? '').toBe('');
+      } finally {
+        setInlineHealer(null);
+      }
+    }, 120_000);
+
+    it('replay still publishes an inline heal that names the same kind of element (the link)', async () => {
+      setInlineHealer(healWith({ kind: 'role', role: 'link', name: 'bench-assignee' } as LocatorCandidate));
+      try {
+        reset(0);
+        const replay = await replayOf(skillOf(steps('', false)));
+        expect(replay.ok, replay.reason ?? '').toBe(true);
+        expect(replay.outputs.assignee_applied).toBe('bench-assignee');
+      } finally {
+        setInlineHealer(null);
+      }
     }, 120_000);
   });
 

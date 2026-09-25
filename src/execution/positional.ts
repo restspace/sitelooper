@@ -192,3 +192,92 @@ export async function positionalClickVerdict(
   }
   return null;
 }
+
+/*
+ * A READ OFF ITS RECORDED ELEMENT (round 62, gitea fwgt13 02-create). The
+ * recording read the assignee LINK ("bench-assignee"); on n2 and n3 none of
+ * its candidates matched, an inline heal proposed the "Add a link" BUTTON (a
+ * role-and-name candidate) from the live page, and the button's text was
+ * published as the assignee. A read resolved by an inline heal, or by a positional
+ * candidate standing in for a better one that missed, reads an element the
+ * recording's own names did not reach. It is published only where that
+ * element is the KIND the recording read — the role a point or a role
+ * candidate recorded, else the point's tag, as markPoint judges a point —
+ * on the element itself, an ancestor it is painted inside, or the one
+ * descendant that carries all its text (a wrapper the css named). Otherwise
+ * the read is skipped, and said to be, in both runners. A chain that records
+ * no kind has nothing to compare, and the read stands as before.
+ */
+
+/** A kind the recording read: a role, else a tag. */
+export interface RecordedKind {
+  role: string | null;
+  tag: string | null;
+}
+
+/** The kinds a recorded chain names for its target: each point's role (else its tag), each role candidate's role. */
+export function recordedKinds(chain: readonly unknown[] | undefined): RecordedKind[] {
+  const out: RecordedKind[] = [];
+  for (const c of chain ?? []) {
+    const cand = c as { kind?: unknown; role?: unknown; tag?: unknown };
+    if (cand.kind === 'point') out.push(typeof cand.role === 'string' && cand.role ? { role: cand.role, tag: null } : { role: null, tag: typeof cand.tag === 'string' ? cand.tag : null });
+    else if (cand.kind === 'role' && typeof cand.role === 'string' && cand.role) out.push({ role: cand.role, tag: null });
+  }
+  return out.filter((k) => k.role || k.tag);
+}
+
+/**
+ * Is the element `loc` resolved to the kind of thing the recording read (see
+ * above)? True when the chain records no kind; null when the page cannot say
+ * — which never withholds.
+ */
+export async function readsRecordedKind(loc: Locator, kinds: readonly RecordedKind[]): Promise<boolean | null> {
+  if (!kinds.length) return true;
+  try {
+    return await loc.first().evaluate(
+      (el, kinds) => {
+        const kindOf = (e: Element): { role: string | null; tag: string } => {
+          const tagOf = e.tagName.toLowerCase();
+          const type = (e.getAttribute('type') || '').toLowerCase();
+          const implicit = (): string | null => {
+            if (tagOf === 'button') return 'button';
+            if (tagOf === 'a') return e.hasAttribute('href') ? 'link' : null;
+            if (tagOf === 'select') return e.hasAttribute('multiple') ? 'listbox' : 'combobox';
+            if (tagOf === 'textarea') return 'textbox';
+            if (tagOf === 'img') return 'img';
+            if (/^h[1-6]$/.test(tagOf)) return 'heading';
+            if (tagOf === 'input') {
+              if (type === 'checkbox') return 'checkbox';
+              if (type === 'radio') return 'radio';
+              if (type === 'submit' || type === 'button' || type === 'reset') return 'button';
+              if (type === 'search') return 'searchbox';
+              if (type === 'number') return 'spinbutton';
+              if (['text', 'email', 'tel', 'url', 'password', ''].includes(type)) return 'textbox';
+              return null;
+            }
+            return null;
+          };
+          return { role: e.getAttribute('role') || implicit(), tag: tagOf };
+        };
+        const is = (e: Element): boolean => {
+          const k = kindOf(e);
+          return kinds.some((want) => (want.role ? k.role === want.role : k.tag === want.tag));
+        };
+        for (let cur: Element | null = el, hops = 0; cur && hops < 6; cur = cur.parentElement, hops++) if (is(cur)) return true;
+        const text = (e: Element): string => ((e as HTMLElement).innerText ?? e.textContent ?? '').replace(/\s+/g, ' ').trim();
+        const own = text(el);
+        return own !== '' && Array.from(el.querySelectorAll('*')).some((d) => is(d) && text(d) === own);
+      },
+      kinds as RecordedKind[],
+      { timeout: 1_000 },
+    );
+  } catch {
+    return null;
+  }
+}
+
+/** Why both runners skip a read that resolved to another kind of element (the same words in each). */
+export function offRecordReadReason(label: string, how: string, kinds: readonly RecordedKind[]): string {
+  const wanted = kinds.map((k) => k.role ?? k.tag).join(' or ');
+  return `read '${label}' resolved by ${how} to an element that is not a ${wanted}, the kind the recording read — its value is not published`;
+}
