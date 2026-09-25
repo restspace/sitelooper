@@ -1,0 +1,38 @@
+{
+  "arm": "spec",
+  "runid": "fwvk15-cv-c1",
+  "target": "vikunja",
+  "flow": "fwvk15-cv.json",
+  "flowName": "fwvk15-cv",
+  "skillsDir": "/home/user/sitelooper/bench/results/fwvk15-cv-skills",
+  "compiled": true,
+  "flowFile": "bench/results/fwvk15-cv-c1-spec-tmp/fwvk15-cv.flow.ts",
+  "specFile": "bench/results/fwvk15-cv-c1-spec-tmp/fwvk15-cv.spec.ts",
+  "wallMs": 16655,
+  "exitCode": 1,
+  "timedOut": false,
+  "costUsd": 0,
+  "stats": {
+    "total": 1,
+    "passed": 0,
+    "failed": 1,
+    "skipped": 0
+  },
+  "tests": [
+    {
+      "title": "fwvk15-cv",
+      "status": "unexpected",
+      "ok": false,
+      "durationMs": 11905,
+      "error": "Error: 02-open needs {{01-signin.visible_projects_2}}, and this run never published it (it was published empty). The step that publishes 01-signin.visible_projects_2 read nothing — look above for its `[sitelooper skip]` line (01-signin s_9e6344/2 target), which is where this run diverged. Stopping here instead of passing an empty value into 02-open: blank, a record-scoped locator matches every record and a known slot loses its identity, so the step would do its work to the wrong one. Everything earlier steps did stands; nothing of 02-open has run.",
+      "drift": []
+    }
+  ],
+  "drift": [],
+  "driftCount": 0,
+  "evidence": [
+    "fwvk15-cv-c1-spec-failure.png",
+    "fwvk15-cv-c1-spec-error-context.md"
+  ],
+  "logTail": "\nRunning 1 test using 1 worker\n\n[sitelooper skip] 01-signin s_9e6344/2 target: read target not found — value left empty\n[sitelooper step] 01-signin\n  ✘  1 fwvk15-cv.spec.ts:9:1 › fwvk15-cv (11.9s)\n\n\n  1) fwvk15-cv.spec.ts:9:1 › fwvk15-cv › 02-open: Open the project named '{{01-signin.visible_projects_2}}' from the sidebar and list the titles of all tasks in it whose title starts with 'Seed:', exactly as displayed. Do not modify anything. Report the exact titles. \n\n    Error: 02-open needs {{01-signin.visible_projects_2}}, and this run never published it (it was published empty). The step that publishes 01-signin.visible_projects_2 read nothing — look above for its `[sitelooper skip]` line (01-signin s_9e6344/2 target), which is where this run diverged. Stopping here instead of passing an empty value into 02-open: blank, a record-scoped locator matches every record and a known slot loses its identity, so the step would do its work to the wrong one. Everything earlier steps did stands; nothing of 02-open has run.\n\n       at fwvk15-cv.flow.ts:13798\n\n      13796 |         ` attempted: check that ${sid} is a step of this flow and that it is the step that publishes` +\n      13797 |         ` this value, rather than re-recording a read that may be working.`;\n    > 13798 |     throw new Error(\n            |           ^\n      13799 |       `${by} needs {{${ref}}}, and this run never published it` +\n      13800 |         (value === '' ? ' (it was published empty)' : '') +\n      13801 |         `. ${trail}` +\n        at need (/home/user/sitelooper/bench/results/fwvk15-cv-c1-spec-tmp/fwvk15-cv.flow.ts:13798:11)\n        at /home/user/sitelooper/bench/results/fwvk15-cv-c1-spec-tmp/fwvk15-cv.flow.ts:17963:42\n        at runFlow (/home/user/sitelooper/bench/results/fwvk15-cv-c1-spec-tmp/fwvk15-cv.flow.ts:17962:5)\n        at /home/user/sitelooper/bench/results/fwvk15-cv-c1-spec-tmp/fwvk15-cv.spec.ts:14:21\n\n    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────\n    \n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────\n    test-results/fwvk15-cv-fwvk15-cv/test-failed-1.png\n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    Error Context: test-results/fwvk15-cv-fwvk15-cv/error-context.md\n\n  1 failed\n    fwvk15-cv.spec.ts:9:1 › fwvk15-cv ──────────────────────────────────────────────────────────────\n"
+}
