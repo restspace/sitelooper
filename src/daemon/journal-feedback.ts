@@ -50,6 +50,10 @@ export function feedbackLines(tool: string, w: number, own: readonly JournalEven
   // Where the click landed.
   const covered = sure.find((e) => e.k === 'hit' && e.on === 0);
   if (covered) lines.push(`the click landed on ${what(covered.cover ?? covered.d)}, not on its target (something covered it)`);
+  // Popups, before state and focus: under the line cap, what opened outranks where focus went (verify-main62).
+  for (const e of sure) {
+    if ((e.k === 'show' || e.k === 'hide') && POPUP.test(String(e.d))) lines.push(`${what(e.d)} ${e.k === 'show' ? 'opened' : 'closed'}`);
+  }
   // State.
   const states = new Map<string, JournalEvent>();
   for (const e of sure) if (e.k === 'state' && typeof e.on === 'boolean') states.set(`${String(e.a) === 'aria-expanded' ? 'x' : 's'}:${name(e.d)}`, e);
@@ -59,10 +63,6 @@ export function feedbackLines(tool: string, w: number, own: readonly JournalEven
     if (e.a === 'aria-expanded') lines.push(`'${n.slice(0, 50)}' is now ${e.on ? 'expanded' : 'collapsed'}`);
     else if (e.a === 'aria-pressed') lines.push(`'${n.slice(0, 50)}' is now ${e.on ? 'pressed' : 'not pressed'}`);
     else lines.push(`'${n.slice(0, 50)}' is now ${e.on ? 'selected' : 'not selected'}`);
-  }
-  // Popups.
-  for (const e of sure) {
-    if ((e.k === 'show' || e.k === 'hide') && POPUP.test(String(e.d))) lines.push(`${what(e.d)} ${e.k === 'show' ? 'opened' : 'closed'}`);
   }
   // Focus, when it went somewhere other than what was acted on.
   const target = sure.find((e) => e.k === 'hit')?.d ?? sure.find((e) => e.k === 'val')?.f;

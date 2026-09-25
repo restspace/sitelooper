@@ -35,7 +35,7 @@ import { routeAt, visitedUrlPart } from '../src/execution/url.js';
 import { SOFT_MATCH_MIN_SIMILARITY, fillableChain, unfilledStepVerdict } from '../src/execution/gates.js';
 import { emitFlowFile } from '../src/spec/emit.js';
 import type { SpecFlow } from '../src/spec/ir.js';
-import { goalSatisfied, type ReplayResult } from '../src/skills/replay.js';
+import { goalSatisfied, setInlineHealer, type InlineHealer, type ReplayResult } from '../src/skills/replay.js';
 import { replayReport } from '../src/skills/learn.js';
 import { givenPartialReason, givenWarning } from '../src/execution/report.js';
 import { partialReasons } from '../src/daemon/step-verdict.js';
@@ -48,6 +48,7 @@ import { flattenContainedComposite, flattenProvenComposite, planContainedParts, 
 import { carryOpener, compileSkills } from '../src/skills/compile.js';
 import { FIXTURE_TOTP_SEED, createFixtureServer, type FixtureServer } from './fixture/server.js';
 import { hotpCode, totpSeed } from '../src/execution/totp.js';
+import { valueHash } from '../src/daemon/journal-attribute.js';
 
 const enabled = process.env.BP_PARITY_TESTS === '1';
 const d = enabled ? describe : describe.skip;
@@ -4043,6 +4044,139 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
     }, 240_000);
   });
 
+  describe('a pick recorded as committing the highlight replays as a pick by name (round 62, fwsi13 03-create)', () => {
+    /**
+     * snipeit fwsi13-n1 03-create typed the model into a select2 search (its
+     * one result highlighted) and clicked the widget's combobox, which closed
+     * it and committed the highlight. Compiled from that shape, the click is a
+     * click on the option by name: both runners wait for the option and pick
+     * it, even when the results arrive after the typing's own settle — where
+     * the recorded click would have closed the list with nothing highlighted.
+     */
+    const compiled = (url: string): SkillStep[] => {
+      const name = 'Bench Laptops - Bench Manufacturer Bench Laptop Model';
+      const entries: RecordedEntry[] = [
+        { k: 'instruction', text: "set the model to 'Bench Laptop Model' and save", url },
+        { k: 'step', tool: 'goto', args: { url }, locators: {}, diff: { url, alerts: [], added: [], dialect: 2 } },
+        {
+          k: 'step',
+          tool: 'click',
+          args: { target: '@e1' },
+          locators: { target: { expr: 'x', verified: true, raw: '@e1', chain: [{ kind: 'role', role: 'combobox', name: 'Select a Model' }] } },
+          diff: { url, alerts: [], added: ['- searchbox ""'], dialect: 2 },
+        },
+        {
+          k: 'step',
+          tool: 'type',
+          args: { target: '#q', text: 'Bench Laptop Model' },
+          locators: { target: { expr: 'x', verified: true, raw: '#q', chain: [{ kind: 'css', selector: '#q' }] } },
+          diff: { url, alerts: [], added: ['- searchbox "": Bench Laptop Model', `- listbox "${name}"`, `- option "${name}"`], dialect: 2 },
+        },
+        {
+          k: 'step',
+          tool: 'click',
+          args: { target: '@e2' },
+          locators: { target: { expr: 'x', verified: true, raw: '@e2', chain: [{ kind: 'css', selector: '#sel' }] } },
+          diff: { url, alerts: [], added: [`- combobox "×${name}"`], removed: [`- option "${name}"`], dialect: 2 },
+        },
+        {
+          k: 'step',
+          tool: 'click',
+          args: { target: '@e3' },
+          locators: { target: { expr: 'x', verified: true, raw: '@e3', chain: [{ kind: 'role', role: 'button', name: 'Save' }] } },
+          diff: { url, alerts: [], added: [], dialect: 2 },
+        },
+      ];
+      const steps = compileSkills({ entries, instruction: "set the model to 'Bench Laptop Model' and save", report: { status: 'success', summary: 'ok' }, session: 's' }).flatMap((sk) => sk.steps);
+      // The typed model is the procedure's slot; both runners get it filled.
+      return JSON.parse(JSON.stringify(steps).split('{{v1}}').join('Bench Laptop Model')) as SkillStep[];
+    };
+
+    it('both runners pick the named option (the recorded target, a hidden native select, picks nothing)', async () => {
+      const steps = compiled(`${origin}/select-late`);
+      const pickStep = steps.find((s) => s.tool === 'click' && String(s.args.target).startsWith('role=option'));
+      expect(pickStep, JSON.stringify(steps.map((s) => s.args.target))).toBeTruthy();
+      for (const url of [`${origin}/select-late`]) {
+        const at = steps.map((st) => (st.tool === 'goto' ? { ...st, args: { url } } : st));
+        const run = await both(at, 0);
+        expect(run.replay.ok, `${url}: ${run.replay.reason ?? ''}`).toBe(true);
+        expect(run.emitted.ok, `${url}: ${run.emitted.reason ?? ''}`).toBe(true);
+        await new Promise((r) => setTimeout(r, 300));
+        expect(run.replayLog, url).toEqual(['commit:model:Bench Laptops - Bench Manufacturer Bench Laptop Model', 'commit:save:asset']);
+        expect(run.emittedLog, url).toEqual(run.replayLog);
+      }
+    }, 240_000);
+  });
+
+  describe('a pre-filled field cleared and restored around a failed save compiles away on the journal\'s proof (round 62, fwsi13 03-create)', () => {
+    /**
+     * snipeit fwsi13-n1 03-create cleared the Asset Tag the app pre-fills,
+     * Save failed ("This field is required"), and the model filled the tag it
+     * had cleared back and saved. The journal proves the restore (the clear's
+     * `was` hash is the restoring fill's `h`), the failed save wrote nothing
+     * and the later save's POST carried the restored value. Compiled, both
+     * runners leave the app's pre-filled tag alone and save it — a tag that
+     * differs on every load, as Snipe-IT's next tag does; the recorded
+     * procedure would clear it and save the recording's literal.
+     */
+    const t0 = 1_790_000_000_000;
+    const at = (w: number, dt: number) => ({ t: t0 + w * 1000 + dt, c: ['in', w, 'gesture'] as ['in', number, string] });
+    const box = { kind: 'role', role: 'textbox', name: 'Asset Tag' } as const;
+    const save = { kind: 'role', role: 'button', name: 'Save' } as const;
+    const compiled = (url: string): SkillStep[] => {
+      const entries: RecordedEntry[] = [
+        { k: 'instruction', text: 'create an asset and save it', url },
+        { k: 'step', tool: 'goto', args: { url }, locators: {}, diff: { url, alerts: [], added: [], dialect: 2 } },
+        {
+          k: 'step',
+          tool: 'fill',
+          args: { target: '@e1', value: '' },
+          locators: { target: { expr: 'x', verified: true, raw: '@e1', chain: [box, { kind: 'css', selector: '#tag' }] } },
+          diff: { url, alerts: [], added: ['- textbox "Asset Tag"'], removed: ['- textbox "Asset Tag": BA-00004'], dialect: 2 },
+          journal: { w: 1, ev: [{ ...at(1, 10), k: 'val', f: 'textbox "Asset Tag"', len: 0, h: valueHash(''), was: valueHash('BA-00004') }] },
+        },
+        {
+          k: 'step',
+          tool: 'click',
+          args: { target: '@e2' },
+          locators: { target: { expr: 'x', verified: true, raw: '@e2', chain: [save, { kind: 'css', selector: '#save' }] } },
+          diff: { url, alerts: ['This field is required'], added: ['- alert "This field is required"'], dialect: 2 },
+          journal: { w: 2, ev: [{ ...at(2, 5), k: 'foc', dir: 'in', d: 'textbox "Asset Tag"' }, { ...at(2, 6), k: 'show', d: 'alert "This field is required"' }] },
+        },
+        {
+          k: 'step',
+          tool: 'fill',
+          args: { target: '#tag', value: 'BA-00004' },
+          locators: { target: { expr: 'x', verified: true, raw: '#tag', chain: [{ kind: 'css', selector: '#tag' }, box] } },
+          diff: { url, alerts: [], added: ['- textbox "Asset Tag": BA-00004'], dialect: 2 },
+          journal: { w: 3, ev: [{ ...at(3, 10), k: 'val', f: 'textbox "Asset Tag"', len: 8, h: valueHash('BA-00004'), was: valueHash('') }] },
+        },
+        {
+          k: 'step',
+          tool: 'click',
+          args: { target: '#save' },
+          locators: { target: { expr: 'x', verified: true, raw: '#save', chain: [{ kind: 'css', selector: '#save' }, save] } },
+          diff: { url, alerts: ['Asset created'], added: ['- status "Asset created"'], dialect: 2 },
+          journal: { w: 4, ev: [{ ...at(4, 5), k: 'req', m: 'POST', e: `${origin}/commit/save/BA-00004`, rt: 'fetch', carries: [3], s: 200 }] },
+        },
+      ];
+      return compileSkills({ entries, instruction: 'create an asset and save it', report: { status: 'success', summary: 'saved' }, session: 's' }).flatMap((sk) => sk.steps);
+    };
+
+    it('both runners save the tag the app pre-filled (the recording cleared it and saved its literal)', async () => {
+      const steps = compiled(`${origin}/prefilled-tag`);
+      expect(JSON.stringify(steps.map((s) => s.args)), 'the literal tag is not in the procedure').not.toContain('BA-00004');
+      const run = await both(steps, 0);
+      expect(run.replay.ok, run.replay.reason ?? '').toBe(true);
+      expect(run.emitted.ok, run.emitted.reason ?? '').toBe(true);
+      await new Promise((r) => setTimeout(r, 300));
+      expect(run.replayLog).toHaveLength(1);
+      expect(run.replayLog[0]).toMatch(/^commit:save:BA-001\d\d$/);
+      expect(run.emittedLog).toHaveLength(1);
+      expect(run.emittedLog[0]).toMatch(/^commit:save:BA-001\d\d$/);
+    }, 240_000);
+  });
+
   describe('a picker click whose target went with the picker its entry opened (round 59, fwsi10 03-create)', () => {
     /**
      * snipeit fwsi10-n1 03-create filled the purchase date (opening the date
@@ -4669,6 +4803,85 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
       expect(emitted.outputs['01-clear.amount_reopened']).toBe('12,500');
       expect(replay.echoed).toEqual([]);
       expect(emitted.echoed).toEqual([]);
+    }, 120_000);
+  });
+
+  /**
+   * Round 62, gitea fwgt13 02-create: a READ OFF ITS RECORDED ELEMENT. The
+   * recording read the assignee LINK ("bench-assignee"). On n2 and n3 its
+   * candidates missed, an inline heal proposed the sidebar's "Add a link"
+   * BUTTON, and its text was published as the assignee. A read resolved by an
+   * inline heal, or by a positional fallback behind a better candidate that
+   * missed, is published only where the element is the KIND the recording
+   * read (the role its point or role candidate recorded); otherwise it is
+   * skipped, in both runners. Controls: the same fallback, and the same kind
+   * of heal, landing on the link are published.
+   */
+  describe('a read off its recorded element (round 62, fwgt13 02-create)', () => {
+    // Where the link was, recorded as a point of role link (the sidebar's
+    // second child, as the fixture lays it out at 1280×900).
+    const POINT: LocatorCandidate = { kind: 'point', x: 56, y: 69, w: 98, h: 17, role: 'link', tag: 'a', vw: 1280, vh: 900 } as LocatorCandidate;
+    // For the heal cases: the link named as it was recorded (someone else's
+    // name here, so it misses) — the chain's recorded kind, and nothing resolves.
+    const NAMED: LocatorCandidate = { kind: 'role', role: 'link', name: 'recorded-assignee' } as LocatorCandidate;
+    const assigneeRead = (fallback: boolean): SkillStep => ({
+      tool: 'read',
+      args: { target: '(read-back)', what: 'text' },
+      label: 'assignee_applied',
+      locators: { target: fallback ? [{ kind: 'css', selector: '#assignee-link' }, { kind: 'css', selector: '.sidebar > :nth-child(2)' } as LocatorCandidate, POINT] : [{ kind: 'css', selector: '#assignee-link' }, NAMED] },
+    });
+    // A second read that resolves, as s_71a916 read the issue number beside it: the segment observed something.
+    const heading: SkillStep = { tool: 'read', args: { target: '(read-back)', what: 'text' }, label: 'sidebar_heading', locators: { target: [{ kind: 'css', selector: '.sidebar h4' }] } };
+    const steps = (mode: string, fallback: boolean): SkillStep[] => [{ tool: 'goto', args: { url: `${origin}/assignee${mode}` }, locators: {} }, assigneeRead(fallback), heading];
+
+    it('both runners skip a positional fallback that lands on a button where the recording read a link', async () => {
+      const { replay, emitted } = await both(steps('?button=1', true), 0);
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      expect(replay.outputs.assignee_applied).toBeUndefined();
+      expect(emitted.outputs['01-clear.assignee_applied'] ?? '').toBe('');
+      expect(replay.warnings?.some((w) => /assignee_applied' resolved by a positional fallback to an element that is not a link/.test(w)), replay.warnings?.join('\n')).toBe(true);
+    }, 120_000);
+
+    it('both runners publish the same fallback where it lands on the link', async () => {
+      const { replay, emitted } = await both(steps('', true), 0);
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      expect(replay.outputs.assignee_applied).toBe('bench-assignee');
+      expect(emitted.outputs['01-clear.assignee_applied']).toBe('bench-assignee');
+    }, 120_000);
+
+    /** A healer proposing one candidate for whatever missed, as the Jev healer proposes from the live page. */
+    const healWith = (candidate: LocatorCandidate): InlineHealer =>
+      (async () => ({ candidate, note: `healed inline: the step ran on ${JSON.stringify(candidate)}`, rows: [], settled: () => {} })) as InlineHealer;
+
+    it("replay skips an inline heal onto the 'Add a link' button, as the artifact (which never heals) reads nothing there", async () => {
+      setInlineHealer(healWith({ kind: 'role', role: 'button', name: 'Add a link' } as LocatorCandidate));
+      try {
+        reset(0);
+        const replay = await replayOf(skillOf(steps('?button=1', false)));
+        reset(0);
+        const emitted = await emittedOf(specOf(steps('?button=1', false)));
+        expect(replay.ok, replay.reason ?? '').toBe(true);
+        expect(replay.outputs.assignee_applied).toBeUndefined();
+        expect(replay.warnings?.some((w) => /assignee_applied' resolved by an inline heal to an element that is not a link/.test(w)), replay.warnings?.join('\n')).toBe(true);
+        expect(emitted.ok, emitted.reason ?? '').toBe(true);
+        expect(emitted.outputs['01-clear.assignee_applied'] ?? '').toBe('');
+      } finally {
+        setInlineHealer(null);
+      }
+    }, 120_000);
+
+    it('replay still publishes an inline heal that names the same kind of element (the link)', async () => {
+      setInlineHealer(healWith({ kind: 'role', role: 'link', name: 'bench-assignee' } as LocatorCandidate));
+      try {
+        reset(0);
+        const replay = await replayOf(skillOf(steps('', false)));
+        expect(replay.ok, replay.reason ?? '').toBe(true);
+        expect(replay.outputs.assignee_applied).toBe('bench-assignee');
+      } finally {
+        setInlineHealer(null);
+      }
     }, 120_000);
   });
 
@@ -5591,6 +5804,78 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
       expect(run.replay.reason).toMatch(said);
       expect(run.emitted.reason).toMatch(said);
     }, 180_000);
+
+    /**
+     * Round 62, gitea fwgt13 (silent wrong data), through compileSkills: a
+     * recording that picked "enhancement" with ArrowDown ×3 and Enter in a
+     * keyboard-driven picker (/kbd-picker), its journal naming the option
+     * the Enter ticked, then Escape. Compile once folded the three ArrowDowns
+     * into one (coalesceControls) and both runners committed "bug" as a
+     * success. Now the pick compiles as a click on "enhancement" by name, so
+     * both runners commit it on the recorded page and on a page with one
+     * more label first (?shifted=1), where the same presses would have landed
+     * on "documentation". A pick no click can name (the journal describing a
+     * bare `div`) stays a press verified by name: it commits on the recorded
+     * page and stops, before anything is committed, on the shifted one.
+     */
+    const kbdRun = async (url: string, described: string) => {
+      const T = 'Label the new issue enhancement.';
+      let w = 0;
+      const press = (key: string, picked?: string): RecordedStep => {
+        w += 1;
+        const own = (ev: Record<string, unknown>) => ({ t: w * 10, ...ev, c: ['in', w, 'gesture'] });
+        return {
+          k: 'step',
+          tool: 'press',
+          args: { key },
+          locators: {},
+          diff: { url, alerts: [], added: [], dialect: 2 },
+          journal: { w, ev: picked ? [own({ k: 'hit', ty: 'c', d: picked, tr: 0 }), own({ k: 'state', d: picked, a: 'class', x: '+checked', on: true })] : [] },
+        } as unknown as RecordedStep;
+      };
+      const entries: RecordedEntry[] = [
+        { k: 'instruction', text: T, url },
+        { k: 'step', tool: 'click', args: { target: '@e1' }, locators: { target: { expr: 'x', verified: true, raw: '@e1', chain: [{ kind: 'css', selector: '#labels' }] } }, diff: { url, alerts: [], added: ['- listbox "Label choices"', '- link "bug"', '- link "documentation"', '- link "enhancement"', '- link "priority-high"'], dialect: 2 } },
+        press('ArrowDown'),
+        press('ArrowDown'),
+        press('ArrowDown'),
+        press('Enter', described),
+        press('Escape'),
+        { k: 'report', status: 'success', summary: 'labelled', values: {} },
+      ];
+      const report: Report = { status: 'success', summary: 'labelled', evidence: { values: {} } };
+      const [skill] = compileSkills({ entries, instruction: T, report, session: 'parity', knownValues: {} });
+      return { skill, ...(await both([{ tool: 'goto', args: { url }, locators: {} }, ...skill.steps], 0)) };
+    };
+
+    it('both runners pick the recorded item by name, on the recorded list and on a shifted one (fwgt13)', async () => {
+      for (const page of ['kbd-picker', 'kbd-picker?shifted=1']) {
+        const run = await kbdRun(`${origin}/${page}`, 'link "enhancement"');
+        expect(run.skill.steps.map((s) => (s.tool === 'press' ? String(s.args.key) : s.tool))).toEqual(['click', 'click', 'Escape']);
+        expect(run.replay.ok, `${page}: ${run.replay.reason ?? ''}`).toBe(true);
+        expect(run.emitted.ok, `${page}: ${run.emitted.reason ?? ''}`).toBe(true);
+        expect(run.replayLog, page).toEqual(['commit:labels:enhancement']);
+        expect(run.emittedLog, page).toEqual(['commit:labels:enhancement']);
+      }
+    }, 240_000);
+
+    it('both runners verify a press no click can name by the name it picked, and stop before committing another (fwgt13)', async () => {
+      const right = await kbdRun(`${origin}/kbd-picker`, 'div "enhancement"');
+      expect(right.skill.steps.filter((s) => s.tool === 'press').map((s) => String(s.args.key))).toEqual(['ArrowDown', 'ArrowDown', 'ArrowDown', 'Enter', 'Escape']);
+      expect(right.replay.ok, right.replay.reason ?? '').toBe(true);
+      expect(right.emitted.ok, right.emitted.reason ?? '').toBe(true);
+      expect(right.replayLog).toEqual(['commit:labels:enhancement']);
+      expect(right.emittedLog).toEqual(['commit:labels:enhancement']);
+
+      const shifted = await kbdRun(`${origin}/kbd-picker?shifted=1`, 'div "enhancement"');
+      expect(shifted.replayLog, 'replay must not commit the wrong pick').toEqual([]);
+      expect(shifted.emittedLog, 'the artifact must not commit the wrong pick').toEqual([]);
+      expect(shifted.replay.ok).toBe(false);
+      expect(shifted.emitted.ok).toBe(false);
+      const said = /the press was recorded picking div "enhancement" and picked "documentation"/;
+      expect(shifted.replay.reason).toMatch(said);
+      expect(shifted.emitted.reason).toMatch(said);
+    }, 240_000);
 
     it('both runners stop, not skip, a toggle whose target no longer resolves although its popup is showing', async () => {
       const { replay, emitted, replayLog, emittedLog } = await both(menuSteps('gone'), 0);
@@ -6701,6 +6986,43 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
       expect(ids(emittedLog, 'publish')).toEqual(ids(emittedLog, 'create'));
     }, 180_000);
 
+    it('both runners publish the visited id when the producer ends on another route with a part at that label (round 62, fwvk13)', async () => {
+      // 02-create of fwvk13 ended on /projects/2/5, whose p1 is the project:
+      // the task's id at p1 on /tasks/:id must not be read off the end url.
+      const toBoard: SkillStep = { tool: 'click', args: { target: '@e4' }, locators: { target: [{ kind: 'role', role: 'link', name: 'Board' }] } };
+      const steps = [...create(false).slice(0, 2), toBoard];
+      reset(0);
+      let trail: ReturnType<typeof urlTrail> | null = null;
+      const first = await replayOf({ ...skillOf(steps), id: 's_hash_create' }, {}, async (page) => {
+        trail = urlTrail(page);
+      });
+      const urls = trail ? [...(trail as ReturnType<typeof urlTrail>).urls] : [];
+      const published = visitedUrlPart(urls, urls[urls.length - 1] ?? '', 'h2', ROUTE());
+      const second = await replayOf({ ...skillOf(open()), id: 's_hash_open', params: V1 }, { v1: published ?? '' });
+      const replayLog = [...fx.log];
+      reset(0);
+      const spec: SpecFlow = {
+        version: 1,
+        name: 'parity-hash-board',
+        origin,
+        startUrl: `${origin}/`,
+        vars: [],
+        steps: [
+          { id: '01-create', instruction: 'create a post', params: {}, outputs: [], urlRoutes: { 'url.h2': ROUTE() }, segments: [{ id: 's_hash_create', template: 'create a post', params: {}, preconditions: { urlPattern: `${origin}/` }, steps }] },
+          { id: '02-open', instruction: 'publish {{01-create.url.h2}}', params: { v1: '{{01-create.url.h2}}' }, outputs: [], segments: [{ id: 's_hash_open', template: 'publish {{v1}}', params: V1, preconditions: { urlPattern: `${origin}/` }, steps: open() }] },
+        ],
+      };
+      const emitted = await emittedFlowOf(spec);
+      const emittedLog = [...fx.log];
+      expect(first.ok, first.reason ?? '').toBe(true);
+      expect(second.ok, second.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      expect(published).toBe(ids(replayLog, 'create')[0]);
+      expect(ids(replayLog, 'publish')).toEqual(ids(replayLog, 'create'));
+      expect(ids(emittedLog, 'create')).toHaveLength(1);
+      expect(ids(emittedLog, 'publish')).toEqual(ids(emittedLog, 'create'));
+    }, 180_000);
+
     it('a record the producer backed out of for another is not the one published (control)', async () => {
       const { published, replayLog, emitted, emittedLog } = await run(true);
       expect(emitted.ok, emitted.reason ?? '').toBe(true);
@@ -6796,5 +7118,41 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
       expect(replay.ok).toBe(emitted.ok);
       expect(replayLog).toEqual(emittedLog);
     }, 240_000);
+  });
+
+  /**
+   * Round 62, vikunja fwvk13 01-signin: s_38a508 fills user and password twice
+   * (the recording refilled after /login replaced its document) and clicks
+   * Login. The daemon survived the reload on both replays; the compiled run
+   * clicked Login on an EMPTY form ("Please provide a username/password") and
+   * stopped on its url gate with neither a refill nor a lost-submit retry
+   * logged. Each variant below runs through both runners, with the login's
+   * mutation log as the oracle: before the submit (a reload 500ms after the
+   * first value; a reload the moment the pre-submit check blurs the password —
+   * a reload landing INSIDE that check; the fields cleared with no reload),
+   * and at the submit (the first click reloads instead of submitting).
+   */
+  describe('a sign-in whose page reloads or clears around the submit (round 62, fwvk13)', () => {
+    const steps = (mode: string): SkillStep[] => {
+      const user: SkillStep = { tool: 'fill', args: { target: '@e1', value: 'admin' }, locators: { target: [{ kind: 'label', label: 'Username' }] } };
+      const pass: SkillStep = { tool: 'fill', args: { target: '@e2', value: 'pass-x62' }, locators: { target: [{ kind: 'css', selector: '#password' }] } };
+      return [
+        { tool: 'goto', args: { url: `${origin}/reload-login/${mode}` }, locators: {} },
+        user,
+        pass,
+        user,
+        pass,
+        { tool: 'click', args: { target: '@e3' }, locators: { target: [{ kind: 'role', role: 'button', name: 'Sign in' }] }, expect: { urlPattern: `${origin}/signed-in` } },
+      ];
+    };
+    for (const mode of ['delay-500', 'blur', 'clear-500', 'submit']) {
+      it(`both runners sign in once (${mode})`, async () => {
+        const { replay, emitted, replayLog, emittedLog } = await both(steps(mode), 0);
+        expect(replay.ok, replay.reason ?? '').toBe(true);
+        expect(emitted.ok, emitted.reason ?? '').toBe(true);
+        expect(replayLog).toEqual(['commit:login:admin:pass-x62']);
+        expect(emittedLog).toEqual(['commit:login:admin:pass-x62']);
+      }, 180_000);
+    }
   });
 });

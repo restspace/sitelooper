@@ -220,8 +220,9 @@ function journalInPage(): void {
     if (v === null) return;
     const pw = el instanceof HTMLInputElement && el.type === 'password';
     const key = pw ? `pw:${v.length}` : fnv(v);
-    if (seenValue.get(el) === key) return;
-    const first = !seenValue.has(el);
+    const prev = seenValue.get(el);
+    if (prev === key) return;
+    const first = prev === undefined;
     seenValue.set(el, key);
     if (seenValue.size > 100) seenValue.delete(seenValue.keys().next().value as Element);
     if (src === 'd' && first) return; // a field first met at a drain has no before
@@ -231,7 +232,13 @@ function journalInPage(): void {
       if (!pw) lastVal.rec.h = key;
       return;
     }
-    const rec = push({ k: 'val', f: desc(el), len: v.length, ...(pw ? { pw: 1 } : { h: key }), ...(src === 'd' ? { src: 'd' } : {}) });
+    // `was`: the hash the field held before this change (seen at focus or an
+    // earlier drain), so a set that puts a field back is provably a restore
+    // (round 62, snipeit fwsi13: Asset Tag's pre-filled tag cleared and
+    // filled back). Never for a password field; a credential's hash is
+    // scrubbed daemon-side as `h` is.
+    const was = !pw && prev !== undefined && !prev.startsWith('pw:') ? { was: prev } : {};
+    const rec = push({ k: 'val', f: desc(el), len: v.length, ...(pw ? { pw: 1 } : { h: key, ...was }), ...(src === 'd' ? { src: 'd' } : {}) });
     lastVal = { el, rec };
   };
   const onValue = (ev: Event) => {

@@ -102,6 +102,16 @@ d('recorder journal: in-page (stage 2)', () => {
     expect(JSON.stringify(steps().flatMap((s) => [...(s.journal?.ev ?? []), ...(s.journal?.gap?.ev ?? [])]))).not.toContain('Bench Title 9');
   }, 90_000);
 
+  it('a pre-filled value cleared and filled back: each set records the hash it replaced (`was`), so the restore is provable (fwsi13)', async () => {
+    await run('goto', { url: `${app.url}/` });
+    await run('fill', { target: '#tag', value: '' });
+    const clear = (last('fill').journal?.ev ?? []).find((e) => e.k === 'val');
+    expect(clear, JSON.stringify(last('fill').journal)).toMatchObject({ f: 'textbox "Tag"', len: 0, h: valueHash(''), was: valueHash('BA-00004') });
+    await run('fill', { target: '#tag', value: 'BA-00004' });
+    const restore = (last('fill').journal?.ev ?? []).find((e) => e.k === 'val');
+    expect(restore, JSON.stringify(last('fill').journal)).toMatchObject({ f: 'textbox "Tag"', h: valueHash('BA-00004'), was: valueHash('') });
+  }, 90_000);
+
   it('a click that landed on an overlay says so', async () => {
     await run('goto', { url: `${app.url}/overlay` });
     await run('click', { target: '#under', timeout: 1500 });

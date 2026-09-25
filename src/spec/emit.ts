@@ -4,7 +4,7 @@ import { setsSomething } from '../execution/echo.js';
 import { standingFillRole } from '../execution/refill.js';
 import { DEFAULT_ACTION_TIMEOUT_MS } from '../execution/browser.js';
 import { appliedPickCandidates, hideEffectLines, isNavigation, toggleEffectLines } from '../execution/toggle.js';
-import { alreadyAddedLines, recordedAccessibleName } from '../execution/positional.js';
+import { alreadyAddedLines, recordedAccessibleName, recordedKinds } from '../execution/positional.js';
 import { derivesFromParams, givenPartialReason, givenWarning, reportNeedsPage, templateMarkers, templateSource, typedSlots, typedWarning } from '../execution/report.js';
 import { askedOutputs } from '../daemon/step-verdict.js';
 import { observedNothing, scopeSetBy } from '../execution/observe.js';
@@ -862,6 +862,8 @@ const HELPERS: { token: string; source: string[] }[] = [
       '    drift?: string[];',
       '    resolved?: { into: string[]; key: string; check?: () => void };',
       '    count?: { root: { locator(selector: string, options?: { hasText?: string | RegExp }): Locator }; scopes: CountScope[] | null };',
+      '    kinds?: RecordedKind[];',
+      '    label?: string;',
       '  } = {},',
       '): Promise<string> {',
       '  lastReadHit = null;',
@@ -873,6 +875,14 @@ const HELPERS: { token: string; source: string[] }[] = [
       '  if (!hit) {',
       '    skippedReads.push(where);',
       '    console.log(`[sitelooper skip] ${where}: read target not found — value left empty`);',
+      "    return '';",
+      '  }',
+      '  // A positional fallback standing in for a better candidate that missed reads',
+      "  // what the recording read only if it is the kind of element it read (round 62,",
+      "  // replay's same check; the artifact never heals, so a fallback is its only case).",
+      '  if (hit.index > 0 && hit.structural && opts.kinds?.length && (await readsRecordedKind(hit.locator, opts.kinds)) === false) {',
+      '    skippedReads.push(where);',
+      "    console.log(`[sitelooper skip] ${where}: ${offRecordReadReason(opts.label ?? '', 'a positional fallback', opts.kinds)}`);",
       "    return '';",
       '  }',
       '  lastReadHit = hit.locator;',
@@ -2651,8 +2661,10 @@ function emitSkillAction(step: SkillStep, segment: SpecSegment, index: number, c
     case 'press':
       if (!args.target) {
         if (ctx.landing) out.push(`${ctx.landing} = await armPageEffect(page, ${JSON.stringify(stepEffect(step))}, ${q(`${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex}`)});`);
+        if (step.picks) out.push('await armKeyboardPick(page);');
         out.push(`await page.keyboard.press(${actSrc(str('key'))});`);
         observeAction(step, ctx, out);
+        out.push(...keyboardPickLines(step, ctx));
         return out;
       }
       break;
@@ -2807,6 +2819,7 @@ function emitSkillAction(step: SkillStep, segment: SpecSegment, index: number, c
       break;
     }
     case 'press':
+      if (step.picks) out.push('await armKeyboardPick(page);');
       out.push(`await ${target}.press(${actSrc(str('key'))});`);
       break;
     case 'select': {
@@ -2885,6 +2898,7 @@ function emitSkillAction(step: SkillStep, segment: SpecSegment, index: number, c
   // The action's observation begins just before it dispatches, after the
   // arming below (both before the dispatch, as replay orders them).
   if (!(step.tool === 'drag' && !out[out.length - 1]?.includes('.dragTo('))) observeAction(step, ctx, out);
+  out.push(...keyboardPickLines(step, ctx));
   // A click the app ignored once in the recording (SkillStep.repeatIfNoEffect,
   // ghost fwgh12-n1's link "Published"): replay's runStepBody presses once more
   // when the press changed nothing — the shared pressHadNoEffect, over the
@@ -3144,13 +3158,18 @@ function readLines(step: SkillStep, ctx: Ctx): string[] {
  * (runOneStep), so both publish "0" or skip on the same page (fwrd88).
  */
 function countOpts(step: SkillStep, chain: LocatorCandidate[], opts: string, root: string): string {
-  if (step.args?.what !== 'count') return opts;
+  // The kind the recording read (round 62): a positional fallback that lands
+  // on another kind of element is skipped, as replay skips it (point.ts
+  // readsRecordedKind). Carried only where the chain records one.
+  const kinds = recordedKinds(chain);
+  const withKinds = (o: string): string => (kinds.length ? o.replace(/ \}$/, `, kinds: ${JSON.stringify(kinds)}, label: ${q(step.label ?? '')} }`) : o);
+  if (step.args?.what !== 'count') return withKinds(opts);
   const scopeData = chain.map((c) => {
     const { kind, selector, container, hasText } = c as { kind: string; selector?: string; container?: string; hasText?: string };
     return { kind, ...(selector !== undefined && { selector }), ...(container !== undefined && { container }), ...(hasText !== undefined && { hasText }) };
   });
   const count = `count: { root: ${root}, scopes: countScopes(fillParamsDeep(${JSON.stringify(scopeData)}, p) as { kind: string }[]) }`;
-  return opts.replace(/ \}$/, `, ${count} }`);
+  return withKinds(opts.replace(/ \}$/, `, ${count} }`));
 }
 
 /**
@@ -4358,4 +4377,15 @@ export function emitSpecFile(spec: SpecFlow): string {
     '});',
     '',
   ].join('\n');
+}
+
+/**
+ * A key press that picked an item, verified by the item's NAME as replay
+ * verifies it (the shared keyboardPickVerdict, gitea fwgt13): the press's
+ * own click must land on an element called what the recording's did.
+ */
+function keyboardPickLines(step: SkillStep, ctx: Ctx): string[] {
+  if (step.tool !== 'press' || !step.picks) return [];
+  const where = `${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex}`;
+  return [`{ const wrongPick = await keyboardPickVerdict(page, { role: ${q(step.picks.role)}, name: ${src(step.picks.name)} }); if (wrongPick) throw new Error(${q(where + ': ')} + wrongPick); }`];
 }

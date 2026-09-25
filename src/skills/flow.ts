@@ -572,24 +572,37 @@ export function buildFlow(
     // the LAST url of the step carrying a label the end url does not carry at
     // all, minted by the same guards, with the route it sat on. The end url
     // always wins: a label it carries is never minted from anywhere else.
+    // Round 62 (vikunja fwvk13) widened it two ways. The end url shadows a
+    // visited part only on the SAME ROUTE: 02-create ended on /projects/2/5,
+    // whose p1 is the project, and that hid the task id it visited at p1 on
+    // /tasks/4. And a path digit run the step's own action LANDED is minted at
+    // any length, as at the end url (landedByAction; the network journal
+    // records #28's PUT minting id 4): a one-digit id is no referencablePart.
+    // Either way 03-set's slot (origin `url:i2:p1`) was exported as n1's "4".
     const routes: Record<string, string> = {};
     if (g.endUrl) {
-      const endLabels = new Set(urlParts(g.endUrl).map((p) => p.label));
+      const endUrl = g.endUrl;
       const lastAt = new Map<string, { value: string; url: string }>();
       for (const s of g.steps) {
         const visited = s.diff?.url;
-        if (!visited || (urlOriginOf(visited) ?? '') !== (urlOriginOf(g.endUrl) ?? '')) continue;
-        for (const part of urlParts(visited)) if (!endLabels.has(part.label)) lastAt.set(part.label, { value: part.value, url: visited });
+        if (!visited || (urlOriginOf(visited) ?? '') !== (urlOriginOf(endUrl) ?? '')) continue;
+        for (const part of urlParts(visited)) {
+          const endRoute = routeAt(endUrl, part.label);
+          if (endRoute !== null && endRoute === routeAt(visited, part.label)) continue;
+          lastAt.set(part.label, { value: part.value, url: visited });
+        }
       }
       for (const [label, at] of lastAt) {
         const part = { label, value: at.value };
         const output = `url.${label}`;
-        if (startParts.has(part.value) || !referencablePart(part, opts.runSpecific)) continue;
+        const landed = !referencablePart(part, opts.runSpecific) && pathDigitPart(part) && landedByAction(g, part, entries);
+        if (startParts.has(part.value) || !(referencablePart(part, opts.runSpecific) || landed)) continue;
         if (produced.some((p) => p.value === part.value) || varEntries.some(([, v]) => v === part.value)) continue;
         if (minted.some((m) => m.output === output || m.value === part.value)) continue;
         const route = routeAt(at.url, label);
         if (!route) continue;
-        minted.push({ stepId: id, output, value: part.value });
+        const path = part.value.length < 2 ? pathTo(at.url, label) : undefined;
+        minted.push({ stepId: id, output, value: part.value, ...(path ? { path } : {}) });
         routes[output] = route;
       }
     }
@@ -649,6 +662,28 @@ export function buildFlow(
       // replay cannot fill goes to recovery; there is no literal fallback,
       // because agreement across runs does not show the app owns a value
       // (see `RunSpecific` and notes/PLAN-evidence-over-shape.md).
+      //
+      // ...but reference it WHERE A REPLAY CAN RE-OBSERVE IT. A value that is
+      // a part of the url this step ENDED on, and that no read of the step
+      // returned, was read off that url: its source is the url position, not
+      // the report. grafana fwgr74 01-open ended on
+      // `/d/bench-service-health/service-health` and reported
+      // `dashboard_uid_from_url: "bench-service-health"`; the slug was not
+      // minted as `url.p1` above (it does not look like an id), so 07-open was
+      // threaded through the report key, which no tier-A replay republishes —
+      // both replays fell to the model and the compile refused. As
+      // `{{01-open.url.p1}}` it is a consumed url part, which both runners
+      // publish from the step's end url whatever it looks like (urlOutputs'
+      // `wanted`, the artifact's urlPartWhen) — the linkMintedParts rule, for a
+      // part the step's report named rather than its own mutation.
+      const atUrl = g.endUrl ? urlParts(g.endUrl).find((p) => p.value === value) : undefined;
+      const readBack = g.steps.some((s) => (s.tool === 'read' || s.tool === 'read_all') && typeof s.result === 'string' && s.result.includes(value));
+      if (atUrl && !readBack && !produced.some((p) => p.stepId === id && p.output === `url.${atUrl.label}`)) {
+        const urlOutput = `url.${atUrl.label}`;
+        produced.push({ stepId: id, output: urlOutput, value });
+        if (!(urlOutput in step.recorded)) step.recorded = { ...step.recorded, [urlOutput]: value };
+        continue;
+      }
       produced.push({ stepId: id, output, value });
       // An id can be minted where no url ever carries it: an app that saves
       // over its own API answers with JSON, and the run reads that answer

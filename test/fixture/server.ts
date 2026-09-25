@@ -219,6 +219,15 @@ document.getElementById('go').addEventListener('click', () => {
  * Save that stores the amount (localStorage, so a reopen shows it) and adds a
  * row showing it.
  */
+/**
+ * Gitea fwgt13 02-create, in miniature (round 62): an issue sidebar whose
+ * assignee was a LINK when recorded. `?button=1` is the page n2 and n3 met:
+ * nothing assigned, and in the link's place the sidebar's "Add a link" BUTTON.
+ */
+const ASSIGNEE = (button: boolean) => `<!doctype html><html><head><meta charset="utf-8"><title>Issue</title></head><body>
+<div class="sidebar"><h4>Assignee</h4>${button ? '<button type="button">Add a link</button>' : '<a href="/u/bench-assignee">bench-assignee</a>'}</div>
+</body></html>`;
+
 const ESPO_FORM = `<!doctype html><html><head><meta charset="utf-8"><title>Opportunity</title></head><body>
 <div class="field" data-name="amount"><label>Amount <input data-name="amount"></label></div>
 <div class="field" data-name="closeDate"><label>Close Date <input data-name="closeDate"></label> <button type="button" id="pick">Pick a date</button></div>
@@ -799,6 +808,24 @@ const build = () => {
   });
   user.addEventListener('input', armed);
   pass.addEventListener('input', armed);
+  // Round 62, vikunja fwvk13: 'delay-<ms>' reloads the document <ms> after the
+  // first value is typed; 'clear-<ms>' empties both fields then, with no
+  // reload; 'blur' reloads the moment the password field loses focus, which
+  // is the moment the pre-submit check looks at the form (a reload landing
+  // inside that check). Once per tab each.
+  const timed = /^(delay|clear)-([0-9]+)$/.exec(MODE);
+  const first = () => {
+    if (!timed || !once('timed-' + MODE)) return;
+    setTimeout(() => {
+      if (timed[1] === 'delay') { sessionStorage.setItem('reloaded-fill', '1'); location.reload(); }
+      else { user.value = ''; pass.value = ''; }
+    }, Number(timed[2]));
+  };
+  user.addEventListener('input', first);
+  pass.addEventListener('input', first);
+  pass.addEventListener('blur', () => {
+    if (MODE === 'blur' && pass.value && once('reloaded-blur')) { sessionStorage.setItem('reloaded-fill', '1'); location.reload(); }
+  });
   document.getElementById('login').addEventListener('click', async () => {
     if (MODE === 'submit' && once('reloaded-submit')) { location.reload(); return; }
     if (!user.value || !pass.value) { document.getElementById('status').textContent = 'Username and password are required'; return; }
@@ -990,6 +1017,59 @@ const PARTS = `<!doctype html><html><head><meta charset="utf-8"><title>Ticket</t
 <tr data-testid="part-row-p18"><td>run-2 RD Part A</td><td>$100.00</td></tr>
 <tr data-testid="part-row-p19"><td>run-2 RD Part B</td><td>$200.00</td></tr>
 </tbody></table></div></section>
+</body></html>`;
+
+/**
+ * A picker driven by the KEYBOARD (round 62, gitea fwgt13): clicking "Labels"
+ * opens the listbox; ArrowDown/ArrowUp move the highlight (none at first, as
+ * Fomantic's menu starts); Enter clicks the highlighted item, which toggles
+ * it; Escape shuts the picker and posts `commit:labels:<applied>`.
+ * `?shifted=1` lists one more label first ("good first issue"), so the same
+ * arrow presses land one item earlier — the page a fresh app shows where the
+ * recording's did not.
+ */
+const KBD_PICKER = (shifted: boolean) => `<!doctype html><html><head><meta charset="utf-8"><title>New issue</title></head><body>
+<h1>New issue</h1>
+<div id="labels" role="combobox" aria-label="Labels" aria-expanded="false" tabindex="0">Labels</div>
+<div id="menu" role="listbox" aria-label="Label choices" hidden>
+  ${shifted ? '<a href="#" class="item">good first issue</a>' : ''}
+  <a href="#" class="item">bug</a>
+  <a href="#" class="item">documentation</a>
+  <a href="#" class="item">enhancement</a>
+  <a href="#" class="item">priority-high</a>
+</div>
+<script>
+const menu = document.getElementById('menu');
+const box = document.getElementById('labels');
+const items = () => Array.from(menu.querySelectorAll('a.item'));
+let active = -1;
+const picked = new Set();
+box.addEventListener('click', () => {
+  menu.hidden = !menu.hidden;
+  box.setAttribute('aria-expanded', String(!menu.hidden));
+  active = -1;
+});
+menu.addEventListener('click', (e) => {
+  const a = e.target.closest('a.item');
+  if (!a) return;
+  e.preventDefault();
+  const name = a.textContent.trim();
+  if (picked.has(name)) picked.delete(name); else picked.add(name);
+});
+document.addEventListener('keydown', (e) => {
+  if (menu.hidden) return;
+  const list = items();
+  if (e.key === 'ArrowDown') { active = Math.min(active + 1, list.length - 1); e.preventDefault(); }
+  else if (e.key === 'ArrowUp') { active = Math.max(active - 1, 0); e.preventDefault(); }
+  else if (e.key === 'Enter' && active >= 0) { list[active].click(); e.preventDefault(); }
+  else if (e.key === 'Escape') {
+    menu.hidden = true;
+    box.setAttribute('aria-expanded', 'false');
+    fetch('/commit/labels/' + encodeURIComponent([...picked].sort().join(',')), { method: 'POST' });
+  }
+  list.forEach((a, i) => a.classList.toggle('active', i === active));
+});
+</script>
 </body></html>`;
 
 /**
@@ -1227,6 +1307,8 @@ document.getElementById('save').addEventListener('click', () => {
  * A hash-routed editor (round 60, ghost fwgh14): "New post" mints a post and
  * routes to '#/editor/post/<id>' (Ghost's autosave does the same), "Posts"
  * routes back to the list, and a step that went back ends on '#/posts'.
+ * "Board" routes to '#/board/view/5' (round 62, vikunja fwvk13): a page whose
+ * url has a part at the post id's label (h2) on another route.
  * Opening '#/editor/post/<id>' directly shows "Post <id>" and a Publish that
  * posts commit:publish:<id>. Every create posts commit:create:<id>.
  */
@@ -1238,7 +1320,7 @@ const render = () => {
   const at = '#/editor/post/';
   const m = location.hash.startsWith(at) ? [location.hash, location.hash.slice(at.length)] : null;
   if (m) {
-    view.innerHTML = '<h1></h1><button id="publish" type="button">Publish</button> <a href="#/posts">Posts</a>';
+    view.innerHTML = '<h1></h1><button id="publish" type="button">Publish</button> <a href="#/posts">Posts</a> <a href="#/board/view/5">Board</a>';
     view.querySelector('h1').textContent = 'Post ' + m[1];
     view.querySelector('#publish').onclick = () => fetch('/commit/publish/' + m[1], { method: 'POST' });
   } else {
@@ -1304,6 +1386,66 @@ document.getElementById('add').addEventListener('click', () => fetch('/commit/ad
  * `/picker` starts with no picker and the field already holding the date (a
  * replay whose picker closed after its fill); `/picker?open=1` with it open.
  */
+/**
+ * A form whose app pre-fills the next asset tag (round 62, snipeit fwsi13
+ * 03-create): each load of `/prefilled-tag` pre-fills a NEW tag (BA-00100,
+ * BA-00101, …). Save with the tag empty shows "This field is required" and
+ * puts the focus back in the tag, with no request; otherwise it posts
+ * `/commit/save/<tag>` and shows "Asset created".
+ */
+const PREFILLED_TAG = (tag: string) => `<!doctype html><html><head><meta charset="utf-8"><title>New asset</title></head><body>
+<h1>New asset</h1>
+<label for="tag">Asset Tag</label><input id="tag" value="${tag}">
+<p id="err"></p>
+<button id="save" type="button">Save</button>
+<script>
+const tag = document.getElementById('tag');
+document.getElementById('save').addEventListener('click', async () => {
+  const err = document.getElementById('err');
+  if (!tag.value) { err.setAttribute('role', 'alert'); err.textContent = 'This field is required'; tag.focus(); return; }
+  await fetch('/commit/save/' + encodeURIComponent(tag.value), { method: 'POST' });
+  document.body.insertAdjacentHTML('beforeend', '<p role="status">Asset created</p>');
+});
+</script>
+</body></html>`;
+
+/**
+ * A select2-like model picker (round 62, snipeit fwsi13 03-create): a
+ * combobox "Select a Model"; typing into its search lists the matching option
+ * only after a delay (the results request), highlighted; clicking the option
+ * picks it — the combobox reads "×<name>" and posts `/commit/model/<name>`.
+ * Clicking the combobox itself with the list open closes it and, like
+ * select2's selectOnClose, picks whatever is highlighted AT THAT MOMENT —
+ * nothing, when the results have not arrived yet.
+ */
+const SELECT_LATE = () => `<!doctype html><html><head><meta charset="utf-8"><title>Model</title></head><body>
+<h1>New asset</h1>
+<select id="sel" aria-hidden="true" style="width:5px;height:1px"><option value="">-</option></select><span role="combobox" aria-label="Select a Model" id="combo" tabindex="0">Select a Model</span>
+<div id="drop" hidden><input type="search" id="q" aria-label=""><ul role="listbox" id="list"></ul></div>
+<button id="save" type="button">Save</button>
+<script>
+const combo = document.getElementById('combo'), drop = document.getElementById('drop'), q = document.getElementById('q'), list = document.getElementById('list');
+let highlighted = null, timer = null;
+const pick = async (name) => { combo.textContent = '×' + name; combo.setAttribute('aria-label', '×' + name); drop.hidden = true; list.innerHTML = ''; highlighted = null; await fetch('/commit/model/' + encodeURIComponent(name), { method: 'POST' }); };
+combo.addEventListener('click', () => {
+  if (drop.hidden) { drop.hidden = false; q.focus(); return; }
+  const h = highlighted; drop.hidden = true; list.innerHTML = ''; highlighted = null; clearTimeout(timer);
+  if (h) pick(h);
+});
+q.addEventListener('input', () => {
+  clearTimeout(timer);
+  timer = setTimeout(() => {
+    const name = 'Bench Laptops - Bench Manufacturer ' + q.value;
+    list.innerHTML = '';
+    const li = document.createElement('li'); li.setAttribute('role', 'option'); li.textContent = name; li.className = 'highlighted';
+    li.addEventListener('click', () => pick(name));
+    list.appendChild(li); highlighted = name;
+  }, 200);
+});
+document.getElementById('save').addEventListener('click', () => fetch('/commit/save/asset', { method: 'POST' }));
+</script>
+</body></html>`;
+
 const PICKER = (open: boolean) => `<!doctype html><html><head><meta charset="utf-8"><title>Picker</title></head><body>
 <h1>New asset</h1>
 <label for="date">Purchase Date</label><input id="date" value="${open ? '' : '2026-03-15'}">
@@ -1775,6 +1917,7 @@ export async function createFixtureServer(initialCount = 10): Promise<FixtureSer
   const espo = { stage: 'Negotiation' };
   const signin = { title: 'EspoCRM' };
   const issue = { labels: ['bug', 'priority-high'] };
+  const assetTag = { next: 100 };
 
   function take<K extends Fault['kind']>(kind: K, req?: http.IncomingMessage): Extract<Fault, { kind: K }> | undefined {
     for (const f of pending) {
@@ -1809,6 +1952,11 @@ export async function createFixtureServer(initialCount = 10): Promise<FixtureSer
     if (url === '/echo-lab' || url.startsWith('/echo-lab?')) {
       res.writeHead(200, { 'content-type': 'text/html' });
       res.end(ECHO_LAB);
+      return;
+    }
+    if (url === '/assignee' || url === '/assignee?button=1') {
+      res.writeHead(200, { 'content-type': 'text/html' });
+      res.end(ASSIGNEE(url.endsWith('button=1')));
       return;
     }
     if (url === '/espo-form') {
@@ -2040,6 +2188,7 @@ export async function createFixtureServer(initialCount = 10): Promise<FixtureSer
       if (url === '/stamp') return html(STAMP);
       if (url === '/hash') return html(HASH);
       if (url.startsWith('/menu/')) return html(MENU(tail('/menu/')));
+      if (url === '/kbd-picker' || url.startsWith('/kbd-picker?')) return html(KBD_PICKER(url.includes('shifted=1')));
       if (url === '/labels-picker' || url.startsWith('/labels-picker?')) return html(LABEL_PICKER({ escape: !url.includes('escape=0'), stuck: url.includes('stuck=1'), furniture: url.includes('furniture=1') }));
       if (url === '/create/form') return html(CREATE);
       if (url === '/hopper') return html(HOPPER);
@@ -2052,6 +2201,8 @@ export async function createFixtureServer(initialCount = 10): Promise<FixtureSer
       if (url === '/modal' || url === '/modal?open=1') return html(MODAL(url.endsWith('open=1')));
       if (url === '/filters' || url.startsWith('/filters?')) return html(FILTERS(url.includes('open=1'), url.includes('stuck=1')));
       if (url === '/picker' || url.startsWith('/picker?')) return html(PICKER(url.includes('open=1')));
+      if (url === '/select-late' || url.startsWith('/select-late?')) return html(SELECT_LATE());
+      if (url === '/prefilled-tag') return html(PREFILLED_TAG(`BA-00${assetTag.next++}`));
       if (url === '/price' || url === '/price?stuck=1') return html(PRICE(url.endsWith('stuck=1')));
       if (url === '/imagelink') return html(IMAGE_LINK);
       if (url === '/hashposts') return html(HASH_POSTS);

@@ -15,7 +15,10 @@ import { MAX_ADDED_LINES as MAX_DIFF_LINES } from '../execution/snapshot.js';
 import { hideEffectLines } from '../execution/toggle.js';
 import { recordedDoubled } from '../execution/refill.js';
 import { collapseTogglePairs, dropSupersededSets, sameControl } from './toggles.js';
+import { namedHighlightPicks } from './highlight-pick.js';
+import { dropRestoredDetours } from './restored-field.js';
 import { locatingSlots, scopeReadBySlot } from './readscope.js';
+import { keyPicks } from './key-pick.js';
 
 /**
  * The url rules live in src/execution/url.ts, where a compiled artifact embeds
@@ -670,6 +673,9 @@ export function compileSkills(input: CompileInput): Skill[] {
   const head = input.entries.find((e): e is RecordedInstruction => e.k === 'instruction');
   const steps = input.entries.filter((e): e is RecordedStep => e.k === 'step');
   if (!steps.length) return [];
+  // What each key press picked, by NAME, from the recording's journal
+  // (skills/key-pick.ts, gitea fwgt13): the fact a keyboard pick replays by.
+  const keyPicked = new Map([...keyPicks(steps)].map(([i, pick]) => [steps[i], pick] as const));
   const startUrl = head?.url ?? firstUrl(steps);
   const origin = startUrl ? originOf(startUrl) : null;
   if (!origin || !startUrl) return [];
@@ -688,7 +694,7 @@ export function compileSkills(input: CompileInput): Skill[] {
   // whose value the run actually reported; drop the rest.
   /** What the recording-level passes dropped, noted on the first segment (built below). */
   const recordingNotes: TransformNote[] = [];
-  const replayable = dropSupersededSets(collapseTogglePairs(expandListReads(dropEvalAssignedCandidates(creditUncreditedPopups(steps, recordingNotes), recordingNotes), reportValues))).filter((step) => {
+  const replayable = dropSupersededSets(collapseTogglePairs(expandListReads(dropEvalAssignedCandidates(creditUncreditedPopups(dropRestoredDetours(namedHighlightPicks(steps)), recordingNotes), recordingNotes), reportValues))).filter((step) => {
     if (step.tool === 'screenshot' || step.tool === 'eval') return false;
     // A bare tab listing (`tabs` with no switch_to) is the agent looking, like
     // a screenshot: it changes nothing and publishes nothing. openproject
@@ -964,6 +970,15 @@ export function compileSkills(input: CompileInput): Skill[] {
       if (step.page !== undefined) out.page = step.page;
       if (step.toggle) out.toggle = true;
       if (step.closedBefore && step.tool === 'click') out.closedBefore = true;
+      // A key press that picked an item (gitea fwgt13: ArrowDown, ArrowDown,
+      // Enter picked "bench-assignee") carries the NAME it picked, from the
+      // journal's own hit, so both runners verify it (SkillStep.picks).
+      const picked = step.tool === 'press' ? keyPicked.get(step) : undefined;
+      if (picked && picked.option) {
+        const role = /^([\w-]+) "/.exec(picked.described)?.[1] ?? 'option';
+        const slot = [...textSlots].find(([, v]) => v === picked.option)?.[0];
+        out.picks = { role, name: slot ? `{{${slot}}}` : picked.option };
+      }
       // The recording's own field held the typed value twice over right after
       // this step (grafana fwgr73 04-open, monaco's auto-closing): judged on
       // the RAW recorded diff, before any masking, so both runners' doubled-
@@ -1024,7 +1039,7 @@ export function compileSkills(input: CompileInput): Skill[] {
     const mintedForStart = mintedMap((m) => m.keptIndex < base);
     const notes: TransformNote[] = [];
     const folded = foldLoops(
-      coalesceControls(dropDismissedDialogs(dropSupersededNavigation(markRequiredRemovals(skillSteps, (s) => recordedDiffs.get(s)), notes, (s) => recordedDiffs.get(s), (s) => recordedObs.get(s)), notes, (s) => recordedDiffs.get(s)), notes),
+      coalesceControls(namedKeyPicks(dropDismissedDialogs(dropSupersededNavigation(markRequiredRemovals(skillSteps, (s) => recordedDiffs.get(s)), notes, (s) => recordedDiffs.get(s), (s) => recordedObs.get(s)), notes, (s) => recordedDiffs.get(s)), notes), notes),
       input.instruction,
       notes,
     );
@@ -3263,7 +3278,10 @@ const NON_LOOP_TOOLS = new Set(['read', 'read_all', 'eval', 'screenshot']);
 /**
  * Collapse a run of consecutive, identical control steps that carry no target
  * (chiefly `dialog_expect`, which the agent often re-arms redundantly) into
- * one. Arming the same handler twice is a no-op, but the extra copies land
+ * one. Never an ACTION: a key press is not idempotent — gitea fwgt13-n1
+ * moved through a picker with ArrowDown ×3 then Enter, and collapsed to one
+ * ArrowDown every replay picked "admin" for "bench-assignee", "Backlog" for
+ * "Bench Milestone", and the labels one item off. Arming the same handler twice is a no-op, but the extra copies land
  * unevenly between otherwise-identical action groups and stop foldLoops from
  * seeing the repetition. Only no-locator steps with byte-identical args are
  * touched, so real actions are never merged.
@@ -3273,7 +3291,7 @@ export function coalesceControls(steps: SkillStep[], notes?: TransformNote[]): S
   for (const [i, step] of steps.entries()) {
     const prev = out[out.length - 1];
     const noTarget = !step.locators.target?.length && !step.locators.source?.length;
-    if (prev && noTarget && !step.effect && !prev.effect && prev.tool === step.tool && !prev.locators.target?.length && JSON.stringify(prev.args) === JSON.stringify(step.args)) {
+    if (prev && noTarget && !isMutatingAction(step.tool) && !step.effect && !prev.effect && prev.tool === step.tool && !prev.locators.target?.length && JSON.stringify(prev.args) === JSON.stringify(step.args)) {
       notes?.push({ name: 'coalesceControls', at: i + 1, reason: `repeat of the previous ${step.tool} with identical args and no target of its own` });
       continue;
     }
@@ -4030,6 +4048,41 @@ export function foldLoops(steps: SkillStep[], instruction = '', notes?: Transfor
       break;
     }
     if (!folded) out.push(steps[i++]);
+  }
+  return out;
+}
+
+/** ARIA roles a named click can find an option by (a journal describing a bare `div` or `li` names no role to click). */
+const PICKABLE_ROLE = /^(option|menuitem|menuitemcheckbox|menuitemradio|checkbox|radio|switch|treeitem|link|tab|gridcell|row|listitem|button)$/;
+
+/**
+ * A key press that picked an option is compiled as a NAMED selection (round
+ * 62, gitea fwgt13): the press becomes a click on the option of that role and
+ * name, and the arrow presses that only moved the highlight onto it go. The
+ * click resolves by name — a list that holds the option elsewhere, or not at
+ * all, finds it or stops — where the presses picked whatever sat at the
+ * recorded distance: fwgt13-n1's ArrowDown ×3 + Enter picked "bench-assignee"
+ * on n1 and "admin" on every replay, reported as success. A pick whose role
+ * no click can name keeps its press, verified by name at replay
+ * (SkillStep.picks, execution/toggle.ts keyboardPickVerdict).
+ */
+export function namedKeyPicks(steps: SkillStep[], notes?: TransformNote[]): SkillStep[] {
+  const out: SkillStep[] = [];
+  const moves = new Set(['ArrowDown', 'ArrowUp', 'ArrowLeft', 'ArrowRight', 'Home', 'End', 'PageDown', 'PageUp']);
+  for (const [i, step] of steps.entries()) {
+    const pick = step.tool === 'press' ? step.picks : undefined;
+    if (!pick || !PICKABLE_ROLE.test(pick.role)) {
+      out.push(step);
+      continue;
+    }
+    while (out.length && out[out.length - 1].tool === 'press' && moves.has(String(out[out.length - 1].args.key)) && !out[out.length - 1].picks) {
+      out.pop();
+      notes?.push({ name: 'namedKeyPicks', at: i, reason: `an arrow press that only moved the highlight onto ${JSON.stringify(pick.name)}, which step ${i + 1} now picks by name` });
+    }
+    const chain: LocatorCandidate[] = [{ kind: 'role', role: pick.role, name: pick.name }];
+    const { picks: _picks, ...rest } = step;
+    out.push({ ...rest, tool: 'click', args: { target: `role=${pick.role}[name=${JSON.stringify(pick.name)}]` }, locators: { target: chain } });
+    notes?.push({ name: 'namedKeyPicks', at: i + 1, reason: `${String(step.args.key)} picked ${pick.role} ${JSON.stringify(pick.name)} (journal): compiled as a click on it by name` });
   }
   return out;
 }
