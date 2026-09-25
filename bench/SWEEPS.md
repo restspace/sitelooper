@@ -507,3 +507,16 @@ failing artifact → repair --converge 1 → rerecord the step it names; ≤4 ro
 refusals), fwvk15-cv, fwgt15-cv, fwsi14-cv (artifact failures). Queued: fwop15-cv, fwop17-cv. fwkb45 excluded (a
 compiler blocker with no rerecord action: the loop stops at once, checked locally).
 
+Round 65 batch 2 (main 62546c80: batch 1's main plus the held-values fix; the controls, hold on) — 1/2 green; round 65 overall 4/7:
+
+| round | runid | app | verified | replay model-free | compiled | green | notes |
+|---|---|---|---|---|---|---|---|
+| 65 | fwrd94 | rd | 6/6 ×3 | yes | pass, drift 0 | **yes** | one hold (07-set `errors_shown` = "none — the action succeeded…", a verdict in prose: a wasted turn); the retry added no read and, with the fix, kept every value |
+| 65 | fwod90 | od | 6/6 ×3 | no: 08-open 9/12 turns (s_bcdf62 stopped at step 3: expected the contact form url, browser on the sales list) | refused (demoted-pin 08-open) | no | recording variance in the final verification step; no hold fired. Export: 03-open `untaxed_amount` asked and "nothing reads it" although n1 made a LABELLED read of it — promoteLabelledReads dropped it because line_subtotal held the same text (£ 885.00), so the hold never saw the key; 03/04-open `status` values are >80-char prose ("Draft - statusbar radio 'Quotation' …"), not data-shaped, so not held (by design; export warned) |
+
+Sourcing hold, round 65 in total: 5 holds over 42 instructions (12%). Retries: 3 added reads (2 labelled), 2 added none; 1 wasted
+turn on a verdict-in-prose value; values lost once (fwop19, fixed) and kept once after the fix (fwrd94). Data-changing gestures
+after a hold: op 1 click (tab), gh back+click (navigation to re-read). No n1 objective was lost in any run (42/42 verified).
+Follow-ups: (1) a verdict word heading a prose value ("none — …") is a verdict, not data; (2) a labelled read is promoted even
+when another key already holds the same text (fwod90 untaxed_amount vs line_subtotal), else the asked key is never a candidate.
+
