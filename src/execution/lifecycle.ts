@@ -80,6 +80,15 @@ export function dispatchesFirstMatch(tool: string, args: DispatchArgs = {}): boo
   return tool === 'wait_for' && args.state !== 'count';
 }
 
+/**
+ * Whether a step's observation is the TEXT of one element: several matches
+ * that all read the same are then one answer (resolve.ts `oneValueRead`,
+ * vikunja fwvk15). Both runners ask it of the same step.
+ */
+export function readsOneValue(tool: string, args: DispatchArgs = {}): boolean {
+  return tool === 'read' && args.what === 'text';
+}
+
 /** Only a nonempty identifier changed by this step is evidence of creation. */
 export function changedCreation(before: string | undefined, after: string | undefined): string | undefined {
   return after && after !== before ? after : undefined;

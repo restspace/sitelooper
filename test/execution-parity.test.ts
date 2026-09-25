@@ -4209,6 +4209,35 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
     }, 240_000);
   });
 
+  describe('a text read whose target names several elements that all read the same (round 64, fwvk15 01-signin)', () => {
+    /**
+     * vikunja fwvk15-n1 01-signin read the landing's "Bench Project" by
+     * `role=link name="Bench Project"` — the sidebar entry, but every task row
+     * shows its project as the same link. Unique-or-nothing resolution called
+     * that ambiguous: every replay skipped the read ("no element matched any
+     * known locator"), published visible_projects_2 empty, and 02-open, 03-create
+     * and 08-open fell back on the unresolved reference; the artifact stopped
+     * at 02-open. Each match reads "Bench Project", so the read has one answer.
+     */
+    const read = (label: string, chain: LocatorCandidate[]): SkillStep => ({ tool: 'read', args: { target: '(read-back)', what: 'text' }, label, locators: { target: chain } } as SkillStep);
+    const steps = (): SkillStep[] => [
+      { tool: 'goto', args: { url: `${origin}/sidebar-projects` }, locators: {} },
+      read('visible_projects_2', [{ kind: 'role', role: 'link', name: 'Bench Project' }]),
+      read('mixed_project', [{ kind: 'css', selector: 'a.proj' }]),
+    ];
+
+    it('both runners publish the one value every match reads, and still skip a target whose matches read differently', async () => {
+      const run = await both(steps(), 0);
+      expect(run.replay.ok, run.replay.reason ?? '').toBe(true);
+      expect(run.emitted.ok, run.emitted.reason ?? '').toBe(true);
+      const value = (o: typeof run.replay, label: string) => Object.entries(o.outputs).find(([k]) => k === label || k.endsWith(`.${label}`))?.[1];
+      expect(value(run.replay, 'visible_projects_2')).toBe('Bench Project');
+      expect(value(run.emitted, 'visible_projects_2')).toBe('Bench Project');
+      expect(value(run.replay, 'mixed_project') ?? '').toBe('');
+      expect(value(run.emitted, 'mixed_project') ?? '').toBe('');
+    }, 240_000);
+  });
+
   describe('a picker click whose target went with the picker its entry opened (round 59, fwsi10 03-create)', () => {
     /**
      * snipeit fwsi10-n1 03-create filled the purchase date (opening the date

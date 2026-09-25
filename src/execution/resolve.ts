@@ -133,6 +133,31 @@ export interface ResolvePolicy {
   waitMs?: number;
   /** Poll cadence inside the wait. Default RESOLVE_POLL_MS. */
   pollMs?: number;
+  /**
+   * A text read (lifecycle.ts readsOneValue): a candidate matching several
+   * elements that all READ the same is one answer, not an ambiguity — the
+   * observation is the text, and every match gives it. vikunja fwvk15-n1
+   * 01-signin read "Bench Project" by `role=link name="Bench Project"`: the
+   * sidebar entry, and every task row's project link beside it. Unique-or-
+   * nothing skipped the read on every replay and in the artifact, published
+   * visible_projects_2 empty, and three later steps fell back on the
+   * unresolved reference. Matches that read differently stay ambiguous.
+   */
+  oneValueRead?: boolean;
+}
+
+/** Most matches compared for oneValueRead; beyond this the candidate names no one thing. */
+const ONE_VALUE_MAX_MATCHES = 20;
+
+/** Whether every match of `locator` (`count` of them) reads the same, non-empty text. */
+async function readsAlike(locator: Locator, count: number): Promise<boolean> {
+  if (count > ONE_VALUE_MAX_MATCHES) return false;
+  try {
+    const texts = (await locator.allInnerTexts()).map((t) => t.replace(/\s+/g, ' ').trim());
+    return texts.length === count && texts[0] !== '' && texts.every((t) => t === texts[0]);
+  } catch {
+    return false;
+  }
 }
 
 /** Why a candidate ahead of the winner was passed over — the same words in both runners' telemetry. */
@@ -317,7 +342,7 @@ export function isDrift(hit: { index: number; missed: readonly unknown[] }): boo
  * Returns null when nothing resolved within the wait.
  */
 export async function resolveCandidates(page: Page, cands: readonly CandidateObservation[], policy: ResolvePolicy = {}): Promise<Resolution | null> {
-  const { allowMultiple = false, ambiguousNth, requireIdentity = [], stayOnOrigin, waitMs = 0, pollMs = RESOLVE_POLL_MS } = policy;
+  const { allowMultiple = false, ambiguousNth, requireIdentity = [], stayOnOrigin, waitMs = 0, pollMs = RESOLVE_POLL_MS, oneValueRead = false } = policy;
   // A snapshot ref is not tried at all, and so is never a miss: it was never a
   // way of finding this element on this run (snapshotRefCandidate), and counting
   // it absent filed a drift ticket on every run for s_5749e4's `aria-ref=e417`.
@@ -369,6 +394,18 @@ export async function resolveCandidates(page: Page, cands: readonly CandidateObs
               continue;
             }
             return { locator: picked, index: c.index, nth: ambiguousNth, structural: c.structural, missed };
+          }
+          if (oneValueRead && c.nth === undefined && c.kind !== 'point' && (await readsAlike(c.locator, count))) {
+            const first = c.locator.first();
+            if (!(await keepsIdentity(c, first, requireIdentity))) {
+              miss(c.index, 'identity');
+              continue;
+            }
+            if (guess && !(await plausible(page, first, recordedBox))) {
+              miss(c.index, 'implausible');
+              continue;
+            }
+            return { locator: first, index: c.index, structural: c.structural, missed };
           }
           miss(c.index, 'ambiguous'); // a primary that was unique: drift; a fallback: not a way of naming one thing
           continue;

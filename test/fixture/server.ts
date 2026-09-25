@@ -1421,6 +1421,20 @@ document.getElementById('save').addEventListener('click', async () => {
 </body></html>`;
 
 /**
+ * A landing whose project name is a link in several places (round 64, vikunja
+ * fwvk15 01-signin): the sidebar's "Bench Project", and each task row's own
+ * "Bench Project" project link beside the task's title. `a.proj` matches
+ * links that read differently ("Bench Project", "Other Project").
+ */
+const SIDEBAR_PROJECTS = `<!doctype html><html><head><meta charset="utf-8"><title>Current Tasks</title></head><body>
+<nav><a href="#inbox">Inbox</a> <a class="proj" href="#p2">Bench Project</a> <a class="proj" href="#p3">Other Project</a></nav>
+<main><h2>Good Morning admin!</h2>
+<div><a href="#p2">Bench Project</a> <a href="#t1">Seed: ship repaired device</a></div>
+<div><a href="#p2">Bench Project</a> <a href="#t2">Seed: order missing parts</a></div>
+<div><a href="#p2">Bench Project</a> <a href="#t3">Seed: triage inbox</a></div>
+</main></body></html>`;
+
+/**
  * A select2-like model picker (round 62, snipeit fwsi13 03-create): a
  * combobox "Select a Model"; typing into its search lists the matching option
  * only after a delay (the results request), highlighted; clicking the option
@@ -2213,6 +2227,7 @@ export async function createFixtureServer(initialCount = 10): Promise<FixtureSer
       if (url === '/filters' || url.startsWith('/filters?')) return html(FILTERS(url.includes('open=1'), url.includes('stuck=1')));
       if (url === '/picker' || url.startsWith('/picker?')) return html(PICKER(url.includes('open=1')));
       if (url === '/select-late' || url.startsWith('/select-late?')) return html(SELECT_LATE());
+      if (url === '/sidebar-projects') return html(SIDEBAR_PROJECTS);
       if (url === '/prefilled-tag') return html(PREFILLED_TAG(`BA-00${assetTag.next++}`));
       if (url === '/edit-notice') return html(EDIT_NOTICE);
       if (url === '/price' || url === '/price?stuck=1') return html(PRICE(url.endsWith('stuck=1')));

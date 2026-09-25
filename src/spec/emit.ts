@@ -1,4 +1,4 @@
-import { dispatchesFirstMatch, isMutatingAction, isReadAction, spansEveryMatch } from '../execution/lifecycle.js';
+import { dispatchesFirstMatch, isMutatingAction, isReadAction, readsOneValue, spansEveryMatch } from '../execution/lifecycle.js';
 import { DEFAULT_BROWSER_PROFILE, isNavigatingAction, type BrowserProfile } from '../execution/browser.js';
 import { setsSomething } from '../execution/echo.js';
 import { standingFillRole } from '../execution/refill.js';
@@ -1596,6 +1596,8 @@ function policySource(chain: LocatorCandidate[], step: SkillStep, ctx: Ctx, o: {
   if (identity) parts.push(`requireIdentity: ${identity}`);
   parts.push(`stayOnOrigin: ${originSource(step)}`);
   parts.push(`waitMs: ${o.waitMs}`);
+  // Several matches that all read the same text are one answer (vikunja fwvk15), as replay passes it.
+  if (readsOneValue(step.tool, step.args ?? {})) parts.push('oneValueRead: true');
   return `{ ${parts.join(', ')} }`;
 }
 

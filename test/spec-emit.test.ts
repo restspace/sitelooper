@@ -357,7 +357,7 @@ describe('step bodies', () => {
       sequenceAt(one({ tool: 'read', args: { target: '@e1', what: 'text' }, locators: loc, label: 'total' }), [
         "outputs['01-do.total'] = await readOptional(page, [",
         `{ locator: page.locator('#total'), index: 0, structural: false, kind: 'id', carries: JSON.stringify({ kind: 'id', selector: '#total' }) },`,
-        "], '01-do s_test1/1 target', { stayOnOrigin: originOf(page.url()) ?? undefined, waitMs: RESOLVE_WAIT_MS }, (loc: Locator) => readElements(loc, false, 'text'), { drift: run.drift });",
+        "], '01-do s_test1/1 target', { stayOnOrigin: originOf(page.url()) ?? undefined, waitMs: RESOLVE_WAIT_MS, oneValueRead: true }, (loc: Locator) => readElements(loc, false, 'text'), { drift: run.drift });",
       ]),
     ).toBeGreaterThan(-1);
     expect(one({ tool: 'read', args: { target: '@e1', what: 'value' }, locators: loc, label: 'name' })).toContain(
@@ -2817,7 +2817,7 @@ describe('a read never fails the flow', () => {
   it('routes a multi-candidate read through readOptional, not a bare pick', () => {
     expect(source).toContain("outputs['01-do.panel_content'] = await readOptional(page, [");
     expect(source).toContain(
-      "], '01-do s_test1/1 target', { stayOnOrigin: originOf(page.url()) ?? undefined, waitMs: RESOLVE_WAIT_MS }, (loc: Locator) => readElements(loc, false, 'text'), { drift: run.drift });",
+      "], '01-do s_test1/1 target', { stayOnOrigin: originOf(page.url()) ?? undefined, waitMs: RESOLVE_WAIT_MS, oneValueRead: true }, (loc: Locator) => readElements(loc, false, 'text'), { drift: run.drift });",
     );
     // the resolution is INSIDE the helper, so nothing at the call site can throw
     expect(source).not.toContain('= await pick(page, [');
@@ -2834,7 +2834,7 @@ describe('a read never fails the flow', () => {
       sequenceAt(out, [
         "outputs['01-do.total'] = await readOptional(page, [",
         `{ locator: page.locator('#total'), index: 0, structural: false, kind: 'id', carries: JSON.stringify({ kind: 'id', selector: '#total' }) },`,
-        "], '01-do s_test1/1 target', { stayOnOrigin: originOf(page.url()) ?? undefined, waitMs: RESOLVE_WAIT_MS }, (loc: Locator) => readElements(loc, false, 'text'), { drift: run.drift });",
+        "], '01-do s_test1/1 target', { stayOnOrigin: originOf(page.url()) ?? undefined, waitMs: RESOLVE_WAIT_MS, oneValueRead: true }, (loc: Locator) => readElements(loc, false, 'text'), { drift: run.drift });",
       ]),
     ).toBeGreaterThan(-1);
     // never a bare read at the call site, which would throw where this cannot

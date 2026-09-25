@@ -1,4 +1,4 @@
-import { changedCreation, dispatchesFirstMatch, isMutatingAction, isReadAction, runStepLifecycle, spansEveryMatch, type StepActionResult } from '../execution/lifecycle.js';
+import { changedCreation, dispatchesFirstMatch, isMutatingAction, isReadAction, readsOneValue, runStepLifecycle, spansEveryMatch, type StepActionResult } from '../execution/lifecycle.js';
 import { outcomeLabel, outcomeOfError, urlHeldStill, type ActionOutcome } from '../execution/browser.js';
 import { inFlightRequests, type ActionExpectation } from '../execution/action.js';
 import { IDENTITY_POLL_MS, IDENTITY_WAIT_MS, SOFT_MATCH_MIN_SIMILARITY, alertVerdict, errorPageVerdict, gotoLandingVerdict, identityMarkerVerdict, isErrorPageUrl, landedOnRecordedPage, markersBound, preconditionVerdict, retargetNavigation, segmentGate, fillableChain, linkLandingWarning, unfilledStepVerdict, urlEffectVerdict, urlRecordParts } from '../execution/gates.js';
@@ -998,6 +998,8 @@ export async function replaySkill(
         // the answer; the absence is the condition (see waitsForAbsence).
         waitMs: absence ? 0 : resolveWaitMs(),
         stayOnOrigin: originOf(step.expect?.urlPattern ?? '') ?? originOf(page.url()) ?? undefined,
+        // Several matches that all read the same text are one answer (vikunja fwvk15).
+        ...(key === 'target' && readsOneValue(step.tool, args) ? { oneValueRead: true } : {}),
       };
       const framed = await rootFor(page, step.contexts?.[key]?.frame, policy.waitMs);
       if ('error' in framed) {
