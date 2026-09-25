@@ -1,0 +1,147 @@
+{
+ "id": "s_bc677b",
+ "origin": "http://127.0.0.1:8098",
+ "template": "In Snipe-IT, open the asset page for asset tag {{v1}} (name '{{v2}}'). Verify on the page: model is '{{v4}}', status '{{v5}}' (deployed status may show as 'Checked out' — report the actual status label shown, but confirm status was set to {{v5}}), location '{{v6}}', purchase date {{v7}}, and it is checked out to user '{{v8}}' with a checkout note containing '{{v3}}'. If the checkout did NOT go through (asset not assigned to {{v8}}), perform the checkout now: check out to user '{{v8}}' with note '{{v3}} checkout note'. Report each of these values as actually shown.",
+ "params": {
+  "v1": {
+   "example": "BA-00012",
+   "usedIn": [],
+   "known": true,
+   "binding": "02-create.asset_tag"
+  },
+  "v2": {
+   "example": "fwsi14-cv2-r2n0 Bench Asset",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i2:asset_name"
+  },
+  "v3": {
+   "example": "fwsi14-cv2-r2n0",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v4": {
+   "example": "Bench Laptop Model",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i2:main_a"
+  },
+  "v5": {
+   "example": "Ready to Deploy",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i2:status"
+  },
+  "v6": {
+   "example": "Bench Office",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i2:default_location"
+  },
+  "v7": {
+   "example": "2026-03-15",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i2:purchase_date"
+  },
+  "v8": {
+   "example": "Bench Assignee",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i2:main_a_href_users"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8098/hardware/{{d1}}/edit",
+  "requireText": [
+   "{{v1}}"
+  ]
+ },
+ "steps": [
+  {
+   "tool": "press",
+   "args": {
+    "key": "Enter",
+    "target": "@e41"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Lookup by Asset Tag"
+     },
+     {
+      "kind": "label",
+      "label": "Lookup by Asset Tag"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "Lookup by Asset Tag"
+     },
+     {
+      "kind": "id",
+      "selector": "#tagSearch"
+     },
+     {
+      "kind": "css",
+      "selector": "#tagSearch"
+     },
+     {
+      "kind": "point",
+      "x": 755,
+      "y": 25,
+      "w": 207,
+      "h": 34,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8098/hardware/:id",
+    "addedContains": [
+     "- textbox \"Lookup by {{*}}\"",
+     "- heading \"Assets {{v2}} #{{v1}} - {{v4}}\"",
+     "- button \"Show/Hide More Information\"",
+     "- link \"Details\"",
+     "- link \"Maintenances\""
+    ],
+    "lineDialect": 2
+   }
+  }
+ ],
+ "contract": 2,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-25T17:07:18.334Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_725dbb",
+  "index": 1,
+  "of": 6
+ },
+ "provenance": {
+  "session": "rerecord-muh7kz4c-0",
+  "instruction": "In Snipe-IT, open the asset page for asset tag BA-00012 (name 'fwsi14-cv2-r2n0 Bench Asset'). Verify on the page: model is 'Bench Laptop Model', status 'Ready to Deploy' (deployed status may show as 'Checked out' — report the actual status label shown, but confirm status was set to Ready to Deploy), location 'Bench Office', purchase date 2026-03-15, and it is checked out to user 'Bench Assignee' with a checkout note containing 'fwsi14-cv2-r2n0'. If the checkout did NOT go through (asset not assigned to Bench Assignee), perform the checkout now: check out to user 'Bench Assignee' with note 'fwsi14-cv2-r2n0 checkout note'. Report each of these values as actually shown.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-25T17:07:18.334Z",
+  "transforms": [
+   {
+    "name": "unfreezeExpectations",
+    "at": 1,
+    "reason": "recorded page change(s) only the recording run could produce: [\"- textbox \\\"Lookup by Asset Tag\\\"\",\"- heading \\\"Assets {{v2}} #{{v1}} - {{v4}}\\\"\",\"- button \\\"Show/Hide More Information\\\"\",\"- link \\\"Details\\\"\",\"- link \\\"Maintenances\\\"\"] → [\"- textbox \\\"Lookup by {{*}}\\\"\",\"- heading \\\"Assets {{v2}} #{{v1}} - {{v4}}\\\"\",\"- button \\\"Show/Hide More Information\\\"\",\"- link \\\"Details\\\"\",\"- link \\\"Maintenances\\\"\"]"
+   }
+  ]
+ },
+ "revision": 1
+}

@@ -1,0 +1,42 @@
+{
+  "arm": "spec",
+  "runid": "fwsi14-cv2-c2",
+  "target": "snipeit",
+  "flow": "fwsi14-cv2.json",
+  "flowName": "fwsi14-cv2",
+  "skillsDir": "/home/user/sitelooper/bench/results/fwsi14-cv2-skills",
+  "compiled": true,
+  "flowFile": "bench/results/fwsi14-cv2-c2-spec-tmp/fwsi14-cv2.flow.ts",
+  "specFile": "bench/results/fwsi14-cv2-c2-spec-tmp/fwsi14-cv2.spec.ts",
+  "wallMs": 88895,
+  "exitCode": 1,
+  "timedOut": false,
+  "costUsd": 0,
+  "stats": {
+    "total": 1,
+    "passed": 0,
+    "failed": 1,
+    "skipped": 0
+  },
+  "tests": [
+    {
+      "title": "fwsi14-cv2",
+      "status": "unexpected",
+      "ok": false,
+      "durationMs": 84214,
+      "error": "Error: after 03-open s_911eab/1 expected url http://127.0.0.1:8098/hardware/9/edit but browser is at http://127.0.0.1:8098/hardware/9#history",
+      "drift": [
+        "[sitelooper drift] 02-create s_5d67dc/1 target: primary getByRole('heading', { name: /^[\\s\\p{Co}\\p{So}\\p{Cf}]*Assets\\s+fwsi14-cv2-c2\\s+Bench\\s+Asset\\s+#BA-00008\\s+-\\s+Bench\\s+Laptop\\s+Model[\\s\\p{Co}\\p{So}\\p{Cf}]*$/u }) missed; used #2 locator('h1') (#1 absent)"
+      ]
+    }
+  ],
+  "drift": [
+    "[sitelooper drift] 02-create s_5d67dc/1 target: primary getByRole('heading', { name: /^[\\s\\p{Co}\\p{So}\\p{Cf}]*Assets\\s+fwsi14-cv2-c2\\s+Bench\\s+Asset\\s+#BA-00008\\s+-\\s+Bench\\s+Laptop\\s+Model[\\s\\p{Co}\\p{So}\\p{Cf}]*$/u }) missed; used #2 locator('h1') (#1 absent)"
+  ],
+  "driftCount": 1,
+  "evidence": [
+    "fwsi14-cv2-c2-spec-failure.png",
+    "fwsi14-cv2-c2-spec-error-context.md"
+  ],
+  "logTail": "2 Bench Asset') — confirms the control, not persistence; dropped from the report's confident values\n[sitelooper warn] 02-create s_60723b/17: read 'purchase_date_value' returned a value the skill itself set/selected ('2026-03-15') — confirms the control, not persistence; dropped from the report's confident values\n[sitelooper warn] 02-create s_67a3bc/4: read 'checkout_to_user_field_2' returned a value the skill itself set/selected ('×\nBench Assignee (bench-assignee)') — confirms the control, not persistence; dropped from the report's confident values\n[sitelooper drift] 02-create s_5d67dc/1 target: primary getByRole('heading', { name: /^[\\s\\p{Co}\\p{So}\\p{Cf}]*Assets\\s+fwsi14-cv2-c2\\s+Bench\\s+Asset\\s+#BA-00008\\s+-\\s+Bench\\s+Laptop\\s+Model[\\s\\p{Co}\\p{So}\\p{Cf}]*$/u }) missed; used #2 locator('h1') (#1 absent)\n[sitelooper warn] 02-create: report value checkout_to_user_field is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)\n[sitelooper step] 02-create\n  ✘  1 fwsi14-cv2.spec.ts:9:1 › fwsi14-cv2 (1.4m)\n\n\n  1) fwsi14-cv2.spec.ts:9:1 › fwsi14-cv2 › 03-open: In Snipe-IT, open the asset page for asset tag {{02-create.asset_tag}} (name '{{runid}} Bench Asset'). Verify on the page: model is 'Bench Laptop Model', status 'Ready to Deploy' (deployed status may show as 'Checked out' — report the actual status label shown, but confirm status was set to Ready to Deploy), location 'Bench Office', purchase date 2026-03-15, and it is checked out to user 'Bench Assignee' with a checkout note containing '{{runid}}'. If the checkout did NOT go through (asset not assigned to Bench Assignee), perform the checkout now: check out to user 'Bench Assignee' with note '{{runid}} checkout note'. Report each of these values as actually shown. \n\n    Error: after 03-open s_911eab/1 expected url http://127.0.0.1:8098/hardware/9/edit but browser is at http://127.0.0.1:8098/hardware/9#history\n\n       at fwsi14-cv2.flow.ts:12904\n\n      12902 |   // (navigationTarget), whether or not the step goes on to stop.\n      12903 |   if (verdict.diffs) volatile.push(...verdict.diffs);\n    > 12904 |   if (verdict.stop) throw new Error(verdict.stop);\n            |                           ^\n      12905 | }\n      12906 |\n      12907 | /**\n        at urlEffect (/home/user/sitelooper/bench/results/fwsi14-cv2-c2-spec-tmp/fwsi14-cv2.flow.ts:12904:27)\n        at Object.verify (/home/user/sitelooper/bench/results/fwsi14-cv2-c2-spec-tmp/fwsi14-cv2.flow.ts:16399:13)\n        at runStepLifecycle (/home/user/sitelooper/bench/results/fwsi14-cv2-c2-spec-tmp/fwsi14-cv2.flow.ts:8887:24)\n        at Object.03-open (/home/user/sitelooper/bench/results/fwsi14-cv2-c2-spec-tmp/fwsi14-cv2.flow.ts:16355:9)\n        at /home/user/sitelooper/bench/results/fwsi14-cv2-c2-spec-tmp/fwsi14-cv2.flow.ts:17021:7\n        at runFlow (/home/user/sitelooper/bench/results/fwsi14-cv2-c2-spec-tmp/fwsi14-cv2.flow.ts:17020:5)\n        at /home/user/sitelooper/bench/results/fwsi14-cv2-c2-spec-tmp/fwsi14-cv2.spec.ts:14:21\n\n    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────\n    [sitelooper drift] 02-create s_5d67dc/1 target: primary getByRole('heading', { name: /^[\\s\\p{Co}\\p{So}\\p{Cf}]*Assets\\s+fwsi14-cv2-c2\\s+Bench\\s+Asset\\s+#BA-00008\\s+-\\s+Bench\\s+Laptop\\s+Model[\\s\\p{Co}\\p{So}\\p{Cf}]*$/u }) missed; used #2 locator('h1') (#1 absent)\n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────\n    test-results/fwsi14-cv2-fwsi14-cv2/test-failed-1.png\n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    Error Context: test-results/fwsi14-cv2-fwsi14-cv2/error-context.md\n\n  1 failed\n    fwsi14-cv2.spec.ts:9:1 › fwsi14-cv2 ────────────────────────────────────────────────────────────\n"
+}

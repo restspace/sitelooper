@@ -1,0 +1,973 @@
+{
+ "id": "s_9402dc",
+ "origin": "http://127.0.0.1:8098",
+ "template": "In Snipe-IT, open the asset page for asset tag {{v1}} (name '{{v2}}'). Verify on the page: model is '{{v4}}', status '{{v5}}' (deployed status may show as 'Checked out' — report the actual status label shown, but confirm status was set to {{v5}}), location '{{v6}}', purchase date {{v7}}, and it is checked out to user '{{v8}}' with a checkout note containing '{{v3}}'. If the checkout did NOT go through (asset not assigned to {{v8}}), perform the checkout now: check out to user '{{v8}}' with note '{{v3}} checkout note'. Report each of these values as actually shown.",
+ "params": {
+  "v1": {
+   "example": "BA-00012",
+   "usedIn": [],
+   "known": true,
+   "binding": "02-create.asset_tag"
+  },
+  "v2": {
+   "example": "fwsi14-cv2-r2n0 Bench Asset",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i2:asset_name"
+  },
+  "v3": {
+   "example": "fwsi14-cv2-r2n0",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v4": {
+   "example": "Bench Laptop Model",
+   "usedIn": [
+    6
+   ],
+   "known": true,
+   "binding": "output:i2:main_a"
+  },
+  "v5": {
+   "example": "Ready to Deploy",
+   "usedIn": [
+    10
+   ],
+   "known": true,
+   "binding": "output:i2:status"
+  },
+  "v6": {
+   "example": "Bench Office",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i2:default_location"
+  },
+  "v7": {
+   "example": "2026-03-15",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i2:purchase_date"
+  },
+  "v8": {
+   "example": "Bench Assignee",
+   "usedIn": [
+    10,
+    11
+   ],
+   "known": true,
+   "binding": "output:i2:main_a_href_users"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8098/hardware/{{d1}}",
+  "fingerprint": [
+   0.296,
+   0.001,
+   0,
+   0.024,
+   0.023,
+   0.023,
+   0.004,
+   0.002,
+   0.069,
+   0,
+   0.013,
+   0.002,
+   0.023,
+   0,
+   0.078,
+   0.003,
+   0.021,
+   0.035,
+   0.005,
+   0.006,
+   0,
+   0,
+   0.095,
+   0.035,
+   0.151,
+   0.164,
+   0,
+   0.018,
+   0.002,
+   0.002,
+   0,
+   0.051,
+   0.006,
+   0.028,
+   0.008,
+   0.009,
+   0.004,
+   0,
+   0.01,
+   0,
+   0.002,
+   0.015,
+   0,
+   0.002,
+   0.002,
+   0.003,
+   0.023,
+   0.038,
+   0.013,
+   0.017,
+   0.008,
+   0,
+   0,
+   0.001,
+   0.002,
+   0.023,
+   0.003,
+   0.019,
+   0.001,
+   0.023,
+   0,
+   0,
+   0.027,
+   0.002,
+   0.002,
+   0,
+   0.021,
+   0.067,
+   0,
+   0.023,
+   0.005,
+   0.005,
+   0.007,
+   0.002,
+   0.011,
+   0.018,
+   0.01,
+   0,
+   0.023,
+   0.005,
+   0.002,
+   0.002,
+   0.003,
+   0.001,
+   0.016,
+   0.044,
+   0.002,
+   0,
+   0.005,
+   0.01,
+   0,
+   0.021,
+   0.003,
+   0,
+   0.028,
+   0.001,
+   0.013,
+   0.025,
+   0.003,
+   0.006,
+   0.002,
+   0.002,
+   0.017,
+   0.301,
+   0.021,
+   0.037,
+   0.01,
+   0.001,
+   0.002,
+   0.011,
+   0.02,
+   0.006,
+   0.026,
+   0.004,
+   0.024,
+   0.002,
+   0.004,
+   0.002,
+   0.02,
+   0.28,
+   0.002,
+   0.002,
+   0.126,
+   0.048,
+   0.014,
+   0.008,
+   0.023,
+   0.008,
+   0,
+   0,
+   0.023,
+   0.008,
+   0.002,
+   0.01,
+   0.004,
+   0.001,
+   0.232,
+   0.003,
+   0.003,
+   0.001,
+   0.001,
+   0.01,
+   0.003,
+   0,
+   0,
+   0.002,
+   0.023,
+   0,
+   0.042,
+   0,
+   0.001,
+   0.011,
+   0,
+   0.005,
+   0.003,
+   0.013,
+   0.041,
+   0.008,
+   0.002,
+   0.003,
+   0.002,
+   0.004,
+   0.017,
+   0.005,
+   0.002,
+   0.113,
+   0.003,
+   0,
+   0.104,
+   0.001,
+   0.007,
+   0,
+   0.001,
+   0,
+   0,
+   0.035,
+   0.017,
+   0.021,
+   0.029,
+   0.019,
+   0.001,
+   0.004,
+   0.002,
+   0.013,
+   0.003,
+   0.015,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.004,
+   0.022,
+   0,
+   0.011,
+   0.001,
+   0,
+   0.003,
+   0.017,
+   0.011,
+   0,
+   0.011,
+   0.006,
+   0.011,
+   0.002,
+   0,
+   0.013,
+   0.01,
+   0.015,
+   0,
+   0.008,
+   0.045,
+   0,
+   0,
+   0.003,
+   0,
+   0,
+   0.004,
+   0.008,
+   0.004,
+   0.016,
+   0,
+   0.021,
+   0.001,
+   0.003,
+   0.001,
+   0.002,
+   0.001,
+   0.01,
+   0.006,
+   0,
+   0.001,
+   0.006,
+   0.001,
+   0.021,
+   0.003,
+   0.005,
+   0.015,
+   0.003,
+   0.002,
+   0,
+   0.048,
+   0,
+   0.02,
+   0,
+   0.006,
+   0.006,
+   0.035,
+   0,
+   0,
+   0.021,
+   0.113,
+   0,
+   0.004,
+   0.004,
+   0.002,
+   0.005,
+   0.042,
+   0.015,
+   0.002,
+   0.044,
+   0,
+   0,
+   0,
+   0.002,
+   0.002,
+   0.009,
+   0.002,
+   0.026,
+   0,
+   0.029,
+   0.007,
+   0.007,
+   0.008,
+   0,
+   0.013,
+   0.002,
+   0.016,
+   0.007,
+   0.023,
+   0.001,
+   0.002,
+   0,
+   0,
+   0.027,
+   0.01,
+   0.031,
+   0,
+   0.002,
+   0,
+   0.023,
+   0.002,
+   0.028,
+   0.004,
+   0.025,
+   0,
+   0.006,
+   0.006,
+   0.002,
+   0.004,
+   0.146,
+   0.024,
+   0,
+   0.016,
+   0.006,
+   0.023,
+   0.017,
+   0.002,
+   0.004,
+   0.002,
+   0.018,
+   0.025,
+   0.004,
+   0.011,
+   0.001,
+   0.034,
+   0,
+   0.017,
+   0.005,
+   0,
+   0.159,
+   0.002,
+   0.008,
+   0.025,
+   0,
+   0,
+   0.045,
+   0.006,
+   0.005,
+   0.01,
+   0,
+   0.021,
+   0.004,
+   0.002,
+   0,
+   0.002,
+   0.19,
+   0.004,
+   0.004,
+   0.002,
+   0,
+   0.021,
+   0.007,
+   0.344,
+   0,
+   0,
+   0.004,
+   0.004,
+   0,
+   0.053,
+   0.006,
+   0.004,
+   0.003,
+   0.008,
+   0.023,
+   0,
+   0,
+   0.001,
+   0.002,
+   0,
+   0.002,
+   0.004,
+   0.039,
+   0.004,
+   0.022,
+   0.019,
+   0.002,
+   0.002,
+   0.006,
+   0,
+   0.008,
+   0.013,
+   0,
+   0,
+   0.01,
+   0.001,
+   0.015,
+   0.003,
+   0.008,
+   0.023,
+   0.001,
+   0,
+   0.044,
+   0.002,
+   0.014,
+   0.021,
+   0,
+   0.003,
+   0,
+   0.011,
+   0.021,
+   0.042,
+   0.021,
+   0.025,
+   0.176,
+   0.003,
+   0.026,
+   0.016,
+   0.002,
+   0.024,
+   0.048,
+   0.013,
+   0.013,
+   0.021,
+   0.021,
+   0.004,
+   0.007,
+   0.021,
+   0.022,
+   0.004,
+   0.002,
+   0.05,
+   0,
+   0.019,
+   0.001,
+   0.009,
+   0.042,
+   0.027,
+   0.004,
+   0.005,
+   0.01,
+   0.034,
+   0,
+   0.021,
+   0.01,
+   0.005,
+   0.002,
+   0.027,
+   0.001,
+   0.027,
+   0.002,
+   0.027,
+   0.022,
+   0.02,
+   0.008,
+   0.002,
+   0.031,
+   0.054,
+   0.011,
+   0.102,
+   0.001,
+   0.168,
+   0,
+   0.004,
+   0.001,
+   0.002,
+   0.013,
+   0.028,
+   0.013,
+   0.035,
+   0.029,
+   0.008,
+   0,
+   0.007,
+   0,
+   0.002,
+   0,
+   0.006,
+   0.053,
+   0.002,
+   0.011,
+   0.002,
+   0.002,
+   0.004,
+   0.005,
+   0.077,
+   0,
+   0.005,
+   0.058,
+   0.008,
+   0.002,
+   0.025,
+   0.018,
+   0,
+   0.004,
+   0,
+   0.021,
+   0.006,
+   0.033,
+   0.026,
+   0.004,
+   0.01,
+   0.009,
+   0.003,
+   0,
+   0,
+   0.015,
+   0.002,
+   0.004,
+   0,
+   0.01,
+   0.002,
+   0.007,
+   0.258,
+   0,
+   0.006,
+   0.001,
+   0.31,
+   0.042,
+   0.024,
+   0.023,
+   0.005,
+   0.042,
+   0.021,
+   0.048,
+   0.042,
+   0,
+   0,
+   0.028,
+   0
+  ],
+  "requireText": [
+   "{{v1}}",
+   "{{v2}}"
+  ]
+ },
+ "steps": [
+  {
+   "tool": "read_all",
+   "args": {
+    "target": "#main .label",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#main .label"
+     },
+     {
+      "kind": "text",
+      "text": "Deployed"
+     },
+     {
+      "kind": "css",
+      "selector": "#details > div > div > div:nth-of-type(2) > div > label"
+     },
+     {
+      "kind": "point",
+      "x": 256,
+      "y": 212,
+      "w": 55.6,
+      "h": 15.9,
+      "role": null,
+      "tag": "label",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "deployed_indicator_label"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(6) > div > div > dl > dd:nth-of-type(1) > span"
+     },
+     {
+      "kind": "point",
+      "x": 261,
+      "y": 311,
+      "w": 57.8,
+      "h": 15,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "asset_tag"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(6) > div > div > dl > dd:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 316,
+      "y": 353,
+      "w": 167.6,
+      "h": 15,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "asset_name"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text",
+    "scopedBy": "v5"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#details > div > div > div:nth-of-type(2) > div"
+     },
+     {
+      "kind": "point",
+      "x": 222,
+      "y": 220,
+      "w": 259.5,
+      "h": 77.1,
+      "role": null,
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "status_badge_text_on_page"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#details > div > div > div:nth-of-type(2) > div > label"
+     },
+     {
+      "kind": "point",
+      "x": 256,
+      "y": 212,
+      "w": 55.6,
+      "h": 15.9,
+      "role": null,
+      "tag": "label",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "deployed_indicator_label"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text",
+    "scopedBy": "v4"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "text",
+      "text": "{{v4}}"
+     },
+     {
+      "kind": "css",
+      "selector": "#model > span > a"
+     },
+     {
+      "kind": "point",
+      "x": 1088,
+      "y": 229,
+      "w": 119.3,
+      "h": 15,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "model"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div > dl > dd:nth-of-type(6) > span > a"
+     },
+     {
+      "kind": "point",
+      "x": 269,
+      "y": 546,
+      "w": 74.2,
+      "h": 15,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "default_location"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div > div > div:nth-of-type(2) > ul > li:nth-of-type(5)",
+      "nth": 3
+     },
+     {
+      "kind": "point",
+      "x": 1126,
+      "y": 397,
+      "w": 235.5,
+      "h": 59.1,
+      "role": null,
+      "tag": "li",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "purchase_date_as_displayed"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#historyListingTable > tbody > tr:nth-of-type(2) > td:nth-of-type(10)"
+     }
+    ]
+   },
+   "label": "checkout_note"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text",
+    "frame": "{{=}} Deployed {{v8}}",
+    "scopedBy": "v5"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "text",
+      "text": "{{v5}} Deployed {{v8}}"
+     },
+     {
+      "kind": "css",
+      "selector": "#details > div > div > div:nth-of-type(2) > div"
+     },
+     {
+      "kind": "point",
+      "x": 222,
+      "y": 220,
+      "w": 259.5,
+      "h": 77.1,
+      "role": null,
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "status_label_shown"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text",
+    "scopedBy": "v8"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "text",
+      "text": "{{v8}}"
+     },
+     {
+      "kind": "css",
+      "selector": "#details > div > div > div:nth-of-type(2) > div > a"
+     },
+     {
+      "kind": "point",
+      "x": 159,
+      "y": 229,
+      "w": 93.2,
+      "h": 15,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "checked_out_to"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(6) > div > div > dl > dt:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 147,
+      "y": 312,
+      "w": 109.8,
+      "h": 41,
+      "role": null,
+      "tag": "dt",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "main_dt"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "Opened asset {{v1}} ({{v2}}) via the app's \"Lookup by Asset Tag\" box and verified every requested value on the page: model \"{{v4}}\", default location \"{{v6}}\", purchase date {{v7}}, and it is already checked out to \"{{v8}}\". The status area reads \"{{v5}} Deployed\" — the status label itself is \"{{v5}}\" (confirmed by the option marked selected in the Status field of the asset's edit form), with a \"Deployed\" indicator label shown while the asset is checked out. Because the asset is already assigned to {{v8}}, no new checkout was needed; the History tab shows the create and a checkout entry to {{v8}} with the note \"{{v3}}\". No changes were saved (the edit page was opened read-only for status confirmation; nothing was submitted there).",
+  "values": {
+   "asset_tag": "{{v1}}",
+   "asset_name": "{{v2}}",
+   "status_label_shown": "{{v5}}",
+   "status_badge_text_on_page": "{{v5}} Deployed   {{v8}}",
+   "deployed_indicator_label": "Deployed",
+   "status_option_marked_selected": "{{v5}}",
+   "status_stored_in_status_field": "{{v5}}",
+   "model": "{{v4}}",
+   "default_location": "{{v6}}",
+   "purchase_date": "{{v7}}",
+   "purchase_date_as_displayed": "Purchased {{v7}} - 6 months 1 week ago",
+   "checked_out_to": "{{v8}}",
+   "checkout_note": "{{v3}}",
+   "checkout_performed_this_run": "no - asset was already checked out to {{v8}}",
+   "history_rows": "2026-09-25 05:04 PM | Bench Admin | create new | {{v2}} #{{v1}} - {{v4}} ; 2026-09-25 05:05 PM | Bench Admin | checkout | {{v2}} #{{v1}} - {{v4}} | {{v8}} | note: {{v3}} | Current Location: [id: 1] {{v6}}",
+   "checkouts_count": "Checkouts 1, Checkins 0",
+   "main_dt": "Asset Tag",
+   "main_li": "Model",
+   "main_li_2": "Status",
+   "model_id_option": "selected"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-25T17:07:18.278Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_48d215",
+  "index": 4,
+  "of": 5
+ },
+ "variantOf": "s_63d79e",
+ "provenance": {
+  "session": "rerecord-muh7kz4c-0",
+  "instruction": "In Snipe-IT, open the asset page for asset tag BA-00012 (name 'fwsi14-cv2-r2n0 Bench Asset'). Verify on the page: model is 'Bench Laptop Model', status 'Ready to Deploy' (deployed status may show as 'Checked out' — report the actual status label shown, but confirm status was set to Ready to Deploy), location 'Bench Office', purchase date 2026-03-15, and it is checked out to user 'Bench Assignee' with a checkout note containing 'fwsi14-cv2-r2n0'. If the checkout did NOT go through (asset not assigned to Bench Assignee), perform the checkout now: check out to user 'Bench Assignee' with note 'fwsi14-cv2-r2n0 checkout note'. Report each of these values as actually shown.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-25T17:07:18.278Z"
+ },
+ "revision": 1
+}

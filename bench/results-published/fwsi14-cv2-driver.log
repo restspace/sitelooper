@@ -1,0 +1,24 @@
+[converge] from fwsi14: 3 step(s), store copied to /home/user/sitelooper/bench/results/fwsi14-cv2-skills, flow /home/user/sitelooper/bench/results/flows/fwsi14-cv2.json
+[converge] round 1 compile: /opt/node22/bin/node /home/user/sitelooper/bin/sitelooper.js compile /home/user/sitelooper/bench/results/flows/fwsi14-cv2.json --out /home/user/sitelooper/bench/results/fwsi14-cv2-c1-compile --overwrite-spec --json
+[converge] round 1 compile: exit 0
+[converge] round 1 artifact: /opt/node22/bin/node /home/user/sitelooper/bench/spec-replay.mjs --flow /home/user/sitelooper/bench/results/flows/fwsi14-cv2.json --skills /home/user/sitelooper/bench/results/fwsi14-cv2-skills --tag fwsi14-cv2-c1 --target snipeit --reset --out /home/user/sitelooper/bench/results
+[converge] round 1 artifact: exit 1
+[converge] round 1: artifact failed (exit 1, verified 5/5); anchors 03-open, 02-create
+[converge] round 1 repair: /opt/node22/bin/node /home/user/sitelooper/bin/sitelooper.js repair /home/user/sitelooper/bench/results/fwsi14-cv2-c1-compile/fwsi14-cv2.flow.ts --var runid=fwsi14-cv2-p1n{n} --converge 1 --reset-cmd "\"/opt/node22/bin/node\" \"/home/user/sitelooper/bench/reset-app.mjs\" --target snipeit" --json
+[converge] round 1 repair: exit 3
+[converge] round 1 rerecord 02-create (repair: needs-rerecord; also named: 03-open): /opt/node22/bin/node /home/user/sitelooper/bin/sitelooper.js rerecord /home/user/sitelooper/bench/results/flows/fwsi14-cv2.json 02-create --var runid=fwsi14-cv2-r1n{n} --runs 2 --reset-cmd "\"/opt/node22/bin/node\" \"/home/user/sitelooper/bench/reset-app.mjs\" --target snipeit" --json
+[converge] round 1 rerecord 02-create (repair: needs-rerecord; also named: 03-open): exit 1
+[converge] round 2 compile: /opt/node22/bin/node /home/user/sitelooper/bin/sitelooper.js compile /home/user/sitelooper/bench/results/flows/fwsi14-cv2.json --out /home/user/sitelooper/bench/results/fwsi14-cv2-c2-compile --overwrite-spec --json
+[converge] round 2 compile: exit 0
+[converge] round 2 artifact: /opt/node22/bin/node /home/user/sitelooper/bench/spec-replay.mjs --flow /home/user/sitelooper/bench/results/flows/fwsi14-cv2.json --skills /home/user/sitelooper/bench/results/fwsi14-cv2-skills --tag fwsi14-cv2-c2 --target snipeit --reset --out /home/user/sitelooper/bench/results
+[converge] round 2 artifact: exit 1
+[converge] round 2: artifact failed (exit 1, verified 5/5); anchors 03-open, 02-create
+[converge] round 2 repair: /opt/node22/bin/node /home/user/sitelooper/bin/sitelooper.js repair /home/user/sitelooper/bench/results/fwsi14-cv2-c2-compile/fwsi14-cv2.flow.ts --var runid=fwsi14-cv2-p2n{n} --converge 1 --reset-cmd "\"/opt/node22/bin/node\" \"/home/user/sitelooper/bench/reset-app.mjs\" --target snipeit" --json
+[converge] round 2 repair: exit 3
+[converge] round 2 rerecord 02-create (repair: needs-rerecord; also named: 03-open) — 3 runs (refused before): /opt/node22/bin/node /home/user/sitelooper/bin/sitelooper.js rerecord /home/user/sitelooper/bench/results/flows/fwsi14-cv2.json 02-create --var runid=fwsi14-cv2-r2n{n} --runs 3 --reset-cmd "\"/opt/node22/bin/node\" \"/home/user/sitelooper/bench/reset-app.mjs\" --target snipeit" --json
+[converge] round 2 rerecord 02-create (repair: needs-rerecord; also named: 03-open) — 3 runs (refused before): exit 1
+[converge] round 3 compile: /opt/node22/bin/node /home/user/sitelooper/bin/sitelooper.js compile /home/user/sitelooper/bench/results/flows/fwsi14-cv2.json --out /home/user/sitelooper/bench/results/fwsi14-cv2-c3-compile --overwrite-spec --json
+[converge] round 3 compile: exit 2
+[converge] round 3: compile refused (unsourced-ref@03-open); rerecord steps: 02-create
+[converge] fwsi14-cv2: stuck-repin — 02-create was re-recorded twice and the store's re-pin rule refused both: its procedure does not replay clean; rounds 3, flow runs 9, model turns 207
+fwsi14-cv2: stuck-repin — 02-create was re-recorded twice and the store's re-pin rule refused both: its procedure does not replay clean; rounds 3, flow runs 9, model turns 207

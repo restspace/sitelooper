@@ -1,0 +1,137 @@
+{
+ "id": "s_6aab68",
+ "origin": "http://127.0.0.1:8098",
+ "template": "In Snipe-IT, open the asset page for asset tag {{v1}} (name '{{v2}}'). Verify on the page: model is '{{v4}}', status 'Ready to Deploy' (deployed status may show as 'Checked out' — report the actual status label shown, but confirm status was set to Ready to Deploy), location '{{v6}}', purchase date {{v7}}, and it is checked out to user '{{v8}}' with a checkout note containing '{{v3}}'. If the checkout did NOT go through (asset not assigned to {{v8}}), perform the checkout now: check out to user '{{v8}}' with note '{{v3}} checkout note'. Report each of these values as actually shown.",
+ "params": {
+  "v1": {
+   "example": "BA-00013",
+   "usedIn": [],
+   "known": true,
+   "binding": "02-create.asset_tag"
+  },
+  "v2": {
+   "example": "fwsi14-cv2-r2n1 Bench Asset",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i2:asset_name"
+  },
+  "v3": {
+   "example": "fwsi14-cv2-r2n1",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v4": {
+   "example": "Bench Laptop Model",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i2:model"
+  },
+  "v6": {
+   "example": "Bench Office",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i2:default_location"
+  },
+  "v7": {
+   "example": "2026-03-15",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i2:purchase_date"
+  },
+  "v8": {
+   "example": "Bench Assignee",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i2:checked_out_to"
+  },
+  "v10": {
+   "example": "13",
+   "usedIn": [],
+   "known": true,
+   "binding": "02-create.url.p1"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8098/hardware/{{d1}}/edit",
+  "requireText": [
+   "{{v1}}"
+  ]
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e43"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Search"
+     },
+     {
+      "kind": "id",
+      "selector": "#topSearchButton"
+     },
+     {
+      "kind": "css",
+      "selector": "#topSearchButton"
+     },
+     {
+      "kind": "point",
+      "x": 876,
+      "y": 25,
+      "w": 37,
+      "h": 34,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8098/hardware/{{v10}}",
+    "addedContains": [
+     "- heading \"Assets {{v2}} #{{v1}} - {{v4}}\"",
+     "- button \"Show/Hide More Information\"",
+     "- link \"Details\"",
+     "- link \"Maintenances\""
+    ],
+    "lineDialect": 2
+   }
+  }
+ ],
+ "contract": 2,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-25T17:13:25.198Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_469f23",
+  "index": 2,
+  "of": 6
+ },
+ "provenance": {
+  "session": "rerecord-muh7kz4c-1",
+  "instruction": "In Snipe-IT, open the asset page for asset tag BA-00013 (name 'fwsi14-cv2-r2n1 Bench Asset'). Verify on the page: model is 'Bench Laptop Model', status 'Ready to Deploy' (deployed status may show as 'Checked out' — report the actual status label shown, but confirm status was set to Ready to Deploy), location 'Bench Office', purchase date 2026-03-15, and it is checked out to user 'Bench Assignee' with a checkout note containing 'fwsi14-cv2-r2n1'. If the checkout did NOT go through (asset not assigned to Bench Assignee), perform the checkout now: check out to user 'Bench Assignee' with note 'fwsi14-cv2-r2n1 checkout note'. Report each of these values as actually shown.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-25T17:13:25.198Z",
+  "transforms": [
+   {
+    "name": "unfreezeExpectations",
+    "at": 1,
+    "reason": "recorded page change(s) only the recording run could produce: [\"- textbox \\\"Lookup by Asset Tag\\\"\",\"- heading \\\"Assets {{v2}} #{{v1}} - {{v4}}\\\"\",\"- button \\\"Show/Hide More Information\\\"\",\"- link \\\"Details\\\"\",\"- link \\\"Maintenances\\\"\"] → [\"- heading \\\"Assets {{v2}} #{{v1}} - {{v4}}\\\"\",\"- button \\\"Show/Hide More Information\\\"\",\"- link \\\"Details\\\"\",\"- link \\\"Maintenances\\\"\"]"
+   }
+  ]
+ },
+ "revision": 1
+}
