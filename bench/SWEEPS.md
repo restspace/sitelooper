@@ -337,3 +337,69 @@ honesty 143bd5b.
 - **honesty (fwgt10)** — a composite no read produces gets read-backs anchored at the step whose recorded
   diff shows its parts; export warns for an asked output held only by an unsupported template literal and
   the runtime `unanswered` includes it; a count of a comma selector list counts across the page.
+
+## Round 59 (5a15753): fifth ten-app confirmation, two batches of five — 6/10 green
+
+Main 5a15753 was cloud-verified as verify-round59c: 2399 main tests, 2591 browser, 155/155 parity, and the
+corpus check showed 0 changes. EspoCRM's first recording died on OpenRouter credit (API 402), and it was
+re-run after the top-up. Kanboard's session stalled idle and was re-fired.
+
+| round | runid | commit | app | verified | replay model-free | compiled | green | notes |
+|---|---|---|---|---|---|---|---|---|
+| 59 | fwrd91 | 5a15753 | rd | 6/6 ×3 | yes | pass | **yes** | |
+| 59 | fwgr72 | 5a15753 | gr | 6/6 ×3 | yes | pass | **yes** | |
+| 59 | fwkb43 | 5a15753 | kb | 6/6 ×3 | yes | pass 4/6+2 n/a | **yes** | |
+| 59 | fwvk11 | 5a15753 | vk | 7/7 ×3 | yes | pass 5/7+2 n/a | **yes** | |
+| 59 | fwsi11 | 5a15753 | si | 7/7 ×3 | yes | pass 5/7+2 n/a | **yes** | |
+| 59 | fwec12 | 5a15753 | ec | 7/7 ×3 | yes | pass 5/7+2 n/a | **yes** | the rerun; the first died on credit |
+| 59 | fwod85 | 5a15753 | od | 6/6 ×3 | no: 05-open fell back both | pass 6/6 | no | bindSkill's lazy regex split "Cabinet with Doors with Quantity"; v10 dropped at export |
+| 59 | fwop14 | 5a15753 | op | 7/7 ×3 | yes | FAIL | no | the artifact diffed a capture taken after bind/url wait; the daemon diffs after settle (parity gap) |
+| 59 | fwgh14 | 5a15753 | gh | 7/7 ×3 | no: 03-open 18/22 turns | FAIL | no | a post id minted mid-step was never an output, so it was frozen; a recovery dropped the stopped click |
+| 59 | fwgt11 | 5a15753 | gt | 7/7, 6/7, 6/7 | yes | pass, obj 3 FAIL | no | the "bug" tick in a blocked attempt was not carried; 07-add published a param-only "bug" (false positive) |
+
+## Round 60 fixes, the design pass and phases A/B (merged to main 0e778e9)
+
+- **Round 60 fixes:** ids (bind slots against the referenced instruction; one slotActs), runners (the artifact
+  judges the page the action settled on; failure evidence is published), ghost (a visited url part is the
+  step's output; a recovery keeps a stopped step that worked; variant start gates), gitea (carry the first
+  opening; closedBefore), report (a param-only value is published only if observed). verify-round60:
+  one stale test string, fixed; 166/166 parity.
+- **Design pass** (notes/design/): a review of rounds 50–59 found no convergence in green counts. The user
+  ruled out per-recording rehearsal replays because of the cost to users.
+- **Phase A:** recorder stage 0 (obs, seq/t, failed steps), eval hygiene (evalResult, the guard, the
+  empty-read hint, `$0`).
+- **Phase B:** one report classifier; a typed value needs commit evidence. verify-phaseAB: 0 failures,
+  171/171 parity.
+
+## Round 61 (0e778e9): sixth ten-app confirmation — 6/10 green
+
+Every failure was recording variance: rebuilding each recording at 5a15753, c089d419 and 0e778e9 gave
+identical procedures. Phase A's `obs` evidence decided or confirmed four of the diagnoses. Phase B changed
+no objective. One element-scoped false positive was found (fwec13) and fixed.
+
+| round | runid | commit | app | verified | replay model-free | compiled | green | notes |
+|---|---|---|---|---|---|---|---|---|
+| 61 | fwrd92 | 0e778e9 | rd | 6/6 ×3 | yes | pass 6/6 | **yes** | |
+| 61 | fwkb44 | 0e778e9 | kb | 6/6 ×3 | yes | pass 4/6+2 n/a | **yes** | |
+| 61 | fwod86 | 0e778e9 | od | 6/6 ×3 | yes | pass 6/6 | **yes** | round 60's ids fix held |
+| 61 | fwec13 | 0e778e9 | ec | 7/7 ×3 | yes | pass 5/7+2 n/a | **yes** | reformatted typed values read at the control published as observed ("12,500", a picker default "2018-01-16") → fixed |
+| 61 | fwsi12 | 0e778e9 | si | 7/7 ×3 | yes | pass 5/7+2 n/a | **yes** | |
+| 61 | fwgh15 | 0e778e9 | gh | 7/7 ×3 | yes | pass 5/7+2 n/a | **yes** | |
+| 61 | fwop15 | 0e778e9 | op | 7/7 ×3 | no: 01-open 20/24 turns | refused (demoted pin) | no | three no-effect link clicks, then a goto to the href; obs decided it |
+| 61 | fwgr73 | 0e778e9 | gr | 6/6 ×3 | no: 04/05-open ~58 turns | FAIL | no | Ctrl+F then typed into the JSON editor; the doubled-value guard stopped |
+| 61 | fwgt12 | 0e778e9 | gt | 7/7 ×3 | no: n2 03-set 20 turns | pass, obj 3 FAIL | no | "bug" toggled four times; timing decides; scoped reads skipped, not failed |
+| 61 | fwvk12 | 0e778e9 | vk | 7/7 ×3 | no: 02-create 20/29 turns | pass | no | an autosave's "Saved!" flash credited to a placeholder click |
+
+## Round 61 fixes and phase C (merged to main f508e0d)
+
+- op: abandoned link clicks decided by obs; rule D (no heal onto another role).
+- gr: R1 (a value the recording itself saw doubled is let through); R2 (an already-in-effect skip; a
+  positional hit must carry the recorded name; a recorded point is not positional).
+- vk: dropFlashedLines (never on a submit step; never a popup line, which merging with gitea's fix showed).
+- gt: an applied pick is skipped (provenance gate); a scoped read that finds another value fails the step.
+- report: element-first echo; the echo ledger spans the flow step.
+- Phase C (shadow only): network and in-page journals, page events, the gap diff, shadow.jsonl, and
+  SITELOOPER_JOURNAL_FEEDBACK (off). Vision: SITELOOPER_VISION (off), for the MiMo A/B.
+- verify-round61: 2 recorded-point parity failures (R2), fixed. verify-round61c: 1 failure (the journal
+  drain had no bound on a never-committing navigation), fixed in 364708a2 and passing locally; main is
+  re-verified alongside round 62.
