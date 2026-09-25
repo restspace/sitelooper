@@ -1,0 +1,1309 @@
+{
+ "id": "s_29baa0",
+ "origin": "http://127.0.0.1:8069",
+ "template": "In this Odoo 17 backend, create a new Quotation in the Sales app for the customer '{{v2}}' (the customer field is an autocomplete dropdown — you must actually select the matching option from the dropdown, not just type the name). Add exactly ONE order line: pick any product from the product catalogue (again the product field is an autocomplete dropdown — select an actual option from the dropdown), with quantity 3. Save the quotation. Then report: (a) the product name you chose, (b) the unit price the app filled in on that line, (c) the untaxed amount the app computed (Untaxed Amount in the totals section), and (d) the quotation's name/reference shown in the breadcrumb or title bar. Do not wait for network idle; wait for concrete page state.\n\nA later step of this flow uses these values, so before you report, read each one from the page with `read` (label=<name>) and report it under exactly this name: quotation_reference.",
+ "params": {
+  "v1": {
+   "example": "fwod88-cv4-r1n0",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v2": {
+   "example": "fwod88-cv4-r1n0 Bench Customer",
+   "usedIn": [],
+   "known": true
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8069/web#action={{d1}}&cids=:id&id={{d3}}&menu_id={{d2}}&model=sale.order&view_type=form",
+  "fingerprint": [
+   0.009,
+   0.012,
+   0.003,
+   0,
+   0.006,
+   0.09,
+   0.003,
+   0.006,
+   0.009,
+   0.012,
+   0.006,
+   0,
+   0.009,
+   0.045,
+   0.03,
+   0.006,
+   0.021,
+   0.003,
+   0.024,
+   0.015,
+   0,
+   0.024,
+   0.03,
+   0.018,
+   0.006,
+   0.006,
+   0,
+   0.021,
+   0.006,
+   0.048,
+   0.012,
+   0.048,
+   0.09,
+   0.024,
+   0.006,
+   0,
+   0.015,
+   0,
+   0,
+   0.003,
+   0.006,
+   0.018,
+   0.042,
+   0.039,
+   0.012,
+   0.033,
+   0.012,
+   0.066,
+   0.042,
+   0.024,
+   0.021,
+   0.003,
+   0,
+   0.09,
+   0.006,
+   0.006,
+   0.003,
+   0.036,
+   0.027,
+   0.003,
+   0,
+   0,
+   0.012,
+   0.194,
+   0,
+   0.012,
+   0.006,
+   0.03,
+   0.012,
+   0.006,
+   0,
+   0,
+   0.012,
+   0.012,
+   0.066,
+   0.012,
+   0.015,
+   0.012,
+   0.015,
+   0,
+   0.009,
+   0.036,
+   0.066,
+   0,
+   0.024,
+   0,
+   0.018,
+   0.102,
+   0.036,
+   0.012,
+   0.048,
+   0,
+   0.009,
+   0,
+   0.072,
+   0.012,
+   0.006,
+   0.042,
+   0.009,
+   0,
+   0.039,
+   0.027,
+   0.009,
+   0.027,
+   0.036,
+   0,
+   0.033,
+   0.012,
+   0.006,
+   0.012,
+   0.003,
+   0.015,
+   0,
+   0.012,
+   0.045,
+   0.009,
+   0,
+   0,
+   0,
+   0.099,
+   0,
+   0.006,
+   0.006,
+   0.009,
+   0.021,
+   0.009,
+   0.012,
+   0.006,
+   0.006,
+   0.006,
+   0.009,
+   0.006,
+   0.051,
+   0.009,
+   0.012,
+   0.003,
+   0.003,
+   0.003,
+   0,
+   0.015,
+   0.006,
+   0.054,
+   0.024,
+   0.021,
+   0.006,
+   0.003,
+   0.006,
+   0.006,
+   0.036,
+   0.06,
+   0.048,
+   0,
+   0.06,
+   0.012,
+   0.003,
+   0.006,
+   0.006,
+   0.015,
+   0.027,
+   0.003,
+   0.006,
+   0.03,
+   0.015,
+   0.012,
+   0.012,
+   0.012,
+   0,
+   0,
+   0.012,
+   0,
+   0.006,
+   0.03,
+   0.033,
+   0.012,
+   0.003,
+   0.066,
+   0,
+   0,
+   0.006,
+   0.123,
+   0,
+   0.036,
+   0.039,
+   0.009,
+   0.006,
+   0.009,
+   0.021,
+   0,
+   0.018,
+   0.033,
+   0.006,
+   0.006,
+   0.009,
+   0.006,
+   0,
+   0.006,
+   0.096,
+   0.009,
+   0.024,
+   0.018,
+   0,
+   0.03,
+   0,
+   0.042,
+   0,
+   0,
+   0.003,
+   0.009,
+   0.018,
+   0,
+   0.006,
+   0.015,
+   0,
+   0.006,
+   0,
+   0,
+   0.003,
+   0.003,
+   0.006,
+   0.03,
+   0,
+   0.003,
+   0.018,
+   0.012,
+   0,
+   0.009,
+   0,
+   0,
+   0,
+   0,
+   0.003,
+   0,
+   0.006,
+   0.006,
+   0.006,
+   0.018,
+   0.006,
+   0.006,
+   0.018,
+   0.015,
+   0.018,
+   0,
+   0.069,
+   0.006,
+   0.018,
+   0.009,
+   0,
+   0.006,
+   0.003,
+   0.012,
+   0.012,
+   0.006,
+   0,
+   0.176,
+   0.137,
+   0.057,
+   0.006,
+   0,
+   0.015,
+   0.033,
+   0.006,
+   0.006,
+   0.003,
+   0.003,
+   0.006,
+   0.143,
+   0.036,
+   0.081,
+   0.009,
+   0.012,
+   0.009,
+   0.009,
+   0.003,
+   0,
+   0.036,
+   0.012,
+   0.018,
+   0.006,
+   0.006,
+   0.009,
+   0.006,
+   0.024,
+   0.003,
+   0.06,
+   0.012,
+   0.006,
+   0.009,
+   0.009,
+   0.015,
+   0.015,
+   0,
+   0,
+   0.006,
+   0.006,
+   0.006,
+   0.009,
+   0,
+   0.009,
+   0.003,
+   0.06,
+   0.033,
+   0.003,
+   0,
+   0.021,
+   0.006,
+   0,
+   0.015,
+   0.006,
+   0.018,
+   0.003,
+   0.012,
+   0.012,
+   0.09,
+   0,
+   0.009,
+   0.003,
+   0,
+   0.021,
+   0.075,
+   0,
+   0.018,
+   0.003,
+   0.039,
+   0.051,
+   0,
+   0.015,
+   0,
+   0.006,
+   0.015,
+   0,
+   0.003,
+   0,
+   0.006,
+   0.012,
+   0,
+   0.021,
+   0.018,
+   0,
+   0.027,
+   0.06,
+   0,
+   0.012,
+   0,
+   0,
+   0,
+   0.012,
+   0.024,
+   0,
+   0.006,
+   0.012,
+   0.03,
+   0.039,
+   0.063,
+   0.003,
+   0.006,
+   0,
+   0.033,
+   0,
+   0.009,
+   0.03,
+   0.045,
+   0.045,
+   0.003,
+   0.006,
+   0.021,
+   0.054,
+   0.012,
+   0,
+   0.012,
+   0,
+   0.015,
+   0.003,
+   0.018,
+   0.003,
+   0,
+   0.006,
+   0,
+   0.003,
+   0.006,
+   0.033,
+   0.012,
+   0.006,
+   0.012,
+   0,
+   0.033,
+   0.012,
+   0.003,
+   0.042,
+   0.012,
+   0.006,
+   0.018,
+   0.03,
+   0.009,
+   0.015,
+   0.015,
+   0.009,
+   0.081,
+   0.003,
+   0.006,
+   0,
+   0.006,
+   0.003,
+   0.012,
+   0.012,
+   0.006,
+   0.009,
+   0.006,
+   0.015,
+   0,
+   0.018,
+   0.057,
+   0.012,
+   0.018,
+   0.003,
+   0,
+   0.054,
+   0.03,
+   0.03,
+   0.006,
+   0.006,
+   0.024,
+   0.012,
+   0,
+   0,
+   0.012,
+   0.045,
+   0.003,
+   0.015,
+   0.006,
+   0.003,
+   0.009,
+   0.006,
+   0.006,
+   0.003,
+   0.006,
+   0,
+   0.012,
+   0.003,
+   0.027,
+   0.003,
+   0.012,
+   0.045,
+   0,
+   0.006,
+   0.006,
+   0,
+   0.009,
+   0.039,
+   0.009,
+   0.003,
+   0.006,
+   0.027,
+   0.042,
+   0.078,
+   0.006,
+   0.003,
+   0.012,
+   0.012,
+   0,
+   0.003,
+   0.09,
+   0.018,
+   0,
+   0,
+   0.018,
+   0.009,
+   0,
+   0.117,
+   0.012,
+   0.669,
+   0.039,
+   0,
+   0.036,
+   0.015,
+   0.045,
+   0.003,
+   0,
+   0,
+   0.006,
+   0.006,
+   0.042,
+   0.003,
+   0,
+   0.012,
+   0.006,
+   0.033,
+   0.006,
+   0.006,
+   0.009,
+   0.033,
+   0.006,
+   0.006,
+   0.051,
+   0,
+   0,
+   0.009,
+   0.018,
+   0.069,
+   0.003,
+   0.015,
+   0.012,
+   0.015,
+   0.027,
+   0.006,
+   0.347,
+   0,
+   0.018,
+   0.018,
+   0.021,
+   0.006,
+   0.015,
+   0
+  ]
+ },
+ "steps": [
+  {
+   "tool": "read",
+   "args": {
+    "target": "@e2978",
+    "what": "text",
+    "label": "quotation_reference"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > h1"
+     },
+     {
+      "kind": "point",
+      "x": 490,
+      "y": 206,
+      "w": 898.5,
+      "h": 55,
+      "role": "heading",
+      "tag": "h1",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "quotation_reference"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "@e2985",
+    "what": "text",
+    "label": "product_name"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "scoped",
+      "container": "tr.o_data_row",
+      "hasText": "[E-COM11] Cabinet with Doors",
+      "selector": "td:nth-of-type(2) > div > span"
+     },
+     {
+      "kind": "text",
+      "text": "[E-COM11] Cabinet with Doors"
+     },
+     {
+      "kind": "css",
+      "selector": "table > tbody > tr:nth-of-type(1) > td:nth-of-type(2) > div > span"
+     },
+     {
+      "kind": "point",
+      "x": 150,
+      "y": 440,
+      "w": 191.1,
+      "h": 16,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "product_name"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "what": "url",
+    "label": "quotation_url"
+   },
+   "locators": {},
+   "label": "quotation_url"
+  },
+  {
+   "tool": "goto",
+   "args": {
+    "url": "http://127.0.0.1:8069/web#cids=1&menu_id={{d2}}&action={{d1}}&model=sale.order&view_type=form&id={{d3}}"
+   },
+   "locators": {}
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "scoped",
+      "container": "tr.o_data_row",
+      "hasText": "[E-COM11] Cabinet with Doors",
+      "selector": "td:nth-of-type(5)"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(1) > td:nth-of-type(5)"
+     },
+     {
+      "kind": "point",
+      "x": 783,
+      "y": 442,
+      "w": 92,
+      "h": 40.6,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "unit_price"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "scoped",
+      "container": "tr.o_data_row",
+      "hasText": "[E-COM11] Cabinet with Doors",
+      "selector": "td:nth-of-type(4)"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(1) > td:nth-of-type(4)"
+     },
+     {
+      "kind": "point",
+      "x": 691,
+      "y": 442,
+      "w": 92,
+      "h": 40.6,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "quantity"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "scoped",
+      "container": "tr.o_data_row",
+      "hasText": "[E-COM11] Cabinet with Doors",
+      "selector": "td:nth-of-type(7)"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(1) > td:nth-of-type(7)"
+     },
+     {
+      "kind": "point",
+      "x": 1179,
+      "y": 442,
+      "w": 104,
+      "h": 40.6,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "untaxed_amount"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr:nth-of-type(3) > td:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 1203,
+      "y": 667,
+      "w": 70.8,
+      "h": 21,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "total"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "value"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "combobox",
+      "name": "Type to find a customer..."
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "Type to find a customer..."
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div > div:nth-of-type(1) > div > div > input",
+      "nth": 0
+     },
+     {
+      "kind": "point",
+      "x": 383,
+      "y": 247,
+      "w": 409.8,
+      "h": 26,
+      "role": "combobox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "customer"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(1) > div:nth-of-type(2) > ol > li > a"
+     },
+     {
+      "kind": "point",
+      "x": 101,
+      "y": 62,
+      "w": 62.9,
+      "h": 16.3,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "breadcrumb"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "tbody > tr:nth-of-type(1) > td:nth-of-type(2) > div > span > span"
+     },
+     {
+      "kind": "point",
+      "x": 150,
+      "y": 440,
+      "w": 191.1,
+      "h": 16,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "order_line_row_text_1"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "scoped",
+      "container": "tr.o_data_row",
+      "hasText": "[E-COM11] Cabinet with Doors",
+      "selector": "td:nth-of-type(4)"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(1) > td:nth-of-type(4)"
+     },
+     {
+      "kind": "point",
+      "x": 691,
+      "y": 442,
+      "w": 92,
+      "h": 40.6,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "order_line_row_text_2"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "scoped",
+      "container": "tr.o_data_row",
+      "hasText": "[E-COM11] Cabinet with Doors",
+      "selector": "td:nth-of-type(5)"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(1) > td:nth-of-type(5)"
+     },
+     {
+      "kind": "point",
+      "x": 783,
+      "y": 442,
+      "w": 92,
+      "h": 40.6,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "order_line_row_text_3"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "scoped",
+      "container": "tr.o_data_row",
+      "hasText": "[E-COM11] Cabinet with Doors",
+      "selector": "td:nth-of-type(6) > div > div > span > div"
+     },
+     {
+      "kind": "css",
+      "selector": "tr:nth-of-type(1) > td:nth-of-type(6) > div > div > span > div"
+     },
+     {
+      "kind": "point",
+      "x": 858,
+      "y": 440,
+      "w": 26,
+      "h": 13,
+      "role": null,
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "order_line_row_text_4"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "scoped",
+      "container": "tr.o_data_row",
+      "hasText": "[E-COM11] Cabinet with Doors",
+      "selector": "td:nth-of-type(7)"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(1) > td:nth-of-type(7)"
+     },
+     {
+      "kind": "point",
+      "x": 1179,
+      "y": 442,
+      "w": 104,
+      "h": 40.6,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "order_line_row_text_5"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div > div > table > tbody > tr:nth-of-type(1)",
+      "nth": 1
+     },
+     {
+      "kind": "point",
+      "x": 1138,
+      "y": 619,
+      "w": 202.2,
+      "h": 23,
+      "role": null,
+      "tag": "tr",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "totals_block_1"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div > div > table > tbody > tr:nth-of-type(2)",
+      "nth": 1
+     },
+     {
+      "kind": "point",
+      "x": 1138,
+      "y": 642,
+      "w": 202.2,
+      "h": 23,
+      "role": null,
+      "tag": "tr",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "totals_block_2"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div > div > table > tbody > tr:nth-of-type(3)",
+      "nth": 1
+     },
+     {
+      "kind": "point",
+      "x": 1138,
+      "y": 668,
+      "w": 202.2,
+      "h": 29.3,
+      "role": null,
+      "tag": "tr",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "totals_block_3"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr:nth-of-type(1) > td:nth-of-type(1) > label"
+     },
+     {
+      "kind": "point",
+      "x": 1102,
+      "y": 619,
+      "w": 127.4,
+      "h": 21,
+      "role": null,
+      "tag": "label",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "oe_subtotal_footer_tr_1"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "scoped",
+      "container": "tr.o_data_row",
+      "hasText": "[E-COM11] Cabinet with Doors",
+      "selector": "td:nth-of-type(7)"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(1) > td:nth-of-type(7)"
+     },
+     {
+      "kind": "point",
+      "x": 1179,
+      "y": 442,
+      "w": 104,
+      "h": 40.6,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "oe_subtotal_footer_tr_2_2"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr:nth-of-type(2) > td:nth-of-type(1) > label"
+     },
+     {
+      "kind": "point",
+      "x": 1124,
+      "y": 642,
+      "w": 82,
+      "h": 21,
+      "role": null,
+      "tag": "label",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "oe_subtotal_footer_tr_2_1"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr:nth-of-type(2) > td:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 1203,
+      "y": 642,
+      "w": 70.8,
+      "h": 21,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "oe_subtotal_footer_tr_2_2_2"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr:nth-of-type(3) > td:nth-of-type(1) > label"
+     },
+     {
+      "kind": "point",
+      "x": 1138,
+      "y": 668,
+      "w": 53.5,
+      "h": 21,
+      "role": null,
+      "tag": "label",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "oe_subtotal_footer_tr_3_1"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr:nth-of-type(3) > td:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 1203,
+      "y": 667,
+      "w": 70.8,
+      "h": 21,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "oe_subtotal_footer_tr_3_2"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div > div > table > tbody > tr:nth-of-type(2)",
+      "nth": 1
+     },
+     {
+      "kind": "point",
+      "x": 1138,
+      "y": 642,
+      "w": 202.2,
+      "h": 23,
+      "role": null,
+      "tag": "tr",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "taxes"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "Created a new Quotation in the Odoo 17 Sales app for the autocomplete-selected customer '{{v2}}' (option actually picked from the dropdown, list closed afterwards) with exactly one order line: product '[E-COM11] Cabinet with Doors' selected from the product autocomplete dropdown, quantity 3, unit price £140.00 filled by the app; totals show Untaxed Amount £420.00 (TAX 20% £84.00, Total £504.00). Saved successfully — the quotation was assigned reference S00021 (id=21), breadcrumb shows \"Quotations / S00021\", and it was re-verified by reloading the record URL (page title \"Odoo - S00021\"), where the same single order line (3.00 × 140.00 = £420.00) and Untaxed Amount £420.00 are shown. Note: an initial product choice of the configurable 'Customizable Desk' opened a \"Configure your product\" dialog which I cancelled (that cleared the draft line); I then re-added the plain, non-configurable Cabinet with Doors product, so the saved page contains exactly one order line.",
+  "values": {
+   "quotation_reference": "S00021",
+   "product_name": "[E-COM11] Cabinet with Doors",
+   "unit_price": "140.00",
+   "quantity": "3.00",
+   "untaxed_amount": "£ 420.00",
+   "taxes": "TAX 20% £ 84.00",
+   "total": "£ 504.00",
+   "customer": "{{v2}}",
+   "quotation_id": "{{d3}}",
+   "quotation_url": "http://127.0.0.1:8069/web#cids=1&menu_id={{d2}}&action={{d1}}&model=sale.order&view_type=form&id={{d3}}",
+   "quotation_reference_reloaded": "S00021",
+   "breadcrumb": "Quotations",
+   "order_lines": "[E-COM11] Cabinet with Doors\\t\\n[E-COM11] Cabinet with Doors\\n\\t3.00\\t140.00\\t\\n20%\\n\\t£ 420.00",
+   "product_field_value": "Customizable Desk",
+   "line_tax_excl": "£ 420.00",
+   "quotation_url_2": "http://127.0.0.1:8069/web#cids=1&menu_id={{d2}}&action={{d1}}&model=sale.order&view_type=form",
+   "system_notification": "Mitchell Admin\n- 1 minute ago\nCreating a new record...",
+   "ref": "{{v1}}",
+   "order_line_row_text_1": "[E-COM11] Cabinet with Doors",
+   "order_line_row_text_2": "3.00",
+   "order_line_row_text_3": "140.00",
+   "order_line_row_text_4": "20%",
+   "order_line_row_text_5": "£ 420.00",
+   "totals_block_1": "Untaxed Amount £ 420.00",
+   "totals_block_2": "TAX 20% £ 84.00",
+   "totals_block_3": "Total £ 504.00",
+   "oe_subtotal_footer_tr_1": "Untaxed Amount",
+   "oe_subtotal_footer_tr_2_2": "£ 420.00",
+   "oe_subtotal_footer_tr_2_1": "TAX 20%",
+   "oe_subtotal_footer_tr_2_2_2": "£ 84.00",
+   "oe_subtotal_footer_tr_3_1": "Total",
+   "oe_subtotal_footer_tr_3_2": "£ 504.00"
+  }
+ },
+ "contract": 4,
+ "stats": {
+  "uses": 2,
+  "successes": 2,
+  "partial": 0,
+  "created": "2026-09-25T16:46:29.985Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 4,
+  "lastUsed": "2026-09-25T16:52:33.619Z"
+ },
+ "status": "validated",
+ "seq": {
+  "chain": "s_081f89",
+  "index": 3,
+  "of": 4
+ },
+ "provenance": {
+  "session": "rerecord-muh6vmvj-0",
+  "instruction": "In this Odoo 17 backend, create a new Quotation in the Sales app for the customer 'fwod88-cv4-r1n0 Bench Customer' (the customer field is an autocomplete dropdown — you must actually select the matching option from the dropdown, not just type the name). Add exactly ONE order line: pick any product from the product catalogue (again the product field is an autocomplete dropdown — select an actual option from the dropdown), with quantity 3. Save the quotation. Then report: (a) the product name you chose, (b) the unit price the app filled in on that line, (c) the untaxed amount the app computed (Untaxed Amount in the totals section), and (d) the quotation's name/reference shown in the breadcrumb or title bar. Do not wait for network idle; wait for concrete page state.\n\nA later step of this flow uses these values, so before you report, read each one from the page with `read` (label=<name>) and report it under exactly this name: quotation_reference.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-25T16:46:29.985Z"
+ },
+ "revision": 3
+}

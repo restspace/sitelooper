@@ -1,0 +1,155 @@
+{
+  "tag": "fwod88-cv4",
+  "from": "fwod88",
+  "target": "odoo",
+  "maxRounds": 4,
+  "rerecordRuns": 2,
+  "rounds": [
+    {
+      "k": 1,
+      "compile": {
+        "outcome": "blocked",
+        "refused": true,
+        "codes": [
+          "unsourced-ref@04-open",
+          "unsourced-ref@05-open",
+          "unsourced-ref@06-open",
+          "unsourced-ref@07-open",
+          "unsourced-ref@08-open",
+          "unsourced-ref@09-report"
+        ],
+        "missingOutputs": {
+          "03-create": [
+            "quotation_reference"
+          ]
+        },
+        "blockers": [],
+        "steps": [
+          "03-create",
+          "08-open"
+        ],
+        "flowFile": "/home/user/sitelooper/bench/results/fwod88-cv4-c1-compile/fwod88-cv4.flow.ts",
+        "missing": {}
+      },
+      "rerecords": [
+        {
+          "step": "03-create",
+          "why": "compile refusal; also named: 08-open",
+          "ok": true,
+          "pinned": "s_89da7d",
+          "runs": [
+            {
+              "status": "success",
+              "tier": null,
+              "turns": 46,
+              "repinned": "s_89da7d"
+            },
+            {
+              "status": "success",
+              "tier": "A",
+              "turns": 0,
+              "repinned": null
+            }
+          ],
+          "attempt": 0,
+          "diagnostics": [],
+          "exit": 0,
+          "dry": false
+        }
+      ],
+      "artifact": null,
+      "repair": null
+    },
+    {
+      "k": 2,
+      "compile": {
+        "outcome": "compiled",
+        "refused": false,
+        "codes": [],
+        "missingOutputs": {},
+        "blockers": [],
+        "steps": [
+          "08-open"
+        ],
+        "flowFile": "/home/user/sitelooper/bench/results/fwod88-cv4-c2-compile/fwod88-cv4.flow.ts",
+        "missing": {}
+      },
+      "rerecords": [],
+      "artifact": {
+        "tag": "fwod88-cv4-c2",
+        "exitCode": 0,
+        "stats": {
+          "total": 1,
+          "passed": 1,
+          "failed": 0,
+          "skipped": 0
+        },
+        "driftCount": 2,
+        "verified": "5/6",
+        "failLines": [
+          "  obj 3: FAIL — 2 lines, 1 distinct products"
+        ],
+        "errors": [],
+        "anchors": [
+          "02-create",
+          "05-open"
+        ],
+        "missing": {},
+        "missingOutputs": {},
+        "passed": false,
+        "dry": false
+      },
+      "repair": {
+        "exit": 4,
+        "outcome": "failed",
+        "refused": null,
+        "converged": true,
+        "specCheck": {
+          "ran": true,
+          "passed": false
+        },
+        "runs": [
+          {
+            "label": "run 1",
+            "passed": 9,
+            "total": 9,
+            "status": "success",
+            "tickets": 1
+          },
+          {
+            "label": "converge 1/1",
+            "passed": 9,
+            "total": 9,
+            "status": "success",
+            "tickets": 1
+          }
+        ],
+        "needsRerecord": [],
+        "changes": [
+          "01-signin: no change",
+          "02-create: candidate promoted: page.locator('li.o_menu_item', { hasText: 'Search Name for: {{v1}}' }).locator('a') now primary (was #1) — s_622ed9 step 2 target",
+          "02-create: candidate promoted: page.getByText('{{v2}}', { exact: true }) now primary (was #1) — s_e259b1 step 6 target",
+          "03-create: no change",
+          "04-open: no change",
+          "05-open: candidate promoted: page.locator('div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > h1 > div > span') now primary (was #1) — s_3735c5 step 1 target",
+          "06-open: no change",
+          "07-open: no change",
+          "08-open: no change",
+          "09-report: no change",
+          "candidate retired: page.getByText('{{v1}}', { exact: true }) — missed 2 run(s), never hit; now last — s_e259b1 step 6 target",
+          "candidate reordered: page.getByText('{{v2}}', { exact: true }) now primary (was #1) on 2 hit(s) — s_e259b1 step 6 target",
+          "candidate retired: page.getByText('{{v1}}', { exact: true }) — missed 2 run(s), never hit; now last — s_3735c5 step 1 target"
+        ],
+        "repaired": "/home/user/sitelooper/bench/results/fwod88-cv4-c2-compile/fwod88-cv4.flow.ts",
+        "dry": false
+      }
+    }
+  ],
+  "verdict": {
+    "status": "stuck-parity",
+    "why": "round 2: the daemon replayed every step clean in repair's 2 run(s) but the compiled spec fails at 02-create, 05-open — a runner parity gap, not a recording",
+    "errors": []
+  },
+  "flowRuns": 5,
+  "modelTurns": 46
+}

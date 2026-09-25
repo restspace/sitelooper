@@ -1,0 +1,95 @@
+
+Running 1 test using 1 worker
+
+[1/1] bench/results/fwod88-cv4-c2-compile/fwod88-cv4.spec.ts:9:1 › fwod88-cv4
+bench/results/fwod88-cv4-c2-compile/fwod88-cv4.spec.ts:9:1 › fwod88-cv4
+[sitelooper step] 01-signin
+
+[sitelooper warn] 02-create s_e259b1/1: read 'saved_contact_city' returned a value the skill itself set/selected ('Benchville') — confirms the control, not persistence; dropped from the report's confident values
+
+[sitelooper warn] 02-create s_e259b1/2: read 'saved_contact_name' returned a value the skill itself set/selected ('fwod88-cv4-p2n2 Bench Customer') — confirms the control, not persistence; dropped from the report's confident values
+
+[sitelooper step] 02-create
+
+[sitelooper warn] 03-create s_8605a5/8: read 'product_field_value' returned a value the skill itself set/selected ('[E-COM11] Cabinet with Doors') — confirms the control, not persistence; dropped from the report's confident values
+
+[sitelooper warn] 03-create s_8605a5/9: the field already held the value this type enters (restored after the recording saw it emptied), so it was cleared first rather than typed onto
+
+[sitelooper warn] 03-create s_8605a5/12: read 'product_name' returned a value the skill itself set/selected ('[E-COM11] Cabinet with Doors') — confirms the control, not persistence; dropped from the report's confident values
+
+[sitelooper warn] 03-create s_8605a5/13: read 'quantity' returned '3.00' from a control this step set, and nothing committed it since — it shows the control, however the app formats it, not what the app stored; dropped from the report's confident values
+
+[sitelooper warn] 03-create s_29baa0/9: read 'customer' returned a value the skill itself set/selected ('fwod88-cv4-p2n2 Bench Customer') — confirms the control, not persistence; dropped from the report's confident values
+
+[sitelooper step] 03-create
+
+[sitelooper warn] 04-open s_14a5cf/13: read 'stray_product_name' returned a value the skill itself set/selected ('Customizable Desk') — confirms the control, not persistence; dropped from the report's confident values
+
+[sitelooper warn] 04-open s_14a5cf/18: read 'line2_product' returned '[E-COM11] Cabinet with Doors' from a control this step set, and nothing committed it since — it shows the control, however the app formats it, not what the app stored; dropped from the report's confident values
+
+[sitelooper warn] 04-open s_14a5cf/19: read 'line2_quantity' returned '2.00' from a control this step set, and nothing committed it since — it shows the control, however the app formats it, not what the app stored; dropped from the report's confident values
+
+[sitelooper warn] 04-open s_14a5cf/22: read 'line2_product' returned '[E-COM11] Cabinet with Doors' from a control this step set, and nothing committed it since — it shows the control, however the app formats it, not what the app stored; dropped from the report's confident values
+
+[sitelooper warn] 04-open s_14a5cf/23: read 'line2_quantity' returned '2.00' from a control this step set, and nothing committed it since — it shows the control, however the app formats it, not what the app stored; dropped from the report's confident values
+
+[sitelooper warn] 04-open: report value sale_order_id is given, not observed: it is built only from the step's own parameters, and neither this run's page nor any of its reads shows it — withheld
+
+[sitelooper step] 04-open
+
+[sitelooper skip] 05-open s_3735c5/16 target: read errored (the element no longer shows the value where the recording saw it ("[{{=}}] Acoustic Bloc Screens")) — value left empty
+
+[sitelooper step] 05-open
+
+[sitelooper skip] 06-open s_435d85/24 target: read errored (the element no longer shows the value where the recording saw it ("{{=}},106.00")) — value left empty
+
+[sitelooper skip] 06-open s_435d85/25 target: read errored (the element no longer shows the value where the recording saw it ("£ 2,{{=}}")) — value left empty
+
+[sitelooper step] 06-open
+
+[sitelooper step] 07-open
+
+  1) bench/results/fwod88-cv4-c2-compile/fwod88-cv4.spec.ts:9:1 › fwod88-cv4 › 08-open: Open the sales order {{03-create.quotation_reference}} (sale.order id {{03-create.url.q.id}}, URL {{03-create.url}}) in this Odoo 17 Sales app and CANCEL it: click the '{{07-open.statusbar_button_cancel}}' button (in the status bar buttons area, next to {{07-open.statusbar_button_create_invoice}} / {{07-open.statusbar_button_send_by_email}} / {{07-open.statusbar_button_preview}}). If a confirmation dialog appears asking to confirm the cancellation, accept it. Then report: (a) the order reference shown in the breadcrumb/title, and (b) the status the app now shows in the status bar (e.g. 'Cancelled'), and (c) whether the {{07-open.statusbar_button_cancel}} button is gone. Do not wait for network idle; wait for concrete page state. 
+
+    Test timeout of 300000ms exceeded.
+
+    Error: click outcome UNKNOWN: the page was torn down during the action (locator.click: Target page, context or browser has been closed). It may already have taken effect. Do not repeat it — observe the app's state and continue from what you find. [outcome: unknown]
+
+       at fwod88-cv4.flow.ts:10388
+
+      10386 |  */
+      10387 | function actionFailure(outcome: 'not-dispatched' | 'unknown', reason: ActionFailureReason, error: string | Error): ActionFailure {
+    > 10388 |   const failure = (typeof error === 'string' ? new Error(error) : error) as ActionFailure;
+            |                                                ^
+      10389 |   failure.actionOutcome = outcome;
+      10390 |   failure.actionReason = reason;
+      10391 |   return failure;
+        at actionFailure (/home/user/sitelooper/bench/results/fwod88-cv4-c2-compile/fwod88-cv4.flow.ts:10388:48)
+        at robustClick (/home/user/sitelooper/bench/results/fwod88-cv4-c2-compile/fwod88-cv4.flow.ts:10569:15)
+        at click (/home/user/sitelooper/bench/results/fwod88-cv4-c2-compile/fwod88-cv4.flow.ts:17859:3)
+        at Object.act (/home/user/sitelooper/bench/results/fwod88-cv4-c2-compile/fwod88-cv4.flow.ts:25935:9)
+        at runStepLifecycle (/home/user/sitelooper/bench/results/fwod88-cv4-c2-compile/fwod88-cv4.flow.ts:13335:18)
+        at Object.08-open (/home/user/sitelooper/bench/results/fwod88-cv4-c2-compile/fwod88-cv4.flow.ts:25915:5)
+        at /home/user/sitelooper/bench/results/fwod88-cv4-c2-compile/fwod88-cv4.flow.ts:27162:7
+        at runFlow (/home/user/sitelooper/bench/results/fwod88-cv4-c2-compile/fwod88-cv4.flow.ts:27161:5)
+        at /home/user/sitelooper/bench/results/fwod88-cv4-c2-compile/fwod88-cv4.spec.ts:14:21
+
+    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: bench/results/fwod88-cv4-c2-compile/.sitelooper-check-YNPkOB/test-results/fwod88-cv4-fwod88-cv4/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    bench/results/fwod88-cv4-c2-compile/.sitelooper-check-YNPkOB/test-results/fwod88-cv4-fwod88-cv4/trace.zip
+    Usage:
+
+        npx playwright show-trace bench/results/fwod88-cv4-c2-compile/.sitelooper-check-YNPkOB/test-results/fwod88-cv4-fwod88-cv4/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+  Slow test file: bench/results/fwod88-cv4-c2-compile/fwod88-cv4.spec.ts (5.1m)
+  Consider running tests from slow files in parallel. See: https://playwright.dev/docs/test-parallel
+  1 failed
+    bench/results/fwod88-cv4-c2-compile/fwod88-cv4.spec.ts:9:1 › fwod88-cv4 ────────────────────────
