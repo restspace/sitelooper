@@ -1,0 +1,17 @@
+[spec-replay] resetting snipeit
+[reset] snipeit: deleted 1 leftover bench asset(s)
+[spec-replay] compiling: /opt/node22/bin/node /home/user/sitelooper/bin/sitelooper.js compile bench/results/flows/fwsi16.json --out /home/user/sitelooper/bench/results/fwsi16-spec-spec-tmp --overwrite-spec
+error 02-create: slot v2 is bound to {{01-signin.model}}, and nothing has ever published model
+  why: nothing in 01-signin's procedure reads model from the page, and no report value derives it from a parameter, so no run can publish it. The recording's own value is not a substitute: passing it would make every replay work run 1's record. 02-create types or locates by v2, so the artifact would stop here on every run, part-way through the flow and with everything earlier already done.
+  fix: re-record 01-signin so it reads model from an element (`sitelooper rerecord <flow file> 01-signin`), or take {{01-signin.model}} out of 02-create's v2
+error 02-create: slot v3 is bound to {{01-signin.status}}, and nothing has ever published status
+  why: nothing in 01-signin's procedure reads status from the page, and no report value derives it from a parameter, so no run can publish it. The recording's own value is not a substitute: passing it would make every replay work run 1's record. 02-create types or locates by v3, so the artifact would stop here on every run, part-way through the flow and with everything earlier already done.
+  fix: re-record 01-signin so it reads status from an element (`sitelooper rerecord <flow file> 01-signin`), or take {{01-signin.status}} out of 02-create's v3
+error 04-open: slot v6 is bound to {{01-signin.status}}, and nothing has ever published status
+  why: nothing in 01-signin's procedure reads status from the page, and no report value derives it from a parameter, so no run can publish it. The recording's own value is not a substitute: passing it would make every replay work run 1's record. 04-open types or locates by v6, so the artifact would stop here on every run, part-way through the flow and with everything earlier already done.
+  fix: re-record 01-signin so it reads status from an element (`sitelooper rerecord <flow file> 01-signin`), or take {{01-signin.status}} out of 04-open's v6
+
+nothing written: the error(s) above are about the RECORDING, not the app — a compiled spec would fail at a locator and read as drift.
+re-record the step(s) with the fix command above.
+sitelooper: refused: unsourced-ref — see the diagnostics above
+[spec-replay] fwsi16-spec: not compilable — result written (exit 2)
