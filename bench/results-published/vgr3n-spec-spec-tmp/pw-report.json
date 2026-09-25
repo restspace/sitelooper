@@ -1,0 +1,192 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/vgr3n-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/vgr3n-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/vgr3n-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/bench/results/vgr3n-spec-spec-tmp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/vgr3n-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "vgr3n.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/vgr3n-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "vgr3n.spec.ts",
+      "file": "vgr3n.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "vgr3n",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 153313,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper warn] 01-open s_583ba3/3: read 'username' returned a value the skill itself set/selected ('admin') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 01-open\n"
+                    },
+                    {
+                      "text": "[sitelooper recipe] filled via recipe monaco/set-value (r_f2510e); value verified on the component\n"
+                    },
+                    {
+                      "text": "[sitelooper skip] 02-create s_89dd1a/14: recorded popup already showing — click skipped\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 02-create s_89dd1a/21: read 'panel_1_title' returned a value the skill itself set/selected ('vgr3n-spec Availability') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 02-create: report value panel_2_type is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-create\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-set\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-report\n"
+                    },
+                    {
+                      "text": "[sitelooper drift] 05-edit s_f09e37/4 target: primary locator('[data-testid=\"data-testid ReactMonacoEditor editorLazy\"] div') missed; used #3 locator('div[data-uri=\"inmemory://model/2\"]') (#1 ambiguous)\n"
+                    },
+                    {
+                      "text": "[sitelooper recipe] filled via recipe monaco/set-value (r_f2510e); value verified on the component\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] step 05-edit s_f09e37/12: none of the 1 expected page change(s) appeared in the step diff (found on the page instead)\n"
+                    },
+                    {
+                      "text": "[sitelooper recipe] filled via recipe monaco/set-value (r_f2510e); value verified on the component\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 05-edit\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-open: Open http://127.0.0.1:3000/ and sign in with username admin and password {{env:APP_PASSWORD}} (type the password text exactly as {{env:APP_PASSWORD}}). Then find the provisioned dashboard named 'Service health', open it, and report the exact titles of its panels as shown.",
+                      "duration": 42652
+                    },
+                    {
+                      "title": "02-create: Create a NEW dashboard (not from a file/import) in Grafana titled exactly '{{runid}} {{01-open.breadcrumb_3}} Dashboard'. Add a Stat panel titled exactly '{{runid}} Availability' whose query uses the 'TestData' (grafana-testdata-datasource) data source. Also add a Text panel titled exactly '{{runid}} Notes' whose markdown content includes the text '{{runid}}' somewhere. Save the dashboard (fill the title, and give it the tag 'bench'). Confirm the save succeeded (not just Apply/Back) and report what happened.",
+                      "duration": 58444
+                    },
+                    {
+                      "title": "03-set: On the dashboard '{{runid}} {{01-open.breadcrumb_3}} Dashboard' (uid {{02-create.url.p1}}), set the dashboard's time range to the last 6 hours (time picker -> Last 6 hours) and set the auto-refresh interval to 1 minute (time picker auto refresh -> 1m). Then open the Save dialog and TICK the 'Update default time range' checkbox before saving, so the 6h range is persisted into the saved dashboard. Save and confirm the save succeeded. Then report the dashboard's current browser page URL (copy it from the browser address bar / window.location, not from memory).",
+                      "duration": 10017
+                    },
+                    {
+                      "title": "04-report: Verification only: on dashboard '{{runid}} {{01-open.breadcrumb_3}} Dashboard' (uid {{02-create.url.p1}}), hard-reload/navigate fresh to http://127.0.0.1:3000/d/{{02-create.url.p1}}/{{runid}}-bench-dashboard with NO time/refresh URL params, and report: (1) what the time picker shows after load (i.e. the dashboard's saved default range), (2) what the auto-refresh interval shows, (3) whether the tag 'bench' is listed, and (4) the titles of the panels. Do not change anything.",
+                      "duration": 7737
+                    },
+                    {
+                      "title": "05-edit: On dashboard '{{runid}} {{01-open.breadcrumb_3}} Dashboard' (uid {{02-create.url.p1}}), persist the auto-refresh interval of 1m into the SAVED dashboard: go to Dashboard settings -> JSON Model, edit the JSON to set the top-level \\\"refresh\\\" field to the string \\\"1m\\\" (add it if absent; keep everything else unchanged), then click Save changes and confirm the save succeeded. Then hard-navigate to the bare URL http://127.0.0.1:3000/d/{{02-create.url.p1}}/{{runid}}-bench-dashboard with no URL params and report what the auto-refresh button/picker shows after fresh load, and what the time picker shows.",
+                      "duration": 33269
+                    }
+                  ],
+                  "startTime": "2026-09-25T06:08:47.713Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": "W3NpdGVsb29wZXIgZHJpZnRdIDA1LWVkaXQgc19mMDllMzcvNCB0YXJnZXQ6IHByaW1hcnkgbG9jYXRvcignW2RhdGEtdGVzdGlkPSJkYXRhLXRlc3RpZCBSZWFjdE1vbmFjb0VkaXRvciBlZGl0b3JMYXp5Il0gZGl2JykgbWlzc2VkOyB1c2VkICMzIGxvY2F0b3IoJ2RpdltkYXRhLXVyaT0iaW5tZW1vcnk6Ly9tb2RlbC8yIl0nKSAoIzEgYW1iaWd1b3VzKQ=="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "7f85ba97de5ddaae4463-6f1af0f6898dae3b975f",
+          "file": "vgr3n.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-25T06:08:45.222Z",
+    "duration": 155980.266,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}
