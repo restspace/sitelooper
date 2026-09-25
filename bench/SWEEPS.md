@@ -547,4 +547,9 @@ Open engineering items from the experiment: (1) counters inside a menu/button na
 as volatile (odoo); (2) a re-record whose run 2 needs model gestures beyond its replay is refused every time — the
 phase C "readings" (link-or-goto) are the designed answer for fwop15's shape; (3) the loop should stop after two
 refused re-records of the same step.
+| fwgt15-cv, fwsi14-cv (re-fired 15:27) | gt, si | INVALID | 12 / 10 | 4 / 0 | every re-record's recording run came back `agent [BLOCKED]` with 0 turns: the OpenRouter key's credit was exhausted at about 15:40 UTC (255 of 255 used); gitea's one earlier re-record (03-open, 4 turns) still ran. Both need a re-run after a top-up |
+
+Credit note: the OpenRouter balance ran out at ~15:40 UTC on 2026-09-25 (255 USD used in total). Every model-driven run
+after that point is invalid, verifies (no model) are not. fwop15-cv2 and fwod88-cv4 (prompts on fix/repin-whole) wait
+for the top-up.
 
