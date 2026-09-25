@@ -133,6 +133,30 @@ export interface ObserveDocumentOptions {
   maxExtraLines: number;
   /** This document is the main one, whose light-DOM walk is dialect 1's. False inside a frame. */
   legacy: boolean;
+  /** Roles whose elements are named in full, past NAME_CAP (see FullNameLook). Absent: every name is capped, as it always was. */
+  fullNameRoles?: string[];
+}
+
+/**
+ * How long a name the observation gives an element: an attribute name is cut
+ * to this, and an element named by its own text is named only while that text
+ * is this short — longer, it reads as a container's text, which would make
+ * the line churn on unrelated changes. Written into the page function as the
+ * literal 80, since that function is serialised into the page.
+ */
+export const NAME_CAP = 80;
+
+/**
+ * A second look, for a recorded line not shown on the first (round 63,
+ * openproject fwop17 04-create): the elements of `fullNameRoles` are named in
+ * full. A row named by its text was recorded at 79 characters with n1's
+ * subject; the compiled run's longer runid took it to 81, past NAME_CAP, the
+ * row was observed with no name, and its saved record's line "did not show".
+ * Only asked after the capped look missed, and only of the roles the missing
+ * lines name, so every stored line and every diff stays as it was.
+ */
+export interface FullNameLook {
+  fullNameRoles?: string[];
 }
 
 /**
@@ -222,7 +246,7 @@ export function observeDocumentInPage(opts: ObserveDocumentOptions): DocumentObs
     return clean(parts.join(' '));
   };
 
-  const namesOf = (el: Element): { name: string; legacyName: string } => {
+  const namesOf = (el: Element, cap: number): { name: string; legacyName: string } => {
     const own = ownName(el, false);
     const labelledBy = el.hasAttribute('aria-labelledby');
     const own2 = labelledBy ? ownName(el, true) : own;
@@ -232,13 +256,13 @@ export function observeDocumentInPage(opts: ObserveDocumentOptions): DocumentObs
     // Only a short subtree reads as this element's own name; anything longer is
     // a container's text and would make the line churn on unrelated changes.
     const inner = () => (text ??= clean((el as HTMLElement).innerText));
-    const fallback = () => (enclosing() ? enclosing().slice(0, 80) : inner().length <= 80 ? inner() : '');
-    const legacyName = own ? own.slice(0, 80) : fallback();
+    const fallback = () => (enclosing() ? enclosing().slice(0, cap) : inner().length <= cap ? inner() : '');
+    const legacyName = own ? own.slice(0, cap) : fallback();
     let name: string;
-    if (own2) name = own2.slice(0, 80);
+    if (own2) name = own2.slice(0, cap);
     else {
       const labels = labelsText(el);
-      name = labels ? labels.slice(0, 80) : fallback();
+      name = labels ? labels.slice(0, cap) : fallback();
     }
     return { name, legacyName };
   };
@@ -247,7 +271,7 @@ export function observeDocumentInPage(opts: ObserveDocumentOptions): DocumentObs
     const role = roleOf(el);
     if (!role) return null;
     if (el.getClientRects().length === 0) return null;
-    const { name, legacyName } = namesOf(el);
+    const { name, legacyName } = namesOf(el, opts.fullNameRoles?.includes(role) ? Number.MAX_SAFE_INTEGER : 80);
     const node: ObservedNode = { role, name, legacyName, context: { frame: [], shadow }, legacy };
     const input = el as HTMLInputElement;
     if (input.type === 'checkbox' || input.type === 'radio') {
@@ -415,9 +439,13 @@ function framePath(frame: PageFrame): number[] {
  * frame with no box is hidden and skipped; a visible frame that cannot be
  * evaluated, or one past MAX_FRAMES, is recorded as a gap.
  */
+/** The page function's share of a FullNameLook: nothing at all when no role is named, so a plain look is sent exactly as before. */
+const fullNames = (look: FullNameLook): { fullNameRoles?: string[] } => (look.fullNameRoles?.length ? { fullNameRoles: look.fullNameRoles } : {});
+
 async function observeFrames(
   page: Page,
   budgetMs: number,
+  look: FullNameLook = {},
 ): Promise<{ nodes: ObservedNode[]; alerts: ObservedAlert[]; frames: ObservationCoverage['frames']; documents: DocumentObservation['coverage'][] }> {
   const frames: ObservationCoverage['frames'] = { observed: 0, hidden: 0, overCap: 0, inaccessible: [] };
   const out = { nodes: [] as ObservedNode[], alerts: [] as ObservedAlert[], frames, documents: [] as DocumentObservation['coverage'][] };
@@ -476,7 +504,7 @@ async function observeFrames(
   const looks = await Promise.all(
     visible.map(async (frame) => ({
       frame,
-      look: await within(frame.evaluate(observeDocumentInPage, { ...SNAPSHOT_LIMITS, ...SHADOW_LIMITS, legacy: false }), remaining()),
+      look: await within(frame.evaluate(observeDocumentInPage, { ...SNAPSHOT_LIMITS, ...SHADOW_LIMITS, legacy: false, ...fullNames(look) }), remaining()),
     })),
   );
   for (const { frame, look } of looks) {
@@ -502,14 +530,14 @@ async function observeFrames(
  * cannot be read does not null the observation: it is recorded in the
  * coverage, which is what stops the observation proving an absence.
  */
-export async function observePage(page: Page): Promise<PageObservation | null> {
+export async function observePage(page: Page, look: FullNameLook = {}): Promise<PageObservation | null> {
   const started = Date.now();
-  const main = await within(page.evaluate(observeDocumentInPage, { ...SNAPSHOT_LIMITS, ...SHADOW_LIMITS, legacy: true }), CAPTURE_TIMEOUT_MS);
+  const main = await within(page.evaluate(observeDocumentInPage, { ...SNAPSHOT_LIMITS, ...SHADOW_LIMITS, legacy: true, ...fullNames(look) }), CAPTURE_TIMEOUT_MS);
   // A page that answered with something other than a capture (a frame torn
   // down mid-evaluate) is as unreadable as one that did not answer.
   if ('error' in main || !isDocumentObservation(main.value)) return null;
   const doc = main.value;
-  const framed = await observeFrames(page, Math.max(FRAME_MIN_BUDGET_MS, CAPTURE_TIMEOUT_MS - (Date.now() - started)));
+  const framed = await observeFrames(page, Math.max(FRAME_MIN_BUDGET_MS, CAPTURE_TIMEOUT_MS - (Date.now() - started)), look);
   const coverage: ObservationCoverage = { ...doc.coverage, collections: { ...doc.coverage.collections, evidence: [...doc.coverage.collections.evidence] }, frames: framed.frames };
   for (const c of framed.documents) {
     coverage.nodesWalked += c.nodesWalked;
@@ -618,8 +646,8 @@ export function describeCoverage(c: ObservationCoverage): string {
  * the alert observation (observe.ts liveAlerts) are views of, so the walk,
  * the caps and the timeout exist once.
  */
-export async function capturePage(page: Page, d: LineDialect = 1): Promise<{ lines: string[]; alerts: string[]; coverage: ObservationCoverage } | null> {
-  const o = await observePage(page);
+export async function capturePage(page: Page, d: LineDialect = 1, look: FullNameLook = {}): Promise<{ lines: string[]; alerts: string[]; coverage: ObservationCoverage } | null> {
+  const o = await observePage(page, look);
   return o ? { lines: renderLines(o, d), alerts: renderAlerts(o, d), coverage: o.coverage } : null;
 }
 
@@ -633,8 +661,8 @@ export async function capturePageLines(page: Page, d: LineDialect = 1): Promise<
 }
 
 /** The lines, and whether the look covered enough of the page for a missing line to mean absent. */
-export async function captureLines(page: Page, d: LineDialect): Promise<{ lines: string[]; complete: boolean; coverage: ObservationCoverage } | null> {
-  const captured = await capturePage(page, d);
+export async function captureLines(page: Page, d: LineDialect, look: FullNameLook = {}): Promise<{ lines: string[]; complete: boolean; coverage: ObservationCoverage } | null> {
+  const captured = await capturePage(page, d, look);
   return captured ? { lines: captured.lines, complete: coverageComplete(captured.coverage), coverage: captured.coverage } : null;
 }
 

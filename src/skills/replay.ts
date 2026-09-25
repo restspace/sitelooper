@@ -1985,7 +1985,7 @@ const expectedChanges: StepGate = async ({ outcome, step, params, tag, args, pag
     step.expect.addedContains,
     params,
     { tag, tool: step.tool, value: typeof args.value === 'string' ? args.value : undefined, positionalResolution },
-    { added: outcome.captureFailed ? null : added, live: () => captureLines(page, d) },
+    { added: outcome.captureFailed ? null : added, live: (look) => captureLines(page, d, look) },
   );
   return verdict.stop || verdict.unobserved || verdict.absentDialog || verdict.confirmed || verdict.inDiff || verdict.warnings.length ? verdict : null;
 };
