@@ -1,0 +1,190 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/vgr1n-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/vgr1n-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/vgr1n-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/bench/results/vgr1n-spec-spec-tmp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/vgr1n-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "vgr1n.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/vgr1n-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "vgr1n.spec.ts",
+      "file": "vgr1n.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "vgr1n",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 140352,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper warn] 01-open s_79a99f/3: read 'signed_in_as' returned a value the skill itself set/selected ('admin') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 01-open s_79a99f/4: read 'signed_in_as' returned a value the skill itself set/selected ('admin') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 01-open s_b38276/3: the field already held the value this type enters (restored after the recording saw it emptied), so it was cleared first rather than typed onto\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 01-open s_b38276/3: expected alert containing \"No results found\"\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] step 01-open s_b38276/4: none of the 5 expected page change(s) appeared in the step diff (found on the page instead)\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 01-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-create\n"
+                    },
+                    {
+                      "text": "[sitelooper recipe] filled via recipe monaco/set-value (r_f2510e); value verified on the component\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 05-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 06-report\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-open: Open http://127.0.0.1:3000/, sign in with username admin and password typed exactly as the text {{env:APP_PASSWORD}} (it gets filled in when typed). Find the provisioned dashboard named 'Service health' (via search/dashboards) and report the titles of all its panels exactly as shown.",
+                      "duration": 65044
+                    },
+                    {
+                      "title": "02-create: Create a NEW dashboard in Grafana: from the dashboard page, click New / New dashboard, add a new visualization panel. Change the panel type to Stat. Set the panel title to exactly '{{runid}} Availability'. Set the panel's query data source to the 'TestData' data source (in the query editor, pick TestData from the data source selector; if it asks for a scenario, leave the default). Then save the dashboard with the title exactly '{{runid}} {{01-open.dashboard_folder}} Dashboard' (Save dashboard dialog, name field, Save). Verify the save succeeded and report the panel title and dashboard title you see, plus the browser page URL after saving.",
+                      "duration": 20550
+                    },
+                    {
+                      "title": "03-open: On the dashboard '{{runid}} {{01-open.dashboard_folder}} Dashboard' (currently open in the browser), add a NEW Text panel: enter dashboard edit mode (Edit button), click 'Add panel' / 'Add visualization' or the Add menu, and choose the Text panel type. Set the new panel's title to exactly '{{runid}} Notes' and set its text content to include the runid, e.g. '{{01-open.dashboard_folder}} notes for run {{runid}}'. Then save the dashboard (Save dashboard button) and confirm the save succeeded. Report the panel title and the text content you entered, and whether the save confirmation appeared.",
+                      "duration": 17343
+                    },
+                    {
+                      "title": "04-open: On the dashboard '{{runid}} {{01-open.dashboard_folder}} Dashboard' (currently open in the browser): (1) In the top bar, set the time range to 'Last 6 hours' (open the time picker and choose Last 6 hours). (2) Enter dashboard settings (gear icon) -> General, and add the tag 'bench' to the dashboard tags. (3) Save the dashboard, and in the save dialog TICK the checkbox 'Update default time range' (so the 6-hour range is persisted into the saved dashboard), then confirm the save. Verify the save succeeded (toast) and report: the tag shown in dashboard settings, the time range shown in the top bar, and whether the 'Update default time range' checkbox was ticked when saving.",
+                      "duration": 19540
+                    },
+                    {
+                      "title": "05-open: On the dashboard '{{runid}} {{01-open.dashboard_folder}} Dashboard' (currently open in the browser): set the dashboard's auto-refresh interval to '1m'. Open the refresh interval picker in the top bar (next to the refresh icon), choose '1m' from the list. Then save the dashboard so the refresh interval persists: click Save dashboard, and in the save dialog tick the checkbox 'Update default time range' if it is present (it persists time settings including refresh interval), then confirm the save. Verify the save succeeded (toast) and report the refresh interval now shown in the top bar and whether the save toast appeared.",
+                      "duration": 5540
+                    },
+                    {
+                      "title": "06-report: Verification task on Grafana: navigate the browser to the dashboard '{{runid}} {{01-open.dashboard_folder}} Dashboard' by opening its URL directly (a hard reload / fresh navigation, so we see the persisted saved state, not the in-session state). Then report, reading from the freshly loaded page: (1) the exact browser page URL; (2) the dashboard title shown; (3) the titles of all panels shown; (4) the time range shown in the top bar time picker; (5) the refresh interval shown in the top bar refresh picker; (6) open dashboard settings (gear) -> General and report the tags listed; (7) open the '{{runid}} Availability' panel in edit mode and report which data source its query uses and its panel type. Do not change anything — this is read-only verification.",
+                      "duration": 10882
+                    }
+                  ],
+                  "startTime": "2026-09-25T03:09:19.889Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": ""
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "287216ae02a25c2dd9ca-f817de2d7b0911a5e8a0",
+          "file": "vgr1n.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-25T03:09:17.486Z",
+    "duration": 142959.131,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

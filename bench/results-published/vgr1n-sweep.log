@@ -1,0 +1,113 @@
+
+[sweep] run 1/3: vgr1n-n1 (store: /home/user/sitelooper/bench/results/vgr1n-skills)
+[harness] grafana: defaulting APP_URL
+[harness] grafana: defaulting APP_EMAIL
+[harness] grafana: defaulting APP_PASSWORD
+[reset] grafana: deleted leftover dashboard "Service Health" (400)
+[harness] grafana responded 302 at http://127.0.0.1:3000/
+stopped: vgr1n-n1
+  flow "vgr1n" saved: 6 step(s), vars runid → /home/user/sitelooper/bench/results/flows/vgr1n.json
+  warning: warning: 03-open's instruction asks to report save_confirmation, and only a recorded literal backs it: no read in its procedure publishes it, so a replay reports it only if the page it ends on shows that exact text — re-record the step so the value is read where it is shown
+  warning: note: 01-open no longer publishes panel_count, ref — no replay reads them from the page and the recording showed no line to read
+  warning: note: 02-create no longer publishes panel_type, query_data_source, scenario, page_url_after_save — no replay reads them from the page and the recording showed no line to read
+  warning: warning: 04-open's instruction asks to report update_default_time_range_checkbox, and no replay can publish it: nothing in its procedure reads it from the page, so export dropped it — re-record the step so the value is read, not only reported
+  warning: note: 04-open no longer publishes save_confirmation — no replay reads it from the page and the recording showed no line to read
+  warning: warning: 06-report's instruction asks to report settings_tags, availability_panel_query_data_source, availability_panel_type, and no replay can publish them: nothing in its procedure reads them from the page, so export dropped them — re-record the step so the value is read, not only reported
+  warning: warning: 237 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.origin: "127.0.0.1" (output) in "http://127.0.0.1:3000"
+  flow.startUrl: "127.0.0.1" (output) in "http://127.0.0.1:3000/"
+  flow.steps[0].instruction: "127.0.0.1" (output) in "Open http://127.0.0.1:3000/, sign in with username admin and password typed exactly as the text {{env:APP_PASSWORD}} (it gets filled in when typed). Find the pr"
+  flow.steps[0].instruction: "admin" (output) in "Open http://127.0.0.1:3000/, sign in with username admin and password typed exactly as the text {{env:APP_PASSWORD}} (it gets filled in when typed). Find the pr"
+  flow.steps[0].params.v1: "127.0.0.1" (output) in "http://127.0.0.1:3000/"
+arm=sitelooper model=z-ai/glm-5.3 runid=vgr1n-n1 stop=completed
+turns=7 wall=847.3s
+commands=6 cmdTime=824.9s cmdBytes=4640 timeouts=0
+orchestrator in=10835 cw=0 cr=15616 out=1960
+inner prompt=2490674 cached=2204096 completion=14361
+spend=$0.0784 maxUsd=3
+learn: A_n=0 replayed=0/6 full=0 repaired=0 compiled=6 variants=0
+-> /home/user/sitelooper/bench/results/vgr1n-n1-sitelooper-result.json
+
+vgr1n-n1: objectives passed 6/6
+  obj 1: PASS — all 3 provisioned titles reported
+  obj 2: PASS — type=stat, datasource ok=true
+  obj 3: PASS — type=text, content includes runid=true
+  obj 4: PASS — tags=["bench"], time=now-6h..now
+  obj 5: PASS — refresh="1m"
+  obj 6: PASS — uid cfza3povbz5z4e reported
+
+[sweep] run 2/3: vgr1n-n2 (replay flow vgr1n, no orchestrator)
+[reset] grafana: deleted leftover dashboard "Service Health" (400)
+[reset] grafana: deleted leftover dashboard "vgr1n-n1 Bench Dashboard" (200)
+[sweep] vgr1n-n2: 2 drift ticket(s) → vgr1n-n2-drift.json
+
+vgr1n-n2: objectives passed 6/6
+  obj 1: PASS — all 3 provisioned titles reported
+  obj 2: PASS — type=stat, datasource ok=true
+  obj 3: PASS — type=text, content includes runid=true
+  obj 4: PASS — tags=["bench"], time=now-6h..now
+  obj 5: PASS — refresh="1m"
+  obj 6: PASS — uid ffza4kobxmubkd reported
+
+[sweep] run 3/3: vgr1n-n3 (replay flow vgr1n, no orchestrator)
+[reset] grafana: deleted leftover dashboard "Service Health" (400)
+[reset] grafana: deleted leftover dashboard "vgr1n-n2 Bench Dashboard" (200)
+
+vgr1n-n3: objectives passed 6/6
+  obj 1: PASS — all 3 provisioned titles reported
+  obj 2: PASS — type=stat, datasource ok=true
+  obj 3: PASS — type=text, content includes runid=true
+  obj 4: PASS — tags=["bench"], time=now-6h..now
+  obj 5: PASS — refresh="1m"
+  obj 6: PASS — uid cfza4wss1y22od reported
+
+Learning sweep vgr1n (K=3)
+┌─────────┬───┬────────────┬──────────┬─────────────┬───────┬──────┬───────────┬──────┬──────────────┬────────┐
+│ (index) │ n │ runid      │ verified │ stop        │ turns │ cmds │ total_usd │ A_n  │ replayed     │ wall_s │
+├─────────┼───┼────────────┼──────────┼─────────────┼───────┼──────┼───────────┼──────┼──────────────┼────────┤
+│ 0       │ 1 │ 'vgr1n-n1' │ '6/6'    │ 'completed' │ 7     │ 6    │ 0.0784    │ 0    │ '0/6'        │ 847    │
+│ 1       │ 2 │ 'vgr1n-n2' │ '6/6'    │ 'partial'   │ 11    │ 6    │ 0.0026    │ 0.83 │ '5/6 (flow)' │ 242    │
+│ 2       │ 3 │ 'vgr1n-n3' │ '6/6'    │ 'success'   │ 0     │ 6    │ 0         │ 1    │ '6/6 (flow)' │ 142    │
+└─────────┴───┴────────────┴──────────┴─────────────┴───────┴──────┴───────────┴──────┴──────────────┴────────┘
+http://127.0.0.1:3000
+  s_2f5b30  validated   16 steps  3/3 (100%)
+           On the dashboard '{{v1}}' (currently open in the browser), add a NEW Text panel: enter dashboard edit mode (Ed…
+  s_35ac9e  validated    5 steps  3/3 (100%)
+           Create a NEW dashboard in Grafana: from the dashboard page, click New / New dashboard, add a new visualization…
+  s_4e9479  validated   11 steps  3/3 (100%)
+           Create a NEW dashboard in Grafana: from the dashboard page, click New / New dashboard, add a new visualization…
+  s_77686c  validated    2 steps  3/3 (100%)
+           Create a NEW dashboard in Grafana: from the dashboard page, click New / New dashboard, add a new visualization…
+  s_79a99f  validated    6 steps  3/3 (100%)
+           Open {{v1}}, sign in with username {{v2}} and password typed exactly as the text {{v3}} (it gets filled in whe…
+  s_8cb971  validated    1 steps  3/3 (100%)
+           Open {{v1}}, sign in with username {{v2}} and password typed exactly as the text {{v3}} (it gets filled in whe…
+  s_8d633b  validated    7 steps  2/3 (67%)
+           On the dashboard '{{v1}}' (currently open in the browser): set the dashboard's auto-refresh interval to '1m'. …
+  s_b38276  validated    6 steps  2/3 (67%)
+           Open {{v1}}, sign in with username {{v2}} and password typed exactly as the text {{v3}} (it gets filled in whe…
+  s_d4baaf  validated   13 steps  3/3 (100%)
+           On the dashboard '{{v1}}' (currently open in the browser): (1) In the top bar, set the time range to 'Last 6 h…
+  s_e4f0b3  validated   14 steps  3/3 (100%)
+           Verification task on Grafana: navigate the browser to the dashboard '{{v1}}' by opening its URL directly (a ha…
+  s_10b19d  validated    2 steps  2/2 (100%)
+           Open {{v1}}, sign in with username {{v2}} and password typed exactly as the text {{v3}} (it gets filled in whe…
+  s_4c1fb4  validated   12 steps  2/2 (100%)
+           Open {{v1}}, sign in with username {{v2}} and password typed exactly as the text {{v3}} (it gets filled in whe…
+  s_c970ac  validated    3 steps  2/2 (100%)
+           Open {{v1}}, sign in with username {{v2}} and password typed exactly as the text {{v3}} (it gets filled in whe…
+  s_e41c82  validated    7 steps  2/2 (100%)
+           Open {{v1}}, sign in with username {{v2}} and password typed exactly as the text {{v3}} (it gets filled in whe…
+  s_38ffcd  provisional  4 steps  1/1 (100%)
+           Open {{v1}}, sign in with username {{v2}} and password typed exactly as the text {{v3}} (it gets filled in whe…
+  s_465324  provisional  5 steps  1/1 (100%)
+           Open {{v1}}, sign in with username {{v2}} and password typed exactly as the text {{v3}} (it gets filled in whe…
+  s_47588e  provisional 11 steps  1/1 (100%)
+           Open {{v1}}, sign in with username {{v2}} and password typed exactly as the text {{v3}} (it gets filled in whe…
+  s_811f66  provisional 11 steps  1/1 (100%)  variant of s_b38276
+           Open http://127.0.0.1:3000/, sign in with username admin and password typed exactly as the text {{env:APP_PASS…
+  s_9e8e2d  provisional  4 steps  1/1 (100%)  variant of s_b38276
+           Open http://127.0.0.1:3000/, sign in with username admin and password typed exactly as the text {{env:APP_PASS…
+store: /home/user/sitelooper/bench/results/vgr1n-skills
+
+summary: /home/user/sitelooper/bench/results/vgr1n-sweep.json

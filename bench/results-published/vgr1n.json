@@ -1,0 +1,305 @@
+{
+  "name": "vgr1n",
+  "origin": "http://127.0.0.1:3000",
+  "startUrl": "http://127.0.0.1:3000/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-open",
+      "instruction": "Open http://127.0.0.1:3000/, sign in with username admin and password typed exactly as the text {{env:APP_PASSWORD}} (it gets filled in when typed). Find the provisioned dashboard named 'Service health' (via search/dashboards) and report the titles of all its panels exactly as shown.",
+      "skill": "s_8cb971",
+      "params": {
+        "v1": "http://127.0.0.1:3000/",
+        "v2": "admin",
+        "v3": "{{env:APP_PASSWORD}}",
+        "v4": "Service health"
+      },
+      "outputs": [
+        "dashboard_name",
+        "dashboard_folder",
+        "signed_in_as",
+        "panel_title_request_rate",
+        "panel_title_error_count",
+        "panel_title_latency_by_endpoint",
+        "panel_titles_1",
+        "panel_titles_2",
+        "panel_titles_3"
+      ],
+      "recorded": {
+        "dashboard_name": "Service Health",
+        "dashboard_folder": "Bench",
+        "panel_count": "3",
+        "signed_in_as": "admin",
+        "panel_title_request_rate": "Request rate",
+        "panel_title_error_count": "Error count",
+        "panel_title_latency_by_endpoint": "Latency by endpoint",
+        "ref": "127.0.0.1",
+        "panel_titles_1": "Request rate",
+        "panel_titles_2": "Error count",
+        "panel_titles_3": "Latency by endpoint",
+        "url": "http://127.0.0.1:3000/d/bench-service-health/service-health?from=now-6h&to=now&timezone=browser"
+      },
+      "route": "http://127.0.0.1:3000/d/bench-service-health/service-health",
+      "outputEvidence": {
+        "dashboard_name": {
+          "same": 1,
+          "differed": 0,
+          "absent": 1
+        },
+        "dashboard_folder": {
+          "same": 2,
+          "differed": 0
+        },
+        "panel_count": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "signed_in_as": {
+          "same": 1,
+          "differed": 0,
+          "absent": 1
+        },
+        "panel_title_request_rate": {
+          "same": 1,
+          "differed": 0,
+          "absent": 1
+        },
+        "panel_title_error_count": {
+          "same": 1,
+          "differed": 0,
+          "absent": 1
+        },
+        "panel_title_latency_by_endpoint": {
+          "same": 1,
+          "differed": 0,
+          "absent": 1
+        },
+        "ref": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "panel_titles_1": {
+          "same": 2,
+          "differed": 0
+        },
+        "panel_titles_2": {
+          "same": 2,
+          "differed": 0
+        },
+        "panel_titles_3": {
+          "same": 2,
+          "differed": 0
+        },
+        "url": {
+          "same": 2,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "02-create",
+      "instruction": "Create a NEW dashboard in Grafana: from the dashboard page, click New / New dashboard, add a new visualization panel. Change the panel type to Stat. Set the panel title to exactly '{{runid}} Availability'. Set the panel's query data source to the 'TestData' data source (in the query editor, pick TestData from the data source selector; if it asks for a scenario, leave the default). Then save the dashboard with the title exactly '{{runid}} {{01-open.dashboard_folder}} Dashboard' (Save dashboard dialog, name field, Save). Verify the save succeeded and report the panel title and dashboard title you see, plus the browser page URL after saving.",
+      "skill": "s_77686c",
+      "params": {
+        "v3": "{{runid}} Availability",
+        "v4": "{{runid}} {{01-open.dashboard_folder}} Dashboard",
+        "v1": "{{runid}}"
+      },
+      "outputs": [
+        "panel_title",
+        "dashboard_title",
+        "dashboard_uid",
+        "page_url",
+        "panel_title_region",
+        "run_id"
+      ],
+      "recorded": {
+        "panel_title": "vgr1n-n1 Availability",
+        "dashboard_title": "vgr1n-n1 Bench Dashboard",
+        "panel_type": "Stat",
+        "query_data_source": "TestData",
+        "scenario": "Random Walk (default)",
+        "page_url_after_save": "http://127.0.0.1:3000/d/cfza3povbz5z4e/vgr1n-n1-bench-dashboard?from=now-6h&to=now&timezone=browser",
+        "dashboard_uid": "cfza3povbz5z4e",
+        "page_url": "http://127.0.0.1:3000/d/cfza3povbz5z4e/vgr1n-n1-bench-dashboard?from=now-6h&to=now&timezone=browser&editPanel=1",
+        "panel_title_region": "vgr1n-n1 Availability\n44.8",
+        "run_id": "vgr1n-n1",
+        "url": "http://127.0.0.1:3000/d/cfza3povbz5z4e/vgr1n-n1-bench-dashboard?from=now-6h&to=now&timezone=browser",
+        "url.p1": "cfza3povbz5z4e",
+        "url.p2": "vgr1n-n1-bench-dashboard"
+      },
+      "route": "http://127.0.0.1:3000/d/cfza3povbz5z4e/:id"
+    },
+    {
+      "id": "03-open",
+      "instruction": "On the dashboard '{{runid}} {{01-open.dashboard_folder}} Dashboard' (currently open in the browser), add a NEW Text panel: enter dashboard edit mode (Edit button), click 'Add panel' / 'Add visualization' or the Add menu, and choose the Text panel type. Set the new panel's title to exactly '{{runid}} Notes' and set its text content to include the runid, e.g. '{{01-open.dashboard_folder}} notes for run {{runid}}'. Then save the dashboard (Save dashboard button) and confirm the save succeeded. Report the panel title and the text content you entered, and whether the save confirmation appeared.",
+      "skill": "s_2f5b30",
+      "params": {
+        "v1": "{{runid}} {{01-open.dashboard_folder}} Dashboard",
+        "v4": "{{runid}} Notes",
+        "v5": "{{01-open.dashboard_folder}} notes for run {{runid}}",
+        "v2": "{{runid}}",
+        "v3": "{{01-open.dashboard_folder}}"
+      },
+      "outputs": [
+        "panel_title",
+        "text_content",
+        "dashboard_title",
+        "save_confirmation",
+        "run_id",
+        "panels_on_dashboard_1",
+        "panels_on_dashboard_2"
+      ],
+      "recorded": {
+        "panel_title": "vgr1n-n1 Notes",
+        "text_content": "Bench notes for run vgr1n-n1",
+        "dashboard_title": "vgr1n-n1 Bench Dashboard",
+        "save_confirmation": "Dashboard saved toast appeared after clicking Save",
+        "run_id": "vgr1n-n1",
+        "panels_on_dashboard_1": "vgr1n-n1 Notes",
+        "panels_on_dashboard_2": "vgr1n-n1 Availability"
+      },
+      "route": "http://127.0.0.1:3000/d/cfza3povbz5z4e/:id",
+      "urlVariance": [
+        "cfza3povbz5z4e",
+        "ffza4kobxmubkd"
+      ]
+    },
+    {
+      "id": "04-open",
+      "instruction": "On the dashboard '{{runid}} {{01-open.dashboard_folder}} Dashboard' (currently open in the browser): (1) In the top bar, set the time range to 'Last 6 hours' (open the time picker and choose Last 6 hours). (2) Enter dashboard settings (gear icon) -> General, and add the tag 'bench' to the dashboard tags. (3) Save the dashboard, and in the save dialog TICK the checkbox 'Update default time range' (so the 6-hour range is persisted into the saved dashboard), then confirm the save. Verify the save succeeded (toast) and report: the tag shown in dashboard settings, the time range shown in the top bar, and whether the 'Update default time range' checkbox was ticked when saving.",
+      "skill": "s_d4baaf",
+      "params": {
+        "v1": "{{runid}} {{01-open.dashboard_folder}} Dashboard",
+        "v4": "bench",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "tag_in_dashboard_settings",
+        "topbar_time_range",
+        "dashboard_title"
+      ],
+      "recorded": {
+        "tag_in_dashboard_settings": "bench",
+        "topbar_time_range": "Last 6 hours",
+        "update_default_time_range_checkbox": "ticked when saving",
+        "save_confirmation": "Dashboard saved toast appeared",
+        "dashboard_title": "vgr1n-n1 Bench Dashboard"
+      },
+      "route": "http://127.0.0.1:3000/d/cfza3povbz5z4e/:id",
+      "urlVariance": [
+        "cfza3povbz5z4e",
+        "ffza4kobxmubkd"
+      ]
+    },
+    {
+      "id": "05-open",
+      "instruction": "On the dashboard '{{runid}} {{01-open.dashboard_folder}} Dashboard' (currently open in the browser): set the dashboard's auto-refresh interval to '1m'. Open the refresh interval picker in the top bar (next to the refresh icon), choose '1m' from the list. Then save the dashboard so the refresh interval persists: click Save dashboard, and in the save dialog tick the checkbox 'Update default time range' if it is present (it persists time settings including refresh interval), then confirm the save. Verify the save succeeded (toast) and report the refresh interval now shown in the top bar and whether the save toast appeared.",
+      "skill": "s_8d633b",
+      "params": {
+        "v1": "{{runid}} {{01-open.dashboard_folder}} Dashboard",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "topbar_refresh_interval",
+        "update_default_time_range_checkbox",
+        "dashboard_title",
+        "save_toast"
+      ],
+      "recorded": {
+        "topbar_refresh_interval": "1m (picker button: 'Choose refresh time interval with current interval 1 minute selected')",
+        "update_default_time_range_checkbox": "not present; save dialog instead showed 'Update default refresh value' checkbox, which was TICKED",
+        "dashboard_title": "vgr1n-n1 Bench Dashboard",
+        "save_toast": "Dashboard saved",
+        "url": "http://127.0.0.1:3000/d/cfza3povbz5z4e/vgr1n-n1-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m"
+      },
+      "route": "http://127.0.0.1:3000/d/cfza3povbz5z4e/:id",
+      "urlVariance": [
+        "cfza3povbz5z4e",
+        "ffza4kobxmubkd"
+      ]
+    },
+    {
+      "id": "06-report",
+      "instruction": "Verification task on Grafana: navigate the browser to the dashboard '{{runid}} {{01-open.dashboard_folder}} Dashboard' by opening its URL directly (a hard reload / fresh navigation, so we see the persisted saved state, not the in-session state). Then report, reading from the freshly loaded page: (1) the exact browser page URL; (2) the dashboard title shown; (3) the titles of all panels shown; (4) the time range shown in the top bar time picker; (5) the refresh interval shown in the top bar refresh picker; (6) open dashboard settings (gear) -> General and report the tags listed; (7) open the '{{runid}} Availability' panel in edit mode and report which data source its query uses and its panel type. Do not change anything — this is read-only verification.",
+      "skill": "s_e4f0b3",
+      "params": {
+        "v1": "{{runid}} {{01-open.dashboard_folder}} Dashboard",
+        "v4": "{{runid}} Availability",
+        "v2": "{{runid}}",
+        "v5": "{{02-create.url.p1}}",
+        "v6": "{{02-create.url.p2}}"
+      },
+      "outputs": [
+        "page_url",
+        "dashboard_title",
+        "topbar_time_range",
+        "topbar_refresh_interval",
+        "run_id",
+        "panel_titles_1",
+        "panel_titles_2"
+      ],
+      "recorded": {
+        "page_url": "http://127.0.0.1:3000/d/cfza3povbz5z4e/vgr1n-n1-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m",
+        "dashboard_title": "vgr1n-n1 Bench Dashboard",
+        "topbar_time_range": "Last 6 hours",
+        "topbar_refresh_interval": "1m (button: current interval 1 minute selected)",
+        "settings_tags": "bench",
+        "availability_panel_query_data_source": "TestData",
+        "availability_panel_type": "Stat",
+        "run_id": "vgr1n-n1",
+        "panel_titles_1": "vgr1n-n1 Notes",
+        "panel_titles_2": "vgr1n-n1 Availability"
+      },
+      "route": "http://127.0.0.1:3000/d/cfza3povbz5z4e/:id"
+    }
+  ],
+  "provenance": {
+    "session": "vgr1n-n1",
+    "created": "2026-09-25T03:02:20.237Z",
+    "model": "xiaomi/mimo-v2.6-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "01-open",
+      "outputs": [
+        "panel_count",
+        "ref"
+      ]
+    },
+    {
+      "stepId": "02-create",
+      "outputs": [
+        "panel_type",
+        "query_data_source",
+        "scenario",
+        "page_url_after_save"
+      ]
+    },
+    {
+      "stepId": "04-open",
+      "outputs": [
+        "update_default_time_range_checkbox",
+        "save_confirmation"
+      ]
+    },
+    {
+      "stepId": "06-report",
+      "outputs": [
+        "settings_tags",
+        "availability_panel_query_data_source",
+        "availability_panel_type"
+      ]
+    }
+  ]
+}

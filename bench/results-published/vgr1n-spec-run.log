@@ -1,0 +1,14 @@
+[spec-replay] resetting grafana
+[reset] grafana: deleted leftover dashboard "Service Health" (400)
+[reset] grafana: deleted leftover dashboard "vgr1n-n3 Bench Dashboard" (200)
+[spec-replay] compiling: /opt/node22/bin/node /home/user/sitelooper/bin/sitelooper.js compile bench/results/flows/vgr1n.json --out /home/user/sitelooper/bench/results/vgr1n-spec-spec-tmp --overwrite-spec
+flow: /home/user/sitelooper/bench/results/vgr1n-spec-spec-tmp/vgr1n.flow.ts
+spec: /home/user/sitelooper/bench/results/vgr1n-spec-spec-tmp/vgr1n.spec.ts
+warning a component recipe is demoted in the store, and the compiled artifact omits it for good
+  why: aria-combobox/set-value: learned recipe r_0d527b is demoted in the component store (2 consecutive verification failures); the snapshot omits it. The snapshot is compile-time state: the daemon keeps validating, learning and demoting after this file is written; the artifact runs what it was given.
+  fix: record the widget again with the daemon to learn a working recipe, then recompile
+warning a component family has no usable recipe, so the compiled artifact drives it with the native primitive for good
+  why: aria-combobox/set-value: no usable recipe; the artifact falls back to the native primitive on this family, as the daemon does today. The snapshot is compile-time state: the daemon keeps validating, learning and demoting after this file is written; the artifact runs what it was given.
+  fix: record the widget again with the daemon to learn a working recipe, then recompile
+[spec-replay] running: npx playwright test --config /home/user/sitelooper/bench/results/vgr1n-spec-spec-tmp/playwright.config.mjs
+[spec-replay] vgr1n-spec: 1/1 passed, exit=0, 144s, 0 drift line(s) — result written

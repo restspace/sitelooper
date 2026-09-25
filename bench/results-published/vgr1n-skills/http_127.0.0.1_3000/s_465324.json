@@ -1,0 +1,288 @@
+{
+ "id": "s_465324",
+ "origin": "http://127.0.0.1:3000",
+ "template": "Open {{v1}}, sign in with username {{v2}} and password typed exactly as the text {{v3}} (it gets filled in when typed). Find the provisioned dashboard named '{{v4}}' (via search/dashboards) and report the titles of all its panels exactly as shown.",
+ "params": {
+  "v1": {
+   "example": "http://127.0.0.1:3000/",
+   "usedIn": [
+    1
+   ]
+  },
+  "v2": {
+   "example": "admin",
+   "usedIn": [
+    2
+   ]
+  },
+  "v3": {
+   "example": "{{env:APP_PASSWORD}}",
+   "usedIn": [
+    3
+   ]
+  },
+  "v4": {
+   "example": "Service health",
+   "usedIn": []
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:3000/login"
+ },
+ "steps": [
+  {
+   "tool": "goto",
+   "args": {
+    "url": "{{v1}}"
+   },
+   "locators": {},
+   "via": {
+    "skill": "s_8cb971",
+    "step": 1
+   }
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e28",
+    "value": "{{v2}}"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid Username input field"
+     },
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Email or username"
+     },
+     {
+      "kind": "label",
+      "label": "Email or username"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "email or username"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"input-wrapper\"] input"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div:nth-of-type(2) > div > div > div > input"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 452,
+      "w": 383,
+      "h": 32,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/login",
+    "addedContains": [
+     "- textbox \"email or username\": {{v2}}"
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_79a99f",
+    "step": 1
+   }
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e37",
+    "value": "{{v3}}"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid Password input field"
+     },
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Password"
+     },
+     {
+      "kind": "label",
+      "label": "Password"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "password"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"input-wrapper\"] input"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(2) > div > div > div > input"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 519,
+      "w": 383,
+      "h": 32,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/login",
+    "addedContains": [
+     "- textbox \"password\": {{*}}"
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_79a99f",
+    "step": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e42"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid Login button"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Log in"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > div > div > form > button"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 567,
+      "w": 383,
+      "h": 32,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/login",
+    "alertContains": "Logged in",
+    "addedContains": [
+     "- button \"Close alert\"",
+     "- heading \"Update your password\"",
+     "- textbox \"New password\"",
+     "- textbox \"Confirm new password\"",
+     "- button \"Submit\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_79a99f",
+    "step": 5
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e118"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid Skip change password button"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Skip"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > div > form > div:nth-of-type(5) > button:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 479,
+      "y": 660,
+      "w": 61.7,
+      "h": 32,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/?from=:id&timezone=browser&to=now",
+    "alertContains": "Error loading RSS feed Make sure that the feed URL is correct and that CORS is configured correctly on the server. See N",
+    "addedContains": [
+     "- link \"Skip to main content\"",
+     "- link \"Go to home\"",
+     "- button \"Search or jump to...\"",
+     "- button \"New\"",
+     "- button \"Help\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_79a99f",
+    "step": 6
+   }
+  }
+ ],
+ "contract": 4,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-25T03:03:48.210Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 4
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_aaad42",
+  "index": 0,
+  "of": 3
+ },
+ "provenance": {
+  "session": "vgr1n-n2",
+  "instruction": "Open http://127.0.0.1:3000/, sign in with username admin and password typed exactly as the text {{env:APP_PASSWORD}} (it gets filled in when typed). Find the provisioned dashboard named 'Service health' (via search/dashboards) and report the titles of all its panels exactly as shown.",
+  "model": "xiaomi/mimo-v2.6-flash",
+  "created": "2026-09-25T03:03:48.210Z"
+ },
+ "revision": 1
+}
