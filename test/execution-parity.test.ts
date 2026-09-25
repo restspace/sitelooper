@@ -5592,6 +5592,78 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
       expect(run.emitted.reason).toMatch(said);
     }, 180_000);
 
+    /**
+     * Round 62, gitea fwgt13 (silent wrong data), through compileSkills: a
+     * recording that picked "enhancement" with ArrowDown ×3 and Enter in a
+     * keyboard-driven picker (/kbd-picker), its journal naming the option
+     * the Enter ticked, then Escape. Compile once folded the three ArrowDowns
+     * into one (coalesceControls) and both runners committed "bug" as a
+     * success. Now the pick compiles as a click on "enhancement" by name, so
+     * both runners commit it on the recorded page and on a page with one
+     * more label first (?shifted=1), where the same presses would have landed
+     * on "documentation". A pick no click can name (the journal describing a
+     * bare `div`) stays a press verified by name: it commits on the recorded
+     * page and stops, before anything is committed, on the shifted one.
+     */
+    const kbdRun = async (url: string, described: string) => {
+      const T = 'Label the new issue enhancement.';
+      let w = 0;
+      const press = (key: string, picked?: string): RecordedStep => {
+        w += 1;
+        const own = (ev: Record<string, unknown>) => ({ t: w * 10, ...ev, c: ['in', w, 'gesture'] });
+        return {
+          k: 'step',
+          tool: 'press',
+          args: { key },
+          locators: {},
+          diff: { url, alerts: [], added: [], dialect: 2 },
+          journal: { w, ev: picked ? [own({ k: 'hit', ty: 'c', d: picked, tr: 0 }), own({ k: 'state', d: picked, a: 'class', x: '+checked', on: true })] : [] },
+        } as unknown as RecordedStep;
+      };
+      const entries: RecordedEntry[] = [
+        { k: 'instruction', text: T, url },
+        { k: 'step', tool: 'click', args: { target: '@e1' }, locators: { target: { expr: 'x', verified: true, raw: '@e1', chain: [{ kind: 'css', selector: '#labels' }] } }, diff: { url, alerts: [], added: ['- listbox "Label choices"', '- link "bug"', '- link "documentation"', '- link "enhancement"', '- link "priority-high"'], dialect: 2 } },
+        press('ArrowDown'),
+        press('ArrowDown'),
+        press('ArrowDown'),
+        press('Enter', described),
+        press('Escape'),
+        { k: 'report', status: 'success', summary: 'labelled', values: {} },
+      ];
+      const report: Report = { status: 'success', summary: 'labelled', evidence: { values: {} } };
+      const [skill] = compileSkills({ entries, instruction: T, report, session: 'parity', knownValues: {} });
+      return { skill, ...(await both([{ tool: 'goto', args: { url }, locators: {} }, ...skill.steps], 0)) };
+    };
+
+    it('both runners pick the recorded item by name, on the recorded list and on a shifted one (fwgt13)', async () => {
+      for (const page of ['kbd-picker', 'kbd-picker?shifted=1']) {
+        const run = await kbdRun(`${origin}/${page}`, 'link "enhancement"');
+        expect(run.skill.steps.map((s) => (s.tool === 'press' ? String(s.args.key) : s.tool))).toEqual(['click', 'click', 'Escape']);
+        expect(run.replay.ok, `${page}: ${run.replay.reason ?? ''}`).toBe(true);
+        expect(run.emitted.ok, `${page}: ${run.emitted.reason ?? ''}`).toBe(true);
+        expect(run.replayLog, page).toEqual(['commit:labels:enhancement']);
+        expect(run.emittedLog, page).toEqual(['commit:labels:enhancement']);
+      }
+    }, 240_000);
+
+    it('both runners verify a press no click can name by the name it picked, and stop before committing another (fwgt13)', async () => {
+      const right = await kbdRun(`${origin}/kbd-picker`, 'div "enhancement"');
+      expect(right.skill.steps.filter((s) => s.tool === 'press').map((s) => String(s.args.key))).toEqual(['ArrowDown', 'ArrowDown', 'ArrowDown', 'Enter', 'Escape']);
+      expect(right.replay.ok, right.replay.reason ?? '').toBe(true);
+      expect(right.emitted.ok, right.emitted.reason ?? '').toBe(true);
+      expect(right.replayLog).toEqual(['commit:labels:enhancement']);
+      expect(right.emittedLog).toEqual(['commit:labels:enhancement']);
+
+      const shifted = await kbdRun(`${origin}/kbd-picker?shifted=1`, 'div "enhancement"');
+      expect(shifted.replayLog, 'replay must not commit the wrong pick').toEqual([]);
+      expect(shifted.emittedLog, 'the artifact must not commit the wrong pick').toEqual([]);
+      expect(shifted.replay.ok).toBe(false);
+      expect(shifted.emitted.ok).toBe(false);
+      const said = /the press was recorded picking div "enhancement" and picked "documentation"/;
+      expect(shifted.replay.reason).toMatch(said);
+      expect(shifted.emitted.reason).toMatch(said);
+    }, 240_000);
+
     it('both runners stop, not skip, a toggle whose target no longer resolves although its popup is showing', async () => {
       const { replay, emitted, replayLog, emittedLog } = await both(menuSteps('gone'), 0);
 

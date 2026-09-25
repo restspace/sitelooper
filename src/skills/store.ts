@@ -328,6 +328,15 @@ export interface SkillStep {
    */
   closedBefore?: true;
   /**
+   * The item a key press picked in the recording, by NAME (compile.ts
+   * keyboardPick, gitea fwgt13-n1). Both runners verify that the replayed
+   * press's own click lands on an element of this name, and stop when it
+   * lands on another or on nothing (execution/toggle.ts keyboardPickVerdict):
+   * a press picks by position, and a position means something else on
+   * another run. Optional: a build that ignores it presses unchecked.
+   */
+  picks?: { role: string; name: string };
+  /**
    * A type or fill whose RECORDED result already held its value twice over
    * (compile.ts, the shared refill.ts recordedDoubled over the step's raw
    * diff): grafana fwgr73-n1 04-open typed `"tags"` into monaco, whose
