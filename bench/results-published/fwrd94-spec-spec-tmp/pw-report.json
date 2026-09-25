@@ -1,0 +1,202 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwrd94-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwrd94-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwrd94-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/bench/results/fwrd94-spec-spec-tmp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwrd94-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwrd94.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwrd94-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwrd94.spec.ts",
+      "file": "fwrd94.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwrd94",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 84025,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper step] 01-open\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 02-create s_a0c2b5/3: read 'ticket_customer' returned a value the skill itself set/selected ('Bench User') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-create\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-add\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-add\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 05-edit\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 06-report\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 07-find s_46270c/1: read 'ref' returned a value the skill itself set/selected ('RD-1018') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 07-find\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 08-report\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 09-delete s_e12c97/3: read 'ticket_ref' returned a value the skill itself set/selected ('RD-1018') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 09-delete\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-open: Open http://127.0.0.1:4180/ and sign in with email bench@example.com and password exactly the text {{env:APP_PASSWORD}} (type it literally as shown, it gets filled in when typed). After signing in, report what the app's main screen shows (page title, main navigation/sections, and what kind of records it lists).",
+                      "duration": 5323
+                    },
+                    {
+                      "title": "02-create: Create a new repair ticket titled '{{runid}} RD Bench Ticket' with customer name '{{01-open.signed_in_user}}' (fill any required fields the form demands, and report what fields the form had). After creating, open that ticket and report its reference, status, and what its detail page shows (especially any parts section with add-part controls).",
+                      "duration": 4782
+                    },
+                    {
+                      "title": "03-add: On the ticket detail page for {{02-create.ticket_reference}} (titled '{{runid}} RD Bench Ticket'), click 'Add part' and add a part named '{{runid}} RD Part A' with cost 100 and markup 25 (fill any other fields the form has with sensible values, e.g. qty 1). Save it, wait for the parts table to refresh, and report the exact Price value the app computes and shows in the parts table row for '{{runid}} RD Part A', plus the full row contents.",
+                      "duration": 23430
+                    },
+                    {
+                      "title": "04-add: On ticket {{02-create.ticket_reference}}, add a second part named '{{runid}} RD Part B' with cost 200 and markup 25 (qty 1, any supplier). Save, wait for the parts table to refresh, and report the exact Price the app computes for '{{runid}} RD Part B' and the full row.",
+                      "duration": 5218
+                    },
+                    {
+                      "title": "05-edit: On ticket {{02-create.ticket_reference}}, edit the part '{{runid}} RD Part A' to change its Cost from 100 to 150 (keep name, markup 25, qty). Save, wait for the parts table to refresh, and report the new Price the app computes for that row and the full row, plus the new parts table total.",
+                      "duration": 3404
+                    },
+                    {
+                      "title": "06-report: On ticket {{02-create.ticket_reference}}, click the '{{02-create.mark_ready_button_label}}' action. The app may refuse and show a validation error or requirement message. If it refuses, report the EXACT error/requirement text shown and what fields appear missing/what else the app requires (look for hints on the ticket detail page). If it succeeds, report the new status. Do not invent requirements — only report what the page actually says.",
+                      "duration": 910
+                    },
+                    {
+                      "title": "07-find: Go back to the tickets list (Tickets nav), find ticket {{02-create.ticket_reference}} in the table, and report its Status value shown in the list row. Then open the ticket again and report its current status chip and the parts table total.",
+                      "duration": 28735
+                    },
+                    {
+                      "title": "08-report: On the tickets list, pick an existing Draft ticket that has 0 parts (report its ref and title), open it, click '{{02-create.mark_ready_button_label}}' and report the EXACT refusal/validation message the app shows (do not actually leave it Ready — if it refuses, stop there; if it somehow succeeds, immediately use 'Mark Draft' to set it back to Draft). Report exactly what the app says and any hints about what is required before a ticket can be marked Ready.",
+                      "duration": 4651
+                    },
+                    {
+                      "title": "09-delete: Go to ticket {{02-create.ticket_reference}} ('{{runid}} RD Bench Ticket'). {{03-add.part_delete_action}} both parts: '{{runid}} RD Part A' and '{{runid}} RD Part B' (confirm any dialog). Wait for the parts table to refresh and verify it shows 'No parts on this ticket yet.' Then archive the ticket (click '{{02-create.archive_ticket_button_label}}', confirm if needed) — note the app may complain about Ready status with no parts; if it refuses, report the exact message. If it succeeds, go to the tickets list, verify {{02-create.ticket_reference}} no longer appears in the active list (check 'Show archived' if present to confirm it is archived), and report exactly what you saw, including any confirmation text.",
+                      "duration": 6192
+                    }
+                  ],
+                  "startTime": "2026-09-25T12:41:25.454Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": ""
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "3022af825bf6ccab8ce6-6e1a786d77c5c6f46d0f",
+          "file": "fwrd94.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-25T12:41:22.125Z",
+    "duration": 87632.141,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

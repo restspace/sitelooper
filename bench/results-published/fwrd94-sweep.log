@@ -1,0 +1,194 @@
+
+[sweep] run 1/3: fwrd94-n1 (store: /home/user/sitelooper/bench/results/fwrd94-skills)
+[harness] repairdesk: defaulting APP_URL
+[harness] repairdesk: defaulting APP_EMAIL
+[harness] repairdesk: defaulting APP_PASSWORD
+[reset] repairdesk: reloaded seed via http://127.0.0.1:4180/__reset
+[harness] repairdesk responded 200 at http://127.0.0.1:4180/
+stopped: fwrd94-n1
+  flow "fwrd94" saved: 9 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwrd94.json
+  warning: note: dropped 5 locator candidate(s) carrying a value this run minted (known only by export time)
+  warning: note: 10 goal/report value(s) carrying a value this run made were slotted or dropped:
+  s_2099b1.goal.requireText[3] dropped (names a value this run made, with no slot to bind it)
+  s_2099b1.reportTemplate.values.part_delete_action dropped (recorded literal of a value this run made)
+  s_46270c.reportTemplate.values.part_b_row dropped (recorded literal of a value this run made)
+  s_a0c2b5.reportTemplate.values.ticket_reference dropped (recorded literal of a value this run made)
+  s_a0c2b5.reportTemplate.summary dropped (narrates a value this run made)
+  s_d6d8b9.reportTemplate.values.part_b_row dropped (recorded literal of a value this run made)
+  s_d6d8b9.reportTemplate.summary dropped (narrates a value this run made)
+  s_f5e01b.reportTemplate.values.part_a_delete_action dropped (recorded literal of a value this run made)
+  s_f5e01b.reportTemplate.values.part_b_delete_action dropped (recorded literal of a value this run made)
+  s_f5e01b.reportTemplate.summary dropped (narrates a value this run made)
+  warning: warning: 06-report's instruction asks to report errors_shown, and only a recorded literal backs it: no read in its procedure publishes it, so a replay reports it only if the page it ends on shows that exact text — re-record the step so the value is read where it is shown
+  warning: warning: 07-find's instruction asks to report parts_table_total, and only a recorded literal backs it: no read in its procedure publishes it, so a replay reports it only if the page it ends on shows that exact text — re-record the step so the value is read where it is shown
+  warning: note: 01-open no longer publishes first_rows, nav_items, table_columns — no replay reads them from the page and the recording showed no line to read
+  warning: warning: 02-create's instruction asks to report parts_section, and no replay can publish it: nothing in its procedure reads it from the page, so export dropped it — re-record the step so the value is read, not only reported
+  warning: note: 02-create no longer publishes create_form_fields — no replay reads it from the page and the recording showed no line to read
+  warning: note: 03-add no longer publishes add_part_form_fields — no replay reads it from the page and the recording showed no line to read
+  warning: warning: 04-add's instruction asks to report part_b_row, and no replay can publish it: nothing in its procedure reads it from the page, so export dropped it — re-record the step so the value is read, not only reported
+  warning: warning: 07-find's instruction asks to report list_row, and no replay can publish it: nothing in its procedure reads it from the page, so export dropped it — re-record the step so the value is read, not only reported
+  warning: note: 07-find no longer publishes detail_url — no replay reads it from the page and the recording showed no line to read
+  warning: note: 09-delete no longer publishes final_list_state — no replay reads it from the page and the recording showed no line to read
+  warning: warning: 292 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[0].route: "http://127.0.0.1:4180/#/tickets" (output) in "http://127.0.0.1:4180/#/tickets"
+  flow.steps[1].route: "http://127.0.0.1:4180/#/tickets" (output) in "http://127.0.0.1:4180/#/tickets/:id"
+  flow.steps[2].route: "http://127.0.0.1:4180/#/tickets" (output) in "http://127.0.0.1:4180/#/tickets/:id"
+  flow.steps[3].route: "http://127.0.0.1:4180/#/tickets" (output) in "http://127.0.0.1:4180/#/tickets/:id"
+  flow.steps[4].route: "http://127.0.0.1:4180/#/tickets" (output) in "http://127.0.0.1:4180/#/tickets/:id"
+arm=sitelooper model=z-ai/glm-5.3 runid=fwrd94-n1 stop=completed
+turns=10 wall=258.7s
+commands=9 cmdTime=218.9s cmdBytes=11841 timeouts=0
+orchestrator in=12924 cw=0 cr=34368 out=2432
+inner prompt=1663116 cached=1548672 completion=15025
+spend=$0.0688 maxUsd=3
+learn: A_n=0 replayed=0/9 full=0 repaired=0 compiled=9 variants=0
+-> /home/user/sitelooper/bench/results/fwrd94-n1-sitelooper-result.json
+
+=== fwrd94-n1 === (run self-reported: completed)
+  obj 1  PASS  seq 1: ticket t15 (RD-1015) "fwrd94-n1 RD Bench Ticket"
+  obj 2  PASS  seq 2 p18 cost=100 markup=25 price=125.00
+  obj 3  PASS  seq 3 p19 cost=200 markup=25 price=250.00
+  obj 4  PASS  seq 4: cost 100 -> 150, price 125.00 -> 187.50 (want 187.50), after the create at seq 2
+  obj 5  PASS  seq 5: status Draft -> Ready
+  obj 6  PASS  part A deleted, part B deleted, archive entry at seq 8; state: 0 part(s) surviving, ticket t15 archived=true
+  claim 2  ok — run reported 125.00, app recorded 125.00
+  claim 3  ok — run reported 250.00, app recorded 250.00
+  claim 4  ok — run reported 187.50, app recorded 187.50
+  summary: 6/6 objectives PASS, 0 price claim mismatch(es), 0 duplicate ticket(s)
+
+App state: 15 tickets total, 1 left by benchmark runs (0 still active), 17 parts total, 8 mutation log entries.
+
+[sweep] run 2/3: fwrd94-n2 (replay flow fwrd94, no orchestrator)
+[reset] repairdesk: reloaded seed via http://127.0.0.1:4180/__reset
+
+=== fwrd94-n2 === (run self-reported: no result file)
+  note: no result file in /home/user/sitelooper/bench/results — objectives are still scored from the log,
+        but the run's claimed prices cannot be cross-checked.
+  obj 1  PASS  seq 1: ticket t15 (RD-1016) "fwrd94-n2 RD Bench Ticket"
+  obj 2  PASS  seq 2 p18 cost=100 markup=25 price=125.00
+  obj 3  PASS  seq 3 p19 cost=200 markup=25 price=250.00
+  obj 4  PASS  seq 4: cost 100 -> 150, price 125.00 -> 187.50 (want 187.50), after the create at seq 2
+  obj 5  PASS  seq 5: status Draft -> Ready
+  obj 6  PASS  part A deleted, part B deleted, archive entry at seq 8; state: 0 part(s) surviving, ticket t15 archived=true
+  claim 2  no claim parsed from the run's final report
+  claim 3  no claim parsed from the run's final report
+  claim 4  no claim parsed from the run's final report
+  summary: 6/6 objectives PASS, 0 price claim mismatch(es), 0 duplicate ticket(s)
+
+App state: 15 tickets total, 1 left by benchmark runs (0 still active), 17 parts total, 8 mutation log entries.
+
+[sweep] run 3/3: fwrd94-n3 (replay flow fwrd94, no orchestrator)
+[reset] repairdesk: reloaded seed via http://127.0.0.1:4180/__reset
+
+=== fwrd94-n3 === (run self-reported: no result file)
+  note: no result file in /home/user/sitelooper/bench/results — objectives are still scored from the log,
+        but the run's claimed prices cannot be cross-checked.
+  obj 1  PASS  seq 1: ticket t15 (RD-1017) "fwrd94-n3 RD Bench Ticket"
+  obj 2  PASS  seq 2 p18 cost=100 markup=25 price=125.00
+  obj 3  PASS  seq 3 p19 cost=200 markup=25 price=250.00
+  obj 4  PASS  seq 4: cost 100 -> 150, price 125.00 -> 187.50 (want 187.50), after the create at seq 2
+  obj 5  PASS  seq 5: status Draft -> Ready
+  obj 6  PASS  part A deleted, part B deleted, archive entry at seq 8; state: 0 part(s) surviving, ticket t15 archived=true
+  claim 2  no claim parsed from the run's final report
+  claim 3  no claim parsed from the run's final report
+  claim 4  no claim parsed from the run's final report
+  summary: 6/6 objectives PASS, 0 price claim mismatch(es), 0 duplicate ticket(s)
+
+App state: 15 tickets total, 1 left by benchmark runs (0 still active), 17 parts total, 8 mutation log entries.
+
+Learning sweep fwrd94 (K=3)
+┌─────────┬───┬─────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid       │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼─────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwrd94-n1' │ '6/6'    │ 'completed' │ 10    │ 9    │ 0.0688    │ 0   │ '0/9'        │ 259    │
+│ 1       │ 2 │ 'fwrd94-n2' │ '6/6'    │ 'success'   │ 0     │ 9    │ 0         │ 1   │ '9/9 (flow)' │ 84     │
+│ 2       │ 3 │ 'fwrd94-n3' │ '6/6'    │ 'success'   │ 0     │ 9    │ 0         │ 1   │ '9/9 (flow)' │ 85     │
+└─────────┴───┴─────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:4180
+  s_0d5d4a  validated    7 steps  3/3 (100%)
+           Go to ticket {{v1}} ('{{v2}}'). {{v4}} both parts: '{{v5}}' and '{{v6}}' (confirm any dialog). Wait for the pa…
+  s_14f2d0  validated    2 steps  3/3 (100%)
+           Go back to the tickets list (Tickets nav), find ticket {{v1}} in the table, and report its Status value shown …
+  s_166f3f  validated    1 steps  3/3 (100%)
+           Go back to the tickets list (Tickets nav), find ticket {{v1}} in the table, and report its Status value shown …
+  s_1ce898  validated    5 steps  3/3 (100%)
+           Create a new repair ticket titled '{{v3}}' with customer name '{{v2}}' (fill any required fields the form dema…
+  s_2099b1  validated   20 steps  3/3 (100%)
+           On the ticket detail page for {{v1}} (titled '{{v2}}'), click 'Add part' and add a part named '{{v3}} RD Part …
+  s_331890  validated    1 steps  3/3 (100%)
+           Go back to the tickets list (Tickets nav), find ticket {{v1}} in the table, and report its Status value shown …
+  s_35f893  validated    6 steps  3/3 (100%)
+           On ticket {{v1}}, click the '{{v2}}' action. The app may refuse and show a validation error or requirement mes…
+  s_3a0241  validated    1 steps  3/3 (100%)
+           Go back to the tickets list (Tickets nav), find ticket {{v1}} in the table, and report its Status value shown …
+  s_3a1bcf  validated    1 steps  3/3 (100%)
+           Go back to the tickets list (Tickets nav), find ticket {{v1}} in the table, and report its Status value shown …
+  s_3e0ad5  validated    1 steps  3/3 (100%)
+           Go back to the tickets list (Tickets nav), find ticket {{v1}} in the table, and report its Status value shown …
+  s_46270c  validated    4 steps  3/3 (100%)
+           Go back to the tickets list (Tickets nav), find ticket {{v1}} in the table, and report its Status value shown …
+  s_47bb0f  validated    1 steps  3/3 (100%)
+           Go back to the tickets list (Tickets nav), find ticket {{v1}} in the table, and report its Status value shown …
+  s_54c0b3  validated    1 steps  3/3 (100%)
+           Go back to the tickets list (Tickets nav), find ticket {{v1}} in the table, and report its Status value shown …
+  s_5722a1  validated    1 steps  3/3 (100%)
+           Go back to the tickets list (Tickets nav), find ticket {{v1}} in the table, and report its Status value shown …
+  s_5b00db  validated    1 steps  3/3 (100%)
+           Go back to the tickets list (Tickets nav), find ticket {{v1}} in the table, and report its Status value shown …
+  s_5cb5f6  validated    1 steps  3/3 (100%)
+           Go back to the tickets list (Tickets nav), find ticket {{v1}} in the table, and report its Status value shown …
+  s_67f49b  validated    1 steps  3/3 (100%)
+           Open {{v1}} and sign in with email {{v2}} and password exactly the text {{v3}} (type it literally as shown, it…
+  s_703d29  validated    1 steps  3/3 (100%)
+           Go back to the tickets list (Tickets nav), find ticket {{v1}} in the table, and report its Status value shown …
+  s_765d56  validated    1 steps  3/3 (100%)
+           Go back to the tickets list (Tickets nav), find ticket {{v1}} in the table, and report its Status value shown …
+  s_8072c2  validated   11 steps  3/3 (100%)
+           On the tickets list, pick an existing {{v1}} ticket that has 0 parts (report its ref and title), open it, clic…
+  s_8ac34f  validated    1 steps  3/3 (100%)
+           Go back to the tickets list (Tickets nav), find ticket {{v1}} in the table, and report its Status value shown …
+  s_8e864f  validated    2 steps  3/3 (100%)
+           Go back to the tickets list (Tickets nav), find ticket {{v1}} in the table, and report its Status value shown …
+  s_8f2dcf  validated    1 steps  3/3 (100%)
+           Go back to the tickets list (Tickets nav), find ticket {{v1}} in the table, and report its Status value shown …
+  s_9171a4  validated    2 steps  3/3 (100%)
+           Go back to the tickets list (Tickets nav), find ticket {{v1}} in the table, and report its Status value shown …
+  s_93eca3  validated    2 steps  3/3 (100%)
+           Go back to the tickets list (Tickets nav), find ticket {{v1}} in the table, and report its Status value shown …
+  s_987694  validated    1 steps  3/3 (100%)
+           Go back to the tickets list (Tickets nav), find ticket {{v1}} in the table, and report its Status value shown …
+  s_a0c2b5  validated    8 steps  3/3 (100%)
+           Create a new repair ticket titled '{{v3}}' with customer name '{{v2}}' (fill any required fields the form dema…
+  s_a5a0a3  validated    1 steps  3/3 (100%)
+           Go back to the tickets list (Tickets nav), find ticket {{v1}} in the table, and report its Status value shown …
+  s_ad2227  validated    1 steps  3/3 (100%)
+           Go back to the tickets list (Tickets nav), find ticket {{v1}} in the table, and report its Status value shown …
+  s_ad7bf3  validated    5 steps  3/3 (100%)
+           Open {{v1}} and sign in with email {{v2}} and password exactly the text {{v3}} (type it literally as shown, it…
+  s_af74cf  validated    1 steps  3/3 (100%)
+           Go back to the tickets list (Tickets nav), find ticket {{v1}} in the table, and report its Status value shown …
+  s_b01f4b  validated    2 steps  3/3 (100%)
+           Go back to the tickets list (Tickets nav), find ticket {{v1}} in the table, and report its Status value shown …
+  s_ca8ddb  validated    1 steps  3/3 (100%)
+           Go back to the tickets list (Tickets nav), find ticket {{v1}} in the table, and report its Status value shown …
+  s_cc604c  validated    1 steps  3/3 (100%)
+           Go back to the tickets list (Tickets nav), find ticket {{v1}} in the table, and report its Status value shown …
+  s_cd155c  validated    1 steps  3/3 (100%)
+           Go back to the tickets list (Tickets nav), find ticket {{v1}} in the table, and report its Status value shown …
+  s_d6d8b9  validated   13 steps  3/3 (100%)
+           On ticket {{v1}}, add a second part named '{{v2}} RD Part B' with cost {{v3}} and markup {{v4}} (qty 1, any su…
+  s_e12c97  validated    5 steps  3/3 (100%)
+           Go to ticket {{v1}} ('{{v2}}'). {{v4}} both parts: '{{v5}}' and '{{v6}}' (confirm any dialog). Wait for the pa…
+  s_e86826  validated    1 steps  3/3 (100%)
+           On the tickets list, pick an existing {{v1}} ticket that has 0 parts (report its ref and title), open it, clic…
+  s_eff0d2  validated    1 steps  3/3 (100%)
+           Go to ticket {{v1}} ('{{v2}}'). {{v4}} both parts: '{{v5}}' and '{{v6}}' (confirm any dialog). Wait for the pa…
+  s_f32e1c  validated    3 steps  3/3 (100%)
+           Open {{v1}} and sign in with email {{v2}} and password exactly the text {{v3}} (type it literally as shown, it…
+  s_f5e01b  validated   24 steps  3/3 (100%)
+           On ticket {{v1}}, edit the part '{{v2}}' to change its Cost from 100 to {{v4}} (keep name, markup 25, qty). Sa…
+  s_fffe3e  validated    1 steps  3/3 (100%)
+           Go back to the tickets list (Tickets nav), find ticket {{v1}} in the table, and report its Status value shown …
+store: /home/user/sitelooper/bench/results/fwrd94-skills
+
+summary: /home/user/sitelooper/bench/results/fwrd94-sweep.json
