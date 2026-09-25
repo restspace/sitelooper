@@ -1,0 +1,51 @@
+
+Running 1 test using 1 worker
+
+[sitelooper step] 01-open
+[sitelooper step] 02-open
+[sitelooper step] 03-create
+  ✘  1 vgt3v.spec.ts:9:1 › vgt3v (28.9s)
+
+
+  1) vgt3v.spec.ts:9:1 › vgt3v ─────────────────────────────────────────────────────────────────────
+
+    Error: 04-set s_6a736e/11: the recorded page change did not appear
+
+    04-set s_6a736e/11: the recorded page change did not appear
+
+    expect(received).toBeNull()
+
+    Received: "after step 04-set s_6a736e/11 none of the 4 recorded page change(s) appeared (e.g. \"- combobox \\\"Assignees bench-assignee (Bench Assignee)\\\"\") — the step ran but did not have its recorded effect"
+
+    Call Log:
+    - Timeout 5000ms exceeded while waiting on the predicate
+
+       at vgt3v.flow.ts:12438
+
+      12436 |       { timeout: EXPECT_WAIT_MS, message: `${ctx.tag}: the recorded page change did not appear` },
+      12437 |     )
+    > 12438 |     .toBeNull();
+            |      ^
+      12439 |   for (const warning of last.warnings) console.log(`[sitelooper warn] ${warning}`);
+      12440 |   if (last.unobserved) console.log(`[sitelooper unobserved] ${ctx.tag}: the page could not be captured, or observed in full, after the action`);
+      12441 |   return last;
+        at expectChanges (/home/user/sitelooper/bench/results/vgt3v-spec-spec-tmp/vgt3v.flow.ts:12438:6)
+        at Object.verify (/home/user/sitelooper/bench/results/vgt3v-spec-spec-tmp/vgt3v.flow.ts:13908:33)
+        at runStepLifecycle (/home/user/sitelooper/bench/results/vgt3v-spec-spec-tmp/vgt3v.flow.ts:7951:24)
+        at Object.04-set (/home/user/sitelooper/bench/results/vgt3v-spec-spec-tmp/vgt3v.flow.ts:13859:5)
+        at /home/user/sitelooper/bench/results/vgt3v-spec-spec-tmp/vgt3v.flow.ts:15485:7
+        at runFlow (/home/user/sitelooper/bench/results/vgt3v-spec-spec-tmp/vgt3v.flow.ts:15484:5)
+        at /home/user/sitelooper/bench/results/vgt3v-spec-spec-tmp/vgt3v.spec.ts:14:21
+
+    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/vgt3v-vgt3v/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/vgt3v-vgt3v/error-context.md
+
+  1 failed
+    vgt3v.spec.ts:9:1 › vgt3v ──────────────────────────────────────────────────────────────────────

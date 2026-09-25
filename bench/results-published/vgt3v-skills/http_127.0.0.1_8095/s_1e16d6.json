@@ -1,0 +1,98 @@
+{
+ "id": "s_1e16d6",
+ "origin": "http://127.0.0.1:8095",
+ "template": "Open {{v1}} in the browser. If you are not already signed in, sign in with username {{v2}} and password {{v3}} — type that password text exactly as given into the password field (the environment fills in the real value when typed; do not guess or alter it). After signing in, report the username shown as signed in and the page you land on.",
+ "params": {
+  "v1": {
+   "example": "http://127.0.0.1:8095/",
+   "usedIn": [
+    1
+   ]
+  },
+  "v2": {
+   "example": "admin",
+   "usedIn": []
+  },
+  "v3": {
+   "example": "{{env:APP_PASSWORD}}",
+   "usedIn": []
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8095/"
+ },
+ "steps": [
+  {
+   "tool": "goto",
+   "args": {
+    "url": "{{v1}}"
+   },
+   "locators": {}
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e10"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "link",
+      "name": "Sign In"
+     },
+     {
+      "kind": "css",
+      "selector": "#navbar > div:nth-of-type(2) > a"
+     },
+     {
+      "kind": "point",
+      "x": 1223,
+      "y": 25,
+      "w": 93.5,
+      "h": 36,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/user/login",
+    "addedContains": [
+     "- heading \"Sign In\"",
+     "- textbox \"Username or Email Address\"",
+     "- link \"Forgot password?\"",
+     "- textbox \"Password\"",
+     "- checkbox \"Remember This Device\""
+    ],
+    "lineDialect": 2
+   }
+  }
+ ],
+ "contract": 4,
+ "stats": {
+  "uses": 3,
+  "successes": 3,
+  "partial": 0,
+  "created": "2026-09-25T05:02:01.963Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 4,
+  "lastUsed": "2026-09-25T05:37:12.974Z"
+ },
+ "status": "validated",
+ "seq": {
+  "chain": "s_2f1c1d",
+  "index": 0,
+  "of": 2
+ },
+ "provenance": {
+  "session": "vgt3v-n1",
+  "instruction": "Open http://127.0.0.1:8095/ in the browser. If you are not already signed in, sign in with username admin and password {{env:APP_PASSWORD}} — type that password text exactly as given into the password field (the environment fills in the real value when typed; do not guess or alter it). After signing in, report the username shown as signed in and the page you land on.",
+  "model": "xiaomi/mimo-v2.6-flash",
+  "created": "2026-09-25T05:02:01.963Z"
+ },
+ "revision": 3
+}

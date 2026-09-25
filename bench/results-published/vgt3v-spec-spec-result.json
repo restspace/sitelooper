@@ -1,0 +1,38 @@
+{
+  "arm": "spec",
+  "runid": "vgt3v-spec",
+  "target": "gitea",
+  "flow": "vgt3v.json",
+  "flowName": "vgt3v",
+  "skillsDir": "/home/user/sitelooper/bench/results/vgt3v-skills",
+  "compiled": true,
+  "flowFile": "bench/results/vgt3v-spec-spec-tmp/vgt3v.flow.ts",
+  "specFile": "bench/results/vgt3v-spec-spec-tmp/vgt3v.spec.ts",
+  "wallMs": 33695,
+  "exitCode": 1,
+  "timedOut": false,
+  "costUsd": 0,
+  "stats": {
+    "total": 1,
+    "passed": 0,
+    "failed": 1,
+    "skipped": 0
+  },
+  "tests": [
+    {
+      "title": "vgt3v",
+      "status": "unexpected",
+      "ok": false,
+      "durationMs": 28903,
+      "error": "Error: 04-set s_6a736e/11: the recorded page change did not appear\n\n04-set s_6a736e/11: the recorded page change did not appear\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeNull\u001b[2m()\u001b[22m\n\nReceived: \u001b[31m\"after step 04-set s_6a736e/11 none of the 4 recorded page change(s) appeared (e.g. \\\"- combobox \\\\\\\"Assignees bench-assignee (Bench Assignee)\\\\\\\"\\\") — the step ran but did not have its recorded effect\"\u001b[39m\n\nCall Log:\n- Timeout 5000ms exceeded while waiting on the predicate",
+      "drift": []
+    }
+  ],
+  "drift": [],
+  "driftCount": 0,
+  "evidence": [
+    "vgt3v-spec-spec-failure.png",
+    "vgt3v-spec-spec-error-context.md"
+  ],
+  "logTail": "\nRunning 1 test using 1 worker\n\n[sitelooper step] 01-open\n[sitelooper step] 02-open\n[sitelooper step] 03-create\n  ✘  1 vgt3v.spec.ts:9:1 › vgt3v (28.9s)\n\n\n  1) vgt3v.spec.ts:9:1 › vgt3v ─────────────────────────────────────────────────────────────────────\n\n    Error: 04-set s_6a736e/11: the recorded page change did not appear\n\n    04-set s_6a736e/11: the recorded page change did not appear\n\n    expect(received).toBeNull()\n\n    Received: \"after step 04-set s_6a736e/11 none of the 4 recorded page change(s) appeared (e.g. \\\"- combobox \\\\\\\"Assignees bench-assignee (Bench Assignee)\\\\\\\"\\\") — the step ran but did not have its recorded effect\"\n\n    Call Log:\n    - Timeout 5000ms exceeded while waiting on the predicate\n\n       at vgt3v.flow.ts:12438\n\n      12436 |       { timeout: EXPECT_WAIT_MS, message: `${ctx.tag}: the recorded page change did not appear` },\n      12437 |     )\n    > 12438 |     .toBeNull();\n            |      ^\n      12439 |   for (const warning of last.warnings) console.log(`[sitelooper warn] ${warning}`);\n      12440 |   if (last.unobserved) console.log(`[sitelooper unobserved] ${ctx.tag}: the page could not be captured, or observed in full, after the action`);\n      12441 |   return last;\n        at expectChanges (/home/user/sitelooper/bench/results/vgt3v-spec-spec-tmp/vgt3v.flow.ts:12438:6)\n        at Object.verify (/home/user/sitelooper/bench/results/vgt3v-spec-spec-tmp/vgt3v.flow.ts:13908:33)\n        at runStepLifecycle (/home/user/sitelooper/bench/results/vgt3v-spec-spec-tmp/vgt3v.flow.ts:7951:24)\n        at Object.04-set (/home/user/sitelooper/bench/results/vgt3v-spec-spec-tmp/vgt3v.flow.ts:13859:5)\n        at /home/user/sitelooper/bench/results/vgt3v-spec-spec-tmp/vgt3v.flow.ts:15485:7\n        at runFlow (/home/user/sitelooper/bench/results/vgt3v-spec-spec-tmp/vgt3v.flow.ts:15484:5)\n        at /home/user/sitelooper/bench/results/vgt3v-spec-spec-tmp/vgt3v.spec.ts:14:21\n\n    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────\n    \n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────\n    test-results/vgt3v-vgt3v/test-failed-1.png\n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    Error Context: test-results/vgt3v-vgt3v/error-context.md\n\n  1 failed\n    vgt3v.spec.ts:9:1 › vgt3v ──────────────────────────────────────────────────────────────────────\n"
+}

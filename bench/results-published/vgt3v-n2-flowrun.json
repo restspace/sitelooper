@@ -1,0 +1,103 @@
+{
+  "flow": "vgt3v",
+  "status": "halted",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_1de4d4.",
+      "values": {},
+      "tier": "A",
+      "recovered": false,
+      "replayed": "5/5",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-open",
+      "status": "success",
+      "summary": "The list shows 3 Open / 0 Closed.",
+      "values": {
+        "open_issue_count": "3",
+        "closed_issue_count": "0",
+        "issue_3": "Seed: ship repaired device",
+        "issue_2": "Seed: order missing parts",
+        "issue_1": "Seed: triage inbox"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "7/7",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "Created a new issue in bench/bench-repo with title \"vgt3v-n2 Bench Issue\" and description \"Bench issue created for run vgt3v-n2\".",
+      "values": {
+        "run_reference": "vgt3v-n2"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "5/5",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "04-set",
+      "status": "blocked",
+      "summary": "Turn cap (30) reached without a final report. Work may be partially complete — check the actions log and verify current state before resuming. Do not blindly repeat state-changing actions like submit/delete/move.",
+      "values": {},
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_773a5e stopped at step 14 — type failed: locator.focus: Timeout 10000ms exceeded. [outcome: unknown]",
+      "replayed": "13/25",
+      "repaired": false,
+      "turns": 33
+    }
+  ],
+  "passed": 3,
+  "total": 7,
+  "repinned": 0,
+  "drift": 1,
+  "driftTickets": [
+    {
+      "flow": "vgt3v",
+      "step": "04-set",
+      "skill": "s_773a5e",
+      "similarity": 1.002,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_773a5e stopped at step 14 — type failed: locator.focus: Timeout 10000ms exceeded. [outcome: unknown]",
+      "reason": "type failed: locator.focus: Timeout 10000ms exceeded. [outcome: unknown]",
+      "pageUrlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "pageUrl": "http://127.0.0.1:8095/bench/bench-repo/issues/5"
+    }
+  ],
+  "wallMs": 446109,
+  "model": "xiaomi/mimo-v2.6-flash",
+  "usage": {
+    "promptTokens": 462605,
+    "completionTokens": 12122,
+    "cachedTokens": 438656
+  },
+  "usageByModel": {
+    "z-ai/glm-5.3": {
+      "promptTokens": 462605,
+      "completionTokens": 12122,
+      "cachedTokens": 438656
+    }
+  },
+  "servedByModel": {
+    "z-ai/glm-5.3": [
+      "Together"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "halted",
+  "nextActions": []
+}

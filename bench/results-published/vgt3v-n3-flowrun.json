@@ -1,0 +1,240 @@
+{
+  "flow": "vgt3v",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_1de4d4.",
+      "values": {},
+      "tier": "A",
+      "recovered": false,
+      "replayed": "5/5",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-open",
+      "status": "success",
+      "summary": "The list shows 3 Open / 0 Closed.",
+      "values": {
+        "open_issue_count": "3",
+        "closed_issue_count": "0",
+        "issue_3": "Seed: ship repaired device",
+        "issue_2": "Seed: order missing parts",
+        "issue_1": "Seed: triage inbox"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "7/7",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "Created a new issue in bench/bench-repo with title \"vgt3v-n3 Bench Issue\" and description \"Bench issue created for run vgt3v-n3\".",
+      "values": {
+        "run_reference": "vgt3v-n3"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "5/5",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "04-set",
+      "status": "success",
+      "summary": "On issue #6 (vgt3v-n3 Bench Issue) in bench/bench-repo, all three sidebar settings are now applied and visibly shown: labels are exactly 'bug' and 'priority-high' (combo input label_ids=\"1,2\", sidebar list shows both chips, no other labels), assignee is 'bench-assignee' (assignee_ids=\"3\", sidebar shows \"bench-assignee (Bench Assignee)\", timeline event \"bench-assignee was assigned by admin\"), and milestone is 'Bench Milestone' (milestone_id=\"1\", sidebar shows \"Bench Milestone\", timeline event \"admin added this to the Bench Milestone milestone\"). Labels had already been committed by the earlier replayed procedure (confirmed via fresh page reload); the previous attempt's assignee clicks had NOT committed (reload showed \"No Assignees\"), so I re-opened the assignee and milestone dropdowns, clicked the items, and pressed Escape to close/commit — the key missing step, since these Fomantic UI combos only POST their update on dropdown close. Verified all values from the live DOM after the commits.",
+      "values": {
+        "ref": "vgt3v-n3"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_773a5e stopped at step 14 — type failed: locator.focus: Timeout 10000ms exceeded. [outcome: unknown]",
+      "replayed": "13/25",
+      "repaired": false,
+      "turns": 46,
+      "repinned": "s_6a736e",
+      "repinParams": {
+        "v1": "{{03-create.url}}",
+        "v2": "{{runid}}"
+      },
+      "unreported": [
+        "issue_url",
+        "issue_number",
+        "issue_title",
+        "assignee_shown",
+        "milestone_shown",
+        "run_reference"
+      ]
+    },
+    {
+      "id": "05-add",
+      "status": "success",
+      "summary": "Replayed stored procedure s_43d821; observed comment_anchor=#issuecomment-13, comment_anchor_id=issuecomment-13, issue_number=#6, issue_title=vgt3v-n3 Bench Issue, comment_text=Comment added for run vgt3v-n3, comment_author=admin, run_reference=vgt3v-n3.",
+      "unanswered": [
+        "comment_visible"
+      ],
+      "values": {
+        "comment_anchor": "#issuecomment-13",
+        "comment_anchor_id": "issuecomment-13",
+        "issue_number": "#6",
+        "issue_title": "vgt3v-n3 Bench Issue",
+        "comment_text": "Comment added for run vgt3v-n3",
+        "comment_author": "admin",
+        "run_reference": "vgt3v-n3"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "7/7",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_43d821: step 3: primary locator did not resolve; used fallback #2 page.locator('#issuecomment-13 > div > div:nth-of-type(2) > div:nth-of-type(1) > p')"
+      ]
+    },
+    {
+      "id": "06-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_ad14c8; observed issue_title=vgt3v-n3 Bench Issue, issue_number=#6, description_text=Bench issue created for run vgt3v-n3, assignee_shown=bench-assignee\n(Bench Assignee), comment_text=Comment added for run vgt3v-n3, run_reference=vgt3v-n3, milestone_shown=Bench Milestone.",
+      "values": {
+        "issue_title": "vgt3v-n3 Bench Issue",
+        "issue_number": "#6",
+        "description_text": "Bench issue created for run vgt3v-n3",
+        "assignee_shown": "bench-assignee\n(Bench Assignee)",
+        "comment_text": "Comment added for run vgt3v-n3",
+        "run_reference": "vgt3v-n3",
+        "milestone_shown": "Bench Milestone"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "8/8",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_ad14c8: step 3: primary locator did not resolve; used fallback #2 elementAt(510, 316) /* p */",
+        "s_ad14c8: step 6: primary locator did not resolve; used fallback #2 page.locator('#issue-title-display > h1')"
+      ]
+    },
+    {
+      "id": "07-open",
+      "status": "success",
+      "summary": "Opened the open-issues list of bench/bench-repo read-only (4 Open / 0 Closed).",
+      "values": {
+        "open_issue_count": "4",
+        "closed_issue_count": "0",
+        "seed_issue_1": "Seed: ship repaired device",
+        "seed_issue_1_number": "#3",
+        "seed_issue_2": "Seed: order missing parts",
+        "seed_issue_2_number": "#2",
+        "seed_issue_3": "Seed: triage inbox",
+        "seed_issue_3_number": "#1",
+        "non_seed_issue_title": "vgt3v-n3 Bench Issue",
+        "non_seed_open_issue_1": "vgt3v-n3 Bench Issue",
+        "non_seed_open_issue_2": "#6",
+        "run_reference": "vgt3v-n3"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "13/13",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 7,
+  "total": 7,
+  "repinned": 1,
+  "drift": 4,
+  "driftTickets": [
+    {
+      "flow": "vgt3v",
+      "step": "04-set",
+      "skill": "s_773a5e",
+      "similarity": 1.002,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_773a5e stopped at step 14 — type failed: locator.focus: Timeout 10000ms exceeded. [outcome: unknown]",
+      "reason": "type failed: locator.focus: Timeout 10000ms exceeded. [outcome: unknown]",
+      "pageUrlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "pageUrl": "http://127.0.0.1:8095/bench/bench-repo/issues/6"
+    },
+    {
+      "flow": "vgt3v",
+      "step": "05-add",
+      "skill": "s_43d821",
+      "atStep": "3",
+      "key": "target",
+      "similarity": 1.001,
+      "missedLocator": "page.getByText('Comment added for run vgt3v-n3', { exact: true })",
+      "fallbackUsed": "page.locator('#issuecomment-13 > div > div:nth-of-type(2) > div:nth-of-type(1) > p')",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id#:id",
+      "pageUrl": "http://127.0.0.1:8095/bench/bench-repo/issues/6#issuecomment-13"
+    },
+    {
+      "flow": "vgt3v",
+      "step": "06-open",
+      "skill": "s_ad14c8",
+      "atStep": "3",
+      "key": "target",
+      "similarity": 1.001,
+      "missedLocator": "page.locator('#issue-4 > div > div:nth-of-type(2) > div:nth-of-type(1) > p')",
+      "fallbackUsed": "elementAt(510, 316) /* p */",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "pageUrl": "http://127.0.0.1:8095/bench/bench-repo/issues/6"
+    },
+    {
+      "flow": "vgt3v",
+      "step": "06-open",
+      "skill": "s_ad14c8",
+      "atStep": "6",
+      "key": "target",
+      "similarity": 1.001,
+      "missedLocator": "page.getByRole('heading', { name: 'vgt3v-n3 Bench Issue #4', exact: true })",
+      "fallbackUsed": "page.locator('#issue-title-display > h1')",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "pageUrl": "http://127.0.0.1:8095/bench/bench-repo/issues/6"
+    }
+  ],
+  "wallMs": 569525,
+  "model": "xiaomi/mimo-v2.6-flash",
+  "usage": {
+    "promptTokens": 696250,
+    "completionTokens": 38771,
+    "cachedTokens": 617600
+  },
+  "usageByModel": {
+    "xiaomi/mimo-v2.6-flash": {
+      "promptTokens": 433285,
+      "completionTokens": 4958,
+      "cachedTokens": 380928
+    },
+    "z-ai/glm-5.3": {
+      "promptTokens": 262965,
+      "completionTokens": 33813,
+      "cachedTokens": 236672
+    }
+  },
+  "servedByModel": {
+    "xiaomi/mimo-v2.6-flash": [
+      "Xiaomi"
+    ],
+    "z-ai/glm-5.3": [
+      "Together"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

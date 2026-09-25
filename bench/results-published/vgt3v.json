@@ -1,0 +1,458 @@
+{
+  "name": "vgt3v",
+  "origin": "http://127.0.0.1:8095",
+  "startUrl": "http://127.0.0.1:8095/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-open",
+      "instruction": "Open http://127.0.0.1:8095/ in the browser. If you are not already signed in, sign in with username admin and password {{env:APP_PASSWORD}} — type that password text exactly as given into the password field (the environment fills in the real value when typed; do not guess or alter it). After signing in, report the username shown as signed in and the page you land on.",
+      "skill": "s_1e16d6",
+      "params": {
+        "v1": "http://127.0.0.1:8095/",
+        "v2": "admin",
+        "v3": "{{env:APP_PASSWORD}}"
+      },
+      "outputs": [],
+      "recorded": {
+        "url": "http://127.0.0.1:8095/"
+      },
+      "route": "http://127.0.0.1:8095/",
+      "outputEvidence": {
+        "url": {
+          "same": 2,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "02-open",
+      "instruction": "Navigate to the repository bench/bench-repo on this Gitea instance (http://127.0.0.1:8095/bench/bench-repo) and open its Issues list (open issues tab). Report the titles of all OPEN issues whose title starts with 'Seed:', exactly as displayed, one per line. Do not modify anything.",
+      "skill": "s_764f11",
+      "params": {
+        "v1": "http://127.0.0.1:8095/bench/bench-repo"
+      },
+      "outputs": [
+        "open_issue_count",
+        "closed_issue_count",
+        "issue_3",
+        "issue_2",
+        "issue_1"
+      ],
+      "recorded": {
+        "open_issue_count": "3",
+        "closed_issue_count": "0",
+        "issue_3": "Seed: ship repaired device",
+        "issue_2": "Seed: order missing parts",
+        "issue_1": "Seed: triage inbox",
+        "url": "http://127.0.0.1:8095/bench/bench-repo/issues"
+      },
+      "route": "http://127.0.0.1:8095/bench/bench-repo/issues",
+      "outputEvidence": {
+        "open_issue_count": {
+          "same": 2,
+          "differed": 0
+        },
+        "closed_issue_count": {
+          "same": 2,
+          "differed": 0
+        },
+        "issue_3": {
+          "same": 2,
+          "differed": 0
+        },
+        "issue_2": {
+          "same": 2,
+          "differed": 0
+        },
+        "issue_1": {
+          "same": 2,
+          "differed": 0
+        },
+        "url": {
+          "same": 2,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "03-create",
+      "instruction": "In the repository bench/bench-repo on this Gitea instance, create a NEW issue with title exactly: {{runid}} Bench Issue — and in the description markdown text area write a description that includes the text {{runid}} (for example: 'Bench issue created for run {{runid}}'). Submit the issue. Then report the new issue's title, its displayed issue number (Gitea shows it as #<number>), and the description text as shown on the issue page.",
+      "skill": "s_14716a",
+      "params": {
+        "v2": "{{runid}} Bench Issue",
+        "v1": "{{runid}}",
+        "v3": "Bench issue created for run {{runid}}"
+      },
+      "outputs": [
+        "run_reference"
+      ],
+      "recorded": {
+        "run_reference": "vgt3v-n1",
+        "url": "http://127.0.0.1:8095/bench/bench-repo/issues/4",
+        "url.p3": "4"
+      },
+      "route": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "outputEvidence": {
+        "run_reference": {
+          "same": 0,
+          "differed": 2
+        },
+        "url": {
+          "same": 0,
+          "differed": 2
+        },
+        "url.p3": {
+          "same": 0,
+          "differed": 2
+        }
+      }
+    },
+    {
+      "id": "04-set",
+      "instruction": "On the Gitea issue page {{03-create.url}} (titled '{{runid}} Bench Issue'), use the sidebar pickers to: (1) set the issue's labels to EXACTLY 'bug' and 'priority-high' — if any other label is applied, remove it so only those two remain; (2) assign the issue to the user 'bench-assignee'; (3) set the issue's milestone to 'Bench Milestone'. Each choice only counts once the app has applied it and it is visibly shown on the issue page (not merely ticked in the open menu). When done, report exactly which labels are displayed on the issue, the assignee shown, and the milestone shown.",
+      "skill": "s_6a736e",
+      "params": {
+        "v1": "{{03-create.url}}",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "issue_url",
+        "issue_number",
+        "issue_title",
+        "assignee_shown",
+        "milestone_shown",
+        "run_reference"
+      ],
+      "recorded": {
+        "issue_url": "http://127.0.0.1:8095/bench/bench-repo/issues/4",
+        "issue_number": "#4",
+        "issue_title": "vgt3v-n1 Bench Issue",
+        "labels_displayed": "bug, priority-high",
+        "assignee_shown": "bench-assignee (Bench Assignee)",
+        "milestone_shown": "Bench Milestone",
+        "run_reference": "vgt3v-n1"
+      },
+      "route": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "outputEvidence": {
+        "issue_url": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "issue_number": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "issue_title": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "labels_displayed": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "assignee_shown": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "milestone_shown": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "run_reference": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        }
+      }
+    },
+    {
+      "id": "05-add",
+      "instruction": "On the Gitea issue page {{03-create.url}} (titled '{{runid}} Bench Issue'), add a comment using the comment markdown text area at the bottom of the page. The comment text must include the text {{runid}} (for example: 'Comment added for run {{runid}}'). Submit the comment. Then report the comment text as it appears on the issue page after posting, and confirm it is visible.",
+      "skill": "s_2296e4",
+      "params": {
+        "v1": "{{03-create.url}}",
+        "v2": "{{runid}} Bench Issue",
+        "v3": "{{runid}}",
+        "v4": "Comment added for run {{runid}}"
+      },
+      "outputs": [
+        "comment_text",
+        "comment_author",
+        "comment_anchor",
+        "issue_number",
+        "issue_title",
+        "run_reference",
+        "comment_anchor_id"
+      ],
+      "recorded": {
+        "comment_text": "Comment added for run vgt3v-n1",
+        "comment_visible": "true",
+        "comment_author": "admin",
+        "comment_anchor": "#issuecomment-5",
+        "issue_number": "#4",
+        "issue_title": "vgt3v-n1 Bench Issue",
+        "run_reference": "vgt3v-n1",
+        "comment_anchor_id": "issuecomment-5",
+        "url": "http://127.0.0.1:8095/bench/bench-repo/issues/4#issuecomment-5",
+        "url.h0": "issuecomment-5"
+      },
+      "route": "http://127.0.0.1:8095/bench/bench-repo/issues/:id#:id",
+      "outputEvidence": {
+        "comment_text": {
+          "same": 0,
+          "differed": 1
+        },
+        "comment_visible": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "comment_author": {
+          "same": 1,
+          "differed": 0
+        },
+        "comment_anchor": {
+          "same": 0,
+          "differed": 1
+        },
+        "issue_number": {
+          "same": 0,
+          "differed": 1
+        },
+        "issue_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "run_reference": {
+          "same": 0,
+          "differed": 1
+        },
+        "comment_anchor_id": {
+          "same": 0,
+          "differed": 1
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        },
+        "url.h0": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "06-open",
+      "instruction": "Open the Gitea issue page {{03-create.url}} in a fresh load and verify, reading only (do not modify anything): (a) the issue title and the issue number exactly as displayed (Gitea shows it as #<number>); (b) the description text shown on the issue and whether it contains the text {{runid}}; (c) the exact list of labels shown in the sidebar; (d) the assignee shown; (e) the milestone shown; (f) whether there is a comment whose text contains {{runid}}, and quote that comment's text. Report each of these as concrete observed values.",
+      "skill": "s_3b3dcb",
+      "params": {
+        "v1": "{{03-create.url}}",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "issue_title",
+        "issue_number",
+        "description_text",
+        "assignee_shown",
+        "milestone_shown",
+        "comment_text",
+        "run_reference"
+      ],
+      "recorded": {
+        "issue_title": "vgt3v-n1 Bench Issue",
+        "issue_number": "#4",
+        "description_text": "Bench issue created for run vgt3v-n1",
+        "description_contains": "true",
+        "labels_sidebar": "bug, priority-high",
+        "assignee_shown": "bench-assignee (Bench Assignee)",
+        "milestone_shown": "Bench Milestone",
+        "comment_contains": "true",
+        "comment_text": "Comment added for run vgt3v-n1",
+        "comment_author": "admin",
+        "run_reference": "vgt3v-n1"
+      },
+      "route": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "outputEvidence": {
+        "issue_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "issue_number": {
+          "same": 0,
+          "differed": 1
+        },
+        "description_text": {
+          "same": 0,
+          "differed": 1
+        },
+        "description_contains": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "labels_sidebar": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "assignee_shown": {
+          "same": 0,
+          "differed": 1
+        },
+        "milestone_shown": {
+          "same": 1,
+          "differed": 0
+        },
+        "comment_contains": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "comment_text": {
+          "same": 0,
+          "differed": 1
+        },
+        "comment_author": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "run_reference": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "07-open",
+      "instruction": "Open the open-issues list of the Gitea repository bench/bench-repo ({{02-open.url}}) read-only and report the titles of all OPEN issues whose title starts with 'Seed:', exactly as displayed, one per line. Do not modify anything.",
+      "skill": "s_6969fa",
+      "params": {
+        "v2": "{{02-open.url}}",
+        "v1": "{{runid}}"
+      },
+      "outputs": [
+        "open_issue_count",
+        "closed_issue_count",
+        "seed_issue_1",
+        "seed_issue_1_number",
+        "seed_issue_2",
+        "seed_issue_2_number",
+        "seed_issue_3",
+        "seed_issue_3_number",
+        "non_seed_issue_title",
+        "run_reference",
+        "non_seed_open_issue_1",
+        "non_seed_open_issue_2"
+      ],
+      "recorded": {
+        "open_issue_count": "4",
+        "closed_issue_count": "0",
+        "seed_issue_1": "Seed: ship repaired device",
+        "seed_issue_1_number": "#3",
+        "seed_issue_2": "Seed: order missing parts",
+        "seed_issue_2_number": "#2",
+        "seed_issue_3": "Seed: triage inbox",
+        "seed_issue_3_number": "#1",
+        "non_seed_issue_title": "vgt3v-n1 Bench Issue",
+        "run_reference": "vgt3v-n1",
+        "non_seed_open_issue_1": "vgt3v-n1 Bench Issue",
+        "non_seed_open_issue_2": "#4"
+      },
+      "route": "http://127.0.0.1:8095/bench/bench-repo/issues",
+      "outputEvidence": {
+        "open_issue_count": {
+          "same": 1,
+          "differed": 0
+        },
+        "closed_issue_count": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_issue_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_issue_1_number": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_issue_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_issue_2_number": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_issue_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_issue_3_number": {
+          "same": 1,
+          "differed": 0
+        },
+        "non_seed_issue_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "run_reference": {
+          "same": 0,
+          "differed": 1
+        },
+        "non_seed_open_issue_1": {
+          "same": 0,
+          "differed": 1
+        },
+        "non_seed_open_issue_2": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "session": "vgt3v-n1",
+    "created": "2026-09-25T05:29:34.776Z",
+    "model": "xiaomi/mimo-v2.6-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "04-set",
+      "outputs": [
+        "labels_displayed"
+      ]
+    },
+    {
+      "stepId": "05-add",
+      "outputs": [
+        "comment_visible"
+      ]
+    },
+    {
+      "stepId": "06-open",
+      "outputs": [
+        "description_contains",
+        "labels_sidebar",
+        "comment_contains",
+        "comment_author"
+      ]
+    }
+  ]
+}
