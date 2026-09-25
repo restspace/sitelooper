@@ -1,0 +1,247 @@
+{
+  "name": "vgr2n",
+  "origin": "http://127.0.0.1:3000",
+  "startUrl": "http://127.0.0.1:3000/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-open",
+      "instruction": "Open http://127.0.0.1:3000/ . If you see a sign-in page, log in with username 'admin' and the password given as the literal text {{env:APP_PASSWORD}} — type exactly those characters into the password field and the real password will be filled in automatically as you type; do not guess or substitute any other password. If Grafana prompts you to change your password or shows a welcome tour, skip or dismiss it. Then find and open the provisioned dashboard named 'Service health' (use dashboard search if helpful) and report the exact titles of all panels shown on that dashboard, exactly as they appear on the page.",
+      "skill": "s_c82111",
+      "params": {
+        "v1": "http://127.0.0.1:3000/",
+        "v2": "admin",
+        "v3": "{{env:APP_PASSWORD}}"
+      },
+      "outputs": [
+        "dashboard_title",
+        "dashboard_folder",
+        "panel_1_title",
+        "panel_2_title",
+        "panel_3_title",
+        "login_user"
+      ],
+      "recorded": {
+        "dashboard_title": "Service Health",
+        "dashboard_folder": "Bench",
+        "panel_1_title": "Request rate",
+        "panel_2_title": "Error count",
+        "panel_3_title": "Latency by endpoint",
+        "panel_count": "3",
+        "login_user": "admin",
+        "host": "127.0.0.1",
+        "url": "http://127.0.0.1:3000/d/bench-service-health/service-health?from=now-6h&to=now&timezone=browser"
+      },
+      "route": "http://127.0.0.1:3000/d/bench-service-health/service-health",
+      "outputEvidence": {
+        "dashboard_title": {
+          "same": 1,
+          "differed": 0
+        },
+        "dashboard_folder": {
+          "same": 1,
+          "differed": 0
+        },
+        "panel_1_title": {
+          "same": 1,
+          "differed": 0
+        },
+        "panel_2_title": {
+          "same": 1,
+          "differed": 0
+        },
+        "panel_3_title": {
+          "same": 1,
+          "differed": 0
+        },
+        "panel_count": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "login_user": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "host": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "02-create",
+      "instruction": "In Grafana at http://127.0.0.1:3000/, create a NEW dashboard. Add a visualization panel and set its visualization type to 'Stat'. Set the panel's title to exactly '{{runid}} Availability'. Set the panel's data source to the 'TestData' data source (choose TestData as the data source for the panel's query; if a query editor appears, leave the default scenario). Then save the dashboard with the title exactly '{{runid}} {{01-open.dashboard_folder}} Dashboard' (use the save dialog, confirm the save, and dismiss any 'unsaved changes' warnings by saving). Verify the save succeeded (no unsaved-changes indicator remains) and report the dashboard's URL as shown in the browser address bar, plus the panel title as displayed on the dashboard.",
+      "skill": "s_b55e47",
+      "params": {
+        "v1": "127.0.0.1",
+        "v4": "Stat",
+        "v5": "{{runid}} Availability",
+        "v6": "{{runid}} {{01-open.dashboard_folder}} Dashboard",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "dashboard_url",
+        "panel_title_displayed",
+        "runid"
+      ],
+      "recorded": {
+        "dashboard_url": "http://127.0.0.1:3000/d/ffza7svvkb8jka/vgr2n-n1-bench-dashboard?from=now-6h&to=now&timezone=browser",
+        "panel_title_displayed": "vgr2n-n1 Availability",
+        "runid": "vgr2n-n1",
+        "url": "http://127.0.0.1:3000/d/ffza7svvkb8jka/vgr2n-n1-bench-dashboard?from=now-6h&to=now&timezone=browser",
+        "url.p1": "ffza7svvkb8jka",
+        "url.p2": "vgr2n-n1-bench-dashboard"
+      },
+      "route": "http://127.0.0.1:3000/d/ffza7svvkb8jka/:id"
+    },
+    {
+      "id": "03-open",
+      "instruction": "In Grafana at http://127.0.0.1:3000/, open the existing dashboard titled '{{runid}} {{01-open.dashboard_folder}} Dashboard' (it is in the {{01-open.dashboard_folder}} folder; you can find it via dashboard search). Enter edit mode and add a NEW panel of type 'Text'. Set that text panel's title to exactly '{{runid}} Notes' and set its text content to include the runid '{{runid}}' (e.g. markdown text like 'Notes for run {{runid}}'). Then explicitly SAVE the dashboard (use the save dialog and confirm) and verify the save succeeded. Report the panel title and the text content as displayed on the dashboard after saving.",
+      "skill": "s_732619",
+      "params": {
+        "v1": "127.0.0.1",
+        "v3": "{{01-open.dashboard_folder}}",
+        "v4": "{{runid}} Notes",
+        "v2": "{{runid}}",
+        "v5": "Notes for run {{runid}}"
+      },
+      "outputs": [
+        "dashboard_url",
+        "text_panel_content",
+        "notes_panel_title",
+        "availability_panel_title",
+        "runid"
+      ],
+      "recorded": {
+        "dashboard_url": "http://127.0.0.1:3000/d/ffza7svvkb8jka/vgr2n-n1-bench-dashboard?from=now-6h&to=now&timezone=browser",
+        "text_panel_content": "Notes for run vgr2n-n1",
+        "notes_panel_title": "vgr2n-n1 Notes",
+        "availability_panel_title": "vgr2n-n1 Availability",
+        "runid": "vgr2n-n1"
+      },
+      "route": "http://127.0.0.1:3000/d/ffza7svvkb8jka/:id",
+      "urlVariance": [
+        "ffza7svvkb8jka",
+        "ffza9v9ivwcu8d"
+      ]
+    },
+    {
+      "id": "04-open",
+      "instruction": "In Grafana at http://127.0.0.1:3000/, open the dashboard titled '{{runid}} {{01-open.dashboard_folder}} Dashboard' (in the {{01-open.dashboard_folder}} folder). Do two things and make sure both are PERSISTED by explicitly saving: (1) Add the tag 'bench' to the dashboard — use the dashboard settings (gear/cog icon) > General, add a tag named 'bench' to the Tags field, and save settings. (2) Set the dashboard's time range to the last 6 hours using the top time picker (choose 'Last 6 hours'), then open the Save dashboard dialog and make sure the checkbox 'Update default time range' (may read 'Update default time') IS TICKED before confirming the save, so the 6-hour range is written into the saved dashboard. Verify both: the tag 'bench' appears in the dashboard settings/tags, and the save succeeded. Report what the time picker shows and what tags are listed.",
+      "skill": "s_6a9490",
+      "params": {
+        "v1": "127.0.0.1",
+        "v3": "{{01-open.dashboard_folder}}",
+        "v4": "Last 6 hours",
+        "v2": "{{runid}}",
+        "v5": "{{02-create.url.p1}}"
+      },
+      "outputs": [],
+      "recorded": {},
+      "route": "http://127.0.0.1:3000/d/ffza7svvkb8jka/:id",
+      "urlVariance": [
+        "vgr2n-n1-bench-dashboard",
+        "vgr2n-n2-bench-dashboard"
+      ]
+    },
+    {
+      "id": "05-open",
+      "instruction": "In Grafana at http://127.0.0.1:3000/, open the dashboard titled '{{runid}} {{01-open.dashboard_folder}} Dashboard' (in the {{01-open.dashboard_folder}} folder). Set the dashboard's auto-refresh interval to '1m' so it is PERSISTED: open the dashboard settings (gear/cog icon) > General, find the 'Auto refresh' option and set it to '1m', then save the settings. Also, if the top-bar time picker has a refresh interval selection, set it to '1m' there too. Verify the auto-refresh setting reads '1m' in the dashboard settings and that the save succeeded. Report the value shown for Auto refresh and any refresh indicator in the top bar.",
+      "skill": "s_c81504",
+      "params": {
+        "v1": "127.0.0.1",
+        "v3": "{{01-open.dashboard_folder}}",
+        "v2": "{{runid}}",
+        "v4": "{{02-create.url.p1}}"
+      },
+      "outputs": [
+        "auto_refresh_setting"
+      ],
+      "recorded": {
+        "auto_refresh_setting": "1m",
+        "url": "http://127.0.0.1:3000/d/ffza7svvkb8jka/vgr2n-n1-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m"
+      },
+      "route": "http://127.0.0.1:3000/d/ffza7svvkb8jka/:id",
+      "urlVariance": [
+        "vgr2n-n1-bench-dashboard",
+        "vgr2n-n2-bench-dashboard"
+      ]
+    },
+    {
+      "id": "06-open",
+      "instruction": "In Grafana at http://127.0.0.1:3000/, open the dashboard titled '{{runid}} {{01-open.dashboard_folder}} Dashboard' by navigating directly to a clean URL with NO query parameters (e.g. http://127.0.0.1:3000/d/{{02-create.url.p1}}/{{runid}}-bench-dashboard — strip any ?from=...&to=... params) so the saved defaults are used, and verify the following on the freshly loaded page, reporting each: (a) the exact titles of all panels on the dashboard; (b) that the panel '{{runid}} Availability' is a Stat visualization and its query uses the TestData data source (open the panel in edit mode to check the visualization type and data source, then exit edit mode without saving); (c) that the text panel '{{runid}} Notes' displays content containing '{{runid}}'; (d) in dashboard Settings > General, the tags include 'bench', the Auto refresh value, and the default time range; (e) the exact URL currently shown in the browser address bar. Report all findings.",
+      "skill": "s_78c6f1",
+      "params": {
+        "v1": "127.0.0.1",
+        "v8": "http://127.0.0.1:3000/d/{{02-create.url.p1}}/{{runid}}-bench-dashboard",
+        "v6": "{{runid}} Availability",
+        "v7": "{{runid}} Notes",
+        "v2": "{{runid}}",
+        "v3": "{{01-open.dashboard_folder}}"
+      },
+      "outputs": [
+        "visualization_type",
+        "datasource_placeholder",
+        "auto_refresh_setting",
+        "address_bar_url",
+        "notes_panel_title",
+        "availability_panel_title",
+        "time_options",
+        "runid"
+      ],
+      "recorded": {
+        "visualization_type": "Stat",
+        "datasource_placeholder": "TestData",
+        "auto_refresh_setting": "1m",
+        "address_bar_url": "http://127.0.0.1:3000/d/ffza7svvkb8jka/vgr2n-n1-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m",
+        "notes_panel_title": "vgr2n-n1 Notes",
+        "availability_panel_title": "vgr2n-n1 Availability",
+        "default_time_range": "Default",
+        "time_options": "Time options",
+        "runid": "vgr2n-n1"
+      },
+      "route": "http://127.0.0.1:3000/d/ffza7svvkb8jka/:id",
+      "urlVariance": [
+        "ffza7svvkb8jka",
+        "ffza9v9ivwcu8d",
+        "vgr2n-n1-bench-dashboard",
+        "vgr2n-n2-bench-dashboard"
+      ]
+    }
+  ],
+  "provenance": {
+    "session": "vgr2n-n1",
+    "created": "2026-09-25T04:02:39.306Z",
+    "model": "xiaomi/mimo-v2.6-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "01-open",
+      "outputs": [
+        "panel_count",
+        "host"
+      ]
+    },
+    {
+      "stepId": "06-open",
+      "outputs": [
+        "default_time_range"
+      ]
+    }
+  ]
+}

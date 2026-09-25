@@ -1,0 +1,190 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/vgr2n-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/vgr2n-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/vgr2n-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/bench/results/vgr2n-spec-spec-tmp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/vgr2n-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "vgr2n.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/vgr2n-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "vgr2n.spec.ts",
+      "file": "vgr2n.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "vgr2n",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 129333,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper warn] 01-open: report value login_user is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 01-open\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 02-create s_9cef70/8: the field already held the value this type enters (restored after the recording saw it emptied), so it was cleared first rather than typed onto\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-create\n"
+                    },
+                    {
+                      "text": "[sitelooper recipe] filled via recipe monaco/set-value (r_f2510e); value verified on the component\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-open\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 05-open s_c81504/4: read 'auto_refresh_setting' returned a value the skill itself set/selected ('1m') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 05-open s_c81504/13: read 'auto_refresh_setting' returned a value the skill itself set/selected ('1m') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 05-open s_c81504/24: read 'auto_refresh_setting' returned a value the skill itself set/selected ('1m') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 05-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 06-open\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-open: Open http://127.0.0.1:3000/ . If you see a sign-in page, log in with username 'admin' and the password given as the literal text {{env:APP_PASSWORD}} — type exactly those characters into the password field and the real password will be filled in automatically as you type; do not guess or substitute any other password. If Grafana prompts you to change your password or shows a welcome tour, skip or dismiss it. Then find and open the provisioned dashboard named 'Service health' (use dashboard search if helpful) and report the exact titles of all panels shown on that dashboard, exactly as they appear on the page.",
+                      "duration": 20299
+                    },
+                    {
+                      "title": "02-create: In Grafana at http://127.0.0.1:3000/, create a NEW dashboard. Add a visualization panel and set its visualization type to 'Stat'. Set the panel's title to exactly '{{runid}} Availability'. Set the panel's data source to the 'TestData' data source (choose TestData as the data source for the panel's query; if a query editor appears, leave the default scenario). Then save the dashboard with the title exactly '{{runid}} {{01-open.dashboard_folder}} Dashboard' (use the save dialog, confirm the save, and dismiss any 'unsaved changes' warnings by saving). Verify the save succeeded (no unsaved-changes indicator remains) and report the dashboard's URL as shown in the browser address bar, plus the panel title as displayed on the dashboard.",
+                      "duration": 27710
+                    },
+                    {
+                      "title": "03-open: In Grafana at http://127.0.0.1:3000/, open the existing dashboard titled '{{runid}} {{01-open.dashboard_folder}} Dashboard' (it is in the {{01-open.dashboard_folder}} folder; you can find it via dashboard search). Enter edit mode and add a NEW panel of type 'Text'. Set that text panel's title to exactly '{{runid}} Notes' and set its text content to include the runid '{{runid}}' (e.g. markdown text like 'Notes for run {{runid}}'). Then explicitly SAVE the dashboard (use the save dialog and confirm) and verify the save succeeded. Report the panel title and the text content as displayed on the dashboard after saving.",
+                      "duration": 21287
+                    },
+                    {
+                      "title": "04-open: In Grafana at http://127.0.0.1:3000/, open the dashboard titled '{{runid}} {{01-open.dashboard_folder}} Dashboard' (in the {{01-open.dashboard_folder}} folder). Do two things and make sure both are PERSISTED by explicitly saving: (1) Add the tag 'bench' to the dashboard — use the dashboard settings (gear/cog icon) > General, add a tag named 'bench' to the Tags field, and save settings. (2) Set the dashboard's time range to the last 6 hours using the top time picker (choose 'Last 6 hours'), then open the Save dashboard dialog and make sure the checkbox 'Update default time range' (may read 'Update default time') IS TICKED before confirming the save, so the 6-hour range is written into the saved dashboard. Verify both: the tag 'bench' appears in the dashboard settings/tags, and the save succeeded. Report what the time picker shows and what tags are listed.",
+                      "duration": 20808
+                    },
+                    {
+                      "title": "05-open: In Grafana at http://127.0.0.1:3000/, open the dashboard titled '{{runid}} {{01-open.dashboard_folder}} Dashboard' (in the {{01-open.dashboard_folder}} folder). Set the dashboard's auto-refresh interval to '1m' so it is PERSISTED: open the dashboard settings (gear/cog icon) > General, find the 'Auto refresh' option and set it to '1m', then save the settings. Also, if the top-bar time picker has a refresh interval selection, set it to '1m' there too. Verify the auto-refresh setting reads '1m' in the dashboard settings and that the save succeeded. Report the value shown for Auto refresh and any refresh indicator in the top bar.",
+                      "duration": 27991
+                    },
+                    {
+                      "title": "06-open: In Grafana at http://127.0.0.1:3000/, open the dashboard titled '{{runid}} {{01-open.dashboard_folder}} Dashboard' by navigating directly to a clean URL with NO query parameters (e.g. http://127.0.0.1:3000/d/{{02-create.url.p1}}/{{runid}}-bench-dashboard — strip any ?from=...&to=... params) so the saved defaults are used, and verify the following on the freshly loaded page, reporting each: (a) the exact titles of all panels on the dashboard; (b) that the panel '{{runid}} Availability' is a Stat visualization and its query uses the TestData data source (open the panel in edit mode to check the visualization type and data source, then exit edit mode without saving); (c) that the text panel '{{runid}} Notes' displays content containing '{{runid}}'; (d) in dashboard Settings > General, the tags include 'bench', the Auto refresh value, and the default time range; (e) the exact URL currently shown in the browser address bar. Report all findings.",
+                      "duration": 9757
+                    }
+                  ],
+                  "startTime": "2026-09-25T04:10:28.403Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": ""
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "d84d04b4a3c32d66cd76-ca55649f8eacea200451",
+          "file": "vgr2n.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-25T04:10:25.953Z",
+    "duration": 132001.383,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}
