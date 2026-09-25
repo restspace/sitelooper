@@ -1,0 +1,6 @@
+flow: /home/user/sitelooper/bench/results/fwgr74-cv3-c2-spec-tmp/fwgr74-cv3.flow.ts
+spec: /home/user/sitelooper/bench/results/fwgr74-cv3-c2-spec-tmp/fwgr74-cv3.spec.ts
+warning the recording carries a value equal to APP_PASSWORD that compile left as recorded
+  why: a non-credential environment variable holds the same value, so it may be a login or other copy rather than the secret, and no password field shows it is APP_PASSWORD
+  fix: if it is the credential, re-record the step passing {{env:APP_PASSWORD}} in single quotes (never $APP_PASSWORD)
+
