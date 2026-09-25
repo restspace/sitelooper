@@ -1,0 +1,51 @@
+
+Running 1 test using 1 worker
+
+[1/1] bench/results/fwod88-cv3-c2-compile/fwod88-cv3.spec.ts:9:1 › fwod88-cv3
+  1) bench/results/fwod88-cv3-c2-compile/fwod88-cv3.spec.ts:9:1 › fwod88-cv3 › 01-signin: Sign in to this Odoo login page with email/login 'admin' and password exactly the text {{env:APP_PASSWORD}} (type it literally as that placeholder text, it will be filled in when typed). Submit the login form and wait until you are logged in (the Odoo apps/home page or sales app appears). Report what page you end up on and the logged-in user name shown. 
+
+    Error: 01-signin s_5fccd8/2: the recorded page change did not appear
+
+    01-signin s_5fccd8/2: the recorded page change did not appear
+
+    expect(received).toBeNull()
+
+    Received: "after step 01-signin s_5fccd8/2 none of the 1 recorded page change(s) appeared (e.g. \"- menu \\\"6 3 YourCompany\\\"\") — the step ran but did not have its recorded effect"
+
+    Call Log:
+    - Timeout 5000ms exceeded while waiting on the predicate
+
+       at fwod88-cv3.flow.ts:17095
+
+      17093 |       { timeout: EXPECT_WAIT_MS, message: `${ctx.tag}: the recorded page change did not appear` },
+      17094 |     )
+    > 17095 |     .toBeNull();
+            |      ^
+      17096 |   for (const warning of last.warnings) console.log(`[sitelooper warn] ${warning}`);
+      17097 |   if (last.unobserved) console.log(`[sitelooper unobserved] ${ctx.tag}: the page could not be captured, or observed in full, after the action`);
+      17098 |   return last;
+        at expectChanges (/home/user/sitelooper/bench/results/fwod88-cv3-c2-compile/fwod88-cv3.flow.ts:17095:6)
+        at Object.verify (/home/user/sitelooper/bench/results/fwod88-cv3-c2-compile/fwod88-cv3.flow.ts:17558:32)
+        at runStepLifecycle (/home/user/sitelooper/bench/results/fwod88-cv3-c2-compile/fwod88-cv3.flow.ts:12504:24)
+        at Object.01-signin (/home/user/sitelooper/bench/results/fwod88-cv3-c2-compile/fwod88-cv3.flow.ts:17533:5)
+        at /home/user/sitelooper/bench/results/fwod88-cv3-c2-compile/fwod88-cv3.flow.ts:24900:7
+        at runFlow (/home/user/sitelooper/bench/results/fwod88-cv3-c2-compile/fwod88-cv3.flow.ts:24899:5)
+        at /home/user/sitelooper/bench/results/fwod88-cv3-c2-compile/fwod88-cv3.spec.ts:14:21
+
+    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: bench/results/fwod88-cv3-c2-compile/.sitelooper-check-caX9fi/test-results/fwod88-cv3-fwod88-cv3/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    bench/results/fwod88-cv3-c2-compile/.sitelooper-check-caX9fi/test-results/fwod88-cv3-fwod88-cv3/trace.zip
+    Usage:
+
+        npx playwright show-trace bench/results/fwod88-cv3-c2-compile/.sitelooper-check-caX9fi/test-results/fwod88-cv3-fwod88-cv3/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+  1 failed
+    bench/results/fwod88-cv3-c2-compile/fwod88-cv3.spec.ts:9:1 › fwod88-cv3 ────────────────────────

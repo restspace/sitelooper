@@ -1,0 +1,222 @@
+{
+ "id": "s_1f0fc3",
+ "origin": "http://127.0.0.1:8069",
+ "template": "Sign in to this Odoo login page with email/login '{{v1}}' and password exactly the text {{v2}} (type it literally as that placeholder text, it will be filled in when typed). Submit the login form and wait until you are logged in (the Odoo apps/home page or sales app appears). Report what page you end up on and the logged-in user name shown.",
+ "params": {
+  "v1": {
+   "example": "admin",
+   "usedIn": [
+    1
+   ]
+  },
+  "v2": {
+   "example": "{{env:APP_PASSWORD}}",
+   "usedIn": [
+    2
+   ]
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8069/web/login"
+ },
+ "steps": [
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e12",
+    "value": "{{v1}}"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Email"
+     },
+     {
+      "kind": "label",
+      "label": "Email"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "Email"
+     },
+     {
+      "kind": "id",
+      "selector": "#login"
+     },
+     {
+      "kind": "css",
+      "selector": "#login"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 200,
+      "w": 268,
+      "h": 35,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web/login",
+    "addedContains": [
+     "- textbox \"Email\": {{v1}}"
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_e72532",
+    "step": 1
+   }
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e15",
+    "value": "{{v2}}"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Password"
+     },
+     {
+      "kind": "label",
+      "label": "Password"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "Password"
+     },
+     {
+      "kind": "id",
+      "selector": "#password"
+     },
+     {
+      "kind": "css",
+      "selector": "#password"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 280,
+      "w": 268,
+      "h": 35,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web/login",
+    "addedContains": [
+     "- textbox \"Password\": {{v2}}"
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_e72532",
+    "step": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e17"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Log in"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div > div > form > div:nth-of-type(3) > button"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 347,
+      "w": 268,
+      "h": 35,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "mints": {
+    "at": "q.action",
+    "sole": false
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action={{d1}}&cids={{d2}}&menu_id={{d3}}",
+    "addedContains": [
+     "- button \"Home Menu\"",
+     "- menuitem \"Discuss\"",
+     "- menu \"6 5 YourCompany\"",
+     "- button \"6\"",
+     "- button \"5\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_e72532",
+    "step": 3
+   }
+  }
+ ],
+ "derived": {
+  "d1": {
+   "step": 3,
+   "at": "q.action",
+   "example": "123"
+  },
+  "d2": {
+   "step": 3,
+   "at": "q.cids",
+   "example": "1"
+  },
+  "d3": {
+   "step": 3,
+   "at": "q.menu_id",
+   "example": "81"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 3,
+  "successes": 3,
+  "partial": 0,
+  "created": "2026-09-25T14:34:35.946Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2,
+  "lastUsed": "2026-09-25T14:56:53.093Z"
+ },
+ "status": "validated",
+ "seq": {
+  "chain": "s_a0ea1e",
+  "index": 0,
+  "of": 2
+ },
+ "provenance": {
+  "session": "rerecord-muh2ac7g-0",
+  "instruction": "Sign in to this Odoo login page with email/login 'admin' and password exactly the text {{env:APP_PASSWORD}} (type it literally as that placeholder text, it will be filled in when typed). Submit the login form and wait until you are logged in (the Odoo apps/home page or sales app appears). Report what page you end up on and the logged-in user name shown.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-25T14:34:35.946Z"
+ },
+ "revision": 3
+}
