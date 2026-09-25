@@ -401,6 +401,13 @@ export class RunLedger {
   private entries: LedgerEntry[] = [];
   /** Values already banked, so first appearance wins. */
   private seen = new Set<string>();
+  /**
+   * When each entry's value was last SEEN at its own origin: banked, or — for
+   * a url id — shown again by that same step at that same position. See
+   * byOrigin.
+   */
+  private sighted = new Map<LedgerEntry, number>();
+  private sightings = 0;
   private instruction = 0;
   private step = 0;
   /**
@@ -515,6 +522,7 @@ export class RunLedger {
     };
     this.seen.add(v);
     this.entries.push(entry);
+    this.sighted.set(entry, ++this.sightings);
     return entry;
   }
 
@@ -528,6 +536,13 @@ export class RunLedger {
   ): LedgerEntry[] {
     const out: LedgerEntry[] = [];
     for (const part of parts) {
+      // Shown again at the position it was banked at, by the same step: this
+      // origin's value is this one again (byOrigin).
+      const again = this.entries.find((e) => e.value === part.value.trim() && e.binding.from === 'url' && e.binding.step === step && e.binding.label === part.label);
+      if (again) {
+        this.sighted.set(again, ++this.sightings);
+        continue;
+      }
       // `landed`: the caller saw a step's own non-navigation action land this
       // url, so a path digit run in it is that step's record id at any length
       // (pathDigitPart). Below the floor it is banked for its position only.
@@ -627,6 +642,32 @@ export class RunLedger {
   /** Every entry, oldest first. */
   all(): LedgerEntry[] {
     return [...this.entries];
+  }
+
+  /**
+   * The run's values keyed by their ORIGIN (bindingKey), so a param can bind
+   * to where a value comes from — what compile is handed as `knownValues`.
+   *
+   * Two values can share an origin: one step's url showed `4` at `p1`, then
+   * `bulkcheckout`, then `4` again. The origin's value is the one SEEN there
+   * last. snipeit fwsi14-n1 02-create landed its asset (`/hardware/4`), clicked
+   * through to `/hardware/bulkcheckout`, went back and ended on `/hardware/4`;
+   * keyed by whichever was BANKED last, `url:i2:p1` read `bulkcheckout`, so
+   * 03-open's `goto /hardware/4/edit` found no origin for its 4 and every
+   * replay opened n1's asset. The flow publishes `{{02-create.url.p1}}` from
+   * the step's end url; the latest sighting is that same value.
+   */
+  byOrigin(): Record<string, string> {
+    const out: Record<string, string> = {};
+    const at: Record<string, number> = {};
+    for (const e of this.entries) {
+      const key = bindingKey(e.binding);
+      const when = this.sighted.get(e) ?? 0;
+      if (key in out && at[key] > when) continue;
+      out[key] = e.value;
+      at[key] = when;
+    }
+    return out;
   }
 
   has(value: string): boolean {

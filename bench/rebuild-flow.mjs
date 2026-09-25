@@ -53,7 +53,7 @@ const { buildFlow, lintFlowRefs, staleInstructionIds, taskConstants } = await im
 const { SkillStore } = await import(dist('skills/store.js'));
 const { bindSkill, publishedOutputs } = await import(dist('skills/learn.js'));
 const { carryOpener, compileSkills } = await import(dist('skills/compile.js'));
-const { RunLedger, bindingKey } = await import(dist('skills/ledger.js'));
+const { RunLedger } = await import(dist('skills/ledger.js'));
 const { urlParts } = await import(dist('execution/url.js'));
 const { backfillReadValues, flattenComposedValues, promoteLabelledReads, unnamedReadValues } = await import(dist('agent/report.js'));
 const { parseScript, selectionReadBack } = await import(dist('daemon/recorder.js'));
@@ -228,7 +228,7 @@ function storeFrom(entries, known, valuesByInstruction) {
   const seed = () => {
     for (const [name, value] of Object.entries(known)) ledger.add(value, { from: 'var', name }, { vouched: true });
   };
-  const knownValues = () => Object.fromEntries(ledger.all().map((e) => [bindingKey(e.binding), e.value]));
+  const knownValues = () => ledger.byOrigin();
   /** server.ts noteMintedIds: url ids first, then reported values (`values` overrides a report's own, see below). */
   const bank = (group, stepId, values) => {
     for (const e of group) {

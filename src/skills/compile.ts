@@ -2608,7 +2608,16 @@ function expectationFor(step: RecordedStep, slots: Map<string, string>, popupHid
   // A navigation's diff is its LANDING — the next segment's start url,
   // fingerprint and startText — not an effect to assert: none of it becomes
   // an expectation, exactly as when goto/back were never diffed.
-  if (!step.diff || NAVIGATION_TOOLS.has(step.tool)) return undefined;
+  //
+  // Except the alert the landing raised. Both runners stop a navigation whose
+  // landing raises an alert the step does not expect, and the recording SAW
+  // this one: snipeit fwsi14-n1 #95 `goto /hardware/4/edit` landed on the edit
+  // form, whose status help ("This asset can be checked out.") is a live
+  // region, and both replays stopped on "raised an alert the recording never
+  // saw". Kept as the step's expected alert only; one a replay's landing does
+  // not raise stays soft, as every recorded alert does.
+  if (!step.diff) return undefined;
+  if (NAVIGATION_TOOLS.has(step.tool)) return step.diff.alerts[0] ? { alertContains: substitute(step.diff.alerts[0], slots).slice(0, 120) } : undefined;
   const out: StepExpectation = {};
   // A fill or a type never navigates: a url seen after one is where the page
   // happened to be while it settled, so only its path is evidence. snipeit
