@@ -45,7 +45,7 @@ import { givenWarning, referenceValue, shownForReport, templateValue, typedWarni
 import { startPageSettled } from '../execution/action.js';
 import { coverageComplete, recordedValueShown } from '../execution/snapshot.js';
 import { captureSignature } from './diff.js';
-import { recordedStandIn, referencableOutputs } from '../skills/flow.js';
+import { recordedStandIn, referencableOutputs, selfNamingReadDrops } from '../skills/flow.js';
 import { SessionState } from './state.js';
 
 interface DaemonOptions {
@@ -194,12 +194,35 @@ ${describeLeaks(leaks.slice(0, 6))}`);
     // carries whether evidence, not only its shape, made it an identifier —
     // the backstop in stripRunValueCandidates reads it.
     const constants = new Set(this.taskConstants());
+    // A read located by the value it read, whose output a later step
+    // references (flow.ts selfNamingReadDrops, round 63 odoo fwod88): that
+    // rung finds the element on this run only. Dropped here, ahead of the run
+    // values below and without the round-59 backstop; a position-only rest
+    // is kept only with a point of the dropped rung's role. The task's
+    // constants and the run's vars (the runid) keep their rungs.
+    const session = new Set(this.sessionSkills(flow, store).map((s) => s.id));
+    const vars = Object.values(this.state.vars ?? {}).filter((v): v is string => typeof v === 'string' && v.length > 0);
+    const chainOf = (id: string): Skill[] | null => {
+      const head = store.get(id);
+      if (!head || !session.has(head.id)) return null;
+      return (head.seq ? store.list(head.origin).filter((s) => s.seq?.chain === head.seq!.chain) : [head]).filter((s) => session.has(s.id));
+    };
     const runValues = this.ledger
       .all()
       .filter((e) => e.kind === 'identifier' && e.value.length >= 3 && !constants.has(e.value))
       .map((e) => ({ value: e.value, evidence: e.basis !== 'shape' }));
-    if (!runValues.length) return 0;
-    let removed = 0;
+    // Only a RUN VALUE — an identifier the ledger banked, less the task's
+    // constants — is dropped: a board column's "Backlog" or a nav link's
+    // "Tickets" is referenced by later steps too (the export references every
+    // reported value) and names the same element on every run.
+    const identifiers = new Set(runValues.map((r) => r.value));
+    let selfNamed = 0;
+    for (const t of selfNamingReadDrops(flow, chainOf, (v) => !identifiers.has(v) || constants.has(v) || vars.some((x) => v.includes(x)))) {
+      store.put(t.skill);
+      selfNamed += t.removed;
+    }
+    if (!runValues.length) return selfNamed;
+    let removed = selfNamed;
     for (const skill of this.sessionSkills(flow, store)) {
       let touched = false;
       const walk = (steps: Skill['steps']): void => {

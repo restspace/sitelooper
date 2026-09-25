@@ -7,7 +7,7 @@ import path from 'node:path';
 import type { LocatorCandidate, RecordedEntry, RecordedInstruction, RecordedReport, RecordedStep, StepDiff } from '../daemon/recorder.js';
 import { rootDir } from '../shared/paths.js';
 import { escapeRe } from '../shared/text.js';
-import { carriedSteps, urlParts, urlPattern } from './compile.js';
+import { carriedSteps, dropSelfNamingCandidates, urlParts, urlPattern } from './compile.js';
 import { mintedShape, originOf as urlOriginOf, routeAt, urlPart, urlShapeOf } from '../execution/url.js';
 import { idPositionPart, linkMintedParts, pathDigitPart, pathIdPart, unseenGotoParts } from './ledger.js';
 import { MIN_ID_LEN, looksLikeId, tokenPattern } from './shape.js';
@@ -720,6 +720,55 @@ export function buildFlow(
     provenance: { session: opts.session, created: opts.now ?? new Date().toISOString(), ...(opts.model ? { model: opts.model } : {}) },
     ...(warnings.length ? { warnings } : {}),
   };
+}
+
+/**
+ * RULE (round 63, odoo fwod88 03-create): at export, the reads whose output a
+ * LATER step references lose the locator rungs that name the value they read
+ * (compile.ts dropSelfNamingCandidates). Only referenced outputs: that is the
+ * value the flow threads onward, the one a replay must re-read on every run;
+ * a self-named read nothing references (page furniture — "USD", "Draft -
+ * Saved" — 229 of 253 such reads across the published recordings) keeps its
+ * working rung. `keep` says a value the task holds constant (taskConstants,
+ * a var such as the runid): its rung names the same thing on every run.
+ * A value the step's own or an earlier instruction states literally is kept
+ * too. `chainOf` gives a pinned skill's chain; the skills it returns are
+ * mutated in place, and each one touched is returned for the caller to put.
+ */
+export function selfNamingReadDrops(
+  flow: Flow,
+  chainOf: (skillId: string) => Skill[] | null,
+  keep: (value: string) => boolean,
+): { skill: Skill; removed: number }[] {
+  const touched = new Map<string, { skill: Skill; removed: number }>();
+  flow.steps.forEach((step, i) => {
+    if (!step.skill) return;
+    const chain = chainOf(step.skill);
+    if (!chain?.length) return;
+    const later = flow.steps.slice(i + 1).map((s) => [s.instruction, ...Object.values(s.params ?? {})].join(' ')).join(' ');
+    const stated = flow.steps.slice(0, i + 1).map((s) => s.instruction).join(' ');
+    for (const skill of chain) {
+      const walk = (steps: SkillStep[]): void => {
+        for (const s of steps) {
+          if (s.body) walk(s.body);
+          if ((s.tool !== 'read' && s.tool !== 'read_all') || !s.label) continue;
+          const value = step.recorded?.[s.label];
+          if (typeof value !== 'string' || !value.trim() || keep(value.trim()) || stated.includes(value.trim())) continue;
+          if (!later.includes(`{{${step.id}.${s.label}}}`)) continue;
+          for (const [key, cands] of Object.entries(s.locators ?? {})) {
+            const kept = dropSelfNamingCandidates(cands ?? [], value);
+            if (kept.length === (cands ?? []).length) continue;
+            s.locators[key] = kept;
+            const t = touched.get(skill.id) ?? { skill, removed: 0 };
+            t.removed += (cands ?? []).length - kept.length;
+            touched.set(skill.id, t);
+          }
+        }
+      };
+      walk(skill.steps);
+    }
+  });
+  return [...touched.values()];
 }
 
 /**
