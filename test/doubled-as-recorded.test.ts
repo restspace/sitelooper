@@ -97,7 +97,7 @@ describe('positionalOnly: a recorded point is not a positional guess (verify-rou
   it('a structural path hit after every identifying rung missed is positional', () => {
     expect(positionalOnly({ structural: true, missed: [0, 1] }, [0, 1])).toBe(true);
   });
-  it('a point hit is the recording's own way to the element', () => {
+  it("a point hit is the recording's own way to the element", () => {
     expect(positionalOnly({ structural: true, point: true, missed: [0] }, [0])).toBe(false);
   });
   it('a hit by an identifying rung, or a chain with none, is not asked about', () => {
