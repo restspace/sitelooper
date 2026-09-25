@@ -159,3 +159,12 @@ describe('journal attribution', () => {
     expect(windowKindOf('snapshot')).toBe('daemon');
   });
 });
+
+describe('within: the journal\'s hard bound on a round trip', () => {
+  it('gives the value when it comes in time, the fallback when it does not, and swallows a rejection', async () => {
+    const { within } = await import('../src/daemon/journal.js');
+    expect(await within(Promise.resolve(1), 50, 0)).toBe(1);
+    expect(await within(new Promise<number>(() => {}), 20, 0)).toBe(0);
+    expect(await within(Promise.reject(new Error('detached')), 50, 7)).toBe(7);
+  });
+});

@@ -49,6 +49,30 @@ const MIN_CARRIED = 3;
 /** Windows kept once closed: attribution only ever looks this far back. */
 const WINDOW_KEEP_MS = 120_000;
 
+/**
+ * The hard bound on every round trip the journal makes to a page. A
+ * page.evaluate has no timeout of its own: on a document whose navigation
+ * never commits it waits for an execution context that never comes (the
+ * parity case "a navigation that never completes" sat on the drain until its
+ * 90 s ran out). The journal is evidence, never worth a wait: past the bound
+ * it gives up quietly and the step records what it has.
+ */
+export const JOURNAL_ROUNDTRIP_MS = 500;
+
+/** The bound on a round trip nothing waits for (a response's status and body, a tab's opener): it only holds its event open. */
+export const JOURNAL_DETACHED_MS = 5_000;
+
+/** `p`, or `fallback` once `ms` has passed; a later rejection is swallowed. */
+export function within<T>(p: Promise<T>, ms: number, fallback: T): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  return Promise.race([
+    p.catch(() => fallback),
+    new Promise<T>((resolve) => {
+      timer = setTimeout(() => resolve(fallback), ms);
+    }),
+  ]).finally(() => clearTimeout(timer));
+}
+
 /** The kind of window a tool's dispatch opens. */
 export function windowKindOf(tool: string): WindowKind {
   if (tool === 'eval') return 'eval';
@@ -146,8 +170,10 @@ export class Journal {
   /** Install the in-page journal (journal-page.ts) in every document the context loads from now on. */
   async attachContext(context: BrowserContext): Promise<void> {
     if (process.env.SITELOOPER_JOURNAL_PAGE === '0') return;
-    await context.addInitScript({ content: JOURNAL_PAGE_SCRIPT });
-    this.pageDrain = (page) => this.drainPages(page);
+    // addInitScript talks to the browser, not to a page: still bounded, and a
+    // context that cannot take it simply records without the in-page half.
+    const installed = await within(context.addInitScript({ content: JOURNAL_PAGE_SCRIPT }).then(() => true), 5_000, false);
+    if (installed) this.pageDrain = (page) => this.drainPages(page);
   }
 
   /** Hashes of the credential variables' values (credentialVars), computed once. */
@@ -164,14 +190,18 @@ export class Journal {
     for (const page of list) {
       const pg = this.pageIndex(page);
       const frames = drainFrames(page);
+      // One bounded evaluate per frame (JOURNAL_ROUNDTRIP_MS): a frame mid-navigation
+      // or stuck is skipped, and its buffer is drained by a later collect.
       const results = await Promise.all(
         frames.map((f) =>
-          f
-            .evaluate(() => {
+          within(
+            f.evaluate(() => {
               const j = (window as unknown as { __slj?: { drain(): { ev: JournalEvent[]; dropped: number } } }).__slj;
               return j ? j.drain() : null;
-            })
-            .catch(() => null),
+            }),
+            JOURNAL_ROUNDTRIP_MS,
+            null,
+          ),
         ),
       );
       results.forEach((r, i) => {
@@ -194,17 +224,22 @@ export class Journal {
    */
   async intend(target: { first(): { evaluate(fn: (el: Element) => void, arg?: undefined, opts?: { timeout: number }): Promise<void> } } | null): Promise<void> {
     if (!target || !this.pageDrain) return;
-    await target
-      .first()
-      .evaluate(
-        (el) => {
-          const j = (window as unknown as { __slj?: { intend(e: Element): void } }).__slj;
-          if (j) j.intend(el);
-        },
-        undefined,
-        { timeout: 100 },
-      )
-      .catch(() => {});
+    // The locator's own timeout bounds finding the element; within() bounds the
+    // round trip itself, which a stuck document would otherwise hold open.
+    await within(
+      target
+        .first()
+        .evaluate(
+          (el) => {
+            const j = (window as unknown as { __slj?: { intend(e: Element): void } }).__slj;
+            if (j) j.intend(el);
+          },
+          undefined,
+          { timeout: 100 },
+        ),
+      JOURNAL_ROUNDTRIP_MS,
+      undefined,
+    );
   }
 
   attachPage(page: Page): void {
@@ -229,8 +264,7 @@ export class Journal {
       const pg = this.pageIndex(page);
       if (pg !== undefined) e.pg = pg;
       this.push(e);
-      page
-        .opener()
+      within(page.opener(), JOURNAL_DETACHED_MS, null)
         .then((op) => {
           const i = op ? this.pageIndex(op) : undefined;
           e.op = i === undefined ? null : i;
@@ -305,11 +339,13 @@ export class Journal {
       delete e._open;
       return;
     }
+    // Detached from every step, and still bounded: a response or body that
+    // never arrives releases the event (it is filed as it stands).
     const job = (async () => {
-      const res = await req.response();
+      const res = await within(req.response(), JOURNAL_DETACHED_MS, null);
       if (res) e.s = res.status();
       if (res && WRITE_METHODS.has(String(e.m)) && (e.rt === 'xhr' || e.rt === 'fetch') && /json/i.test(res.headers()['content-type'] ?? '')) {
-        const body = await res.body();
+        const body = await within(res.body(), JOURNAL_DETACHED_MS, Buffer.alloc(MAX_MINT_BODY + 1));
         if (body.length <= MAX_MINT_BODY) {
           const mint = mintedIds(JSON.parse(body.toString('utf8')));
           if (mint.length) e.mint = mint;

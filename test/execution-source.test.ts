@@ -472,3 +472,65 @@ describe('shared execution calls bound their own waits (fwgr70)', () => {
     expect(body.indexOf('page.setDefaultTimeout(')).toBeLessThan(body.indexOf('await page.goto('));
   });
 });
+
+/**
+ * The recorder journal's round trips are bounded (verify-round61c: the parity
+ * case "a navigation that never completes" sat 90 s on the journal's in-page
+ * drain, a frame.evaluate — which has no timeout of its own — on a document
+ * whose navigation never committed). The journal is evidence, never worth a
+ * wait: in src/daemon/journal*.ts every call on a Playwright object (Page,
+ * Frame, BrowserContext, Locator, Request, Response, handles) that returns a
+ * Promise must sit inside the first argument of `within(...)`, the journal's
+ * hard bound. Found by the type checker; comments and strings never match.
+ */
+describe('recorder journal round trips are bounded (verify-round61c)', () => {
+  const PLAYWRIGHT = new Set(['Page', 'Frame', 'BrowserContext', 'Locator', 'Request', 'Response', 'ElementHandle', 'JSHandle', 'Browser', 'CDPSession']);
+
+  function unboundedJournalCalls(): { found: string[]; calls: number } {
+    const dir = path.resolve('src/daemon');
+    const files = fs.readdirSync(dir).filter((f) => /^journal.*\.ts$/.test(f)).map((f) => path.join(dir, f));
+    const program = ts.createProgram(files, {
+      target: ts.ScriptTarget.ES2022,
+      module: ts.ModuleKind.NodeNext,
+      moduleResolution: ts.ModuleResolutionKind.NodeNext,
+      strict: true,
+      skipLibCheck: true,
+      lib: ['lib.es2022.d.ts', 'lib.dom.d.ts'],
+    });
+    const checker = program.getTypeChecker();
+    /** Whether `node` lies inside the first argument of a `within(...)` call. */
+    const inWithin = (node: ts.Node): boolean => {
+      for (let n: ts.Node = node; n.parent; n = n.parent) {
+        const p = n.parent;
+        if (ts.isCallExpression(p) && ts.isIdentifier(p.expression) && p.expression.text === 'within' && p.arguments[0] === n) return true;
+      }
+      return false;
+    };
+    const found: string[] = [];
+    let calls = 0;
+    for (const sf of program.getSourceFiles()) {
+      if (!files.includes(path.resolve(sf.fileName))) continue;
+      const visit = (node: ts.Node): void => {
+        if (ts.isCallExpression(node) && ts.isPropertyAccessExpression(node.expression)) {
+          const receiver = checker.getTypeAtLocation(node.expression.expression);
+          const name = (receiver.getSymbol() ?? receiver.aliasSymbol)?.getName();
+          const returns = checker.getTypeAtLocation(node).getSymbol()?.getName();
+          if (name && PLAYWRIGHT.has(name) && returns === 'Promise') {
+            calls++;
+            if (!inWithin(node)) found.push(`${path.basename(sf.fileName)}: ${name}.${node.expression.name.text} (line ${sf.getLineAndCharacterOfPosition(node.getStart()).line + 1})`);
+          }
+        }
+        ts.forEachChild(node, visit);
+      };
+      visit(sf);
+    }
+    return { found, calls };
+  }
+
+  it('every Playwright round trip in the journal is inside within()', () => {
+    const { found, calls } = unboundedJournalCalls();
+    // The scan must be seeing Playwright calls at all, or an empty list proves nothing.
+    expect(calls).toBeGreaterThanOrEqual(5);
+    expect(found).toEqual([]);
+  }, 120_000);
+});
