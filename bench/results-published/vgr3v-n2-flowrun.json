@@ -1,0 +1,174 @@
+{
+  "flow": "vgr3v",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_5825e1; observed panel_title_1=Request rate, panel_title_2=Error count, panel_title_3=Latency by endpoint, dashboard_title=Service Health, panel_titles_1=Request rate, panel_titles_2=Error count, panel_titles_3=Latency by endpoint.",
+      "values": {
+        "panel_title_1": "Request rate",
+        "panel_title_2": "Error count",
+        "panel_title_3": "Latency by endpoint",
+        "dashboard_title": "Service Health",
+        "panel_titles_1": "Request rate",
+        "panel_titles_2": "Error count",
+        "panel_titles_3": "Latency by endpoint"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "17/17",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_5825e1: report value signed_in_as is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)"
+      ],
+      "unreported": [
+        "signed_in_as"
+      ]
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_5d1397; observed dashboard_uid=afzajh8fcc8w0b, run_id=vgr3v-n2, dashboard_slug=vgr3v-n2-bench-dashboard, dashboard_title=vgr3v-n2 Bench Dashboard, panel_titles=vgr3v-n2 Availability.",
+      "values": {
+        "dashboard_uid": "afzajh8fcc8w0b",
+        "run_id": "vgr3v-n2",
+        "dashboard_slug": "vgr3v-n2-bench-dashboard",
+        "dashboard_title": "vgr3v-n2 Bench Dashboard",
+        "panel_titles": "vgr3v-n2 Availability"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "14/14",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-add",
+      "status": "success",
+      "summary": "Replayed stored procedure s_c43624; observed dashboard_uid=afzajh8fcc8w0b, dashboard_title=vgr3v-n2 Bench Dashboard, panel_titles_1=vgr3v-n2 Notes, panel_titles_2=vgr3v-n2 Availability, text_panel_rendered_content_1=Notes, text_panel_rendered_content_2=Run ID: vgr3v-n2, run_id=vgr3v-n2.",
+      "values": {
+        "dashboard_uid": "afzajh8fcc8w0b",
+        "dashboard_title": "vgr3v-n2 Bench Dashboard",
+        "panel_titles_1": "vgr3v-n2 Notes",
+        "panel_titles_2": "vgr3v-n2 Availability",
+        "text_panel_rendered_content_1": "Notes",
+        "text_panel_rendered_content_2": "Run ID: vgr3v-n2",
+        "run_id": "vgr3v-n2"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "20/20",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_c43624: step 20: the target chain is dead and was not healed inline — the step is a synthesized read no run has ever resolved, so nothing about it has drifted",
+        "s_c43624: step 20: skipped read — no element matched any known locator for target (tried 1: page.getByRole('status', { name: 'Dashboard saved', exact: true }))"
+      ],
+      "unreported": [
+        "save_confirmation"
+      ]
+    },
+    {
+      "id": "04-set",
+      "status": "success",
+      "summary": "Replayed procedure s_e388c9 (1–9 done: time range Last 6 hours, tag 'bench' added, save with 'Update default time range' ticked), then continued from its step-10 state: reloaded the settings General page — tag 'bench' is shown, and the JSON Model view of the persisted dashboard (version 3) shows tags [\"bench\"] and time {\"from\":\"now-6h\",\"to\":\"now\"}, i.e. the default range now-6h→now was saved. Only issue: the procedure's step 10 landed on editview=settings instead of editview=1; no work was repeated and no duplicate changes were made.",
+      "values": {
+        "dashboard_title": "vgr3v-n2 Bench Dashboard",
+        "tags": "bench",
+        "default_time_range": "now-6h to now",
+        "dashboard_uid": "afzajh8fcc8w0b",
+        "dashboard_version": "3",
+        "run_id": "vgr3v-n2",
+        "ref_2": "step-10",
+        "ref_3": "now-6h"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_e388c9 stopped at step 10 — step 10 navigated but landed on another view: editview=settings where it was sent to editview=1 — the page it asked for was not given",
+      "replayed": "9/15",
+      "repaired": false,
+      "turns": 14
+    },
+    {
+      "id": "05-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_0618a0; observed page_url=http://127.0.0.1:3000/d/afzajh8fcc8w0b/vgr3v-n2-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m.",
+      "unanswered": [
+        "auto_refresh_interval"
+      ],
+      "values": {
+        "page_url": "http://127.0.0.1:3000/d/afzajh8fcc8w0b/vgr3v-n2-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "12/12",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_0618a0: report value save_confirmation is given, not observed: it is built only from the step's own parameters, and neither this run's page nor any of its reads shows it — withheld"
+      ],
+      "unreported": [
+        "save_confirmation"
+      ]
+    }
+  ],
+  "passed": 5,
+  "total": 5,
+  "repinned": 0,
+  "drift": 2,
+  "driftTickets": [
+    {
+      "flow": "vgr3v",
+      "step": "03-add",
+      "skill": "s_c43624",
+      "atStep": "20",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.getByRole('status', { name: 'Dashboard saved', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:3000/d/afzajh8fcc8w0b/:id?from=:id&timezone=browser&to=now",
+      "pageUrl": "http://127.0.0.1:3000/d/afzajh8fcc8w0b/vgr3v-n2-bench-dashboard?from=now-6h&to=now&timezone=browser"
+    },
+    {
+      "flow": "vgr3v",
+      "step": "04-set",
+      "skill": "s_e388c9",
+      "similarity": 1.001,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_e388c9 stopped at step 10 — step 10 navigated but landed on another view: editview=settings where it was sent to editview=1 — the page it asked for was not given",
+      "reason": "step 10 navigated but landed on another view: editview=settings where it was sent to editview=1 — the page it asked for was not given",
+      "pageUrlPattern": "http://127.0.0.1:3000/d/afzajh8fcc8w0b/:id?editview=settings&from=:id&timezone=browser&to=now",
+      "pageUrl": "http://127.0.0.1:3000/d/afzajh8fcc8w0b/vgr3v-n2-bench-dashboard?editview=settings&from=now-6h&to=now&timezone=browser"
+    }
+  ],
+  "wallMs": 189003,
+  "model": "xiaomi/mimo-v2.6-flash",
+  "usage": {
+    "promptTokens": 226932,
+    "completionTokens": 6044,
+    "cachedTokens": 184960
+  },
+  "usageByModel": {
+    "xiaomi/mimo-v2.6-flash": {
+      "promptTokens": 226932,
+      "completionTokens": 6044,
+      "cachedTokens": 184960
+    }
+  },
+  "servedByModel": {
+    "xiaomi/mimo-v2.6-flash": [
+      "Xiaomi"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

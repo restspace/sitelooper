@@ -1,0 +1,177 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/vgr3v-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/vgr3v-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/vgr3v-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/bench/results/vgr3v-spec-spec-tmp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/vgr3v-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "vgr3v.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/vgr3v-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "vgr3v.spec.ts",
+      "file": "vgr3v.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "vgr3v",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 99225,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper warn] 01-open: report value signed_in_as is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 01-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-create\n"
+                    },
+                    {
+                      "text": "[sitelooper recipe] filled via recipe monaco/set-value (r_f2510e); value verified on the component\n"
+                    },
+                    {
+                      "text": "[sitelooper skip] 03-add s_c43624/20 target: read target not found — value left empty\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-add\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-set\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 05-open: report value save_confirmation is given, not observed: it is built only from the step's own parameters, and neither this run's page nor any of its reads shows it — withheld\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 05-open\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-open: Open http://127.0.0.1:3000/ and sign in with username admin and password {{env:APP_PASSWORD}} (type the password text exactly as given). Then find and open the provisioned dashboard named 'Service health' (use search / dashboards listing). Report the titles of all panels on that dashboard exactly as shown on screen.",
+                      "duration": 22879
+                    },
+                    {
+                      "title": "02-create: Create a NEW dashboard titled exactly '{{runid}} Bench Dashboard'. Add a Stat panel titled exactly '{{runid}} Availability' whose query uses the 'TestData' data source (pick any default test data scenario like Random Walk). Make sure the change is persisted by saving the dashboard (Save dashboard, confirm 'Dashboard saved'). Report the dashboard title and panel titles you see after saving, and any issue encountered.",
+                      "duration": 25079
+                    },
+                    {
+                      "title": "03-add: On the existing dashboard '{{runid}} Bench Dashboard' (URL /d/ffzaavjb2wuf4b or /d/{{02-create.url.p1}}/...), add a Text panel titled exactly '{{runid}} Notes' whose text content includes the runid {{runid}} (e.g. markdown containing '{{runid}}'). Edit the panel, apply, and then explicitly SAVE the dashboard (Save dashboard, confirm). Verify after saving/reloading that the dashboard shows both panels: '{{runid}} Availability' and '{{runid}} Notes', and that the text panel displays the runid. Report panel titles seen and the text content shown.",
+                      "duration": 23317
+                    },
+                    {
+                      "title": "04-set: On the dashboard at /d/{{02-create.url.p1}}/{{runid}}-bench-dashboard: 1) In the top time picker, set the time range to 'Last 6 hours'. 2) Open the dashboard settings (gear) > General, and give the dashboard the tag 'bench' (add tag). 3) Save the dashboard and in the save dialog TICK the 'Update default time range' checkbox so the last-6-hours range is persisted into the saved dashboard, then confirm save. Verify by reloading the dashboard settings General page: tag 'bench' present, and from the dashboard JSON/settings that time range 'now-6h to now' is the default (you may check via settings JSON view). Report the tags and the default time range you observe.",
+                      "duration": 15620
+                    },
+                    {
+                      "title": "05-open: On the dashboard at /d/{{02-create.url.p1}}/{{runid}}-bench-dashboard: open the top time picker, find the 'Refresh interval'/'Auto refresh' selection, and set the auto-refresh interval to '1m'. Then SAVE the dashboard (Save dashboard, confirm 'Dashboard saved'; keep any 'Update default time range' setting consistent). Verify persistence by reloading the dashboard and opening the time picker to confirm the auto-refresh interval shows 1m (and/or check the dashboard JSON settings that refresh is '1m'). Then read the browser's current page URL. Report the auto-refresh interval observed and the exact URL of the dashboard page.",
+                      "duration": 10925
+                    }
+                  ],
+                  "startTime": "2026-09-25T05:55:36.449Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": ""
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "dc3f17d8ee0b6dbca1db-da1fb98ce1da0b638a98",
+          "file": "vgr3v.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-25T05:55:33.729Z",
+    "duration": 102188.529,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}
