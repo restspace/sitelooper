@@ -198,13 +198,17 @@ function artifact(k) {
   // ("01-signin s_5fccd8/2: …", "… (01-signin s_9e6344/2 target)") and `@step` anchors.
   const texts = [...errors, ...(res?.drift ?? []).map(String)].map(String);
   const producers = texts.flatMap((e) => [...e.matchAll(/needs \{\{([\w-]+)\./g)].map((m) => m[1]));
+  // …and WHAT the producer must read: "02-open needs {{01-signin.visible_projects_2}}"
+  // (fwvk15-cv2 re-recorded 01-signin four times without being told).
+  const missing = new Map();
+  for (const e of texts) for (const m of e.matchAll(/needs \{\{([\w-]+)\.([\w.-]+?)\}\}/g)) missing.set(m[1], [...new Set([...(missing.get(m[1]) ?? []), m[2]])]);
   const sites = texts.flatMap((e) => [
     ...[...e.matchAll(/@step\s+([\w-]+)/g)].map((m) => m[1]),
     ...[...e.matchAll(/(?:^|[\s(:])([\w-]+) s_[0-9a-f]{6}\/\d+\b/g)].map((m) => m[1]),
   ]);
   const anchors = [...new Set([...producers, ...sites])];
   const passed = Boolean(res) && res.exitCode === 0 && (res.stats?.failed ?? 1) === 0 && !failLines.length && (verified === 'n/a' || !verified.includes('FAIL'));
-  return { tag, exitCode: res?.exitCode ?? null, stats: res?.stats ?? null, driftCount: res?.driftCount ?? null, verified, failLines, errors: errors.map((e) => e.slice(0, 400)), anchors, passed, dry: args.dry };
+  return { tag, exitCode: res?.exitCode ?? null, stats: res?.stats ?? null, driftCount: res?.driftCount ?? null, verified, failLines, errors: errors.map((e) => e.slice(0, 400)), anchors, missing, missingOutputs: Object.fromEntries(missing), passed, dry: args.dry };
 }
 
 function repair(k, flowFile) {
@@ -250,7 +254,7 @@ for (let k = 1; k <= args.maxRounds && !verdict; k++) {
   // The producer the artifact blames outranks the consumers repair lists; then flow order.
   const steps = [...new Set([...round.artifact.anchors, ...round.repair.needsRerecord])].sort((a, b) => (order.get(a) ?? 1e9) - (order.get(b) ?? 1e9));
   if (!steps.length) { verdict = { status: 'stuck', why: 'artifact failed, repair did not converge, and no step to re-record was named' }; break; }
-  round.rerecords.push(rerecord(k, steps[0], `${round.repair.needsRerecord.length ? 'repair: needs-rerecord' : 'artifact failed at this step'}${steps.length > 1 ? `; also named: ${steps.slice(1).join(', ')}` : ''}`));
+  round.rerecords.push(rerecord(k, steps[0], `${round.repair.needsRerecord.length ? 'repair: needs-rerecord' : 'artifact failed at this step'}${steps.length > 1 ? `; also named: ${steps.slice(1).join(', ')}` : ''}`, round.artifact.missing.get(steps[0])));
   save();
 }
 report.verdict = verdict ?? { status: 'exhausted', why: `${args.maxRounds} round(s) without a passing artifact` };
