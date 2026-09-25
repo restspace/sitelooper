@@ -1,0 +1,107 @@
+
+[sweep] run 1/3: fwop19-n1 (store: /home/user/sitelooper/bench/results/fwop19-skills)
+[harness] openproject: defaulting APP_URL
+[harness] openproject: defaulting APP_EMAIL
+[harness] openproject: defaulting APP_PASSWORD
+[reset] openproject: no leftover bench work packages
+[harness] openproject responded 302 at http://127.0.0.1:8090/
+stopped: fwop19-n1
+  flow "fwop19" saved: 4 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwop19.json
+  warning: note: 01-signin no longer publishes match_count — no replay reads it from the page and the recording showed no line to read
+  warning: note: 03-open no longer publishes comment_anchor, comment_anchor_id — no replay reads them from the page and the recording showed no line to read
+  warning: warning: 04-open's instruction asks to report description_contains, and no replay can publish it: nothing in its procedure reads it from the page, so export dropped it — re-record the step so the value is read, not only reported
+  warning: note: 04-open no longer publishes finish_date_shown, work_field_label, date_field_label, date_range_text — no replay reads them from the page and the recording showed no line to read
+  warning: warning: 125 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[0].instruction: "Bench Project" (output) in "Sign in to OpenProject at http://127.0.0.1:8090/ with username admin and password {{env:APP_PASSWORD}} (type the password exactly as the literal text '{{env:APP"
+  flow.steps[1].instruction: "Bench Assignee" (output) in "In the project 'Bench Project' in OpenProject, create a new work package of type 'Task' with subject exactly '{{runid}} Bench Work Package' and a description th"
+  flow.steps[1].instruction: "Bench Project" (output) in "In the project 'Bench Project' in OpenProject, create a new work package of type 'Task' with subject exactly '{{runid}} Bench Work Package' and a description th"
+  flow.steps[1].instruction: "In progress" (output) in "In the project 'Bench Project' in OpenProject, create a new work package of type 'Task' with subject exactly '{{runid}} Bench Work Package' and a description th"
+  flow.steps[1].instruction: "Assignee" (output) in "In the project 'Bench Project' in OpenProject, create a new work package of type 'Task' with subject exactly '{{runid}} Bench Work Package' and a description th"
+arm=sitelooper model=z-ai/glm-5.3 runid=fwop19-n1 stop=completed
+turns=5 wall=461.7s
+commands=4 cmdTime=438.2s cmdBytes=5077 timeouts=0
+orchestrator in=10209 cw=0 cr=7552 out=1036
+inner prompt=3281172 cached=3033984 completion=34490
+spend=$0.3617 maxUsd=3
+learn: A_n=0 replayed=0/4 full=0 repaired=0 compiled=4 variants=0
+-> /home/user/sitelooper/bench/results/fwop19-n1-sitelooper-result.json
+
+fwop19-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed subjects reported
+  obj 2: PASS — type=Task, description includes runid=true
+  obj 3: PASS — assignee=Bench Assignee
+  obj 4: PASS — status=In progress
+  obj 5: PASS — finish date=2026-12-31, want 2026-12-31
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — work package id 41 reported
+
+[sweep] run 2/3: fwop19-n2 (replay flow fwop19, no orchestrator)
+[reset] openproject: deleted 1 leftover bench work package(s)
+[sweep] fwop19-n2: 3 drift ticket(s) → fwop19-n2-drift.json
+
+fwop19-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed subjects reported
+  obj 2: PASS — type=Task, description includes runid=true
+  obj 3: PASS — assignee=Bench Assignee
+  obj 4: PASS — status=In progress
+  obj 5: PASS — finish date=2026-12-31, want 2026-12-31
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — work package id 42 reported
+
+[sweep] run 3/3: fwop19-n3 (replay flow fwop19, no orchestrator)
+[reset] openproject: deleted 1 leftover bench work package(s)
+[sweep] fwop19-n3: 4 drift ticket(s) → fwop19-n3-drift.json
+
+fwop19-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed subjects reported
+  obj 2: PASS — type=Task, description includes runid=true
+  obj 3: PASS — assignee=Bench Assignee
+  obj 4: PASS — status=In progress
+  obj 5: PASS — finish date=2026-12-31, want 2026-12-31
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — work package id 43 reported
+
+Learning sweep fwop19 (K=3)
+┌─────────┬───┬─────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid       │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼─────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwop19-n1' │ '7/7'    │ 'completed' │ 5     │ 4    │ 0.3617    │ 0   │ '0/4'        │ 462    │
+│ 1       │ 2 │ 'fwop19-n2' │ '7/7'    │ 'success'   │ 0     │ 4    │ 0         │ 1   │ '4/4 (flow)' │ 110    │
+│ 2       │ 3 │ 'fwop19-n3' │ '7/7'    │ 'success'   │ 0     │ 4    │ 0         │ 1   │ '4/4 (flow)' │ 95     │
+└─────────┴───┴─────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:8090
+  s_2b17de  validated    1 steps  3/3 (100%)
+           Sign in to OpenProject at {{v1}} with username {{v2}} and password {{env:APP_PASSWORD}} (type the password exa…
+  s_3067b7  validated    1 steps  3/3 (100%)
+           In OpenProject, open work package {{v1}} ('{{v3}}') in project '{{v5}}' and read-only verify and report: (1) t…
+  s_472c8d  validated    2 steps  3/3 (100%)
+           Sign in to OpenProject at {{v1}} with username {{v2}} and password {{env:APP_PASSWORD}} (type the password exa…
+  s_50544d  validated    1 steps  3/3 (100%)
+           In OpenProject, open work package {{v1}} ('{{v3}}') in project '{{v5}}' and add a comment whose text includes …
+  s_61a89c  validated    1 steps  3/3 (100%)
+           Sign in to OpenProject at {{v1}} with username {{v2}} and password {{env:APP_PASSWORD}} (type the password exa…
+  s_692a42  validated   12 steps  3/3 (100%)
+           In the project '{{v1}}' in OpenProject, create a new work package of type 'Task' with subject exactly '{{v3}}'…
+  s_80f765  validated   12 steps  3/3 (100%)
+           In the project '{{v1}}' in OpenProject, create a new work package of type 'Task' with subject exactly '{{v3}}'…
+  s_8f70aa  validated    1 steps  3/3 (100%)
+           In OpenProject, open work package {{v1}} ('{{v3}}') in project '{{v5}}' and read-only verify and report: (1) t…
+  s_8fa51e  validated    1 steps  3/3 (100%)
+           Sign in to OpenProject at {{v1}} with username {{v2}} and password {{env:APP_PASSWORD}} (type the password exa…
+  s_a588de  validated   13 steps  3/3 (100%)
+           Sign in to OpenProject at {{v1}} with username {{v2}} and password {{env:APP_PASSWORD}} (type the password exa…
+  s_ac4a19  validated    5 steps  3/3 (100%)
+           In OpenProject, open work package {{v1}} ('{{v3}}') in project '{{v5}}' and read-only verify and report: (1) t…
+  s_b3f600  validated    7 steps  3/3 (100%)
+           In OpenProject, open work package {{v1}} ('{{v3}}') in project '{{v5}}' and read-only verify and report: (1) t…
+  s_cb5d96  validated    3 steps  3/3 (100%)
+           Sign in to OpenProject at {{v1}} with username {{v2}} and password {{env:APP_PASSWORD}} (type the password exa…
+  s_cd9f45  validated    2 steps  3/3 (100%)
+           In OpenProject, open work package {{v1}} ('{{v3}}') in project '{{v5}}' and read-only verify and report: (1) t…
+  s_d0a440  validated    6 steps  3/3 (100%)
+           In OpenProject, open work package {{v1}} ('{{v3}}') in project '{{v5}}' and add a comment whose text includes …
+  s_e77b5f  validated    3 steps  3/3 (100%)
+           In the project '{{v1}}' in OpenProject, create a new work package of type 'Task' with subject exactly '{{v3}}'…
+store: /home/user/sitelooper/bench/results/fwop19-skills
+
+summary: /home/user/sitelooper/bench/results/fwop19-sweep.json
