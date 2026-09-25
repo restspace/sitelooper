@@ -1,0 +1,38 @@
+{
+  "arm": "spec",
+  "runid": "fwvk13-spec",
+  "target": "vikunja",
+  "flow": "fwvk13.json",
+  "flowName": "fwvk13",
+  "skillsDir": "/home/user/sitelooper/bench/results/fwvk13-skills",
+  "compiled": true,
+  "flowFile": "bench/results/fwvk13-spec-spec-tmp/fwvk13.flow.ts",
+  "specFile": "bench/results/fwvk13-spec-spec-tmp/fwvk13.spec.ts",
+  "wallMs": 15992,
+  "exitCode": 1,
+  "timedOut": false,
+  "costUsd": 0,
+  "stats": {
+    "total": 1,
+    "passed": 0,
+    "failed": 1,
+    "skipped": 0
+  },
+  "tests": [
+    {
+      "title": "fwvk13",
+      "status": "unexpected",
+      "ok": false,
+      "durationMs": 12513,
+      "error": "Error: after 01-signin s_38a508/5 expected url http://127.0.0.1:8096/ but browser is at http://127.0.0.1:8096/login",
+      "drift": []
+    }
+  ],
+  "drift": [],
+  "driftCount": 0,
+  "evidence": [
+    "fwvk13-spec-spec-failure.png",
+    "fwvk13-spec-spec-error-context.md"
+  ],
+  "logTail": "\nRunning 1 test using 1 worker\n\n  ✘  1 fwvk13.spec.ts:9:1 › fwvk13 (12.5s)\n\n\n  1) fwvk13.spec.ts:9:1 › fwvk13 › 01-signin: Sign in to Vikunja at http://127.0.0.1:8096/ with username admin and password {{env:APP_PASSWORD}} (type that exact literal text as the password). Then open the project Bench Project, and report the titles of all tasks whose title starts with 'Seed:' exactly as shown. \n\n    Error: after 01-signin s_38a508/5 expected url http://127.0.0.1:8096/ but browser is at http://127.0.0.1:8096/login\n\n       at fwvk13.flow.ts:12487\n\n      12485 |   // (navigationTarget), whether or not the step goes on to stop.\n      12486 |   if (verdict.diffs) volatile.push(...verdict.diffs);\n    > 12487 |   if (verdict.stop) throw new Error(verdict.stop);\n            |                           ^\n      12488 | }\n      12489 |\n      12490 | /**\n        at urlEffect (/home/user/sitelooper/bench/results/fwvk13-spec-spec-tmp/fwvk13.flow.ts:12487:27)\n        at Object.verify (/home/user/sitelooper/bench/results/fwvk13-spec-spec-tmp/fwvk13.flow.ts:13487:19)\n        at runStepLifecycle (/home/user/sitelooper/bench/results/fwvk13-spec-spec-tmp/fwvk13.flow.ts:8614:24)\n        at Object.01-signin (/home/user/sitelooper/bench/results/fwvk13-spec-spec-tmp/fwvk13.flow.ts:13456:9)\n        at /home/user/sitelooper/bench/results/fwvk13-spec-spec-tmp/fwvk13.flow.ts:16584:7\n        at runFlow (/home/user/sitelooper/bench/results/fwvk13-spec-spec-tmp/fwvk13.flow.ts:16583:5)\n        at /home/user/sitelooper/bench/results/fwvk13-spec-spec-tmp/fwvk13.spec.ts:14:21\n\n    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────\n    \n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────\n    test-results/fwvk13-fwvk13/test-failed-1.png\n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    Error Context: test-results/fwvk13-fwvk13/error-context.md\n\n  1 failed\n    fwvk13.spec.ts:9:1 › fwvk13 ────────────────────────────────────────────────────────────────────\n"
+}

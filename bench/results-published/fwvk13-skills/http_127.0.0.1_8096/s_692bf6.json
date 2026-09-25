@@ -1,0 +1,65 @@
+{
+ "id": "s_692bf6",
+ "origin": "http://127.0.0.1:8096",
+ "template": "Sign in to Vikunja at {{v1}} with username {{v2}} and password {{v3}} (type that exact literal text as the password). Then open the project Bench Project, and report the titles of all tasks whose title starts with 'Seed:' exactly as shown.",
+ "params": {
+  "v1": {
+   "example": "http://127.0.0.1:8096/",
+   "usedIn": [
+    2
+   ]
+  },
+  "v2": {
+   "example": "admin",
+   "usedIn": []
+  },
+  "v3": {
+   "example": "{{env:APP_PASSWORD}}",
+   "usedIn": []
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8096/"
+ },
+ "steps": [
+  {
+   "tool": "read",
+   "args": {
+    "what": "url"
+   },
+   "locators": {},
+   "label": "initial_page_url"
+  },
+  {
+   "tool": "goto",
+   "args": {
+    "url": "{{v1}}"
+   },
+   "locators": {}
+  }
+ ],
+ "contract": 4,
+ "stats": {
+  "uses": 3,
+  "successes": 3,
+  "partial": 0,
+  "created": "2026-09-25T01:20:52.839Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 4,
+  "lastUsed": "2026-09-25T01:25:23.396Z"
+ },
+ "status": "validated",
+ "seq": {
+  "chain": "s_ddbcee",
+  "index": 0,
+  "of": 4
+ },
+ "provenance": {
+  "session": "fwvk13-n1",
+  "instruction": "Sign in to Vikunja at http://127.0.0.1:8096/ with username admin and password {{env:APP_PASSWORD}} (type that exact literal text as the password). Then open the project Bench Project, and report the titles of all tasks whose title starts with 'Seed:' exactly as shown.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-25T01:20:52.839Z"
+ },
+ "revision": 3
+}

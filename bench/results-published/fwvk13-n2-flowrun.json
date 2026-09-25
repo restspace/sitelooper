@@ -1,0 +1,195 @@
+{
+  "flow": "fwvk13",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_d8f75f; observed initial_page_url=http://127.0.0.1:8096/login, task_list=Seed: triage inbox\nSeed: order missing parts\nSeed: ship repaired device, project_url=http://127.0.0.1:8096/projects/2/5, seed_task_titles_1=Seed: triage inbox, seed_task_titles_2=Seed: order missing parts, seed_task_titles_3=Seed: ship repaired device, project_name=Bench Project.",
+      "values": {
+        "initial_page_url": "http://127.0.0.1:8096/login",
+        "task_list": "Seed: triage inbox\nSeed: order missing parts\nSeed: ship repaired device",
+        "project_url": "http://127.0.0.1:8096/projects/2/5",
+        "seed_task_titles_1": "Seed: triage inbox",
+        "seed_task_titles_2": "Seed: order missing parts",
+        "seed_task_titles_3": "Seed: ship repaired device",
+        "project_name": "Bench Project"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "16/16",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_38a508: step 3: after step 3 the page did not show \"- textbox \\\"e.g. frederick\\\": admin\" as it did when recorded — the step ran but probably acted on the wrong element — the page replaced its document under this fill, so it is repeated once on the rebuilt field"
+      ]
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_b6ea59; observed task_path=/tasks/6, created_task_title=fwvk13-n2 Bench Task, project_list_after_2=Seed: triage inbox, project_list_after_3=Seed: order missing parts, project_list_after_4=Seed: ship repaired device, project_list_after_1=fwvk13-n2 Bench Task, run_reference=fwvk13-n2.",
+      "values": {
+        "task_path": "/tasks/6",
+        "created_task_title": "fwvk13-n2 Bench Task",
+        "project_list_after_2": "Seed: triage inbox",
+        "project_list_after_3": "Seed: order missing parts",
+        "project_list_after_4": "Seed: ship repaired device",
+        "project_list_after_1": "fwvk13-n2 Bench Task",
+        "run_reference": "fwvk13-n2"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "19/19",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_b6ea59: report value task_description_shown is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)"
+      ],
+      "unreported": [
+        "task_identifier",
+        "task_page_url",
+        "task_description_shown"
+      ]
+    },
+    {
+      "id": "03-set",
+      "status": "success",
+      "summary": "On the task page /tasks/6 ('fwvk13-n2 Bench Task', BENCH-5) I set the due date to 31 December 2026 via the SET DUE DATE picker (Month→December, day 31, Confirm) and set the priority to High via the SET PRIORITY control. After a full page reload both persisted: the due-date button reads \"31 Dec 2026, 12:00:00\" and the priority selector shows High (value 3, selected). Nothing else on the task was changed.",
+      "values": {
+        "task_identifier": "BENCH-5",
+        "task_title": "fwvk13-n2 Bench Task",
+        "due_date_displayed": "31 Dec 2026, 12:00:00",
+        "priority_displayed": "High",
+        "priority_value": "3",
+        "description_text": "Benchmark task for run fwvk13-n2",
+        "ref": "fwvk13-n2"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_265222 stopped at step ? — not on the page this procedure starts from (expects http://127.0.0.1:8096/tasks/4, browser is at http://127.0.0.1:8096/tasks/6) — nothing was run",
+      "replayed": "0/20",
+      "repaired": false,
+      "turns": 16,
+      "warnings": [
+        "s_2f7cd9: step 1: 2 recorded page change(s) carry a value this run could not fill (e.g. \"- button \\\"{{02-create.task_identifier}}\\\"\") — not checked"
+      ],
+      "unreported": [
+        "priority_select_value",
+        "task_description",
+        "typed_year",
+        "run_reference"
+      ]
+    },
+    {
+      "id": "04-add",
+      "status": "success",
+      "summary": "Replayed stored procedure s_40a29b; observed labels_field_text_on_task_page=Labels\nBackend, labels_page_link=/labels, due_date_displayed=31 Dec 2026, 12:00:00, labels_shown_on_task=Backend, priority_displayed=High, task_identifier=BENCH-5, task_title=fwvk13-n2 Bench Task.",
+      "unanswered": [
+        "duplicate_created"
+      ],
+      "values": {
+        "labels_field_text_on_task_page": "Labels\nBackend",
+        "labels_page_link": "/labels",
+        "due_date_displayed": "31 Dec 2026, 12:00:00",
+        "labels_shown_on_task": "Backend",
+        "priority_displayed": "High",
+        "task_identifier": "BENCH-5",
+        "task_title": "fwvk13-n2 Bench Task"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "12/12",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "05-add",
+      "status": "success",
+      "summary": "Replayed stored procedure s_516598; observed comment_timestamp=less than a minute ago, task_identifier=BENCH-5, task_title=fwvk13-n2 Bench Task, comment_author=admin, run_reference=fwvk13-n2.",
+      "values": {
+        "comment_timestamp": "less than a minute ago",
+        "task_identifier": "BENCH-5",
+        "task_title": "fwvk13-n2 Bench Task",
+        "comment_author": "admin",
+        "run_reference": "fwvk13-n2"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "9/9",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_516598: step 5: read 'comment_text_displayed' returned a value the skill itself set/selected ('Comment for run fwvk13-n2') — confirms the control, not persistence; dropped from the report's confident values"
+      ],
+      "unreported": [
+        "comment_text_displayed"
+      ]
+    },
+    {
+      "id": "06-report",
+      "status": "success",
+      "summary": "Replayed stored procedure s_626bbf; observed comment_text=Comment for run fwvk13-n2, description_text=Benchmark task for run fwvk13-n2, due_date=31 Dec 2026, 12:00:00, identifier=BENCH-5, labels=Backend, priority=High, task_title=fwvk13-n2 Bench Task, comment_author=admin, comment_timestamp=less than a minute ago, run_reference=fwvk13-n2.",
+      "values": {
+        "comment_text": "Comment for run fwvk13-n2",
+        "description_text": "Benchmark task for run fwvk13-n2",
+        "due_date": "31 Dec 2026, 12:00:00",
+        "identifier": "BENCH-5",
+        "labels": "Backend",
+        "priority": "High",
+        "task_title": "fwvk13-n2 Bench Task",
+        "comment_author": "admin",
+        "comment_timestamp": "less than a minute ago",
+        "run_reference": "fwvk13-n2"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "11/11",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 6,
+  "total": 6,
+  "repinned": 0,
+  "drift": 1,
+  "driftTickets": [
+    {
+      "flow": "fwvk13",
+      "step": "03-set",
+      "skill": "s_265222",
+      "similarity": 0.999,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_265222 stopped at step ? — not on the page this procedure starts from (expects http://127.0.0.1:8096/tasks/4, browser is at http://127.0.0.1:8096/tasks/6) — nothing was run",
+      "reason": "not on the page this procedure starts from (expects http://127.0.0.1:8096/tasks/4, browser is at http://127.0.0.1:8096/tasks/6) — nothing was run",
+      "pageUrlPattern": "http://127.0.0.1:8096/tasks/:id",
+      "pageUrl": "http://127.0.0.1:8096/tasks/6"
+    }
+  ],
+  "wallMs": 76992,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 203282,
+    "completionTokens": 2232,
+    "cachedTokens": 182656
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 203282,
+      "completionTokens": 2232,
+      "cachedTokens": 182656
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

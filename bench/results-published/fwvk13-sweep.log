@@ -1,0 +1,114 @@
+
+[sweep] run 1/3: fwvk13-n1 (store: /home/user/sitelooper/bench/results/fwvk13-skills)
+[harness] vikunja: defaulting APP_URL
+[harness] vikunja: defaulting APP_EMAIL
+[harness] vikunja: defaulting APP_PASSWORD
+[reset] vikunja: no leftover bench tasks
+[harness] vikunja responded 200 at http://127.0.0.1:8096/
+stopped: fwvk13-n1
+  flow "fwvk13" saved: 6 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwvk13.json
+  warning: note: 01-signin no longer publishes task_count — no replay reads it from the page and the recording showed no line to read
+  warning: warning: 04-add's instruction asks to report duplicate_created, and no replay can publish it: nothing in its procedure reads it from the page, so export dropped it — re-record the step so the value is read, not only reported
+  warning: note: 04-add no longer publishes label_list_after, labels_page_url — no replay reads them from the page and the recording showed no line to read
+  warning: warning: 85 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[0].instruction: "Bench Project" (output) in "Sign in to Vikunja at http://127.0.0.1:8096/ with username admin and password {{env:APP_PASSWORD}} (type that exact literal text as the password). Then open the"
+  flow.steps[0].instruction: "admin" (output) in "Sign in to Vikunja at http://127.0.0.1:8096/ with username admin and password {{env:APP_PASSWORD}} (type that exact literal text as the password). Then open the"
+  flow.steps[0].params.v2: "admin" (output) in "admin"
+  flow.steps[1].instruction: "Bench Project" (output) in "In the Vikunja project Bench Project, create a new task with the exact title '{{runid}} Bench Task' and a description that includes the text '{{runid}}' (e.g. '"
+  flow.steps[1].params.v1: "Bench Project" (output) in "Bench Project"
+  warning: {{02-create.task_identifier}} (used by 03-set) can only be re-observed by model recovery — consider re-recording so the value is read from the page.
+  warning: 02-create reports task_identifier, but no segment of the procedure it pins (s_96a262, through its last segment s_b6ea59) re-reads it from the page — a replay without the model will succeed without that value; re-record so a read for it lands in s_b6ea59.
+arm=sitelooper model=z-ai/glm-5.3 runid=fwvk13-n1 stop=completed
+turns=7 wall=223.5s
+commands=6 cmdTime=209.8s cmdBytes=5729 timeouts=0
+orchestrator in=6735 cw=0 cr=19776 out=1303
+inner prompt=1465463 cached=1357952 completion=15866
+spend=$0.0503 maxUsd=3
+learn: A_n=0 replayed=0/6 full=0 repaired=0 compiled=6 variants=0
+-> /home/user/sitelooper/bench/results/fwvk13-n1-sitelooper-result.json
+
+fwvk13-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — project=Bench Project, description includes runid=true
+  obj 3: PASS — due date=2026-12-31T12:00:00Z, want 2026-12-31
+  obj 4: PASS — priority=3 (want 3 = High)
+  obj 5: PASS — labels=Backend#1; seeded Backend is #1
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — identifier BENCH-4 reported
+
+[sweep] run 2/3: fwvk13-n2 (replay flow fwvk13, no orchestrator)
+[reset] vikunja: deleted 1 leftover bench task(s)
+[reset] vikunja: re-created "Seed: ship repaired device" as BENCH-4 so the next task is BENCH-5
+[sweep] fwvk13-n2: 1 drift ticket(s) → fwvk13-n2-drift.json
+
+fwvk13-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — project=Bench Project, description includes runid=true
+  obj 3: PASS — due date=2026-12-31T12:00:00Z, want 2026-12-31
+  obj 4: PASS — priority=3 (want 3 = High)
+  obj 5: PASS — labels=Backend#1; seeded Backend is #1
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — identifier BENCH-5 reported
+
+[sweep] run 3/3: fwvk13-n3 (replay flow fwvk13, no orchestrator)
+[reset] vikunja: deleted 1 leftover bench task(s)
+[reset] vikunja: re-created "Seed: ship repaired device" as BENCH-5 so the next task is BENCH-6
+[sweep] fwvk13-n3: 1 drift ticket(s) → fwvk13-n3-drift.json
+
+fwvk13-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — project=Bench Project, description includes runid=true
+  obj 3: PASS — due date=2026-12-31T12:00:00Z, want 2026-12-31
+  obj 4: PASS — priority=3 (want 3 = High)
+  obj 5: PASS — labels=Backend#1; seeded Backend is #1
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — identifier BENCH-6 reported
+
+Learning sweep fwvk13 (K=3)
+┌─────────┬───┬─────────────┬──────────┬─────────────┬───────┬──────┬───────────┬──────┬──────────────┬────────┐
+│ (index) │ n │ runid       │ verified │ stop        │ turns │ cmds │ total_usd │ A_n  │ replayed     │ wall_s │
+├─────────┼───┼─────────────┼──────────┼─────────────┼───────┼──────┼───────────┼──────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwvk13-n1' │ '7/7'    │ 'completed' │ 7     │ 6    │ 0.0503    │ 0    │ '0/6'        │ 224    │
+│ 1       │ 2 │ 'fwvk13-n2' │ '7/7'    │ 'success'   │ 16    │ 6    │ 0.005     │ 0.83 │ '6/6 (flow)' │ 77     │
+│ 2       │ 3 │ 'fwvk13-n3' │ '7/7'    │ 'success'   │ 34    │ 6    │ 0.1384    │ 0.83 │ '6/6 (flow)' │ 214    │
+└─────────┴───┴─────────────┴──────────┴─────────────┴───────┴──────┴───────────┴──────┴──────────────┴────────┘
+http://127.0.0.1:8096
+  s_1f53fa  validated    5 steps  3/3 (100%)
+           In the Vikunja project {{v1}}, create a new task with the exact title '{{v3}}' and a description that includes…
+  s_2f7cd9  validated    1 steps  3/3 (100%)
+           On the Vikunja task page for the task '{{v1}}' (identifier {{v3}}, at {{v4}}), set the due date to {{v5}} and …
+  s_38a508  validated    5 steps  3/3 (100%)
+           Sign in to Vikunja at {{v1}} with username {{v2}} and password {{v3}} (type that exact literal text as the pas…
+  s_40a29b  validated   12 steps  3/3 (100%)
+           On the Vikunja task page for the task '{{v1}}' (identifier {{v3}}, at {{v4}}), add the EXISTING label named 'B…
+  s_516598  validated    9 steps  3/3 (100%)
+           On the Vikunja task page for the task '{{v1}}' (identifier {{v3}}, at {{v4}}), add a comment whose text includ…
+  s_626bbf  validated   11 steps  3/3 (100%)
+           Final verification on the Vikunja task page at {{v1}}: reload the page and report, exactly as displayed: (1) t…
+  s_692bf6  validated    2 steps  3/3 (100%)
+           Sign in to Vikunja at {{v1}} with username {{v2}} and password {{v3}} (type that exact literal text as the pas…
+  s_96a262  validated    3 steps  3/3 (100%)
+           In the Vikunja project {{v1}}, create a new task with the exact title '{{v3}}' and a description that includes…
+  s_b6ea59  validated   11 steps  3/3 (100%)
+           In the Vikunja project {{v1}}, create a new task with the exact title '{{v3}}' and a description that includes…
+  s_c1a281  validated    1 steps  3/3 (100%)
+           Sign in to Vikunja at {{v1}} with username {{v2}} and password {{v3}} (type that exact literal text as the pas…
+  s_d8f75f  validated    8 steps  3/3 (100%)
+           Sign in to Vikunja at {{v1}} with username {{v2}} and password {{v3}} (type that exact literal text as the pas…
+  s_0c507c  provisional  1 steps  1/1 (100%)
+           On the Vikunja task page for the task '{{v1}}' (identifier {{02-create.task_identifier}}, at {{v3}}), set the …
+  s_265222  provisional 20 steps  1/1 (100%)
+           On the Vikunja task page for the task '{{v1}}' (identifier {{v3}}, at {{v4}}), set the due date to {{v5}} and …
+  s_66b6f9  provisional  3 steps  1/1 (100%)
+           On the Vikunja task page for the task '{{v1}}' (identifier {{02-create.task_identifier}}, at {{v3}}), set the …
+  s_7b2a8d  provisional  7 steps  1/1 (100%)
+           On the Vikunja task page for the task '{{v1}}' (identifier {{02-create.task_identifier}}, at {{v3}}), set the …
+  s_d7a64e  provisional 18 steps  1/1 (100%)
+           On the Vikunja task page for the task '{{v1}}' (identifier {{02-create.task_identifier}}, at {{v3}}), set the …
+  s_e1a4eb  provisional 17 steps  1/1 (100%)
+           On the Vikunja task page for the task '{{v1}}' (identifier {{02-create.task_identifier}}, at {{v3}}), set the …
+  s_e85e87  provisional  1 steps  1/1 (100%)
+           On the Vikunja task page for the task '{{v1}}' (identifier {{02-create.task_identifier}}, at {{v3}}), set the …
+store: /home/user/sitelooper/bench/results/fwvk13-skills
+
+summary: /home/user/sitelooper/bench/results/fwvk13-sweep.json

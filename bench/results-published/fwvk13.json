@@ -1,0 +1,496 @@
+{
+  "name": "fwvk13",
+  "origin": "http://127.0.0.1:8096",
+  "startUrl": "http://127.0.0.1:8096/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-signin",
+      "instruction": "Sign in to Vikunja at http://127.0.0.1:8096/ with username admin and password {{env:APP_PASSWORD}} (type that exact literal text as the password). Then open the project Bench Project, and report the titles of all tasks whose title starts with 'Seed:' exactly as shown.",
+      "skill": "s_692bf6",
+      "params": {
+        "v1": "http://127.0.0.1:8096/",
+        "v2": "admin",
+        "v3": "{{env:APP_PASSWORD}}"
+      },
+      "outputs": [
+        "initial_page_url",
+        "project_name",
+        "project_url",
+        "task_list",
+        "seed_task_titles_1",
+        "seed_task_titles_2",
+        "seed_task_titles_3"
+      ],
+      "recorded": {
+        "initial_page_url": "about:blank",
+        "project_name": "Bench Project",
+        "project_url": "http://127.0.0.1:8096/projects/2/5",
+        "task_count": "3",
+        "task_list": "Seed: triage inbox\nSeed: order missing parts\nSeed: ship repaired device",
+        "seed_task_titles_1": "Seed: triage inbox",
+        "seed_task_titles_2": "Seed: order missing parts",
+        "seed_task_titles_3": "Seed: ship repaired device",
+        "url": "http://127.0.0.1:8096/projects/2/5",
+        "url.p1": "2",
+        "url.p2": "5"
+      },
+      "route": "http://127.0.0.1:8096/projects/:id/:id",
+      "outputEvidence": {
+        "initial_page_url": {
+          "same": 0,
+          "differed": 1
+        },
+        "project_name": {
+          "same": 1,
+          "differed": 0
+        },
+        "project_url": {
+          "same": 1,
+          "differed": 0
+        },
+        "task_count": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "task_list": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_task_titles_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_task_titles_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_task_titles_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        },
+        "url.p1": {
+          "same": 1,
+          "differed": 0
+        },
+        "url.p2": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "02-create",
+      "instruction": "In the Vikunja project Bench Project, create a new task with the exact title '{{runid}} Bench Task' and a description that includes the text '{{runid}}' (e.g. 'Benchmark task for run {{runid}}'). Do not modify any tasks whose title starts with 'Seed:'. After creating it, open the new task's own page and report the identifier the app displays for it (shown as BENCH-<number>) and the description text shown.",
+      "skill": "s_96a262",
+      "params": {
+        "v1": "Bench Project",
+        "v3": "{{runid}} Bench Task",
+        "v2": "{{runid}}",
+        "v4": "Benchmark task for run {{runid}}",
+        "v5": "{{01-signin.url.p1}}",
+        "v6": "{{01-signin.url.p2}}"
+      },
+      "outputs": [
+        "created_task_title",
+        "task_identifier",
+        "task_path",
+        "task_page_url",
+        "task_description_shown",
+        "run_reference",
+        "project_list_after_1",
+        "project_list_after_2",
+        "project_list_after_3",
+        "project_list_after_4"
+      ],
+      "recorded": {
+        "created_task_title": "fwvk13-n1 Bench Task",
+        "task_identifier": "BENCH-4",
+        "task_path": "/tasks/4",
+        "task_page_url": "http://127.0.0.1:8096/tasks/4",
+        "task_description_shown": "Benchmark task for run fwvk13-n1",
+        "run_reference": "fwvk13-n1",
+        "project_list_after_1": "fwvk13-n1 Bench Task",
+        "project_list_after_2": "Seed: triage inbox",
+        "project_list_after_3": "Seed: order missing parts",
+        "project_list_after_4": "Seed: ship repaired device"
+      },
+      "route": "http://127.0.0.1:8096/projects/:id/:id",
+      "outputEvidence": {
+        "created_task_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "task_identifier": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "task_path": {
+          "same": 0,
+          "differed": 1
+        },
+        "task_page_url": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "task_description_shown": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "run_reference": {
+          "same": 0,
+          "differed": 1
+        },
+        "project_list_after_1": {
+          "same": 0,
+          "differed": 1
+        },
+        "project_list_after_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "project_list_after_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "project_list_after_4": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "03-set",
+      "instruction": "On the Vikunja task page for the task '{{runid}} Bench Task' (identifier {{02-create.task_identifier}}, at {{02-create.task_path}}), set the due date to 2026-12-31 and set the priority to High. The page edits fields in place and saves automatically (no Save button). Then verify and report the due date and priority exactly as displayed on the task page.",
+      "skill": "s_2f7cd9",
+      "params": {
+        "v1": "{{runid}} Bench Task",
+        "v3": "{{02-create.task_identifier}}",
+        "v4": "{{02-create.task_path}}",
+        "v5": "2026-12-31",
+        "v7": "High",
+        "v2": "{{runid}}",
+        "v8": "4"
+      },
+      "outputs": [
+        "due_date_displayed",
+        "priority_displayed",
+        "priority_select_value",
+        "task_identifier",
+        "task_title",
+        "task_description",
+        "typed_year",
+        "run_reference"
+      ],
+      "recorded": {
+        "due_date_displayed": "31 Dec 2026, 12:00:00",
+        "priority_displayed": "High",
+        "priority_select_value": "3",
+        "task_identifier": "BENCH-4",
+        "task_title": "fwvk13-n1 Bench Task",
+        "task_description": "Benchmark task for run fwvk13-n1",
+        "typed_year": "2026",
+        "run_reference": "fwvk13-n1",
+        "url.p1": "4"
+      },
+      "route": "http://127.0.0.1:8096/tasks/:id",
+      "outputEvidence": {
+        "due_date_displayed": {
+          "same": 1,
+          "differed": 0
+        },
+        "priority_displayed": {
+          "same": 1,
+          "differed": 0
+        },
+        "priority_select_value": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "task_identifier": {
+          "same": 0,
+          "differed": 1
+        },
+        "task_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "task_description": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "typed_year": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "run_reference": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "url.p1": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "04-add",
+      "instruction": "On the Vikunja task page for the task '{{runid}} Bench Task' (identifier {{02-create.task_identifier}}, at {{02-create.task_path}}), add the EXISTING label named 'Backend' to the task. Important: the label field creates a new label from typed text, so you must pick the existing 'Backend' label from the suggestion dropdown rather than typing it in and creating a new one. Then verify and report the labels shown on the task page, and confirm the label used is the pre-existing 'Backend' label (not a newly created duplicate).",
+      "skill": "s_40a29b",
+      "params": {
+        "v1": "{{runid}} Bench Task",
+        "v3": "{{02-create.task_identifier}}",
+        "v4": "{{02-create.task_path}}",
+        "v2": "{{runid}}",
+        "v5": "{{03-set.url.p1}}"
+      },
+      "outputs": [
+        "due_date_displayed",
+        "label_source",
+        "labels_field_text_on_task_page",
+        "labels_shown_on_task",
+        "priority_displayed",
+        "task_identifier",
+        "task_title",
+        "labels_page_link"
+      ],
+      "recorded": {
+        "due_date_displayed": "31 Dec 2026, 12:00:00",
+        "duplicate_created": "no",
+        "label_list_after": "Backend, Docs, Frontend",
+        "label_source": "picked from existing-label suggestion dropdown (option \"Backend Click or press enter to select\")",
+        "labels_field_text_on_task_page": "Labels\nBackend",
+        "labels_page_url": "http://127.0.0.1:8096/labels",
+        "labels_shown_on_task": "Backend",
+        "priority_displayed": "High",
+        "task_identifier": "BENCH-4",
+        "task_title": "fwvk13-n1 Bench Task",
+        "labels_page_link": "/labels"
+      },
+      "route": "http://127.0.0.1:8096/tasks/:id",
+      "outputEvidence": {
+        "due_date_displayed": {
+          "same": 1,
+          "differed": 0
+        },
+        "duplicate_created": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "label_list_after": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "label_source": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "labels_field_text_on_task_page": {
+          "same": 1,
+          "differed": 0
+        },
+        "labels_page_url": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "labels_shown_on_task": {
+          "same": 1,
+          "differed": 0
+        },
+        "priority_displayed": {
+          "same": 1,
+          "differed": 0
+        },
+        "task_identifier": {
+          "same": 0,
+          "differed": 1
+        },
+        "task_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "labels_page_link": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "05-add",
+      "instruction": "On the Vikunja task page for the task '{{runid}} Bench Task' (identifier {{02-create.task_identifier}}, at {{02-create.task_path}}), add a comment whose text includes '{{runid}}' (e.g. 'Comment for run {{runid}}'). Submit the comment, then verify and report the comment text as displayed on the task page.",
+      "skill": "s_516598",
+      "params": {
+        "v1": "{{runid}} Bench Task",
+        "v3": "{{02-create.task_identifier}}",
+        "v4": "{{02-create.task_path}}",
+        "v2": "{{runid}}",
+        "v5": "Comment for run {{runid}}"
+      },
+      "outputs": [
+        "comment_author",
+        "comment_timestamp",
+        "comment_text_displayed",
+        "task_identifier",
+        "task_title",
+        "run_reference"
+      ],
+      "recorded": {
+        "comment_author": "admin",
+        "comment_timestamp": "less than a minute ago",
+        "comment_text_displayed": "Comment for run fwvk13-n1",
+        "task_identifier": "BENCH-4",
+        "task_title": "fwvk13-n1 Bench Task",
+        "run_reference": "fwvk13-n1"
+      },
+      "route": "http://127.0.0.1:8096/tasks/:id",
+      "outputEvidence": {
+        "comment_author": {
+          "same": 1,
+          "differed": 0
+        },
+        "comment_timestamp": {
+          "same": 1,
+          "differed": 0
+        },
+        "comment_text_displayed": {
+          "same": 0,
+          "differed": 1
+        },
+        "task_identifier": {
+          "same": 0,
+          "differed": 1
+        },
+        "task_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "run_reference": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "06-report",
+      "instruction": "Final verification on the Vikunja task page at {{02-create.task_path}}: reload the page and report, exactly as displayed: (1) the task title, (2) the identifier shown as BENCH-<number>, (3) the description text, (4) the due date, (5) the priority, (6) the labels on the task, and (7) the text of any comments. Do not change anything.",
+      "skill": "s_626bbf",
+      "params": {
+        "v1": "{{02-create.task_path}}",
+        "v2": "{{runid}}",
+        "v3": "{{03-set.url.p1}}"
+      },
+      "outputs": [
+        "comment_text",
+        "comment_author",
+        "comment_timestamp",
+        "description_text",
+        "due_date",
+        "identifier",
+        "labels",
+        "priority",
+        "task_title",
+        "run_reference"
+      ],
+      "recorded": {
+        "comment_text": "Comment for run fwvk13-n1",
+        "comment_author": "admin",
+        "comment_timestamp": "less than a minute ago",
+        "description_text": "Benchmark task for run fwvk13-n1",
+        "due_date": "31 Dec 2026, 12:00:00",
+        "identifier": "BENCH-4",
+        "labels": "Backend",
+        "priority": "High",
+        "task_title": "fwvk13-n1 Bench Task",
+        "run_reference": "fwvk13-n1"
+      },
+      "route": "http://127.0.0.1:8096/tasks/:id",
+      "outputEvidence": {
+        "comment_text": {
+          "same": 0,
+          "differed": 1
+        },
+        "comment_author": {
+          "same": 1,
+          "differed": 0
+        },
+        "comment_timestamp": {
+          "same": 1,
+          "differed": 0
+        },
+        "description_text": {
+          "same": 0,
+          "differed": 1
+        },
+        "due_date": {
+          "same": 1,
+          "differed": 0
+        },
+        "identifier": {
+          "same": 0,
+          "differed": 1
+        },
+        "labels": {
+          "same": 1,
+          "differed": 0
+        },
+        "priority": {
+          "same": 1,
+          "differed": 0
+        },
+        "task_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "run_reference": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "session": "fwvk13-n1",
+    "created": "2026-09-25T01:23:44.608Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "01-signin",
+      "outputs": [
+        "task_count"
+      ]
+    },
+    {
+      "stepId": "04-add",
+      "outputs": [
+        "duplicate_created",
+        "label_list_after",
+        "labels_page_url"
+      ]
+    }
+  ]
+}

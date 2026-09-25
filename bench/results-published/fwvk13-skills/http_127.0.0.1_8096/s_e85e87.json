@@ -1,0 +1,125 @@
+{
+ "id": "s_e85e87",
+ "origin": "http://127.0.0.1:8096",
+ "template": "On the Vikunja task page for the task '{{v1}}' (identifier {{02-create.task_identifier}}, at {{v3}}), set the due date to 2026-12-{{v4}} and set the priority to {{v5}}. The page edits fields in place and saves automatically (no Save button). Then verify and report the due date and priority exactly as displayed on the task page.",
+ "params": {
+  "v1": {
+   "example": "fwvk13-n2 Bench Task",
+   "usedIn": [
+    1
+   ],
+   "known": true,
+   "binding": "output:i2:created_task_title"
+  },
+  "v2": {
+   "example": "fwvk13-n2",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v3": {
+   "example": "/tasks/6",
+   "usedIn": [],
+   "known": true,
+   "binding": "02-create.task_path"
+  },
+  "v4": {
+   "example": "31",
+   "usedIn": []
+  },
+  "v5": {
+   "example": "High",
+   "usedIn": []
+  },
+  "v6": {
+   "example": "6",
+   "usedIn": [],
+   "known": true,
+   "binding": "url:i2:p1"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8096/projects/:id/:id"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e150"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "scoped",
+      "container": "span",
+      "hasText": "{{v1}}",
+      "selector": "a"
+     },
+     {
+      "kind": "role",
+      "role": "link",
+      "name": "{{v1}}"
+     },
+     {
+      "kind": "css",
+      "selector": "ul > div:nth-of-type(1) > div > div:nth-of-type(2) > span:nth-of-type(1) > a"
+     },
+     {
+      "kind": "point",
+      "x": 450,
+      "y": 230,
+      "w": 165.3,
+      "h": 22,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8096/tasks/:id",
+    "addedContains": [
+     "- heading \"{{v1}}\"",
+     "- heading \"Description\"",
+     "- button \"Edit\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_2f7cd9",
+    "step": 1
+   }
+  }
+ ],
+ "contract": 2,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-25T01:24:55.223Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_d384cc",
+  "index": 0,
+  "of": 2
+ },
+ "provenance": {
+  "session": "fwvk13-n2",
+  "instruction": "On the Vikunja task page for the task 'fwvk13-n2 Bench Task' (identifier {{02-create.task_identifier}}, at /tasks/6), set the due date to 2026-12-31 and set the priority to High. The page edits fields in place and saves automatically (no Save button). Then verify and report the due date and priority exactly as displayed on the task page.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-25T01:24:55.223Z",
+  "transforms": [
+   {
+    "name": "unfreezeExpectations",
+    "at": 1,
+    "reason": "recorded page change(s) only the recording run could produce: [\"- button \\\"BENCH-5\\\"\",\"- heading \\\"BENCH-5\\\"\",\"- heading \\\"{{v1}}\\\"\",\"- heading \\\"Description\\\"\",\"- button \\\"Edit\\\"\"] → [\"- heading \\\"{{v1}}\\\"\",\"- heading \\\"Description\\\"\",\"- button \\\"Edit\\\"\"]"
+   }
+  ]
+ },
+ "revision": 1
+}
