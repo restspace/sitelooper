@@ -1,0 +1,119 @@
+{
+ "id": "s_ebcb0d",
+ "origin": "http://127.0.0.1:8096",
+ "template": "Open the '{{v1}}' project list view (read-only) and report the exact titles of all tasks listed, in order, confirming the three 'Seed:' tasks are present and unmodified, and that '{{v4}}' is also listed. Do not change anything.",
+ "params": {
+  "v1": {
+   "example": "Inbox\nBench Project",
+   "usedIn": [],
+   "known": true,
+   "binding": "01-signin.visible_projects_2"
+  },
+  "v3": {
+   "example": "Bench Project",
+   "usedIn": [
+    1
+   ],
+   "known": true,
+   "binding": "output:i2:opened_project"
+  },
+  "v4": {
+   "example": "fwvk15-cv3-r2n1 Bench Task",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i3:task_title"
+  },
+  "v5": {
+   "example": "fwvk15-cv3-r2n1",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8096/tasks/:id"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e86"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "link",
+      "name": "{{v3}}",
+      "nth": 0
+     },
+     {
+      "kind": "css",
+      "selector": "aside > nav:nth-of-type(4) > menu > li:nth-of-type(2) > div > a"
+     },
+     {
+      "kind": "point",
+      "x": 121,
+      "y": 414,
+      "w": 242,
+      "h": 44,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "mints": {
+    "at": "p1"
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8096/projects/{{d1}}/{{d2}}",
+    "addedContains": [
+     "- heading \"{{v3}}\"",
+     "- link \"List\"",
+     "- link \"Gantt\"",
+     "- link \"Table\"",
+     "- link \"Kanban\""
+    ],
+    "lineDialect": 2
+   }
+  }
+ ],
+ "derived": {
+  "d1": {
+   "step": 1,
+   "at": "p1",
+   "example": "2"
+  },
+  "d2": {
+   "step": 1,
+   "at": "p2",
+   "example": "5"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 5,
+  "successes": 5,
+  "partial": 0,
+  "created": "2026-09-25T14:58:50.684Z",
+  "failedAtStep": {},
+  "fallthroughs": 4,
+  "verifiedContract": 2,
+  "lastUsed": "2026-09-25T15:06:25.358Z"
+ },
+ "status": "validated",
+ "seq": {
+  "chain": "s_054196",
+  "index": 0,
+  "of": 2
+ },
+ "provenance": {
+  "session": "rerecord-muh2zug9-1",
+  "instruction": "Open the 'Inbox\nBench Project' project list view (read-only) and report the exact titles of all tasks listed, in order, confirming the three 'Seed:' tasks are present and unmodified, and that 'fwvk15-cv3-r2n1 Bench Task' is also listed. Do not change anything.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-25T14:58:50.684Z"
+ },
+ "revision": 5
+}

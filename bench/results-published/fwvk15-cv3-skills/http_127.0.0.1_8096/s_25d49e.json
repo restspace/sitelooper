@@ -1,0 +1,87 @@
+{
+ "id": "s_25d49e",
+ "origin": "http://127.0.0.1:8096",
+ "template": "Open the project named '{{v1}}' from the sidebar and list the titles of all tasks in it whose title starts with 'Seed:', exactly as displayed. Do not modify anything. Report the exact titles.",
+ "params": {
+  "v1": {
+   "example": "Inbox\nBench Project",
+   "usedIn": [],
+   "known": true,
+   "binding": "01-signin.visible_projects_2"
+  },
+  "v2": {
+   "example": "Inbox",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i1:visible_projects_readback_1"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8096/"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e51"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "link",
+      "name": "Projects"
+     },
+     {
+      "kind": "css",
+      "selector": "div > aside > nav:nth-of-type(1) > menu > li:nth-of-type(3) > a"
+     },
+     {
+      "kind": "point",
+      "x": 150,
+      "y": 190,
+      "w": 300,
+      "h": 44,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8096/projects",
+    "addedContains": [
+     "- checkbox \"Show Archived\"",
+     "- link \"NEW SAVED FILTER\"",
+     "- link \"NEW PROJECT\""
+    ],
+    "lineDialect": 2
+   }
+  }
+ ],
+ "contract": 2,
+ "stats": {
+  "uses": 6,
+  "successes": 6,
+  "partial": 0,
+  "created": "2026-09-25T14:54:49.808Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2,
+  "lastUsed": "2026-09-25T15:05:00.407Z"
+ },
+ "status": "validated",
+ "seq": {
+  "chain": "s_d8a26f",
+  "index": 0,
+  "of": 3
+ },
+ "provenance": {
+  "session": "rerecord-muh2zug9-0",
+  "instruction": "Open the project named 'Inbox\nBench Project' from the sidebar and list the titles of all tasks in it whose title starts with 'Seed:', exactly as displayed. Do not modify anything. Report the exact titles.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-25T14:54:49.808Z"
+ },
+ "revision": 6
+}

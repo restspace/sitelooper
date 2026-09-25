@@ -1,0 +1,271 @@
+{
+ "id": "s_4af799",
+ "origin": "http://127.0.0.1:8096",
+ "template": "In the '{{v1}}' project, create a new task with the exact title '{{v5}}' and a description that includes the text '{{v4}}' (e.g. '{{v6}}'). Fill in the title and description in the task creation form and submit/save it. Then open the newly created task's own detail page and report its title, its description text, and the identifier the app displays for it (Vikunja shows something like BENCH-<number>). Do not touch the tasks whose titles start with 'Seed:'.",
+ "params": {
+  "v1": {
+   "example": "Inbox\nBench Project",
+   "usedIn": [],
+   "known": true,
+   "binding": "01-signin.visible_projects_2"
+  },
+  "v3": {
+   "example": "Bench Project",
+   "usedIn": [
+    1
+   ],
+   "known": true,
+   "binding": "output:i1:a_href_projects"
+  },
+  "v4": {
+   "example": "fwvk15-cv3-r1n0",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v5": {
+   "example": "fwvk15-cv3-r1n0 Bench Task",
+   "usedIn": [
+    2,
+    4
+   ],
+   "known": true
+  },
+  "v6": {
+   "example": "Bench task created for run fwvk15-cv3-r1n0",
+   "usedIn": [],
+   "known": true
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8096/projects/:id/:id"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e86"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "link",
+      "name": "{{v3}}",
+      "nth": 0
+     },
+     {
+      "kind": "css",
+      "selector": "aside > nav:nth-of-type(4) > menu > li:nth-of-type(2) > div > a"
+     },
+     {
+      "kind": "point",
+      "x": 121,
+      "y": 414,
+      "w": 242,
+      "h": 44,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "mints": {
+    "at": "p1"
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8096/projects/{{d1}}/{{d2}}",
+    "addedContains": [
+     "- heading \"{{v3}}\"",
+     "- link \"List\"",
+     "- link \"Gantt\"",
+     "- link \"Table\"",
+     "- link \"Kanban\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e230",
+    "value": "{{v5}}"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Add a task…"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "Add a task…"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div > div > div > p:nth-of-type(1) > textarea"
+     },
+     {
+      "kind": "point",
+      "x": 749,
+      "y": 183,
+      "w": 815.9,
+      "h": 38,
+      "role": "textbox",
+      "tag": "textarea",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8096/projects/{{d1}}/{{d2}}",
+    "addedContains": [
+     "- textbox \"Add a task…\": {{v5}}",
+     "- button \"Add\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e235"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Add"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div > div > div > p:nth-of-type(2) > button"
+     },
+     {
+      "kind": "point",
+      "x": 1204,
+      "y": 183,
+      "w": 70.1,
+      "h": 38,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8096/projects/{{d1}}/{{d2}}",
+    "addedContains": [
+     "- textbox \"Add a task…\"",
+     "- button \"Add\" [disabled]",
+     "- link \"{{v5}}\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=link[name=\"{{v5}}\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "role=link[name=\"{{v5}}\"]"
+     },
+     {
+      "kind": "scoped",
+      "container": "span",
+      "hasText": "{{v5}}",
+      "selector": "a"
+     },
+     {
+      "kind": "role",
+      "role": "link",
+      "name": "{{v5}}"
+     },
+     {
+      "kind": "css",
+      "selector": "ul > div:nth-of-type(1) > div > div:nth-of-type(2) > span:nth-of-type(1) > a"
+     },
+     {
+      "kind": "point",
+      "x": 473,
+      "y": 230,
+      "w": 210.9,
+      "h": 22,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "mints": {
+    "at": "p1"
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8096/tasks/{{d3}}",
+    "addedContains": [
+     "- heading \"{{v5}}\"",
+     "- heading \"Description\"",
+     "- button \"1\""
+    ],
+    "lineDialect": 2
+   }
+  }
+ ],
+ "derived": {
+  "d1": {
+   "step": 1,
+   "at": "p1",
+   "example": "2"
+  },
+  "d2": {
+   "step": 1,
+   "at": "p2",
+   "example": "5"
+  },
+  "d3": {
+   "step": 4,
+   "at": "p1",
+   "example": "8"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-25T14:45:09.451Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_1bc95f",
+  "index": 0,
+  "of": 2
+ },
+ "provenance": {
+  "session": "rerecord-muh2m7pn-0",
+  "instruction": "In the 'Inbox\nBench Project' project, create a new task with the exact title 'fwvk15-cv3-r1n0 Bench Task' and a description that includes the text 'fwvk15-cv3-r1n0' (e.g. 'Bench task created for run fwvk15-cv3-r1n0'). Fill in the title and description in the task creation form and submit/save it. Then open the newly created task's own detail page and report its title, its description text, and the identifier the app displays for it (Vikunja shows something like BENCH-<number>). Do not touch the tasks whose titles start with 'Seed:'.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-25T14:45:09.451Z",
+  "transforms": [
+   {
+    "name": "unfreezeExpectations",
+    "at": 4,
+    "reason": "recorded page change(s) only the recording run could produce: [\"- button \\\"BENCH-6\\\"\",\"- heading \\\"BENCH-6\\\"\",\"- heading \\\"{{v5}}\\\"\",\"- heading \\\"Description\\\"\",\"- button \\\"1\\\"\"] → [\"- heading \\\"{{v5}}\\\"\",\"- heading \\\"Description\\\"\",\"- button \\\"1\\\"\"]"
+   }
+  ]
+ },
+ "revision": 1
+}

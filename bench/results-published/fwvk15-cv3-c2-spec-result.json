@@ -1,0 +1,38 @@
+{
+  "arm": "spec",
+  "runid": "fwvk15-cv3-c2",
+  "target": "vikunja",
+  "flow": "fwvk15-cv3.json",
+  "flowName": "fwvk15-cv3",
+  "skillsDir": "/home/user/sitelooper/bench/results/fwvk15-cv3-skills",
+  "compiled": true,
+  "flowFile": "bench/results/fwvk15-cv3-c2-spec-tmp/fwvk15-cv3.flow.ts",
+  "specFile": "bench/results/fwvk15-cv3-c2-spec-tmp/fwvk15-cv3.spec.ts",
+  "wallMs": 23067,
+  "exitCode": 1,
+  "timedOut": false,
+  "costUsd": 0,
+  "stats": {
+    "total": 1,
+    "passed": 0,
+    "failed": 1,
+    "skipped": 0
+  },
+  "tests": [
+    {
+      "title": "fwvk15-cv3",
+      "status": "unexpected",
+      "ok": false,
+      "durationMs": 18477,
+      "error": "Error: 02-open s_3f56c3: identity: {{v1}} is not confirmed on this page",
+      "drift": []
+    }
+  ],
+  "drift": [],
+  "driftCount": 0,
+  "evidence": [
+    "fwvk15-cv3-c2-spec-failure.png",
+    "fwvk15-cv3-c2-spec-error-context.md"
+  ],
+  "logTail": "\nRunning 1 test using 1 worker\n\n[sitelooper skip] 01-signin s_2c3670/2 target: read target not found — value left empty\n[sitelooper step] 01-signin\n  ✘  1 fwvk15-cv3.spec.ts:9:1 › fwvk15-cv3 (18.5s)\n\n\n  1) fwvk15-cv3.spec.ts:9:1 › fwvk15-cv3 › 02-open: Open the project named '{{01-signin.visible_projects_2}}' from the sidebar and list the titles of all tasks in it whose title starts with 'Seed:', exactly as displayed. Do not modify anything. Report the exact titles. \n\n    Error: 02-open s_3f56c3: identity: {{v1}} is not confirmed on this page\n\n       at fwvk15-cv3.flow.ts:14501\n\n      14499 |         const verdict = identityMarkerVerdict('http://127.0.0.1:8096/', page.url(), p, `${p.v1}`, seen.presence);\n      14500 |         if (verdict.warning) logWarning('02-open s_3f56c3: ' + verdict.warning);\n    > 14501 |         if (!verdict.pass) throw new Error('02-open s_3f56c3: identity: {{v1}} is not confirmed on this page');\n            |                                  ^\n      14502 |       }\n      14503 |     }\n      14504 |\n        at Object.02-open (/home/user/sitelooper/bench/results/fwvk15-cv3-c2-spec-tmp/fwvk15-cv3.flow.ts:14501:34)\n        at /home/user/sitelooper/bench/results/fwvk15-cv3-c2-spec-tmp/fwvk15-cv3.flow.ts:18039:7\n        at runFlow (/home/user/sitelooper/bench/results/fwvk15-cv3-c2-spec-tmp/fwvk15-cv3.flow.ts:18038:5)\n        at /home/user/sitelooper/bench/results/fwvk15-cv3-c2-spec-tmp/fwvk15-cv3.spec.ts:14:21\n\n    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────\n    \n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────\n    test-results/fwvk15-cv3-fwvk15-cv3/test-failed-1.png\n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    Error Context: test-results/fwvk15-cv3-fwvk15-cv3/error-context.md\n\n  1 failed\n    fwvk15-cv3.spec.ts:9:1 › fwvk15-cv3 ────────────────────────────────────────────────────────────\n"
+}
