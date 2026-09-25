@@ -188,3 +188,23 @@ describe('overlap: only an answer that lands while the window is open makes a ch
     expect(out.find((e) => e.k === 'show')!.also).toBe(1);
   });
 });
+
+describe('a write soon after any gesture is that gesture\'s (shadow2 fix 2)', () => {
+  // vikunja fwvk13 #64: Confirm, then 139 ms after its window closed the POST
+  // that saved the task. A GET that soon after a click is not claimed.
+  it('a POST 139 ms after a click is the click\'s, late by debounce; a GET is not', () => {
+    const windows = [win(64, 'gesture', 1_000, 1_140)];
+    const [post] = attribute([req(1_279, 1_300, { m: 'POST', e: 'http://app/api/v1/tasks/4' })], windows);
+    expect(post.c).toEqual(['late', 64, 'debounce']);
+    const [get] = attribute([req(1_279, 1_300, { m: 'GET', e: 'http://app/api/v1/notifications' })], windows);
+    expect(get.c).toEqual(['app', 'timer']);
+  });
+});
+
+describe('a write soon after a navigation is not the navigation\'s', () => {
+  it('an autosave 600 ms after a goto stays the app\'s', () => {
+    const windows: JournalWindow[] = [{ w: 3, kind: 'gesture', tool: 'goto', start: 1_000, end: 1_200 }];
+    const [post] = attribute([req(1_800, 1_850, { m: 'POST', e: 'http://app/api/autosave' })], windows);
+    expect(post.c).toEqual(['app', 'timer']);
+  });
+});

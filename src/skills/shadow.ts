@@ -18,6 +18,7 @@ import type { LocatorCandidate } from '../daemon/recorder.js';
 import type { Skill, SkillStep } from './store.js';
 import { collapseTogglePairs, dropSupersededSets } from './toggles.js';
 import { creditUncreditedPopups } from './compile.js';
+import { keyPicks } from './key-pick.js';
 
 export interface ShadowRow {
   /** The heuristic (or round-61 question) this row shadows. */
@@ -125,7 +126,11 @@ export function abandonedEdits(steps: readonly RecordedStep[], skills: readonly 
     const w = edit.journal.w;
     const between = events.filter((e) => e.k === 'req' && e.t >= from && e.t < to);
     const carrying = between.filter((e) => Array.isArray(e.carries) && (e.carries as number[]).includes(w));
-    const writes = between.filter((e) => WRITE_METHODS.has(String(e.m)) && !(e.c?.[0] === 'app'));
+    // Any write that is not the app polling counts as a save, whoever it is
+    // attributed to: vikunja fwvk13 #64's Confirm saved the date by a POST that
+    // left 139 ms after the click's window closed (filed app:timer before the
+    // write-debounce rule), and the edit before it was not abandoned.
+    const writes = between.filter((e) => WRITE_METHODS.has(String(e.m)) && !(e.c?.[0] === 'app' && e.c[1] === 'poll'));
     const fact = carrying.length || writes.length ? 'saved' : 'abandoned';
     const kept = compiledMatches(edit, skills).length > 0;
     rows.push({
@@ -177,7 +182,6 @@ function causedBy(step: RecordedStep, events: readonly JournalEvent[]): JournalE
   return events.filter((e) => (e.c?.[0] === 'in' || e.c?.[0] === 'late') && e.c[1] === w);
 }
 
-const OPTION_ATTRS = new Set(['class', 'aria-selected', 'aria-checked', 'checked']);
 const OBSERVE_TOOLS = new Set(['read', 'read_all', 'wait_for', 'screenshot']);
 const observesOnly = (s: RecordedStep) => OBSERVE_TOOLS.has(s.tool) || (s.tool === 'tabs' && typeof s.args.switch_to !== 'number');
 const optionName = (d: unknown) =>
@@ -186,71 +190,105 @@ const optionName = (d: unknown) =>
     .replace(/^[✓✔☑\s]+/, '')
     .trim();
 
+/** A tick: an option's own checked/selected state changed, with a known direction. */
+const TICK_ATTRS = new Set(['class', 'aria-checked', 'checked']);
+const POPUP_D = /^(listbox|menu|menubar|dialog|alertdialog|tree|grid) "/;
+
 /**
- * (a) A picker's recorded net option state (gitea fwgt12 03-set): the ticks
- * the journal saw (state events with a direction), which of them a close
- * COMMITTED (a hide followed by a write request), and what a reload threw
- * away (a goto or back returns the picker to the last commit). Beside it, the
- * state the compiled procedure's kept ticking steps produce from the same
- * start. They agree when the procedure ends with the same options selected.
+ * (a) Each picker's recorded net option state (gitea fwgt12 03-set, fwgt13
+ * 02-create), one row per picker.
+ *
+ * Ticks are option state changes with a direction: a checked class, native
+ * `checked`, aria-checked. aria-selected is not a tick: it moves with the
+ * highlight (grafana fwgr74's search list, openproject fwop16's tabs). Each
+ * tick belongs to the picker that was showing when it happened: the latest
+ * popup shown before it and not hidden since. A tick with no picker showing
+ * is not a picker's and is not counted.
+ *
+ * A picker's state is COMMITTED by the next write request after a tick: right
+ * after it closes (a picker that commits on close) or later (a form submitted
+ * with it: gitea's Create Issue). A goto or back before any commit throws the
+ * uncommitted ticks away. The row compares that with the state the compiled
+ * procedure's kept ticking steps produce, and says how many ticks were made by
+ * a key press: those the procedure repeats by POSITION (see the keyPick rule).
  */
 export function pickerNetState(steps: readonly RecordedStep[], skills: readonly Skill[], prior: readonly RecordedStep[] = []): ShadowRow[] {
   // A dead instruction just before (gitea fwgt11/fwgt12: blocked, then resumed)
   // ticked the same picker: its ticks and commits are part of the recorded
   // state, though its steps are not this procedure's unless carried in.
+  const all = [...prior, ...steps];
   const events = [...new Set([...eventsOf(prior), ...eventsOf(steps)])].sort((a, b) => a.t - b.t);
-  const ticks = events.filter((e) => e.k === 'state' && typeof e.on === 'boolean' && OPTION_ATTRS.has(String(e.a)));
+  const ticks = events.filter((e) => e.k === 'state' && typeof e.on === 'boolean' && TICK_ATTRS.has(String(e.a)) && !/^tab "/.test(String(e.d)));
   if (!ticks.length) return [];
-  const resets = [...prior, ...steps].filter((s) => (s.tool === 'goto' || s.tool === 'back') && dispatchOf(s) !== undefined).map((s) => dispatchOf(s)!);
-  const initial = new Map<string, boolean>();
-  for (const t of ticks) if (!initial.has(optionName(t.d))) initial.set(optionName(t.d), !t.on);
-  let current = new Map(initial);
-  let committed = new Map(initial);
-  const commits: string[] = [];
+  const shows = events.filter((e) => e.k === 'show' && POPUP_D.test(String(e.d)));
+  const hides = events.filter((e) => e.k === 'hide' && POPUP_D.test(String(e.d)));
+  /** The picker showing at t: the latest popup shown before t and not hidden since. */
+  const pickerAt = (t: number): JournalEvent | undefined =>
+    [...shows].reverse().find((sh) => sh.t <= t && !hides.some((h) => h.lm === sh.lm && h.t > sh.t && h.t <= t));
+  const groups = new Map<string, { picker: JournalEvent; ticks: JournalEvent[] }>();
+  for (const t of ticks) {
+    const p = pickerAt(t.t);
+    if (!p) continue;
+    const key = `${String(p.d)}#${String(p.fr ?? '')}`;
+    const g = groups.get(key) ?? { picker: p, ticks: [] };
+    g.ticks.push(t);
+    groups.set(key, g);
+  }
+  const resets = all.filter((s) => (s.tool === 'goto' || s.tool === 'back') && dispatchOf(s) !== undefined).map((s) => dispatchOf(s)!);
+  const writes = events.filter((r) => r.k === 'req' && WRITE_METHODS.has(String(r.m)) && !(r.c?.[0] === 'app' && r.c[1] === 'poll'));
   const selected = (m: Map<string, boolean>) =>
     [...m]
       .filter(([, v]) => v)
       .map(([k]) => k)
       .sort();
-  const timeline = [
-    ...ticks.map((e) => ({ t: e.t, e: e as JournalEvent | null })),
-    ...events.filter((e) => e.k === 'hide').map((e) => ({ t: e.t, e: e as JournalEvent | null })),
-    ...resets.map((t) => ({ t, e: null as JournalEvent | null })),
-  ].sort((a, b) => a.t - b.t);
-  for (const { t, e } of timeline) {
-    if (!e) {
-      current = new Map(committed);
-      continue;
-    }
-    if (e.k === 'state') current.set(optionName(e.d), e.on as boolean);
-    else {
-      const write = events.find((r) => r.k === 'req' && WRITE_METHODS.has(String(r.m)) && r.c?.[0] !== 'app' && r.t >= t - 300 && r.t <= t + 1_500);
-      if (write) {
+  const rows: ShadowRow[] = [];
+  for (const { picker, ticks: gt } of groups.values()) {
+    const initial = new Map<string, boolean>();
+    for (const t of gt) if (!initial.has(optionName(t.d))) initial.set(optionName(t.d), !t.on);
+    let current = new Map(initial);
+    let committed = new Map(initial);
+    let dirty = false;
+    const commits: string[] = [];
+    const pickerHides = hides.filter((h) => h.d === picker.d);
+    const timeline = [
+      ...gt.map((e) => ({ t: e.t, k: 'tick' as const, e: e as JournalEvent | null })),
+      ...pickerHides.map((e) => ({ t: e.t, k: 'close' as const, e: e as JournalEvent | null })),
+      ...writes.map((e) => ({ t: e.t, k: 'write' as const, e: e as JournalEvent | null })),
+      ...resets.map((t) => ({ t, k: 'reset' as const, e: null as JournalEvent | null })),
+    ].sort((a, b) => a.t - b.t);
+    let closedAt = -Infinity;
+    for (const x of timeline) {
+      if (x.k === 'tick') {
+        current.set(optionName(x.e!.d), x.e!.on as boolean);
+        dirty = true;
+      } else if (x.k === 'close') closedAt = x.t;
+      else if (x.k === 'write' && dirty) {
         committed = new Map(current);
-        commits.push(`{${selected(committed).join(', ')}} at #${causeWindowOf(e) ?? '?'}`);
+        dirty = false;
+        commits.push(`{${selected(committed).join(', ')}} ${x.t - closedAt <= 1_500 ? 'when it closed' : 'with the form'} (#${causeWindowOf(x.e!) ?? '?'})`);
+      } else if (x.k === 'reset' && dirty) {
+        current = new Map(committed);
+        dirty = false;
       }
     }
-  }
-  const lastTick = ticks[ticks.length - 1].t;
-  const pending = !timeline.some(({ t, e }) => e?.k === 'hide' && t > lastTick);
-  // The procedure: the same start, ticked by the kept steps that ticked.
-  const proc = new Map(initial);
-  for (const t of ticks) {
-    const step = t.c?.[0] === 'in' ? stepOfWindow(steps, t.c[1] as number) : undefined;
-    if (step && keptOccurrence(step, steps, skills).kept) proc.set(optionName(t.d), t.on as boolean);
-  }
-  const fact = selected(pending ? current : committed);
-  const procedure = selected(proc);
-  return [
-    {
+    const byKey = gt.filter((t) => stepOfWindow(all, causeWindowOf(t))?.tool === 'press');
+    const proc = new Map(initial);
+    for (const t of gt) {
+      const step = t.c?.[0] === 'in' ? stepOfWindow(steps, t.c[1] as number) : undefined;
+      if (step && keptOccurrence(step, steps, skills).kept) proc.set(optionName(t.d), t.on as boolean);
+    }
+    const fact = selected(dirty ? current : committed);
+    const procedure = selected(proc);
+    rows.push({
       rule: 'pickerNetState',
-      step: String(events.find((e) => e.k === 'show' && /^(listbox|menu|dialog)/.test(String(e.d)))?.d ?? 'picker'),
-      fact: `net selected: [${fact.join(', ')}]${pending ? ' (not committed: no close after the last tick)' : ''}; commits: ${commits.join(' then ') || 'none'}`,
+      step: String(picker.d).slice(0, 80),
+      fact: `net selected: [${fact.join(', ')}]${dirty ? ' (not committed by any write)' : ''}; commits: ${commits.join(' then ') || 'none'}${byKey.length ? `; ${byKey.length} tick(s) made by a key press (positional in the procedure)` : ''}`,
       heuristic: `the procedure's kept ticks give [${procedure.join(', ')}]`,
       agree: JSON.stringify(fact) === JSON.stringify(procedure),
-      evidence: ticks.slice(0, 8).map(short),
-    },
-  ];
+      evidence: gt.slice(0, 8).map(short),
+    });
+  }
+  return rows;
 }
 
 /**
@@ -275,11 +313,16 @@ export function flashCause(steps: readonly RecordedStep[], skills: readonly Skil
     const prevEnd = prev ? (prev.obs?.at.c ?? prev.obs?.at.s ?? dispatchOf(prev) ?? -Infinity) : -Infinity;
     const end = s.obs?.at.c ?? s.obs?.at.s ?? Infinity;
     for (const line of added) {
-      const hit = events.find((e) => {
-        if (e.t < prevEnd - 50 || e.t > end + 50) return false;
+      const shows = (e: JournalEvent) => {
         const text = e.k === 'txt' ? String(e.x ?? '') : optionName(e.d);
         return text.length >= 3 && line.includes(text);
-      });
+      };
+      // The step's own event first, wherever it was filed; only then another
+      // source's in the span (vikunja fwvk13 #31: an earlier unknown flash was
+      // taken over the Save's own, which its POST explains).
+      const hit =
+        events.find((e) => e.c?.[0] === 'in' && e.c[1] === w && shows(e)) ??
+        events.find((e) => e.t >= prevEnd - 50 && e.t <= end + 50 && shows(e));
       if (!hit) continue;
       const own = hit.c?.[0] === 'in' && hit.c[1] === w;
       const verdict = own && hit.also === undefined ? 'own' : own ? 'ambiguous' : 'foreign';
@@ -368,13 +411,24 @@ export function hideRequired(steps: readonly RecordedStep[], skills: readonly Sk
   const rows: ShadowRow[] = [];
   for (const s of steps) {
     if (!s.journal || s.tool !== 'click') continue;
+    // Only a click compile itself would treat as a hide: its recorded diff
+    // added nothing (grafana fwgr74 #41/#81 added lines; their hides were
+    // incidental live regions), and it did nothing else (no request, value,
+    // show, navigation or tick).
+    if (!s.diff || s.diff.added.length) continue;
     const mine = causedBy(s, events).filter((e) => e.k !== 'foc' && e.k !== 'hit');
-    const hides = mine.filter((e) => e.k === 'hide');
-    if (!hides.length || mine.some((e) => e.k === 'req' || e.k === 'val' || e.k === 'show' || (e.k === 'state' && e.a !== 'aria-expanded'))) continue;
-    const shows = hides.map((h) => events.find((e) => e.k === 'show' && e.lm === h.lm && e.t <= h.t));
-    const show = shows.find((e) => e && stepOfWindow(steps, causeWindowOf(e)));
+    const hides = mine.filter((e) => e.k === 'hide' && POPUP_D.test(String(e.d)));
+    if (!hides.length || mine.some((e) => e.k === 'req' || e.k === 'val' || e.k === 'show' || e.k === 'nav' || (e.k === 'state' && e.a !== 'aria-expanded'))) continue;
+    // The LATEST show of each hidden landmark before the hide (gitea fwgt13
+    // #39: the re-open at #34, not the first opening at #26), and only a show
+    // IN its step's own window, by a step that did not navigate (openproject
+    // fwop16 #7: the login's navigation showed the onboarding dialog as a side
+    // effect; the login click is not its opener).
+    const shows = hides.map((h) => [...events].reverse().find((e) => e.k === 'show' && e.lm === h.lm && e.t <= h.t));
+    const show = shows.find((e) => e && e.c?.[0] === 'in' && stepOfWindow(steps, causeWindowOf(e)));
     const shower = show ? stepOfWindow(steps, causeWindowOf(show)) : undefined;
     if (!show || !shower) continue;
+    if (causedBy(shower, events).some((e) => e.k === 'nav' || (e.k === 'req' && e.rt === 'document'))) continue;
     const focused = events.some((e) => e.k === 'foc' && e.dir === 'in' && e.t <= show.t && show.t - e.t <= 300 && causeWindowOf(e) === causeWindowOf(show));
     const byEntry = ['fill', 'type', 'press'].includes(shower.tool) || (focused && shower.tool !== 'click');
     const occ = keptOccurrence(s, steps, skills);
@@ -416,6 +470,13 @@ export function supersededSets(steps: readonly RecordedStep[]): ShadowRow[] {
     const shown = causedBy(a, events).filter((e) => e.k === 'show');
     const dead = !carried;
     const dropped = !kept.has(a);
+    // The same value set again (a password refilled after a failed submit, or
+    // after the login page reloaded: grafana fwgr74 #3, vikunja fwvk13 #4):
+    // keeping or dropping the first gives the same procedure.
+    if (a.args.value !== undefined && a.args.value === b.args.value) {
+      rows.push({ rule: 'supersededSet', w: a.journal.w, ...(a.seq !== undefined ? { seq: a.seq } : {}), step: label(a), fact: `the same value was set again by ${label(b)}: either set gives the same field`, heuristic: dropped ? 'dropped as superseded' : 'kept', agree: true });
+      continue;
+    }
     rows.push({
       rule: 'supersededSet',
       w: a.journal.w,
@@ -481,16 +542,24 @@ export function linkClicks(steps: readonly RecordedStep[], skills: readonly Skil
     if (!isLink || !quiet) continue;
     const mine = causedBy(s, events);
     const went = mine.filter((e) => e.k === 'nav' || (e.k === 'req' && e.rt === 'document'));
+    // Anything else the click did makes it not inert either: gitea fwgt13
+    // #27/#29's option links prevent their navigation and toggle the option.
+    const did = mine.filter((e) => e.k === 'state' || e.k === 'show' || e.k === 'hide' || e.k === 'val' || e.k === 'txt' || e.k === 'req');
+    const effective = went.length > 0 || did.length > 0;
     const occ = keptOccurrence(s, steps, skills);
     rows.push({
       rule: 'linkClick',
       w: s.journal.w,
       ...(s.seq !== undefined ? { seq: s.seq } : {}),
       step: label(s),
-      fact: went.length ? `it navigated (${went.map((e) => e.c?.join(':')).join(', ')})` : 'inert: no request and no url change followed it',
+      fact: went.length
+        ? `it navigated (${went.map((e) => e.c?.join(':')).join(', ')})`
+        : did.length
+          ? `it did not navigate, but changed the page (${[...new Set(did.map((e) => e.k))].join(', ')})`
+          : 'inert: no request, no url change and no change of its own followed it',
       heuristic: occ.kept ? 'kept' : 'dropped as an abandoned link click',
-      agree: went.length ? occ.kept : !occ.kept,
-      evidence: went.slice(0, 3).map(short),
+      agree: effective ? occ.kept : !occ.kept,
+      evidence: [...went, ...did].slice(0, 3).map(short),
     });
   }
   return rows;
@@ -540,6 +609,53 @@ export function togglePairs(steps: readonly RecordedStep[]): ShadowRow[] {
 }
 
 /**
+ * A key press that picked an option (gitea fwgt13 02-create: ArrowDown ×k +
+ * Enter for every label, the milestone and the assignee). Fact: the option it
+ * picked, by name (key-pick.ts). Beside: whether the compiled procedure picks
+ * it BY NAME (a kept step names the option) or BY POSITION (it replays the
+ * same key presses, which pick whatever the highlight reaches: fwgt13's
+ * replays ticked enhancement, admin and Backlog). Position disagrees.
+ */
+export function keyPick(steps: readonly RecordedStep[], skills: readonly Skill[]): ShadowRow[] {
+  const picks = keyPicks(steps);
+  if (!picks.size) return [];
+  const compiled: SkillStep[] = [];
+  const walk = (list: readonly SkillStep[]) => {
+    for (const s of list) {
+      compiled.push(s);
+      const nested = (s as { steps?: SkillStep[] }).steps;
+      if (Array.isArray(nested)) walk(nested);
+    }
+  };
+  for (const sk of skills) walk(sk.steps);
+  /** The compiled presses of one key, in order, beside the recorded ones: the earliest are the dropped ones. */
+  const pressesOf = (key: string, list: readonly { tool: string; args: Record<string, unknown> }[]) => list.filter((s) => s.tool === 'press' && (s.args.key ?? s.args.text) === key);
+  const rows: ShadowRow[] = [];
+  for (const [i, p] of picks) {
+    const s = steps[i];
+    const recorded = pressesOf(p.key, steps);
+    const kept = pressesOf(p.key, compiled);
+    const occurrence = recorded.indexOf(s) - Math.max(0, recorded.length - kept.length);
+    const byPosition = occurrence >= 0 && occurrence < kept.length;
+    const named = compiled.some((c) => c.tool !== 'press' && JSON.stringify([c.args, c.locators]).includes(JSON.stringify(p.option).slice(1, -1)));
+    // A press the procedure still makes picks by position, whatever else names
+    // the option (gitea fwgt13's labels are named elsewhere by their own clicks).
+    const how = byPosition ? 'by position' : named ? 'by name' : 'not at all';
+    rows.push({
+      rule: 'keyPick',
+      ...(s.journal ? { w: s.journal.w } : {}),
+      ...(s.seq !== undefined ? { seq: s.seq } : {}),
+      step: label(s) + ` ${p.key}`,
+      fact: `${p.key} ${p.kind === 'toggle' ? `${p.on ? 'picked' : 'unpicked'}` : 'picked the highlighted'} ${JSON.stringify(p.option)}`,
+      heuristic: `the procedure picks it ${how}`,
+      agree: !byPosition && named,
+      evidence: [p.described],
+    });
+  }
+  return rows;
+}
+
+/**
  * The instructions just before this one that did not succeed (back to the
  * last successful report): their page effects are part of what this one
  * started from.
@@ -574,7 +690,7 @@ export function shadowVerdicts(entries: readonly RecordedEntry[], skills: readon
 
 type ShadowRule = (steps: readonly RecordedStep[], skills: readonly Skill[], prior: readonly RecordedStep[]) => ShadowRow[];
 
-const RULES: ShadowRule[] = [abandonedEdits, pickerNetState, flashCause, repeatClicks, hideRequired, supersededSets, popupCredit, linkClicks, togglePairs];
+const RULES: ShadowRule[] = [abandonedEdits, pickerNetState, flashCause, repeatClicks, hideRequired, supersededSets, popupCredit, linkClicks, togglePairs, keyPick];
 
 /**
  * Append one instruction's rows to `<storeDir>/shadow.jsonl`. Best effort: a
