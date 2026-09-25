@@ -11,7 +11,7 @@ import type { DriftTicket } from '../skills/repair.js';
 import type { Page } from 'playwright-core';
 import { agentGesturesOutsideReplay, bindSkill, canAdoptPin, decideRepin, instructionEntry, learnFromInstruction, matchTemplate, pinCarriesFailedStep, pinEndsElsewhere, pinStartsElsewhere, pinStatus, publishedOutputs, replayReport, selectCandidates } from '../skills/learn.js';
 import { threadStepParams } from '../skills/rethread.js';
-import { buildFlow, consumedReportedOutputs, consumedUrlOutputs, ignorableRefs, jsonLeaves, lintFlowRefs, lintUnboundParams, lintUnpublishedOutputs, listFlows, liveReadsFor, liveReadsForRecovery, loadFlow, loadFlowFile, lookupOutput, mutatingIntent, noteOutputEvidence, pruneUnsourcedOutputs, recoveryRoute, remapParams, resolveInstruction, resolveStepParams, softResolveInstruction, saveFlow, staleInstructionIds, taskConstants, textMints, unbankedMutations, unreportedOutputs, urlOutputs, varyingValues, type RunSpecific } from '../skills/flow.js';
+import { buildFlow, consumedReportedOutputs, consumedUrlOutputs, ignorableRefs, jsonLeaves, lintFlowRefs, lintUnboundParams, lintUnpublishedOutputs, listFlows, liveReadsFor, liveReadsForRecovery, loadFlow, loadFlowFile, lookupOutput, mutatingIntent, noteOutputEvidence, pruneUnsourcedOutputs, recoveryRoute, remapParams, resolveInstruction, resolveStepParams, softResolveInstruction, saveFlow, staleInstructionIds, taskConstants, taskWordOutputs, textMints, unbankedMutations, unreportedOutputs, urlOutputs, varyingValues, type RunSpecific } from '../skills/flow.js';
 import { applyRelabelToEntries, applyRelabelToSkills, relabelCases, requestRelabelPlan, runValueKeyRenames } from '../skills/relabel.js';
 import { goalSatisfied, renderChainStop } from '../skills/replay.js';
 import { drainDrift, llmProposer, recordCandidateEvidence } from '../skills/repair.js';
@@ -486,6 +486,19 @@ ${describeLeaks(leaks.slice(0, 6))}`);
     return [...taskConstants(entries, outputs, Object.values(this.state.vars ?? {}), this.runSpecific)];
   }
 
+  /**
+   * The ledger's reported values the export will never thread as references:
+   * the task stated them at or before the instruction that reported them
+   * (flow.ts taskWordOutputs, buildFlow's own veto). Compile gives them no
+   * known-value policy (round 64, kanboard fwkb45 06-change).
+   */
+  private taskWords(): string[] {
+    const entries = this.browser.script?.entries ?? [];
+    const outputs = this.ledger.all().flatMap((e) => (e.binding.from === 'output' ? [{ step: e.binding.step, value: e.value }] : []));
+    if (!entries.length || !outputs.length) return [];
+    return taskWordOutputs(entries, outputs);
+  }
+
   /** The exact matcher found nothing: is this instruction a stored procedure in other words? */
   private async matchReworded(
     skills: import('../skills/store.js').Skill[],
@@ -884,6 +897,10 @@ ${describeLeaks(leaks.slice(0, 6))}`);
                 // them: task constants, which must not strand a locator
                 // (flow.ts taskConstants; snipeit fwsi4 05-open, espocrm fwec3).
                 taskConstants: this.taskConstants(),
+                // Earlier outputs the task stated first: the export never threads
+                // them, so compile gives them no slot policy (flow.ts
+                // taskWordOutputs; kanboard fwkb45 06-change's "open" and "text").
+                taskWords: this.taskWords(),
                 // Record numbers an earlier instruction minted as page text and
                 // the run has named since (flow.ts textMints, repairdesk fwrd85).
                 mintedValues: textMints(this.browser.script?.entries ?? []),

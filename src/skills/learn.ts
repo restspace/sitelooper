@@ -93,6 +93,8 @@ export function learnFromInstruction(
     ownStep?: string;
     /** Known values that are constants of the task (compile.ts CompileInput.taskConstants). */
     taskConstants?: string[];
+    /** Earlier outputs the task stated first (compile.ts CompileInput.taskWords). */
+    taskWords?: string[];
     /** Text mints of earlier instructions (compile.ts CompileInput.mintedValues). */
     mintedValues?: string[];
     /** What the run recorded before this instruction (compile.ts CompileInput.before). */
@@ -175,6 +177,7 @@ export function learnFromInstruction(
       knownValues: input.vars,
       ...(input.ownStep ? { ownStep: input.ownStep } : {}),
       ...(input.taskConstants?.length ? { taskConstants: input.taskConstants } : {}),
+      ...(input.taskWords ? { taskWords: input.taskWords } : {}),
       ...(input.mintedValues?.length ? { mintedValues: input.mintedValues } : {}),
       ...(stoppedAt ? { stoppedAt } : {}),
       ...(input.before?.length ? { before: input.before } : {}),

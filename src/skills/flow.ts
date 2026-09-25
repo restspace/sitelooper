@@ -825,6 +825,30 @@ export function selfNamingReadDrops(
  * grafana's "now" and "now-6h", "Dashboard saved", "Cancel", and fwgr53's
  * "text". The other 3 had no transcript to check.
  */
+/**
+ * The reported OUTPUTS buildFlow will never thread as a reference, by its own
+ * veto: the producing instruction's text states the value, or the task stated
+ * it before that instruction and before the run had shown it
+ * (statedBeforeShown). `step` is the ledger's instruction index (`i3`: the
+ * third instruction, resume continuations not counted, as the daemon counts
+ * them). Compile gives these no known-value slot policy (round 64, kanboard
+ * fwkb45 06-change: "open", which 01-open stated as "Open http://…" before
+ * 02-create reported task_status, was slotted into "Then {{v5}} task #4's
+ * page"; the flow itself never referenced it).
+ */
+export function taskWordOutputs(entries: readonly RecordedEntry[], outputs: readonly { step: string; value: string }[]): string[] {
+  const producers = entries.filter((e): e is RecordedInstruction => e.k === 'instruction' && !e.resume);
+  const out = new Set<string>();
+  for (const { step, value } of outputs) {
+    const n = /^i(\d+)$/.exec(step);
+    const producer = n ? producers[Number(n[1]) - 1] : undefined;
+    const v = value.trim();
+    if (!producer || v.length < 2) continue;
+    if (replaceToken(producer.text, v, ' ') !== producer.text || statedBeforeShown(entries, producer, v)) out.add(v);
+  }
+  return [...out];
+}
+
 function statedBeforeShown(entries: readonly RecordedEntry[], producer: RecordedInstruction, value: string): boolean {
   const end = entries.indexOf(producer);
   if (end <= 0 || value.length < 2) return false;

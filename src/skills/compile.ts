@@ -64,6 +64,21 @@ export interface TransformNote {
 /** Args whose string values are candidates for parameter slots. */
 const VALUE_ARGS = new Set(['value', 'text', 'option', 'url', 'prompt_text']);
 
+/**
+ * A tool's MODE arguments — the enums of its schema (agent/tools.ts): a read's
+ * `what`, a wait's `state`, a dialog's `action`, a click's `modifiers`, a
+ * report's `status`. They say HOW the step acts, never on what, so nothing is
+ * ever slotted into them (round 64, kanboard fwkb45 06-change: an earlier
+ * output "text" was slotted into every read's `what`, and the compile refused
+ * `read what={{v6}}` seventeen times).
+ */
+const MODE_ARGS = new Set(['what', 'state', 'action', 'modifiers', 'status']);
+
+/** Slot values into a step's args, its MODE arguments left as recorded. */
+function substituteArgs(args: Record<string, unknown>, slots: Map<string, string>): Record<string, unknown> {
+  return Object.fromEntries(Object.entries(args).map(([k, v]) => [k, MODE_ARGS.has(k) ? v : substituteDeep(v, slots)]));
+}
+
 /** Steps whose recorded diff is a landing, not an effect (see expectationFor). */
 export const NAVIGATION_TOOLS = new Set(['goto', 'back']);
 
@@ -109,6 +124,13 @@ export interface CompileInput {
    * known value; they only never strand a locator (`runValues` below).
    */
   taskConstants?: string[];
+  /**
+   * Earlier OUTPUTS the export will never thread as a reference, because the
+   * TASK stated them at or before the instruction that reported them (flow.ts
+   * taskWordOutputs, buildFlow's own veto). They get no known-value policy in
+   * discoverSlots (round 64, kanboard fwkb45 06-change). Absent: today's policy.
+   */
+  taskWords?: string[];
   /**
    * Values the run minted as page text under an EARLIER instruction and has
    * addressed its record by since (flow.ts textMints, which needs the whole
@@ -680,7 +702,7 @@ export function compileSkills(input: CompileInput): Skill[] {
   const origin = startUrl ? originOf(startUrl) : null;
   if (!origin || !startUrl) return [];
 
-  const slots = discoverSlots(input.instruction, steps, input.knownValues);
+  const slots = discoverSlots(input.instruction, steps, input.knownValues, new Set((input.taskWords ?? []).map((v) => v.trim())));
   const textMinted = textMintSlots(input, steps, slots);
   const sub = (s: string) => substitute(s, textSlots);
 
@@ -891,7 +913,7 @@ export function compileSkills(input: CompileInput): Skill[] {
       // post-nav url is the first downstream occurrence).
       const mintedBefore = mintedMap((m) => m.keptIndex < g);
       const mintedHere = mintedMap((m) => m.keptIndex <= g);
-      const args = substituteDeep(substituteDeep(step.args, textSlots), mintedBefore) as Record<string, unknown>;
+      const args = substituteArgs(substituteArgs(step.args, textSlots), mintedBefore);
       // A navigation url is rebuilt from the RECORDED string, because a
       // url-origin slot may only be written at the position the ledger banked
       // it at. substitute() is textual and position-blind: it refuses a number
@@ -1946,6 +1968,8 @@ export function discoverSlots(
   instruction: string,
   steps: RecordedStep[],
   known: Record<string, string> = {},
+  /** Output values the task stated before the run reported them (CompileInput.taskWords): no known-value policy for them. */
+  constants: ReadonlySet<string> = new Set(),
 ): Map<string, string> {
   const values = new Set<string>();
   const locatorCandidates = new Set<string>();
@@ -1982,10 +2006,24 @@ export function discoverSlots(
     if (values.has(v) || /\d/.test(v)) values.add(v);
   }
   const knownVals: string[] = [];
-  for (const raw of Object.values(known)) {
+  for (const [key, raw] of Object.entries(known)) {
     const v = String(raw ?? '').trim();
     if (v.length < 2 || v.length > 200) continue;
     if (!occursAsToken(instruction, v) || knownVals.includes(v)) continue;
+    // An earlier step's OUTPUT (the ledger's `output:iN:…`) that the TASK
+    // stated at or before the instruction that reported it (flow.ts
+    // taskWordOutputs — buildFlow's own veto, so the export never threads it as
+    // a reference) is the task's own word, not this run's value: it gets no
+    // known-value policy
+    // (round 64, kanboard fwkb45 06-change: "open", an earlier task_status the
+    // task said first as "Open http://…", and "text", an input's type an
+    // earlier read returned, slotted into "Then {{v5}} task #4's page … the
+    // description {{v6}}"). A value the procedure typed still slots through
+    // `values` below, under its single-occurrence guard. A declared var, a
+    // minted url part, a flow reference this instruction resolved (a recovery
+    // compile's `02-create.name` keys) and a run value the task learned from
+    // a report (the ticket ref a create reported) keep the policy.
+    if (key.startsWith('output:') && constants.has(v)) continue;
     knownVals.push(v);
   }
   knownVals.sort((a, b) => instruction.indexOf(a) - instruction.indexOf(b) || b.length - a.length);
