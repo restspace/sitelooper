@@ -1,0 +1,328 @@
+[converge] from fwgt15: 8 step(s), store copied to /home/user/sitelooper/bench/results/fwgt15-cv2-skills, flow /home/user/sitelooper/bench/results/flows/fwgt15-cv2.json
+[converge] round 1 compile: /opt/node22/bin/node /home/user/sitelooper/bin/sitelooper.js compile /home/user/sitelooper/bench/results/flows/fwgt15-cv2.json --out /home/user/sitelooper/bench/results/fwgt15-cv2-c1-compile --overwrite-spec --json
+[converge] round 1 compile: exit 0
+[converge] round 1 artifact: /opt/node22/bin/node /home/user/sitelooper/bench/spec-replay.mjs --flow /home/user/sitelooper/bench/results/flows/fwgt15-cv2.json --skills /home/user/sitelooper/bench/results/fwgt15-cv2-skills --tag fwgt15-cv2-c1 --target gitea --reset --out /home/user/sitelooper/bench/results
+[reset] gitea: no leftover bench issues
+[spec-replay] resetting gitea
+[spec-replay] compiling: /opt/node22/bin/node /home/user/sitelooper/bin/sitelooper.js compile /home/user/sitelooper/bench/results/flows/fwgt15-cv2.json --out /home/user/sitelooper/bench/results/fwgt15-cv2-c1-spec-tmp --overwrite-spec
+flow: /home/user/sitelooper/bench/results/fwgt15-cv2-c1-spec-tmp/fwgt15-cv2.flow.ts
+spec: /home/user/sitelooper/bench/results/fwgt15-cv2-c1-spec-tmp/fwgt15-cv2.spec.ts
+  warning: 03-open: step 1 (read applied_label_link) has no locator left — it publishes nothing, as replay skips it
+[spec-replay] running: npx playwright test --config /home/user/sitelooper/bench/results/fwgt15-cv2-c1-spec-tmp/playwright.config.mjs
+[spec-replay] failure evidence: fwgt15-cv2-c1-spec-failure.png
+[spec-replay] failure evidence: fwgt15-cv2-c1-spec-error-context.md
+[spec-replay] fwgt15-cv2-c1: 0/1 passed, exit=1, 31s, 1 drift line(s) — result written
+[converge] round 1 artifact: exit 1
+
+fwgt15-cv2-c1: objectives passed 1/7
+  obj 1: UNVERIFIABLE — no result file with finalText found
+  obj 2: PASS — #4, state=open, description includes runid=true
+  obj 3: FAIL — labels=[], want [bug, priority-high]
+  obj 4: FAIL — assignees=[]
+  obj 5: FAIL — milestone=(none)
+  obj 6: FAIL — 0 comment(s), 0 carrying the runid
+  obj 7: UNVERIFIABLE — no result file with finalText found
+[converge] round 1: artifact failed (exit 1, verified 1/5); anchors 04-add, 03-open
+[converge] round 1 repair: /opt/node22/bin/node /home/user/sitelooper/bin/sitelooper.js repair /home/user/sitelooper/bench/results/fwgt15-cv2-c1-compile/fwgt15-cv2.flow.ts --var runid=fwgt15-cv2-p1n{n} --converge 1 --reset-cmd "\"/opt/node22/bin/node\" \"/home/user/sitelooper/bench/reset-app.mjs\" --target gitea" --json
+repairing /home/user/sitelooper/bench/results/fwgt15-cv2-c1-compile/fwgt15-cv2.flow.ts (8 step(s)) in /tmp/sitelooper-repair-PmEPWA
+  reset (run 1): "/opt/node22/bin/node" "/home/user/sitelooper/bench/reset-app.mjs" --target gitea
+run 1: 8/8 step(s) success, 6 drift ticket(s)
+  [OK] 01-open (tier A)
+  [OK] 02-create (tier A)
+  [OK] 03-open (tier A)
+  [OK] 04-add (tier A)
+  [OK] 05-change (tier A)
+  [OK] 06-set (tier A)
+  [OK] 07-add (tier A)
+  [OK] 08-open (tier A)
+  evidence         candidate reordered: page.locator('h1') now primary (was #1) on 1 hit(s) — s_37f40f step 14 target
+  evidence         candidate reordered: page.locator('h1') now primary (was #1) on 1 hit(s) — s_e18531 step 19 target
+  reset (converge 1/1): "/opt/node22/bin/node" "/home/user/sitelooper/bench/reset-app.mjs" --target gitea
+  evidence         candidate retired: elementAt(510, 659) /* p */ — missed 2 run(s), never hit; now last — s_39c2c9 step 11 target
+  evidence         candidate retired: page.getByText('{{v4}}', { exact: true }) — missed 2 run(s), never hit; now last — s_3f58c7 step 3 target
+  evidence         candidate retired: page.locator('.labels-list >> nth=1') — missed 2 run(s), never hit; now last — s_5e9f7a step 3 target
+  [OK] 01-open (tier A)
+  [OK] 02-create (tier A)
+  [OK] 03-open (tier A)
+  [OK] 04-add (tier A)
+  [OK] 05-change (tier A)
+  [OK] 06-set (tier A)
+  [OK] 07-add (tier A)
+  [OK] 08-open (tier A)
+converge 1/1: 8/8 step(s) success, 9 drift ticket(s)
+  ticket: 03-open s_5e9f7a/1 target: (none recorded) → nothing resolved
+  ticket: 03-open s_5e9f7a/3 target: page.locator('.labels-list >> nth=1') → used page.locator('div > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2)')
+  ticket: 04-add s_e18531/3 target: elementAt(988, 595) /* span */ → used page.locator('[id="_aria_dropdown_label_36"]')
+  ticket: 04-add s_e18531/23 target: page.getByRole('heading', { name: 'fwgt15-cv2-p1n1 Bench Issue #5', exact: true }) → used page.locator('#issue-title-display > h1')
+  ticket: 07-add s_3f58c7/3 target: page.getByText('Comment for run fwgt15-cv2-p1n1.', { exact: true }) → used page.locator('#issuecomment-10 > div > div:nth-of-type(2) > div:nth-of-type(1) > p')
+  ticket: 08-open s_39c2c9/6 target: page.locator('#issuecomment-3 > span:nth-of-type(2) > a') → nothing resolved
+  ticket: 08-open s_39c2c9/8 target: page.locator('#issuecomment-3 > span:nth-of-type(2) > a') → nothing resolved
+  ticket: 08-open s_39c2c9/11 target: elementAt(510, 659) /* p */ → nothing resolved
+  ticket: 08-open s_39c2c9/14 target: page.getByRole('heading', { name: 'fwgt15-cv2-p1n1 Bench Issue #4', exact: true }) → used page.locator('#issue-title-display > h1')
+not converged: 04-add (drift (elementAt(988, 595) /* span */)), 08-open (drift (page.locator('#issuecomment-3 > span:nth-of-type(2) > a')))
+[converge] round 1 repair: exit 3
+[converge] round 1 rerecord 03-open (repair: needs-rerecord; also named: 04-add, 08-open): /opt/node22/bin/node /home/user/sitelooper/bin/sitelooper.js rerecord /home/user/sitelooper/bench/results/flows/fwgt15-cv2.json 03-open --var runid=fwgt15-cv2-r1n{n} --runs 2 --reset-cmd "\"/opt/node22/bin/node\" \"/home/user/sitelooper/bench/reset-app.mjs\" --target gitea" --json
+re-recording fwgt15-cv2 step 03-open (2 run(s))
+  unpinned s_5e9f7a; old recording kept at /home/user/sitelooper/bench/results/flows/fwgt15-cv2.bak-muh7r2wp.json
+  retired s_5e9f7a (the procedure being replaced cannot be re-pinned; restored if this re-record fails)
+  reset (run 1): "/opt/node22/bin/node" "/home/user/sitelooper/bench/reset-app.mjs" --target gitea
+  run 1: 03-open  Open http://127.0.0.1:8095/bench/bench-repo/issues/7 and report exactly which la
+  run 1: 03-open  falling back to the model — the flow step has no pinned skill
+  run 1: 03-open  adopted — recovering on deepseek/deepseek-v4.1-flash (escalates to z-ai/glm-5.3)
+  run 1: 03-open  adopted step graduated — pinned s_e7e19e (provisional), shedding model-first replay
+  run 1: 03-open  succeeded without reporting applied_label_link
+run 1: 03-open  agent (3 turns) re-pinned s_e7e19e
+  fwgt15-cv2: 8/8 step(s) success
+  reset (run 2): "/opt/node22/bin/node" "/home/user/sitelooper/bench/reset-app.mjs" --target gitea
+  run 2: 03-open  Open http://127.0.0.1:8095/bench/bench-repo/issues/8 and report exactly which la
+  run 2: 03-open  succeeded without reporting applied_label_link
+run 2: 03-open  replay tier A (4/4)
+  fwgt15-cv2: 8/8 step(s) success
+  03-open: recorded 4 value(s) from the re-recording run
+[converge] round 1 rerecord 03-open (repair: needs-rerecord; also named: 04-add, 08-open): exit 0
+[converge] round 2 compile: /opt/node22/bin/node /home/user/sitelooper/bin/sitelooper.js compile /home/user/sitelooper/bench/results/flows/fwgt15-cv2.json --out /home/user/sitelooper/bench/results/fwgt15-cv2-c2-compile --overwrite-spec --json
+[converge] round 2 compile: exit 0
+[converge] round 2 artifact: /opt/node22/bin/node /home/user/sitelooper/bench/spec-replay.mjs --flow /home/user/sitelooper/bench/results/flows/fwgt15-cv2.json --skills /home/user/sitelooper/bench/results/fwgt15-cv2-skills --tag fwgt15-cv2-c2 --target gitea --reset --out /home/user/sitelooper/bench/results
+[reset] gitea: deleted 1 leftover bench issue(s)
+[spec-replay] resetting gitea
+[spec-replay] compiling: /opt/node22/bin/node /home/user/sitelooper/bin/sitelooper.js compile /home/user/sitelooper/bench/results/flows/fwgt15-cv2.json --out /home/user/sitelooper/bench/results/fwgt15-cv2-c2-spec-tmp --overwrite-spec
+flow: /home/user/sitelooper/bench/results/fwgt15-cv2-c2-spec-tmp/fwgt15-cv2.flow.ts
+spec: /home/user/sitelooper/bench/results/fwgt15-cv2-c2-spec-tmp/fwgt15-cv2.spec.ts
+[spec-replay] running: npx playwright test --config /home/user/sitelooper/bench/results/fwgt15-cv2-c2-spec-tmp/playwright.config.mjs
+[spec-replay] failure evidence: fwgt15-cv2-c2-spec-failure.png
+[spec-replay] failure evidence: fwgt15-cv2-c2-spec-error-context.md
+[spec-replay] fwgt15-cv2-c2: 0/1 passed, exit=1, 34s, 1 drift line(s) — result written
+[converge] round 2 artifact: exit 1
+
+fwgt15-cv2-c2: objectives passed 1/7
+  obj 1: UNVERIFIABLE — no result file with finalText found
+  obj 2: PASS — #9, state=open, description includes runid=true
+  obj 3: FAIL — labels=[], want [bug, priority-high]
+  obj 4: FAIL — assignees=[]
+  obj 5: FAIL — milestone=(none)
+  obj 6: FAIL — 0 comment(s), 0 carrying the runid
+  obj 7: UNVERIFIABLE — no result file with finalText found
+[converge] round 2: artifact failed (exit 1, verified 1/5); anchors 04-add, 03-open
+[converge] round 2 repair: /opt/node22/bin/node /home/user/sitelooper/bin/sitelooper.js repair /home/user/sitelooper/bench/results/fwgt15-cv2-c2-compile/fwgt15-cv2.flow.ts --var runid=fwgt15-cv2-p2n{n} --converge 1 --reset-cmd "\"/opt/node22/bin/node\" \"/home/user/sitelooper/bench/reset-app.mjs\" --target gitea" --json
+repairing /home/user/sitelooper/bench/results/fwgt15-cv2-c2-compile/fwgt15-cv2.flow.ts (8 step(s)) in /tmp/sitelooper-repair-c9cn9z
+  reset (run 1): "/opt/node22/bin/node" "/home/user/sitelooper/bench/reset-app.mjs" --target gitea
+run 1: 8/8 step(s) success, 8 drift ticket(s)
+  [OK] 01-open (tier A)
+  [OK] 02-create (tier A)
+  [OK] 03-open (tier A)
+  [OK] 04-add (tier A)
+  [OK] 05-change (tier A)
+  [OK] 06-set (tier A)
+  [OK] 07-add (tier A)
+  [OK] 08-open (tier A)
+  folded           s_39c2c9 step 6 target: page.getByText('bench-assignee', { exact: true }) folded in as primary (from variant s_fff85c)
+  evidence         candidate retired: page.getByRole('heading', { name: '{{v3}} Bench Issue #5', exact: true }) — missed 2 run(s), never hit; now last — s_37f40f step 14 target
+  evidence         candidate reordered: page.locator('h1') now primary (was #1) on 2 hit(s) — s_37f40f step 14 target
+  evidence         candidate retired: page.getByRole('heading', { name: '{{v4}} Bench Issue #5', exact: true }) — missed 2 run(s), never hit; now last — s_e18531 step 19 target
+  evidence         candidate reordered: page.locator('h1') now primary (was #1) on 2 hit(s) — s_e18531 step 19 target
+  reset (converge 1/1): "/opt/node22/bin/node" "/home/user/sitelooper/bench/reset-app.mjs" --target gitea
+  evidence         candidate retired: page.locator('#issuecomment-3 > span:nth-of-type(2) > a') — missed 2 run(s), never hit; now last — s_39c2c9 step 8 target
+  evidence         candidate retired: elementAt(510, 659) /* p */ — missed 2 run(s), never hit; now last — s_39c2c9 step 11 target
+  evidence         candidate retired: page.getByText('{{v4}}', { exact: true }) — missed 2 run(s), never hit; now last — s_3f58c7 step 3 target
+  [OK] 01-open (tier A)
+  [OK] 02-create (tier A)
+  [OK] 03-open (tier A)
+  [OK] 04-add (tier A)
+  [OK] 05-change (tier A)
+  [OK] 06-set (tier A)
+  [OK] 07-add (tier A)
+  [OK] 08-open (tier A)
+converge 1/1: 8/8 step(s) success, 8 drift ticket(s)
+  ticket: 01-open s_b6cf7a/2 target: page.locator('div:nth-of-type(1) > div:nth-of-type(2) > overflow-menu > div > a:nth-of-type(2) > span:nth-of-type(2)') → used elementAt(226, 117) /* span */
+  ticket: 03-open s_e7e19e/4 target: page.getByRole('heading', { name: 'fwgt15-cv2-p2n1 Bench Issue #7', exact: true }) → used page.locator('#issue-title-display > h1')
+  ticket: 04-add s_e18531/3 target: elementAt(988, 595) /* span */ → used page.locator('[id="_aria_dropdown_label_36"]')
+  ticket: 04-add s_e18531/23 target: page.getByRole('heading', { name: 'fwgt15-cv2-p2n1 Bench Issue #5', exact: true }) → used page.locator('#issue-title-display > h1')
+  ticket: 07-add s_3f58c7/3 target: page.getByText('Comment for run fwgt15-cv2-p2n1.', { exact: true }) → used page.locator('#issuecomment-34 > div > div:nth-of-type(2) > div:nth-of-type(1) > p')
+  ticket: 08-open s_39c2c9/8 target: page.locator('#issuecomment-3 > span:nth-of-type(2) > a') → nothing resolved
+  ticket: 08-open s_39c2c9/11 target: elementAt(510, 659) /* p */ → nothing resolved
+  ticket: 08-open s_39c2c9/14 target: page.getByRole('heading', { name: 'fwgt15-cv2-p2n1 Bench Issue #4', exact: true }) → used page.locator('#issue-title-display > h1')
+not converged: 01-open (drift (page.locator('div:nth-of-type(1) > div:nth-of-type(2) > overflow-menu > div > a:nth-of-type(2) > span:nth-of-type(2)'))), 03-open (drift (page.getByRole('heading', { name: 'fwgt15-cv2-p2n1 Bench Issue #7', exact: true }))), 04-add (drift (elementAt(988, 595) /* span */)), 08-open (drift (page.getByRole('heading', { name: 'fwgt15-cv2-p2n1 Bench Issue #4', exact: true })))
+[converge] round 2 repair: exit 3
+[converge] round 2 rerecord 01-open (repair: needs-rerecord; also named: 03-open, 04-add, 08-open): /opt/node22/bin/node /home/user/sitelooper/bin/sitelooper.js rerecord /home/user/sitelooper/bench/results/flows/fwgt15-cv2.json 01-open --var runid=fwgt15-cv2-r2n{n} --runs 2 --reset-cmd "\"/opt/node22/bin/node\" \"/home/user/sitelooper/bench/reset-app.mjs\" --target gitea" --json
+re-recording fwgt15-cv2 step 01-open (2 run(s))
+  unpinned s_b7548c; old recording kept at /home/user/sitelooper/bench/results/flows/fwgt15-cv2.bak-muh97i6r.json
+  retired s_b7548c, s_8cfdd4, s_9c9c74, s_b6cf7a (the procedure being replaced cannot be re-pinned; restored if this re-record fails)
+  reset (run 1): "/opt/node22/bin/node" "/home/user/sitelooper/bench/reset-app.mjs" --target gitea
+  run 1: 01-open  Open http://127.0.0.1:8095/ and sign in with username admin and password {{env:A
+  run 1: 01-open  falling back to the model — the flow step has no pinned skill
+  run 1: 01-open  adopted — recovering on deepseek/deepseek-v4.1-flash (escalates to z-ai/glm-5.3)
+  run 1: 01-open  adopted step graduated — pinned s_920c3e (provisional), shedding model-first replay
+  run 1: 01-open  succeeded without reporting open_issues_count, closed_issues_count, issue_3_title, issue_2_title, issue_1_title, issues_page_url
+run 1: 01-open  agent (11 turns) re-pinned s_920c3e
+  fwgt15-cv2: 8/8 step(s) success
+  reset (run 2): "/opt/node22/bin/node" "/home/user/sitelooper/bench/reset-app.mjs" --target gitea
+  run 2: 01-open  Open http://127.0.0.1:8095/ and sign in with username admin and password {{env:A
+  run 2: 01-open  succeeded without reporting open_issues_count, closed_issues_count, issue_3_title, issue_2_title, issue_1_title, issues_page_url
+run 2: 01-open  replay tier A (14/14)
+  fwgt15-cv2: 8/8 step(s) success
+  01-open: recorded 10 value(s) from the re-recording run
+[converge] round 2 rerecord 01-open (repair: needs-rerecord; also named: 03-open, 04-add, 08-open): exit 0
+[converge] round 3 compile: /opt/node22/bin/node /home/user/sitelooper/bin/sitelooper.js compile /home/user/sitelooper/bench/results/flows/fwgt15-cv2.json --out /home/user/sitelooper/bench/results/fwgt15-cv2-c3-compile --overwrite-spec --json
+[converge] round 3 compile: exit 0
+[converge] round 3 artifact: /opt/node22/bin/node /home/user/sitelooper/bench/spec-replay.mjs --flow /home/user/sitelooper/bench/results/flows/fwgt15-cv2.json --skills /home/user/sitelooper/bench/results/fwgt15-cv2-skills --tag fwgt15-cv2-c3 --target gitea --reset --out /home/user/sitelooper/bench/results
+[reset] gitea: deleted 1 leftover bench issue(s)
+[spec-replay] resetting gitea
+[spec-replay] compiling: /opt/node22/bin/node /home/user/sitelooper/bin/sitelooper.js compile /home/user/sitelooper/bench/results/flows/fwgt15-cv2.json --out /home/user/sitelooper/bench/results/fwgt15-cv2-c3-spec-tmp --overwrite-spec
+flow: /home/user/sitelooper/bench/results/fwgt15-cv2-c3-spec-tmp/fwgt15-cv2.flow.ts
+spec: /home/user/sitelooper/bench/results/fwgt15-cv2-c3-spec-tmp/fwgt15-cv2.spec.ts
+[spec-replay] running: npx playwright test --config /home/user/sitelooper/bench/results/fwgt15-cv2-c3-spec-tmp/playwright.config.mjs
+[spec-replay] failure evidence: fwgt15-cv2-c3-spec-failure.png
+[spec-replay] failure evidence: fwgt15-cv2-c3-spec-error-context.md
+[spec-replay] fwgt15-cv2-c3: 0/1 passed, exit=1, 34s, 1 drift line(s) — result written
+[converge] round 3 artifact: exit 1
+
+fwgt15-cv2-c3: objectives passed 1/7
+  obj 1: UNVERIFIABLE — no result file with finalText found
+  obj 2: PASS — #14, state=open, description includes runid=true
+  obj 3: FAIL — labels=[], want [bug, priority-high]
+  obj 4: FAIL — assignees=[]
+  obj 5: FAIL — milestone=(none)
+  obj 6: FAIL — 0 comment(s), 0 carrying the runid
+  obj 7: UNVERIFIABLE — no result file with finalText found
+[converge] round 3: artifact failed (exit 1, verified 1/5); anchors 04-add, 03-open
+[converge] round 3 repair: /opt/node22/bin/node /home/user/sitelooper/bin/sitelooper.js repair /home/user/sitelooper/bench/results/fwgt15-cv2-c3-compile/fwgt15-cv2.flow.ts --var runid=fwgt15-cv2-p3n{n} --converge 1 --reset-cmd "\"/opt/node22/bin/node\" \"/home/user/sitelooper/bench/reset-app.mjs\" --target gitea" --json
+repairing /home/user/sitelooper/bench/results/fwgt15-cv2-c3-compile/fwgt15-cv2.flow.ts (8 step(s)) in /tmp/sitelooper-repair-jxA5LT
+  reset (run 1): "/opt/node22/bin/node" "/home/user/sitelooper/bench/reset-app.mjs" --target gitea
+run 1: 8/8 step(s) success, 8 drift ticket(s)
+  [OK] 01-open (tier A)
+  [OK] 02-create (tier A)
+  [OK] 03-open (tier A)
+  [OK] 04-add (tier A)
+  [OK] 05-change (tier A)
+  [OK] 06-set (tier A)
+  [OK] 07-add (tier A)
+  [OK] 08-open (tier A)
+  folded           s_39c2c9 step 8 target: page.locator('#event-53') folded in as primary (from variant s_f497f6)
+  evidence         candidate retired: page.getByRole('heading', { name: '{{v3}} Bench Issue #5', exact: true }) — missed 2 run(s), never hit; now last — s_37f40f step 14 target
+  evidence         candidate reordered: page.locator('h1') now primary (was #1) on 2 hit(s) — s_37f40f step 14 target
+  evidence         candidate retired: page.getByRole('heading', { name: '{{v4}} Bench Issue #5', exact: true }) — missed 2 run(s), never hit; now last — s_e18531 step 19 target
+  evidence         candidate reordered: page.locator('h1') now primary (was #1) on 2 hit(s) — s_e18531 step 19 target
+  reset (converge 1/1): "/opt/node22/bin/node" "/home/user/sitelooper/bench/reset-app.mjs" --target gitea
+  evidence         candidate retired: page.locator('#issuecomment-3 > span:nth-of-type(2) > a') — missed 2 run(s), never hit; now last — s_39c2c9 step 6 target
+  evidence         candidate retired: elementAt(510, 659) /* p */ — missed 2 run(s), never hit; now last — s_39c2c9 step 11 target
+  evidence         candidate retired: page.getByText('{{v4}}', { exact: true }) — missed 2 run(s), never hit; now last — s_3f58c7 step 3 target
+  [OK] 01-open (tier A)
+  [OK] 02-create (tier A)
+  [OK] 03-open (tier A)
+  [OK] 04-add (tier A)
+  [OK] 05-change (tier A)
+  [OK] 06-set (tier A)
+  [OK] 07-add (tier A)
+  [OK] 08-open (tier A)
+converge 1/1: 8/8 step(s) success, 8 drift ticket(s)
+  ticket: 03-open s_e7e19e/4 target: page.getByRole('heading', { name: 'fwgt15-cv2-p3n1 Bench Issue #7', exact: true }) → used page.locator('#issue-title-display > h1')
+  ticket: 04-add s_e18531/3 target: elementAt(988, 595) /* span */ → used page.locator('[id="_aria_dropdown_label_36"]')
+  ticket: 04-add s_e18531/23 target: page.getByRole('heading', { name: 'fwgt15-cv2-p3n1 Bench Issue #5', exact: true }) → used page.locator('#issue-title-display > h1')
+  ticket: 07-add s_3f58c7/3 target: page.getByText('Comment for run fwgt15-cv2-p3n1.', { exact: true }) → used page.locator('#issuecomment-58 > div > div:nth-of-type(2) > div:nth-of-type(1) > p')
+  ticket: 08-open s_39c2c9/6 target: page.locator('#issuecomment-3 > span:nth-of-type(2) > a') → nothing resolved
+  ticket: 08-open s_39c2c9/8 target: page.locator('#event-53') → nothing resolved
+  ticket: 08-open s_39c2c9/11 target: elementAt(510, 659) /* p */ → nothing resolved
+  ticket: 08-open s_39c2c9/14 target: page.getByRole('heading', { name: 'fwgt15-cv2-p3n1 Bench Issue #4', exact: true }) → used page.locator('#issue-title-display > h1')
+not converged: 03-open (drift (page.getByRole('heading', { name: 'fwgt15-cv2-p3n1 Bench Issue #7', exact: true }))), 04-add (drift (elementAt(988, 595) /* span */)), 08-open (drift (page.locator('#event-53')))
+[converge] round 3 repair: exit 3
+[converge] round 3 rerecord 03-open (repair: needs-rerecord; also named: 04-add, 08-open): /opt/node22/bin/node /home/user/sitelooper/bin/sitelooper.js rerecord /home/user/sitelooper/bench/results/flows/fwgt15-cv2.json 03-open --var runid=fwgt15-cv2-r3n{n} --runs 2 --reset-cmd "\"/opt/node22/bin/node\" \"/home/user/sitelooper/bench/reset-app.mjs\" --target gitea" --json
+re-recording fwgt15-cv2 step 03-open (2 run(s))
+  unpinned s_e7e19e; old recording kept at /home/user/sitelooper/bench/results/flows/fwgt15-cv2.bak-muh9p31h.json
+  retired s_e7e19e (the procedure being replaced cannot be re-pinned; restored if this re-record fails)
+  reset (run 1): "/opt/node22/bin/node" "/home/user/sitelooper/bench/reset-app.mjs" --target gitea
+  run 1: 03-open  Open http://127.0.0.1:8095/bench/bench-repo/issues/17 and report exactly which l
+  run 1: 03-open  falling back to the model — the flow step has no pinned skill
+  run 1: 03-open  adopted — recovering on deepseek/deepseek-v4.1-flash (escalates to z-ai/glm-5.3)
+  run 1: 03-open  adopted step graduated — pinned s_5e6cd5 (provisional), shedding model-first replay
+run 1: 03-open  agent (3 turns) re-pinned s_5e6cd5
+  fwgt15-cv2: 8/8 step(s) success
+  reset (run 2): "/opt/node22/bin/node" "/home/user/sitelooper/bench/reset-app.mjs" --target gitea
+  run 2: 03-open  Open http://127.0.0.1:8095/bench/bench-repo/issues/18 and report exactly which l
+  run 2: 03-open  succeeded without reporting applied_label_link
+run 2: 03-open  replay tier A (4/4)
+  fwgt15-cv2: 8/8 step(s) success
+  03-open: recorded 5 value(s) from the re-recording run
+[converge] round 3 rerecord 03-open (repair: needs-rerecord; also named: 04-add, 08-open): exit 0
+[converge] round 4 compile: /opt/node22/bin/node /home/user/sitelooper/bin/sitelooper.js compile /home/user/sitelooper/bench/results/flows/fwgt15-cv2.json --out /home/user/sitelooper/bench/results/fwgt15-cv2-c4-compile --overwrite-spec --json
+[converge] round 4 compile: exit 0
+[converge] round 4 artifact: /opt/node22/bin/node /home/user/sitelooper/bench/spec-replay.mjs --flow /home/user/sitelooper/bench/results/flows/fwgt15-cv2.json --skills /home/user/sitelooper/bench/results/fwgt15-cv2-skills --tag fwgt15-cv2-c4 --target gitea --reset --out /home/user/sitelooper/bench/results
+[reset] gitea: deleted 1 leftover bench issue(s)
+[spec-replay] resetting gitea
+[spec-replay] compiling: /opt/node22/bin/node /home/user/sitelooper/bin/sitelooper.js compile /home/user/sitelooper/bench/results/flows/fwgt15-cv2.json --out /home/user/sitelooper/bench/results/fwgt15-cv2-c4-spec-tmp --overwrite-spec
+flow: /home/user/sitelooper/bench/results/fwgt15-cv2-c4-spec-tmp/fwgt15-cv2.flow.ts
+spec: /home/user/sitelooper/bench/results/fwgt15-cv2-c4-spec-tmp/fwgt15-cv2.spec.ts
+[spec-replay] running: npx playwright test --config /home/user/sitelooper/bench/results/fwgt15-cv2-c4-spec-tmp/playwright.config.mjs
+[spec-replay] failure evidence: fwgt15-cv2-c4-spec-failure.png
+[spec-replay] failure evidence: fwgt15-cv2-c4-spec-error-context.md
+[spec-replay] fwgt15-cv2-c4: 0/1 passed, exit=1, 30s, 0 drift line(s) — result written
+[converge] round 4 artifact: exit 1
+
+fwgt15-cv2-c4: objectives passed 1/7
+  obj 1: UNVERIFIABLE — no result file with finalText found
+  obj 2: PASS — #19, state=open, description includes runid=true
+  obj 3: FAIL — labels=[], want [bug, priority-high]
+  obj 4: FAIL — assignees=[]
+  obj 5: FAIL — milestone=(none)
+  obj 6: FAIL — 0 comment(s), 0 carrying the runid
+  obj 7: UNVERIFIABLE — no result file with finalText found
+[converge] round 4: artifact failed (exit 1, verified 1/5); anchors 04-add
+[converge] round 4 repair: /opt/node22/bin/node /home/user/sitelooper/bin/sitelooper.js repair /home/user/sitelooper/bench/results/fwgt15-cv2-c4-compile/fwgt15-cv2.flow.ts --var runid=fwgt15-cv2-p4n{n} --converge 1 --reset-cmd "\"/opt/node22/bin/node\" \"/home/user/sitelooper/bench/reset-app.mjs\" --target gitea" --json
+repairing /home/user/sitelooper/bench/results/fwgt15-cv2-c4-compile/fwgt15-cv2.flow.ts (8 step(s)) in /tmp/sitelooper-repair-6CjW9w
+  reset (run 1): "/opt/node22/bin/node" "/home/user/sitelooper/bench/reset-app.mjs" --target gitea
+run 1: 8/8 step(s) success, 7 drift ticket(s)
+  [OK] 01-open (tier A)
+  [OK] 02-create (tier A)
+  [OK] 03-open (tier A)
+  [OK] 04-add (tier A)
+  [OK] 05-change (tier A)
+  [OK] 06-set (tier A)
+  [OK] 07-add (tier A)
+  [OK] 08-open (tier A)
+  folded           s_39c2c9 step 6 target: page.locator('#event-78') folded in as primary (from variant s_df706f)
+  folded           s_39c2c9 step 8 target: page.locator('#event-77') folded in as primary (from variant s_3e3033)
+  evidence         candidate retired: page.getByRole('heading', { name: '{{v3}} Bench Issue #5', exact: true }) — missed 2 run(s), never hit; now last — s_37f40f step 14 target
+  evidence         candidate reordered: page.locator('h1') now primary (was #1) on 2 hit(s) — s_37f40f step 14 target
+  evidence         candidate retired: page.getByRole('heading', { name: '{{v4}} Bench Issue #5', exact: true }) — missed 2 run(s), never hit; now last — s_e18531 step 19 target
+  evidence         candidate reordered: page.locator('h1') now primary (was #1) on 2 hit(s) — s_e18531 step 19 target
+  reset (converge 1/1): "/opt/node22/bin/node" "/home/user/sitelooper/bench/reset-app.mjs" --target gitea
+  evidence         candidate retired: elementAt(510, 659) /* p */ — missed 2 run(s), never hit; now last — s_39c2c9 step 11 target
+  evidence         candidate retired: page.getByText('{{v4}}', { exact: true }) — missed 2 run(s), never hit; now last — s_3f58c7 step 3 target
+  [OK] 01-open (tier A)
+  [OK] 02-create (tier A)
+  [OK] 03-open (tier A)
+  [OK] 04-add (tier A)
+  [OK] 05-change (tier A)
+  [OK] 06-set (tier A)
+  [OK] 07-add (tier A)
+  [OK] 08-open (tier A)
+converge 1/1: 8/8 step(s) success, 7 drift ticket(s)
+  ticket: 04-add s_e18531/3 target: elementAt(988, 595) /* span */ → used page.locator('[id="_aria_dropdown_label_36"]')
+  ticket: 04-add s_e18531/23 target: page.getByRole('heading', { name: 'fwgt15-cv2-p4n1 Bench Issue #5', exact: true }) → used page.locator('#issue-title-display > h1')
+  ticket: 07-add s_3f58c7/3 target: page.getByText('Comment for run fwgt15-cv2-p4n1.', { exact: true }) → used page.locator('#issuecomment-82 > div > div:nth-of-type(2) > div:nth-of-type(1) > p')
+  ticket: 08-open s_39c2c9/6 target: page.locator('#event-78') → nothing resolved
+  ticket: 08-open s_39c2c9/8 target: page.locator('#event-77') → nothing resolved
+  ticket: 08-open s_39c2c9/11 target: elementAt(510, 659) /* p */ → nothing resolved
+  ticket: 08-open s_39c2c9/14 target: page.getByRole('heading', { name: 'fwgt15-cv2-p4n1 Bench Issue #4', exact: true }) → used page.locator('#issue-title-display > h1')
+not converged: 04-add (drift (elementAt(988, 595) /* span */)), 08-open (drift (page.locator('#event-78')))
+[converge] round 4 repair: exit 3
+[converge] round 4 rerecord 04-add (repair: needs-rerecord; also named: 08-open): /opt/node22/bin/node /home/user/sitelooper/bin/sitelooper.js rerecord /home/user/sitelooper/bench/results/flows/fwgt15-cv2.json 04-add --var runid=fwgt15-cv2-r4n{n} --runs 2 --reset-cmd "\"/opt/node22/bin/node\" \"/home/user/sitelooper/bench/reset-app.mjs\" --target gitea" --json
+re-recording fwgt15-cv2 step 04-add (2 run(s))
+  unpinned s_e18531; old recording kept at /home/user/sitelooper/bench/results/flows/fwgt15-cv2.bak-muha18k9.json
+  retired s_e18531 (the procedure being replaced cannot be re-pinned; restored if this re-record fails)
+  reset (run 1): "/opt/node22/bin/node" "/home/user/sitelooper/bench/reset-app.mjs" --target gitea
+  run 1: 04-add  On the issue page http://127.0.0.1:8095/bench/bench-repo/issues/22, the issue cu
+  run 1: 04-add  falling back to the model — unresolved reference(s): 03-open.applied_label_link, 03-open.applied_label_link, 03-open.applied_label_link
+  run 1: 04-add  adopted — recovering on deepseek/deepseek-v4.1-flash (escalates to z-ai/glm-5.3)
+  run 1: 04-add  adopted step graduated — pinned s_eae00d (provisional), shedding model-first replay
+  run 1: 04-add  succeeded without reporting priority_high_label_option_url, ph_item_class_after_clic, ph_item_class_after_chec, sidebar_labels_rendered, bug_label_link
+run 1: 04-add  agent (42 turns) re-pinned s_eae00d
+  fwgt15-cv2: 8/8 step(s) success
+  reset (run 2): "/opt/node22/bin/node" "/home/user/sitelooper/bench/reset-app.mjs" --target gitea
+  run 2: 04-add  reference(s) 03-open.applied_label_link unresolved but unused by the pinned procedure — replaying as pinned
+  run 2: 04-add  On the issue page http://127.0.0.1:8095/bench/bench-repo/issues/23, the issue cu
+  run 2: 04-add  succeeded without reporting priority_high_label_option_url, ph_item_class_after_clic, ph_item_class_after_chec, sidebar_labels_rendered, bug_label_link
+run 2: 04-add  replay tier A (16/16)
+  fwgt15-cv2: 8/8 step(s) success
+  04-add: recorded 10 value(s) from the re-recording run
+[converge] round 4 rerecord 04-add (repair: needs-rerecord; also named: 08-open): exit 0
+[converge] fwgt15-cv2: exhausted — 4 round(s) without a passing artifact; rounds 4, flow runs 16, model turns 59

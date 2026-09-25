@@ -1,0 +1,618 @@
+{
+ "id": "s_e18531",
+ "origin": "http://127.0.0.1:8095",
+ "template": "On the issue page {{v1}}, the issue currently has the label '{{v3}}'. Add the label 'priority-high' to it using the Labels picker in the issue sidebar. The picker is a dropdown menu listing available labels with checkboxes — open it, tick/select the 'priority-high' entry, then close the menu (click elsewhere or press Escape) so Gitea saves the change. The goal is that the issue page ends up displaying BOTH labels '{{v3}}' and 'priority-high' on the issue itself (not just ticked inside the open menu). If clicking the menu item does not apply it, try alternatives such as keyboard navigation (arrow keys + Enter) or clicking the item's checkbox/label element. Verify at the end by reading the sidebar label list, and report the labels displayed. Do not remove the '{{v3}}' label.",
+ "params": {
+  "v1": {
+   "example": "http://127.0.0.1:8095/bench/bench-repo/issues/5",
+   "usedIn": [
+    1,
+    5,
+    9,
+    20
+   ],
+   "known": true,
+   "binding": "02-create.url"
+  },
+  "v3": {
+   "example": "No labels",
+   "usedIn": [],
+   "known": true,
+   "binding": "03-open.applied_label_link"
+  },
+  "v4": {
+   "example": "fwgt15-n2",
+   "usedIn": [
+    19,
+    22,
+    23
+   ],
+   "known": true,
+   "binding": "var:runid"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id"
+ },
+ "steps": [
+  {
+   "tool": "goto",
+   "args": {
+    "url": "{{v1}}"
+   },
+   "locators": {},
+   "via": {
+    "skill": "s_418503",
+    "step": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e258"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 1098,
+      "y": 335,
+      "w": 270,
+      "h": 16,
+      "role": "combobox",
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+    "addedContains": [
+     "- combobox \"Labels Clear labels bug documentation enhancement priority-high\"",
+     "- listbox \"Clear labels bug documentation enhancement priority-high\"",
+     "- textbox \"Filter Label\"",
+     "- link \"Clear labels\"",
+     "- link \"bug\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_418503",
+    "step": 3
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "#_aria_dropdown_menu_32 a:has-text(\"priority-high\") span.item-check-mark"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "point",
+      "x": 988,
+      "y": 595,
+      "w": 16,
+      "h": 16,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "press",
+   "args": {
+    "key": "Escape"
+   },
+   "locators": {},
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "goto",
+   "args": {
+    "url": "{{v1}}"
+   },
+   "locators": {}
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "[aria-controls=\"_aria_dropdown_menu_32\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 1098,
+      "y": 335,
+      "w": 270,
+      "h": 16,
+      "role": "combobox",
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+    "addedContains": [
+     "- combobox \"Labels Clear labels bug documentation enhancement priority-high\"",
+     "- listbox \"Clear labels bug documentation enhancement priority-high\"",
+     "- textbox \"Filter Label\"",
+     "- link \"Clear labels\"",
+     "- link \"bug\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": ".issue-sidebar-combo a:has-text(\"priority-high\") span.item-check-mark"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".issue-sidebar-combo a:has-text(\"priority-high\") span.item-check-mark"
+     },
+     {
+      "kind": "point",
+      "x": 988,
+      "y": 595,
+      "w": 16,
+      "h": 16,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "press",
+   "args": {
+    "key": "Escape"
+   },
+   "locators": {},
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "goto",
+   "args": {
+    "url": "{{v1}}"
+   },
+   "locators": {}
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "[aria-controls=\"_aria_dropdown_menu_32\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 1098,
+      "y": 335,
+      "w": 270,
+      "h": 16,
+      "role": "combobox",
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+    "addedContains": [
+     "- combobox \"Labels Clear labels bug documentation enhancement priority-high\"",
+     "- listbox \"Clear labels bug documentation enhancement priority-high\"",
+     "- textbox \"Filter Label\"",
+     "- link \"Clear labels\"",
+     "- link \"bug\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": ".issue-sidebar-combo a:has-text(\"priority-high\") span.item-check-mark"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".issue-sidebar-combo a:has-text(\"priority-high\") span.item-check-mark"
+     },
+     {
+      "kind": "point",
+      "x": 988,
+      "y": 595,
+      "w": 16,
+      "h": 16,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e386"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "link",
+      "name": "priority-high"
+     },
+     {
+      "kind": "point",
+      "x": 1089,
+      "y": 596,
+      "w": 249.4,
+      "h": 40,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "what": "url"
+   },
+   "locators": {},
+   "label": "issue_page_url"
+  },
+  {
+   "tool": "wait_for",
+   "args": {
+    "state": "text_contains",
+    "target": ".issue-content-right",
+    "text": "priority-high"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".issue-content-right"
+     },
+     {
+      "kind": "css",
+      "selector": "div[data-global-init=\"initRepoIssueSidebar\"]"
+     },
+     {
+      "kind": "css",
+      "selector": "body > div > div > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 1098,
+      "y": 752,
+      "w": 300,
+      "h": 1004.1,
+      "role": null,
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "[aria-controls=\"_aria_dropdown_menu_32\"] .menu .item[data-value=\"2\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "link",
+      "name": "priority-high"
+     },
+     {
+      "kind": "point",
+      "x": 1089,
+      "y": 596,
+      "w": 249.4,
+      "h": 40,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "[aria-controls=\"_aria_dropdown_menu_32\"] .menu .item[data-value=\"2\"]",
+    "what": "attr",
+    "attr": "class",
+    "label": "ph_item_class_after_click"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "link",
+      "name": "priority-high"
+     },
+     {
+      "kind": "point",
+      "x": 1089,
+      "y": 596,
+      "w": 249.4,
+      "h": 40,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "ph_item_class_after_click"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "input[name=\"label_ids\"]",
+    "what": "value",
+    "label": "label_ids_value_after_click"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "input[name=\"label_ids\"]"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(3) > input"
+     }
+    ]
+   },
+   "label": "label_ids_value_after_click"
+  },
+  {
+   "tool": "press",
+   "args": {
+    "key": "Escape"
+   },
+   "locators": {},
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "h1"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "heading",
+      "name": "{{v4}} Bench Issue #5",
+      "seen": {
+       "hit": 0,
+       "miss": 2
+      }
+     },
+     {
+      "kind": "css",
+      "selector": "h1",
+      "seen": {
+       "hit": 2,
+       "miss": 0
+      }
+     },
+     {
+      "kind": "css",
+      "selector": "#issue-title-display > h1"
+     },
+     {
+      "kind": "point",
+      "x": 548,
+      "y": 172,
+      "w": 1032.4,
+      "h": 36,
+      "role": "heading",
+      "tag": "h1",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+    "addedContains": [
+     "- combobox \"Labels\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "goto",
+   "args": {
+    "url": "{{v1}}"
+   },
+   "locators": {}
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#issue-title-display > h1 > span"
+     },
+     {
+      "kind": "point",
+      "x": 431,
+      "y": 172,
+      "w": 47.2,
+      "h": 38,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "issue_number"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "value"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "input[data-old-title=\"{{v4}} Bench Issue\"]"
+     },
+     {
+      "kind": "css",
+      "selector": "#issue-title-editor > div:nth-of-type(1) > input"
+     }
+    ]
+   },
+   "label": "issue_title"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text",
+    "frame": "{{=}} Bench Issue #{{*}}",
+    "scopedBy": "v4"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "heading",
+      "name": "{{v4}} Bench Issue #5"
+     },
+     {
+      "kind": "css",
+      "selector": "#issue-title-display > h1"
+     },
+     {
+      "kind": "point",
+      "x": 548,
+      "y": 172,
+      "w": 1032.4,
+      "h": 36,
+      "role": "heading",
+      "tag": "h1",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "ref"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "Added the 'priority-high' label to issue #5 ({{v4}} Bench Issue) in bench/bench-repo via the Labels picker: opened the sidebar Labels dropdown, clicked the 'priority-high' menu item (its class became 'item muted checked' and the hidden label_ids input became '2'), then closed the menu by clicking the page heading, which triggered Gitea's save. Verified after a full page reload: the sidebar Labels section displays 'priority-high'. Note: '{{v3}}' is not an actual label — it is Gitea's placeholder shown when an issue has no labels; it was not removed, and the issue now displays exactly one label: 'priority-high'.",
+  "values": {
+   "issue_number": "#5",
+   "issue_title": "{{v4}} Bench Issue",
+   "labels_displayed_on_issue": "priority-high",
+   "ph_item_class_after_click": "item muted checked",
+   "label_ids_value_after_click": "2",
+   "sidebar_labels_after_reload": "priority-high",
+   "sidebar_labels_section_text": "Labels: priority-high (Milestone: No Milestone; Projects: No projects; Assignees: No Assignees)",
+   "issue_page_url": "{{v1}}",
+   "ref": "{{v4}}",
+   "ref_2": "aria_dropdown_menu_32"
+  }
+ },
+ "contract": 4,
+ "stats": {
+  "uses": 8,
+  "successes": 8,
+  "partial": 0,
+  "created": "2026-09-25T08:41:41.685Z",
+  "failedAtStep": {},
+  "fallthroughs": 16,
+  "verifiedContract": 4,
+  "lastUsed": "2026-09-25T18:05:04.374Z"
+ },
+ "status": "demoted",
+ "variantOf": "s_418503",
+ "provenance": {
+  "session": "fwgt15-n2",
+  "instruction": "On the issue page http://127.0.0.1:8095/bench/bench-repo/issues/5, the issue currently has the label 'No labels'. Add the label 'priority-high' to it using the Labels picker in the issue sidebar. The picker is a dropdown menu listing available labels with checkboxes — open it, tick/select the 'priority-high' entry, then close the menu (click elsewhere or press Escape) so Gitea saves the change. The goal is that the issue page ends up displaying BOTH labels 'No labels' and 'priority-high' on the issue itself (not just ticked inside the open menu). If clicking the menu item does not apply it, try alternatives such as keyboard navigation (arrow keys + Enter) or clicking the item's checkbox/label element. Verify at the end by reading the sidebar label list, and report the labels displayed. Do not remove the 'No labels' label.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-25T08:41:41.685Z"
+ },
+ "revision": 12
+}

@@ -1,0 +1,44 @@
+
+Running 1 test using 1 worker
+
+[sitelooper step] 01-open
+[sitelooper step] 02-create
+[sitelooper drift] 03-open s_e7e19e/4 target: primary getByRole('heading', { name: /^[\s\p{Co}\p{So}\p{Cf}]*fwgt15-cv2-c2\s+Bench\s+Issue\s+#7[\s\p{Co}\p{So}\p{Cf}]*$/u }) missed; used #2 locator('#issue-title-display > h1') (#1 absent)
+[sitelooper step] 03-open
+  ✘  1 fwgt15-cv2.spec.ts:9:1 › fwgt15-cv2 (28.7s)
+
+
+  1) fwgt15-cv2.spec.ts:9:1 › fwgt15-cv2 › 04-add: On the issue page {{02-create.url}}, the issue currently has the label '{{03-open.applied_label_link}}'. Add the label 'priority-high' to it using the Labels picker in the issue sidebar. The picker is a dropdown menu listing available labels with checkboxes — open it, tick/select the 'priority-high' entry, then close the menu (click elsewhere or press Escape) so Gitea saves the change. The goal is that the issue page ends up displaying BOTH labels '{{03-open.applied_label_link}}' and 'priority-high' on the issue itself (not just ticked inside the open menu). If clicking the menu item does not apply it, try alternatives such as keyboard navigation (arrow keys + Enter) or clicking the item's checkbox/label element. Verify at the end by reading the sidebar label list, and report the labels displayed. Do not remove the '{{03-open.applied_label_link}}' label. 
+
+    Error: none of 1 recorded locators resolved at 04-add s_e18531/3 target (page is at http://127.0.0.1:8095/bench/bench-repo/issues/9): locator('[data-sitelooper-point="988,595"]')
+
+       at fwgt15-cv2.flow.ts:13135
+
+      13133 | /** The stop for a chain that resolved nothing, shared by `pick` and `pickOrNavigate`. */
+      13134 | function pickMiss(page: Page, candidates: CandidateObservation[], where: string, note?: string): Error {
+    > 13135 |   return new Error(
+            |          ^
+      13136 |     // The url and the recorded step are half the answer whenever a chain
+      13137 |     // misses wholesale: a locator that named the control on the day it was
+      13138 |     // recorded usually misses because the page is not the page the step
+        at pickMiss (/home/user/sitelooper/bench/results/fwgt15-cv2-c2-spec-tmp/fwgt15-cv2.flow.ts:13135:10)
+        at pickOrNavigate (/home/user/sitelooper/bench/results/fwgt15-cv2-c2-spec-tmp/fwgt15-cv2.flow.ts:13185:9)
+        at Object.act (/home/user/sitelooper/bench/results/fwgt15-cv2-c2-spec-tmp/fwgt15-cv2.flow.ts:14777:22)
+        at runStepLifecycle (/home/user/sitelooper/bench/results/fwgt15-cv2-c2-spec-tmp/fwgt15-cv2.flow.ts:8837:18)
+        at Object.04-add (/home/user/sitelooper/bench/results/fwgt15-cv2-c2-spec-tmp/fwgt15-cv2.flow.ts:14770:5)
+        at /home/user/sitelooper/bench/results/fwgt15-cv2-c2-spec-tmp/fwgt15-cv2.flow.ts:17436:7
+        at runFlow (/home/user/sitelooper/bench/results/fwgt15-cv2-c2-spec-tmp/fwgt15-cv2.flow.ts:17435:5)
+        at /home/user/sitelooper/bench/results/fwgt15-cv2-c2-spec-tmp/fwgt15-cv2.spec.ts:14:21
+
+    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    [sitelooper drift] 03-open s_e7e19e/4 target: primary getByRole('heading', { name: /^[\s\p{Co}\p{So}\p{Cf}]*fwgt15-cv2-c2\s+Bench\s+Issue\s+#7[\s\p{Co}\p{So}\p{Cf}]*$/u }) missed; used #2 locator('#issue-title-display > h1') (#1 absent)
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/fwgt15-cv2-fwgt15-cv2/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/fwgt15-cv2-fwgt15-cv2/error-context.md
+
+  1 failed
+    fwgt15-cv2.spec.ts:9:1 › fwgt15-cv2 ────────────────────────────────────────────────────────────
