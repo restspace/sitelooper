@@ -1,0 +1,439 @@
+{
+  "name": "fwod87",
+  "origin": "http://127.0.0.1:8069",
+  "startUrl": "http://127.0.0.1:8069/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-signin",
+      "instruction": "Sign in to Odoo at http://127.0.0.1:8069/ with login admin and password {{env:APP_PASSWORD}}, then in Sales, create a new customer named '{{runid}} Bench Customer' with City 'Benchville' (only the name and city matter), then report the customer's name and city as saved.",
+      "skill": "s_09ee5c",
+      "params": {
+        "v2": "http://127.0.0.1:8069/",
+        "v3": "admin",
+        "v4": "{{env:APP_PASSWORD}}",
+        "v5": "{{runid}} Bench Customer",
+        "v6": "Benchville",
+        "v1": "{{runid}}"
+      },
+      "outputs": [
+        "customer_name",
+        "customer_city",
+        "partner_id",
+        "ref"
+      ],
+      "recorded": {
+        "customer_name": "fwod87-n1 Bench Customer",
+        "customer_city": "Benchville",
+        "partner_id": "44",
+        "model": "res.partner",
+        "ref": "fwod87-n1",
+        "url": "http://127.0.0.1:8069/web#cids=1&menu_id=199&action=288&model=res.partner&view_type=form&id=44",
+        "url.q.menu_id": "199",
+        "url.q.action": "288",
+        "url.q.id": "44"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=res.partner&view_type=form",
+      "outputEvidence": {
+        "customer_name": {
+          "same": 0,
+          "differed": 1
+        },
+        "customer_city": {
+          "same": 1,
+          "differed": 0
+        },
+        "partner_id": {
+          "same": 0,
+          "differed": 1
+        },
+        "model": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        },
+        "url.q.menu_id": {
+          "same": 1,
+          "differed": 0
+        },
+        "url.q.action": {
+          "same": 1,
+          "differed": 0
+        },
+        "url.q.id": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "02-create",
+      "instruction": "In Odoo Sales, create a new quotation for customer '{{runid}} Bench Customer' (choose from the autocomplete dropdown). Add exactly ONE order line: pick any product from the catalogue via its dropdown, quantity 3. Save/let Odoo compute, then report: the product chosen, the unit price Odoo filled in, the untaxed amount computed, and the quotation number.",
+      "skill": "s_d4f53f",
+      "params": {
+        "v1": "{{runid}} Bench Customer",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "quotation_number",
+        "sale_order_id",
+        "customer",
+        "customer_city",
+        "product",
+        "quantity",
+        "unit_price",
+        "tax_20_percent",
+        "total",
+        "ref"
+      ],
+      "recorded": {
+        "quotation_number": "S00021",
+        "sale_order_id": "21",
+        "customer": "fwod87-n1 Bench Customer",
+        "customer_city": "Benchville",
+        "product": "[FURN_6666] Acoustic Bloc Screens",
+        "quantity": "3.00",
+        "unit_price": "295.00",
+        "untaxed_amount": "£ 885.00",
+        "tax_20_percent": "£ 177.00",
+        "total": "£ 1,062.00",
+        "order_lines_count": "1",
+        "ref": "fwod87-n1",
+        "ref_2": "FURN_6666",
+        "url": "http://127.0.0.1:8069/web#cids=1&menu_id=197&action=315&model=sale.order&view_type=form&id=21",
+        "url.q.menu_id": "197",
+        "url.q.action": "315",
+        "url.q.id": "21"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "outputEvidence": {
+        "quotation_number": {
+          "same": 0,
+          "differed": 1
+        },
+        "sale_order_id": {
+          "same": 0,
+          "differed": 1
+        },
+        "customer": {
+          "same": 0,
+          "differed": 1
+        },
+        "customer_city": {
+          "same": 1,
+          "differed": 0
+        },
+        "product": {
+          "same": 1,
+          "differed": 0
+        },
+        "quantity": {
+          "same": 1,
+          "differed": 0
+        },
+        "unit_price": {
+          "same": 1,
+          "differed": 0
+        },
+        "untaxed_amount": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "tax_20_percent": {
+          "same": 0,
+          "differed": 1
+        },
+        "total": {
+          "same": 0,
+          "differed": 1
+        },
+        "order_lines_count": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "ref": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "ref_2": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        },
+        "url.q.menu_id": {
+          "same": 1,
+          "differed": 0
+        },
+        "url.q.action": {
+          "same": 1,
+          "differed": 0
+        },
+        "url.q.id": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "03-open",
+      "instruction": "In Odoo Sales, open quotation {{02-create.quotation_number}} for '{{runid}} Bench Customer' and add a SECOND order line: a different product (not Acoustic Bloc Screens) picked from the product dropdown, quantity 2. Save and report the product chosen and the new untaxed amount for the whole order.",
+      "skill": "s_d3a412",
+      "params": {
+        "v1": "{{02-create.quotation_number}}",
+        "v2": "{{runid}} Bench Customer",
+        "v3": "{{runid}}"
+      },
+      "outputs": [
+        "second_order_line_row",
+        "ref",
+        "ref_2"
+      ],
+      "recorded": {
+        "second_order_line_row": "[E-COM11] Cabinet with Doors\t\n[E-COM11] Cabinet with Doors\n\t2.00\t140.00\t\n20%\n\t£ 280.00",
+        "ref": "S00021",
+        "ref_2": "fwod87-n1",
+        "ref_3": "FURN_6666"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "outputEvidence": {
+        "second_order_line_row": {
+          "same": 1,
+          "differed": 0
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "ref_2": {
+          "same": 0,
+          "differed": 1
+        },
+        "ref_3": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        }
+      }
+    },
+    {
+      "id": "04-change",
+      "instruction": "In Odoo Sales, on quotation {{02-create.quotation_number}}, change the quantity of the first order line ({{02-create.product}}) from 3 to 5. Save and report the untaxed amount now shown for the whole order.",
+      "skill": "s_dd0f40",
+      "params": {
+        "v1": "{{02-create.quotation_number}}",
+        "v2": "{{02-create.product}}"
+      },
+      "outputs": [
+        "ref",
+        "oe_subtotal_footer_tr_1",
+        "tax_amount",
+        "oe_subtotal_footer_tr_2_1",
+        "total_amount_part1",
+        "total_amount_part2"
+      ],
+      "recorded": {
+        "ref": "S00021",
+        "ref_2": "FURN_6666",
+        "oe_subtotal_footer_tr_1": "TAX 20%",
+        "tax_amount": "£ 351.00",
+        "oe_subtotal_footer_tr_2_1": "Total",
+        "total_amount_part1": "£ 2",
+        "total_amount_part2": "106.00"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "outputEvidence": {
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "ref_2": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "oe_subtotal_footer_tr_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "tax_amount": {
+          "same": 1,
+          "differed": 0
+        },
+        "oe_subtotal_footer_tr_2_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "total_amount_part1": {
+          "same": 0,
+          "differed": 1
+        },
+        "total_amount_part2": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "05-report",
+      "instruction": "In Odoo Sales, on quotation {{02-create.quotation_number}}, confirm the quotation (click Confirm) so it becomes a sales order. Report the order reference (its name) and the status the app now shows (e.g. 'Sales Order').",
+      "skill": "s_881871",
+      "params": {
+        "v1": "{{02-create.quotation_number}}",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "order_status",
+        "final_url",
+        "ref",
+        "ref_2"
+      ],
+      "recorded": {
+        "order_status": "Sales Order",
+        "final_url": "http://127.0.0.1:8069/web#cids=1&menu_id=197&action=315&model=sale.order&view_type=form&id=21",
+        "ref": "S00021",
+        "ref_2": "fwod87-n1"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "outputEvidence": {
+        "order_status": {
+          "same": 1,
+          "differed": 0
+        },
+        "final_url": {
+          "same": 0,
+          "differed": 1
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "ref_2": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "06-report",
+      "instruction": "On sales order {{02-create.quotation_number}}, cancel it (click Cancel and confirm any dialog that appears). Report the status the app shows after cancelling.",
+      "skill": "s_f98f5d",
+      "params": {
+        "v1": "{{02-create.quotation_number}}",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "breadcrumb_before_cancel",
+        "order_reference",
+        "status_after_cancel_2",
+        "final_url",
+        "dialog_button_send_and_cancel"
+      ],
+      "recorded": {
+        "breadcrumb_before_cancel": "Sales Order\nQuotation Sent\nQuotation",
+        "order_reference": "S00021",
+        "status_after_cancel_2": "Cancelled\nSales Order\nQuotation Sent\nQuotation",
+        "final_url": "http://127.0.0.1:8069/web#cids=1&menu_id=197&action=315&model=sale.order&view_type=form&id=21",
+        "dialog_button_send_and_cancel": "Send and cancel",
+        "dialog_button_cancel": "Cancel",
+        "dialog_action_cancel": "action_cancel"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "outputEvidence": {
+        "breadcrumb_before_cancel": {
+          "same": 1,
+          "differed": 0
+        },
+        "order_reference": {
+          "same": 0,
+          "differed": 1
+        },
+        "status_after_cancel_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "final_url": {
+          "same": 0,
+          "differed": 1
+        },
+        "dialog_button_send_and_cancel": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "dialog_button_cancel": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "dialog_action_cancel": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "session": "fwod87-n1",
+    "created": "2026-09-25T01:27:32.176Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "01-signin",
+      "outputs": [
+        "model"
+      ]
+    },
+    {
+      "stepId": "02-create",
+      "outputs": [
+        "untaxed_amount",
+        "order_lines_count",
+        "ref_2"
+      ]
+    },
+    {
+      "stepId": "03-open",
+      "outputs": [
+        "ref_3"
+      ]
+    },
+    {
+      "stepId": "04-change",
+      "outputs": [
+        "ref_2"
+      ]
+    },
+    {
+      "stepId": "06-report",
+      "outputs": [
+        "dialog_button_cancel",
+        "dialog_action_cancel"
+      ]
+    }
+  ]
+}
