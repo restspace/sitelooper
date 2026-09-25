@@ -1387,6 +1387,29 @@ document.getElementById('add').addEventListener('click', () => fetch('/commit/ad
  * replay whose picker closed after its fill); `/picker?open=1` with it open.
  */
 /**
+ * A form whose app pre-fills the next asset tag (round 62, snipeit fwsi13
+ * 03-create): each load of `/prefilled-tag` pre-fills a NEW tag (BA-00100,
+ * BA-00101, …). Save with the tag empty shows "This field is required" and
+ * puts the focus back in the tag, with no request; otherwise it posts
+ * `/commit/save/<tag>` and shows "Asset created".
+ */
+const PREFILLED_TAG = (tag: string) => `<!doctype html><html><head><meta charset="utf-8"><title>New asset</title></head><body>
+<h1>New asset</h1>
+<label for="tag">Asset Tag</label><input id="tag" value="${tag}">
+<p id="err"></p>
+<button id="save" type="button">Save</button>
+<script>
+const tag = document.getElementById('tag');
+document.getElementById('save').addEventListener('click', async () => {
+  const err = document.getElementById('err');
+  if (!tag.value) { err.setAttribute('role', 'alert'); err.textContent = 'This field is required'; tag.focus(); return; }
+  await fetch('/commit/save/' + encodeURIComponent(tag.value), { method: 'POST' });
+  document.body.insertAdjacentHTML('beforeend', '<p role="status">Asset created</p>');
+});
+</script>
+</body></html>`;
+
+/**
  * A select2-like model picker (round 62, snipeit fwsi13 03-create): a
  * combobox "Select a Model"; typing into its search lists the matching option
  * only after a delay (the results request), highlighted; clicking the option
@@ -1894,6 +1917,7 @@ export async function createFixtureServer(initialCount = 10): Promise<FixtureSer
   const espo = { stage: 'Negotiation' };
   const signin = { title: 'EspoCRM' };
   const issue = { labels: ['bug', 'priority-high'] };
+  const assetTag = { next: 100 };
 
   function take<K extends Fault['kind']>(kind: K, req?: http.IncomingMessage): Extract<Fault, { kind: K }> | undefined {
     for (const f of pending) {
@@ -2178,6 +2202,7 @@ export async function createFixtureServer(initialCount = 10): Promise<FixtureSer
       if (url === '/filters' || url.startsWith('/filters?')) return html(FILTERS(url.includes('open=1'), url.includes('stuck=1')));
       if (url === '/picker' || url.startsWith('/picker?')) return html(PICKER(url.includes('open=1')));
       if (url === '/select-late' || url.startsWith('/select-late?')) return html(SELECT_LATE());
+      if (url === '/prefilled-tag') return html(PREFILLED_TAG(`BA-00${assetTag.next++}`));
       if (url === '/price' || url === '/price?stuck=1') return html(PRICE(url.endsWith('stuck=1')));
       if (url === '/imagelink') return html(IMAGE_LINK);
       if (url === '/hashposts') return html(HASH_POSTS);
