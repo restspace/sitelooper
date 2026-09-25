@@ -422,3 +422,22 @@ key picks and select2 highlight picks compile to picks by name; a reported url v
 compare within their route; the pre-submit refill re-checks a replaced document; an off-record healed or positional read is not
 published; a journal-proven restore detour is dropped (`was` recorded); report records flattened. Phase C shadow rules fixed and
 keyPick added: abandonedEdit, flashCause, linkClick and pickerNetState agree on every observed case (phase D candidates).
+
+## Round 63 (b6966d3): eighth confirmation, 7 apps (rd, kb, ec stable) — 3/7 green (6/10 counting the stable three)
+
+| round | runid | app | verified | replay model-free | compiled | green | notes |
+|---|---|---|---|---|---|---|---|
+| 63 | fwgt14 | gt | 7/7 ×3 | yes | pass 5/7+2 n/a | **yes** | the folded key presses fix held |
+| 63 | fwgr75 | gr | 6/6 ×3 | yes | pass 4/6+2 n/a | **yes** | |
+| 63 | fwvk14 | vk | 7/7 ×3 | yes | pass 5/7+2 n/a | **yes** | |
+| 63 | fwod88 | od | 6/6 ×3 | no: 10 / 48 turns | refused (unsourced-ref) | no | round 62's keyPick misread an Enter on a button (regression); a read's locator named its own minted value (S00021) |
+| 63 | fwop17 | op | 7/7 ×3 | no: n2 8 turns | FAIL 1/7 | no | a row name pushed past the 80-char cap by the longer spec runid |
+| 63 | fwsi14 | si | 7/7 ×3 | no: 44 / 34 turns | FAIL | no | an origin read the wrong of two banked values (the recording's asset opened); a lookup typed n1's minted tag |
+| 63 | fwgh17 | gh | 7/7 ×3 | yes, but 04-open partial | pass 5/7+2 n/a | no | round 60's given rule judged a loaded url against the end page |
+
+Round 63 fixes (merged to main 71d955d; verify-round63 PASS 2654 / 2875 / 204 parity): a key that activated a control picks nothing; an
+export-time drop of a read locator naming its own referenced run value; a second full-name look past the name cap; a given url the chain
+loaded is observed; origins read the step's end value; a navigation keeps its landing's alert; an app-minted value is never typed as a literal.
+
+Vision A/B (MiMo, 18 runs, vision on vs off): clean (both replays model-free and compiled pass) 3/9 with vision vs 5/9 without. No
+evidence that vision helps; within noise at n=3 per cell. Full metrics pending.
