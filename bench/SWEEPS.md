@@ -553,3 +553,28 @@ Credit note: the OpenRouter balance ran out at ~15:40 UTC on 2026-09-25 (255 USD
 after that point is invalid, verifies (no model) are not. fwop15-cv2 and fwod88-cv4 (prompts on fix/repin-whole) wait
 for the top-up.
 
+
+## Convergence experiment, batch 2 (main 3df960b2: a driven-past full replay compiles whole, counters masked, stuck-repin stop; credit restored 16:30)
+
+| run | from | class | verdict | flow runs | model turns | what decided it |
+|---|---|---|---|---|---|---|
+| fwod88-cv4 | od, unsourced-ref (quotation_reference) | stuck-parity — a FALSE verdict (the budget) | 5 | 46 | one re-record of 03-create (46 turns) read the reference; round 2 COMPILED and the artifact PASSED under Playwright (259s). The verifier failed obj 3 only ("2 lines, 1 distinct products": the second order line's product pick lands on the first product, in both runners). Repair replayed 9/9 twice, then its spec check hit the emitted 300s budget at 08-open (`Test timeout of 300000ms exceeded`) and the driver read that as parity. The round-63 menu-counter failure (fwod88-cv3) is gone: counters are masked now |
+| fwgt15-cv2 | gt, artifact FAIL at 04-add (label pick recorded as a point) | exhausted — INCONCLUSIVE | 16 | 59 | the spec failed at the same site every round: `none of 1 recorded locators resolved at 04-add s_e18531/3 target: locator('[data-sitelooper-point="988,595"]')` (the daemon heals it to a minted `_aria_dropdown_label_N` id each run, so repair never converges on it). The driver re-recorded 03-open (3 turns), 01-open (11), 03-open (3) first — a healed DRIFT line named 03-open and flow order won — and only round 4 re-recorded 04-add (42 turns, re-pinned s_eae00d, run 2 tier A 16/16); the loop then ended without ever compiling it |
+| fwsi14-cv2 | si, artifact FAIL at 03-open (url expectation) | stuck-repin — INCONCLUSIVE | 9 | 207 | the spec failed at `after 03-open s_911eab/1 expected url …/hardware/N/edit but browser is at …/hardware/N#history` every round and repair named only 03-open; the driver re-recorded 02-create five times (a healed drift line named it, and it is earlier in flow order). Each new whole recording (the model drove 18-24 gestures past the old procedure: the checkout) was refused by the cross-step guard: "its procedure ends on /hardware, and the next step's procedure starts on /hardware/:id without navigating there". 03-open was never re-recorded |
+| fwop15-cv2 | op, demoted-pin 01-open | pending | | | fired 16:31 on the driven-past fix; results branch not yet published |
+
+Reading: none of the three is a verdict on the retry commands themselves. All three were decided by the DRIVER:
+(1) a healed drift line named a step, and flow order put it ahead of the step the spec actually failed at — in both
+gt and si the right step was named by the failure text and by repair from round 1; (2) a spec check that timed out was
+read as parity — odoo's 9-step flow runs in 259s against the emitted spec's 300s cap (MAX_BUDGET_MS, src/spec/emit.ts),
+a margin to raise together with the outer watchdog; (3) the last round's re-record was never compiled. All three fixed
+in bench/converge.mjs (this commit): only the failure's producer or site names a step, never a drift line; a timed-out
+spec check falls through to the step choice; one final compile + artifact after the last re-record. Real defects the
+batch surfaced, not driver faults: the gitea label-picker click recorded as a point only (04-add, open since round 64)
+and an odoo second-line product pick that lands on the first product in both runners — invisible to Playwright and to
+repair, only the verifier sees it (so a step the artifact "passes" can still be wrong).
+
+Tally, fair runs with a verdict (7): converged 2 (gr; op17 control) · compile fixed, artifact passes Playwright,
+verifier 5/6 1 (od) · inconclusive on a driver choice 2 (gt, si) · non-deterministic step 1 (op15-cv; re-run pending) ·
+driver parse miss over a step that would not re-pin 1 (vk). Cost of a converged run stays 2 flow runs / ≤46 turns; a
+wrong step choice costs 9-16 flow runs and 59-207 turns, which is why the choice rule matters more than the round cap.

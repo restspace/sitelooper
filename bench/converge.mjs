@@ -22,9 +22,13 @@
  *   3. Artifact or verifier failed → `sitelooper repair <name>.flow.ts
  *      --converge 1` (triage run, converge run, compiled-spec check). If
  *      repair's own spec check passes → CONVERGED BY REPAIR (the artifact is
- *      the repaired .flow.ts). Else the steps repair says need re-recording,
- *      or the step the artifact failed at (`@step` anchor), are re-recorded →
- *      next round.
+ *      the repaired .flow.ts). Else the step the artifact's FAILURE names
+ *      (the producer of a value it needed, then the failing site; never a
+ *      healed drift line) or the steps repair says need re-recording, earliest
+ *      in flow order, is re-recorded → next round. A spec check that only
+ *      timed out is the emitted budget, not a parity gap.
+ *   4. After the last round's re-record, one final compile + artifact (no
+ *      repair): the loop must not end on an untested recording.
  *
  * Every model turn happens at record or repair time; the artifact that ends
  * the loop is model-free. Writes <out>/<tag>-converge.json (every round, every
@@ -212,18 +216,25 @@ function artifact(k) {
   // rounds re-recording the consumer). Then the artifact's own site
   // ("01-signin s_5fccd8/2: …", "… (01-signin s_9e6344/2 target)") and `@step` anchors.
   const texts = [...errors, ...(res?.drift ?? []).map(String)].map(String);
+  // Only the FAILURE's own text names a step to re-record. A drift line is a
+  // locator the artifact healed on its way past, and that step is fine:
+  // fwsi14-cv2 spent 207 model turns re-recording 02-create (a healed drift,
+  // earlier in flow order) while the spec failed at 03-open every round, and
+  // fwgt15-cv2 re-recorded 03-open and 01-open the same way while 04-add failed.
+  const errorTexts = errors.map(String);
+  const sitesOf = (list) => list.flatMap((e) => [
+    ...[...e.matchAll(/@step\s+([\w-]+)/g)].map((m) => m[1]),
+    ...[...e.matchAll(/(?:^|[\s(:])([\w-]+) s_[0-9a-f]{6}(?:\/\d+)?\b/g)].map((m) => m[1]),
+  ]);
   const producers = texts.flatMap((e) => [...e.matchAll(/needs \{\{([\w-]+)\./g)].map((m) => m[1]));
   // …and WHAT the producer must read: "02-open needs {{01-signin.visible_projects_2}}"
   // (fwvk15-cv2 re-recorded 01-signin four times without being told).
   const missing = new Map();
   for (const e of texts) for (const m of e.matchAll(/needs \{\{([\w-]+)\.([\w.-]+?)\}\}/g)) missing.set(m[1], [...new Set([...(missing.get(m[1]) ?? []), m[2]])]);
-  const sites = texts.flatMap((e) => [
-    ...[...e.matchAll(/@step\s+([\w-]+)/g)].map((m) => m[1]),
-    ...[...e.matchAll(/(?:^|[\s(:])([\w-]+) s_[0-9a-f]{6}(?:\/\d+)?\b/g)].map((m) => m[1]),
-  ]);
-  const anchors = [...new Set([...producers, ...sites])];
+  const anchors = [...new Set([...producers, ...sitesOf(errorTexts)])];
+  const driftSites = [...new Set(sitesOf((res?.drift ?? []).map(String)))].filter((id) => !anchors.includes(id));
   const passed = Boolean(res) && res.exitCode === 0 && (res.stats?.failed ?? 1) === 0 && !failLines.length && (verified === 'n/a' || !verified.includes('FAIL'));
-  return { tag, exitCode: res?.exitCode ?? null, stats: res?.stats ?? null, driftCount: res?.driftCount ?? null, verified, failLines, errors: errors.map((e) => e.slice(0, 400)), anchors, missing, missingOutputs: Object.fromEntries(missing), passed, dry: args.dry };
+  return { tag, exitCode: res?.exitCode ?? null, stats: res?.stats ?? null, driftCount: res?.driftCount ?? null, verified, failLines, errors: errors.map((e) => e.slice(0, 400)), anchors, driftSites, missing, missingOutputs: Object.fromEntries(missing), passed, dry: args.dry };
 }
 
 function repair(k, flowFile) {
@@ -241,7 +252,7 @@ function repair(k, flowFile) {
   // the whole string to rerecord, which refused it, four times).
   const stepIdOf = (x) => /^([\w-]+)/.exec(String(x ?? ''))?.[1] ?? null;
   const needs = [...new Set([...(j.notConverged ?? []).map(stepIdOf), ...(j.diagnostics ?? []).filter((d) => d.code === 'needs-rerecord' && d.step).map((d) => stepIdOf(d.step))].filter((id) => id && flow.steps.some((st) => st.id === id)))];
-  return { exit: r.status, outcome: j.outcome ?? null, refused: j.refused ?? null, converged: j.converged ?? null, specCheck: j.specCheck ? { ran: j.specCheck.ran, passed: j.specCheck.passed } : null, runs, needsRerecord: needs, changes: (j.changes ?? []).slice(0, 20), repaired, dry: r.dry ?? false };
+  return { exit: r.status, outcome: j.outcome ?? null, refused: j.refused ?? null, converged: j.converged ?? null, specCheck: j.specCheck ? { ran: j.specCheck.ran, passed: j.specCheck.passed, timedOut: Boolean(j.specCheck.timedOut), error: String(j.specCheck.error ?? j.specCheck.verdict ?? '').slice(0, 300) } : null, runs, needsRerecord: needs, changes: (j.changes ?? []).slice(0, 20), repaired, dry: r.dry ?? false };
 }
 
 let verdict = null;
@@ -272,17 +283,47 @@ for (let k = 1; k <= args.maxRounds && !verdict; k++) {
   // three times over a menu name "6 3 YourCompany" whose counters the artifact
   // insists on). Stop and name it.
   const daemonClean = round.repair.converged && round.repair.runs.length > 0 && round.repair.runs.every((u) => u.status === 'success' && u.passed === u.total);
-  if (daemonClean && round.repair.specCheck?.ran && !round.repair.specCheck.passed) {
+  if (daemonClean && round.repair.specCheck?.ran && !round.repair.specCheck.passed && round.repair.specCheck.timedOut) {
+    // fwod88-cv4: the artifact had PASSED under Playwright in 259s and repair's
+    // spec check then hit the emitted spec's 300s budget (MAX_BUDGET_MS) at
+    // 08-open. That is the budget, not a parity gap: fall through to the step
+    // choice below.
+    log(`round ${k}: repair's spec check timed out (${round.repair.specCheck.error || 'the emitted budget'}) — the budget, not a parity gap`);
+  } else if (daemonClean && round.repair.specCheck?.ran && !round.repair.specCheck.passed) {
     verdict = { status: 'stuck-parity', why: `round ${k}: the daemon replayed every step clean in repair's ${round.repair.runs.length} run(s) but the compiled spec fails at ${round.artifact.anchors.join(', ') || 'an unnamed step'} — a runner parity gap, not a recording`, errors: round.artifact.errors.slice(0, 2) };
     break;
   }
   const order = new Map(flow.steps.map((st, i) => [st.id, i]));
   // The producer the artifact blames outranks the consumers repair lists; then flow order.
   const steps = [...new Set([...round.artifact.anchors, ...round.repair.needsRerecord])].sort((a, b) => (order.get(a) ?? 1e9) - (order.get(b) ?? 1e9));
-  if (!steps.length) { verdict = { status: 'stuck', why: 'artifact failed, repair did not converge, and no step to re-record was named' }; break; }
+  if (!steps.length) {
+    // fwod88-cv4: Playwright passed, the verifier saw one product on both order
+    // lines, repair replayed clean twice — nothing names a step. Say what it is.
+    verdict = round.artifact.exitCode === 0
+      ? { status: 'stuck', why: `round ${k}: the artifact passed under Playwright but the verifier failed (${round.artifact.failLines.map((l) => l.trim()).join('; ') || round.artifact.verified}); repair replayed clean and named no step — a recording defect neither runner can see` }
+      : { status: 'stuck', why: 'artifact failed, repair did not converge, and no step to re-record was named' };
+    break;
+  }
   if (!mayRerecord(steps[0])) { verdict = { status: 'stuck-repin', why: `${steps[0]} was re-recorded twice and the store's re-pin rule refused both: its procedure does not replay clean` }; break; }
   round.rerecords.push(rerecord(k, steps[0], `${round.repair.needsRerecord.length ? 'repair: needs-rerecord' : 'artifact failed at this step'}${steps.length > 1 ? `; also named: ${steps.slice(1).join(', ')}` : ''}`, round.artifact.missing.get(steps[0])));
   save();
+}
+// The last round's re-record is never tested by the loop above (fwgt15-cv2:
+// 04-add was re-recorded in round 4 — 42 turns, replayed tier A 16/16 — and the
+// loop ended "exhausted" without compiling it). One more compile + artifact;
+// no repair, no re-record.
+if (!verdict && report.rounds.at(-1)?.rerecords.some((r) => r.ok && !r.dry)) {
+  const k = args.maxRounds + 1;
+  const round = { k, final: true, compile: compile(k), rerecords: [], artifact: null, repair: null };
+  report.rounds.push(round);
+  save();
+  if (round.compile.refused) log(`final check: compile refused (${round.compile.codes.join(', ') || round.compile.outcome})`);
+  else if (!args.dry) {
+    round.artifact = artifact(k);
+    save();
+    if (round.artifact.passed) verdict = { status: 'converged', why: `final check after round ${args.maxRounds}: compiled artifact passed (${round.artifact.verified})`, artifact: round.compile.flowFile };
+    else log(`final check: artifact failed (exit ${round.artifact.exitCode}, verified ${round.artifact.verified}); anchors ${round.artifact.anchors.join(', ') || 'none'}`);
+  }
 }
 report.verdict = verdict ?? { status: 'exhausted', why: `${args.maxRounds} round(s) without a passing artifact` };
 save();
