@@ -799,6 +799,24 @@ const build = () => {
   });
   user.addEventListener('input', armed);
   pass.addEventListener('input', armed);
+  // Round 62, vikunja fwvk13: 'delay-<ms>' reloads the document <ms> after the
+  // first value is typed; 'clear-<ms>' empties both fields then, with no
+  // reload; 'blur' reloads the moment the password field loses focus, which
+  // is the moment the pre-submit check looks at the form (a reload landing
+  // inside that check). Once per tab each.
+  const timed = /^(delay|clear)-([0-9]+)$/.exec(MODE);
+  const first = () => {
+    if (!timed || !once('timed-' + MODE)) return;
+    setTimeout(() => {
+      if (timed[1] === 'delay') { sessionStorage.setItem('reloaded-fill', '1'); location.reload(); }
+      else { user.value = ''; pass.value = ''; }
+    }, Number(timed[2]));
+  };
+  user.addEventListener('input', first);
+  pass.addEventListener('input', first);
+  pass.addEventListener('blur', () => {
+    if (MODE === 'blur' && pass.value && once('reloaded-blur')) { sessionStorage.setItem('reloaded-fill', '1'); location.reload(); }
+  });
   document.getElementById('login').addEventListener('click', async () => {
     if (MODE === 'submit' && once('reloaded-submit')) { location.reload(); return; }
     if (!user.value || !pass.value) { document.getElementById('status').textContent = 'Username and password are required'; return; }
