@@ -1,0 +1,9 @@
+flow: /home/user/sitelooper/bench/results/fwod88-cv-c3-spec-tmp/fwod88-cv.flow.ts
+spec: /home/user/sitelooper/bench/results/fwod88-cv-c3-spec-tmp/fwod88-cv.spec.ts
+warning 09-report: 09-report read a value that contradicts what the previous step reported
+  why: 09-report read statusbar_buttons_after_reload_1 "Preview" right after 08-open reported "Cancelled"; 08-open's change may not have landed and a later step may be retrying it. Re-record 08-open.
+  fix: sitelooper rerecord /home/user/sitelooper/bench/results/flows/fwod88-cv.json 08-open
+warning the recording carries a value equal to APP_PASSWORD that compile left as recorded
+  why: a non-credential environment variable holds the same value, so it may be a login or other copy rather than the secret, and no password field shows it is APP_PASSWORD
+  fix: if it is the credential, re-record the step passing {{env:APP_PASSWORD}} in single quotes (never $APP_PASSWORD)
+

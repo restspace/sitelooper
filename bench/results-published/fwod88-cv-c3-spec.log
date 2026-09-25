@@ -1,0 +1,48 @@
+
+Running 1 test using 1 worker
+
+  ✘  1 fwod88-cv.spec.ts:9:1 › fwod88-cv (11.5s)
+
+
+  1) fwod88-cv.spec.ts:9:1 › fwod88-cv ─────────────────────────────────────────────────────────────
+
+    Error: 01-signin s_5fccd8/2: the recorded page change did not appear
+
+    01-signin s_5fccd8/2: the recorded page change did not appear
+
+    expect(received).toBeNull()
+
+    Received: "after step 01-signin s_5fccd8/2 none of the 1 recorded page change(s) appeared (e.g. \"- menu \\\"6 3 YourCompany\\\"\") — the step ran but did not have its recorded effect"
+
+    Call Log:
+    - Timeout 5000ms exceeded while waiting on the predicate
+
+       at fwod88-cv.flow.ts:16884
+
+      16882 |       { timeout: EXPECT_WAIT_MS, message: `${ctx.tag}: the recorded page change did not appear` },
+      16883 |     )
+    > 16884 |     .toBeNull();
+            |      ^
+      16885 |   for (const warning of last.warnings) console.log(`[sitelooper warn] ${warning}`);
+      16886 |   if (last.unobserved) console.log(`[sitelooper unobserved] ${ctx.tag}: the page could not be captured, or observed in full, after the action`);
+      16887 |   return last;
+        at expectChanges (/home/user/sitelooper/bench/results/fwod88-cv-c3-spec-tmp/fwod88-cv.flow.ts:16884:6)
+        at Object.verify (/home/user/sitelooper/bench/results/fwod88-cv-c3-spec-tmp/fwod88-cv.flow.ts:17347:32)
+        at runStepLifecycle (/home/user/sitelooper/bench/results/fwod88-cv-c3-spec-tmp/fwod88-cv.flow.ts:12293:24)
+        at Object.01-signin (/home/user/sitelooper/bench/results/fwod88-cv-c3-spec-tmp/fwod88-cv.flow.ts:17322:5)
+        at /home/user/sitelooper/bench/results/fwod88-cv-c3-spec-tmp/fwod88-cv.flow.ts:24459:7
+        at runFlow (/home/user/sitelooper/bench/results/fwod88-cv-c3-spec-tmp/fwod88-cv.flow.ts:24458:5)
+        at /home/user/sitelooper/bench/results/fwod88-cv-c3-spec-tmp/fwod88-cv.spec.ts:14:21
+
+    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/fwod88-cv-fwod88-cv/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/fwod88-cv-fwod88-cv/error-context.md
+
+  1 failed
+    fwod88-cv.spec.ts:9:1 › fwod88-cv ──────────────────────────────────────────────────────────────
