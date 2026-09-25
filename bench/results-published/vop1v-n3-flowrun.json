@@ -1,0 +1,130 @@
+{
+  "flow": "vop1v",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Signed in as admin, opened the project named Bench Project's work packages (\"All open\" view) and read the full list: 3 work packages total (pagination: \"(1 - 3/3) You are on the only page.\"). Subjects starting with \"Seed:\" are exactly: \"Seed: triage inbox\", \"Seed: order missing parts\", \"Seed: ship repaired device\". No work package subject contains \"Bench Work Package\".",
+      "values": {
+        "project_name": "Bench Project",
+        "pagination_summary": "(1 - 3/3)\nYou are on the only page.",
+        "work_packages_total": "3",
+        "bench_work_package_exists": "false",
+        "ref": "vop1v-n3",
+        "seed_subjects_1": "Seed: triage inbox",
+        "seed_subjects_2": "Seed: order missing parts",
+        "seed_subjects_3": "Seed: ship repaired device",
+        "seed_ids_1": "38",
+        "seed_ids_2": "39",
+        "seed_ids_3": "40"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_c709b4 stopped at step 1 — no element matched any known locator for target (tried 3: page.getByRole('button', { name: 'Save', exact: true }), page.locator('#user-form > div:nth-of-type(4) > div > button:nth-of-type(2)'), elementAt(908, 547) /* button */)",
+      "replayed": "0/2",
+      "repaired": false,
+      "turns": 9,
+      "unreported": [
+        "pagination_text",
+        "seed_subject_triage_inbox",
+        "seed_subject_order_missing_parts",
+        "data_field_name_subject_3"
+      ]
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_b876d0.",
+      "values": {},
+      "tier": "A",
+      "recovered": false,
+      "replayed": "5/5",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_082bf8: step 2: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear",
+        "s_b876d0: step 1: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear",
+        "s_b876d0: step 2: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear",
+        "s_b876d0: report value work_package_ref is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)"
+      ],
+      "unreported": [
+        "work_package_ref"
+      ]
+    },
+    {
+      "id": "03-set",
+      "status": "success",
+      "summary": "Replayed stored procedure s_58deb9; observed work_package_ref=vop1v-n3.",
+      "values": {
+        "work_package_ref": "vop1v-n3"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "7/7",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_58deb9: step 4: expected alert containing \"Successful update.\"",
+        "s_58deb9: step 7: expected alert containing \"Successful update.\""
+      ]
+    },
+    {
+      "id": "04-add",
+      "status": "success",
+      "summary": "Replayed stored procedure s_56f2be; observed work_package_ref=vop1v-n3.",
+      "values": {
+        "work_package_ref": "vop1v-n3"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "5/5",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 4,
+  "total": 4,
+  "repinned": 0,
+  "drift": 1,
+  "driftTickets": [
+    {
+      "flow": "vop1v",
+      "step": "01-open",
+      "skill": "s_c709b4",
+      "atStep": "1",
+      "key": "target",
+      "similarity": 0.846,
+      "missedLocator": "page.getByRole('button', { name: 'Save', exact: true })",
+      "fallbackUsed": null,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:8090/",
+      "pageUrl": "http://127.0.0.1:8090/"
+    }
+  ],
+  "wallMs": 85151,
+  "model": "xiaomi/mimo-v2.6-flash",
+  "usage": {
+    "promptTokens": 101983,
+    "completionTokens": 1104,
+    "cachedTokens": 85056
+  },
+  "usageByModel": {
+    "xiaomi/mimo-v2.6-flash": {
+      "promptTokens": 101983,
+      "completionTokens": 1104,
+      "cachedTokens": 85056
+    }
+  },
+  "servedByModel": {
+    "xiaomi/mimo-v2.6-flash": [
+      "Xiaomi"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

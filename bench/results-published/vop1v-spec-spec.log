@@ -1,0 +1,40 @@
+
+Running 1 test using 1 worker
+
+  ✘  1 vop1v.spec.ts:9:1 › vop1v (13.7s)
+
+
+  1) vop1v.spec.ts:9:1 › vop1v › 01-open: Open http://127.0.0.1:8090/, sign in with username admin and password typed exactly as the literal text {{env:APP_PASSWORD}}. Then navigate to the project named 'Bench Project' and list its work packages: report the subjects of all work packages whose subject starts with 'Seed:' exactly as shown, and report whether any work package with subject containing 'Bench Work Package' exists. 
+
+    Error: none of 3 recorded locators resolved at 01-open s_c709b4/1 target (page is at http://127.0.0.1:8090/): getByRole('button', { name: /^[\s\p{Co}\p{So}\p{Cf}]*Save[\s\p{Co}\p{So}\p{Cf}]*$/u }) | locator('#user-form > div:nth-of-type(4) > div > button:nth-of-type(2)') | locator('[data-sitelooper-point="908,547"]')
+
+       at vop1v.flow.ts:12286
+
+      12284 | /** The stop for a chain that resolved nothing, shared by `pick` and `pickOrNavigate`. */
+      12285 | function pickMiss(page: Page, candidates: CandidateObservation[], where: string, note?: string): Error {
+    > 12286 |   return new Error(
+            |          ^
+      12287 |     // The url and the recorded step are half the answer whenever a chain
+      12288 |     // misses wholesale: a locator that named the control on the day it was
+      12289 |     // recorded usually misses because the page is not the page the step
+        at pickMiss (/home/user/sitelooper/bench/results/vop1v-spec-spec-tmp/vop1v.flow.ts:12286:10)
+        at pickOrNavigate (/home/user/sitelooper/bench/results/vop1v-spec-spec-tmp/vop1v.flow.ts:12336:9)
+        at Object.act (/home/user/sitelooper/bench/results/vop1v-spec-spec-tmp/vop1v.flow.ts:12866:22)
+        at runStepLifecycle (/home/user/sitelooper/bench/results/vop1v-spec-spec-tmp/vop1v.flow.ts:7859:18)
+        at Object.01-open (/home/user/sitelooper/bench/results/vop1v-spec-spec-tmp/vop1v.flow.ts:12854:5)
+        at /home/user/sitelooper/bench/results/vop1v-spec-spec-tmp/vop1v.flow.ts:16100:7
+        at runFlow (/home/user/sitelooper/bench/results/vop1v-spec-spec-tmp/vop1v.flow.ts:16099:5)
+        at /home/user/sitelooper/bench/results/vop1v-spec-spec-tmp/vop1v.spec.ts:14:21
+
+    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/vop1v-vop1v/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/vop1v-vop1v/error-context.md
+
+  1 failed
+    vop1v.spec.ts:9:1 › vop1v ──────────────────────────────────────────────────────────────────────
