@@ -1,0 +1,198 @@
+{
+  "name": "fwgt13",
+  "origin": "http://127.0.0.1:8095",
+  "startUrl": "http://127.0.0.1:8095/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-signin",
+      "instruction": "Sign in at http://127.0.0.1:8095/ with username admin and password {{env:APP_PASSWORD}} (type the password text exactly as given). Then open the issues list of repo bench/bench-repo and report the titles of all open issues whose title starts with 'Seed:', exactly as shown.",
+      "skill": "s_dc3073",
+      "params": {
+        "v1": "http://127.0.0.1:8095/",
+        "v2": "admin",
+        "v3": "{{env:APP_PASSWORD}}"
+      },
+      "outputs": [
+        "open_issue_count",
+        "closed_issue_count",
+        "seed_issue_number_1",
+        "seed_issue_number_2",
+        "seed_issue_number_3",
+        "seed_issue_titles_1",
+        "seed_issue_titles_2",
+        "seed_issue_titles_3"
+      ],
+      "recorded": {
+        "open_issue_count": "3",
+        "closed_issue_count": "0",
+        "seed_issue_number_1": "#3",
+        "seed_issue_number_2": "#2",
+        "seed_issue_number_3": "#1",
+        "seed_issue_titles_1": "Seed: ship repaired device",
+        "seed_issue_titles_2": "Seed: order missing parts",
+        "seed_issue_titles_3": "Seed: triage inbox",
+        "url": "http://127.0.0.1:8095/bench/bench-repo/issues"
+      },
+      "route": "http://127.0.0.1:8095/bench/bench-repo/issues",
+      "outputEvidence": {
+        "open_issue_count": {
+          "same": 1,
+          "differed": 0
+        },
+        "closed_issue_count": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_issue_number_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_issue_number_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_issue_number_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_issue_titles_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_issue_titles_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_issue_titles_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "02-create",
+      "instruction": "In repo bench/bench-repo, create a new issue titled '{{runid}} Bench Issue' with a description containing the text '{{runid}}' (markdown textarea), assign it labels bug and priority-high, assignee bench-assignee, and milestone Bench Milestone (use the sidebar pickers; verify each is shown applied on the issue after creation), then add a comment containing '{{runid}}'. Report the issue number as displayed (#N).",
+      "skill": "s_ed80ae",
+      "params": {
+        "v2": "{{runid}} Bench Issue",
+        "v1": "{{runid}}"
+      },
+      "outputs": [
+        "assignee_applied",
+        "comment_id",
+        "comment_text",
+        "description_contains",
+        "issue_number",
+        "issue_title",
+        "issue_url",
+        "comment_anchor"
+      ],
+      "recorded": {
+        "assignee_applied": "bench-assignee",
+        "comment_author": "admin",
+        "comment_id": "#issuecomment-5",
+        "comment_text": "fwgt13-n1",
+        "description_contains": "fwgt13-n1",
+        "issue_number": "#4",
+        "issue_title": "fwgt13-n1 Bench Issue",
+        "issue_url": "http://127.0.0.1:8095/bench/bench-repo/issues/4",
+        "labels_applied": "bug, priority-high",
+        "milestone_applied": "Bench Milestone",
+        "comment_anchor": "issuecomment-5",
+        "url": "http://127.0.0.1:8095/bench/bench-repo/issues/4#issuecomment-5",
+        "url.p3": "4",
+        "url.h0": "issuecomment-5"
+      },
+      "route": "http://127.0.0.1:8095/bench/bench-repo/issues/:id#:id",
+      "outputEvidence": {
+        "assignee_applied": {
+          "same": 0,
+          "differed": 1
+        },
+        "comment_author": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "comment_id": {
+          "same": 0,
+          "differed": 1
+        },
+        "comment_text": {
+          "same": 0,
+          "differed": 1
+        },
+        "description_contains": {
+          "same": 0,
+          "differed": 1
+        },
+        "issue_number": {
+          "same": 0,
+          "differed": 1
+        },
+        "issue_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "issue_url": {
+          "same": 0,
+          "differed": 1
+        },
+        "labels_applied": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "milestone_applied": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "comment_anchor": {
+          "same": 0,
+          "differed": 1
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        },
+        "url.p3": {
+          "same": 0,
+          "differed": 1
+        },
+        "url.h0": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "session": "fwgt13-n1",
+    "created": "2026-09-25T01:24:51.639Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "02-create",
+      "outputs": [
+        "comment_author",
+        "labels_applied",
+        "milestone_applied"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,88 @@
+
+[sweep] run 1/3: fwgt13-n1 (store: /home/user/sitelooper/bench/results/fwgt13-skills)
+[harness] gitea: defaulting APP_URL
+[harness] gitea: defaulting APP_EMAIL
+[harness] gitea: defaulting APP_PASSWORD
+[reset] gitea: no leftover bench issues
+[harness] gitea responded 200 at http://127.0.0.1:8095/
+stopped: fwgt13-n1
+  flow "fwgt13" saved: 2 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwgt13.json
+  warning: note: 02-create no longer publishes comment_author, labels_applied, milestone_applied — no replay reads them from the page and the recording showed no line to read
+  warning: warning: 29 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[0].instruction: "admin" (output) in "Sign in at http://127.0.0.1:8095/ with username admin and password {{env:APP_PASSWORD}} (type the password text exactly as given). Then open the issues list of "
+  flow.steps[0].params.v2: "admin" (output) in "admin"
+  flow.steps[1].instruction: "Bench Milestone" (output) in "In repo bench/bench-repo, create a new issue titled '{{runid}} Bench Issue' with a description containing the text '{{runid}}' (markdown textarea), assign it la"
+  flow.steps[1].instruction: "bench-assignee" (output) in "In repo bench/bench-repo, create a new issue titled '{{runid}} Bench Issue' with a description containing the text '{{runid}}' (markdown textarea), assign it la"
+  s_0db667.template: "Bench Milestone" (output) in "In repo bench/bench-repo, create a new issue titled '{{v2}}' with a description containing the text '{{v1}}' (markdown textarea), assign it labels bug and prior"
+arm=sitelooper model=z-ai/glm-5.3 runid=fwgt13-n1 stop=completed
+turns=3 wall=253.5s
+commands=2 cmdTime=244.7s cmdBytes=2469 timeouts=0
+orchestrator in=3272 cw=0 cr=5568 out=451
+inner prompt=1029695 cached=938688 completion=17190
+spend=$0.1257 maxUsd=3
+learn: A_n=0 replayed=0/2 full=0 repaired=0 compiled=2 variants=0
+-> /home/user/sitelooper/bench/results/fwgt13-n1-sitelooper-result.json
+
+fwgt13-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — #4, state=open, description includes runid=true
+  obj 3: PASS — labels=[bug, priority-high], want [bug, priority-high]
+  obj 4: PASS — assignees=[bench-assignee]
+  obj 5: PASS — milestone=Bench Milestone
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — issue #4 reported
+
+[sweep] run 2/3: fwgt13-n2 (replay flow fwgt13, no orchestrator)
+[reset] gitea: deleted 1 leftover bench issue(s)
+[sweep] fwgt13-n2: 1 drift ticket(s) → fwgt13-n2-drift.json
+
+fwgt13-n2: objectives passed 4/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — #5, state=open, description includes runid=true
+  obj 3: FAIL — labels=[bug, enhancement], want [bug, priority-high]
+  obj 4: FAIL — assignees=[admin]
+  obj 5: FAIL — milestone=Backlog
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — issue #5 reported
+
+[sweep] run 3/3: fwgt13-n3 (replay flow fwgt13, no orchestrator)
+[reset] gitea: deleted 1 leftover bench issue(s)
+[sweep] fwgt13-n3: 1 drift ticket(s) → fwgt13-n3-drift.json
+
+fwgt13-n3: objectives passed 4/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — #6, state=open, description includes runid=true
+  obj 3: FAIL — labels=[bug, enhancement], want [bug, priority-high]
+  obj 4: FAIL — assignees=[admin]
+  obj 5: FAIL — milestone=Backlog
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — issue #6 reported
+
+Learning sweep fwgt13 (K=3)
+┌─────────┬───┬─────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid       │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼─────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwgt13-n1' │ '7/7'    │ 'completed' │ 3     │ 2    │ 0.1257    │ 0   │ '0/2'        │ 253    │
+│ 1       │ 2 │ 'fwgt13-n2' │ '4/7'    │ 'success'   │ 0     │ 2    │ 0         │ 1   │ '2/2 (flow)' │ 57     │
+│ 2       │ 3 │ 'fwgt13-n3' │ '4/7'    │ 'success'   │ 0     │ 2    │ 0         │ 1   │ '2/2 (flow)' │ 57     │
+└─────────┴───┴─────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:8095
+  s_0db667  validated   29 steps  3/3 (100%)
+           In repo bench/bench-repo, create a new issue titled '{{v2}}' with a description containing the text '{{v1}}' (…
+  s_18d652  validated    3 steps  3/3 (100%)
+           Sign in at {{v1}} with username {{v2}} and password {{v3}} (type the password text exactly as given). Then ope…
+  s_35ab65  validated    1 steps  3/3 (100%)
+           Sign in at {{v1}} with username {{v2}} and password {{v3}} (type the password text exactly as given). Then ope…
+  s_71a916  validated    3 steps  3/3 (100%)
+           In repo bench/bench-repo, create a new issue titled '{{v2}}' with a description containing the text '{{v1}}' (…
+  s_dc3073  validated    3 steps  3/3 (100%)
+           Sign in at {{v1}} with username {{v2}} and password {{v3}} (type the password text exactly as given). Then ope…
+  s_ddeec1  validated    8 steps  3/3 (100%)
+           Sign in at {{v1}} with username {{v2}} and password {{v3}} (type the password text exactly as given). Then ope…
+  s_e6c6f6  validated    2 steps  3/3 (100%)
+           In repo bench/bench-repo, create a new issue titled '{{v2}}' with a description containing the text '{{v1}}' (…
+  s_ed80ae  validated    1 steps  3/3 (100%)
+           In repo bench/bench-repo, create a new issue titled '{{v2}}' with a description containing the text '{{v1}}' (…
+store: /home/user/sitelooper/bench/results/fwgt13-skills
+
+summary: /home/user/sitelooper/bench/results/fwgt13-sweep.json
