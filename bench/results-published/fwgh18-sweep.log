@@ -1,0 +1,106 @@
+
+[sweep] run 1/3: fwgh18-n1 (store: /home/user/sitelooper/bench/results/fwgh18-skills)
+[harness] ghost: defaulting APP_URL
+[harness] ghost: defaulting APP_EMAIL
+[harness] ghost: defaulting APP_PASSWORD
+[reset] ghost: no posts to delete
+[harness] ghost responded 200 at http://127.0.0.1:8099/
+stopped: fwgh18-n1
+  flow "fwgh18" saved: 4 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwgh18.json
+  warning: warning: 03-verify's instruction asks to report status, and only a recorded literal backs it: no read in its procedure publishes it, so a replay reports it only if the page it ends on shows that exact text — re-record the step so the value is read where it is shown
+  warning: note: 01-signin no longer publishes published_post_count — no replay reads it from the page and the recording showed no line to read
+  warning: note: 03-verify no longer publishes publish_time — no replay reads it from the page and the recording showed no line to read
+  warning: warning: 04-edit's instruction asks to report publish_time, and no replay can publish it: nothing in its procedure reads it from the page, so export dropped it — re-record the step so the value is read, not only reported
+  warning: note: 04-edit no longer publishes published_post_count, body_paragraph_occurrences_of_fwgh18_n1_visible_editor — no replay reads them from the page and the recording showed no line to read
+  warning: warning: 68 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[1].instruction: "Bench News" (output) in "Create a new post in Ghost admin titled exactly '{{runid}} Bench Post'. In the body editor type a single paragraph that includes the text '{{runid}}' (e.g. 'Thi"
+  flow.steps[1].instruction: "2026-09-01" (output) in "Create a new post in Ghost admin titled exactly '{{runid}} Bench Post'. In the body editor type a single paragraph that includes the text '{{runid}}' (e.g. 'Thi"
+  flow.steps[1].params.v4: "Bench News" (output) in "Bench News"
+  flow.steps[2].instruction: "Bench News" (output) in "Publish the draft post '{{runid}} Bench Post' in Ghost admin using the publish confirmation flow (click Publish, confirm in the dialog, wait for it to finish). "
+  flow.steps[2].instruction: "2026-09-01" (output) in "Publish the draft post '{{runid}} Bench Post' in Ghost admin using the publish confirmation flow (click Publish, confirm in the dialog, wait for it to finish). "
+arm=sitelooper model=z-ai/glm-5.3 runid=fwgh18-n1 stop=completed
+turns=5 wall=193.5s
+commands=4 cmdTime=170.6s cmdBytes=5270 timeouts=0
+orchestrator in=6869 cw=0 cr=11008 out=1615
+inner prompt=849858 cached=778112 completion=14227
+spend=$0.0414 maxUsd=3
+learn: A_n=0 replayed=0/4 full=0 repaired=0 compiled=4 variants=0
+-> /home/user/sitelooper/bench/results/fwgh18-n1-sitelooper-result.json
+
+fwgh18-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — fwgh18-n1-bench-post, body includes runid=true
+  obj 3: PASS — tags=Bench News (bench-news), want only the seeded Bench News (bench-news)
+  obj 4: PASS — custom excerpt="Excerpt for fwgh18-n1 bench post created by automation."
+  obj 5: PASS — status=published, visibility=public
+  obj 6: PASS — published_at=2026-09-01T08:13:00.000Z, want 2026-09-01
+  obj 7: PASS — slug fwgh18-n1-bench-post reported
+
+[sweep] run 2/3: fwgh18-n2 (replay flow fwgh18, no orchestrator)
+[reset] ghost: deleted 1 post(s) (earlier runs' and non-seed)
+[sweep] fwgh18-n2: 3 drift ticket(s) → fwgh18-n2-drift.json
+
+fwgh18-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — fwgh18-n2-bench-post, body includes runid=true
+  obj 3: PASS — tags=Bench News (bench-news), want only the seeded Bench News (bench-news)
+  obj 4: PASS — custom excerpt="Excerpt for fwgh18-n2 bench post created by automation."
+  obj 5: PASS — status=published, visibility=public
+  obj 6: PASS — published_at=2026-09-01T08:16:00.000Z, want 2026-09-01
+  obj 7: PASS — slug fwgh18-n2-bench-post reported
+
+[sweep] run 3/3: fwgh18-n3 (replay flow fwgh18, no orchestrator)
+[reset] ghost: deleted 1 post(s) (earlier runs' and non-seed)
+[sweep] fwgh18-n3: 3 drift ticket(s) → fwgh18-n3-drift.json
+
+fwgh18-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — fwgh18-n3-bench-post, body includes runid=true
+  obj 3: PASS — tags=Bench News (bench-news), want only the seeded Bench News (bench-news)
+  obj 4: PASS — custom excerpt="Excerpt for fwgh18-n3 bench post created by automation."
+  obj 5: PASS — status=published, visibility=public
+  obj 6: PASS — published_at=2026-09-01T08:17:00.000Z, want 2026-09-01
+  obj 7: PASS — slug fwgh18-n3-bench-post reported
+
+Learning sweep fwgh18 (K=3)
+┌─────────┬───┬─────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid       │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼─────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwgh18-n1' │ '7/7'    │ 'completed' │ 5     │ 4    │ 0.0414    │ 0   │ '0/4'        │ 194    │
+│ 1       │ 2 │ 'fwgh18-n2' │ '7/7'    │ 'success'   │ 0     │ 4    │ 0         │ 1   │ '4/4 (flow)' │ 62     │
+│ 2       │ 3 │ 'fwgh18-n3' │ '7/7'    │ 'success'   │ 0     │ 4    │ 0         │ 1   │ '4/4 (flow)' │ 62     │
+└─────────┴───┴─────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:8099
+  s_06e101  validated    5 steps  3/3 (100%)
+           Publish the draft post '{{v1}}' in Ghost admin using the publish confirmation flow (click Publish, confirm in …
+  s_211700  validated    1 steps  3/3 (100%)
+           Create a new post in Ghost admin titled exactly '{{v2}}'. In the body editor type a single paragraph that incl…
+  s_2e6ec6  validated    1 steps  3/3 (100%)
+           Publish the draft post '{{v1}}' in Ghost admin using the publish confirmation flow (click Publish, confirm in …
+  s_415b05  validated    1 steps  3/3 (100%)
+           Sign in to Ghost admin at {{v1}} with email {{v2}} and password typed exactly as {{v3}} (the text is replaced …
+  s_4671de  validated   10 steps  3/3 (100%)
+           Final verification, read-only (do not edit anything): 1) In Ghost admin, open the published posts list and rep…
+  s_84143a  validated   17 steps  3/3 (100%)
+           Create a new post in Ghost admin titled exactly '{{v2}}'. In the body editor type a single paragraph that incl…
+  s_85dcb0  validated    4 steps  3/3 (100%)
+           Final verification, read-only (do not edit anything): 1) In Ghost admin, open the published posts list and rep…
+  s_8b595d  validated    1 steps  3/3 (100%)
+           Final verification, read-only (do not edit anything): 1) In Ghost admin, open the published posts list and rep…
+  s_d7d98b  validated    5 steps  3/3 (100%)
+           Final verification, read-only (do not edit anything): 1) In Ghost admin, open the published posts list and rep…
+  s_ded6b0  validated    9 steps  3/3 (100%)
+           Publish the draft post '{{v1}}' in Ghost admin using the publish confirmation flow (click Publish, confirm in …
+  s_e33d9e  validated    1 steps  3/3 (100%)
+           Sign in to Ghost admin at {{v1}} with email {{v2}} and password typed exactly as {{v3}} (the text is replaced …
+  s_ea26a7  validated    3 steps  3/3 (100%)
+           Sign in to Ghost admin at {{v1}} with email {{v2}} and password typed exactly as {{v3}} (the text is replaced …
+  s_eaa621  validated    6 steps  3/3 (100%)
+           Sign in to Ghost admin at {{v1}} with email {{v2}} and password typed exactly as {{v3}} (the text is replaced …
+  s_fe870b  validated    3 steps  3/3 (100%)
+           Publish the draft post '{{v1}}' in Ghost admin using the publish confirmation flow (click Publish, confirm in …
+  s_feb3ee  validated    2 steps  3/3 (100%)
+           Create a new post in Ghost admin titled exactly '{{v2}}'. In the body editor type a single paragraph that incl…
+store: /home/user/sitelooper/bench/results/fwgh18-skills
+
+summary: /home/user/sitelooper/bench/results/fwgh18-sweep.json
