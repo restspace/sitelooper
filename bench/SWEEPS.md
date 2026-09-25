@@ -520,3 +520,31 @@ after a hold: op 1 click (tab), gh back+click (navigation to re-read). No n1 obj
 Follow-ups: (1) a verdict word heading a prose value ("none — …") is a verdict, not data; (2) a labelled read is promoted even
 when another key already holds the same text (fwod90 untaxed_amount vs line_subtotal), else the asked key is never a candidate.
 
+## Convergence experiment, results (main ec8691de; bench/converge.mjs)
+
+Question (user, 2026-09-25): the artifact stays model-free for CI, so how far do the EXISTING retry commands (rerecord,
+repair) take a recording that did not end in a passing artifact? Each run: compile → rerecord the earliest named step →
+recompile; a failing artifact → repair --converge 1 → rerecord the step it names; ≤4 rounds. 11 runs in all; the first
+6 stalled on gaps in the retry machinery itself, each fixed before the next run (rerecord: recorded values emptied and
+never refilled; a re-record never re-threaded a url-part reference; the replaced chain stayed a candidate and was re-pinned;
+driver: repair's step strings, the artifact's failing-step forms, the producer a `needs {{P.key}}` names, the outputs a
+re-record must be told to read; repair's spec check needs the spec beside the flow file). Fair runs, on ec8691de:
+
+| run | from | class | verdict | flow runs | model turns | what decided it |
+|---|---|---|---|---|---|---|
+| fwgr74-cv3 | gr, unsourced-ref (uid read off the url) | **CONVERGED** round 2 | 2 | 13 | one re-record of 01-open, told to read dashboard_uid_from_url; rethreadUrlRefs bound 07-open to {{01-open.url.p1}}; artifact 4/4 |
+| fwop17-cv | op, artifact FAIL 1/7 (name cap) | **CONVERGED** round 1 | 0 | 0 | round 63's cap fix is on main: compiled and passed 5/5 without a retry (control) |
+| fwod88-cv3 | od, unsourced-ref (quotation_reference) | exhausted | 11 | 74 | round 1's re-record of 03-create READ the reference and round 2 COMPILED (the original refusal is fixed); the artifact then failed 01-signin s_5fccd8/2 on `- menu "6 3 YourCompany"` (activity counters in a menu name; the daemon passes it, repair replayed 9/9 twice, the spec check failed): a runner PARITY gap, and the loop wasted rounds 2-4 re-recording 01-signin |
+| fwvk15-cv3 | vk, artifact FAIL (visible_projects_2 published empty) | exhausted | 12 | 74 | round 1's re-record of 01-signin was told to read visible_projects_2 and pinned; round 2's artifact failed elsewhere ("02-open s_3f56c3: identity: {{v1}} is not confirmed"), the driver missed that step form and re-recorded 03-create, whose new procedure never replayed clean (the re-pin rule refused: "the model drove 3-9 gestures beyond its replay") |
+| fwop15-cv | op, demoted-pin 01-open | exhausted | 8 | 150 | four re-records of 01-open (sign-in + open project), none accepted: every run 2 needed 3-8 model gestures beyond the new procedure's replay. The round-61 shape (no-effect link clicks, then a goto): a step whose recording cannot be made deterministic by re-recording alone |
+| fwgt15-cv, fwsi14-cv | gt, si | not run | | | Docker Hub 429 at setup (8 boxes fired in one hour); to re-fire |
+
+Reading: 2 of 5 fair runs converged; of the 3 that did not, one is a parity gap the loop now names and stops on
+(stuck-parity), one was a driver parse miss (fixed) over a step that then would not re-pin, and one is a genuinely
+non-deterministic step. Cost of a converged run: 2 flow runs, 13 model turns. Cost of an exhausted one: 8-12 flow
+runs, 74-150 turns — the loop needs an earlier stop on a step that fails to re-pin twice.
+Open engineering items from the experiment: (1) counters inside a menu/button name in an expectation are not masked
+as volatile (odoo); (2) a re-record whose run 2 needs model gestures beyond its replay is refused every time — the
+phase C "readings" (link-or-goto) are the designed answer for fwop15's shape; (3) the loop should stop after two
+refused re-records of the same step.
+

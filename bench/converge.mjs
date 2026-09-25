@@ -204,7 +204,7 @@ function artifact(k) {
   for (const e of texts) for (const m of e.matchAll(/needs \{\{([\w-]+)\.([\w.-]+?)\}\}/g)) missing.set(m[1], [...new Set([...(missing.get(m[1]) ?? []), m[2]])]);
   const sites = texts.flatMap((e) => [
     ...[...e.matchAll(/@step\s+([\w-]+)/g)].map((m) => m[1]),
-    ...[...e.matchAll(/(?:^|[\s(:])([\w-]+) s_[0-9a-f]{6}\/\d+\b/g)].map((m) => m[1]),
+    ...[...e.matchAll(/(?:^|[\s(:])([\w-]+) s_[0-9a-f]{6}(?:\/\d+)?\b/g)].map((m) => m[1]),
   ]);
   const anchors = [...new Set([...producers, ...sites])];
   const passed = Boolean(res) && res.exitCode === 0 && (res.stats?.failed ?? 1) === 0 && !failLines.length && (verified === 'n/a' || !verified.includes('FAIL'));
@@ -250,6 +250,16 @@ for (let k = 1; k <= args.maxRounds && !verdict; k++) {
   round.repair = repair(k, round.compile.flowFile);
   save();
   if (round.repair.specCheck?.ran && round.repair.specCheck.passed) { verdict = { status: 'converged-by-repair', why: `round ${k}: repair's compiled-spec check passed`, artifact: round.repair.repaired }; break; }
+  // The daemon replayed every step clean, twice, and the emitted spec still
+  // fails: that is a runner PARITY gap, not a recording — re-recording the
+  // step the artifact blames cannot fix it (fwod88-cv3 re-recorded 01-signin
+  // three times over a menu name "6 3 YourCompany" whose counters the artifact
+  // insists on). Stop and name it.
+  const daemonClean = round.repair.converged && round.repair.runs.length > 0 && round.repair.runs.every((u) => u.status === 'success' && u.passed === u.total);
+  if (daemonClean && round.repair.specCheck?.ran && !round.repair.specCheck.passed) {
+    verdict = { status: 'stuck-parity', why: `round ${k}: the daemon replayed every step clean in repair's ${round.repair.runs.length} run(s) but the compiled spec fails at ${round.artifact.anchors.join(', ') || 'an unnamed step'} — a runner parity gap, not a recording`, errors: round.artifact.errors.slice(0, 2) };
+    break;
+  }
   const order = new Map(flow.steps.map((st, i) => [st.id, i]));
   // The producer the artifact blames outranks the consumers repair lists; then flow order.
   const steps = [...new Set([...round.artifact.anchors, ...round.repair.needsRerecord])].sort((a, b) => (order.get(a) ?? 1e9) - (order.get(b) ?? 1e9));
