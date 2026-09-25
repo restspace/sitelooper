@@ -340,7 +340,7 @@ describe('shadow2: the live journal of gitea fwgt13-n1 02-create (round 62)', ()
   // admin and milestone Backlog, and reported success.
   const e = load('fwgt13-n1-02-create.jsonl');
 
-  it('keyPick: every Enter is named from the journal, and the procedure picks each by position', () => {
+  it('keyPick: every Enter is named from the journal, and since round 62 (fix/round62-gt) the procedure picks each by name', () => {
     const rows = rowsFor(show('fwgt13 02-create keyPick', compileSpan(e, 'fwgt13-n1')), 'keyPick');
     expect(rows.map((r) => [r.seq, r.fact])).toEqual([
       [36, 'Enter unpicked "bug"'],
@@ -351,7 +351,10 @@ describe('shadow2: the live journal of gitea fwgt13-n1 02-create (round 62)', ()
       [77, 'Enter picked "Bench Milestone"'],
       [85, 'Enter picked "bench-assignee (Bench Assignee)"'],
     ]);
-    expect(rows.every((r) => r.heuristic === 'the procedure picks it by position' && !r.agree)).toBe(true);
+    // Round 62's namedKeyPicks compiles each named key pick to a click on the option by name, so the
+    // heuristic now agrees with the journal: the fwgt13 disagreements that exposed the folded presses are closed.
+    expect(rows.map((r) => [r.heuristic, r.agree])).toEqual(rows.map(() => [rows[0].heuristic, true]));
+    expect(rows[0].heuristic).not.toBe('the procedure picks it by position');
   });
 
   it('pickerNetState: one row per picker, committed with the form, ticks by key flagged', () => {
