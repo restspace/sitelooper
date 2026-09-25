@@ -1,0 +1,116 @@
+{
+  "flow": "fwsi15",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_33134c; observed asset_1_name=Seed: Reception Laptop, asset_1_tag=SEED-0001, asset_2_name=Seed: Training Laptop, asset_2_tag=SEED-0002, asset_3_name=Seed: Spare Laptop, asset_3_tag=SEED-0003.",
+      "values": {
+        "asset_1_name": "Seed: Reception Laptop",
+        "asset_1_tag": "SEED-0001",
+        "asset_2_name": "Seed: Training Laptop",
+        "asset_2_tag": "SEED-0002",
+        "asset_3_name": "Seed: Spare Laptop",
+        "asset_3_tag": "SEED-0003"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "11/11",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_8df350; observed asset_detail_url=http://127.0.0.1:8098/hardware/6, ref=fwsi15-n3, asset_tag=BA-00006, asset_name=fwsi15-n3 Bench Asset, model=Bench Laptop Model, status=Ready to Deploy, label_3=Asset, label_6=Purchase Date, purchase_date=2026-03-15, label_4=Location, label_5=Default Location.",
+      "values": {
+        "asset_detail_url": "http://127.0.0.1:8098/hardware/6",
+        "ref": "fwsi15-n3",
+        "asset_tag": "BA-00006",
+        "asset_name": "fwsi15-n3 Bench Asset",
+        "model": "Bench Laptop Model",
+        "status": "Ready to Deploy",
+        "label_3": "Asset",
+        "label_6": "Purchase Date",
+        "purchase_date": "2026-03-15",
+        "label_4": "Location",
+        "label_5": "Default Location"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "23/23",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_8df350: step 3: primary locator did not resolve; used fallback #2 page.locator('#details > div > div > div:nth-of-type(2) > div > a')",
+        "s_8df350: step 4: skipped read — no element matched any known locator for target (tried 2: page.locator('#historyListingTable tr', { hasText: 'fwsi15-n3 Bench Asset #BA-00004 - Bench Laptop Model' }).locator('td:nth-of-type(2)'), page.locator('#historyListingTable > tbody > tr > td:nth-of-type(2)'))"
+      ],
+      "unreported": [
+        "created_at"
+      ]
+    },
+    {
+      "id": "03-report",
+      "status": "success",
+      "summary": "Replayed stored procedure s_bd7eaa; observed checkout_note=fwsi15-n3, asset_tag=BA-00006.",
+      "values": {
+        "checkout_note": "fwsi15-n3",
+        "asset_tag": "BA-00006"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "8/8",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 3,
+  "total": 3,
+  "repinned": 0,
+  "drift": 2,
+  "driftTickets": [
+    {
+      "flow": "fwsi15",
+      "step": "02-create",
+      "skill": "s_8df350",
+      "atStep": "3",
+      "key": "target",
+      "similarity": 1.001,
+      "missedLocator": "page.locator('#details div.col-md-6', { hasText: 'Ready to Deploy deployable' }).locator('div > a')",
+      "fallbackUsed": "page.locator('#details > div > div > div:nth-of-type(2) > div > a')",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8098/hardware/:id",
+      "pageUrl": "http://127.0.0.1:8098/hardware/6"
+    },
+    {
+      "flow": "fwsi15",
+      "step": "02-create",
+      "skill": "s_8df350",
+      "atStep": "4",
+      "key": "target",
+      "similarity": 1.001,
+      "missedLocator": "page.locator('#historyListingTable tr', { hasText: 'fwsi15-n3 Bench Asset #BA-00004 - Bench Laptop Model' }).locator('td:nth-of-type(2)')",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8098/hardware/:id",
+      "pageUrl": "http://127.0.0.1:8098/hardware/6"
+    }
+  ],
+  "wallMs": 64774,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "cachedTokens": 0
+  },
+  "usageByModel": {},
+  "servedByModel": {},
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}
