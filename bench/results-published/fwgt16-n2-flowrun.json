@@ -1,0 +1,435 @@
+{
+  "flow": "fwgt16",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_f92f56; observed open_issue_count=3, closed_issue_count=0, seed_issue_titles_1=Seed: ship repaired device, seed_issue_titles_2=Seed: order missing parts, seed_issue_titles_3=Seed: triage inbox.",
+      "values": {
+        "open_issue_count": "3",
+        "closed_issue_count": "0",
+        "seed_issue_titles_1": "Seed: ship repaired device",
+        "seed_issue_titles_2": "Seed: order missing parts",
+        "seed_issue_titles_3": "Seed: triage inbox"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "12/12",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_bdb6c2; observed bench_marker=fwgt16-n2.",
+      "values": {
+        "bench_marker": "fwgt16-n2"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "5/5",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-set",
+      "status": "success",
+      "summary": "Completed all three sidebar changes on issue #5 'fwgt16-n2 Bench Issue' (http://127.0.0.1:8095/bench/bench-repo/issues/5). The previous attempt had failed because the Fomantic dropdown items only commit when the dropdown is closed — the working pattern was: open the combobox, click the option in the listbox (which ticks it in the open menu), then press Escape to close the dropdown, which triggers the save. Applied: (1) Labels — clicked 'bug' then 'priority-high' in the Labels picker; (2) Assignees — clicked 'bench-assignee (Bench Assignee)'; (3) Milestone — clicked 'Bench Milestone'. After each picker the sidebar text was read back confirming the applied state, and finally the page was fully reloaded (goto) and all three values re-read from the fresh page, confirming they persisted server-side: Labels shows chips 'bug' and 'priority-high' (exactly those two, no others), Assignees shows 'bench-assignee' with full name '(Bench Assignee)' and avatar, Milestone shows 'Bench Milestone'. A screenshot was captured as evidence.",
+      "values": {
+        "issue_sidebar_combo_has_": "bug",
+        "issue_sidebar_combo_has__2": "priority-high",
+        "ref": "fwgt16-n2"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_41d941 stopped at step 12 — every identifying locator missed, and the positional fallback #2 is not the recorded \"fwgt16-n2 Bench Issue #4\" — the element there carries another name, so it was not clicked",
+      "replayed": "11/28",
+      "repaired": false,
+      "turns": 66,
+      "warnings": [
+        "s_41d941: step 12: primary locator did not resolve; used fallback #2 page.locator('#issue-title-display > h1')"
+      ],
+      "unreported": [
+        "sidebar_assignee_text",
+        "sidebar_milestone_text",
+        "issue_title",
+        "assignee_name",
+        "assignee_username",
+        "assignee_full_name"
+      ]
+    },
+    {
+      "id": "04-add",
+      "status": "success",
+      "summary": "Replayed stored procedure s_38aa1f; observed comment_anchor=#issuecomment-12, bench_marker=fwgt16-n2, comment_anchor_id=issuecomment-12, issue_full_heading=fwgt16-n2 Bench Issue #5, sidebar_label_1=bug, sidebar_label_2=priority-high, sidebar_milestone=Bench Milestone, sidebar_assignee_2=bench-assignee\n(Bench Assignee), issue_number=#5, issue_title=fwgt16-n2 Bench Issue, sidebar_assignee=bench-assignee, comment_text=Automated verification comment mentioning fwgt16-n2 for issue #4..",
+      "values": {
+        "comment_anchor": "#issuecomment-12",
+        "bench_marker": "fwgt16-n2",
+        "comment_anchor_id": "issuecomment-12",
+        "issue_full_heading": "fwgt16-n2 Bench Issue #5",
+        "sidebar_label_1": "bug",
+        "sidebar_label_2": "priority-high",
+        "sidebar_milestone": "Bench Milestone",
+        "sidebar_assignee_2": "bench-assignee\n(Bench Assignee)",
+        "issue_number": "#5",
+        "issue_title": "fwgt16-n2 Bench Issue",
+        "sidebar_assignee": "bench-assignee",
+        "comment_text": "Automated verification comment mentioning fwgt16-n2 for issue #4."
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "11/11",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_38aa1f: step 1: primary locator did not resolve; used fallback #2 page.locator('h1')",
+        "s_38aa1f: step 8: primary locator did not resolve; used fallback #2 elementAt(214, 460) /* link */"
+      ]
+    },
+    {
+      "id": "05-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_c2176b; observed bench_marker=fwgt16-n2, issue_heading=fwgt16-n2 Bench Issue #5, sidebar_label_priority_high=bug, sidebar_label_bug=priority-high, sidebar_labels_1=bug, sidebar_labels_2=priority-high, sidebar_milestone=Bench Milestone, assignee_shown=bench-assignee\n(Bench Assignee), closed_issue_2=fwgt16-n2 Bench Issue, issue_title=fwgt16-n2 Bench Issue, open_issues_1=#3, open_issues_2=Seed: ship repaired device, open_issues_3=#2, open_issues_4=Seed: order missing parts, open_issues_5=#1, open_issues_6=Seed: triage inbox, issue_number=#5, open_issue_count=3, closed_issue_count=1, description_text_1=Automated test issue for fwgt16-n2., description_text_2=This description mentions fwgt16-n2 so the created issue can be verified., sidebar_assignee=bench-assignee, issue_state=Closed, description_paragraph_1=Automated test issue for fwgt16-n2., description_paragraph_2=This description mentions fwgt16-n2 so the created issue can be verified., comment_text=Automated verification comment mentioning fwgt16-n2 for issue #4., timeline_item_2=admin added the \nbug\npriority-high\n labels, timeline_item_3=bench-assignee was assigned by admin, timeline_item_4=admin added this to the Bench Milestone milestone.",
+      "values": {
+        "bench_marker": "fwgt16-n2",
+        "issue_heading": "fwgt16-n2 Bench Issue #5",
+        "sidebar_label_priority_high": "bug",
+        "sidebar_label_bug": "priority-high",
+        "sidebar_labels_1": "bug",
+        "sidebar_labels_2": "priority-high",
+        "sidebar_milestone": "Bench Milestone",
+        "assignee_shown": "bench-assignee\n(Bench Assignee)",
+        "closed_issue_2": "fwgt16-n2 Bench Issue",
+        "issue_title": "fwgt16-n2 Bench Issue",
+        "open_issues_1": "#3",
+        "open_issues_2": "Seed: ship repaired device",
+        "open_issues_3": "#2",
+        "open_issues_4": "Seed: order missing parts",
+        "open_issues_5": "#1",
+        "open_issues_6": "Seed: triage inbox",
+        "issue_number": "#5",
+        "open_issue_count": "3",
+        "closed_issue_count": "1",
+        "description_text_1": "Automated test issue for fwgt16-n2.",
+        "description_text_2": "This description mentions fwgt16-n2 so the created issue can be verified.",
+        "sidebar_assignee": "bench-assignee",
+        "issue_state": "Closed",
+        "description_paragraph_1": "Automated test issue for fwgt16-n2.",
+        "description_paragraph_2": "This description mentions fwgt16-n2 so the created issue can be verified.",
+        "comment_text": "Automated verification comment mentioning fwgt16-n2 for issue #4.",
+        "timeline_item_2": "admin added the \nbug\npriority-high\n labels",
+        "timeline_item_3": "bench-assignee was assigned by admin",
+        "timeline_item_4": "admin added this to the Bench Milestone milestone"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "35/35",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_6b330c: step 1: primary locator did not resolve; used fallback #2 page.locator('#issue-title-display > h1')",
+        "s_bcb02f: step 2: skipped read — no element matched any known locator for target (tried 1: page.getByRole('link', { name: '#4', exact: true }))",
+        "s_c2176b: step 1: skipped read — no element matched any known locator for target (tried 1: page.getByRole('link', { name: 'bug', exact: true }))",
+        "s_c2176b: step 2: skipped read — no element matched any known locator for target (tried 1: page.getByRole('link', { name: 'priority-high', exact: true }))",
+        "s_c2176b: step 6: primary locator did not resolve; used fallback #2 elementAt(510, 316) /* p */",
+        "s_c2176b: step 7: primary locator did not resolve; used fallback #2 elementAt(510, 352) /* p */",
+        "s_c2176b: step 8: primary locator did not resolve; used fallback #2 elementAt(214, 460) /* link */",
+        "s_c2176b: step 10: primary locator did not resolve; used fallback #2 elementAt(510, 316) /* p */",
+        "s_c2176b: step 11: primary locator did not resolve; used fallback #2 elementAt(510, 352) /* p */",
+        "s_c2176b: step 13: primary locator did not resolve; used fallback #2 elementAt(542, 410) /* span */",
+        "s_c2176b: step 14: primary locator did not resolve; used fallback #2 elementAt(542, 460) /* span */",
+        "s_c2176b: step 15: primary locator did not resolve; used fallback #2 elementAt(542, 510) /* span */"
+      ],
+      "unreported": [
+        "timeline_item_5",
+        "closed_issue_1"
+      ]
+    },
+    {
+      "id": "06-open",
+      "status": "success",
+      "summary": "Title/number as displayed: \"fwgt16-n2 Bench Issue #5\".",
+      "values": {
+        "bench_marker": "fwgt16-n2",
+        "issue_state": "Open",
+        "issue_heading": "fwgt16-n2 Bench Issue #5",
+        "milestone_displayed_2": "Projects\nNo projects",
+        "assignee_displayed": "Assignees\nbench-assignee\n(Bench Assignee)",
+        "milestone_displayed": "Milestone\nBench Milestone",
+        "labels_displayed": "bug\npriority-high",
+        "issue_number": "#5",
+        "issue_title": "fwgt16-n2 Bench Issue",
+        "repo_open_issue_counter": "Issues\n4"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "12/12",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_7bbf07: step 4: primary locator did not resolve; used fallback #2 page.locator('#issue-title-display > h1')"
+      ]
+    }
+  ],
+  "passed": 6,
+  "total": 6,
+  "repinned": 0,
+  "drift": 16,
+  "driftTickets": [
+    {
+      "flow": "fwgt16",
+      "step": "03-set",
+      "skill": "s_41d941",
+      "atStep": "12",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.getByRole('heading', { name: 'fwgt16-n2 Bench Issue #4', exact: true })",
+      "fallbackUsed": "page.locator('#issue-title-display > h1')",
+      "fallbackIndex": 1,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "pageUrl": "http://127.0.0.1:8095/bench/bench-repo/issues/5"
+    },
+    {
+      "flow": "fwgt16",
+      "step": "04-add",
+      "skill": "s_38aa1f",
+      "atStep": "1",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.getByRole('heading', { name: 'fwgt16-n2 Bench Issue #4', exact: true })",
+      "fallbackUsed": "page.locator('h1')",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id#:id",
+      "pageUrl": "http://127.0.0.1:8095/bench/bench-repo/issues/5#issuecomment-12"
+    },
+    {
+      "flow": "fwgt16",
+      "step": "04-add",
+      "skill": "s_38aa1f",
+      "atStep": "8",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.locator('#issuecomment-3 > span:nth-of-type(2) > a')",
+      "fallbackUsed": "elementAt(214, 460) /* link */",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id#:id",
+      "pageUrl": "http://127.0.0.1:8095/bench/bench-repo/issues/5#issuecomment-12"
+    },
+    {
+      "flow": "fwgt16",
+      "step": "05-open",
+      "skill": "s_6b330c",
+      "atStep": "1",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.getByRole('heading', { name: 'fwgt16-n2 Bench Issue #4', exact: true })",
+      "fallbackUsed": "page.locator('#issue-title-display > h1')",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "pageUrl": "http://127.0.0.1:8095/bench/bench-repo/issues/5"
+    },
+    {
+      "flow": "fwgt16",
+      "step": "05-open",
+      "skill": "s_bcb02f",
+      "atStep": "2",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.getByRole('link', { name: '#4', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "pageUrl": "http://127.0.0.1:8095/bench/bench-repo/issues/5"
+    },
+    {
+      "flow": "fwgt16",
+      "step": "05-open",
+      "skill": "s_c2176b",
+      "atStep": "1",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.getByRole('link', { name: 'bug', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "pageUrl": "http://127.0.0.1:8095/bench/bench-repo/issues/5"
+    },
+    {
+      "flow": "fwgt16",
+      "step": "05-open",
+      "skill": "s_c2176b",
+      "atStep": "2",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.getByRole('link', { name: 'priority-high', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "pageUrl": "http://127.0.0.1:8095/bench/bench-repo/issues/5"
+    },
+    {
+      "flow": "fwgt16",
+      "step": "05-open",
+      "skill": "s_c2176b",
+      "atStep": "6",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.locator('#issue-4 > div > div:nth-of-type(2) > div:nth-of-type(1) > p:nth-of-type(1)')",
+      "fallbackUsed": "elementAt(510, 316) /* p */",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "pageUrl": "http://127.0.0.1:8095/bench/bench-repo/issues/5"
+    },
+    {
+      "flow": "fwgt16",
+      "step": "05-open",
+      "skill": "s_c2176b",
+      "atStep": "7",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.locator('#issue-4 > div > div:nth-of-type(2) > div:nth-of-type(1) > p:nth-of-type(2)')",
+      "fallbackUsed": "elementAt(510, 352) /* p */",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "pageUrl": "http://127.0.0.1:8095/bench/bench-repo/issues/5"
+    },
+    {
+      "flow": "fwgt16",
+      "step": "05-open",
+      "skill": "s_c2176b",
+      "atStep": "8",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.locator('#issuecomment-3 > span:nth-of-type(2) > a')",
+      "fallbackUsed": "elementAt(214, 460) /* link */",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "pageUrl": "http://127.0.0.1:8095/bench/bench-repo/issues/5"
+    },
+    {
+      "flow": "fwgt16",
+      "step": "05-open",
+      "skill": "s_c2176b",
+      "atStep": "10",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.locator('#issue-4 > div > div:nth-of-type(2) > div:nth-of-type(1) > p:nth-of-type(1)')",
+      "fallbackUsed": "elementAt(510, 316) /* p */",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "pageUrl": "http://127.0.0.1:8095/bench/bench-repo/issues/5"
+    },
+    {
+      "flow": "fwgt16",
+      "step": "05-open",
+      "skill": "s_c2176b",
+      "atStep": "11",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.locator('#issue-4 > div > div:nth-of-type(2) > div:nth-of-type(1) > p:nth-of-type(2)')",
+      "fallbackUsed": "elementAt(510, 352) /* p */",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "pageUrl": "http://127.0.0.1:8095/bench/bench-repo/issues/5"
+    },
+    {
+      "flow": "fwgt16",
+      "step": "05-open",
+      "skill": "s_c2176b",
+      "atStep": "13",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.locator('#issuecomment-1 > span:nth-of-type(2)')",
+      "fallbackUsed": "elementAt(542, 410) /* span */",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "pageUrl": "http://127.0.0.1:8095/bench/bench-repo/issues/5"
+    },
+    {
+      "flow": "fwgt16",
+      "step": "05-open",
+      "skill": "s_c2176b",
+      "atStep": "14",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.locator('#issuecomment-3 > span:nth-of-type(2)')",
+      "fallbackUsed": "elementAt(542, 460) /* span */",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "pageUrl": "http://127.0.0.1:8095/bench/bench-repo/issues/5"
+    },
+    {
+      "flow": "fwgt16",
+      "step": "05-open",
+      "skill": "s_c2176b",
+      "atStep": "15",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.locator('#issuecomment-4 > span:nth-of-type(2)')",
+      "fallbackUsed": "elementAt(542, 510) /* span */",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "pageUrl": "http://127.0.0.1:8095/bench/bench-repo/issues/5"
+    },
+    {
+      "flow": "fwgt16",
+      "step": "06-open",
+      "skill": "s_7bbf07",
+      "atStep": "4",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.getByRole('heading', { name: 'fwgt16-n2 Bench Issue #4', exact: true })",
+      "fallbackUsed": "page.locator('#issue-title-display > h1')",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "pageUrl": "http://127.0.0.1:8095/bench/bench-repo/issues/5"
+    }
+  ],
+  "wallMs": 641805,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 1260883,
+    "completionTokens": 39939,
+    "cachedTokens": 1111488
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 571449,
+      "completionTokens": 24779,
+      "cachedTokens": 516992
+    },
+    "z-ai/glm-5.3": {
+      "promptTokens": 689434,
+      "completionTokens": 15160,
+      "cachedTokens": 594496
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ],
+    "z-ai/glm-5.3": [
+      "Baidu"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

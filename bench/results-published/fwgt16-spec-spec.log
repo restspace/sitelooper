@@ -1,0 +1,42 @@
+
+Running 1 test using 1 worker
+
+[sitelooper step] 01-open
+[sitelooper step] 02-create
+[sitelooper drift] 03-set s_41d941/12 target: primary getByRole('heading', { name: /^[\s\p{Co}\p{So}\p{Cf}]*fwgt16-spec\s+Bench\s+Issue\s+#4[\s\p{Co}\p{So}\p{Cf}]*$/u }) missed; used #2 locator('#issue-title-display > h1') (#1 absent)
+  ✘  1 fwgt16.spec.ts:9:1 › fwgt16 (40.2s)
+
+
+  1) fwgt16.spec.ts:9:1 › fwgt16 › 03-set: On the issue page {{02-create.url}} (titled '{{runid}} Bench Issue'), use the sidebar pickers to: (1) set the issue's labels to exactly 'bug' and 'priority-high' (no other labels), (2) assign the issue to the user 'bench-assignee', and (3) set the issue's milestone to 'Bench Milestone'. For each picker, make sure the change is actually applied and visible on the issue page sidebar (labels shown as chips, assignee avatar/name shown, milestone name shown) — not merely ticked in the open menu. Then report exactly what the sidebar shows for labels, assignees, and milestone. 
+
+    Error: 03-set s_41d941/12: every identifying locator missed, and the positional fallback #2 is not the recorded "fwgt16-spec Bench Issue #4" — the element there carries another name, so it was not clicked
+
+       at fwgt16.flow.ts:13824
+
+      13822 |     return true;
+      13823 |   }
+    > 13824 |   if (verdict && 'stop' in verdict) throw new Error(`${where}: ${verdict.stop}`);
+            |                                           ^
+      13825 |   return false;
+      13826 | }
+      13827 |
+        at positionalClick (/home/user/sitelooper/bench/results/fwgt16-spec-spec-tmp/fwgt16.flow.ts:13824:43)
+        at Object.act (/home/user/sitelooper/bench/results/fwgt16-spec-spec-tmp/fwgt16.flow.ts:15249:13)
+        at runStepLifecycle (/home/user/sitelooper/bench/results/fwgt16-spec-spec-tmp/fwgt16.flow.ts:8854:18)
+        at Object.03-set (/home/user/sitelooper/bench/results/fwgt16-spec-spec-tmp/fwgt16.flow.ts:15235:5)
+        at /home/user/sitelooper/bench/results/fwgt16-spec-spec-tmp/fwgt16.flow.ts:17807:7
+        at runFlow (/home/user/sitelooper/bench/results/fwgt16-spec-spec-tmp/fwgt16.flow.ts:17806:5)
+        at /home/user/sitelooper/bench/results/fwgt16-spec-spec-tmp/fwgt16.spec.ts:14:21
+
+    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    [sitelooper drift] 03-set s_41d941/12 target: primary getByRole('heading', { name: /^[\s\p{Co}\p{So}\p{Cf}]*fwgt16-spec\s+Bench\s+Issue\s+#4[\s\p{Co}\p{So}\p{Cf}]*$/u }) missed; used #2 locator('#issue-title-display > h1') (#1 absent)
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/fwgt16-fwgt16/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/fwgt16-fwgt16/error-context.md
+
+  1 failed
+    fwgt16.spec.ts:9:1 › fwgt16 ────────────────────────────────────────────────────────────────────

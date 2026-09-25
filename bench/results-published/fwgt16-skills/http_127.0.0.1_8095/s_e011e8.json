@@ -1,0 +1,1337 @@
+{
+ "id": "s_e011e8",
+ "origin": "http://127.0.0.1:8095",
+ "template": "On the issue page {{v1}} (titled '{{v2}} Bench Issue'), use the sidebar pickers to: (1) set the issue's labels to exactly '{{v3}}' and 'priority-high' (no other labels), (2) assign the issue to the user 'bench-assignee', and (3) set the issue's milestone to 'Bench Milestone'. For each picker, make sure the change is actually applied and visible on the issue page sidebar (labels shown as chips, assignee avatar/name shown, milestone name shown) — not merely ticked in the open menu. Then report exactly what the sidebar shows for labels, assignees, and milestone.",
+ "params": {
+  "v1": {
+   "example": "http://127.0.0.1:8095/bench/bench-repo/issues/6",
+   "usedIn": [
+    4,
+    17,
+    21
+   ],
+   "known": true,
+   "binding": "02-create.url"
+  },
+  "v2": {
+   "example": "fwgt16-n3",
+   "usedIn": [
+    41
+   ],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v3": {
+   "example": "bug",
+   "usedIn": [
+    2,
+    6,
+    10,
+    12,
+    13,
+    14,
+    16,
+    19,
+    23,
+    24
+   ]
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e246"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 1098,
+      "y": 335,
+      "w": 270,
+      "h": 16,
+      "role": "combobox",
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+    "addedContains": [
+     "- combobox \"{{*}}{{v3}} {{*}}\"",
+     "- listbox \"{{*}}{{v3}} {{*}}\"",
+     "- textbox \"Filter Label\"",
+     "- link \"Clear labels\"",
+     "- link \"{{v3}}\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_180df0",
+    "step": 1
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=link[name=\"{{v3}}\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "link",
+      "name": "{{v3}}"
+     },
+     {
+      "kind": "css",
+      "selector": "#_aria_dropdown_menu_32 > div:nth-of-type(2) > a:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 1089,
+      "y": 476,
+      "w": 249.4,
+      "h": 40,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_180df0",
+    "step": 2
+   }
+  },
+  {
+   "tool": "press",
+   "args": {
+    "key": "Escape"
+   },
+   "locators": {},
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_180df0",
+    "step": 3
+   }
+  },
+  {
+   "tool": "goto",
+   "args": {
+    "url": "{{v1}}"
+   },
+   "locators": {},
+   "via": {
+    "skill": "s_180df0",
+    "step": 4
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e246"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 1098,
+      "y": 335,
+      "w": 270,
+      "h": 16,
+      "role": "combobox",
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+    "addedContains": [
+     "- combobox \"{{*}}{{v3}} {{*}}\"",
+     "- listbox \"{{*}}{{v3}} {{*}}\"",
+     "- textbox \"Filter Label\"",
+     "- link \"Clear labels\"",
+     "- link \"{{v3}}\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_180df0",
+    "step": 5
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": ".issue-sidebar-combo .scrolling.menu a.item[href=\"/bench/bench-repo/issues?labels=1\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "link",
+      "name": "{{v3}}"
+     },
+     {
+      "kind": "css",
+      "selector": "#_aria_dropdown_menu_32 > div:nth-of-type(2) > a:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 1089,
+      "y": 476,
+      "w": 249.4,
+      "h": 40,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_180df0",
+    "step": 6
+   }
+  },
+  {
+   "tool": "press",
+   "args": {
+    "key": "Escape"
+   },
+   "locators": {},
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_180df0",
+    "step": 7
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e252"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "text",
+      "text": "No labels"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 991,
+      "y": 360,
+      "w": 55.4,
+      "h": 20,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_180df0",
+    "step": 8
+   }
+  },
+  {
+   "tool": "press",
+   "args": {
+    "key": "Tab",
+    "target": ".issue-sidebar-combo .ui.dropdown >> nth=0"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 1098,
+      "y": 335,
+      "w": 270,
+      "h": 16,
+      "role": "combobox",
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_180df0",
+    "step": 9
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e377"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "link",
+      "name": "{{v3}}"
+     },
+     {
+      "kind": "css",
+      "selector": "#_aria_dropdown_menu_32 > div:nth-of-type(2) > a:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 1089,
+      "y": 476,
+      "w": 249.4,
+      "h": 40,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_180df0",
+    "step": 10
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e389"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "link",
+      "name": "priority-high"
+     },
+     {
+      "kind": "css",
+      "selector": "#_aria_dropdown_menu_32 > div:nth-of-type(2) > a:nth-of-type(5)"
+     },
+     {
+      "kind": "point",
+      "x": 1089,
+      "y": 596,
+      "w": 249.4,
+      "h": 40,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_180df0",
+    "step": 11
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e257"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "link",
+      "name": "{{v3}}"
+     },
+     {
+      "kind": "css",
+      "selector": "#_aria_dropdown_menu_32 > div:nth-of-type(2) > a:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 1089,
+      "y": 476,
+      "w": 249.4,
+      "h": 40,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_180df0",
+    "step": 12
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e257"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "link",
+      "name": "{{v3}}"
+     },
+     {
+      "kind": "css",
+      "selector": "#_aria_dropdown_menu_32 > div:nth-of-type(2) > a:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 1089,
+      "y": 476,
+      "w": 249.4,
+      "h": 40,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_180df0",
+    "step": 13
+   }
+  },
+  {
+   "tool": "type",
+   "args": {
+    "target": "@e253",
+    "text": "{{v3}}",
+    "delay_ms": 60
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Filter Label"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "Filter Label"
+     },
+     {
+      "kind": "css",
+      "selector": "#_aria_dropdown_menu_32 > div:nth-of-type(1) > input"
+     },
+     {
+      "kind": "point",
+      "x": 1089,
+      "y": 376,
+      "w": 227.4,
+      "h": 32,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+    "addedContains": [
+     "- combobox \"{{*}}{{v3}}\"",
+     "- listbox \"{{v3}}\"",
+     "- textbox \"Filter Label\": {{v3}}"
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_180df0",
+    "step": 14
+   }
+  },
+  {
+   "tool": "press",
+   "args": {
+    "key": "Enter"
+   },
+   "locators": {},
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_180df0",
+    "step": 15
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "#_aria_dropdown_menu_32 a.item[data-value=\"1\"] >> nth=0"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "link",
+      "name": "{{v3}}"
+     },
+     {
+      "kind": "css",
+      "selector": "#_aria_dropdown_menu_32 > div:nth-of-type(2) > a:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 1089,
+      "y": 429,
+      "w": 249.4,
+      "h": 40,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_180df0",
+    "step": 16
+   }
+  },
+  {
+   "tool": "goto",
+   "args": {
+    "url": "{{v1}}"
+   },
+   "locators": {},
+   "via": {
+    "skill": "s_180df0",
+    "step": 17
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": ".issue-sidebar-combo:has(strong:text-is(\"Labels\")) a.fixed-text.muted >> nth=0"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(1) > a"
+     },
+     {
+      "kind": "point",
+      "x": 1098,
+      "y": 335,
+      "w": 270,
+      "h": 16,
+      "role": null,
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+    "addedContains": [
+     "- combobox \"{{*}}{{v3}} {{*}}\"",
+     "- listbox \"{{*}}{{v3}} {{*}}\"",
+     "- textbox \"Filter Label\"",
+     "- link \"Clear labels\"",
+     "- link \"{{v3}}\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_180df0",
+    "step": 18
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e257"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "link",
+      "name": "{{v3}}"
+     },
+     {
+      "kind": "css",
+      "selector": "#_aria_dropdown_menu_32 > div:nth-of-type(2) > a:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 1089,
+      "y": 476,
+      "w": 249.4,
+      "h": 40,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "what": "url",
+    "label": "current_url"
+   },
+   "locators": {},
+   "label": "issue_url"
+  },
+  {
+   "tool": "goto",
+   "args": {
+    "url": "{{v1}}"
+   },
+   "locators": {}
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e246"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 1098,
+      "y": 335,
+      "w": 270,
+      "h": 16,
+      "role": "combobox",
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+    "addedContains": [
+     "- combobox \"{{*}}{{v3}} {{*}}\"",
+     "- listbox \"{{*}}{{v3}} {{*}}\"",
+     "- textbox \"Filter Label\"",
+     "- link \"Clear labels\"",
+     "- link \"{{v3}}\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": ".ui.dropdown.active.visible a.item[data-value=\"1\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "link",
+      "name": "{{v3}}"
+     },
+     {
+      "kind": "css",
+      "selector": ".ui.dropdown.active.visible a.item[data-value=\"1\"]"
+     },
+     {
+      "kind": "css",
+      "selector": "#_aria_dropdown_menu_32 > div:nth-of-type(2) > a:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 1089,
+      "y": 476,
+      "w": 249.4,
+      "h": 40,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": ".ui.dropdown.active.visible input",
+    "value": "{{v3}}"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".ui.dropdown.active.visible input"
+     },
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Filter Label"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "Filter Label"
+     },
+     {
+      "kind": "css",
+      "selector": "#_aria_dropdown_menu_32 > div:nth-of-type(1) > input"
+     },
+     {
+      "kind": "point",
+      "x": 1089,
+      "y": 376,
+      "w": 227.4,
+      "h": 32,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+    "addedContains": [
+     "- combobox \"{{*}}{{v3}}\"",
+     "- listbox \"{{v3}}\"",
+     "- textbox \"Filter Label\": {{v3}}"
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "press",
+   "args": {
+    "key": "Enter",
+    "target": ".ui.dropdown.active.visible input"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".ui.dropdown.active.visible input"
+     },
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Filter Label"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "Filter Label"
+     },
+     {
+      "kind": "css",
+      "selector": "#_aria_dropdown_menu_32 > div:nth-of-type(1) > input"
+     },
+     {
+      "kind": "point",
+      "x": 1089,
+      "y": 376,
+      "w": 227.4,
+      "h": 32,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "press",
+   "args": {
+    "key": "Escape"
+   },
+   "locators": {},
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+    "addedContains": [
+     "- combobox \"Labels\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": ".issue-sidebar-combo .ui.dropdown >> nth=0"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".issue-sidebar-combo .ui.dropdown >> nth=0"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 1098,
+      "y": 335,
+      "w": 270,
+      "h": 16,
+      "role": "combobox",
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+    "addedContains": [
+     "- combobox \"{{*}}{{v3}} {{*}}\"",
+     "- listbox \"{{*}}{{v3}} {{*}}\"",
+     "- textbox \"Filter Label\"",
+     "- link \"Clear labels\"",
+     "- link \"documentation\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": ".ui.dropdown.active.visible a.item[data-value=\"2\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "link",
+      "name": "priority-high"
+     },
+     {
+      "kind": "css",
+      "selector": ".ui.dropdown.active.visible a.item[data-value=\"2\"]"
+     },
+     {
+      "kind": "css",
+      "selector": "#_aria_dropdown_menu_78 > div:nth-of-type(2) > a:nth-of-type(5)"
+     },
+     {
+      "kind": "point",
+      "x": 1089,
+      "y": 596,
+      "w": 249.4,
+      "h": 40,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "press",
+   "args": {
+    "key": "Escape"
+   },
+   "locators": {},
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": ".issue-sidebar-combo .ui.dropdown >> nth=0"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".issue-sidebar-combo .ui.dropdown >> nth=0"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 1098,
+      "y": 335,
+      "w": 270,
+      "h": 16,
+      "role": "combobox",
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+    "addedContains": [
+     "- combobox \"Labels\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e408"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "link",
+      "name": "Bench Milestone"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(5) > div:nth-of-type(1)"
+     },
+     {
+      "kind": "css",
+      "selector": "#_aria_dropdown_menu_99 > div:nth-of-type(2) > a:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 1089,
+      "y": 536,
+      "w": 249.4,
+      "h": 40,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+    "addedContains": [
+     "- combobox \"Milestone\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e408"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(5) > div:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 1098,
+      "y": 402,
+      "w": 270,
+      "h": 16,
+      "role": "combobox",
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+    "addedContains": [
+     "- combobox \"Milestone Open milestones {{*}}\"",
+     "- listbox \"Open milestones {{*}}\"",
+     "- textbox \"Filter Milestone\": {{*}}"
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e509"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "link",
+      "name": "Bench Milestone"
+     },
+     {
+      "kind": "css",
+      "selector": "#_aria_dropdown_menu_99 > div:nth-of-type(2) > a:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 1089,
+      "y": 536,
+      "w": 249.4,
+      "h": 40,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+    "addedContains": [
+     "- combobox \"Milestone\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "what": "url"
+   },
+   "locators": {},
+   "label": "issue_url"
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e556"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(9) > div:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 1098,
+      "y": 538,
+      "w": 270,
+      "h": 16,
+      "role": "combobox",
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+    "addedContains": [
+     "- combobox \"Assignees Clear assignees admin bench-assignee (Bench Assignee)\"",
+     "- listbox \"Clear assignees admin bench-assignee (Bench Assignee)\"",
+     "- textbox \"Filter Assignee\"",
+     "- link \"bench-assignee (Bench Assignee)\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e643"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "[id^=\"_aria_dropdown_menu_\"] > div:nth-of-type(2) > a:nth-of-type(2)",
+      "nth": 3
+     },
+     {
+      "kind": "point",
+      "x": 1098,
+      "y": 718,
+      "w": 268,
+      "h": 39,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "what": "url"
+   },
+   "locators": {},
+   "label": "issue_url"
+  },
+  {
+   "tool": "press",
+   "args": {
+    "key": "Escape"
+   },
+   "locators": {},
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "press",
+   "args": {
+    "key": "Escape",
+    "target": "@e636"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Filter Assignee"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "Filter Assignee"
+     },
+     {
+      "kind": "css",
+      "selector": "[id^=\"_aria_dropdown_menu_\"] > div:nth-of-type(1) > input"
+     },
+     {
+      "kind": "point",
+      "x": 1098,
+      "y": 579,
+      "w": 246,
+      "h": 32,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+    "addedContains": [
+     "- link \"bench-assignee\"",
+     "- combobox \"Assignees\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#issue-title-display > h1 > span"
+     },
+     {
+      "kind": "point",
+      "x": 431,
+      "y": 172,
+      "w": 47.2,
+      "h": 38,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "issue_number"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "value"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "input[data-old-title=\"{{v2}} Bench Issue\"]"
+     },
+     {
+      "kind": "css",
+      "selector": "#issue-title-editor > div:nth-of-type(1) > input"
+     }
+    ]
+   },
+   "label": "issue_title"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "scoped",
+      "container": "div.timeline-item",
+      "hasText": "admin added this to the Bench Milestone milestone",
+      "selector": "span:nth-of-type(2) > b"
+     },
+     {
+      "kind": "css",
+      "selector": "#issuecomment-17 > span:nth-of-type(2) > b"
+     },
+     {
+      "kind": "point",
+      "x": 395,
+      "y": 460,
+      "w": 130.4,
+      "h": 16,
+      "role": null,
+      "tag": "b",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "sidebar_milestone"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "Completed the sidebar picker changes on issue #6 ({{v2}} Bench Issue). Labels: '{{v3}}' and 'priority-high' were already applied (confirmed as chips/links in the sidebar, with a timeline event \"admin added the {{v3}} and priority-high labels\"). Milestone: opened the Milestone combobox and clicked the 'Bench Milestone' item — the sidebar now shows the 'Bench Milestone' link. Assignees: opened the Assignees combobox, clicked 'bench-assignee (Bench Assignee)' (item became 'checked'), then closed the dropdown with Escape on the filter textbox, which committed the change — the sidebar now shows the assignee link with avatar 'Bench Assignee bench-assignee (Bench Assignee)'. Final sidebar state verified by snapshot: Labels = {{v3}}, priority-high; Milestone = Bench Milestone; Assignees = Bench Assignee bench-assignee (Bench Assignee). Screenshot saved as evidence.",
+  "values": {
+   "issue_number": "#6",
+   "issue_title": "{{v2}} Bench Issue",
+   "sidebar_labels": "{{v3}}, priority-high",
+   "sidebar_assignees": "Bench Assignee bench-assignee (Bench Assignee) — with avatar",
+   "sidebar_milestone": "Bench Milestone",
+   "issue_url": "{{v1}}",
+   "ref": "{{v2}}"
+  }
+ },
+ "contract": 4,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-25T11:36:17.477Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 4
+ },
+ "status": "provisional",
+ "variantOf": "s_180df0",
+ "provenance": {
+  "session": "fwgt16-n3",
+  "instruction": "On the issue page http://127.0.0.1:8095/bench/bench-repo/issues/6 (titled 'fwgt16-n3 Bench Issue'), use the sidebar pickers to: (1) set the issue's labels to exactly 'bug' and 'priority-high' (no other labels), (2) assign the issue to the user 'bench-assignee', and (3) set the issue's milestone to 'Bench Milestone'. For each picker, make sure the change is actually applied and visible on the issue page sidebar (labels shown as chips, assignee avatar/name shown, milestone name shown) — not merely ticked in the open menu. Then report exactly what the sidebar shows for labels, assignees, and milestone.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-25T11:36:17.477Z",
+  "transforms": [
+   {
+    "name": "unfreezeExpectations",
+    "at": 32,
+    "reason": "recorded page change(s) only the recording run could produce: [\"- combobox \\\"Milestone Open milestones Bench Milestone\\\"\",\"- listbox \\\"Open milestones Bench Milestone\\\"\",\"- textbox \\\"Filter Milestone\\\": {{*}}\",\"- link \\\"Bench Milestone\\\"\"] → [\"- combobox \\\"Milestone Open milestones {{*}}\\\"\",\"- listbox \\\"Open milestones {{*}}\\\"\",\"- textbox \\\"Filter Milestone\\\": {{*}}\"]"
+   }
+  ]
+ },
+ "revision": 1
+}
