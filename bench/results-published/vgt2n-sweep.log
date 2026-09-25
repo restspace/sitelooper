@@ -1,0 +1,106 @@
+
+[sweep] run 1/3: vgt2n-n1 (store: /home/user/sitelooper/bench/results/vgt2n-skills)
+[harness] gitea: defaulting APP_URL
+[harness] gitea: defaulting APP_EMAIL
+[harness] gitea: defaulting APP_PASSWORD
+[reset] gitea: no leftover bench issues
+[harness] gitea responded 200 at http://127.0.0.1:8095/
+stopped: vgt2n-n1
+  flow "vgt2n" saved: 7 step(s), vars runid → /home/user/sitelooper/bench/results/flows/vgt2n.json
+  warning: warning: 02-open's instruction asks to report Bench Issue exists, and no replay can publish it: nothing in its procedure reads it from the page, so export dropped it — re-record the step so the value is read, not only reported
+  warning: warning: 04-set's instruction asks to report sidebar_assignees, sidebar_labels, and no replay can publish them: nothing in its procedure reads them from the page, so export dropped them — re-record the step so the value is read, not only reported
+  warning: note: 05-add no longer publishes comment_author — no replay reads it from the page and the recording showed no line to read
+  warning: warning: 06-open's instruction asks to report sidebar_labels, sidebar_assignee, and no replay can publish them: nothing in its procedure reads them from the page, so export dropped them — re-record the step so the value is read, not only reported
+  warning: warning: 46 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[0].instruction: "admin" (output) in "Sign in to Gitea with username 'admin' and password exactly the text '{{env:APP_PASSWORD}}' (type it literally, it will be filled in when typed). After signing "
+  flow.steps[0].params.v1: "admin" (output) in "admin"
+  flow.steps[3].instruction: "Bench Milestone" (output) in "On the issue page for issue {{03-create.issue_number}} in bench/bench-repo ({{03-create.url}}), use the sidebar pickers to set: (a) exactly the two labels 'bug'"
+  s_01f5b5.template: "Bench Milestone" (output) in "On the issue page for issue #4 in bench/bench-repo (http://127.0.0.1:8095/bench/bench-repo/issues/4), use the sidebar pickers to set: (a) exactly the two labels"
+  s_01f5b5.goal.requireText[0]: "Bench Milestone" (output) in "Bench Milestone"
+  warning: 02-open reports issue_#1_title, issue_#2_title, issue_#3_title, but no segment of the procedure it pins (s_04de68, through its last segment s_eb2d6b) re-reads them from the page — a replay without the model will succeed without those values; re-record so a read for them lands in s_eb2d6b.
+arm=sitelooper model=z-ai/glm-5.3 runid=vgt2n-n1 stop=completed
+turns=9 wall=1262.7s
+commands=8 cmdTime=1231.4s cmdBytes=5930 timeouts=0
+orchestrator in=7552 cw=0 cr=27200 out=2097
+inner prompt=1497055 cached=1266176 completion=13210
+spend=$0.1139 maxUsd=3
+learn: A_n=0 replayed=0/7 full=0 repaired=0 compiled=7 variants=0
+-> /home/user/sitelooper/bench/results/vgt2n-n1-sitelooper-result.json
+
+vgt2n-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — #4, state=open, description includes runid=true
+  obj 3: PASS — labels=[bug, priority-high], want [bug, priority-high]
+  obj 4: PASS — assignees=[bench-assignee]
+  obj 5: PASS — milestone=Bench Milestone
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — issue #4 reported
+
+[sweep] run 2/3: vgt2n-n2 (replay flow vgt2n, no orchestrator)
+[reset] gitea: deleted 1 leftover bench issue(s)
+[sweep] vgt2n-n2: 4 drift ticket(s) → vgt2n-n2-drift.json
+
+vgt2n-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — #5, state=open, description includes runid=true
+  obj 3: PASS — labels=[bug, priority-high], want [bug, priority-high]
+  obj 4: PASS — assignees=[bench-assignee]
+  obj 5: PASS — milestone=Bench Milestone
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — issue #5 reported
+
+[sweep] run 3/3: vgt2n-n3 (replay flow vgt2n, no orchestrator)
+[reset] gitea: deleted 1 leftover bench issue(s)
+[sweep] vgt2n-n3: 4 drift ticket(s) → vgt2n-n3-drift.json
+
+vgt2n-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — #6, state=open, description includes runid=true
+  obj 3: PASS — labels=[bug, priority-high], want [bug, priority-high]
+  obj 4: PASS — assignees=[bench-assignee]
+  obj 5: PASS — milestone=Bench Milestone
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — issue #6 reported
+
+Learning sweep vgt2n (K=3)
+┌─────────┬───┬────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid      │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'vgt2n-n1' │ '7/7'    │ 'completed' │ 9     │ 8    │ 0.1139    │ 0   │ '0/7'        │ 1263   │
+│ 1       │ 2 │ 'vgt2n-n2' │ '7/7'    │ 'success'   │ 0     │ 7    │ 0         │ 1   │ '7/7 (flow)' │ 59     │
+│ 2       │ 3 │ 'vgt2n-n3' │ '7/7'    │ 'success'   │ 0     │ 7    │ 0         │ 1   │ '7/7 (flow)' │ 59     │
+└─────────┴───┴────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:8095
+  s_01f5b5  validated   19 steps  3/3 (100%)
+           On the issue page for issue #4 in bench/bench-repo (http://127.0.0.1:8095/bench/bench-repo/issues/4), use the …
+  s_04de68  validated    1 steps  3/3 (100%)
+           Go to the repository 'bench/bench-repo' at {{v2}} and open its Issues list (only OPEN issues, not closed). Rep…
+  s_164b84  validated    3 steps  3/3 (100%)
+           Sign in to Gitea with username '{{v1}}' and password exactly the text '{{v2}}' (type it literally, it will be …
+  s_1ec86f  validated    6 steps  3/3 (100%)
+           Open http://127.0.0.1:8095/bench/bench-repo/issues/4 and verify the issue page state, reporting each of these …
+  s_22becb  validated    1 steps  3/3 (100%)
+           Open the open-issues list of bench/bench-repo ({{v2}}) and report the exact titles and numbers of every open i…
+  s_65ab08  validated    1 steps  3/3 (100%)
+           Sign in to Gitea with username '{{v1}}' and password exactly the text '{{v2}}' (type it literally, it will be …
+  s_798594  validated    2 steps  3/3 (100%)
+           On the issue page for issue #4 in bench/bench-repo (http://127.0.0.1:8095/bench/bench-repo/issues/4), add a co…
+  s_79c6fe  validated    6 steps  3/3 (100%)
+           In the repository 'bench/bench-repo' (http://127.0.0.1:8095/bench/bench-repo), create a new issue with the exa…
+  s_84c095  validated    3 steps  3/3 (100%)
+           Sign in to Gitea with username '{{v1}}' and password exactly the text '{{v2}}' (type it literally, it will be …
+  s_9c0931  validated    1 steps  3/3 (100%)
+           Go to the repository 'bench/bench-repo' at {{v2}} and open its Issues list (only OPEN issues, not closed). Rep…
+  s_9ef006  validated    1 steps  3/3 (100%)
+           In the repository 'bench/bench-repo' (http://127.0.0.1:8095/bench/bench-repo), create a new issue with the exa…
+  s_bdf056  validated    3 steps  3/3 (100%)
+           In the repository 'bench/bench-repo' (http://127.0.0.1:8095/bench/bench-repo), create a new issue with the exa…
+  s_da6f49  validated    2 steps  3/3 (100%)
+           On the issue page for issue #4 in bench/bench-repo (http://127.0.0.1:8095/bench/bench-repo/issues/4), add a co…
+  s_eb2d6b  validated    5 steps  3/3 (100%)
+           Go to the repository 'bench/bench-repo' at {{v2}} and open its Issues list (only OPEN issues, not closed). Rep…
+  s_fb3faa  validated   15 steps  3/3 (100%)
+           Open the open-issues list of bench/bench-repo ({{v2}}) and report the exact titles and numbers of every open i…
+store: /home/user/sitelooper/bench/results/vgt2n-skills
+
+summary: /home/user/sitelooper/bench/results/vgt2n-sweep.json
