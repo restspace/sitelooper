@@ -471,3 +471,39 @@ Vision A/B full metrics (bench/ab-metrics.mjs, 9 runs per arm). Vision on vs off
 - recording wall time: 156 vs 172 minutes.
 
 Verdict: vision does not help; keep it off by default.
+
+## Round 65 (62859f8a): the sourcing-hold confirmation batch (SITELOOPER_SOURCING_HOLD=on), batch 1 of 2 — 3/5 green
+
+Main 62859f8a = round 64's main plus hygiene stages 3-4 (fix/hygiene-s34, verified verify-hygiene-s34: 2664 / 2890 / 204
+parity, corpus 0 changes). The flag is ON in every run of this round. Batch 1: the five eval-heavy apps; batch 2 (rd, od
+controls) waits for the held-values fix below.
+
+| round | runid | app | verified | replay model-free | compiled | green | notes |
+|---|---|---|---|---|---|---|---|
+| 65 | fwop19 | op | 7/7 ×3 | yes | pass, drift 2 | **yes** | first op green since 62; the hold fired on 04-open (see below) and the retry LOST every value (values {}) |
+| 65 | fwec16 | ec | 7/7 ×3 | yes | pass, drift 1 | **yes** | no hold fired (4 instructions) |
+| 65 | fwgh19 | gh | 7/7 ×3 | yes | pass, drift 0 | **yes** | hold on 02-create url_slug: the model went `back`, clicked, and added 3 labelled reads (url_slug, excerpt, slug_preview) |
+| 65 | fwsi16 | si | 7/7 ×3 | no: 02-create 45/44 turns, 04-open 27/47 (unresolved refs 01-signin.model/.status) | refused (unsourced-ref) | no | 01-signin REPORTED model="Bench Laptop Model", status="Ready to Deploy" (list columns nobody asked for); 02-create's literals were threaded to them; nothing reads them. The hold did not fire: the values were not ASKED (askedOutputs), by design |
+| 65 | fwgt16 | gt | 7/7 ×3 | no: 03-set 66/54 turns | FAIL at 03-set (positional fallback #2 not the recorded name) | no | the round-64 fwgt15 class (label picker click missed), unchanged; two holds fired and both retries added reads (5 unlabelled; 2 labelled) |
+
+Sourcing hold, batch 1 (RecordedReport.sourcingAsk): 4 holds over 25 instructions (16%; the design's bar was ≤10%).
+- fwop19 04-open `description_text`: retry added 0 reads under that label (1 labelled read `wp41_description` after a
+  tab click), then reported values {} — the naming hold's mergeReportValues protection did not cover the sourcing hold.
+  Fixed on fix/sourcing-held-values 0009043e (held values kept; a labelled retry read answers the asked key), verify fired.
+- fwgh19 02-create `url_slug`: 3 labelled reads added; gestures after the hold: `back`, `click` (navigation back to the
+  editor to read the slug, allowed by the ask text).
+- fwgt16 03-set `sidebar_labels`: 5 reads added, none labelled (the model renamed the values instead); 06-open
+  `labels_displayed`, `milestone_displayed`: 2 labelled reads, clean.
+- Not covered by design: fwsi16's refusal. The hold only asks about ASKED keys; the unsourced values were unasked
+  list columns the model reported anyway, which flow-building then threaded a later step's literals to. Candidate rule
+  (compile side): never thread a later step's literal to an unasked, unsourced reported value; keep it a task constant.
+- No hold fired on a value the page showed; no hold burned a turn on a correct derivation (0 stubborn retries).
+Steps per n1 instruction vs round 64 (different recordings, indicative only): op 132 vs 152, si 150 vs 68, gt 168 vs
+262, ec 88 vs 147, gh 79 vs 90. No sign of hold-driven inflation; si's growth is in instructions where no hold fired.
+
+Convergence experiment (bench/converge.mjs, main 26d22062; user decision 2026-09-25: the artifact stays model-free for
+CI, so model work and retries go to record/compile time): compile → rerecord the earliest named step → recompile; a
+failing artifact → repair --converge 1 → rerecord the step it names; ≤4 rounds. Fired: fwod88-cv, fwgr74-cv (compile
+refusals), fwvk15-cv, fwgt15-cv, fwsi14-cv (artifact failures). Queued: fwop15-cv, fwop17-cv. fwkb45 excluded (a
+compiler blocker with no rerecord action: the loop stops at once, checked locally).
+
