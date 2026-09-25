@@ -212,6 +212,36 @@ document.getElementById('go').addEventListener('click', () => {
  * option chosen from its listbox; a live preview mirroring a textarea with no
  * save; and a part name that a Save commits into a table row.
  */
+/**
+ * EspoCRM fwec13 03-create, in miniature (round 61): an Amount input that
+ * formats what it is given when it loses focus ("12500" → "12,500"), a Close
+ * Date input whose picker button puts its own default in ("2018-01-16"), and a
+ * Save that stores the amount (localStorage, so a reopen shows it) and adds a
+ * row showing it.
+ */
+const ESPO_FORM = `<!doctype html><html><head><meta charset="utf-8"><title>Opportunity</title></head><body>
+<div class="field" data-name="amount"><label>Amount <input data-name="amount"></label></div>
+<div class="field" data-name="closeDate"><label>Close Date <input data-name="closeDate"></label> <button type="button" id="pick">Pick a date</button></div>
+<button type="button" id="save">Save</button>
+<table><tbody id="saved"></tbody></table>
+<script>
+const amount = document.querySelector('input[data-name="amount"]');
+const fmt = (v) => { const n = Number(String(v).replace(/,/g, '')); return String(v).trim() !== '' && Number.isFinite(n) ? n.toLocaleString('en-US') : v; };
+amount.addEventListener('blur', () => { amount.value = fmt(amount.value); });
+const stored = localStorage.getItem('espo-amount');
+if (stored) amount.value = fmt(stored);
+document.getElementById('pick').addEventListener('click', () => { document.querySelector('input[data-name="closeDate"]').value = '2018-01-16'; });
+document.getElementById('save').addEventListener('click', () => {
+  localStorage.setItem('espo-amount', amount.value.replace(/,/g, ''));
+  const row = document.createElement('tr');
+  const cell = document.createElement('td');
+  cell.textContent = fmt(amount.value);
+  row.appendChild(cell);
+  document.getElementById('saved').appendChild(row);
+});
+</script>
+</body></html>`;
+
 const ECHO_LAB = `<!doctype html><html><head><meta charset="utf-8"><title>Echo lab</title></head><body>
 <div id="a"><label>Title <input id="title"></label> <button id="rerender" type="button">Re-render</button></div>
 <div class="field"><input id="fruit2" role="combobox" aria-label="Fruit" aria-controls="fruit-list" autocomplete="off"><span id="chosen"></span></div>
@@ -971,8 +1001,17 @@ const PARTS = `<!doctype html><html><head><meta charset="utf-8"><title>Ticket</t
  * sidebar does. What is applied survives a reload (sessionStorage); what is
  * pending does not. `?escape=0`: Escape does not shut it (Gitea's picker on
  * fwgt11's replays). `?stuck=1`: the Labels click does not shut it either.
+ * `?furniture=1` (round 61): a `link "bug"` outside the picker from the start
+ * (a nav link that merely shares the name), for the applied-pick control.
+ *
+ * Escape and focus: whether Escape shuts Gitea's picker depends on where focus
+ * is, not on the picker. fwgt11's untargeted Escape (focus on the page) left
+ * it open on the replays; fwgt12-n1 entry 64, an Escape pressed IN the filter
+ * input, shut it (its obs removed the listbox). `escape=0` models the first
+ * case only.
  */
-const LABEL_PICKER = (mode: { escape: boolean; stuck: boolean }) => `<!doctype html><html><head><meta charset="utf-8"><title>Issue</title></head><body>
+const LABEL_PICKER = (mode: { escape: boolean; stuck: boolean; furniture: boolean }) => `<!doctype html><html><head><meta charset="utf-8"><title>Issue</title></head><body>
+${mode.furniture ? '<nav><a href="/wiki/bug">bug</a></nav>' : ''}
 <h1>Issue #4</h1>
 <div id="labels" role="combobox" aria-label="Labels" aria-expanded="false" tabindex="0">Labels</div>
 <div id="menu" role="listbox" aria-label="Label choices" hidden>
@@ -1079,6 +1118,70 @@ document.getElementById('account').addEventListener('input', () => { amount.valu
 document.getElementById('save').addEventListener('click', () => {
   fetch('/commit/opportunity/' + encodeURIComponent(amount.value), { method: 'POST' });
 });
+</script>
+</body></html>`;
+
+/**
+ * An editor that DOUBLES what is typed into it (round 61, grafana fwgr73
+ * 04-open line 125): monaco's auto-closing turned a typed `"tags"` into
+ * `"tags""tags""`, and the recording carried on from that. `/code-editor`:
+ * the Code field, on an input that leaves it reading "tags", appends a second
+ * "tags". Save posts `commit:code:<value>`.
+ */
+const CODE_EDITOR = `<!doctype html><html><head><meta charset="utf-8"><title>Code</title></head><body>
+<h1>JSON model</h1>
+<label for="code">Code</label><textarea id="code"></textarea>
+<button id="save" type="button">Save</button>
+<script>
+const code = document.getElementById('code');
+code.addEventListener('input', () => { if (code.value === 'tags') code.value = 'tagstags'; });
+document.getElementById('save').addEventListener('click', () => {
+  fetch('/commit/code/' + encodeURIComponent(code.value), { method: 'POST' });
+});
+</script>
+</body></html>`;
+
+/**
+ * A toolbar whose EDIT MODE swaps its buttons (round 61, grafana fwgr73
+ * 05-open step 3). `/edit-mode/view`: Edit (testid edit-btn) and Share;
+ * clicking Edit enters edit mode. `/edit-mode/edit`: already in edit mode —
+ * Exit edit sits where Edit sat, then Add, Settings, Save dashboard.
+ * `/edit-mode/twin`: two buttons both named Edit and no testid; either
+ * enters edit mode. Exit edit posts `commit:dashboard:exit` and leaves edit
+ * mode; Save dashboard posts `commit:dashboard:saved`. A Title field is on
+ * every mode.
+ */
+const EDIT_MODE = (mode: string) => `<!doctype html><html><head><meta charset="utf-8"><title>Dashboard</title></head><body>
+<h1>Dashboard</h1>
+<label for="title">Title</label><input id="title">
+<div id="bar"></div>
+<script>
+const bar = document.getElementById('bar');
+const post = (what) => fetch('/commit/dashboard/' + what, { method: 'POST' });
+function button(name, onClick, testid) {
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.textContent = name;
+  if (testid) b.dataset.testid = testid;
+  b.addEventListener('click', onClick);
+  bar.appendChild(b);
+}
+function render(mode) {
+  bar.innerHTML = '';
+  if (mode === 'edit') {
+    button('Exit edit', () => { post('exit'); render('view'); });
+    button('Add', () => {});
+    button('Settings', () => {});
+    button('Save dashboard', () => post('saved'));
+  } else if (mode === 'twin') {
+    button('Edit', () => render('edit'));
+    button('Edit', () => render('edit'));
+  } else {
+    button('Edit', () => render('edit'), 'edit-btn');
+    button('Share', () => {});
+  }
+}
+render(${JSON.stringify(mode)});
 </script>
 </body></html>`;
 
@@ -1517,6 +1620,31 @@ document.getElementById('wp').addEventListener('click', () => fetch('/commit/wp/
 </script>
 </body></html>`;
 
+/**
+ * The fwop15 variant (round 61): the project page has NO link to itself, only
+ * the project selector, a BUTTON of the same name (OpenProject's), so a
+ * second click on the list's link from there finds nothing, and a heal that
+ * picked the button would press a different control. Its "Work packages"
+ * posts commit:wp:open; the selector posts commit:selector:open.
+ */
+const PROJ2_LIST = `<!doctype html><html><head><meta charset="utf-8"><title>Projects</title></head><body>
+<h1>Projects</h1>
+<a id="bench" href="/proj2/bench">Bench Project</a>
+<span id="more" title="More">More</span><div id="menu" hidden><button type="button">Archive</button></div>
+<script>
+document.getElementById('more').addEventListener('mouseover', () => { document.getElementById('menu').hidden = false; });
+</script>
+</body></html>`;
+const PROJ2_PAGE = `<!doctype html><html><head><meta charset="utf-8"><title>Bench Project</title></head><body>
+<button id="selector" type="button">Bench Project</button>
+<h1>Overview</h1>
+<button id="wp" type="button">Work packages</button>
+<script>
+document.getElementById('wp').addEventListener('click', () => fetch('/commit/wp/open', { method: 'POST' }));
+document.getElementById('selector').addEventListener('click', () => fetch('/commit/selector/open', { method: 'POST' }));
+</script>
+</body></html>`;
+
 const POPUP_CHILD = `<!doctype html><html><head><meta charset="utf-8"><title>Approval</title></head><body>
 <h1>Approve order</h1>
 <button type="button" id="approve">Approve</button>
@@ -1681,6 +1809,11 @@ export async function createFixtureServer(initialCount = 10): Promise<FixtureSer
     if (url === '/echo-lab' || url.startsWith('/echo-lab?')) {
       res.writeHead(200, { 'content-type': 'text/html' });
       res.end(ECHO_LAB);
+      return;
+    }
+    if (url === '/espo-form') {
+      res.writeHead(200, { 'content-type': 'text/html' });
+      res.end(ESPO_FORM);
       return;
     }
     if (url === '/signin') {
@@ -1907,7 +2040,7 @@ export async function createFixtureServer(initialCount = 10): Promise<FixtureSer
       if (url === '/stamp') return html(STAMP);
       if (url === '/hash') return html(HASH);
       if (url.startsWith('/menu/')) return html(MENU(tail('/menu/')));
-      if (url === '/labels-picker' || url.startsWith('/labels-picker?')) return html(LABEL_PICKER({ escape: !url.includes('escape=0'), stuck: url.includes('stuck=1') }));
+      if (url === '/labels-picker' || url.startsWith('/labels-picker?')) return html(LABEL_PICKER({ escape: !url.includes('escape=0'), stuck: url.includes('stuck=1'), furniture: url.includes('furniture=1') }));
       if (url === '/create/form') return html(CREATE);
       if (url === '/hopper') return html(HOPPER);
       if (url.startsWith('/hop/')) {
@@ -1924,6 +2057,8 @@ export async function createFixtureServer(initialCount = 10): Promise<FixtureSer
       if (url === '/hashposts') return html(HASH_POSTS);
       if (url.startsWith('/row-save/')) return html(ROW_SAVE(tail('/row-save/')));
       if (url === '/typed-amount' || url === '/typed-amount?sticky=1') return html(TYPED_AMOUNT(url.endsWith('sticky=1')));
+      if (url === '/code-editor') return html(CODE_EDITOR);
+      if (url.startsWith('/edit-mode/')) return html(EDIT_MODE(tail('/edit-mode/')));
       if (url === '/hover-menu') return html(HOVER_MENU);
       if (url === '/counts' || url === '/counts?nolist=1') return html(COUNTS(!url.endsWith('nolist=1')));
       if (url === '/transform') return html(TRANSFORM);
@@ -1944,6 +2079,8 @@ export async function createFixtureServer(initialCount = 10): Promise<FixtureSer
       if (url === '/opener') return html(OPENER);
       if (url === '/proj-list') return html(PROJ_LIST);
       if (url === '/proj/bench') return html(PROJ_PAGE);
+      if (url === '/proj2-list') return html(PROJ2_LIST);
+      if (url === '/proj2/bench') return html(PROJ2_PAGE);
       if (url === '/opener-plain') return html(OPENER_PLAIN);
       if (url === '/popup/child') return html(POPUP_CHILD);
       if (url.startsWith('/stall/')) {

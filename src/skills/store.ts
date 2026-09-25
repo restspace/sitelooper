@@ -327,6 +327,16 @@ export interface SkillStep {
    * it skips the re-open as already showing, as before.
    */
   closedBefore?: true;
+  /**
+   * A type or fill whose RECORDED result already held its value twice over
+   * (compile.ts, the shared refill.ts recordedDoubled over the step's raw
+   * diff): grafana fwgr73-n1 04-open typed `"tags"` into monaco, whose
+   * auto-closing left `"tags""tags""`, and the recording carried on from it.
+   * Both runners' doubled-value stop (valueDoubled, fwec10) then defers: the
+   * replay reproduced the recorded state rather than typing onto a stale copy.
+   * Optional: a build that ignores it stops there, as before.
+   */
+  doubledAsRecorded?: true;
   expect?: StepExpectation;
   /** For read/read_all steps: which report value this read supplied, if any. */
   label?: string;

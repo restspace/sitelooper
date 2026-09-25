@@ -3,10 +3,11 @@ import { DEFAULT_BROWSER_PROFILE, isNavigatingAction, type BrowserProfile } from
 import { setsSomething } from '../execution/echo.js';
 import { standingFillRole } from '../execution/refill.js';
 import { DEFAULT_ACTION_TIMEOUT_MS } from '../execution/browser.js';
-import { hideEffectLines, toggleEffectLines } from '../execution/toggle.js';
+import { appliedPickCandidates, hideEffectLines, isNavigation, toggleEffectLines } from '../execution/toggle.js';
+import { alreadyAddedLines, recordedAccessibleName } from '../execution/positional.js';
 import { derivesFromParams, givenPartialReason, givenWarning, reportNeedsPage, templateMarkers, templateSource, typedSlots, typedWarning } from '../execution/report.js';
 import { askedOutputs } from '../daemon/step-verdict.js';
-import { observedNothing } from '../execution/observe.js';
+import { observedNothing, scopeSetBy } from '../execution/observe.js';
 import { segmentGate } from '../execution/gates.js';
 /**
  * The IR as `@playwright/test` source (Tier 2: no sitelooper runtime).
@@ -31,7 +32,7 @@ import { segmentGate } from '../execution/gates.js';
 import { EXECUTION_MODULES, executionClosure } from './runtime-source.js';
 import { candidateExpr, type LocatorCandidate } from '../daemon/recorder.js';
 import { DIALOG_LINE, SLOT_LINE, TRANSIENT_LINE, slotActs } from '../execution/expect.js';
-import { identityFields } from '../execution/resolve.js';
+import { identityFields, snapshotRefCandidate, structuralCandidate } from '../execution/resolve.js';
 import { originOf } from '../execution/url.js';
 import { describeFramePath, stepEffect } from '../execution/context.js';
 import { OPENER_LINE, recordMarkers, waitsForAbsence } from '../skills/replay.js';
@@ -269,11 +270,14 @@ const HELPERS: { token: string; source: string[] }[] = [
       ' * app persisted anything, so the label is listed in `run.echoed` and warned;',
       ' * the value is still published, as replay still carries it to later steps.',
       ' * Judged by the element, not only the text (the shared echoAt, round 59:',
-      " * fwec11's display name \"Admin\" after the sign-in form was submitted).",
+      " * fwec11's display name \"Admin\" after the sign-in form was submitted), and",
+      ' * the element FIRST (the shared judgeEcho, round 61: EspoCRM fwec13 read',
+      ' * "12,500" back from the Amount input typed with 12500). The ledger is the',
+      " * flow step's, across its segments, as the daemon's flow runner keeps it.",
       ' */',
       'async function echoRead(ledger: Set<string>, run: FlowRun, label: string, key: string, value: string | undefined, where: string, page: Page, at: Locator | null): Promise<void> {',
-      "  const echo = echoVerdict(ledger, label, value ?? '', where);",
-      "  if (!echo || !(await echoAt(page, ledger, value ?? '', at))) return;",
+      "  const echo = await judgeEcho(page, ledger, label, value ?? '', at, where);",
+      '  if (!echo) return;',
       '  run.echoed.push(key);',
       '  logWarning(echo);',
       '}',
@@ -874,6 +878,8 @@ const HELPERS: { token: string; source: string[] }[] = [
       '  lastReadHit = hit.locator;',
       '  const taken = await takeRead(() => read(hit.locator));',
       '  if (taken.ok) return taken.value;',
+      '  // A read proving what the step set did not land fails the step (scopedReadLanded, gitea fwgt12).',
+      '  if (taken.lost) throw new Error(`${where}: ${taken.message}`);',
       '  skippedReads.push(where);',
       '  console.log(`[sitelooper skip] ${where}: read errored (${taken.message}) — value left empty`);',
       "  return '';",
@@ -1182,6 +1188,48 @@ const HELPERS: { token: string; source: string[] }[] = [
     ],
   },
   {
+    token: 'await positionalClick(',
+    source: [
+      '/**',
+      " * RULE R2 (round 61, grafana fwgr73 05-open step 3), replay's runOneStep",
+      ' * after its targets resolve: a click whose identifying rungs ALL missed',
+      ' * (`hit` positional, or null when nothing resolved) is — the shared',
+      ' * positionalClickVerdict decides — (a) skipped, its effect in place, when',
+      ' * every line it was recorded adding already shows (`lines`, the shared',
+      ' * alreadyAddedLines: never one that submits the segment\'s work), or (b)',
+      ' * stopped when a positional rung took it onto an element without the',
+      ' * recorded accessible name. True means skipped; a stop throws.',
+      ' */',
+      'async function positionalClick(',
+      '  page: Page,',
+      '  hit: Resolution | null,',
+      '  identifying: number[],',
+      '  points: number[],',
+      '  lines: string[],',
+      "  want: { by: 'role' | 'label' | 'text'; role?: string; name: string } | null,",
+      '  p: Record<string, string>,',
+      '  where: string,',
+      '  dialect: LineDialect = 1,',
+      '): Promise<boolean> {',
+      '  const verdict = await positionalClickVerdict(',
+      '    page,',
+      '    hit ? { locator: hit.locator, index: hit.index, structural: hit.structural, point: points.includes(hit.index), missed: hit.missed.map((m) => m.index) } : null,',
+      '    identifying,',
+      '    lines,',
+      '    want,',
+      '    p,',
+      '    dialect,',
+      '  );',
+      "  if (verdict && 'skip' in verdict) {",
+      '    logWarning(`${where}: ${verdict.skip}`);',
+      '    return true;',
+      '  }',
+      "  if (verdict && 'stop' in verdict) throw new Error(`${where}: ${verdict.stop}`);",
+      '  return false;',
+      '}',
+    ],
+  },
+  {
     token: 'await hideGoneSkip(',
     source: [
       '/**',
@@ -1340,6 +1388,8 @@ interface Ctx {
   picks: number;
   /** The segment and within-segment step index currently emitting — for `@step` and `pick`'s `where`. */
   segmentId: string;
+  /** The steps of the segment being emitted: what the positional-click rule (alreadyAddedLines) and scopeSetBy read. */
+  segmentSteps?: readonly SkillStep[];
   stepIndex: number;
   /** Hoisted loop guards, so each loop names its own. */
   loops: number;
@@ -1386,6 +1436,12 @@ interface Ctx {
    */
   echoes?: string;
   echoUsed?: boolean;
+  /** The applied-pick rule's candidates in this segment (execution/toggle.ts), by 0-based step index. */
+  appliedPicks?: Map<number, { role: string; name: string }>;
+  /** The variable holding this segment's starting page lines, when it has an applied-pick candidate. */
+  pickStart?: string;
+  /** A segment of this flow step named the step's echo ledger: the body declares it once, at its top (round 61). */
+  stepEchoUsed?: boolean;
   /**
    * A line of the body named `typedCommitted`, the step's set of typed slots a
    * commit showed (expect.ts committedSlots), which its report classifies by
@@ -1863,6 +1919,44 @@ function hideGoneLines(step: SkillStep, chain: LocatorCandidate[], ctx: Ctx): st
   ];
 }
 
+/**
+ * RULE R2's call sites (positionalClick, over the shared
+ * positionalClickVerdict), for a top-level click on the page whose chain has
+ * identifying rungs — replay's exclusions: no loop pass, no frame. `miss` is
+ * appended to the pick: a chain that resolved nothing is still skipped as
+ * already in effect when every line the click adds shows (else the pick's
+ * own miss stands). `hit` is the guard over what the pick resolved. Null for
+ * every other step, which emits exactly as before.
+ */
+function positionalClickLines(
+  step: SkillStep,
+  chain: LocatorCandidate[],
+  key: 'target' | 'source',
+  root: string,
+  ctx: Ctx,
+): { miss: string; hit: (name: string) => string } | null {
+  if (key !== 'target' || root !== 'page' || ctx.loopSink || step.tool !== 'click' || !ctx.segmentSteps) return null;
+  const identifying = chain.flatMap((c, i) => (structuralCandidate(c) || snapshotRefCandidate(c) ? [] : [i]));
+  if (!identifying.length) return null;
+  const lines = alreadyAddedLines(ctx.segmentSteps, ctx.stepIndex - 1);
+  const want = recordedAccessibleName(chain);
+  // Nothing to decide unless the click may be skipped (a) or a positional
+  // rung could take it with a name to hold it to (b): every other click
+  // emits exactly as before.
+  if (!lines.length && !(want && chain.some((c) => structuralCandidate(c)))) return null;
+  noteSlots(lines, ctx);
+  if (want) noteSlots(want.name, ctx);
+  const where = q(`${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex}`);
+  const dialect = step.expect?.lineDialect === 2 ? ', 2' : '';
+  // A recorded point's hit is the recording's own way to the element, never a positional guess (positionalOnly).
+  const points = chain.flatMap((c, i) => (c.kind === 'point' ? [i] : []));
+  const args = `[${identifying.join(', ')}], [${points.join(', ')}], [${lines.map(q).join(', ')}], ${want ? JSON.stringify(want) : 'null'}, p, ${where}${dialect}`;
+  return {
+    miss: lines.length ? `.catch(async (error: unknown) => { if (await positionalClick(page, null, ${args})) return null; throw error; })` : '',
+    hit: (name: string) => `if (await positionalClick(page, ${name}, ${args})) return { status: 'skipped' };`,
+  };
+}
+
 function actionTarget(step: SkillStep, key: 'target' | 'source', ctx: Ctx, out: string[], hoist?: string): string | null {
   const chain = step.locators?.[key] ?? [];
   if (!chain.length) return null;
@@ -1898,12 +1992,17 @@ function actionTarget(step: SkillStep, key: 'target' | 'source', ctx: Ctx, out: 
     // done, and its gates are not asked, as replay returns before them.
     noteSlots(destPattern, ctx);
     const head = list(`const ${name} = await pickOrNavigate(page, `);
-    head[head.length - 1] += `${policy}, ${q(destPattern)}, p, ${opts}${note});`;
+    const guard = positionalClickLines(step, chain, key, root, ctx);
+    head[head.length - 1] += `${policy}, ${q(destPattern)}, p, ${opts}${note})${guard ? guard.miss : ''};`;
     out.push(...head, `if (!${name}) return { status: 'skipped' };`);
+    if (guard) out.push(guard.hit(name));
   } else {
     const head = list(`const ${name} = await pick(page, `);
-    head[head.length - 1] += `${policy}, ${opts}${note});`;
+    const guard = positionalClickLines(step, chain, key, root, ctx);
+    head[head.length - 1] += `${policy}, ${opts}${note})${guard ? guard.miss : ''};`;
     out.push(...head);
+    if (guard?.miss) out.push(`if (!${name}) return { status: 'skipped' };`);
+    if (guard) out.push(guard.hit(name));
   }
   // Replay's per-step flag: a resolution through a positional candidate, or
   // one narrowed to the loop cursor (an index into several matches), is what
@@ -1919,7 +2018,7 @@ function actionTarget(step: SkillStep, key: 'target' | 'source', ctx: Ctx, out: 
     if (ctx.echoes) {
       noteSlots(echoTexts, ctx);
       ctx.echoUsed = true;
-      out.push(`await markActed(page, ${name}.locator, ${ctx.echoes}, [${echoTexts.map(src).join(', ')}], ${q(`${ctx.segmentId}/${ctx.stepIndex}`)});`);
+      out.push(`await markActed(page, ${name}.locator, ${ctx.echoes}, [${echoTexts.map(src).join(', ')}], ${q(`${ctx.segmentId}/${ctx.stepIndex}`)}, ${q(step.tool)});`);
     }
   }
   return `${name}.locator`;
@@ -2169,6 +2268,7 @@ function withLiveRungs(step: SkillStep, segment: SpecSegment, index: number, min
 function emitSkillStep(recorded: SkillStep, segment: SpecSegment, index: number, ctx: Ctx, first = false): string[] {
   ctx.segmentId = segment.id;
   ctx.stepIndex = index;
+  ctx.segmentSteps = segment.steps;
   const minted: ReadonlySet<string> = ctx.minted ?? new Set<string>();
   const unfillable = unfillableStep(recorded, segment, index, minted);
   if (unfillable) {
@@ -2639,6 +2739,17 @@ function emitSkillAction(step: SkillStep, segment: SpecSegment, index: number, c
   // resolved, another recorded candidate may already show the text (textHeldOrThrow).
   const heldText = step.tool === 'wait_for' && (args.state === 'text_contains' || args.state === 'text_equals') && typeof args.text === 'string' && args.text.trim();
   const observations = heldText ? `observations${ctx.picks + 1}` : undefined;
+  // A popup item this run already applied (the shared pickAlreadyApplied,
+  // gitea fwgt12 s_f54a5a step 9): asked before the pick, as replay asks it.
+  const appliedPick = ctx.appliedPicks?.get(index - 1);
+  if (appliedPick && ctx.pickStart) {
+    out.push(
+      `if (await pickAlreadyApplied(page, ${q(appliedPick.role)}, ${src(appliedPick.name)}, ${ctx.pickStart})) {`,
+      `  console.log(${q(`[sitelooper skip] ${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex}: ${appliedPick.role} already applied by this run's own pick and close — click skipped`)});`,
+      "  return { status: 'skipped' };",
+      '}',
+    );
+  }
   const target = actionTarget(step, 'target', ctx, out, observations);
   const actionAt = out.length;
   if (!target) {
@@ -2689,7 +2800,10 @@ function emitSkillAction(step: SkillStep, segment: SpecSegment, index: number, c
           : `type(${target}, ${actSrc(str('text'))}${delay === undefined ? '' : `, { delay: ${delay} }`})`;
       if (ctx.standing) ctx.standingUsed = true;
       const where = `${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex}: `;
-      out.push(`await guardedTyping(${ctx.standing ?? 'null'}, ${target}, ${src(str(key))}, ${q(step.tool)}, (w) => logWarning(${q(where)} + w), async () => await ${call});`);
+      // …and a field the recording's own diff showed doubled after this very
+      // step is not stopped (SkillStep.doubledAsRecorded, grafana fwgr73).
+      const asRecorded = step.doubledAsRecorded ? ', { doubledAsRecorded: true }' : '';
+      out.push(`await guardedTyping(${ctx.standing ?? 'null'}, ${target}, ${src(str(key))}, ${q(step.tool)}, (w) => logWarning(${q(where)} + w), async () => await ${call}${asRecorded});`);
       break;
     }
     case 'press':
@@ -2966,7 +3080,9 @@ function readLines(step: SkillStep, ctx: Ctx): string[] {
   ];
   const read = readable
     ? slotFrame || frameMark || scopedBy
-      ? `async (loc: Locator) => scopedRead(await ${take}, { ${scope.join(', ')} })`
+      ? scopedBy && scopeSetBy(ctx.segmentSteps ?? [], step.args?.scopedBy)
+        ? `async (loc: Locator) => scopedReadLanded(await ${take}, { ${scope.join(', ')} }, loc, { set: true, what: ${q(what)} })`
+        : `async (loc: Locator) => scopedRead(await ${take}, { ${scope.join(', ')} })`
       : valueFrame
         ? `async (loc: Locator) => framedRead(await ${take}, ${src(valueFrame)})`
         : `(loc: Locator) => ${take}`
@@ -3356,9 +3472,11 @@ function identityChecks(segment: SpecSegment, ctx: Ctx): string[] {
 function emitSegment(segment: SpecSegment, ctx: Ctx): string[] {
   const out: string[] = [];
   ctx.known = new Set(Object.entries(segment.params).filter(([, p]) => p.known === true).map(([slot]) => slot));
-  // One echo ledger per segment, as replay keeps one per replayed segment.
+  // One echo ledger per FLOW STEP, spanning its segments, as the daemon's flow
+  // runner passes one ledger through the chain (round 61): a segment's read
+  // of a control an earlier segment filled is judged too.
   ctx.segments = (ctx.segments ?? 0) + 1;
-  ctx.echoes = `typed${ctx.segments}`;
+  ctx.echoes = 'echoLedger';
   ctx.echoUsed = false;
   // One volatility ledger per segment, as replay keeps one per replayed skill:
   // a navigation is retargeted by what THIS procedure has watched vary, never
@@ -3377,7 +3495,18 @@ function emitSegment(segment: SpecSegment, ctx: Ctx): string[] {
   // asks the same shared segmentGate (src/execution/gates.ts); a rule only one
   // runner applies is the class of defect the parity harness exists to catch.
   const gate = segmentGate(segment.steps);
+  ctx.segmentSteps = segment.steps;
+  ctx.appliedPicks = appliedPickCandidates(segment.steps);
+  ctx.pickStart = ctx.appliedPicks.size ? `pickStart${ctx.segments}` : undefined;
+  // The applied-pick rule's starting page, taken before the first step as
+  // replay takes it (gitea fwgt12 03-set).
+  if (ctx.pickStart) out.push(`let ${ctx.pickStart}: string[] | null = null;`);
   for (const [i, step] of segment.steps.entries()) {
+    // …taken before the first step that is not a navigation and again after
+    // each navigation, where replay takes it.
+    if (ctx.pickStart && !isNavigation(step.tool) && (i === 0 || isNavigation(segment.steps[i - 1].tool))) {
+      out.push(`${ctx.pickStart} = await pickBaseline(page);`);
+    }
     if (i + 1 === gate.at) out.push('', ...segmentGateLines(segment, ctx, gate.afterNavigation));
     out.push('');
     const lines = step.tool === 'loop' ? emitLoop(step, segment, i + 1, ctx) : emitSkillStep(step, segment, i + 1, ctx);
@@ -3409,9 +3538,7 @@ function emitSegment(segment: SpecSegment, ctx: Ctx): string[] {
   if (ctx.volatileUsed) {
     out.splice(2, 0, `// Url positions this segment has watched vary, for a later navigation (see navigationTarget).`, `const ${ctx.volatile}: UrlSegDiff[] = [];`);
   }
-  if (ctx.echoUsed) {
-    out.splice(2, 0, `// What this segment types, selects or names: a read that returns only that is an echo (see echoRead).`, `const ${ctx.echoes} = new Set<string>();`);
-  }
+  if (ctx.echoUsed) ctx.stepEchoUsed = true;
   if (ctx.standingUsed) {
     out.splice(2, 0, `// What this segment filled, which must still stand when the action that submits it goes (see restoreStandingFills).`, `const ${ctx.standing} = standingFills();`);
   }
@@ -3902,12 +4029,17 @@ export function emitFlowFile(spec: SpecFlow, o: EmitOptions): { source: string; 
       const consumed = new Set(consumedReportedOutputs(spec.steps, step.id));
       const guard = satisfiedGuard(step, ctx, consumed);
       if (guard.length) lines.push(...guard, '');
+      // Where the step's echo ledger goes, if a segment names it: after the guard, before the first segment.
+      const ledgerAt = lines.length;
       for (const [i, segment] of step.segments.entries()) {
         if (i) lines.push('');
         lines.push(...emitSegment(segment, ctx));
       }
       const templated = reportTemplateLines(step, ctx, consumed);
       if (templated.length) lines.push('', ...templated);
+      // What the step's segments type, select or name: a read that returns only that, or reads a control
+      // one of them set, is an echo (see echoRead). One for the whole chain (round 61).
+      if (ctx.stepEchoUsed) lines.splice(ledgerAt, 0, '// What this step types, selects or names, across its segments (see echoRead).', 'const echoLedger = new Set<string>();', '');
       // The typed slots a commit showed, collected across the body's segments (see committedSlots).
       if (ctx.committedUsed) lines.unshift('const typedCommitted = new Set<string>();', '');
       const routes = step.urlRoutes;

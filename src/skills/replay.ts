@@ -25,7 +25,7 @@ import {
 import { isRefTarget } from '../daemon/refs.js';
 import { settleDom } from '../daemon/settle.js';
 import { TRANSIENT_LINE, fillParams, fillParamsDeep, urlMatches, urlPart, urlPattern } from './compile.js';
-import { countScopes, countedNothing, flattenRead, liveAlerts, liveAlertsObserved, observedNothing, resolveForRead, scopedRead, takeRead, type ObservedAlerts } from '../execution/observe.js';
+import { countScopes, countedNothing, flattenRead, liveAlerts, liveAlertsObserved, observedNothing, resolveForRead, scopeSetBy, scopedReadLanded, takeRead, type ObservedAlerts } from '../execution/observe.js';
 import {
   addedLines,
   alertsComplete,
@@ -46,10 +46,11 @@ import { committedSlots, dismissalAlreadyInEffect, effectExpectation, expectedCh
 // Re-exported so this module's callers need not know which owns the source.
 export { lineShows, type LineShowsOptions } from '../execution/snapshot.js';
 export { consequentialExpectations, isEchoLine } from '../execution/expect.js';
-import { candidateNames, echoAt, echoVerdict, markActed, noteCommit, noteInteraction, setsSomething } from '../execution/echo.js';
+import { candidateNames, judgeEcho, markActed, noteCommit, noteInteraction, setsSomething } from '../execution/echo.js';
 import { documentOf, fillLost, guardedTyping, noteFill, rearmStandingFills, restoreStandingFills, standingFills, standingFillsLost } from '../execution/refill.js';
 import { hasTotpMarker, resolveSecrets, resolveSecretsAsync } from '../shared/secrets.js';
-import { closeBeforeReopen, hideBefore, hideEffectLines, hideVerdict, pressHadNoEffect, toggleAlreadyShown, toggleEffectLines } from '../execution/toggle.js';
+import { appliedPickCandidates, closeBeforeReopen, isNavigation, pickAlreadyApplied, pickBaseline, hideBefore, hideEffectLines, hideVerdict, pressHadNoEffect, toggleAlreadyShown, toggleEffectLines } from '../execution/toggle.js';
+import { alreadyAddedLines, positionalClickVerdict, recordedAccessibleName } from '../execution/positional.js';
 import { mayNavigateToDestination, navigateToDestination, textHeldElsewhere } from '../execution/recover.js';
 import { CONTEXT_CONTRACT, contractOf, contractVerdict, isVerified, originOf, stepsCarryContext, type Skill, type SkillStep } from './store.js';
 import { armPageEffect, describeFramePath, pageIndexVerdict, rootFor, stepEffect, type Root } from '../execution/context.js';
@@ -104,6 +105,13 @@ export interface ReplayOptions {
    * segment alone.
    */
   chain?: ReadonlyArray<Pick<Skill, 'params' | 'preconditions'>>;
+  /**
+   * The echo ledger of the flow step's whole chain (round 61): what every
+   * segment so far set, and where, so a read of a control an EARLIER segment
+   * filled is judged too. The flow runner passes one per chain; absent, this
+   * segment keeps its own, as before.
+   */
+  echoLedger?: Set<string>;
   /**
    * Inline healing for a step whose whole chain missed (site B of notes/PLAN-jev.md).
    * Per call, so a test supplies its own; the daemon registers one for the
@@ -238,6 +246,38 @@ export function unhealableWhy(step: SkillStep, key: string, tag: string): string
   }
   if (expect?.urlPattern || expect?.addedContains?.length || step.effect) return null;
   return 'the step recorded nothing that would verify a healed locator (no url pattern, no added lines, no page effect)';
+}
+
+/**
+ * Rule D (ghost fwgh14 n3, openproject fwop15 n2/n3): why an inline heal must
+ * NOT dispatch, or null. A click the recording saw stay on its page (its url
+ * expectation is the page it started on) whose recorded chain names a role —
+ * a role candidate, or a point's role — healed onto an element of ANOTHER
+ * role is a different control, and its only verifier is a url gate that can
+ * refuse it only after it has clicked. fwop15's s_bab182 step 5 was a link
+ * "Bench Project"; on the project page the heal clicked the project-selector
+ * button of that name before the url gate refused it, and fwgh14 n3's heal
+ * clicked Ghost's Settings nav link for a settings button. A heal of the same
+ * role, a proposal with no role, or a click whose recording navigated is left
+ * to the step's own checks, as before. Replay-only: a compiled artifact has
+ * no inline heal.
+ */
+export function healRoleRefused(
+  steps: readonly SkillStep[],
+  at: number,
+  preconditionPattern: string | undefined,
+  chain: readonly LocatorCandidate[],
+  proposal: LocatorCandidate,
+): string | null {
+  const step = steps[at];
+  if (!step || (step.tool !== 'click' && step.tool !== 'dblclick')) return null;
+  const roleOf = (c: LocatorCandidate): string | null => (c.kind === 'role' ? c.role : c.kind === 'point' && c.role ? c.role : null);
+  const recorded = new Set(chain.map(roleOf).filter((r): r is string => Boolean(r)));
+  const proposed = roleOf(proposal);
+  if (!recorded.size || !proposed || recorded.has(proposed)) return null;
+  const before = steps.slice(0, at).reverse().find((s) => s.expect?.urlPattern)?.expect?.urlPattern ?? preconditionPattern;
+  if (!step.expect?.urlPattern || !before || step.expect.urlPattern !== before) return null;
+  return `an inline heal proposed a ${proposed} for a control recorded as a ${[...recorded].join('/')}, on a click the recording saw stay on its page — a different control, not dispatched`;
 }
 
 /** Tools that write into one control: the wrong one is echoed back by the step's own expectation. */
@@ -469,7 +509,7 @@ export async function replaySkill(
   // names of options it clicks. A later read that returns one of these is an
   // echo (confirming the control, not app persistence); see echoedValues and
   // the shared rule, src/execution/echo.ts, which the artifact embeds.
-  const interacted = new Set<string>();
+  const interacted = opts.echoLedger ?? new Set<string>();
   // The fills this segment made that must still stand when the action that
   // submits them goes (the shared src/execution/refill.ts, which the artifact
   // embeds and keeps per segment too): fwvk1 n3 01-open's login form was
@@ -730,6 +770,15 @@ export async function replaySkill(
       return null;
     }
     if (!proposal) return null;
+    // Rule D: a heal onto another role, for a click recorded staying on its
+    // page, would click a different control before anything could refuse it.
+    const stepAt = skill.steps.indexOf(step);
+    const refusedRole = stepAt >= 0 ? healRoleRefused(skill.steps, stepAt, skill.preconditions.urlPattern, chain, proposal.candidate) : null;
+    if (refusedRole) {
+      proposal.settled?.(false);
+      res.warnings.push(`step ${tag}: ${refusedRole} (${candidateExpr(proposal.candidate)})`);
+      return null;
+    }
     const expr = candidateExpr(proposal.candidate);
     let locator: Locator;
     try {
@@ -768,6 +817,14 @@ export async function replaySkill(
   // stepsRun) and returns how it went; a 'stop' has already set failedAt/reason.
   // `tag` labels the step for humans (e.g. "5" or, inside a loop, "9.2.1");
   // `failIndex` is the top-level step number recorded in failedAt on a stop.
+  // The applied-pick rule's candidates and the page this segment started on
+  // (execution/toggle.ts, gitea fwgt12 03-set): taken before the first step
+  // that is not a navigation, and again after each navigation — the page a
+  // goto lands on is a new start — only for a procedure with a candidate.
+  const pickSteps = appliedPickCandidates(skill.steps);
+  let pickStart: string[] | null | undefined;
+  let pickStale = true;
+
   const runStepBody = async (
     step: SkillStep,
     tag: string,
@@ -777,6 +834,14 @@ export async function replaySkill(
     /** Loop-body cursor: which match an ambiguous per-record locator should act on (see resolveChain). */
     ambiguousNth?: number,
   ): Promise<'ran' | 'skipped' | 'stop'> => {
+    // The applied-pick baseline, ahead of everything this step does — where
+    // the artifact takes it, before the step's settle.
+    const topLevel = pickSteps.size > 0 && skill.steps.includes(step);
+    if (topLevel && isNavigation(step.tool)) pickStale = true;
+    else if (topLevel && pickStale) {
+      pickStart = await pickBaseline(page);
+      pickStale = false;
+    }
     const args = fillParamsDeep(step.args, params) as Record<string, unknown>;
     // A slot the run could not fill "asks for no particular value" — the
     // reading every marker gate here already takes (markersBound,
@@ -855,6 +920,16 @@ export async function replaySkill(
     // so its target need not be unique.
     const isRead = isReadAction(step.tool);
 
+    // A popup item this run already applied (the shared pickAlreadyApplied,
+    // gitea fwgt12 s_f54a5a step 9): clicking it again would un-tick it.
+    const pick = pickSteps.get(skill.steps.indexOf(step));
+    if (pick && (await pickAlreadyApplied(page, pick.role, fillParams(pick.name, params), pickStart ?? null))) {
+      const shown = `- ${pick.role} ${JSON.stringify(fillParams(pick.name, params))}`;
+      res.warnings.push(`step ${tag}: ${shown} shows inside the popup and outside it, where this run's own pick and close put it — a click would un-tick it; skipped as already in effect`);
+      res.lines.push(`${head} → skipped (already applied by this run)`);
+      return 'skipped';
+    }
+
     // Resolve every target through its chain before touching the page.
     const resolved: Record<string, Locator> = {};
     let resolveError: string | null = null;
@@ -877,6 +952,10 @@ export async function replaySkill(
     // below apply to it: they act on the page.
     const roots: Record<string, Root> = {};
     let frameMissed = false;
+    // The target's resolution and the chain it was resolved from, for the
+    // positional-click rule (R2) asked once every target is resolved.
+    let targetHit: { locator: Locator; index: number; candidate: LocatorCandidate; missed: number[] } | null = null;
+    let targetChain: LocatorCandidate[] = [];
     for (const key of ['target', 'source'] as const) {
       if (!(key in args)) continue;
       // A chain is a PREFERENCE ORDER, not a conjunction (shared fillableChain):
@@ -931,6 +1010,7 @@ export async function replaySkill(
         break;
       }
       const root = (roots[key] = framed.root);
+      if (key === 'target') targetChain = chain;
       // A read is an observation: the shared resolveForRead sweeps the page
       // and asks once more before giving up on it, exactly as the artifact does.
       const hit = isRead
@@ -972,7 +1052,7 @@ export async function replaySkill(
           resolved[key] = healedLocator;
           if (setsSomething(step.tool)) {
             noteInteraction(interacted, candidateNames(chain as { name?: unknown; label?: unknown }[]));
-            await markActed(page, healedLocator, interacted, [...candidateNames(chain as { name?: unknown; label?: unknown }[]), args.value, args.text], tag);
+            await markActed(page, healedLocator, interacted, [...candidateNames(chain as { name?: unknown; label?: unknown }[]), args.value, args.text], tag, step.tool);
           }
           continue;
         }
@@ -981,6 +1061,7 @@ export async function replaySkill(
         break;
       }
       resolved[key] = hit.locator;
+      if (key === 'target') targetHit = hit;
       if (structural(hit.candidate)) positionalResolution = true;
       // Evidence ONLY from a pass whose winner names something. When a
       // structural path won, that is precisely the resolution we distrust —
@@ -1001,7 +1082,7 @@ export async function replaySkill(
         noteInteraction(interacted, candidateNames(chain as { name?: unknown; label?: unknown }[]));
         // …and the element itself: an echo is judged by the control, not only
         // the text (echoAt, round 59).
-        await markActed(page, hit.locator, interacted, [...candidateNames(chain as { name?: unknown; label?: unknown }[]), args.value, args.text], tag);
+        await markActed(page, hit.locator, interacted, [...candidateNames(chain as { name?: unknown; label?: unknown }[]), args.value, args.text], tag, step.tool);
       }
       // Drift only when a candidate tried ahead of the winner FAILED (the shared
       // isDrift): a positional primary ranked behind a name that won was never missed.
@@ -1013,6 +1094,38 @@ export async function replaySkill(
     }
     // A typed/filled value is likewise something the skill put on the page.
     if (setsSomething(step.tool)) noteInteraction(interacted, [args.value, args.text]);
+    // RULE R2 (round 61, grafana fwgr73 05-open step 3), the shared
+    // positionalClickVerdict: a click whose identifying rungs ALL missed is
+    // (a) skipped as already in effect when everything it was recorded adding
+    // already shows (never one that submits the segment's work — the shared
+    // alreadyAddedLines), else (b) stopped when a positional rung took it onto
+    // an element without the recorded accessible name — never a different
+    // button. Top-level steps on the page only: a loop pass's cursor makes
+    // position its normal shape, and a frame step is judged in its frame.
+    const clickAt = step.tool === 'click' && !tag.includes('.') && !frameMissed && !step.contexts?.target?.frame?.length ? skill.steps.indexOf(step) : -1;
+    if (clickAt >= 0 && (targetHit || (resolveError && !resolved.target))) {
+      const identifying = targetChain.flatMap((c, i) => (structural(c) || snapshotRefCandidate(c) ? [] : [i]));
+      const verdict = await positionalClickVerdict(
+        page,
+        targetHit ? { locator: targetHit.locator, index: targetHit.index, structural: structural(targetHit.candidate), point: targetHit.candidate.kind === 'point', missed: targetHit.missed } : null,
+        identifying,
+        alreadyAddedLines(skill.steps, clickAt),
+        recordedAccessibleName(targetChain),
+        params,
+        dialectOf(step),
+      );
+      if (verdict && 'skip' in verdict) {
+        res.warnings.push(`step ${tag}: ${verdict.skip}`);
+        res.lines.push(`${head} → skipped (already in effect)`);
+        return 'skipped';
+      }
+      if (verdict && 'stop' in verdict) {
+        res.failedAt = failIndex;
+        res.reason = verdict.stop;
+        res.lines.push(`${head} → FAILED: ${verdict.stop}`);
+        return 'stop';
+      }
+    }
     if (!resolveError) absentDialog = null;
     if (resolveError) {
       if (isRead) {
@@ -1239,8 +1352,16 @@ export async function replaySkill(
             // …and a read scoped by a slot (skills/readscope.ts) publishes only
             // what this run's record shows (observe.ts scopedRead, fwrd87).
             const slot = (name: unknown) => (typeof name === 'string' ? params[name] : undefined);
-            return scopedRead(decodeRead(result), { frame: args.frame, slotFrame: args.slotFrame, mark: slot(args.frameMark), within: slot(args.scopedBy) });
+            // …and one that proves a value this procedure SET did not land is a
+            // failed step, not a skipped read (scopedReadLanded, gitea fwgt12).
+            return scopedReadLanded(decodeRead(result), { frame: args.frame, slotFrame: args.slotFrame, mark: slot(args.frameMark), within: slot(args.scopedBy) }, resolved.target ?? null, { set: scopeSetBy(skill.steps, step.args.scopedBy), what: String(args.what ?? 'text') });
           });
+          if (!taken.ok && taken.lost) {
+            res.failedAt = failIndex;
+            res.reason = taken.message;
+            res.lines.push(`${head} → FAILED: ${taken.message}`);
+            return { status: 'stopped' };
+          }
           if (!taken.ok) {
             if (step.label) {
               readsSkipped++;
@@ -1268,7 +1389,7 @@ export async function replaySkill(
           const typed = step.tool === 'type' ? args.text : step.tool === 'fill' ? args.value : undefined;
           let value =
             typeof typed === 'string' && resolved.target
-              ? await guardedTyping(standing, resolved.target, typed, step.tool, (w) => res.warnings.push(`step ${tag}: ${w}`), dispatch)
+              ? await guardedTyping(standing, resolved.target, typed, step.tool, (w) => res.warnings.push(`step ${tag}: ${w}`), dispatch, step.doubledAsRecorded ? { doubledAsRecorded: true } : {})
               : await dispatch();
           // A click the app ignored once in the recording (SkillStep.
           // repeatIfNoEffect, ghost fwgh12-n1's link "Published"): pressed
@@ -1475,8 +1596,11 @@ export async function replaySkill(
       // Round 59: the text alone is not an echo — a read of an element that is
       // not the control, after the value was committed, is observed (EspoCRM
       // fwec11's "Admin" display name after the sign-in form was submitted).
-      const echo = echoVerdict(interacted, key, value, `step ${tag}`);
-      if (echo && (await echoAt(page, interacted, value, (resolved.target as Locator | undefined) ?? null))) {
+      // Round 61: the element first — a read of a control this chain put a
+      // value into, nothing committed since, is an echo whatever its text
+      // (EspoCRM fwec13's "12,500" for the 12500 typed) — then the text rule.
+      const echo = await judgeEcho(page, interacted, key, value, (resolved.target as Locator | undefined) ?? null, `step ${tag}`);
+      if (echo) {
         res.echoedValues.push(key);
         res.warnings.push(echo);
       }

@@ -8,6 +8,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { rootDir } from '../shared/paths.js';
+import { acceptsImages, anthropicImageBlocks, carriesImages, openAiWireMessages, shownIds, visionSettings } from './vision.js';
 
 export interface ToolDef {
   name: string;
@@ -26,7 +27,17 @@ export interface ToolCall {
 export type ChatMessage =
   | { role: 'system' | 'user'; content: string }
   | { role: 'assistant'; content: string | null; tool_calls?: RawToolCall[] }
-  | { role: 'tool'; tool_call_id: string; content: string };
+  | {
+      role: 'tool';
+      tool_call_id: string;
+      content: string;
+      /**
+       * Vision only (SITELOOPER_VISION=on): ids of images this result shows the
+       * model (vision.ts storeImage). Never bytes, never sent as a field: the
+       * providers turn them into image parts at send time.
+       */
+      images?: string[];
+    };
 
 export interface RawToolCall {
   id: string;
@@ -246,9 +257,13 @@ export interface GlobalConfig {
   jev?: string;
   jevApiKey?: string;
   jevModel?: string;
+  /** Show screenshots to the model (vision.ts): `on` or off. */
+  vision?: string;
+  /** Also attach a small screenshot to every state-changing action (needs vision on). */
+  visionAuto?: string;
 }
 
-const CONFIG_KEYS: (keyof GlobalConfig)[] = ['provider', 'model', 'fallbackModel', 'baseUrl', 'apiKey', 'jev', 'jevApiKey', 'jevModel'];
+const CONFIG_KEYS: (keyof GlobalConfig)[] = ['provider', 'model', 'fallbackModel', 'baseUrl', 'apiKey', 'jev', 'jevApiKey', 'jevModel', 'vision', 'visionAuto'];
 
 export function globalConfigPath(): string {
   return path.join(rootDir(), 'config.json');
@@ -409,10 +424,14 @@ export class OpenAICompatProvider implements Provider {
           `(or \`sitelooper config set apiKey <key>\`)`,
       );
     }
+    const sendable = sendableMessages(messages);
     const body = {
       model: this.config.model,
       temperature: this.config.temperature,
-      messages: sendableMessages(messages),
+      // With no image in the history this is `sendable` itself (vision.ts).
+      messages: carriesImages(sendable)
+        ? openAiWireMessages(sendable, { allowed: await acceptsImages(this.config.model, this.config.provider, this.config.baseUrl), keep: visionSettings().keep })
+        : sendable,
       tools: tools.map((t) => ({
         type: 'function',
         function: { name: t.name, description: t.description, parameters: t.parameters },
@@ -534,7 +553,14 @@ export class AnthropicProvider implements Provider {
       .filter((m) => m.role === 'system')
       .map((m) => m.content)
       .join('\n\n');
-    const anthMessages = toAnthropicMessages(messages.filter((m) => m.role !== 'system'));
+    const rest = messages.filter((m) => m.role !== 'system');
+    const vision = carriesImages(rest)
+      ? (async () => {
+          const allowed = await acceptsImages(this.config.model, this.config.provider, this.baseUrl);
+          return { allowed, shown: shownIds(rest, { allowed, keep: visionSettings().keep }) };
+        })()
+      : null;
+    const anthMessages = toAnthropicMessages(rest, vision ? await vision : undefined);
     // Prompt caching: unlike the OpenAI-compatible providers above (which cache
     // automatically server-side), Anthropic only caches up to an explicit
     // cache_control breakpoint. Without one, every turn re-bills the entire
@@ -597,11 +623,16 @@ export class AnthropicProvider implements Provider {
  * (one per call in that turn) are collapsed here rather than sent as
  * separate messages.
  */
-function toAnthropicMessages(messages: ChatMessage[]): Array<{ role: 'user' | 'assistant'; content: any[] }> {
+function toAnthropicMessages(
+  messages: ChatMessage[],
+  /** Vision only: whether this model takes images, and which ids are recent enough to show. */
+  vision?: { allowed: boolean; shown: ReadonlySet<string> },
+): Array<{ role: 'user' | 'assistant'; content: any[] }> {
   const out: Array<{ role: 'user' | 'assistant'; content: any[] }> = [];
   for (const m of messages) {
     if (m.role === 'tool') {
-      const block = { type: 'tool_result', tool_use_id: m.tool_call_id, content: m.content };
+      const content = vision && m.images?.length ? [{ type: 'text', text: m.content }, ...anthropicImageBlocks(m.images, vision.shown, vision.allowed)] : m.content;
+      const block = { type: 'tool_result', tool_use_id: m.tool_call_id, content };
       const prev = out[out.length - 1];
       if (prev && prev.role === 'user' && prev.content.every((b) => b.type === 'tool_result')) {
         prev.content.push(block);

@@ -1,5 +1,9 @@
 import { isMutatingAction, mutatesSteps } from '../execution/lifecycle.js';
 import type { LocatorCandidate, RecordedEntry, RecordedInstruction, RecordedStep, StepDiff } from '../daemon/recorder.js';
+import { urlMatches } from '../execution/url.js';
+
+/** What the recorder knew about one action (daemon/step-evidence.ts StepEvidence), as abandonedLinkClick reads it. */
+type RecordedEvidence = NonNullable<RecordedStep['obs']>;
 import type { Report } from '../agent/report.js';
 import { contractFor, newSkillId, originOf, type Skill, type SkillParam, type SkillStep, type StepExpectation } from './store.js';
 import { MIN_ID_LEN, digitDominant, looksLikeId, skeleton, tokenPattern } from './shape.js';
@@ -9,6 +13,7 @@ import { CREDENTIAL_KEY, fillParamsDeep, queryPairs, safeDecode, urlParts, urlSh
 import { contextsEqual, framesEqual, stepEffect } from '../execution/context.js';
 import { MAX_ADDED_LINES as MAX_DIFF_LINES } from '../execution/snapshot.js';
 import { hideEffectLines } from '../execution/toggle.js';
+import { recordedDoubled } from '../execution/refill.js';
 import { collapseTogglePairs, dropSupersededSets, sameControl } from './toggles.js';
 import { locatingSlots, scopeReadBySlot } from './readscope.js';
 
@@ -868,6 +873,9 @@ export function compileSkills(input: CompileInput): Skill[] {
     for (const [name, value] of slots) segParams[name] = { example: value, usedIn: [] };
     // What each built step recorded, for transforms that must look past its expectation (dropDismissedDialogs).
     const recordedDiffs = new WeakMap<SkillStep, StepDiff>();
+    // ...and what the recorder knew about each action (RecordedStep.obs): the
+    // settle's link and the uncapped totals decide an abandoned link click (fwop15).
+    const recordedObs = new WeakMap<SkillStep, RecordedEvidence>();
     const skillSteps: SkillStep[] = sg.steps.map((step, i) => {
       const g = base + i;
       // A minted value is a reference only DOWNSTREAM of its mint: in this
@@ -956,6 +964,14 @@ export function compileSkills(input: CompileInput): Skill[] {
       if (step.page !== undefined) out.page = step.page;
       if (step.toggle) out.toggle = true;
       if (step.closedBefore && step.tool === 'click') out.closedBefore = true;
+      // The recording's own field held the typed value twice over right after
+      // this step (grafana fwgr73 04-open, monaco's auto-closing): judged on
+      // the RAW recorded diff, before any masking, so both runners' doubled-
+      // value stop defers to what the recording saw (refill.ts guardedTyping).
+      if (step.tool === 'type' || step.tool === 'fill') {
+        const typed = step.tool === 'type' ? step.args.text : step.args.value;
+        if (typeof typed === 'string' && recordedDoubled(step.diff?.added ?? [], step.locators.target?.chain ?? [], typed)) out.doubledAsRecorded = true;
+      }
       if (pressedAgain.has(step)) out.repeatIfNoEffect = true;
       if (step.effect) {
         out.effect =
@@ -1002,12 +1018,13 @@ export function compileSkills(input: CompileInput): Skill[] {
       // by re-inlining every dropped slot into the steps, expectations included.
       for (const name of slotsUsed(JSON.stringify({ args, locators }))) segParams[name]?.usedIn.push(i + 1);
       if (step.diff) recordedDiffs.set(out, step.diff);
+      if (step.obs) recordedObs.set(out, step.obs);
       return out;
     });
     const mintedForStart = mintedMap((m) => m.keptIndex < base);
     const notes: TransformNote[] = [];
     const folded = foldLoops(
-      coalesceControls(dropDismissedDialogs(dropSupersededNavigation(markRequiredRemovals(skillSteps, (s) => recordedDiffs.get(s)), notes, (s) => recordedDiffs.get(s)), notes, (s) => recordedDiffs.get(s)), notes),
+      coalesceControls(dropDismissedDialogs(dropSupersededNavigation(markRequiredRemovals(skillSteps, (s) => recordedDiffs.get(s)), notes, (s) => recordedDiffs.get(s), (s) => recordedObs.get(s)), notes, (s) => recordedDiffs.get(s)), notes),
       input.instruction,
       notes,
     );
@@ -1024,6 +1041,8 @@ export function compileSkills(input: CompileInput): Skill[] {
   // evidence of its lines whether or not the procedure keeps the read.
   const reads = recordedReadTexts(steps);
   for (const b of built) unfreezeExpectations(b.folded, published, b.notes, { reads, diffOf: (s) => b.recordedDiffs.get(s), slots });
+  // A flash is not a step's effect (vikunja fwvk12): see dropFlashedLines.
+  for (const b of built) dropFlashedLines(b.folded, steps, (s) => b.recordedDiffs.get(s), b.notes);
   if (built.length) built[0].notes.unshift(...recordingNotes);
 
   // Derived-param metadata lands on the MINTING segment: which post-fold step
@@ -3272,14 +3291,26 @@ export function coalesceControls(steps: SkillStep[], notes?: TransformNote[]): S
  * intermediate page may have been load-bearing (a session bootstrap, a
  * redirect that set a cookie), and this cannot tell from the outside.
  */
-export function dropSupersededNavigation(steps: SkillStep[], notes?: TransformNote[], diffOf?: (step: SkillStep) => StepDiff | undefined): SkillStep[] {
+export function dropSupersededNavigation(
+  steps: SkillStep[],
+  notes?: TransformNote[],
+  diffOf?: (step: SkillStep) => StepDiff | undefined,
+  obsOf?: (step: SkillStep) => RecordedEvidence | undefined,
+): SkillStep[] {
+  /** Gestures that only prepared an abandoned click (abandonedLinkClick's `prepared`): they go with it. */
+  const preparedDrop = new Set<number>();
   return steps.filter((step, i) => {
+    if (preparedDrop.has(i)) {
+      notes?.push({ name: 'dropSupersededNavigation', at: i + 1, reason: `a ${step.tool} that only prepared a link click the recording saw go nowhere, replaced by a goto to its href` });
+      return false;
+    }
     const superseded = step.tool === 'goto' && steps[i + 1]?.tool === 'goto';
     if (superseded) notes?.push({ name: 'dropSupersededNavigation', at: i + 1, reason: `the next step navigates again, to ${JSON.stringify(String(steps[i + 1].args.url ?? ''))}` });
     if (superseded) return false;
-    const replacedBy = abandonedLinkClick(steps, i);
-    if (replacedBy !== null) {
-      notes?.push({ name: 'dropSupersededNavigation', at: i + 1, reason: `a link click that recorded no consequence, replaced by the goto at step ${replacedBy + 1}` });
+    const abandoned = abandonedLinkClick(steps, i, diffOf, obsOf);
+    if (abandoned !== null) {
+      for (const k of abandoned.prepared) preparedDrop.add(k);
+      notes?.push({ name: 'dropSupersededNavigation', at: i + 1, reason: `a link click that recorded no consequence, replaced by the goto at step ${abandoned.goto + 1}` });
       return false;
     }
     const repeated = repeatOf(steps, i, diffOf);
@@ -3390,6 +3421,156 @@ const entryPopupHides = new WeakSet<SkillStep>();
 export function observesOnly(step: SkillStep): boolean {
   if (step.tool === 'read' || step.tool === 'read_all' || step.tool === 'wait_for') return true;
   return step.tool === 'tabs' && typeof step.args?.switch_to !== 'number';
+}
+
+/**
+ * A FLASH IS NOT A STEP'S EFFECT (round 61).
+ *
+ * vikunja fwvk12-n1 02-create: #24 clicked the empty description's
+ * placeholder, and its diff caught `- heading "Description Saved!"` (the
+ * heading "Description" renamed) — a timed save indicator that happened to
+ * land in that click's settle window. It reverted by itself: nothing recorded
+ * removing it, yet #35, the description's Save, recorded it appearing AGAIN
+ * (and "Description" going). s_329439 step 1 expected the flash as its only
+ * line, and n2 and n3 both stopped there ("none of the 1 recorded page
+ * change(s) appeared"); fwvk11-n1 made the same click and recorded nothing.
+ *
+ * So a line a step added is not that step's evidence when a LATER step of the
+ * same recording adds the identical line again with no step in between
+ * recording its removal: it must have gone by itself, so it was a flash, and
+ * it is dropped from the earlier step's expectation. The later step keeps it.
+ * The recording decides, never the line's words.
+ *
+ * Never dropped from:
+ *  - a step that commits the segment's work (commitsWork): two Saves that
+ *    each flash "Saved!" keep both lines, or a Save that never happened would
+ *    pass silently (repairdesk fwrd84's class, round 51);
+ *  - a minting step, and a line carrying this run's own value (SLOT_LINE);
+ *  - a step whose later re-add is the SAME control (a repeat of itself).
+ * Where phase A's `obs` is recorded, the later step's before-state (its own
+ * recorded removals) not listing the line confirms it; it is not required.
+ */
+function dropFlashedLines(
+  folded: SkillStep[],
+  recording: readonly RecordedStep[],
+  diffOf: (step: SkillStep) => StepDiff | undefined,
+  notes: TransformNote[],
+): void {
+  const at = (s: SkillStep): number => {
+    const d = diffOf(s);
+    return d ? recording.findIndex((r) => r.diff === d) : -1;
+  };
+  const trim = (l: string) => l.trim();
+  folded.forEach((step, si) => {
+    const lines = step.expect?.addedContains;
+    const i = at(step);
+    if (!lines?.length || i < 0 || step.mints || commitsWork(recording, i)) return;
+    const added = (recording[i].diff?.added ?? []).map(trim);
+    const flashed = new Set<string>();
+    /** The later steps that re-added a flashed line (their recorded indices). */
+    const readdedAt = new Set<number>();
+    for (const line of added) {
+      for (let j = i + 1; j < recording.length; j++) {
+        const later = recording[j];
+        if ((later.diff?.added ?? []).some((l) => trim(l) === line)) {
+          if (primaryOfRecorded(later) !== primaryOfRecorded(recording[i])) {
+            flashed.add(line);
+            readdedAt.add(j);
+          }
+          break;
+        }
+        // "Nothing recorded removing it" is evidence only where every step in
+        // between has a COMPLETE record of what it removed (removalRecord): a
+        // recorder before round 56 kept removals only for a dialog or an empty
+        // add, and a step without one proves nothing gone. The sizing scan
+        // over the published recordings fired on 60+ dialog openings
+        // (repairdesk "Edit part") without this.
+        const removed = removalRecord(later);
+        if (removed === null || removed.some((l) => trim(l) === line)) break;
+      }
+    }
+    if (!flashed.size) return;
+    // A compiled line stands for its recorded one after slotting and masking:
+    // it is the flash's when it IS the recorded line, or when the step that
+    // re-added the flash compiled the very same line.
+    const again = new Set(folded.filter((s) => readdedAt.has(at(s))).flatMap((s) => s.expect?.addedContains ?? []));
+    // A popup's own line is never a flash: it belongs to the opener and
+    // close rules (carryOpener, closedBefore, openerLines), and a picker can
+    // shut between gestures with nothing recorded (gitea fwgt11), so the
+    // 'complete removal record' this rule trusts is not complete for it.
+    const drop = lines.filter((l) => !SLOT_LINE.test(l) && !POPUP_LINE.test(trim(l)) && (flashed.has(trim(l)) || (again.has(l) && !added.includes(trim(l)))));
+    if (!drop.length) return;
+    const kept = lines.filter((l) => !drop.includes(l));
+    if (kept.length) step.expect!.addedContains = kept;
+    else {
+      delete step.expect!.addedContains;
+      if (!step.expect!.alertContains && !step.expect!.removedContains) delete step.expect!.lineDialect;
+      if (!Object.keys(step.expect!).length) delete step.expect;
+    }
+    notes.push({ name: 'dropFlashedLines', at: si + 1, reason: `line(s) a later step recorded appearing again, never recorded going: a flash, not this step's effect: ${JSON.stringify(drop)}` });
+  });
+}
+
+/**
+ * Whether the recorded step at `i` may be committing work, so that its lines
+ * are what proves the work landed and are never dropped as a flash. Any step
+ * that is not a click or press; and a click or press that
+ *  - follows a value ENTERED (fill, type, select) on the same page (no url
+ *    change since): the Save of what was typed, as markRequiredRemovals
+ *    (round 56) reads a hide that removes what the segment filled;
+ *  - acts on a control the step right before it ADDED, unless it is a
+ *    dismissal: the confirm a first click raised — ghost fwgh6 02's "Publish
+ *    post, right now", raised by its Publish click, which the sizing scan
+ *    otherwise flagged; repairdesk's "Delete part" behind "Delete";
+ *  - is already a required removal.
+ * Only what is left — fwvk12's placeholder click, right after the task page
+ * opened — can lose a flashed line.
+ */
+function commitsWork(recording: readonly RecordedStep[], i: number): boolean {
+  const s = recording[i];
+  if (s.tool !== 'click' && s.tool !== 'dblclick' && s.tool !== 'press') return true;
+  const page = (k: number): string | undefined => {
+    for (let m = k; m >= 0; m--) if (recording[m].diff?.url) return recording[m].diff!.url;
+    return undefined;
+  };
+  const here = page(i - 1);
+  for (let k = i - 1; k >= 0; k--) {
+    const t = recording[k].tool;
+    if (t === 'goto' || t === 'back' || (here !== undefined && recording[k].diff?.url !== undefined && recording[k].diff!.url !== here)) break;
+    if (t === 'fill' || t === 'type' || t === 'select') return true;
+  }
+  const prev = recording[i - 1];
+  const role = s.locators?.target?.chain?.find((c): c is Extract<LocatorCandidate, { kind: 'role' }> => c.kind === 'role' && Boolean(c.name));
+  const name = role?.name ?? /\[name="([^"]+)"\]/.exec(String(s.args.target ?? ''))?.[1];
+  if (prev && name && !DISMISSAL.test(name.trim()) && (prev.diff?.added ?? []).some((l) => l.includes(`"${name}"`))) return true;
+  return false;
+}
+
+/**
+ * Everything a recorded step took off the page, or null when the recording
+ * cannot say. Complete when phase A's `obs` holds the removals and they number
+ * `obs.totals.removed`, or when the diff's own removals were kept below the
+ * recorder's cap; a step that looked and did not act (read, screenshot, wait)
+ * removed nothing. Anything else — an eval, an action whose removals were not
+ * kept — is unknown.
+ */
+function removalRecord(s: RecordedStep): string[] | null {
+  const all = s.diff?.removed ?? s.obs?.removed;
+  const total = s.obs?.totals?.removed;
+  if (all && total !== undefined) return all.length === total ? all : null;
+  if (total === 0) return [];
+  if (s.diff?.removed) return s.diff.removed.length < MAX_DIFF_LINES ? s.diff.removed : null;
+  if (!s.diff && (s.tool === 'read' || s.tool === 'read_all' || s.tool === 'screenshot' || s.tool === 'wait_for')) return [];
+  // Phase A's recorder refuses an eval that changes the page and stores the
+  // result of one it kept (`evalResult`): such an eval removed nothing.
+  if (s.tool === 'eval' && s.evalResult !== undefined) return [];
+  return null;
+}
+
+/** A recorded step's primary locator (or raw target), as a comparable key. */
+function primaryOfRecorded(s: RecordedStep): string {
+  const c = s.locators?.target?.chain?.[0];
+  return c ? JSON.stringify(c) : String(s.args?.target ?? '');
 }
 
 /** A click's primary locator — the first candidate it was recorded with — as a comparable key. */
@@ -3541,7 +3722,23 @@ function removalUndoneBetween(steps: readonly SkillStep[], i: number, j: number,
  * recorded). And the goto comes before any other gesture: only observations
  * (reads, waits) and further such clicks lie between.
  */
-function abandonedLinkClick(steps: readonly SkillStep[], i: number): number | null {
+function abandonedLinkClick(
+  steps: readonly SkillStep[],
+  i: number,
+  diffOf?: (step: SkillStep) => StepDiff | undefined,
+  obsOf?: (step: SkillStep) => RecordedEvidence | undefined,
+): { goto: number; prepared: number[] } | null {
+  // THE RECORDING'S OWN EVIDENCE, when the recorder kept it (openproject
+  // fwop15 01-open): the click's settle waited on a link whose navigation
+  // never committed — the url after it is still the link's `from`, and the
+  // uncapped totals say it added and removed nothing. Such a click was the
+  // procedure trying to reach the link's href, and a goto to that href is the
+  // navigation it relies on. The recording clicked it three times, forced,
+  // with a scroll and a hover on the same link between: those prepared a
+  // click that went nowhere and go with it. Without the evidence, the rule
+  // below is today's, exactly.
+  const link = obsOf?.(steps[i])?.settle?.link;
+  if (link) return abandonedByEvidence(steps, i, link, diffOf, obsOf);
   const inert = (k: number): boolean => {
     const s = steps[k];
     if (s.tool !== 'click' || s.effect || s.mints || s.label !== undefined || s.toggle) return false;
@@ -3556,9 +3753,67 @@ function abandonedLinkClick(steps: readonly SkillStep[], i: number): number | nu
   if (!inert(i)) return null;
   for (let j = i + 1; j < steps.length; j++) {
     const s = steps[j];
-    if (s.tool === 'goto') return j;
+    if (s.tool === 'goto') return { goto: j, prepared: [] };
     if (observesOnly(s)) continue;
     if (inert(j)) continue;
+    return null;
+  }
+  return null;
+}
+
+/** Tools that only PREPARE a click on the same control, and change nothing the recorder diffs (tools.ts STATE_CHANGING leaves them out). */
+const PREPARING_TOOLS = new Set(['scroll_into_view', 'hover', 'focus']);
+
+/**
+ * abandonedLinkClick when the recording's evidence (RecordedStep.obs) says the
+ * click went nowhere: see there. A click is dropped when its settle's link
+ * went nowhere (the url after it is still `link.from`) and it added and
+ * removed nothing (obs.totals, else the diff), and the first gesture past
+ * the observations, further such clicks and gestures preparing one of them is
+ * a goto to `link.href`. A goto anywhere else, or any other gesture first,
+ * keeps it. A preparing gesture counts only when the next gesture after it
+ * is another such click or the goto: a hover that opened something the
+ * procedure then used is part of the procedure.
+ */
+function abandonedByEvidence(
+  steps: readonly SkillStep[],
+  i: number,
+  link: { from: string; href: string },
+  diffOf?: (step: SkillStep) => StepDiff | undefined,
+  obsOf?: (step: SkillStep) => RecordedEvidence | undefined,
+): { goto: number; prepared: number[] } | null {
+  const wentNowhere = (k: number): boolean => {
+    const s = steps[k];
+    if (s.tool !== 'click' || s.effect || s.mints || s.label !== undefined || s.toggle) return false;
+    const obs = obsOf?.(s);
+    if (!obs?.settle?.link || obs.settle.link.href !== link.href || obs.captureFailed) return false;
+    const diff = diffOf?.(s);
+    if (!diff || diff.url !== obs.settle.link.from) return false;
+    const added = obs.totals?.added ?? diff.added.length;
+    const removed = obs.totals?.removed ?? (diff.removed ?? []).length;
+    return added === 0 && removed === 0 && !diff.alerts.length;
+  };
+  if (!wentNowhere(i)) return null;
+  const controls = new Set([primaryLocator(steps[i])]);
+  const prepared: number[] = [];
+  let pending: number[] = [];
+  for (let j = i + 1; j < steps.length; j++) {
+    const s = steps[j];
+    if (s.tool === 'goto') {
+      if (typeof s.args.url !== 'string' || !urlMatches(s.args.url, link.href)) return null;
+      return { goto: j, prepared: [...prepared, ...pending] };
+    }
+    if (observesOnly(s)) continue;
+    if (wentNowhere(j)) {
+      controls.add(primaryLocator(s));
+      prepared.push(...pending);
+      pending = [];
+      continue;
+    }
+    if (PREPARING_TOOLS.has(s.tool) && controls.has(primaryLocator(s))) {
+      pending.push(j);
+      continue;
+    }
     return null;
   }
   return null;

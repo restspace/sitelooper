@@ -186,10 +186,75 @@ export function scopedRead(value: unknown, scope: ReadScope): unknown {
   const fold = (s: string) => s.replace(/\s+/g, ' ').trim().toLowerCase();
   const within = typeof scope.within === 'string' ? fold(scope.within) : '';
   if (within && !fold(flattenRead(got)).includes(within)) {
-    throw new Error(`the element shows another record than ${JSON.stringify(clip(String(scope.within), 80))} — not published`);
+    throw new ScopeMiss(`the element shows another record than ${JSON.stringify(clip(String(scope.within), 80))} — not published`, flattenRead(got));
   }
   return got;
 }
+
+/** scopedRead's record check failing: the element read shows another value than the scope's. */
+export class ScopeMiss extends Error {
+  constructor(
+    message: string,
+    readonly shown: string,
+  ) {
+    super(message);
+  }
+}
+
+/** A scoped read that proves the value the procedure SET did not land (scopedReadLanded); takeRead reports it `lost`. */
+export class ScopedValueLost extends Error {}
+
+/**
+ * Whether a procedure SET the value slot `slot` names: a fill, type or select
+ * of it, or a click on the element named by it exactly (its target's quoted
+ * name, or a candidate whose name or text is the slot).
+ * gitea fwgt12 s_f54a5a set `{{v4}}` ("bug") by filling and clicking it.
+ */
+export function scopeSetBy(
+  steps: readonly { tool: string; args?: Record<string, unknown>; locators?: { target?: readonly object[] } }[],
+  slot: unknown,
+): boolean {
+  if (typeof slot !== 'string' || !/^[vd]\d+$/.test(slot)) return false;
+  const marker = `{{${slot}}}`;
+  const has = (v: unknown) => typeof v === 'string' && v.includes(marker);
+  return steps.some((s) => {
+    if (s.tool === 'fill' || s.tool === 'type' || s.tool === 'select') return has(s.args?.value) || has(s.args?.text) || has(s.args?.option);
+    if (s.tool !== 'click' && s.tool !== 'check' && s.tool !== 'dblclick') return false;
+    // A click SETS the value when it picks the element named by it exactly —
+    // an option or item called `{{v4}}` — not one whose name merely includes
+    // it (a heading `{{v2}} #5` names a record; clicking it sets nothing).
+    const exact = (v: unknown) => v === marker;
+    const target = typeof s.args?.target === 'string' ? s.args.target : '';
+    return target.includes(`"${marker}"`) || (s.locators?.target ?? []).some((c) => exact((c as { name?: unknown }).name) || exact((c as { text?: unknown }).text));
+  });
+}
+
+/**
+ * scopedRead, and then (round 61, gitea fwgt12 03-set) the difference between
+ * a read that landed on ANOTHER record and one whose value is gone. A scope
+ * miss on a text read of a value the procedure SET (`set`), where no element
+ * the read's locator matches shows that value, is evidence that what the step
+ * set did not land: s_f54a5a read the sidebar labels scoped to "bug" and
+ * found "priority-high", and the artifact skipped the read and passed while
+ * the issue lost "bug". That throws ScopedValueLost, which both runners turn
+ * into a failed step. A miss where some match still shows the value is
+ * another record read (fwrd87's Part A row for Part B): skipped, as before.
+ */
+export async function scopedReadLanded(value: unknown, scope: ReadScope, loc: Locator | null, o: { set: boolean; what: string }): Promise<unknown> {
+  try {
+    return scopedRead(value, scope);
+  } catch (err) {
+    if (!(err instanceof ScopeMiss) || !o.set || o.what !== 'text' || !loc || typeof scope.within !== 'string') throw err;
+    const fold = (s: string) => s.replace(/\s+/g, ' ').trim().toLowerCase();
+    const within = fold(scope.within);
+    const texts = await loc.allInnerTexts().catch(() => null);
+    if (texts === null || texts.some((t) => fold(t).includes(within))) throw err;
+    throw new ScopedValueLost(
+      `the read scoped to ${JSON.stringify(clip(scope.within, 80))}, a value this procedure set, shows ${JSON.stringify(clip(err.shown, 80))} and nothing it reads shows ${JSON.stringify(clip(scope.within, 80))}: what the step set did not land`,
+    );
+  }
+}
+
 
 /**
  * Where a read's target is, for an OBSERVATION: the runner's own resolution,
@@ -212,7 +277,7 @@ export async function resolveForRead<H>(page: Page, resolve: (again: boolean) =>
   return resolve(true);
 }
 
-export type ReadTaken = { ok: true; value: string } | { ok: false; message: string };
+export type ReadTaken = { ok: true; value: string } | { ok: false; message: string; lost?: true };
 
 /**
  * A resolved read, taken. A read is an observation and never fails the step:
@@ -225,7 +290,8 @@ export async function takeRead(read: () => Promise<unknown>): Promise<ReadTaken>
   try {
     return { ok: true, value: flattenRead(await read()) };
   } catch (err) {
-    return { ok: false, message: (err instanceof Error ? err.message : String(err)).split('\nCall log:')[0] };
+    const message = (err instanceof Error ? err.message : String(err)).split('\nCall log:')[0];
+    return err instanceof ScopedValueLost ? { ok: false, message, lost: true } : { ok: false, message };
   }
 }
 

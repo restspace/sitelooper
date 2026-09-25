@@ -2600,10 +2600,15 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
       if (moved.isError) return { why: `could not reach ${head!.id}'s start page ${startAt}` };
       movedFrom = url;
     }
+    // One echo ledger per attempt, spanning its chain (round 61): a segment's
+    // read of a control an earlier segment filled is judged as an echo too
+    // (execution/echo.ts judgeEcho), as the artifact keeps one per flow step.
+    let echoLedger = new Set<string>();
     for (const cand of candidates) {
       if (attempts >= MAX_CANDIDATE_ATTEMPTS) break;
+      echoLedger = new Set<string>();
       progress(`[skill] trying ${cand.skill.id} (${cand.skill.status}, ${cand.skill.stats.successes}/${cand.skill.stats.uses}) without the model`);
-      const execution = await executeTool(this.browser, 'run_skill', { id: cand.skill.id, params: cand.params }, screenshotDir, signal);
+      const execution = await executeTool(this.browser, 'run_skill', { id: cand.skill.id, params: cand.params, echoLedger }, screenshotDir, signal);
       const r = execution.replay;
       if (!r) return { why: `run_skill returned nothing for ${cand.skill.id}` };
       varianceSeen(r.urlDiffs);
@@ -2703,7 +2708,7 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
       agg.segmentsDone++;
       earlier.push({ skill: current, res: replay });
       progress(`[skill] chain ${current.seq.chain}: segment ${next.seq!.index + 1}/${next.seq!.of} → ${next.id}`);
-      const nextExec = await executeTool(this.browser, 'run_skill', { id: next.id, params: { ...match.params, ...derived } }, screenshotDir, signal);
+      const nextExec = await executeTool(this.browser, 'run_skill', { id: next.id, params: { ...match.params, ...derived }, echoLedger }, screenshotDir, signal);
       const r = nextExec.replay;
       if (!r) return withVariance({});
       varianceSeen(r.urlDiffs);

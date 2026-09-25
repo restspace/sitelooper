@@ -4557,6 +4557,121 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
     }, 120_000);
   });
 
+  /**
+   * Round 61, EspoCRM fwec13 03-create: ELEMENT BEFORE TEXT. The Amount input
+   * typed with 12500 read back "12,500" (the app formats on blur), and the
+   * Close Date input read "2018-01-16" once its picker put its own default in.
+   * Neither text is one the step set, so the text rule never reached the
+   * element and both went out as observed, on n2, n3 and the compiled script.
+   * A read of a control this chain put a value into, with nothing committed
+   * since, is an echo whatever its text says; the same value in the row a Save
+   * added is observed. The ledger spans the flow step's chain: a later segment
+   * reading a control an earlier one filled is judged too, and a Save plus a
+   * reopen still makes it observed (odoo fwod86 02-create).
+   */
+  describe('element before text: a control the chain set shows its value, not the app’s (round 61, fwec13)', () => {
+    const at = (selector: string): LocatorCandidate[] => [{ kind: 'css', selector }];
+    const readValue = (selector: string, label: string): SkillStep => ({ tool: 'read', args: { target: '(read-back)', what: 'value' }, label, locators: { target: at(selector) } });
+    const AMOUNT = 'input[data-name="amount"]';
+    const CLOSE = 'input[data-name="closeDate"]';
+    const open: SkillStep = { tool: 'goto', args: { url: '' }, locators: {} };
+    const goto = (): SkillStep => ({ ...open, args: { url: `${origin}/espo-form` } });
+    const typeAmount = (): SkillStep[] => [
+      { tool: 'fill', args: { target: '@e1', value: '12500' }, locators: { target: at(AMOUNT) } },
+      { tool: 'press', args: { target: '@e1', key: 'Tab' }, locators: { target: at(AMOUNT) } },
+    ];
+    const save: SkillStep = { tool: 'click', args: { target: '@e3' }, locators: { target: at('#save') }, expect: { addedContains: ['- cell "12,500"'], lineDialect: 2 } };
+
+    it('both runners withhold a reformatted or defaulted value read at the control the step set, and observe it in the saved row', async () => {
+      const steps: SkillStep[] = [
+        goto(),
+        ...typeAmount(),
+        readValue(AMOUNT, 'amount_typed_value'),
+        { tool: 'fill', args: { target: '@e2', value: '12/31/2026' }, locators: { target: at(CLOSE) } },
+        { tool: 'click', args: { target: '@e4' }, locators: { target: at('#pick') } },
+        readValue(CLOSE, 'close_date_after_toggle'),
+        save,
+        { tool: 'read', args: { target: '(read-back)', what: 'text' }, label: 'amount_saved', locators: { target: at('#saved td') } },
+      ];
+      const { replay, emitted } = await both(steps, 0);
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      // Still given to later steps, on both sides.
+      expect(replay.outputs.amount_typed_value).toBe('12,500');
+      expect(emitted.outputs['01-clear.amount_typed_value']).toBe('12,500');
+      expect(replay.outputs.close_date_after_toggle).toBe('2018-01-16');
+      expect(emitted.outputs['01-clear.close_date_after_toggle']).toBe('2018-01-16');
+      // Echoes, whatever their text; the saved row is observed.
+      expect([...(replay.echoed ?? [])].sort()).toEqual(['amount_typed_value', 'close_date_after_toggle']);
+      expect([...(emitted.echoed ?? [])].sort()).toEqual(['amount_typed_value', 'close_date_after_toggle']);
+      expect(replay.outputs.amount_saved).toBe('12,500');
+      expect(emitted.outputs['01-clear.amount_saved']).toBe('12,500');
+    }, 120_000);
+
+    /** Daemon: the segments through run_skill in order, one echo ledger for the chain, as the flow runner passes it. */
+    async function chainOf(skills: Skill[]): Promise<Outcome> {
+      const session = new BrowserSession({ session: `parity-echo-chain-${Date.now()}`, persist: false, learn: true });
+      try {
+        const page = await session.getPage();
+        await page.goto(`${origin}/`);
+        for (const skill of skills) session.learn!.put(skill);
+        const echoLedger = new Set<string>();
+        const outputs: Record<string, string> = {};
+        const echoed: string[] = [];
+        for (const skill of skills) {
+          const out = await executeTool(session, 'run_skill', { id: skill.id, params: {}, echoLedger }, os.tmpdir());
+          const r = out.replay as ReplayResult | undefined;
+          if (!r?.ok) return { ok: false, reason: r?.reason ?? String(out.result), outputs };
+          Object.assign(outputs, r.values);
+          echoed.push(...r.echoedValues);
+        }
+        return { ok: true, reason: null, outputs, echoed };
+      } finally {
+        await session.close();
+      }
+    }
+    const segmentsOf = (parts: SkillStep[][]): { skills: Skill[]; spec: SpecFlow } => {
+      const skills = parts.map((steps, i): Skill => ({
+        ...skillOf(steps),
+        id: `s_part${i}`,
+        template: 'enter the amount',
+        preconditions: { urlPattern: i === 0 ? `${origin}/` : `${origin}/espo-form` },
+        seq: { chain: 's_parts', index: i, of: parts.length },
+      }));
+      const spec = specOf(parts[0]);
+      spec.steps[0].segments = skills.map((s) => ({ id: s.id, template: s.template, params: {}, preconditions: s.preconditions, steps: s.steps }));
+      return { skills, spec };
+    };
+
+    it('both runners judge a control an EARLIER segment of the chain set: an echo with nothing committed between', async () => {
+      const { skills, spec } = segmentsOf([[goto(), ...typeAmount()], [readValue(AMOUNT, 'amount_shown')]]);
+      reset(0);
+      const replay = await chainOf(skills);
+      reset(0);
+      const emitted = await emittedOf(spec);
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      expect(replay.outputs.amount_shown).toBe('12,500');
+      expect(emitted.outputs['01-clear.amount_shown']).toBe('12,500');
+      expect(replay.echoed).toEqual(['amount_shown']);
+      expect(emitted.echoed).toEqual(['amount_shown']);
+    }, 120_000);
+
+    it('both runners observe the value a Save stored once the record is reopened in a later segment (odoo fwod86)', async () => {
+      const { skills, spec } = segmentsOf([[goto(), ...typeAmount(), save], [goto(), readValue(AMOUNT, 'amount_reopened')]]);
+      reset(0);
+      const replay = await chainOf(skills);
+      reset(0);
+      const emitted = await emittedOf(spec);
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      expect(replay.outputs.amount_reopened).toBe('12,500');
+      expect(emitted.outputs['01-clear.amount_reopened']).toBe('12,500');
+      expect(replay.echoed).toEqual([]);
+      expect(emitted.echoed).toEqual([]);
+    }, 120_000);
+  });
+
   describe('echo reads', () => {
     it('both runners flag a read that echoes the filled value, and only that read', async () => {
       const steps: SkillStep[] = [
@@ -5389,6 +5504,94 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
       expect(run.emitted.reason).toMatch(said);
     }, 180_000);
 
+    /**
+     * Round 61, gitea fwgt12 03-set (s_f54a5a), on /labels-picker: pick "bug",
+     * shut the picker (Escape here; the page body there — Gitea commits),
+     * open it again, pick "bug" again (recorded with `link "bug"` unique, the
+     * label not applied), pick "priority-high", shut, and read the applied
+     * labels scoped to "bug". On the artifact's run the first shut committed
+     * "bug", the second pick un-ticked it, and the scoped read was skipped.
+     *
+     * (A) the shared pickAlreadyApplied skips the second pick when `link
+     * "bug"` shows inside the picker AND outside it and was not on the page the
+     * segment started on; (B) the shared scopedReadLanded fails a read scoped
+     * to a value the procedure set whose value no match shows.
+     */
+    const pickSteps = (url: string, o: { secondPickByRole: boolean; firstPickTwice?: boolean }): SkillStep[] => {
+      const opener: SkillStep = { tool: 'click', args: { target: '@e1' }, locators: { target: [{ kind: 'css', selector: '#labels' }] }, expect: { addedContains: ['- listbox "Label choices"'], lineDialect: 2 } };
+      const bug = (byRole: boolean): SkillStep => ({
+        tool: 'click',
+        args: { target: '@e2' },
+        locators: { target: byRole ? [{ kind: 'role', role: 'link', name: '{{v4}}' }, { kind: 'css', selector: '#menu a[data-value="1"]' }] : [{ kind: 'css', selector: '#menu a[data-value="1"]' }] },
+      });
+      const escape: SkillStep = { tool: 'press', args: { key: 'Escape' }, locators: {} };
+      return [
+        { tool: 'goto', args: { url }, locators: {} },
+        opener,
+        bug(true),
+        ...(o.firstPickTwice ? [bug(true)] : []),
+        escape,
+        opener,
+        bug(o.secondPickByRole),
+        { tool: 'click', args: { target: '@e3' }, locators: { target: [{ kind: 'role', role: 'link', name: 'priority-high' }, { kind: 'css', selector: '#menu a[data-value="2"]' }] } },
+        escape,
+        { tool: 'read', args: { target: '#applied', what: 'text', scopedBy: 'v4' }, locators: { target: [{ kind: 'css', selector: '#applied' }] }, label: 'labels_shown' },
+      ];
+    };
+    const pickRun = async (url: string, o: { secondPickByRole: boolean; firstPickTwice?: boolean }) => {
+      const steps = pickSteps(url, o);
+      const params = { v4: { example: 'bug', usedIn: [2], known: true } };
+      const skill: Skill = { ...skillOf(steps), id: 's_pick', template: 'set the labels {{v4}} and priority-high', params };
+      const spec: SpecFlow = {
+        ...specOf(steps),
+        steps: [{ id: '01-set', instruction: 'set the labels bug and priority-high', params: { v4: 'bug' }, outputs: ['labels_shown'], segments: [{ id: 's_pick', template: skill.template, params, preconditions: skill.preconditions, steps }] }],
+      };
+      return bothOf(skill, spec, { v4: 'bug' });
+    };
+
+    it('both runners skip a pick this run already applied, and commit bug,priority-high (fwgt12, rule A)', async () => {
+      const run = await pickRun(`${origin}/labels-picker`, { secondPickByRole: true });
+      expect(run.replay.ok, run.replay.reason ?? '').toBe(true);
+      expect(run.emitted.ok, run.emitted.reason ?? '').toBe(true);
+      expect(run.replayLog).toEqual(['commit:labels:bug', 'commit:labels:bug,priority-high']);
+      expect(run.emittedLog).toEqual(['commit:labels:bug', 'commit:labels:bug,priority-high']);
+    }, 180_000);
+
+    it('control (i): a link of that name on the page from the start is not this run\'s pick — clicked as today, and the scoped read fails the step', async () => {
+      const run = await pickRun(`${origin}/labels-picker?furniture=1`, { secondPickByRole: true });
+      expect(run.replayLog, 'replay must click the pick, not skip it').toEqual(['commit:labels:bug', 'commit:labels:priority-high']);
+      expect(run.emittedLog, 'the artifact must click the pick, not skip it').toEqual(['commit:labels:bug', 'commit:labels:priority-high']);
+      expect(run.replay.ok).toBe(false);
+      expect(run.emitted.ok).toBe(false);
+      const said = /a value this procedure set, shows "priority-high" and nothing it reads shows "bug": what the step set did not land/;
+      expect(run.replay.reason).toMatch(said);
+      expect(run.emitted.reason).toMatch(said);
+    }, 180_000);
+
+    it('control (ii): an item this run has not applied (unique at replay) is clicked', async () => {
+      // "bug" ticked and un-ticked before the first shut: nothing committed, so
+      // the second pick finds `link "bug"` in the picker alone and ticks it.
+      const run = await pickRun(`${origin}/labels-picker`, { secondPickByRole: true, firstPickTwice: true });
+      expect(run.replay.ok, run.replay.reason ?? '').toBe(true);
+      expect(run.emitted.ok, run.emitted.reason ?? '').toBe(true);
+      expect(run.replayLog).toEqual(['commit:labels:bug,priority-high']);
+      expect(run.emittedLog).toEqual(['commit:labels:bug,priority-high']);
+    }, 180_000);
+
+    it('both runners fail, not skip, a read scoped to a value the procedure set that no match shows (fwgt12, rule B)', async () => {
+      // The second pick recorded by position (rule A's gate does not hold):
+      // it un-ticks "bug", as fwgt12's artifact did, and the scoped read of
+      // the applied labels finds "priority-high" alone.
+      const run = await pickRun(`${origin}/labels-picker`, { secondPickByRole: false });
+      expect(run.replayLog).toEqual(['commit:labels:bug', 'commit:labels:priority-high']);
+      expect(run.emittedLog).toEqual(['commit:labels:bug', 'commit:labels:priority-high']);
+      expect(run.replay.ok).toBe(false);
+      expect(run.emitted.ok).toBe(false);
+      const said = /the read scoped to "bug", a value this procedure set, shows "priority-high" and nothing it reads shows "bug": what the step set did not land/;
+      expect(run.replay.reason).toMatch(said);
+      expect(run.emitted.reason).toMatch(said);
+    }, 180_000);
+
     it('both runners stop, not skip, a toggle whose target no longer resolves although its popup is showing', async () => {
       const { replay, emitted, replayLog, emittedLog } = await both(menuSteps('gone'), 0);
 
@@ -5825,6 +6028,7 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
       { tool: 'click', args: { target: '@e1' }, locators: { target: chain } },
     ];
     const gone: LocatorCandidate = { kind: 'role', role: 'button', name: 'Gone' };
+    const goneId: LocatorCandidate = { kind: 'testid', attr: 'data-testid', value: 'gone' };
     const farGuess: LocatorCandidate = { kind: 'css', selector: '#far > button:nth-of-type(1)' };
 
     it('both runners resolve a recorded point to the element of the recorded kind under it', async () => {
@@ -5852,12 +6056,24 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
       expect(guarded.replay.ok, guarded.replay.reason ?? '').toBe(true);
       expect(guarded.emitted.ok, guarded.emitted.reason ?? '').toBe(true);
 
-      const unguarded = await both(farSteps([gone, farGuess]), 0);
+      // No point and no recorded NAME (the vanished primary is a testid):
+      // nothing is left to hold the guess to, and both take it.
+      const unguarded = await both(farSteps([goneId, farGuess]), 0);
       expect(unguarded.replayLog).toEqual(['mark:far']);
       expect(unguarded.emittedLog).toEqual(['mark:far']);
       expect(unguarded.replay.ok, unguarded.replay.reason ?? '').toBe(true);
       expect(unguarded.emitted.ok, unguarded.emitted.reason ?? '').toBe(true);
-    }, 240_000);
+
+      // No point, but the chain RECORDED a name ("Gone") the guess's element
+      // does not carry: round 61's R2(b) (grafana fwgr73 05-open) holds a
+      // positional-only click to the recorded accessible name, so both stop
+      // before acting rather than click a Mark nobody recorded.
+      const named = await both(farSteps([gone, farGuess]), 0);
+      expect(named.replayLog).toEqual([]);
+      expect(named.emittedLog).toEqual([]);
+      expect(named.replay.reason).toMatch(/positional fallback #2 is not the recorded "Gone"/);
+      expect(named.emitted.reason).toMatch(/positional fallback #2 is not the recorded "Gone"/);
+    }, 300_000);
   });
 
   // -------------------------------------------------------------------------
@@ -6270,6 +6486,102 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
   });
 
   /**
+   * Round 61, grafana fwgr73 04-open line 125: the recording typed `"tags"`
+   * into monaco and its own diff shows the field then held it twice over. The
+   * doubled-value stop (fwec10, above) fired on every replay on a state the
+   * recording itself produced. Compile flags such a step (doubledAsRecorded):
+   * both runners then go on, saying so. Without the flag — fwec10's case,
+   * whose recording saw the value once — both still stop.
+   */
+  describe('a field the recording itself left holding its value twice (round 61, fwgr73)', () => {
+    const code = [{ kind: 'label' as const, label: 'Code' }];
+    const steps = (flag: boolean): SkillStep[] => [
+      { tool: 'goto', args: { url: `${origin}/code-editor` }, locators: {} },
+      { tool: 'type', args: { target: '@e1', text: 'tags' }, locators: { target: code }, ...(flag ? { doubledAsRecorded: true as const } : {}) },
+      { tool: 'click', args: { target: '@e2' }, locators: { target: [{ kind: 'role', role: 'button', name: 'Save' }] } },
+    ];
+
+    it('both runners go on past the doubled field when the recording saw it doubled, and warn', async () => {
+      const { replay, emitted, replayLog, emittedLog } = await bothOf(skillOf(steps(true)), specOf(steps(true)), {});
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      expect(replayLog).toEqual(['commit:code:tagstags']);
+      expect(emittedLog).toEqual(['commit:code:tagstags']);
+      for (const warnings of [replay.warnings, emitted.warnings]) {
+        expect(warnings?.some((w) => /twice over .* as the recording's own field did after this step/.test(w)), JSON.stringify(warnings)).toBe(true);
+      }
+    }, 120_000);
+
+    it('both runners still stop, saving nothing, when the recording did not (the fwec10 control)', async () => {
+      const { replay, emitted, replayLog, emittedLog } = await bothOf(skillOf(steps(false)), specOf(steps(false)), {});
+      expect(replay.ok).toBe(false);
+      expect(emitted.ok).toBe(false);
+      expect(replay.reason).toMatch(/holds the value it was given twice over/);
+      expect(emitted.reason).toMatch(/holds the value it was given twice over/);
+      expect(replayLog).toEqual([]);
+      expect(emittedLog).toEqual([]);
+    }, 120_000);
+  });
+
+  /**
+   * Round 61, grafana fwgr73 05-open step 3 (s_c49ccb): the Edit click, on a
+   * dashboard 04-open's recovery had left IN edit mode. The testid and the
+   * role rung missed; the positional `…div:nth-of-type(5) > button` fallback
+   * hit another toolbar button, and none of the recorded additions appeared.
+   * (a) every line the click was recorded adding is already on the page and
+   * only positional rungs are left: already in effect, skipped — never for a
+   * click that submits the segment's work (an earlier fill). (b) otherwise a
+   * positional hit must carry the recorded accessible name, else stop.
+   */
+  describe('a click whose identifying rungs all miss (round 61, fwgr73 05-open)', () => {
+    const editChain = [
+      { kind: 'testid' as const, attr: 'data-testid', value: 'edit-btn' },
+      { kind: 'role' as const, role: 'button', name: 'Edit' },
+      { kind: 'css' as const, selector: '#bar > button:nth-of-type(1)' },
+    ];
+    const steps = (mode: string, fillFirst = false): SkillStep[] => [
+      { tool: 'goto', args: { url: `${origin}/edit-mode/${mode}` }, locators: {} },
+      ...(fillFirst ? [{ tool: 'fill', args: { target: '@e0', value: 'Bench' }, locators: { target: [{ kind: 'label' as const, label: 'Title' }] } }] : []),
+      {
+        tool: 'click',
+        args: { target: '@e1' },
+        locators: { target: editChain },
+        expect: { addedContains: ['- button "Exit edit"', '- button "Add"', '- button "Settings"', '- button "Save dashboard"'] },
+      },
+      { tool: 'click', args: { target: '@e2' }, locators: { target: [{ kind: 'role', role: 'button', name: 'Save dashboard' }] } },
+    ];
+
+    it('(a) both runners skip the click as already in effect when everything it adds is showing, and save', async () => {
+      const { replay, emitted, replayLog, emittedLog } = await bothOf(skillOf(steps('edit')), specOf(steps('edit')), {});
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      expect(replayLog).toEqual(['commit:dashboard:saved']);
+      expect(emittedLog).toEqual(['commit:dashboard:saved']);
+      for (const warnings of [replay.warnings, emitted.warnings]) {
+        expect(warnings?.some((w) => /everything this click was recorded adding is already showing/.test(w)), JSON.stringify(warnings)).toBe(true);
+      }
+    }, 120_000);
+
+    it('(a) control, (b) refusal: after a fill the click is never skipped, and neither runner clicks a button of another name', async () => {
+      const { replay, emitted, replayLog, emittedLog } = await bothOf(skillOf(steps('edit', true)), specOf(steps('edit', true)), {});
+      expect(replay.ok).toBe(false);
+      expect(emitted.ok).toBe(false);
+      expect(replay.reason).toMatch(/positional fallback .* is not the recorded "Edit"/);
+      expect(emitted.reason).toMatch(/positional fallback .* is not the recorded "Edit"/);
+      expect(replayLog).toEqual([]);
+      expect(emittedLog).toEqual([]);
+    }, 120_000);
+
+    it('(b) both runners take a positional fallback whose element carries the recorded name', async () => {
+      const { replay, emitted, replayLog, emittedLog } = await bothOf(skillOf(steps('twin')), specOf(steps('twin')), {});
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      expect(replayLog).toEqual(['commit:dashboard:saved']);
+      expect(emittedLog).toEqual(['commit:dashboard:saved']);
+    }, 120_000);
+  });
+
+  /**
    * Round 60, openproject fwop14 02-create s_459e98/3: the Save's recorded
    * effect is the new record's row, `- row "{{d1}} … {{v3}} TASK New - Normal"`
    * (hard). The daemon judges the diff between its action's before capture and
@@ -6400,5 +6712,89 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
       expect(madeE).toHaveLength(2);
       expect(ids(emittedLog, 'publish')).toEqual([madeE[1]]);
     }, 180_000);
+  });
+
+  /**
+   * Round 61, openproject fwop15 01-open: the recording clicked the project
+   * link three times, each forced and each going nowhere (obs: the link's
+   * navigation never committed, url unchanged, 0 added and 0 removed), with a
+   * scroll and a hover on the same link between, then typed a goto to the
+   * link's href. Compiled with two of the clicks, the first navigated on
+   * replay and the second — on a project page that has only a SELECTOR button
+   * of that name — found nothing. Compiled from the same shape with the
+   * recording's evidence, both runners reach the project and open its work
+   * packages. Controls: a goto elsewhere keeps the clicks, and a hover whose
+   * menu the procedure then used is kept; each time both runners agree.
+   */
+  describe('link clicks the recording saw go nowhere, by its evidence (round 61, fwop15)', () => {
+    const LINK = [{ kind: 'role' as const, role: 'link', name: 'Bench Project' }, { kind: 'css' as const, selector: '#bench' }];
+    const at = { d: 1, s: 2, c: 3 };
+    const step = (tool: string, args: Record<string, unknown>, chain: LocatorCandidate[], extra: Partial<RecordedStep> = {}): RecordedStep => ({
+      k: 'step',
+      tool,
+      args,
+      locators: chain.length ? { target: { expr: 'x', verified: true, raw: String(args.target ?? ''), chain } } : {},
+      ...extra,
+    });
+    const recording = (mode: 'fwop15' | 'elsewhere' | 'menu'): RecordedEntry[] => {
+      const LIST = `${origin}/proj2-list`;
+      const HREF = `${origin}/proj2/bench`;
+      const nowhere = (): RecordedStep =>
+        step('click', { target: '@e7' }, LINK, {
+          diff: { url: LIST, alerts: [], added: [], dialect: 2 },
+          obs: { at, settle: { outcome: 'dispatched', via: 'forced', link: { from: LIST, href: HREF }, waited: { domMs: 60, networkMs: 0, urlMs: 0, effectMs: 0 } }, totals: { added: 0, removed: 0 } },
+        });
+      const hover = mode === 'menu' ? step('hover', { target: '@e9' }, [{ kind: 'css', selector: '#more' }], { obs: { at } }) : step('hover', { target: '@e7' }, LINK, { obs: { at } });
+      const target = mode === 'elsewhere' ? `${origin}/proj/bench` : HREF;
+      return [
+        { k: 'instruction', text: 'open the Bench Project and its work packages', url: LIST },
+        nowhere(),
+        step('read', { what: 'url', label: 'project_url' }, [], { result: JSON.stringify(LIST) }),
+        nowhere(),
+        step('scroll_into_view', { target: '@e7' }, LINK, { obs: { at } }),
+        hover,
+        ...(mode === 'menu' ? [step('click', { target: '@e10' }, [{ kind: 'role', role: 'button', name: 'Archive' }], { diff: { url: LIST, alerts: [], added: ['- dialog "Archive"'], dialect: 2 } })] : []),
+        step('goto', { url: target }, [], { diff: { url: target, alerts: [], added: ['- heading "Overview"', '- button "Work packages"'], dialect: 2 } }),
+        step('click', { target: '@e8' }, [{ kind: 'role', role: 'button', name: 'Work packages' }], { diff: { url: target, alerts: [], added: [], dialect: 2 } }),
+      ];
+    };
+    const compiled = (mode: 'fwop15' | 'elsewhere' | 'menu'): SkillStep[] =>
+      compileSkills({ entries: recording(mode), instruction: 'open the Bench Project and its work packages', report: { status: 'success', summary: 'ok' }, session: 's' }).flatMap((sk) => sk.steps);
+    const run = async (steps: SkillStep[]) => {
+      const all: SkillStep[] = [{ tool: 'goto', args: { url: `${origin}/proj2-list` }, locators: {} }, ...steps];
+      const skill: Skill = { ...skillOf(all), id: 's_nowhere_links', template: 's_nowhere_links' };
+      return bothOf(skill, specOf(all), {});
+    };
+    const linkClicks = (steps: SkillStep[]) => steps.filter((s) => s.tool === 'click' && JSON.stringify(s.locators.target ?? []).includes('Bench Project'));
+
+    it('both runners replay the goto to the link’s href, with no click that went nowhere and nothing that prepared one', async () => {
+      const steps = compiled('fwop15');
+      expect(linkClicks(steps)).toEqual([]);
+      expect(steps.some((s) => s.tool === 'scroll_into_view' || s.tool === 'hover')).toBe(false);
+      const { replay, emitted, replayLog, emittedLog } = await run(steps);
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      await new Promise((r) => setTimeout(r, 300));
+      expect(replayLog).toEqual(['commit:wp:open']);
+      expect(emittedLog).toEqual(['commit:wp:open']);
+    }, 240_000);
+
+    it('control: a goto somewhere other than the link’s href keeps the clicks, and both runners stop alike', async () => {
+      const steps = compiled('elsewhere');
+      expect(linkClicks(steps).length).toBeGreaterThan(0);
+      const { replay, emitted, replayLog, emittedLog } = await run(steps);
+      expect(replay.ok).toBe(emitted.ok);
+      expect(replayLog).toEqual(emittedLog);
+      expect(replayLog).not.toContain('commit:selector:open');
+    }, 240_000);
+
+    it('control: a hover whose menu the procedure then used is kept, with the clicks, and both runners agree', async () => {
+      const steps = compiled('menu');
+      expect(steps.some((s) => s.tool === 'hover')).toBe(true);
+      expect(linkClicks(steps).length).toBeGreaterThan(0);
+      const { replay, emitted, replayLog, emittedLog } = await run(steps);
+      expect(replay.ok).toBe(emitted.ok);
+      expect(replayLog).toEqual(emittedLog);
+    }, 240_000);
   });
 });
