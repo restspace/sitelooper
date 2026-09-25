@@ -1,0 +1,40 @@
+
+Running 1 test using 1 worker
+
+  ✘  1 vop3n.spec.ts:9:1 › vop3n (10.3s)
+
+
+  1) vop3n.spec.ts:9:1 › vop3n › 01-signin: Navigate to http://127.0.0.1:8090/ and sign in with username 'admin' and password '{{env:APP_PASSWORD}}' — type that password text exactly as given, braces and all; the environment fills in the real value when typed. After signing in, go to the project named 'Bench Project' and open its 'Work packages' tab. Report the subjects of every work package whose subject begins with 'Seed:', exactly as shown on screen. Do not modify or edit anything. 
+
+    Error: none of 3 recorded locators resolved at 01-signin s_746e7c/1 target (page is at http://127.0.0.1:8090/): getByRole('button', { name: /^[\s\p{Co}\p{So}\p{Cf}]*Close[\s\p{Co}\p{So}\p{Cf}]*$/u }) | locator('#user-form > div:nth-of-type(4) > div > button:nth-of-type(1)') | locator('[data-sitelooper-point="828,547"]')
+
+       at vop3n.flow.ts:12182
+
+      12180 | /** The stop for a chain that resolved nothing, shared by `pick` and `pickOrNavigate`. */
+      12181 | function pickMiss(page: Page, candidates: CandidateObservation[], where: string, note?: string): Error {
+    > 12182 |   return new Error(
+            |          ^
+      12183 |     // The url and the recorded step are half the answer whenever a chain
+      12184 |     // misses wholesale: a locator that named the control on the day it was
+      12185 |     // recorded usually misses because the page is not the page the step
+        at pickMiss (/home/user/sitelooper/bench/results/vop3n-spec-spec-tmp/vop3n.flow.ts:12182:10)
+        at pickOrNavigate (/home/user/sitelooper/bench/results/vop3n-spec-spec-tmp/vop3n.flow.ts:12232:9)
+        at Object.act (/home/user/sitelooper/bench/results/vop3n-spec-spec-tmp/vop3n.flow.ts:12801:22)
+        at runStepLifecycle (/home/user/sitelooper/bench/results/vop3n-spec-spec-tmp/vop3n.flow.ts:7926:18)
+        at Object.01-signin (/home/user/sitelooper/bench/results/vop3n-spec-spec-tmp/vop3n.flow.ts:12790:5)
+        at /home/user/sitelooper/bench/results/vop3n-spec-spec-tmp/vop3n.flow.ts:15344:7
+        at runFlow (/home/user/sitelooper/bench/results/vop3n-spec-spec-tmp/vop3n.flow.ts:15343:5)
+        at /home/user/sitelooper/bench/results/vop3n-spec-spec-tmp/vop3n.spec.ts:14:21
+
+    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/vop3n-vop3n/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/vop3n-vop3n/error-context.md
+
+  1 failed
+    vop3n.spec.ts:9:1 › vop3n ──────────────────────────────────────────────────────────────────────
