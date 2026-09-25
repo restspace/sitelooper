@@ -411,6 +411,15 @@ export interface RecordedReport {
    * intervention that leaves no trace in the artifacts cannot be evaluated.
    */
   namingAsk?: { asked: string[]; named: boolean };
+  /**
+   * The sourcing hold (loop, SITELOOPER_SOURCING_HOLD; hygiene design §4)
+   * this report was held for: the keys asked about, how many reads the retry
+   * added and which of them were labelled, and every data-changing gesture
+   * the model made after the hold (the one way the hold can make a recording
+   * worse). Same reason as namingAsk: an intervention that leaves no trace
+   * in the artifacts cannot be evaluated.
+   */
+  sourcingAsk?: { asked: string[]; readsAdded: number; labelled: string[]; gesturesAfter: string[] };
   /** Running entry number and write time (stage 0 evidence). Absent on older stores. */
   seq?: number;
   t?: number;
@@ -593,8 +602,27 @@ export class ScriptRecorder {
 
   /** Close the current instruction with its outcome (learning mode; flows are built from these). */
   endInstruction(report: Omit<RecordedReport, 'k'>): void {
-    this.append({ k: 'report', ...report, ...(this.pendingAsk ? { namingAsk: this.pendingAsk } : {}) });
+    this.append({ k: 'report', ...report, ...(this.pendingAsk ? { namingAsk: this.pendingAsk } : {}), ...(this.pendingSourcing ? { sourcingAsk: this.pendingSourcing } : {}) });
     this.pendingAsk = undefined;
+    this.pendingSourcing = undefined;
+  }
+
+  /** The sourcing hold the loop asked this instruction — see RecordedReport.sourcingAsk. */
+  private pendingSourcing?: NonNullable<RecordedReport['sourcingAsk']>;
+
+  /** Record that the loop held the report for sourcing these keys. */
+  noteSourcingAsk(asked: string[]): void {
+    this.pendingSourcing = { asked, readsAdded: 0, labelled: [], gesturesAfter: [] };
+  }
+
+  /** A data-changing gesture the model made after the sourcing hold. */
+  noteSourcingGesture(tool: string): void {
+    this.pendingSourcing?.gesturesAfter.push(tool);
+  }
+
+  /** What the retry added: reads since the hold, and the labels among them. */
+  noteSourcingRetry(readsAdded: number, labelled: string[]): void {
+    if (this.pendingSourcing) Object.assign(this.pendingSourcing, { readsAdded, labelled });
   }
 
   /** Values the loop is holding this instruction's report to name — see RecordedReport.namingAsk. */

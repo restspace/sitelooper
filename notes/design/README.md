@@ -15,3 +15,12 @@ Approved order:
 - Phases C/D (shadow-mode journals, provenance tags at export, retiring heuristics, readings) await that sweep.
 
 No rehearsal replays: the user ruled out a cost per recording.
+
+Status (2026-09-25):
+- Phases A and B shipped (0e778e9). Phase C shipped in shadow mode (f508e0d, b6966d3); keyPick and the
+  restored-field detour decide from the journal already (round 62). Phase D not started as a phase.
+- Hygiene stages 3-4 (the commentary pre-pass and the sourcing hold, design-recording-hygiene.md §4) are
+  built on fix/hygiene-s34 in src/agent/sourcing.ts, behind SITELOOPER_SOURCING_HOLD=on (default off:
+  byte-identical loop). The hold leaves a durable trace on the report entry (RecordedReport.sourcingAsk),
+  counted by bench/ab-metrics.mjs. Confirmation batch: bench/sweep-prompts/fwop19, fwsi16, fwgt16, fwec16,
+  fwgh19 (the eval-heavy apps) and fwrd94, fwod90 (controls), all with the flag on.
