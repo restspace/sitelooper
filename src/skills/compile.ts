@@ -2234,6 +2234,40 @@ export function stripRunValueCandidates(chain: LocatorCandidate[], runValues: re
   return chain.filter((c) => kept.includes(c) || rescued.includes(c));
 }
 
+/**
+ * A READ's chain less the rungs that NAME the value the read returned — a
+ * role, text or label whose whole name is that value (round 63, odoo fwod88
+ * 03-create: `heading "S00021"` reading the quotation reference S00021).
+ * Such a rung finds the element only on the run whose value it names; every
+ * later run misses it and falls through, and once a run shows the value
+ * changing dropDeadReadLocators drops it and, with only positional rungs
+ * left, EMPTIES the read (n3 published nothing). Asked at export, of reads a
+ * later step references (flow.ts selfNamingReadDrops), and never of a value
+ * the task holds constant.
+ *
+ * When what is left is position-only it drops only when a recorded POINT of
+ * the dropped rung's own role remains (the heading's h1): the point checks
+ * the element's kind and where it sits. Otherwise the chain is returned as
+ * it was — a list cell read by row index (repair-desk fwrd16) keeps today's
+ * behaviour, and dropDeadReadLocators' protection with it. Never empties.
+ */
+export function dropSelfNamingCandidates(chain: LocatorCandidate[], value: string): LocatorCandidate[] {
+  const norm = (t: unknown) => String(t ?? '').replace(/\s+/g, ' ').trim();
+  const v = norm(value);
+  if (!v) return chain;
+  const nameOf = (c: LocatorCandidate): string | undefined => (c.kind === 'role' ? c.name : c.kind === 'text' ? c.text : c.kind === 'label' ? c.label : undefined);
+  const self = chain.filter((c) => nameOf(c) !== undefined && norm(nameOf(c)) === v);
+  if (!self.length) return chain;
+  const rest = chain.filter((c) => !self.includes(c));
+  if (!rest.length) return chain;
+  if (rest.every(positional)) {
+    const roles = new Set(self.flatMap((c) => (c.kind === 'role' ? [c.role] : [])));
+    const matched = rest.some((c) => c.kind === 'point' && typeof c.role === 'string' && roles.has(c.role));
+    if (!matched) return chain;
+  }
+  return rest;
+}
+
 export function stranded(c: LocatorCandidate, runValues: string[]): boolean {
   const fields: string[] = [];
   if (c.kind === 'scoped') fields.push(c.hasText);
