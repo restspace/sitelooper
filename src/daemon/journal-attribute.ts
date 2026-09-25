@@ -207,7 +207,13 @@ function eventCause(e: JournalEvent, windows: readonly JournalWindow[], state: A
     // ambiguous: `also` names that request's window, or 0 when the app asked
     // on its own (an autosave's answer inside a click: vikunja fwvk12 #23).
     const landed = (r: JournalEvent) => typeof r.t1 === 'number' && (r.t1 as number) - ANSWER_SLOP_MS <= e.t && e.t - (r.t1 as number) <= LINEAGE_MS;
-    const foreign = [...state.requests].reverse().find((r) => landed(r) && !(r.c?.[0] === 'app' && r.c[1] === 'poll') && reqOwner(r) !== active.w);
+    // Only an answer heard while this window was open: one that landed before
+    // it opened (a goto's document, then at once a click) was acted on before
+    // the gesture went out, and cannot share its changes (verify-main62: the
+    // picker's show was marked ambiguous by the goto's answer).
+    const foreign = [...state.requests]
+      .reverse()
+      .find((r) => landed(r) && (r.t1 as number) >= active.start && !(r.c?.[0] === 'app' && r.c[1] === 'poll') && reqOwner(r) !== active.w);
     const other = foreign ? (reqOwner(foreign) ?? 0) : undefined;
     return { c: ['in', active.w, active.kind], ...(other !== undefined && other !== active.w && e.k !== 'hit' && e.k !== 'foc' ? { also: other } : {}) };
   }

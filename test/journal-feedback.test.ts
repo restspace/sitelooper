@@ -85,3 +85,12 @@ describe('journal feedback lines', () => {
     expect(journalFeedbackOn({ SITELOOPER_JOURNAL_FEEDBACK: 'on' })).toBe(true);
   });
 });
+
+describe('journal feedback order', () => {
+  it('a popup opening outranks option state and focus under the line cap', () => {
+    const many = Array.from({ length: 5 }, (_, i) => own('state', { d: `option "o${i}"`, a: 'class', on: true }));
+    const lines = feedbackLines('click', W, [...many, own('show', { d: 'listbox "Labels"' }), own('foc', { dir: 'in', d: 'listbox "Labels"' }), own('hit', { ty: 'c', d: 'button "Labels"', on: 1 })]);
+    expect(lines[0]).toBe('listbox "Labels" opened');
+    expect(lines).toHaveLength(MAX_FEEDBACK_LINES);
+  });
+});
