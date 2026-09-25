@@ -1,0 +1,215 @@
+{
+  "flow": "vgt1n",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Signed in as admin, opened bench/bench-repo issues, and applied the open-issues view (3 Open / 0 Closed). All three open issues begin with \"Seed:\"; their titles were read from the live DOM.",
+      "values": {
+        "open_issue_3": "Seed: ship repaired device",
+        "open_issue_2": "Seed: order missing parts",
+        "open_issue_1": "Seed: triage inbox",
+        "open_issue_count": "3",
+        "closed_issue_count": "0"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_9172ea stopped at step 1 — after step 1 expected url http://127.0.0.1:8095/bench/bench-repo/issues?state=open&type=all but browser is at http://127.0.0.1:8095/bench/bench-repo/issues?state=all&type=all",
+      "replayed": "0/12",
+      "repaired": false,
+      "turns": 5,
+      "unreported": [
+        "open_count",
+        "closed_count",
+        "signed_in_as",
+        "open_issue_title_1",
+        "open_issue_title_2",
+        "open_issue_title_3",
+        "open_issue_titles_1",
+        "open_issue_titles_2",
+        "open_issue_titles_3",
+        "issue_numbers_1",
+        "issue_numbers_2",
+        "issue_numbers_3"
+      ]
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Created a new issue in bench/bench-repo with title \"vgt1n-n2 Bench Issue\" and description \"Bench issue created for run vgt1n-n2\".",
+      "values": {
+        "issue_number": "#5",
+        "title_on_issue_page": "vgt1n-n2 Bench Issue",
+        "heading": "vgt1n-n2 Bench Issue #5",
+        "issues_open_count": "4",
+        "description_text": "Bench issue created for run vgt1n-n2",
+        "run_ref": "vgt1n-n2"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "10/10",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-set",
+      "status": "success",
+      "summary": "On issue #5 \"vgt1n-n2 Bench Issue\" (the live page's matching issue; the instruction's \"#4\" doesn't exist — #5 is the vgt1n-n2 Bench Issue), applied and verified via a fresh reload: labels \"bug\" and \"priority-high\", milestone \"Bench Milestone\", and assignee \"bench-assignee (Bench Assignee)\", all visible in the issue sidebar. The assignee was committed by clicking the item then clicking outside the dropdown, which the prior attempt had not tried.",
+      "values": {
+        "assignee": "bench-assignee (Bench Assignee)",
+        "assignees_combobox_text": "Assignees Clear assignees admin bench-assignee (Bench Assignee)",
+        "issue_number": "#5",
+        "issue_page_url": "http://127.0.0.1:8095/bench/bench-repo/issues/5",
+        "issue_title": "vgt1n-n2 Bench Issue",
+        "label_1": "bug",
+        "label_2": "priority-high",
+        "milestone": "Bench Milestone",
+        "sidebar_assignees_heading": "Assignees",
+        "ref": "vgt1n-n2"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_24418b stopped at step 17 — every identifying locator missed, and the positional fallback #3 is not the recorded \"priority-high\" — the element there carries another name, so it was not clicked",
+      "replayed": "16/28",
+      "repaired": false,
+      "turns": 64,
+      "warnings": [
+        "s_24418b: step 16: primary locator did not resolve; used fallback #2 page.locator('h1')",
+        "s_24418b: step 17: primary locator did not resolve; used fallback #3 page.locator('#_aria_dropdown_menu_78 > div:nth-of-type(2) > a:nth-of-type(5)')"
+      ],
+      "unreported": [
+        "run_ref"
+      ]
+    },
+    {
+      "id": "04-add",
+      "status": "success",
+      "summary": "Replayed stored procedure s_bb7a8c; observed comment_anchor=issuecomment-10, issue_number_displayed=#5, issue_heading=vgt1n-n2 Bench Issue #5, comment_text=Comment for run vgt1n-n2, run_ref=vgt1n-n2.",
+      "values": {
+        "comment_anchor": "issuecomment-10",
+        "issue_number_displayed": "#5",
+        "issue_heading": "vgt1n-n2 Bench Issue #5",
+        "comment_text": "Comment for run vgt1n-n2",
+        "run_ref": "vgt1n-n2"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "7/7",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_bb7a8c: step 3: primary locator did not resolve; used fallback #2 page.locator('#issuecomment-10 > div > div:nth-of-type(2) > div:nth-of-type(1) > p')",
+        "s_bb7a8c: step 4: primary locator did not resolve; used fallback #2 page.locator('#issue-title-display > h1')"
+      ]
+    }
+  ],
+  "passed": 4,
+  "total": 4,
+  "repinned": 0,
+  "drift": 5,
+  "driftTickets": [
+    {
+      "flow": "vgt1n",
+      "step": "01-signin",
+      "skill": "s_9172ea",
+      "similarity": 0.99,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_9172ea stopped at step 1 — after step 1 expected url http://127.0.0.1:8095/bench/bench-repo/issues?state=open&type=all but browser is at http://127.0.0.1:8095/bench/bench-repo/issues?state=all&type=all",
+      "reason": "after step 1 expected url http://127.0.0.1:8095/bench/bench-repo/issues?state=open&type=all but browser is at http://127.0.0.1:8095/bench/bench-repo/issues?state=all&type=all",
+      "pageUrlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues?state=all&type=all",
+      "pageUrl": "http://127.0.0.1:8095/bench/bench-repo/issues?type=all&state=all"
+    },
+    {
+      "flow": "vgt1n",
+      "step": "03-set",
+      "skill": "s_24418b",
+      "atStep": "16",
+      "key": "target",
+      "similarity": 1.002,
+      "missedLocator": "page.getByRole('heading', { name: 'vgt1n-n2 Bench Issue #4', exact: true })",
+      "fallbackUsed": "page.locator('h1')",
+      "fallbackIndex": 1,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "pageUrl": "http://127.0.0.1:8095/bench/bench-repo/issues/5"
+    },
+    {
+      "flow": "vgt1n",
+      "step": "03-set",
+      "skill": "s_24418b",
+      "atStep": "17",
+      "key": "target",
+      "similarity": 1.002,
+      "missedLocator": "page.locator('role=link[name=\"priority-high\"]')",
+      "fallbackUsed": "page.locator('#_aria_dropdown_menu_78 > div:nth-of-type(2) > a:nth-of-type(5)')",
+      "fallbackIndex": 2,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "pageUrl": "http://127.0.0.1:8095/bench/bench-repo/issues/5"
+    },
+    {
+      "flow": "vgt1n",
+      "step": "04-add",
+      "skill": "s_bb7a8c",
+      "atStep": "3",
+      "key": "target",
+      "similarity": 0.999,
+      "missedLocator": "page.getByText('Comment for run vgt1n-n2', { exact: true })",
+      "fallbackUsed": "page.locator('#issuecomment-10 > div > div:nth-of-type(2) > div:nth-of-type(1) > p')",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id#:id",
+      "pageUrl": "http://127.0.0.1:8095/bench/bench-repo/issues/5#issuecomment-10"
+    },
+    {
+      "flow": "vgt1n",
+      "step": "04-add",
+      "skill": "s_bb7a8c",
+      "atStep": "4",
+      "key": "target",
+      "similarity": 0.999,
+      "missedLocator": "page.getByRole('heading', { name: 'vgt1n-n2 Bench Issue #4', exact: true })",
+      "fallbackUsed": "page.locator('#issue-title-display > h1')",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id#:id",
+      "pageUrl": "http://127.0.0.1:8095/bench/bench-repo/issues/5#issuecomment-10"
+    }
+  ],
+  "wallMs": 629963,
+  "model": "xiaomi/mimo-v2.6-flash",
+  "usage": {
+    "promptTokens": 1127607,
+    "completionTokens": 93399,
+    "cachedTokens": 1035328
+  },
+  "usageByModel": {
+    "xiaomi/mimo-v2.6-flash": {
+      "promptTokens": 520543,
+      "completionTokens": 4136,
+      "cachedTokens": 474944
+    },
+    "z-ai/glm-5.3": {
+      "promptTokens": 607064,
+      "completionTokens": 89263,
+      "cachedTokens": 560384
+    }
+  },
+  "servedByModel": {
+    "xiaomi/mimo-v2.6-flash": [
+      "Xiaomi"
+    ],
+    "z-ai/glm-5.3": [
+      "Together"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

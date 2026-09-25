@@ -1,0 +1,39 @@
+
+Running 1 test using 1 worker
+
+  ✘  1 vgt1n.spec.ts:9:1 › vgt1n (13.0s)
+
+
+  1) vgt1n.spec.ts:9:1 › vgt1n › 01-signin: Sign in at http://127.0.0.1:8095/ with username admin and password {{env:APP_PASSWORD}} (type it exactly like that, it will be substituted). Then go to repository bench/bench-repo issues list, filter open issues, and report the titles of all open issues whose titles start with 'Seed:' exactly as shown. 
+
+    Error: after 01-signin s_9172ea/1 expected url http://127.0.0.1:8095/bench/bench-repo/issues?state=open&type=all but browser is at http://127.0.0.1:8095/bench/bench-repo/issues?state=all&type=all
+
+       at vgt1n.flow.ts:12518
+
+      12516 |   // (navigationTarget), whether or not the step goes on to stop.
+      12517 |   if (verdict.diffs) volatile.push(...verdict.diffs);
+    > 12518 |   if (verdict.stop) throw new Error(verdict.stop);
+            |                           ^
+      12519 | }
+      12520 |
+      12521 | /**
+        at urlEffect (/home/user/sitelooper/bench/results/vgt1n-spec-spec-tmp/vgt1n.flow.ts:12518:27)
+        at Object.verify (/home/user/sitelooper/bench/results/vgt1n-spec-spec-tmp/vgt1n.flow.ts:13457:9)
+        at runStepLifecycle (/home/user/sitelooper/bench/results/vgt1n-spec-spec-tmp/vgt1n.flow.ts:8372:24)
+        at Object.01-signin (/home/user/sitelooper/bench/results/vgt1n-spec-spec-tmp/vgt1n.flow.ts:13419:5)
+        at /home/user/sitelooper/bench/results/vgt1n-spec-spec-tmp/vgt1n.flow.ts:16822:7
+        at runFlow (/home/user/sitelooper/bench/results/vgt1n-spec-spec-tmp/vgt1n.flow.ts:16821:5)
+        at /home/user/sitelooper/bench/results/vgt1n-spec-spec-tmp/vgt1n.spec.ts:14:21
+
+    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/vgt1n-vgt1n/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/vgt1n-vgt1n/error-context.md
+
+  1 failed
+    vgt1n.spec.ts:9:1 › vgt1n ──────────────────────────────────────────────────────────────────────

@@ -1,0 +1,105 @@
+{
+ "id": "s_c194dd",
+ "origin": "http://127.0.0.1:8095",
+ "template": "Sign in at {{v1}} with username {{v2}} and password {{v3}} (type it exactly like that, it will be substituted). Then go to repository bench/bench-repo issues list, filter open issues, and report the titles of all open issues whose titles start with 'Seed:' exactly as shown.",
+ "params": {
+  "v1": {
+   "example": "http://127.0.0.1:8095/",
+   "usedIn": [
+    1
+   ]
+  },
+  "v2": {
+   "example": "admin",
+   "usedIn": []
+  },
+  "v3": {
+   "example": "{{env:APP_PASSWORD}}",
+   "usedIn": []
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8095/"
+ },
+ "steps": [
+  {
+   "tool": "goto",
+   "args": {
+    "url": "{{v1}}"
+   },
+   "locators": {},
+   "via": {
+    "skill": "s_6b5c54",
+    "step": 1
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e10"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "link",
+      "name": "Sign In"
+     },
+     {
+      "kind": "css",
+      "selector": "#navbar > div:nth-of-type(2) > a"
+     },
+     {
+      "kind": "point",
+      "x": 1223,
+      "y": 25,
+      "w": 93.5,
+      "h": 36,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/user/login",
+    "addedContains": [
+     "- heading \"Sign In\"",
+     "- textbox \"Username or Email Address\"",
+     "- link \"Forgot password?\"",
+     "- textbox \"Password\"",
+     "- checkbox \"Remember This Device\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_6b5c54",
+    "step": 2
+   }
+  }
+ ],
+ "contract": 4,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-25T02:27:15.589Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 4
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_522999",
+  "index": 0,
+  "of": 4
+ },
+ "provenance": {
+  "session": "vgt1n-n3",
+  "instruction": "Sign in at http://127.0.0.1:8095/ with username admin and password {{env:APP_PASSWORD}} (type it exactly like that, it will be substituted). Then go to repository bench/bench-repo issues list, filter open issues, and report the titles of all open issues whose titles start with 'Seed:' exactly as shown.",
+  "model": "xiaomi/mimo-v2.6-flash",
+  "created": "2026-09-25T02:27:15.589Z"
+ },
+ "revision": 1
+}
