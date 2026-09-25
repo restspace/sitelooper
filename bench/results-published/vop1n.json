@@ -1,0 +1,499 @@
+{
+  "name": "vop1n",
+  "origin": "http://127.0.0.1:8090",
+  "startUrl": "http://127.0.0.1:8090/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-signin",
+      "instruction": "Sign in as username admin with password {{env:APP_PASSWORD}} (type the password text exactly as {{env:APP_PASSWORD}}; the browser fills it in). After signing in, report whether you are logged in as admin.",
+      "skill": "s_c17560",
+      "params": {},
+      "outputs": [
+        "display_name",
+        "first_name",
+        "email",
+        "avatar_initials"
+      ],
+      "recorded": {
+        "Username": "admin",
+        "display_name": "Bench Admin",
+        "first_name": "Bench",
+        "last_name": "Admin",
+        "email": "admin@example.net",
+        "avatar_initials": "BA",
+        "post_login_page": "http://127.0.0.1:8090/projects",
+        "url": "http://127.0.0.1:8090/my/account"
+      },
+      "route": "http://127.0.0.1:8090/my/account",
+      "outputEvidence": {
+        "Username": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "display_name": {
+          "same": 1,
+          "differed": 0
+        },
+        "first_name": {
+          "same": 1,
+          "differed": 0
+        },
+        "last_name": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "email": {
+          "same": 1,
+          "differed": 0
+        },
+        "avatar_initials": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "post_login_page": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "02-find",
+      "instruction": "Go to the project named '{{01-signin.first_name}} Project' in OpenProject. In its work packages list, find all work packages whose subject starts with 'Seed:' and report their subjects EXACTLY as shown (do not modify anything). If the full list needs pagination or filters, make sure you see all of them.",
+      "skill": "s_4a65b9",
+      "params": {
+        "v1": "{{01-signin.first_name}}"
+      },
+      "outputs": [
+        "project",
+        "pagination_text",
+        "view_state_notice",
+        "subject_1",
+        "subject_2",
+        "subject_3"
+      ],
+      "recorded": {
+        "project": "Bench Project",
+        "pagination_text": "(1 - 3/3) You are on the only page.",
+        "view_state_notice": "This view has unsaved changes. Click to save them.",
+        "total_work_packages": "3",
+        "subject_1": "Seed: triage inbox",
+        "subject_2": "Seed: order missing parts",
+        "subject_3": "Seed: ship repaired device",
+        "pagination": "1 - 3/3 (only page)",
+        "url": "http://127.0.0.1:8090/projects/bench-project/work_packages?query_props=%7B%22c%22%3A%5B%22id%22%2C%22subject%22%2C%22type%22%2C%22status%22%2C%22assignee%22%2C%22priority%22%5D%2C%22hi%22%3Atrue%2C%22g%22%3A%22%22%2C%22is%22%3Atrue%2C%22tv%22%3Afalse%2C%22hla%22%3A%5B%22status%22%2C%22priority%22%2C%22dueDate%22%5D%2C%22t%22%3A%22id%3Aasc%22%2C%22f%22%3A%5B%7B%22n%22%3A%22status%22%2C%22o%22%3A%22c%22%2C%22v%22%3A%5B%5D%7D%5D%2C%22ts%22%3A%22PT0S%22%2C%22pp%22%3A20%2C%22pa%22%3A1%7D"
+      },
+      "route": "http://127.0.0.1:8090/projects/bench-project/work_packages",
+      "outputEvidence": {
+        "project": {
+          "same": 1,
+          "differed": 0
+        },
+        "pagination_text": {
+          "same": 0,
+          "differed": 1
+        },
+        "view_state_notice": {
+          "same": 1,
+          "differed": 0
+        },
+        "total_work_packages": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "subject_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "subject_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "subject_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "pagination": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "03-create",
+      "instruction": "In {{01-signin.first_name}} Project, create a new work package of type Task with subject '{{runid}} {{01-signin.first_name}} Work Package' and a description that includes the text '{{runid}}'. Save it, then report the work package's numeric ID as OpenProject displays it (shown as #<number>) and confirm the subject and type.",
+      "skill": "s_a65c05",
+      "params": {
+        "v1": "{{01-signin.first_name}} Project",
+        "v4": "{{runid}} {{01-signin.first_name}} Work Package",
+        "v3": "{{runid}}"
+      },
+      "outputs": [
+        "work_package_id",
+        "work_package_reference",
+        "subject",
+        "description_contains",
+        "creation_alert",
+        "date_fields",
+        "description_editor",
+        "label",
+        "button",
+        "button_2",
+        "button_3"
+      ],
+      "recorded": {
+        "work_package_id": "41",
+        "work_package_reference": "#41",
+        "subject": "vop1n-n1 Bench Work Package",
+        "type": "Task",
+        "description_contains": "vop1n-n1",
+        "creation_alert": "Successful creation.",
+        "date_fields": "no start date - no finish date",
+        "description_editor": "Rich Text Editor. Editing area: main. Press Alt+0 for help.",
+        "label": "Work",
+        "button": "Bench Project",
+        "button_2": "Create",
+        "button_3": "Create new work package",
+        "url": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/41/overview?query_props=%7B%22c%22%3A%5B%22id%22%2C%22subject%22%2C%22type%22%2C%22status%22%2C%22assignee%22%2C%22priority%22%5D%2C%22hi%22%3Atrue%2C%22g%22%3A%22%22%2C%22is%22%3Atrue%2C%22tv%22%3Afalse%2C%22hla%22%3A%5B%22status%22%2C%22priority%22%2C%22dueDate%22%5D%2C%22t%22%3A%22id%3Aasc%22%2C%22f%22%3A%5B%5D%2C%22ts%22%3A%22PT0S%22%2C%22pp%22%3A20%2C%22pa%22%3A1%7D",
+        "url.p4": "41"
+      },
+      "route": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:id/overview",
+      "outputEvidence": {
+        "work_package_id": {
+          "same": 0,
+          "differed": 1
+        },
+        "work_package_reference": {
+          "same": 0,
+          "differed": 1
+        },
+        "subject": {
+          "same": 0,
+          "differed": 1
+        },
+        "type": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "description_contains": {
+          "same": 0,
+          "differed": 1
+        },
+        "creation_alert": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "date_fields": {
+          "same": 1,
+          "differed": 0
+        },
+        "description_editor": {
+          "same": 1,
+          "differed": 0
+        },
+        "label": {
+          "same": 1,
+          "differed": 0
+        },
+        "button": {
+          "same": 1,
+          "differed": 0
+        },
+        "button_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "button_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        },
+        "url.p4": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "04-edit",
+      "instruction": "On the work package page for {{03-create.work_package_reference}} (Task: {{runid}} {{01-signin.first_name}} Work Package) in {{01-signin.first_name}} Project, edit the following in-place fields and verify each saved: (1) set the Assignee to the user '{{01-signin.first_name}} Assignee' — it's an autocomplete, so actually pick '{{01-signin.first_name}} Assignee' from the dropdown options; (2) set the Status to 'In progress'; (3) set the finish date to 2026-12-31. Note these fields are edited in place by clicking them and they save automatically. Report the final values shown for assignee, status, and finish date.",
+      "skill": "s_d02782",
+      "params": {
+        "v1": "{{03-create.work_package_reference}}",
+        "v3": "Task",
+        "v4": "{{runid}} {{01-signin.first_name}} Work Package",
+        "v8": "{{01-signin.first_name}} Project",
+        "v6": "{{01-signin.first_name}}",
+        "v9": "2026-12-31",
+        "v5": "{{runid}}",
+        "v7": "Work"
+      },
+      "outputs": [
+        "work_package_reference",
+        "assignee",
+        "assignee_dropdown_option",
+        "status",
+        "finish_date",
+        "finish_date_iso",
+        "subject",
+        "type",
+        "save_confirmation",
+        "status_field_label",
+        "status_edit_button",
+        "date_range_displayed",
+        "subject_prefix"
+      ],
+      "recorded": {
+        "work_package_reference": "#41",
+        "assignee": "Bench Assignee",
+        "assignee_dropdown_option": "BA Bench Assignee bench-assignee@example.com",
+        "status": "In progress",
+        "finish_date": "12/31/2026",
+        "finish_date_iso": "2026-12-31",
+        "subject": "vop1n-n1 Bench Work Package",
+        "type": "Task",
+        "save_confirmation": "Successful update. (shown after each of the three edits)",
+        "status_field_label": "Status",
+        "status_edit_button": "Edit the status of the work package",
+        "date_range_displayed": "no start date - 12/31/2026",
+        "subject_prefix": "vop1n-n1"
+      },
+      "route": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:id/overview",
+      "urlVariance": [
+        "41",
+        "42"
+      ],
+      "outputEvidence": {
+        "work_package_reference": {
+          "same": 0,
+          "differed": 1
+        },
+        "assignee": {
+          "same": 1,
+          "differed": 0
+        },
+        "assignee_dropdown_option": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "status": {
+          "same": 1,
+          "differed": 0
+        },
+        "finish_date": {
+          "same": 1,
+          "differed": 0
+        },
+        "finish_date_iso": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "subject": {
+          "same": 0,
+          "differed": 1
+        },
+        "type": {
+          "same": 1,
+          "differed": 0
+        },
+        "save_confirmation": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "status_field_label": {
+          "same": 0,
+          "differed": 1
+        },
+        "status_edit_button": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "date_range_displayed": {
+          "same": 1,
+          "differed": 0
+        },
+        "subject_prefix": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "05-add",
+      "instruction": "On the work package {{03-create.work_package_reference}} page (Task: {{runid}} {{01-signin.first_name}} Work Package), add a comment whose text includes '{{runid}}' (e.g. 'Progress note for {{runid}}'). Submit it, and report the comment text as displayed in the activity feed. Also verify and report the work package's currently displayed assignee, status, and finish date.",
+      "skill": "s_6ae088",
+      "params": {
+        "v1": "{{03-create.work_package_reference}}",
+        "v3": "Task",
+        "v4": "{{runid}} {{01-signin.first_name}} Work Package",
+        "v5": "{{runid}}",
+        "v8": "Progress note for {{runid}}",
+        "v7": "Work"
+      },
+      "outputs": [
+        "work_package_reference",
+        "subject",
+        "type",
+        "comment_text",
+        "comment_location",
+        "comment_editor_placeholder",
+        "finish_date_label",
+        "assignee",
+        "status",
+        "finish_date",
+        "date_range_displayed",
+        "description",
+        "status_label",
+        "assignee_label",
+        "subject_prefix"
+      ],
+      "recorded": {
+        "work_package_reference": "#41",
+        "subject": "vop1n-n1 Bench Work Package",
+        "type": "Task",
+        "comment_text": "Progress note for vop1n-n1",
+        "comment_location": "Activity tab feed (posted by Bench Admin)",
+        "comment_editor_placeholder": "Add a comment. Type @ to notify people.",
+        "finish_date_label": "Finish date",
+        "assignee": "Bench Assignee",
+        "status": "In progress",
+        "finish_date": "12/31/2026",
+        "date_range_displayed": "no start date - 12/31/2026",
+        "description": "vop1n-n1 description for the bench work package.",
+        "status_label": "Status",
+        "assignee_label": "Assignee",
+        "subject_prefix": "vop1n-n1"
+      },
+      "route": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:id/overview",
+      "urlVariance": [
+        "41",
+        "42"
+      ],
+      "outputEvidence": {
+        "work_package_reference": {
+          "same": 0,
+          "differed": 1
+        },
+        "subject": {
+          "same": 0,
+          "differed": 1
+        },
+        "type": {
+          "same": 1,
+          "differed": 0
+        },
+        "comment_text": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "comment_location": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "comment_editor_placeholder": {
+          "same": 1,
+          "differed": 0
+        },
+        "finish_date_label": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "assignee": {
+          "same": 1,
+          "differed": 0
+        },
+        "status": {
+          "same": 1,
+          "differed": 0
+        },
+        "finish_date": {
+          "same": 1,
+          "differed": 0
+        },
+        "date_range_displayed": {
+          "same": 1,
+          "differed": 0
+        },
+        "description": {
+          "same": 0,
+          "differed": 1
+        },
+        "status_label": {
+          "same": 0,
+          "differed": 1
+        },
+        "assignee_label": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "subject_prefix": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "session": "vop1n-n1",
+    "created": "2026-09-25T03:10:28.149Z",
+    "model": "xiaomi/mimo-v2.6-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "01-signin",
+      "outputs": [
+        "Username",
+        "last_name",
+        "post_login_page"
+      ]
+    },
+    {
+      "stepId": "02-find",
+      "outputs": [
+        "total_work_packages",
+        "pagination"
+      ]
+    },
+    {
+      "stepId": "03-create",
+      "outputs": [
+        "type"
+      ]
+    }
+  ]
+}
