@@ -109,6 +109,19 @@ d('the sourcing hold at the loop', () => {
     expect(lastReport.sourcingAsk).toEqual({ asked: ['open_issue_titles'], readsAdded: 1, labelled: ['open_issue_titles'], gesturesAfter: [] });
   }, 60_000);
 
+  it('keeps every value the held report named when the retry drops its evidence block (fwop19 04-open)', async () => {
+    const { result, lastReport } = await run([
+      [evalTitles],
+      [{ name: 'report', args: { status: 'success', summary: 'Listed.', evidence: { values: { open_issue_titles: notOnPage, issue_count: '2' } } } }],
+      [{ name: 'read_all', args: { target: '.flex-item-title', what: 'text', label: 'open_issue_titles' } }],
+      [{ name: 'report', args: { status: 'success', summary: 'Listed the issues; titles read from the page.' } }],
+    ]);
+    expect(result.report.status).toBe('success');
+    expect(result.report.evidence?.values?.issue_count).toBe('2');
+    expect(String(lastReport.values.issue_count)).toBe('2');
+    expect(Object.values(lastReport.values).join(' ')).toContain('Seed: triage inbox');
+  }, 60_000);
+
   it('accepts a stubborn retry as it stands, and names a data-changing gesture after the hold', async () => {
     const stubborn = { name: 'report', args: { status: 'success', summary: 'Listed the issues (from memory).', evidence: { values: { open_issue_titles: notOnPage } } } };
     const { result, progress } = await run([[evalTitles], [stubborn], [{ name: 'click', args: { target: '#heading' } }], [stubborn]]);
