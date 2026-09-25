@@ -1,0 +1,43 @@
+
+Running 1 test using 1 worker
+
+[sitelooper step] 01-open
+[sitelooper step] 02-create
+[sitelooper step] 03-open
+  ✘  1 fwgt15-cv.spec.ts:9:1 › fwgt15-cv (26.6s)
+
+
+  1) fwgt15-cv.spec.ts:9:1 › fwgt15-cv › 04-add: On the issue page {{02-create.url}}, the issue currently has the label '{{03-open.applied_label_link}}'. Add the label 'priority-high' to it using the Labels picker in the issue sidebar. The picker is a dropdown menu listing available labels with checkboxes — open it, tick/select the 'priority-high' entry, then close the menu (click elsewhere or press Escape) so Gitea saves the change. The goal is that the issue page ends up displaying BOTH labels '{{03-open.applied_label_link}}' and 'priority-high' on the issue itself (not just ticked inside the open menu). If clicking the menu item does not apply it, try alternatives such as keyboard navigation (arrow keys + Enter) or clicking the item's checkbox/label element. Verify at the end by reading the sidebar label list, and report the labels displayed. Do not remove the '{{03-open.applied_label_link}}' label. 
+
+    Error: none of 1 recorded locators resolved at 04-add s_e18531/3 target (page is at http://127.0.0.1:8095/bench/bench-repo/issues/9): locator('[data-sitelooper-point="988,595"]')
+
+       at fwgt15-cv.flow.ts:13028
+
+      13026 | /** The stop for a chain that resolved nothing, shared by `pick` and `pickOrNavigate`. */
+      13027 | function pickMiss(page: Page, candidates: CandidateObservation[], where: string, note?: string): Error {
+    > 13028 |   return new Error(
+            |          ^
+      13029 |     // The url and the recorded step are half the answer whenever a chain
+      13030 |     // misses wholesale: a locator that named the control on the day it was
+      13031 |     // recorded usually misses because the page is not the page the step
+        at pickMiss (/home/user/sitelooper/bench/results/fwgt15-cv-c2-spec-tmp/fwgt15-cv.flow.ts:13028:10)
+        at pickOrNavigate (/home/user/sitelooper/bench/results/fwgt15-cv-c2-spec-tmp/fwgt15-cv.flow.ts:13078:9)
+        at Object.act (/home/user/sitelooper/bench/results/fwgt15-cv-c2-spec-tmp/fwgt15-cv.flow.ts:14569:22)
+        at runStepLifecycle (/home/user/sitelooper/bench/results/fwgt15-cv-c2-spec-tmp/fwgt15-cv.flow.ts:8730:18)
+        at Object.04-add (/home/user/sitelooper/bench/results/fwgt15-cv-c2-spec-tmp/fwgt15-cv.flow.ts:14562:5)
+        at /home/user/sitelooper/bench/results/fwgt15-cv-c2-spec-tmp/fwgt15-cv.flow.ts:17228:7
+        at runFlow (/home/user/sitelooper/bench/results/fwgt15-cv-c2-spec-tmp/fwgt15-cv.flow.ts:17227:5)
+        at /home/user/sitelooper/bench/results/fwgt15-cv-c2-spec-tmp/fwgt15-cv.spec.ts:14:21
+
+    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/fwgt15-cv-fwgt15-cv/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/fwgt15-cv-fwgt15-cv/error-context.md
+
+  1 failed
+    fwgt15-cv.spec.ts:9:1 › fwgt15-cv ──────────────────────────────────────────────────────────────

@@ -1,0 +1,42 @@
+{
+  "arm": "spec",
+  "runid": "fwgt15-cv-c1",
+  "target": "gitea",
+  "flow": "fwgt15-cv.json",
+  "flowName": "fwgt15-cv",
+  "skillsDir": "/home/user/sitelooper/bench/results/fwgt15-cv-skills",
+  "compiled": true,
+  "flowFile": "bench/results/fwgt15-cv-c1-spec-tmp/fwgt15-cv.flow.ts",
+  "specFile": "bench/results/fwgt15-cv-c1-spec-tmp/fwgt15-cv.spec.ts",
+  "wallMs": 31655,
+  "exitCode": 1,
+  "timedOut": false,
+  "costUsd": 0,
+  "stats": {
+    "total": 1,
+    "passed": 0,
+    "failed": 1,
+    "skipped": 0
+  },
+  "tests": [
+    {
+      "title": "fwgt15-cv",
+      "status": "unexpected",
+      "ok": false,
+      "durationMs": 27740,
+      "error": "Error: none of 1 recorded locators resolved at 04-add s_e18531/3 target (page is at http://127.0.0.1:8095/bench/bench-repo/issues/4): locator('[data-sitelooper-point=\"988,595\"]')",
+      "drift": [
+        "[sitelooper drift] 03-open s_5e9f7a/3 target: primary locator('.labels-list').nth(1) missed; used #2 locator('div > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2)') (#1 absent)"
+      ]
+    }
+  ],
+  "drift": [
+    "[sitelooper drift] 03-open s_5e9f7a/3 target: primary locator('.labels-list').nth(1) missed; used #2 locator('div > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2)') (#1 absent)"
+  ],
+  "driftCount": 1,
+  "evidence": [
+    "fwgt15-cv-c1-spec-failure.png",
+    "fwgt15-cv-c1-spec-error-context.md"
+  ],
+  "logTail": "\nRunning 1 test using 1 worker\n\n[sitelooper step] 01-open\n[sitelooper step] 02-create\n[sitelooper skip] 03-open s_5e9f7a/1 target: no locator recorded — value left empty\n[sitelooper drift] 03-open s_5e9f7a/3 target: primary locator('.labels-list').nth(1) missed; used #2 locator('div > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2)') (#1 absent)\n[sitelooper step] 03-open\n  ✘  1 fwgt15-cv.spec.ts:9:1 › fwgt15-cv (27.7s)\n\n\n  1) fwgt15-cv.spec.ts:9:1 › fwgt15-cv › 04-add: On the issue page {{02-create.url}}, the issue currently has the label '{{03-open.applied_label_link}}'. Add the label 'priority-high' to it using the Labels picker in the issue sidebar. The picker is a dropdown menu listing available labels with checkboxes — open it, tick/select the 'priority-high' entry, then close the menu (click elsewhere or press Escape) so Gitea saves the change. The goal is that the issue page ends up displaying BOTH labels '{{03-open.applied_label_link}}' and 'priority-high' on the issue itself (not just ticked inside the open menu). If clicking the menu item does not apply it, try alternatives such as keyboard navigation (arrow keys + Enter) or clicking the item's checkbox/label element. Verify at the end by reading the sidebar label list, and report the labels displayed. Do not remove the '{{03-open.applied_label_link}}' label. \n\n    Error: none of 1 recorded locators resolved at 04-add s_e18531/3 target (page is at http://127.0.0.1:8095/bench/bench-repo/issues/4): locator('[data-sitelooper-point=\"988,595\"]')\n\n       at fwgt15-cv.flow.ts:13050\n\n      13048 | /** The stop for a chain that resolved nothing, shared by `pick` and `pickOrNavigate`. */\n      13049 | function pickMiss(page: Page, candidates: CandidateObservation[], where: string, note?: string): Error {\n    > 13050 |   return new Error(\n            |          ^\n      13051 |     // The url and the recorded step are half the answer whenever a chain\n      13052 |     // misses wholesale: a locator that named the control on the day it was\n      13053 |     // recorded usually misses because the page is not the page the step\n        at pickMiss (/home/user/sitelooper/bench/results/fwgt15-cv-c1-spec-tmp/fwgt15-cv.flow.ts:13050:10)\n        at pickOrNavigate (/home/user/sitelooper/bench/results/fwgt15-cv-c1-spec-tmp/fwgt15-cv.flow.ts:13100:9)\n        at Object.act (/home/user/sitelooper/bench/results/fwgt15-cv-c1-spec-tmp/fwgt15-cv.flow.ts:14640:22)\n        at runStepLifecycle (/home/user/sitelooper/bench/results/fwgt15-cv-c1-spec-tmp/fwgt15-cv.flow.ts:8752:18)\n        at Object.04-add (/home/user/sitelooper/bench/results/fwgt15-cv-c1-spec-tmp/fwgt15-cv.flow.ts:14633:5)\n        at /home/user/sitelooper/bench/results/fwgt15-cv-c1-spec-tmp/fwgt15-cv.flow.ts:17299:7\n        at runFlow (/home/user/sitelooper/bench/results/fwgt15-cv-c1-spec-tmp/fwgt15-cv.flow.ts:17298:5)\n        at /home/user/sitelooper/bench/results/fwgt15-cv-c1-spec-tmp/fwgt15-cv.spec.ts:14:21\n\n    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────\n    [sitelooper drift] 03-open s_5e9f7a/3 target: primary locator('.labels-list').nth(1) missed; used #2 locator('div > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2)') (#1 absent)\n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────\n    test-results/fwgt15-cv-fwgt15-cv/test-failed-1.png\n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    Error Context: test-results/fwgt15-cv-fwgt15-cv/error-context.md\n\n  1 failed\n    fwgt15-cv.spec.ts:9:1 › fwgt15-cv ──────────────────────────────────────────────────────────────\n"
+}

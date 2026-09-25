@@ -1,0 +1,98 @@
+{
+ "id": "s_b7548c",
+ "origin": "http://127.0.0.1:8095",
+ "template": "Open {{v1}} and sign in with username {{v2}} and password {{v3}} (type the password exactly as that text; it is filled in when typed). Then go to the repository bench/bench-repo, open its Issues tab, and report the titles of the OPEN issues whose titles start with 'Seed:', exactly as displayed on the page.",
+ "params": {
+  "v1": {
+   "example": "http://127.0.0.1:8095/",
+   "usedIn": [
+    1
+   ]
+  },
+  "v2": {
+   "example": "admin",
+   "usedIn": []
+  },
+  "v3": {
+   "example": "{{env:APP_PASSWORD}}",
+   "usedIn": []
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8095/"
+ },
+ "steps": [
+  {
+   "tool": "goto",
+   "args": {
+    "url": "{{v1}}"
+   },
+   "locators": {}
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e10"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "link",
+      "name": "Sign In"
+     },
+     {
+      "kind": "css",
+      "selector": "#navbar > div:nth-of-type(2) > a"
+     },
+     {
+      "kind": "point",
+      "x": 1223,
+      "y": 25,
+      "w": 93.5,
+      "h": 36,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/user/login",
+    "addedContains": [
+     "- heading \"Sign In\"",
+     "- textbox \"Username or Email Address\"",
+     "- link \"Forgot password?\"",
+     "- textbox \"Password\"",
+     "- checkbox \"Remember This Device\""
+    ],
+    "lineDialect": 2
+   }
+  }
+ ],
+ "contract": 4,
+ "stats": {
+  "uses": 11,
+  "successes": 11,
+  "partial": 0,
+  "created": "2026-09-25T08:13:40.210Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 4,
+  "lastUsed": "2026-09-25T15:51:03.728Z"
+ },
+ "status": "validated",
+ "seq": {
+  "chain": "s_dfc39d",
+  "index": 0,
+  "of": 4
+ },
+ "provenance": {
+  "session": "fwgt15-n1",
+  "instruction": "Open http://127.0.0.1:8095/ and sign in with username admin and password {{env:APP_PASSWORD}} (type the password exactly as that text; it is filled in when typed). Then go to the repository bench/bench-repo, open its Issues tab, and report the titles of the OPEN issues whose titles start with 'Seed:', exactly as displayed on the page.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-25T08:13:40.210Z"
+ },
+ "revision": 11
+}
