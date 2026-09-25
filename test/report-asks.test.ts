@@ -104,6 +104,37 @@ describe('export: a pruned output the instruction asked for is named, not droppe
   });
 });
 
+/**
+ * Round 64, openproject fwop18 02-open: "Find all work packages in that
+ * project whose subject starts with 'Seed:'. Report each of those subjects
+ * EXACTLY as displayed, one per line, and say how many there are." The
+ * recording reported seed_subjects and seed_subject_count; no read of the
+ * procedure publishes either, export pruned both with a quiet note, and n2
+ * and n3 replayed clean at tier A with no `unanswered` — the verifier alone
+ * saw the subjects were missing. "those subjects" is the sentence before it;
+ * "how many" asks for a count.
+ */
+describe('a report clause that points back at what the sentence before it found (round 64, fwop18)', () => {
+  const INSTRUCTION =
+    "Navigate to the project named 'Bench Project' and open its work packages list. Find all work packages in that project whose subject starts with 'Seed:'. Report each of those subjects EXACTLY as displayed, one per line, and say how many there are. Do not modify anything.";
+  const OUTPUTS = ['project', 'query_view', 'pagination', 'projects_list_url', 'pagination_2', 'work_packages_url', 'project_list_link_text'];
+  const PRUNED = ['project_url', 'seed_subject_count', 'seed_subjects'];
+  const PUBLISHED = ['projects_list_url', 'pagination_2', 'work_packages_url', 'pagination', 'project_list_link_text', 'project'];
+
+  it('export names the pruned seed_subjects and seed_subject_count as asked, not a quiet note', () => {
+    expect(askedOutputs(INSTRUCTION, PRUNED)).toEqual(['seed_subject_count', 'seed_subjects']);
+  });
+
+  it('the replay that published neither leaves both unanswered', () => {
+    expect(unansweredAsks(INSTRUCTION, [...OUTPUTS, ...PRUNED], PUBLISHED).sort()).toEqual(['seed_subject_count', 'seed_subjects']);
+  });
+
+  it('only a demonstrative points back: "report … as the app shows them" does not take in the sentence before', () => {
+    expect(askedOutputs('Set the date and keep a valid time. Save and report the tag as the app shows them.', ['publish_time', 'tag'])).toEqual(['tag']);
+    expect(askedOutputs('Find the seed items. Report each of these items.', ['seed_item'])).toEqual(['seed_item']);
+  });
+});
+
 describe('the whole of rounds 54, 56 and 57', () => {
   it('names exactly these steps (a warning, not a verdict — see step-verdict.ts for why)', () => {
     const named = ROWS.filter((r) => unanswered(r).length).map((r) => `${r.green ? 'GREEN ' : ''}${r.run} ${r.replay} ${r.step}: ${unanswered(r).join(', ')}`).sort();
@@ -146,7 +177,9 @@ describe('the whole of rounds 54, 56 and 57', () => {
       'fwsi7 n2 05-open: checked_out_to_user, model, status',
       'fwsi7 n3 05-open: checked_out_to_user, model, status',
       'fwsi8 n2 01-signin: asset_1, asset_2, asset_3',
+      'fwsi8 n2 04-open: asset_name_label, checked_out_to_as_displayed, default_location_label, status_label_as_displayed',
       'fwsi8 n3 01-signin: asset_1, asset_2, asset_3',
+      'fwsi8 n3 04-open: asset_name_label, checked_out_to_as_displayed, default_location_label, status_label_as_displayed',
       'fwsi9 n3 04-report: confirmation_message, note_text_shown, status_label_displayed',
       'fwsi9 n3 05-open: purchase_date, status_label',
     ]);

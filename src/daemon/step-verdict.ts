@@ -134,8 +134,27 @@ export function partialReasons(input: StepVerdictInput): string[] {
 /** The words of every clause of `instruction` that asks to report something. */
 function reportWords(instruction: string): Set<string> {
   const text = instruction.replace(/\{\{[^}]*\}\}/g, ' ').replace(/https?:\/\/\S+/g, ' ');
-  const clauses = text.match(/\breport[^.!?]*/gi) ?? [];
-  return new Set(clauses.join(' ').toLowerCase().match(/[a-z]+/g) ?? []);
+  const words = (s: string) => s.toLowerCase().match(/[a-z]+/g) ?? [];
+  const out = new Set<string>();
+  // Sentences, each with the clause of it that asks to report. A clause that
+  // points back at what the sentence before it found ("Find all work
+  // packages … whose subject starts with 'Seed:'. Report each of those
+  // subjects …", openproject fwop18 02-open) asks for THAT: the words of the
+  // sentence it points at are words of the ask. A clause that points at
+  // nothing keeps its own words only (fwvk7 02-create's verified priority).
+  const sentences = text.split(/[.!?](?:\s+|$)/);
+  sentences.forEach((sentence, i) => {
+    const at = sentence.search(/\breport/i);
+    if (at < 0) return;
+    const clause = sentence.slice(at);
+    for (const w of words(clause)) out.add(w);
+    // "say how many there are" asks for a count, in the words an output names one by.
+    if (/\bhow many\b/i.test(clause)) for (const w of ['count', 'number', 'total']) out.add(w);
+    // Only a demonstrative ("those subjects", "these values"): "report the
+    // tag … as the app shows them" points within its own clause (fwgh11 03-open).
+    if (i > 0 && /\b(those|these)\b/i.test(clause)) for (const w of words(sentences[i - 1])) out.add(w);
+  });
+  return out;
 }
 
 /** An output name's words: split on case and punctuation, one-letter labels and list indices dropped, singular. */
