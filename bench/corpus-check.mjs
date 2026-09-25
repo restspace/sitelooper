@@ -137,9 +137,15 @@ const APPS = ['rd', 'od', 'gr', 'kb', 'op', 'gt', 'vk', 'ec', 'si', 'gh'];
 /** `results/fwrd69-hh6jhj` → { runid: 'fwrd69', app: 'rd', num: 69 }. */
 function parseBranch(name) {
   const short = name.replace(/^.*?results\//, '');
-  const runid = short.split('-')[0];
+  const [runid, ...rest] = short.split('-');
   const m = /^fw(rd|od|gr|kb|op|gt|vk|ec|si|gh)(\d*)$/.exec(runid);
   if (!m) return null;
+  // Only a re-publish suffix (a 6-char id the cloud appends) repeats a runid.
+  // A named suffix is a different experiment on the same recording — the
+  // convergence runs publish `results/<runid>-cv` with no flow at the base
+  // runid's path — and must not shadow the sweep's own branch (the
+  // verify-sourcing-held-values corpus check read fwod88 and fwgr74 as "no flow").
+  if (rest.some((p) => !/^[a-z0-9]{6}$/.test(p))) return null;
   return { branch: `results/${short}`, short, runid, app: m[1], num: m[2] ? Number(m[2]) : 0 };
 }
 
