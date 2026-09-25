@@ -169,10 +169,17 @@ function artifact(k) {
   const errors = (res?.tests ?? []).filter((t) => !t.ok).map((t) => t.error ?? '').filter(Boolean);
   // The step a failure names: the artifact's own message ("01-signin s_5fccd8/2: …"),
   // or a `@step <id>` anchor in a stack.
-  const anchors = [...new Set([...errors, ...(res?.drift ?? []).map(String)].flatMap((e) => [
-    ...[...String(e).matchAll(/@step\s+([\w-]+)/g)].map((m) => m[1]),
-    ...[...String(e).matchAll(/(?:^|\n|: )([\w-]+) s_[0-9a-f]{6}\/\d+:/g)].map((m) => m[1]),
-  ]))];
+  // The step a failure names. Producer first: "02-open needs {{01-signin.x}}, and
+  // this run never published it" is 01-signin's fault (fwvk15-cv burned four
+  // rounds re-recording the consumer). Then the artifact's own site
+  // ("01-signin s_5fccd8/2: …", "… (01-signin s_9e6344/2 target)") and `@step` anchors.
+  const texts = [...errors, ...(res?.drift ?? []).map(String)].map(String);
+  const producers = texts.flatMap((e) => [...e.matchAll(/needs \{\{([\w-]+)\./g)].map((m) => m[1]));
+  const sites = texts.flatMap((e) => [
+    ...[...e.matchAll(/@step\s+([\w-]+)/g)].map((m) => m[1]),
+    ...[...e.matchAll(/(?:^|[\s(:])([\w-]+) s_[0-9a-f]{6}\/\d+\b/g)].map((m) => m[1]),
+  ]);
+  const anchors = [...new Set([...producers, ...sites])];
   const passed = Boolean(res) && res.exitCode === 0 && (res.stats?.failed ?? 1) === 0 && !failLines.length && (verified === 'n/a' || !verified.includes('FAIL'));
   return { tag, exitCode: res?.exitCode ?? null, stats: res?.stats ?? null, driftCount: res?.driftCount ?? null, verified, failLines, errors: errors.map((e) => e.slice(0, 400)), anchors, passed, dry: args.dry };
 }
@@ -187,7 +194,11 @@ function repair(k, flowFile) {
   const j = r.json ?? {};
   const runs = (j.runs ?? []).map((x) => ({ label: x.label, passed: x.passed, total: x.total, status: x.status, tickets: x.tickets }));
   report.flowRuns += runs.length + (j.specCheck?.ran ? 1 : 0);
-  const needs = [...new Set([...(j.notConverged ?? []), ...(j.diagnostics ?? []).filter((d) => d.code === 'needs-rerecord' && d.step).map((d) => d.step)])];
+  // notConverged entries read "02-open (tier B — unresolved reference(s): …)":
+  // the id is the leading token; "(unreached)" is not a step (fwvk15-cv passed
+  // the whole string to rerecord, which refused it, four times).
+  const stepIdOf = (x) => /^([\w-]+)/.exec(String(x ?? ''))?.[1] ?? null;
+  const needs = [...new Set([...(j.notConverged ?? []).map(stepIdOf), ...(j.diagnostics ?? []).filter((d) => d.code === 'needs-rerecord' && d.step).map((d) => stepIdOf(d.step))].filter((id) => id && flow.steps.some((st) => st.id === id)))];
   return { exit: r.status, outcome: j.outcome ?? null, refused: j.refused ?? null, converged: j.converged ?? null, specCheck: j.specCheck ? { ran: j.specCheck.ran, passed: j.specCheck.passed } : null, runs, needsRerecord: needs, changes: (j.changes ?? []).slice(0, 20), repaired, dry: r.dry ?? false };
 }
 
@@ -213,7 +224,8 @@ for (let k = 1; k <= args.maxRounds && !verdict; k++) {
   save();
   if (round.repair.specCheck?.ran && round.repair.specCheck.passed) { verdict = { status: 'converged-by-repair', why: `round ${k}: repair's compiled-spec check passed`, artifact: round.repair.repaired }; break; }
   const order = new Map(flow.steps.map((st, i) => [st.id, i]));
-  const steps = (round.repair.needsRerecord.length ? round.repair.needsRerecord : round.artifact.anchors).slice().sort((a, b) => (order.get(a) ?? 1e9) - (order.get(b) ?? 1e9));
+  // The producer the artifact blames outranks the consumers repair lists; then flow order.
+  const steps = [...new Set([...round.artifact.anchors, ...round.repair.needsRerecord])].sort((a, b) => (order.get(a) ?? 1e9) - (order.get(b) ?? 1e9));
   if (!steps.length) { verdict = { status: 'stuck', why: 'artifact failed, repair did not converge, and no step to re-record was named' }; break; }
   round.rerecords.push(rerecord(k, steps[0], `${round.repair.needsRerecord.length ? 'repair: needs-rerecord' : 'artifact failed at this step'}${steps.length > 1 ? `; also named: ${steps.slice(1).join(', ')}` : ''}`));
   save();
