@@ -94,3 +94,85 @@ d('recorder journal: network (stage 1)', () => {
     expect((noop.journal?.ev ?? []).filter((e) => e.k === 'req')).toEqual([]);
   }, 60_000);
 });
+
+d('recorder journal: carries on multipart bodies (shadow2 fix 6)', () => {
+  let home: string;
+  let session: BrowserSession;
+  let app: Awaited<ReturnType<typeof startJournalApp>>;
+  const run = (name: string, args: Record<string, unknown>) => executeTool(session, name, args, os.tmpdir());
+  const steps = () => session.script!.entries.filter((e): e is RecordedStep => e.k === 'step');
+  const last = (tool: string) => steps().filter((s) => s.tool === tool).at(-1)!;
+  const all = (): JournalEvent[] => steps().flatMap((s) => [...(s.journal?.ev ?? []), ...(s.journal?.gap?.ev ?? [])]);
+
+  beforeAll(async () => {
+    home = fs.mkdtempSync(path.join(os.tmpdir(), 'bp-journal-mp-'));
+    process.env.SITELOOPER_HOME = home;
+    app = await startJournalApp();
+    session = new BrowserSession({ session: 'journal-mp', persist: false, learn: true });
+    session.script!.beginInstruction('journal multipart');
+  }, 60_000);
+
+  afterAll(async () => {
+    await session?.close();
+    await app?.close();
+    delete process.env.SITELOOPER_HOME;
+    fs.rmSync(home, { recursive: true, force: true });
+  });
+
+  // gitea fwgt13-n1 #89: Create Issue posted the form multipart, and the
+  // journal said it carried nothing, though it carried the typed title.
+  it('a fetch posting FormData carries the fill it sends', async () => {
+    await run('goto', { url: `${app.url}/multipart` });
+    await run('fill', { target: '#t2', value: 'Multipart title 42' });
+    const fill = last('fill');
+    await run('click', { target: '#submit-fetch' });
+    const post = all().find((e) => e.k === 'req' && String(e.e).endsWith('/api/multipart'));
+    expect(post, JSON.stringify(all().filter((e) => e.k === 'req'))).toBeTruthy();
+    expect(post!.carries).toEqual([fill.journal!.w]);
+  }, 60_000);
+
+  it('a native multipart form submit carries the fill it sends', async () => {
+    await run('goto', { url: `${app.url}/multipart` });
+    await run('fill', { target: '#t1', value: 'Native title 43' });
+    const fill = last('fill');
+    await run('click', { target: '#submit-native' });
+    const post = all().find((e) => e.k === 'req' && String(e.e).endsWith('/api/native'));
+    expect(post, JSON.stringify(all().filter((e) => e.k === 'req'))).toBeTruthy();
+    expect(post!.carries).toEqual([fill.journal!.w]);
+  }, 60_000);
+});
+
+d('recorder journal: carries on a multipart body with a file part (shadow2 fix 6)', () => {
+  let home: string;
+  let session: BrowserSession;
+  let app: Awaited<ReturnType<typeof startJournalApp>>;
+  const run = (name: string, args: Record<string, unknown>) => executeTool(session, name, args, os.tmpdir());
+  const steps = () => session.script!.entries.filter((e): e is RecordedStep => e.k === 'step');
+  const last = (tool: string) => steps().filter((s) => s.tool === tool).at(-1)!;
+  const all = (): JournalEvent[] => steps().flatMap((s) => [...(s.journal?.ev ?? []), ...(s.journal?.gap?.ev ?? [])]);
+
+  beforeAll(async () => {
+    home = fs.mkdtempSync(path.join(os.tmpdir(), 'bp-journal-mpf-'));
+    process.env.SITELOOPER_HOME = home;
+    app = await startJournalApp();
+    session = new BrowserSession({ session: 'journal-mpf', persist: false, learn: true });
+    session.script!.beginInstruction('journal multipart file');
+  }, 60_000);
+
+  afterAll(async () => {
+    await session?.close();
+    await app?.close();
+    delete process.env.SITELOOPER_HOME;
+    fs.rmSync(home, { recursive: true, force: true });
+  });
+
+  it('a FormData post with a file part still carries the fill it sends', async () => {
+    await run('goto', { url: `${app.url}/multipart` });
+    await run('fill', { target: '#t2', value: 'Titled with a file 44' });
+    const fill = last('fill');
+    await run('click', { target: '#submit-blob' });
+    const post = all().find((e) => e.k === 'req' && String(e.e).endsWith('/api/withfile'));
+    expect(post, JSON.stringify(all().filter((e) => e.k === 'req'))).toBeTruthy();
+    expect(post!.carries).toEqual([fill.journal!.w]);
+  }, 60_000);
+});

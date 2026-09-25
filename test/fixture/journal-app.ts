@@ -83,6 +83,13 @@ const OVERLAY = `<!doctype html><html><head><title>Overlay</title>
 <div id="cover" role="presentation" aria-label="Cover" onclick="this.remove()"></div>
 </body></html>`;
 
+const MULTIPART = `<!doctype html><html><head><meta charset="utf-8"><title>Multipart</title></head><body>
+<form id="native" method="post" action="/api/native" enctype="multipart/form-data"><label for="t1">Native title</label><input id="t1" name="title"><button id="submit-native">Create</button></form>
+<label for="t2">Fetch title</label><input id="t2"><button id="submit-fetch" type="button">Create by fetch</button><button id="submit-blob" type="button">Create with a file</button>
+<script>document.getElementById('submit-fetch').onclick = async () => { const fd = new FormData(); fd.append('title', document.getElementById('t2').value); fd.append('_csrf', 'x'.repeat(40)); await fetch('/api/multipart', { method: 'POST', body: fd }); };
+document.getElementById('submit-blob').onclick = async () => { const fd = new FormData(); fd.append('title', document.getElementById('t2').value); fd.append('files', new Blob(['%PDF-1.4 binary \u0000 bytes'], { type: 'application/octet-stream' }), 'a.bin'); await fetch('/api/withfile', { method: 'POST', body: fd }); };</script>
+</body></html>`;
+
 const POPUP = `<!doctype html><html><head><title>Popup</title></head><body>
 <a id="later" href="#" onclick="event.preventDefault(); setTimeout(() => window.open('/search', '_blank', 'noopener'), 700)">Open later</a>
 </body></html>`;
@@ -105,6 +112,8 @@ export async function startJournalApp(): Promise<{ url: string; close: () => Pro
       if (u.pathname === '/flash') return send('text/html', FLASH);
       if (u.pathname === '/overlay') return send('text/html', OVERLAY);
       if (u.pathname === '/popup') return send('text/html', POPUP);
+      if (u.pathname === '/multipart') return send('text/html; charset=utf-8', MULTIPART);
+      if (u.pathname === '/api/native') return send('text/html; charset=utf-8', '<!doctype html><title>Created</title><h1>Created</h1>');
       if (u.pathname === '/api/save') return send('application/json', JSON.stringify({ id: `rec-${++n}`, ok: true }));
       if (u.pathname === '/api/slow') return send('application/json', '{"ok":true}', 2_500);
       if (u.pathname === '/api/search') return send('application/json', JSON.stringify([`${u.searchParams.get('q')} one`, `${u.searchParams.get('q')} two`]));

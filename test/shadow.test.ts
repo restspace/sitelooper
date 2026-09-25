@@ -168,7 +168,7 @@ describe('shadow (a): a picker\'s net option state (gitea fwgt12 03-set)', () =>
     const success = all.findIndex((e) => e.k === 'report' && e.status === 'success');
     const rows = show('fwgt12 03-set (the blocked attempt and its resume, one instruction)', compileSpan(all.filter((e, i) => i <= success && !(e.k === 'report' && e.status !== 'success')), 'fwgt12-n1'));
     const [net] = rowsFor(rows, 'pickerNetState');
-    expect(net.fact).toMatch(/^net selected: \[bug, priority-high\]; commits: \{bug\} at #55 then \{bug, priority-high\} at #91/);
+    expect(net.fact).toMatch(/^net selected: \[bug, priority-high\]; commits: \{bug\} when it closed \(#55\) then \{bug, priority-high\} when it closed \(#91\)/);
     // The procedure's kept ticks (bug x3 net on; priority-high at #87, #69 dropped
     // as an abandoned link click) end in the same state: the net-state question
     // agrees here. fwgt12's replay stop was elsewhere (#59's re-open expectation).
@@ -331,5 +331,112 @@ describe('shadow: tabs, link clicks and toggle pairs (synthetic, stage 3)', () =
     });
     const [row] = rowsFor(compileSpan(e, 'syn'), 'togglePair');
     expect(row.fact).toMatch(/aria-expanded false then true\): a toggle pair/);
+  });
+});
+
+describe('shadow2: the live journal of gitea fwgt13-n1 02-create (round 62)', () => {
+  // The published recording with the journal the recorder actually wrote. Its
+  // replays and compiled script picked labels [bug, enhancement], assignee
+  // admin and milestone Backlog, and reported success.
+  const e = load('fwgt13-n1-02-create.jsonl');
+
+  it('keyPick: every Enter is named from the journal, and the procedure picks each by position', () => {
+    const rows = rowsFor(show('fwgt13 02-create keyPick', compileSpan(e, 'fwgt13-n1')), 'keyPick');
+    expect(rows.map((r) => [r.seq, r.fact])).toEqual([
+      [36, 'Enter unpicked "bug"'],
+      [49, 'Enter picked "enhancement"'],
+      [55, 'Enter unpicked "enhancement"'],
+      [59, 'Enter picked "bug"'],
+      [65, 'Enter picked "priority-high"'],
+      [77, 'Enter picked "Bench Milestone"'],
+      [85, 'Enter picked "bench-assignee (Bench Assignee)"'],
+    ]);
+    expect(rows.every((r) => r.heuristic === 'the procedure picks it by position' && !r.agree)).toBe(true);
+  });
+
+  it('pickerNetState: one row per picker, committed with the form, ticks by key flagged', () => {
+    const rows = rowsFor(compileSpan(e, 'fwgt13-n1'), 'pickerNetState');
+    expect(rows.map((r) => r.fact)).toEqual([
+      'net selected: [bug, priority-high]; commits: {bug, priority-high} with the form (#294); 5 tick(s) made by a key press (positional in the procedure)',
+      'net selected: [Bench Milestone]; commits: {Bench Milestone} with the form (#294); 1 tick(s) made by a key press (positional in the procedure)',
+      'net selected: [bench-assignee (Bench Assignee)]; commits: {bench-assignee (Bench Assignee)} with the form (#294); 1 tick(s) made by a key press (positional in the procedure)',
+    ]);
+  });
+
+  it('linkClick: an option link that ticked its option is not inert (fix 4)', () => {
+    const rows = rowsFor(compileSpan(e, 'fwgt13-n1'), 'linkClick');
+    expect(rows.find((r) => r.seq === 27)).toMatchObject({ fact: 'it did not navigate, but changed the page (state)', heuristic: 'kept', agree: true });
+  });
+});
+
+describe('shadow2 fixes 1-3 (synthetic)', () => {
+  const chain = (sel: string) => ({ target: { expr: `page.locator('${sel}')`, verified: true, raw: sel, chain: [{ kind: 'css' as const, selector: sel }] } });
+  const step = (tool: string, sel: string, extra: Partial<RecordedStep> = {}): RecordedStep => ({
+    k: 'step',
+    tool,
+    args: { target: sel },
+    locators: chain(sel),
+    diff: { url: 'http://app/p', alerts: [], added: [], removed: [], dialect: 2 },
+    ...extra,
+  });
+  const base = (steps: RecordedStep[]): RecordedEntry[] => [{ k: 'instruction', text: 'do it', url: 'http://app/p' }, ...steps, { k: 'report', status: 'success', summary: 'done', values: {} }];
+
+  it('fix 1: a click that added lines is not a hide, whatever it hid (grafana fwgr74 #41)', () => {
+    const e = annotate(base([step('click', '#open'), step('click', '#viz', { diff: { url: 'http://app/p', alerts: [], added: ['- button "Stat"'], dialect: 2 } })]), {
+      1: [{ dt: 30, k: 'show', d: 'dialog "Picker"', lm: 3 }],
+      2: [{ dt: 20, k: 'hide', d: 'dialog "Picker"', lm: 3 }],
+    });
+    expect(rowsFor(compileSpan(e, 'syn'), 'hideRequired')).toEqual([]);
+  });
+
+  it('fix 1: a dialog a navigation showed has no opener (openproject fwop16 #7: the welcome dialog after sign-in)', () => {
+    const e = annotate(base([step('click', '#login'), step('click', '#close')]), {
+      1: [{ dt: 10, k: 'nav', url: 'http://app/home' }, { dt: 300, k: 'show', d: 'dialog "Welcome"', lm: 4 }],
+      2: [{ dt: 20, k: 'hide', d: 'dialog "Welcome"', lm: 4 }],
+    });
+    expect(rowsFor(compileSpan(e, 'syn'), 'hideRequired')).toEqual([]);
+  });
+
+  it('fix 1: the latest show of the landmark is the opening that counts (gitea fwgt13 #39)', () => {
+    const e = annotate(base([step('fill', '#name', { args: { target: '#name', value: 'x' } }), step('click', '#opener'), step('click', '#toggle')]), {
+      1: [{ dt: 30, k: 'show', d: 'listbox "Labels"', lm: 5 }, { dt: 40, k: 'hide', d: 'listbox "Labels"', lm: 5 }],
+      2: [{ dt: 30, k: 'show', d: 'listbox "Labels"', lm: 5 }],
+      3: [{ dt: 20, k: 'hide', d: 'listbox "Labels"', lm: 5 }],
+    });
+    const [row] = rowsFor(compileSpan(e, 'syn'), 'hideRequired');
+    expect(row.fact).toMatch(/closed what click #opener opened: required/);
+  });
+
+  it('fix 3: a flash the step caused is its own, even with an earlier one of unknown cause in the span (vikunja fwvk13 #31)', () => {
+    const e = annotate(base([step('click', '#edit'), step('click', '#save', { diff: { url: 'http://app/p', alerts: [], added: ['- heading "Description Saved!"'], dialect: 2 } })]), {
+      2: [
+        { dt: -2_000, k: 'txt', d: 'heading', x: 'Description Saved!' },
+        { dt: 30, dt1: 90, k: 'req', m: 'POST', e: 'http://app/api/tasks/4', s: 200 },
+        { dt: 120, k: 'txt', d: 'heading', x: 'Description Saved!' },
+      ],
+    });
+    const [row] = rowsFor(compileSpan(e, 'syn'), 'flashCause');
+    expect(row.fact).toMatch(/was this step's own change/);
+  });
+
+  it('fix 2: a write just after a click saves the edit before it, not the app (vikunja fwvk13 #59/#64)', () => {
+    const e = annotate(base([step('select', '#month', { args: { target: '#month', option: 'December' } }), step('click', '#confirm'), step('goto', '', { args: { url: 'http://app/tasks/4' } })]), {
+      1: [{ dt: 20, k: 'val', f: 'combobox "Month"', len: 2 }],
+      2: [{ dt: 539, dt1: 560, k: 'req', m: 'POST', e: 'http://app/api/v1/tasks/4', s: 200 }],
+    });
+    const [row] = rowsFor(compileSpan(e, 'syn'), 'abandonedEdit');
+    expect(row.fact).toMatch(/^saved \(a write request followed\)/);
+  });
+});
+
+describe('shadow2: an unnamed field is one field only at the same target (snipe-it fwsi13 #51/#55)', () => {
+  const chain = (sel: string) => ({ target: { expr: `page.locator('${sel}')`, verified: true, raw: sel, chain: [{ kind: 'css' as const, selector: sel }] } });
+  const type = (sel: string, text: string): RecordedStep => ({ k: 'step', tool: 'type', args: { target: sel, text }, locators: chain(sel), diff: { url: 'http://app/p', alerts: [], added: [], dialect: 2 } });
+  it('a model typed into one select2 search box and a location into another are not a superseded set', () => {
+    const e = annotate([{ k: 'instruction', text: 'create the asset', url: 'http://app/p' }, type('#model', 'Bench Laptop Model'), type('#location', 'Bench Office'), { k: 'report', status: 'success', summary: 'done', values: {} }], {
+      1: [{ dt: 20, k: 'val', f: 'searchbox ""', len: 12 }],
+      2: [{ dt: 20, k: 'val', f: 'searchbox ""', len: 6 }],
+    });
+    expect(rowsFor(compileSpan(e, 'syn'), 'supersededSet')).toEqual([]);
   });
 });

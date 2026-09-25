@@ -48,6 +48,12 @@ export interface JournalEvent {
   [field: string]: unknown;
 }
 
+/** Gestures a write may follow by a moment (a click that saves after its own settle). */
+const PRESSING: ReadonlySet<string> = new Set(['click', 'dblclick', 'modifier_click', 'right_click', 'press', 'select', 'check']);
+
+/** Request methods that write. */
+const WRITES: ReadonlySet<string> = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
+
 /** Slack at a window's start: an event stamped a hair before dispatch is still the action's. */
 export const WINDOW_SLACK_MS = 20;
 /** A change within this long after a request's answer is that request's consequence. */
@@ -162,7 +168,7 @@ function requestCause(r: JournalEvent, windows: readonly JournalWindow[], state:
     .reverse()
     .find((p) => typeof p.t1 === 'number' && (p.t1 as number) - ANSWER_SLOP_MS <= r.t && r.t - (p.t1 as number) <= LINEAGE_MS && directOwner(p) !== undefined && endpointKey(p) !== key);
   if (parent && !activeStartedBetween(windows, parent.t, r.t)) return ['late', directOwner(parent)!, 'req'];
-  const debounced = debounceWindow(windows, r.t);
+  const debounced = debounceWindow(windows, r.t, WRITES.has(String(r.m ?? 'GET')));
   if (debounced) return ['late', debounced.w, 'debounce'];
   const quiet = windowAt(windows, r.t, new Set<WindowKind>(['observe']));
   if (quiet) return ['in', quiet.w, 'observe'];
@@ -188,10 +194,15 @@ function directOwner(e: JournalEvent): number | undefined {
 }
 
 /** The input window a request or url change at t may be the debounced consequence of. */
-function debounceWindow(windows: readonly JournalWindow[], t: number): JournalWindow | undefined {
+function debounceWindow(windows: readonly JournalWindow[], t: number, write = false): JournalWindow | undefined {
   let best: JournalWindow | undefined;
   for (const w of windows) {
-    if (w.kind !== 'gesture' || !w.input || w.end === undefined || w.end > t || t - w.end > DEBOUNCE_MS) continue;
+    // An input's app may debounce any request after it. A WRITE may follow any
+    // gesture that soon: vikunja fwvk13 #64's Confirm saved the task by a POST
+    // that left 139 ms after its window closed (filed app:timer until this).
+    // Not a navigation: a page's own timers start with it (an autosave 600 ms
+    // after load is the app's, not the goto's).
+    if (w.kind !== 'gesture' || !(w.input || (write && PRESSING.has(w.tool))) || w.end === undefined || w.end > t || t - w.end > DEBOUNCE_MS) continue;
     if (!best || w.end > best.end!) best = w;
   }
   if (!best || activeStartedBetween(windows, best.end!, t)) return undefined;

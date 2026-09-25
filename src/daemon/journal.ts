@@ -73,6 +73,15 @@ export function within<T>(p: Promise<T>, ms: number, fallback: T): Promise<T> {
   ]).finally(() => clearTimeout(timer));
 }
 
+/** Whether Playwright was given no body for a request that has one (Chromium omits a body with a file part). */
+function bodyMissing(req: Request): boolean {
+  try {
+    return req.postData() === null && (req.headers()['content-type'] ?? '').length > 0;
+  } catch {
+    return false;
+  }
+}
+
 /** The kind of window a tool's dispatch opens. */
 export function windowKindOf(tool: string): WindowKind {
   if (tool === 'eval') return 'eval';
@@ -248,6 +257,7 @@ export class Journal {
     page.on('request', (req) => this.onRequest(page, req));
     page.on('requestfinished', (req) => this.onRequestDone(req, false));
     page.on('requestfailed', (req) => this.onRequestDone(req, true));
+    this.watchBodies(page);
     // Stage 3: the page's own events, time-stamped. A url change of the main
     // frame (same-document ones included: pushState, hash), a new document, a
     // dialog, the page closing; and, for every page after the first, its
@@ -309,6 +319,14 @@ export class Journal {
       if (req.frame() !== page.mainFrame()) e.fr = 1;
       const carries = this.carriesOf(req);
       if (carries.length) e.carries = carries;
+      // A body Playwright was not given (a multipart post with a file part:
+      // Chromium leaves it out of the request event; gitea fwgt13-n1 #89's
+      // Create Issue) is fetched over CDP (watchBodies) and matched here.
+      if (!carries.length && WRITE_METHODS.has(method) && this.typed.length && bodyMissing(req)) {
+        e._body = req.url();
+        this.awaitingBody.push(e);
+        if (this.awaitingBody.length > 20) this.awaitingBody.shift();
+      }
       this.live.set(req, e);
       this.push(e);
     } catch {
@@ -324,9 +342,46 @@ export class Journal {
     } catch {
       /* a binary body carries nothing we typed */
     }
+    return this.carriedIn(wire);
+  }
+
+  /** The windows whose typed value the text carries. */
+  private carriedIn(wire: string): number[] {
     const out = new Set<number>();
     for (const t of this.typed) if (t.forms.some((f) => wire.includes(f))) out.add(t.w);
     return [...out];
+  }
+
+/** Write requests whose body Playwright did not have, waiting for CDP to supply it. */
+  private readonly awaitingBody: JournalEvent[] = [];
+
+  /**
+   * Chromium only: a request whose body holds a file part is announced
+   * without its body (`hasPostData`, no `postData`), and Playwright's
+   * postData() and postDataBuffer() are empty for it. Ask CDP for the body
+   * (Network.getRequestPostData), match it to the journal event by url, and
+   * say what it carried. Never stored; bounded like every journal round trip.
+   */
+  private watchBodies(page: Page): void {
+    const context = typeof page.context === 'function' ? page.context() : null;
+    if (!context || typeof context.newCDPSession !== 'function') return;
+    void within(context.newCDPSession(page), JOURNAL_ROUNDTRIP_MS * 4, null).then(async (cdp) => {
+      if (!cdp) return;
+      await within(cdp.send('Network.enable'), JOURNAL_ROUNDTRIP_MS * 4, undefined);
+      cdp.on('Network.requestWillBeSent', (p: { requestId: string; request: { url: string; method: string; hasPostData?: boolean; postData?: string } }) => {
+        if (!p.request.hasPostData || p.request.postData !== undefined || !WRITE_METHODS.has(p.request.method) || !this.typed.length) return;
+        void within(cdp.send('Network.getRequestPostData', { requestId: p.requestId }), JOURNAL_DETACHED_MS, null).then((got) => {
+          const body = (got as { postData?: string } | null)?.postData;
+          if (!body) return;
+          const at = this.awaitingBody.findIndex((e) => e._body === p.request.url);
+          if (at < 0) return;
+          const e = this.awaitingBody.splice(at, 1)[0];
+          delete e._body;
+          const carries = this.carriedIn(`${p.request.url}\n${body}`);
+          if (carries.length) e.carries = carries;
+        });
+      });
+    });
   }
 
   private onRequestDone(req: Request, failed: boolean): void {
