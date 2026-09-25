@@ -428,3 +428,15 @@ describe('shadow2 fixes 1-3 (synthetic)', () => {
     expect(row.fact).toMatch(/^saved \(a write request followed\)/);
   });
 });
+
+describe('shadow2: an unnamed field is one field only at the same target (snipe-it fwsi13 #51/#55)', () => {
+  const chain = (sel: string) => ({ target: { expr: `page.locator('${sel}')`, verified: true, raw: sel, chain: [{ kind: 'css' as const, selector: sel }] } });
+  const type = (sel: string, text: string): RecordedStep => ({ k: 'step', tool: 'type', args: { target: sel, text }, locators: chain(sel), diff: { url: 'http://app/p', alerts: [], added: [], dialect: 2 } });
+  it('a model typed into one select2 search box and a location into another are not a superseded set', () => {
+    const e = annotate([{ k: 'instruction', text: 'create the asset', url: 'http://app/p' }, type('#model', 'Bench Laptop Model'), type('#location', 'Bench Office'), { k: 'report', status: 'success', summary: 'done', values: {} }], {
+      1: [{ dt: 20, k: 'val', f: 'searchbox ""', len: 12 }],
+      2: [{ dt: 20, k: 'val', f: 'searchbox ""', len: 6 }],
+    });
+    expect(rowsFor(compileSpan(e, 'syn'), 'supersededSet')).toEqual([]);
+  });
+});

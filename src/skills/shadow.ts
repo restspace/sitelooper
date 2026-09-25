@@ -457,7 +457,15 @@ export function supersededSets(steps: readonly RecordedStep[]): ShadowRow[] {
   const events = eventsOf(steps);
   const kept = new Set(dropSupersededSets(steps));
   const rows: ShadowRow[] = [];
-  const fieldOf = (s: RecordedStep) => causedBy(s, events).find((e) => e.k === 'val')?.f;
+  // A field is the one its value event names; an UNNAMED one (select2's search
+  // box, an empty-named searchbox) is only the same field when the step aimed at the same
+  // target (snipe-it fwsi13 #51 typed a model and #55 a location, both into
+  // an unnamed search box).
+  const fieldOf = (s: RecordedStep) => {
+    const f = causedBy(s, events).find((e) => e.k === 'val')?.f;
+    if (f === undefined) return undefined;
+    return /"[^"]+"$/.test(String(f)) ? String(f) : `${String(f)}@${String(s.args.target ?? '')}`;
+  };
   for (let i = 0; i < steps.length; i++) {
     const a = steps[i];
     if (!a.journal || !['fill', 'type'].includes(a.tool)) continue;
