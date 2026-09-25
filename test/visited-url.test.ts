@@ -26,11 +26,14 @@ describe('routeAt / visitedUrlPart', () => {
     expect(routeAt(`${G}/#/posts`, 'h2')).toBeNull();
   });
 
-  it('the end url wins when it carries the label', () => {
+  it('the end url wins when it carries the label on the recorded route', () => {
     const route = routeAt(`${G}/#/editor/post/A`, 'h2')!;
     expect(visitedUrlPart([`${G}/#/editor/post/A`], `${G}/#/editor/post/B`, 'h2', route)).toBe('B');
-    // ...whatever route it is on (the guard: a step that ends on the label keeps its output)
-    expect(visitedUrlPart([`${G}/#/editor/post/A`], `${G}/#/settings/staff/C`, 'h2', route)).toBe('C');
+    // ...but not on another route (round 62, vikunja fwvk13: 02-create ended
+    // on /projects/2/5, whose p1 is the project, not the task it visited).
+    expect(visitedUrlPart([`${G}/#/editor/post/A`], `${G}/#/settings/staff/C`, 'h2', route)).toBe('A');
+    // With no route recorded, the end url's part as before.
+    expect(visitedUrlPart([`${G}/#/editor/post/A`], `${G}/#/settings/staff/C`, 'h2', undefined)).toBe('C');
   });
 
   it('otherwise the LAST url of the step on the recorded route: a record backed out of for another is not published', () => {

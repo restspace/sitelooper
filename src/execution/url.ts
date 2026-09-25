@@ -448,7 +448,10 @@ export function routeAt(url: string, label: string): string | null {
  */
 export function visitedUrlPart(visited: readonly string[], endUrl: string, label: string, route: string | undefined): string | undefined {
   const end = urlPart(endUrl, label);
-  if (end) return end;
+  // The end url's part only on the recorded route (round 62, vikunja fwvk13):
+  // 02-create ended on /projects/2/5, whose p1 is the PROJECT, and published
+  // it as the task id the step had visited at p1 on /tasks/:id.
+  if (end && (!route || routeAt(endUrl, label) === route)) return end;
   if (!route) return undefined;
   for (let i = visited.length - 1; i >= 0; i--) {
     if (routeAt(visited[i], label) !== route) continue;

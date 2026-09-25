@@ -2943,10 +2943,14 @@ export async function captureUrlOutputs(
   // recorded route — the shared visitedUrlPart, which the artifact calls too.
   // Never waited for: the end url is not where it lives.
   const fromTrail = (out: Record<string, string>, url: string): Record<string, string> => {
+    // Always through visitedUrlPart, which the artifact calls too: an end url
+    // part at the same label on ANOTHER route is not this output (vikunja
+    // fwvk13 02-create ended on /projects/2/5; its url.p1 is the task's).
     for (const [key, route] of Object.entries(routes ?? {})) {
-      if (key in out || !key.startsWith('url.')) continue;
+      if (!key.startsWith('url.')) continue;
       const value = visitedUrlPart(visited ?? [], url, key.slice('url.'.length), route);
       if (value) out[key] = value;
+      else delete out[key];
     }
     return out;
   };
