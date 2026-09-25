@@ -168,3 +168,23 @@ describe('within: the journal\'s hard bound on a round trip', () => {
     expect(await within(Promise.reject(new Error('detached')), 50, 7)).toBe(7);
   });
 });
+
+describe('overlap: only an answer that lands while the window is open makes a change ambiguous (verify-main62)', () => {
+  // journal-feedback.browser.test.ts:66 on the verify box: a goto, then at once a
+  // click that opens the picker. The goto's document answer (heard 100 ms
+  // before the click went out) fell inside LINEAGE_MS of the listbox showing,
+  // so the show was marked `also` and the feedback left "listbox opened" out.
+  it('an answer heard before the click went out does not make the click\'s popup ambiguous', () => {
+    const windows = [win(1, 'gesture', 1_000, 1_400), win(2, 'gesture', 1_500, 1_800)];
+    const out = attribute([req(1_010, 1_400, { m: 'GET', e: 'http://app/picker', rt: 'document' }), ev(1_520, 'show', { d: 'listbox "Labels"' })], windows);
+    const show = out.find((e) => e.k === 'show')!;
+    expect(show.c).toEqual(['in', 2, 'gesture']);
+    expect(show.also).toBeUndefined();
+  });
+
+  it('an answer heard after it went out still does (the overlap rule stands)', () => {
+    const windows = [win(1, 'gesture', 1_000, 1_100), win(2, 'gesture', 1_500, 1_800)];
+    const out = attribute([req(1_050, 1_600), ev(1_650, 'show', { d: 'status "Saved"' })], windows);
+    expect(out.find((e) => e.k === 'show')!.also).toBe(1);
+  });
+});
