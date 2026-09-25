@@ -1,0 +1,183 @@
+
+[sweep] run 1/3: fwod90-n1 (store: /home/user/sitelooper/bench/results/fwod90-skills)
+[harness] odoo: defaulting APP_URL
+[harness] odoo: defaulting APP_EMAIL
+[harness] odoo: defaulting APP_PASSWORD
+[reset] odoo: no leftover bench customers
+[harness] odoo responded 303 at http://127.0.0.1:8069/
+stopped: fwod90-n1
+  flow "fwod90" saved: 8 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwod90.json
+  warning: note: dropped 1 locator candidate(s) carrying a value this run minted (known only by export time)
+  warning: note: 10 goal/report value(s) carrying a value this run made were slotted or dropped:
+  s_1faa69.reportTemplate.values.quotation_record_id dropped (recorded literal of a value this run made)
+  s_1faa69.reportTemplate.summary dropped (narrates a value this run made)
+  s_2d491c.reportTemplate.summary dropped (narrates a value this run made)
+  s_67f3ba.reportTemplate.values.quotation_record_id dropped (recorded literal of a value this run made)
+  s_67f3ba.reportTemplate.summary dropped (narrates a value this run made)
+  s_773dd9.reportTemplate.values.quotation_url slotted "21" → {{v4}}
+  s_773dd9.reportTemplate.summary slotted "21" → {{v4}}
+  s_939def.reportTemplate.values.quotation_url slotted "21" → {{v4}}
+  s_939def.reportTemplate.summary slotted "21" → {{v4}}
+  s_c71167.reportTemplate.summary dropped (narrates a value this run made)
+  warning: warning: 05-open's instruction asks to report status, and only a recorded literal backs it: no read in its procedure publishes it, so a replay reports it only if the page it ends on shows that exact text — re-record the step so the value is read where it is shown
+  warning: note: 01-signin no longer publishes apps_menu_items — no replay reads it from the page and the recording showed no line to read
+  warning: warning: 03-open's instruction asks to report untaxed_amount, and no replay can publish it: nothing in its procedure reads it from the page, so export dropped it — re-record the step so the value is read, not only reported
+  warning: warning: 04-open's instruction asks to report status, and no replay can publish it: nothing in its procedure reads it from the page, so export dropped it — re-record the step so the value is read, not only reported
+  warning: note: 04-open no longer publishes list_row_after_save, quotation_record_id — no replay reads them from the page and the recording showed no line to read
+  warning: note: 05-open no longer publishes quotation_record_id, line_qty_2 — no replay reads them from the page and the recording showed no line to read
+  warning: note: 06-open no longer publishes statusbar_after_confirm — no replay reads it from the page and the recording showed no line to read
+  warning: note: 08-open no longer publishes sales_order_status, sales_order_total, sales_order_untaxed_amount — no replay reads them from the page and the recording showed no line to read
+  warning: note: 01-signin: added a read for logged_in_user to s_40a903 (page.getByRole('heading', { name: 'Mitchell Admin', exact: true }); seen on the instruction's own page)
+  warning: warning: 153 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[0].instruction: "admin" (output) in "Navigate to http://127.0.0.1:8069/ and sign in to Odoo with login admin. In the password field type exactly this text: {{env:APP_PASSWORD}} - type it literally,"
+  flow.steps[0].params.v2: "admin" (output) in "admin"
+  flow.steps[1].instruction: "Benchville" (output) in "In Odoo, open the Contacts app and create a new contact (individual/company, any type) with Name exactly \"{{runid}} Bench Customer\" and City set to \"Benchville\""
+  flow.steps[1].params.v3: "Benchville" (output) in "Benchville"
+  flow.steps[2].instruction: "Quotation" (output) in "In Odoo, open the Sales app and create a new quotation (New Quotation). Set the Customer to \"{{runid}} Bench Customer\" — the customer field is an autocomplete d"
+arm=sitelooper model=z-ai/glm-5.3 runid=fwod90-n1 stop=completed
+turns=9 wall=433.3s
+commands=8 cmdTime=387.9s cmdBytes=12904 timeouts=0
+orchestrator in=10610 cw=0 cr=35968 out=5702
+inner prompt=2964702 cached=2756992 completion=28567
+spend=$0.1062 maxUsd=3
+learn: A_n=0 replayed=0/8 full=0 repaired=0 compiled=8 variants=0
+-> /home/user/sitelooper/bench/results/fwod90-n1-sitelooper-result.json
+
+fwod90-n1: objectives passed 6/6
+  obj 1: PASS — city="Benchville"
+  obj 2: PASS — orders for customer: 1, lines: 2
+  obj 3: PASS — 2 lines, 2 distinct products
+  obj 4: PASS — quantities: 5, 2
+  obj 5: PASS — state tracking shows confirmation
+  obj 6: PASS — final state=cancel, ref=S00021
+
+[sweep] run 2/3: fwod90-n2 (replay flow fwod90, no orchestrator)
+[reset] odoo: deleted 1 leftover bench order(s)
+[reset] odoo: deleted 1 leftover bench customer(s)
+[sweep] fwod90-n2: 3 drift ticket(s) → fwod90-n2-drift.json
+
+fwod90-n2: objectives passed 6/6
+  obj 1: PASS — city="Benchville"
+  obj 2: PASS — orders for customer: 1, lines: 2
+  obj 3: PASS — 2 lines, 2 distinct products
+  obj 4: PASS — quantities: 5, 2
+  obj 5: PASS — state tracking shows confirmation
+  obj 6: PASS — final state=cancel, ref=S00022
+
+[sweep] run 3/3: fwod90-n3 (replay flow fwod90, no orchestrator)
+[reset] odoo: deleted 1 leftover bench order(s)
+[reset] odoo: deleted 1 leftover bench customer(s)
+[sweep] fwod90-n3: 3 drift ticket(s) → fwod90-n3-drift.json
+
+fwod90-n3: objectives passed 6/6
+  obj 1: PASS — city="Benchville"
+  obj 2: PASS — orders for customer: 1, lines: 2
+  obj 3: PASS — 2 lines, 2 distinct products
+  obj 4: PASS — quantities: 5, 2
+  obj 5: PASS — state tracking shows confirmation
+  obj 6: PASS — final state=cancel, ref=S00023
+
+Learning sweep fwod90 (K=3)
+┌─────────┬───┬─────────────┬──────────┬─────────────┬───────┬──────┬───────────┬──────┬──────────────┬────────┐
+│ (index) │ n │ runid       │ verified │ stop        │ turns │ cmds │ total_usd │ A_n  │ replayed     │ wall_s │
+├─────────┼───┼─────────────┼──────────┼─────────────┼───────┼──────┼───────────┼──────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwod90-n1' │ '6/6'    │ 'completed' │ 9     │ 8    │ 0.1062    │ 0    │ '0/8'        │ 433    │
+│ 1       │ 2 │ 'fwod90-n2' │ '6/6'    │ 'success'   │ 9     │ 8    │ 0.0048    │ 0.88 │ '8/8 (flow)' │ 148    │
+│ 2       │ 3 │ 'fwod90-n3' │ '6/6'    │ 'success'   │ 12    │ 8    │ 0.0045    │ 0.88 │ '8/8 (flow)' │ 152    │
+└─────────┴───┴─────────────┴──────────┴─────────────┴───────┴──────┴───────────┴──────┴──────────────┴────────┘
+http://127.0.0.1:8069
+  s_019940  validated    3 steps  3/3 (100%)
+           In Odoo, open the Contacts app and create a new contact (individual/company, any type) with Name exactly "{{v2…
+  s_11ec33  validated    1 steps  3/3 (100%)
+           In Odoo, open the Sales app and create a new quotation (New Quotation). Set the Customer to "{{v1}}" — the cus…
+  s_193bab  validated    2 steps  3/3 (100%)
+           In Odoo, open the Sales app and create a new quotation (New Quotation). Set the Customer to "{{v1}}" — the cus…
+  s_1bdf64  validated    3 steps  3/3 (100%)
+           In Odoo, open the Sales app and go to the existing draft quotation {{v1}} (customer "{{v2}}"). Add a SECOND or…
+  s_1c1945  validated    3 steps  3/3 (100%)
+           Navigate to {{v1}} and sign in to Odoo with login {{v2}}. In the password field type exactly this text: {{v3}}…
+  s_1faa69  validated   26 steps  3/3 (100%)
+           In Odoo, open the Sales app and go to the existing draft quotation {{v1}} (customer "{{v2}}"). It has two orde…
+  s_2d491c  validated   12 steps  3/3 (100%)
+           In Odoo, open the Sales app and create a new quotation (New Quotation). Set the Customer to "{{v1}}" — the cus…
+  s_380e4a  validated    1 steps  3/3 (100%)
+           In Odoo, open the Contacts app and create a new contact (individual/company, any type) with Name exactly "{{v2…
+  s_3ac9ea  validated    1 steps  3/3 (100%)
+           In Odoo, open the Sales app and go to the existing draft quotation {{v1}} (customer "{{v2}}"). It has two orde…
+  s_40a903  validated    8 steps  3/3 (100%)
+           Navigate to {{v1}} and sign in to Odoo with login {{v2}}. In the password field type exactly this text: {{v3}}…
+  s_45247f  validated    6 steps  3/3 (100%)
+           In Odoo, open the Sales app and go to the existing draft quotation {{v1}} (customer "{{v2}}"). Add a SECOND or…
+  s_52e7ac  validated    1 steps  3/3 (100%)
+           In Odoo, open the Contacts app and create a new contact (individual/company, any type) with Name exactly "{{v2…
+  s_67f3ba  validated   18 steps  3/3 (100%)
+           In Odoo, open the Sales app and go to the existing draft quotation {{v1}} (customer "{{v2}}"). Add a SECOND or…
+  s_6aba09  validated    5 steps  3/3 (100%)
+           In Odoo, open the Contacts app and create a new contact (individual/company, any type) with Name exactly "{{v2…
+  s_773dd9  validated   17 steps  3/3 (100%)
+           In Odoo, open the Sales app and go to the confirmed sales order {{v1}} (customer "{{v2}}", status "Sales Order…
+  s_7cea38  validated    1 steps  3/3 (100%)
+           In Odoo, open the Contacts app and create a new contact (individual/company, any type) with Name exactly "{{v2…
+  s_81ef4b  validated   16 steps  3/3 (100%)
+           In Odoo, open the Sales app and go to the existing draft quotation {{v1}} (customer "{{v2}}"). It has two orde…
+  s_8adef5  validated    1 steps  3/3 (100%)
+           Navigate to {{v1}} and sign in to Odoo with login {{v2}}. In the password field type exactly this text: {{v3}}…
+  s_939def  validated   13 steps  3/3 (100%)
+           In Odoo, open the Sales app and go to the existing draft quotation {{v1}} (customer "{{v2}}"). Confirm it so i…
+  s_ad228b  validated    3 steps  3/3 (100%)
+           In Odoo, open the Contacts app and create a new contact (individual/company, any type) with Name exactly "{{v2…
+  s_bcdf62  demoted      3 steps  1/3 (33%)
+           Final verification in Odoo, two checks: (1) Open the Contacts app, search for "{{v1}}", open the record and re…
+  s_d560c8  validated   13 steps  3/3 (100%)
+           In Odoo, open the Sales app and create a new quotation (New Quotation). Set the Customer to "{{v1}}" — the cus…
+  s_e73b84  validated    6 steps  3/3 (100%)
+           Final verification in Odoo, two checks: (1) Open the Contacts app, search for "{{v1}}", open the record and re…
+  s_119254  provisional  1 steps  1/1 (100%)
+           Final verification in Odoo, two checks: (1) Open the Contacts app, search for "{{v1}}", open the record and re…
+  s_2e50ec  provisional  3 steps  1/1 (100%)  variant of s_bcdf62
+           Final verification in Odoo, two checks: (1) Open the Contacts app, search for "{{v1}}", open the record and re…
+  s_3f4807  provisional  4 steps  1/1 (100%)  variant of s_bcdf62
+           Final verification in Odoo, two checks: (1) Open the Contacts app, search for "{{v1}}", open the record and re…
+  s_4c1fa9  provisional  3 steps  1/1 (100%)
+           Final verification in Odoo, two checks: (1) Open the Contacts app, search for "{{v1}}", open the record and re…
+  s_4f8e94  provisional  1 steps  1/1 (100%)  variant of s_bcdf62
+           Final verification in Odoo, two checks: (1) Open the Contacts app, search for "{{v1}}", open the record and re…
+  s_5d0dd2  provisional  3 steps  1/1 (100%)  variant of s_bcdf62
+           Final verification in Odoo, two checks: (1) Open the Contacts app, search for "{{v1}}", open the record and re…
+  s_6a3720  provisional  3 steps  1/1 (100%)
+           Final verification in Odoo, two checks: (1) Open the Contacts app, search for "{{v1}}", open the record and re…
+  s_6be511  provisional  5 steps  1/1 (100%)
+           Final verification in Odoo, two checks: (1) Open the Contacts app, search for "{{v1}}", open the record and re…
+  s_75a252  provisional  3 steps  1/1 (100%)  variant of s_bcdf62
+           Final verification in Odoo, two checks: (1) Open the Contacts app, search for "{{v1}}", open the record and re…
+  s_82a9c4  provisional  3 steps  1/1 (100%)  variant of s_bcdf62
+           Final verification in Odoo, two checks: (1) Open the Contacts app, search for "{{v1}}", open the record and re…
+  s_87aab6  provisional  3 steps  1/1 (100%)  variant of s_bcdf62
+           Final verification in Odoo, two checks: (1) Open the Contacts app, search for "{{v1}}", open the record and re…
+  s_8e6828  provisional  1 steps  1/1 (100%)
+           Final verification in Odoo, two checks: (1) Open the Contacts app, search for "{{v1}}", open the record and re…
+  s_9d50d5  provisional  3 steps  1/1 (100%)
+           Final verification in Odoo, two checks: (1) Open the Contacts app, search for "{{v1}}", open the record and re…
+  s_a9f664  provisional  4 steps  1/1 (100%)
+           Final verification in Odoo, two checks: (1) Open the Contacts app, search for "{{v1}}", open the record and re…
+  s_aeee62  provisional  6 steps  1/1 (100%)
+           Final verification in Odoo, two checks: (1) Open the Contacts app, search for "{{v1}}", open the record and re…
+  s_b77461  provisional  4 steps  1/1 (100%)
+           Final verification in Odoo, two checks: (1) Open the Contacts app, search for "{{v1}}", open the record and re…
+  s_c71167  provisional  5 steps  1/1 (100%)
+           Final verification in Odoo, two checks: (1) Open the Contacts app, search for "{{v1}}", open the record and re…
+  s_d03416  provisional  1 steps  1/1 (100%)  variant of s_bcdf62
+           Final verification in Odoo, two checks: (1) Open the Contacts app, search for "{{v1}}", open the record and re…
+  s_d2863c  provisional  5 steps  1/1 (100%)  variant of s_bcdf62
+           Final verification in Odoo, two checks: (1) Open the Contacts app, search for "{{v1}}", open the record and re…
+  s_d4ae3a  provisional  3 steps  1/1 (100%)
+           Final verification in Odoo, two checks: (1) Open the Contacts app, search for "{{v1}}", open the record and re…
+  s_ead9e8  provisional  4 steps  1/1 (100%)
+           Final verification in Odoo, two checks: (1) Open the Contacts app, search for "{{v1}}", open the record and re…
+  s_f28d79  provisional  4 steps  1/1 (100%)  variant of s_bcdf62
+           Final verification in Odoo, two checks: (1) Open the Contacts app, search for "{{v1}}", open the record and re…
+  s_ffc8fb  provisional  3 steps  1/1 (100%)
+           Final verification in Odoo, two checks: (1) Open the Contacts app, search for "{{v1}}", open the record and re…
+store: /home/user/sitelooper/bench/results/fwod90-skills
+
+summary: /home/user/sitelooper/bench/results/fwod90-sweep.json

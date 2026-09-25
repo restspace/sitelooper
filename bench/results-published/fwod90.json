@@ -1,0 +1,999 @@
+{
+  "name": "fwod90",
+  "origin": "http://127.0.0.1:8069",
+  "startUrl": "http://127.0.0.1:8069/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-signin",
+      "instruction": "Navigate to http://127.0.0.1:8069/ and sign in to Odoo with login admin. In the password field type exactly this text: {{env:APP_PASSWORD}} - type it literally, character for character; the harness substitutes the real password as it is typed. Never guess or spell out a password. Note: the app long-polls, so never wait for network idle; wait for concrete page state instead. After login, verify the Odoo apps menu is visible and report which user you are logged in as.",
+      "skill": "s_8adef5",
+      "params": {
+        "v1": "http://127.0.0.1:8069/",
+        "v2": "admin",
+        "v3": "{{env:APP_PASSWORD}}"
+      },
+      "outputs": [
+        "apps_menu_visible",
+        "company",
+        "logged_in_user",
+        "login_used",
+        "topbar_avatar_label",
+        "user_email",
+        "current_url"
+      ],
+      "recorded": {
+        "apps_menu_items": "Discuss, Contacts, Sales, Dashboards, Invoicing, Apps, Settings",
+        "apps_menu_visible": "yes - app switcher dropdown opened in top bar",
+        "company": "YourCompany",
+        "logged_in_user": "Mitchell Admin",
+        "login_used": "admin",
+        "topbar_avatar_label": "User",
+        "user_email": "admin@yourcompany.example.com",
+        "current_url": "http://127.0.0.1:8069/web#action=123&cids=1&menu_id=81",
+        "url": "http://127.0.0.1:8069/web#action=123&cids=1&menu_id=81",
+        "url.q.action": "123"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&menu_id=:id",
+      "outputEvidence": {
+        "apps_menu_items": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "apps_menu_visible": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "company": {
+          "same": 2,
+          "differed": 0
+        },
+        "logged_in_user": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "login_used": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "topbar_avatar_label": {
+          "same": 2,
+          "differed": 0
+        },
+        "user_email": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "current_url": {
+          "same": 2,
+          "differed": 0
+        },
+        "url": {
+          "same": 2,
+          "differed": 0
+        },
+        "url.q.action": {
+          "same": 2,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "02-open",
+      "instruction": "In Odoo, open the Contacts app and create a new contact (individual/company, any type) with Name exactly \"{{runid}} Bench Customer\" and City set to \"Benchville\". Fill any other required fields. Save it. Then verify by reopening the contact record and report the Name and City values shown on the saved record, plus the contact reference/id Odoo assigned if visible.",
+      "skill": "s_7cea38",
+      "params": {
+        "v2": "{{runid}} Bench Customer",
+        "v3": "Benchville",
+        "v1": "{{runid}}"
+      },
+      "outputs": [
+        "contact_city_value_on_reopened_record",
+        "contact_name_value_on_reopened_record",
+        "contact_record_id",
+        "partner_type",
+        "record_url",
+        "contact_reference"
+      ],
+      "recorded": {
+        "contact_city_value_on_reopened_record": "Benchville",
+        "contact_name_value_on_reopened_record": "fwod90-n1 Bench Customer",
+        "contact_record_id": "44",
+        "partner_type": "Company",
+        "record_url": "http://127.0.0.1:8069/web#id=44&cids=1&menu_id=110&action=156&model=res.partner&view_type=form",
+        "contact_reference": "fwod90-n1",
+        "url": "http://127.0.0.1:8069/web#id=44&cids=1&menu_id=110&action=156&model=res.partner&view_type=form",
+        "url.q.id": "44",
+        "url.q.menu_id": "110",
+        "url.q.action": "156"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=res.partner&view_type=form",
+      "outputEvidence": {
+        "contact_city_value_on_reopened_record": {
+          "same": 2,
+          "differed": 0
+        },
+        "contact_name_value_on_reopened_record": {
+          "same": 0,
+          "differed": 2
+        },
+        "contact_record_id": {
+          "same": 0,
+          "differed": 2
+        },
+        "partner_type": {
+          "same": 2,
+          "differed": 0
+        },
+        "record_url": {
+          "same": 0,
+          "differed": 2
+        },
+        "contact_reference": {
+          "same": 0,
+          "differed": 2
+        },
+        "url": {
+          "same": 0,
+          "differed": 2
+        },
+        "url.q.id": {
+          "same": 0,
+          "differed": 2
+        },
+        "url.q.menu_id": {
+          "same": 2,
+          "differed": 0
+        },
+        "url.q.action": {
+          "same": 2,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "03-open",
+      "instruction": "In Odoo, open the Sales app and create a new quotation (New Quotation). Set the Customer to \"{{runid}} Bench Customer\" — the customer field is an autocomplete dropdown, so type the name and actually click the matching option from the dropdown that appears; a typed-only value does not count. Then add exactly ONE order line: pick any product from the product catalogue (again the product field is an autocomplete dropdown — type and click a real option from the dropdown), and set the quantity to 3. Let Odoo fill in the unit price automatically. Do NOT confirm the quotation yet — leave it as a draft quotation. Then report: (a) the product name you chose, (b) the unit price Odoo filled in on the line, (c) the untaxed amount (Untaxed Amount) the app computes in the totals, and (d) the quotation reference/name (e.g. S00042) shown on the record. Note: the app long-polls, so never wait for network idle; wait for concrete page state instead.",
+      "skill": "s_193bab",
+      "params": {
+        "v1": "{{runid}} Bench Customer",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "customer",
+        "line_qty",
+        "line_subtotal",
+        "product_name",
+        "quotation_reference",
+        "quotation_record_id",
+        "quotation_url",
+        "status",
+        "total_amount",
+        "unit_price",
+        "line_subtotal_2",
+        "total_amount_2",
+        "system_notification",
+        "customer_shown",
+        "contact_reference",
+        "product_reference"
+      ],
+      "recorded": {
+        "customer": "fwod90-n1 Bench Customer",
+        "line_qty": "3.00",
+        "line_subtotal": "£ 885.00",
+        "product_name": "[FURN_6666] Acoustic Bloc Screens",
+        "quotation_reference": "S00021",
+        "quotation_record_id": "21",
+        "quotation_url": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=21",
+        "status": "Draft - statusbar radio 'Quotation' is the checked state; 'Confirm' button not used",
+        "total_amount": "£ 1,062.00",
+        "unit_price": "295.00",
+        "untaxed_amount": "£ 885.00",
+        "line_subtotal_2": "£ 885.00",
+        "total_amount_2": "£ 1,062.00",
+        "system_notification": "Mitchell Admin\n- now\nCreating a new record...",
+        "customer_shown": "fwod90-n1 Bench Customer",
+        "contact_reference": "fwod90-n1",
+        "product_reference": "FURN_6666",
+        "url": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=21",
+        "url.q.menu_id": "194",
+        "url.q.action": "316",
+        "url.q.id": "21"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "outputEvidence": {
+        "customer": {
+          "same": 0,
+          "differed": 2
+        },
+        "line_qty": {
+          "same": 2,
+          "differed": 0
+        },
+        "line_subtotal": {
+          "same": 0,
+          "differed": 2
+        },
+        "product_name": {
+          "same": 2,
+          "differed": 0
+        },
+        "quotation_reference": {
+          "same": 0,
+          "differed": 2
+        },
+        "quotation_record_id": {
+          "same": 0,
+          "differed": 2
+        },
+        "quotation_url": {
+          "same": 0,
+          "differed": 2
+        },
+        "status": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "total_amount": {
+          "same": 0,
+          "differed": 2
+        },
+        "unit_price": {
+          "same": 2,
+          "differed": 0
+        },
+        "untaxed_amount": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "line_subtotal_2": {
+          "same": 2,
+          "differed": 0
+        },
+        "total_amount_2": {
+          "same": 2,
+          "differed": 0
+        },
+        "system_notification": {
+          "same": 2,
+          "differed": 0
+        },
+        "customer_shown": {
+          "same": 0,
+          "differed": 2
+        },
+        "contact_reference": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "product_reference": {
+          "same": 2,
+          "differed": 0
+        },
+        "url": {
+          "same": 0,
+          "differed": 2
+        },
+        "url.q.menu_id": {
+          "same": 2,
+          "differed": 0
+        },
+        "url.q.action": {
+          "same": 2,
+          "differed": 0
+        },
+        "url.q.id": {
+          "same": 0,
+          "differed": 2
+        }
+      }
+    },
+    {
+      "id": "04-open",
+      "instruction": "In Odoo, open the Sales app and go to the existing draft quotation {{03-open.quotation_reference}} (customer \"{{runid}} Bench Customer\"). Add a SECOND order line below the existing \"{{03-open.product_name}}\" line: choose a DIFFERENT product from the catalogue (the product field is an autocomplete dropdown — type and click a real option from the dropdown that appears; a typed-only value does not count), and set its quantity to 2. Let Odoo fill in the unit price automatically. Save the quotation but do NOT confirm it. Then report: (a) the name of the second product you chose, (b) its unit price, (c) the new Untaxed Amount the app computes in the totals, and (d) the quotation reference and status shown. Note: the app long-polls, so never wait for network idle; wait for concrete page state instead.",
+      "skill": "s_45247f",
+      "params": {
+        "v1": "{{03-open.quotation_reference}}",
+        "v2": "{{runid}} Bench Customer",
+        "v4": "{{03-open.product_name}}",
+        "v3": "{{runid}}"
+      },
+      "outputs": [
+        "customer",
+        "line1",
+        "line2_product",
+        "line2_qty",
+        "line2_subtotal",
+        "line2_unit_price",
+        "quotation_reference",
+        "taxes",
+        "total_amount",
+        "untaxed_amount",
+        "list_row_customer",
+        "list_row_total",
+        "list_row_status",
+        "list_row_line1_unit_price",
+        "list_row_line1_subtotal",
+        "list_row_line2_product",
+        "list_row_line2_subtotal",
+        "untaxed_amount_row",
+        "line2_product_reference",
+        "line1_product_reference",
+        "contact_reference"
+      ],
+      "recorded": {
+        "customer": "fwod90-n1 Bench Customer",
+        "line1": "[FURN_6666] Acoustic Bloc Screens — qty 3.00 @ 295.00 = £885.00 (pre-existing)",
+        "line2_product": "[FURN_7777] Office Chair",
+        "line2_qty": "2.00",
+        "line2_subtotal": "£ 140.00",
+        "line2_unit_price": "70.00",
+        "list_row_after_save": "S00021 | fwod90-n1 Bench Customer | Mitchell Admin | £1,230.00 | Quotation",
+        "quotation_reference": "S00021",
+        "quotation_record_id": "21",
+        "status": "Quotation (draft) — statusbar radio 'Quotation' checked; Sales Order / Quotation Sent not selected; Confirm never clicked",
+        "taxes": "20% on both lines, tax amount £205.00",
+        "total_amount": "£ 1,230.00",
+        "untaxed_amount": "£ 1,025.00",
+        "list_row_customer": "fwod90-n1 Bench Customer",
+        "list_row_total": "£ 1,230.00",
+        "list_row_status": "Quotation",
+        "list_row_line1_unit_price": "295.00",
+        "list_row_line1_subtotal": "£ 885.00",
+        "list_row_line2_product": "[FURN_7777] Office Chair",
+        "list_row_line2_subtotal": "£ 140.00",
+        "untaxed_amount_row": "Untaxed Amount\t£ 1,025.00",
+        "line2_product_reference": "FURN_7777",
+        "line1_product_reference": "FURN_6666",
+        "contact_reference": "fwod90-n1",
+        "url": "http://127.0.0.1:8069/web#id=21&cids=1&menu_id=194&action=316&model=sale.order&view_type=form"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "outputEvidence": {
+        "customer": {
+          "same": 0,
+          "differed": 2
+        },
+        "line1": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "line2_product": {
+          "same": 2,
+          "differed": 0
+        },
+        "line2_qty": {
+          "same": 2,
+          "differed": 0
+        },
+        "line2_subtotal": {
+          "same": 0,
+          "differed": 2
+        },
+        "line2_unit_price": {
+          "same": 2,
+          "differed": 0
+        },
+        "list_row_after_save": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "quotation_reference": {
+          "same": 0,
+          "differed": 2
+        },
+        "quotation_record_id": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "status": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "taxes": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "total_amount": {
+          "same": 0,
+          "differed": 2
+        },
+        "untaxed_amount": {
+          "same": 0,
+          "differed": 2
+        },
+        "list_row_customer": {
+          "same": 0,
+          "differed": 2
+        },
+        "list_row_total": {
+          "same": 2,
+          "differed": 0
+        },
+        "list_row_status": {
+          "same": 2,
+          "differed": 0
+        },
+        "list_row_line1_unit_price": {
+          "same": 2,
+          "differed": 0
+        },
+        "list_row_line1_subtotal": {
+          "same": 2,
+          "differed": 0
+        },
+        "list_row_line2_product": {
+          "same": 2,
+          "differed": 0
+        },
+        "list_row_line2_subtotal": {
+          "same": 2,
+          "differed": 0
+        },
+        "untaxed_amount_row": {
+          "same": 2,
+          "differed": 0
+        },
+        "line2_product_reference": {
+          "same": 2,
+          "differed": 0
+        },
+        "line1_product_reference": {
+          "same": 2,
+          "differed": 0
+        },
+        "contact_reference": {
+          "same": 0,
+          "differed": 2
+        },
+        "url": {
+          "same": 0,
+          "differed": 2
+        }
+      }
+    },
+    {
+      "id": "05-open",
+      "instruction": "In Odoo, open the Sales app and go to the existing draft quotation {{03-open.quotation_reference}} (customer \"{{runid}} Bench Customer\"). It has two order lines: line 1 is \"{{03-open.product_name}}\" with quantity 3, line 2 is \"{{04-open.line2_product}}\" with quantity 2. Change ONLY the first line quantity from 3 to 5 (leave the second line at quantity 2). Save the quotation but do NOT confirm it. Then report: (a) the quantity shown on each of the two lines after the change, and (b) the new Untaxed Amount the app computes in the totals, plus the quotation reference and status shown. Note: the app long-polls, so never wait for network idle; wait for concrete page state instead.",
+      "skill": "s_81ef4b",
+      "params": {
+        "v1": "{{03-open.quotation_reference}}",
+        "v2": "{{runid}} Bench Customer",
+        "v4": "{{03-open.product_name}}",
+        "v6": "{{04-open.line2_product}}",
+        "v3": "{{runid}}"
+      },
+      "outputs": [
+        "customer",
+        "line1_product",
+        "line1_qty_after",
+        "line1_subtotal",
+        "line2_product",
+        "line2_qty_after",
+        "line2_subtotal",
+        "quotation_reference",
+        "status",
+        "tax_amount",
+        "total_amount",
+        "untaxed_amount",
+        "verification",
+        "untaxed_amount_after_change",
+        "total_amount_saved",
+        "statusbar_current",
+        "td_name_product_uom_qty_",
+        "line2_unit_price",
+        "td_name_product_uom_qty__3",
+        "line1_unit_price",
+        "line1_product_reference"
+      ],
+      "recorded": {
+        "customer": "fwod90-n1 Bench Customer",
+        "line1_product": "[FURN_6666] Acoustic Bloc Screens",
+        "line1_qty_after": "5.00",
+        "line1_subtotal": "£ 1,475.00",
+        "line2_product": "[FURN_7777] Office Chair",
+        "line2_qty_after": "2.00",
+        "line2_subtotal": "£ 140.00",
+        "quotation_reference": "S00021",
+        "quotation_record_id": "21",
+        "status": "Quotation (draft) — statusbar current state 'Quotation'; 'Sales Order' and 'Quotation Sent' not selected; Confirm not clicked",
+        "tax_amount": "£ 323.00",
+        "total_amount": "£ 1,938.00",
+        "untaxed_amount": "£ 1,615.00",
+        "verification": "read after reloading the record via Sales > Quotations list (search S00021)",
+        "untaxed_amount_after_change": "£ 1,615.00",
+        "total_amount_saved": "£ 1,938.00",
+        "line_qty_2": "2.00",
+        "statusbar_current": "Quotation",
+        "td_name_product_uom_qty_": "£ 1,475.00",
+        "line2_unit_price": "70.00",
+        "td_name_product_uom_qty__3": "£ 140.00",
+        "line1_unit_price": "295.00",
+        "line1_product_reference": "FURN_6666"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "outputEvidence": {
+        "customer": {
+          "same": 0,
+          "differed": 2
+        },
+        "line1_product": {
+          "same": 2,
+          "differed": 0
+        },
+        "line1_qty_after": {
+          "same": 2,
+          "differed": 0
+        },
+        "line1_subtotal": {
+          "same": 0,
+          "differed": 2
+        },
+        "line2_product": {
+          "same": 2,
+          "differed": 0
+        },
+        "line2_qty_after": {
+          "same": 2,
+          "differed": 0
+        },
+        "line2_subtotal": {
+          "same": 0,
+          "differed": 2
+        },
+        "quotation_reference": {
+          "same": 0,
+          "differed": 2
+        },
+        "quotation_record_id": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "status": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "tax_amount": {
+          "same": 0,
+          "differed": 2
+        },
+        "total_amount": {
+          "same": 0,
+          "differed": 2
+        },
+        "untaxed_amount": {
+          "same": 0,
+          "differed": 2
+        },
+        "verification": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "untaxed_amount_after_change": {
+          "same": 2,
+          "differed": 0
+        },
+        "total_amount_saved": {
+          "same": 2,
+          "differed": 0
+        },
+        "line_qty_2": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "statusbar_current": {
+          "same": 2,
+          "differed": 0
+        },
+        "td_name_product_uom_qty_": {
+          "same": 2,
+          "differed": 0
+        },
+        "line2_unit_price": {
+          "same": 2,
+          "differed": 0
+        },
+        "td_name_product_uom_qty__3": {
+          "same": 2,
+          "differed": 0
+        },
+        "line1_unit_price": {
+          "same": 2,
+          "differed": 0
+        },
+        "line1_product_reference": {
+          "same": 2,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "06-open",
+      "instruction": "In Odoo, open the Sales app and go to the existing draft quotation {{03-open.quotation_reference}} (customer \"{{runid}} Bench Customer\"). Confirm it so it becomes a sales order — click the Confirm button (accept any confirmation dialog if one appears). Then report: (a) the order reference/name shown on the record (e.g. {{03-open.quotation_reference}}), and (b) the status the app now shows (read the statusbar on the record, e.g. \"Sales Order\"). Also report the untaxed amount and total shown after confirmation. Note: the app long-polls, so never wait for network idle; wait for concrete page state instead.",
+      "skill": "s_939def",
+      "params": {
+        "v1": "{{03-open.quotation_reference}}",
+        "v2": "{{runid}} Bench Customer",
+        "v3": "{{runid}}",
+        "v4": "{{03-open.url.q.id}}"
+      },
+      "outputs": [
+        "confirm_button_after",
+        "delivered_invoiced_columns",
+        "order_reference",
+        "record_id",
+        "status_before_confirm",
+        "total_amount_after_confirmation",
+        "untaxed_amount_after_confirmation",
+        "verification",
+        "untaxed_amount_confirmed",
+        "total_amount_confirmed",
+        "statusbar_state",
+        "quotation_url"
+      ],
+      "recorded": {
+        "confirm_button_after": "gone from the action bar (replaced by Create Invoice / Send by Email / Preview / Cancel)",
+        "delivered_invoiced_columns": "now present on the order lines table (0.00 delivered / 0.00 invoiced), typical of a confirmed sales order",
+        "order_reference": "S00021",
+        "record_id": "21",
+        "status_before_confirm": "Quotation",
+        "statusbar_after_confirm": "radio 'Sales Order' is checked (and disabled); options Sales Order / Quotation Sent / Quotation",
+        "total_amount_after_confirmation": "£ 1,938.00",
+        "untaxed_amount_after_confirmation": "£ 1,615.00",
+        "verification": "state and totals re-read after a full page reload of the record URL",
+        "untaxed_amount_confirmed": "£ 1,615.00",
+        "total_amount_confirmed": "£ 1,938.00",
+        "statusbar_state": "Sales Order\nQuotation Sent\nQuotation",
+        "quotation_url": "http://127.0.0.1:8069/web#id=21&cids=1&menu_id=194&action=316&model=sale.order&view_type=form"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "outputEvidence": {
+        "confirm_button_after": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "delivered_invoiced_columns": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "order_reference": {
+          "same": 0,
+          "differed": 2
+        },
+        "record_id": {
+          "same": 0,
+          "differed": 2
+        },
+        "status_before_confirm": {
+          "same": 2,
+          "differed": 0
+        },
+        "statusbar_after_confirm": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "total_amount_after_confirmation": {
+          "same": 0,
+          "differed": 2
+        },
+        "untaxed_amount_after_confirmation": {
+          "same": 0,
+          "differed": 2
+        },
+        "verification": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "untaxed_amount_confirmed": {
+          "same": 2,
+          "differed": 0
+        },
+        "total_amount_confirmed": {
+          "same": 2,
+          "differed": 0
+        },
+        "statusbar_state": {
+          "same": 2,
+          "differed": 0
+        },
+        "quotation_url": {
+          "same": 0,
+          "differed": 2
+        }
+      }
+    },
+    {
+      "id": "07-open",
+      "instruction": "In Odoo, open the Sales app and go to the confirmed sales order {{03-open.quotation_reference}} (customer \"{{runid}} Bench Customer\", status \"Sales Order\"). Cancel it so nothing stays active — click the Cancel button and accept/confirm any dialog that appears (e.g. a cancellation reason wizard if Odoo shows one; pick any reason and confirm). Then report: (a) the status the app shows on the record after cancelling (read the statusbar, e.g. \"Cancelled\"), and (b) the order reference shown. Verify by reloading the record and reading the status again. Note: the app long-polls, so never wait for network idle; wait for concrete page state instead.",
+      "skill": "s_773dd9",
+      "params": {
+        "v1": "{{03-open.quotation_reference}}",
+        "v2": "{{runid}} Bench Customer",
+        "v3": "{{runid}}",
+        "v4": "{{03-open.url.q.id}}"
+      },
+      "outputs": [
+        "action_bar_after_cancel",
+        "cancellation_dialog",
+        "record_id",
+        "reference",
+        "status_after_cancel",
+        "status_reloaded",
+        "total_after_cancel",
+        "untaxed_after_cancel",
+        "statusbar_after_cancel",
+        "untaxed_after_cancel_2",
+        "total_after_cancel_2",
+        "quotation_url",
+        "contact_reference"
+      ],
+      "recorded": {
+        "action_bar_after_cancel": "Confirm button gone; 'Preview' and 'Set to Quotation' shown (no Create Invoice / Send by Email on a cancelled order)",
+        "cancellation_dialog": "modal 'Cancel Sales Order' - body 'Are you sure you want to cancel this order?' plus a notification email draft to fwod90-n1 Bench Customer (subject 'YourCompany Sales Order Cancelled (Ref S00021)'); buttons: 'Send and cancel', 'Cancel', 'Discard'. I used the plain primary 'Cancel' (no reason field was offered), not 'Send and cancel', so no email was sent.",
+        "record_id": "21",
+        "reference": "S00021",
+        "status_after_cancel": "Cancelled (statusbar radio 'Cancelled' checked and disabled)",
+        "status_reloaded": "Cancelled (radio 'Cancelled' checked [disabled]) - persisted after full reload",
+        "total_after_cancel": "£ 1,938.00",
+        "untaxed_after_cancel": "£ 1,615.00",
+        "statusbar_after_cancel": "Cancelled\nSales Order\nQuotation Sent\nQuotation",
+        "untaxed_after_cancel_2": "£ 1,615.00",
+        "total_after_cancel_2": "£ 1,938.00",
+        "quotation_url": "http://127.0.0.1:8069/web#id=21&cids=1&menu_id=194&action=316&model=sale.order&view_type=form",
+        "contact_reference": "fwod90-n1"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "outputEvidence": {
+        "action_bar_after_cancel": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "cancellation_dialog": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "record_id": {
+          "same": 0,
+          "differed": 2
+        },
+        "reference": {
+          "same": 0,
+          "differed": 2
+        },
+        "status_after_cancel": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "status_reloaded": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "total_after_cancel": {
+          "same": 0,
+          "differed": 2
+        },
+        "untaxed_after_cancel": {
+          "same": 0,
+          "differed": 2
+        },
+        "statusbar_after_cancel": {
+          "same": 2,
+          "differed": 0
+        },
+        "untaxed_after_cancel_2": {
+          "same": 2,
+          "differed": 0
+        },
+        "total_after_cancel_2": {
+          "same": 2,
+          "differed": 0
+        },
+        "quotation_url": {
+          "same": 0,
+          "differed": 2
+        },
+        "contact_reference": {
+          "same": 0,
+          "differed": 2
+        }
+      }
+    },
+    {
+      "id": "08-open",
+      "instruction": "Final verification in Odoo, two checks: (1) Open the Contacts app, search for \"{{runid}} Bench Customer\", open the record and report the Name and City shown. (2) Open the Sales app, find the order {{03-open.quotation_reference}} (customer {{runid}} Bench Customer) and report the status shown on its statusbar and the untaxed amount. Report both results. Note: the app long-polls, so never wait for network idle; wait for concrete page state instead.",
+      "skill": "s_e73b84",
+      "params": {
+        "v1": "{{runid}} Bench Customer",
+        "v3": "{{03-open.quotation_reference}}",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "contact_city",
+        "contact_name",
+        "contact_record_id",
+        "contact_smart_button",
+        "contact_url",
+        "sales_order_customer",
+        "sales_order_reference",
+        "sales_order_status_2",
+        "sales_order_untaxed_amount_2",
+        "sales_order_total_2",
+        "contact_reference"
+      ],
+      "recorded": {
+        "contact_city": "Benchville",
+        "contact_name": "fwod90-n1 Bench Customer",
+        "contact_record_id": "44",
+        "contact_smart_button": "1 Sales",
+        "contact_url": "http://127.0.0.1:8069/web#id=44&cids=1&menu_id=109&action=156&model=res.partner&view_type=form",
+        "sales_order_customer": "fwod90-n1 Bench Customer",
+        "sales_order_reference": "S00021",
+        "sales_order_status": "Cancelled (statusbar: Cancelled | Sales Order | Quotation Sent | Quotation, with Cancelled the current/checked state)",
+        "sales_order_total": "£ 1,938.00",
+        "sales_order_untaxed_amount": "£ 1,615.00",
+        "sales_order_status_2": "Cancelled\nSales Order\nQuotation Sent\nQuotation",
+        "sales_order_untaxed_amount_2": "£ 1,615.00",
+        "sales_order_total_2": "£ 1,938.00",
+        "contact_reference": "fwod90-n1",
+        "url": "http://127.0.0.1:8069/web#id=44&cids=1&menu_id=109&action=156&model=res.partner&view_type=form",
+        "url.q.menu_id": "109"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=res.partner&view_type=form",
+      "outputEvidence": {
+        "contact_city": {
+          "same": 2,
+          "differed": 0
+        },
+        "contact_name": {
+          "same": 0,
+          "differed": 2
+        },
+        "contact_record_id": {
+          "same": 0,
+          "differed": 1,
+          "absent": 1
+        },
+        "contact_smart_button": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "contact_url": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "sales_order_customer": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "sales_order_reference": {
+          "same": 0,
+          "differed": 2
+        },
+        "sales_order_status": {
+          "same": 0,
+          "differed": 2
+        },
+        "sales_order_total": {
+          "same": 2,
+          "differed": 0
+        },
+        "sales_order_untaxed_amount": {
+          "same": 2,
+          "differed": 0
+        },
+        "sales_order_status_2": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "sales_order_untaxed_amount_2": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "sales_order_total_2": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "contact_reference": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "url": {
+          "same": 0,
+          "differed": 2
+        },
+        "url.q.menu_id": {
+          "same": 1,
+          "differed": 1
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "session": "fwod90-n1",
+    "created": "2026-09-25T12:44:14.832Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "01-signin",
+      "outputs": [
+        "apps_menu_items"
+      ]
+    },
+    {
+      "stepId": "03-open",
+      "outputs": [
+        "untaxed_amount"
+      ]
+    },
+    {
+      "stepId": "04-open",
+      "outputs": [
+        "list_row_after_save",
+        "quotation_record_id",
+        "status"
+      ]
+    },
+    {
+      "stepId": "05-open",
+      "outputs": [
+        "quotation_record_id",
+        "line_qty_2"
+      ]
+    },
+    {
+      "stepId": "06-open",
+      "outputs": [
+        "statusbar_after_confirm"
+      ]
+    },
+    {
+      "stepId": "08-open",
+      "outputs": [
+        "sales_order_status",
+        "sales_order_total",
+        "sales_order_untaxed_amount"
+      ]
+    }
+  ]
+}
