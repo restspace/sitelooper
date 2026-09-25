@@ -7,7 +7,7 @@ WHAT THIS IS: the RE-RUN of fwop15-cv (four re-records of 01-open were refused: 
 OVERRIDES
 1. Code: use `main`:
    git fetch origin && git checkout -B main origin/main
-   (The box's local main can be an unrelated old history; never push main.) Record `git log --oneline -1`. It must contain the whole-recording re-pin (`grep -q 'driven PAST' src/skills/learn.ts`), else STOP and report. Then `npm ci && npm run build` if cloud-setup.sh does not already build.
+   (The box's local main can be an unrelated old history; never push main.) Record `git log --oneline -1`. It must contain the whole-recording re-pin (`grep -q 'drove PAST' src/skills/learn.ts`), else STOP and report. Then `npm ci && npm run build` if cloud-setup.sh does not already build.
 2. The earlier recording: fetch its results branch and unpack the flow and the skill store into bench/results:
    git fetch origin results/fwop15-mmue9y
    mkdir -p bench/results/flows && git archive origin/results/fwop15-mmue9y bench/results-published/fwop15-skills bench/results-published/fwop15.json | tar -x -C /tmp
