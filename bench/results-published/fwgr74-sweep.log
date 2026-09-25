@@ -1,0 +1,125 @@
+
+[sweep] run 1/3: fwgr74-n1 (store: /home/user/sitelooper/bench/results/fwgr74-skills)
+[harness] grafana: defaulting APP_URL
+[harness] grafana: defaulting APP_EMAIL
+[harness] grafana: defaulting APP_PASSWORD
+[reset] grafana: deleted leftover dashboard "Service Health" (400)
+[harness] grafana responded 302 at http://127.0.0.1:3000/
+stopped: fwgr74-n1
+  flow "fwgr74" saved: 7 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwgr74.json
+  warning: note: dropped 3 locator candidate(s) carrying a value this run minted (known only by export time)
+  warning: warning: 07-open's instruction asks to report panel_1, and only a recorded literal backs it: no read in its procedure publishes it, so a replay reports it only if the page it ends on shows that exact text — re-record the step so the value is read where it is shown
+  warning: note: 01-open no longer publishes panel_count — no replay reads it from the page and the recording showed no line to read
+  warning: note: 02-create no longer publishes data_source, panel_series_label — no replay reads them from the page and the recording showed no line to read
+  warning: note: 03-open no longer publishes dashboard_url, panel_1_after_reload, panel_2_after_reload, panel_count_after_reload — no replay reads them from the page and the recording showed no line to read
+  warning: note: 04-open no longer publishes save_confirmation, time_range_from — no replay reads them from the page and the recording showed no line to read
+  warning: note: 05-open no longer publishes panel_after_reload_1, panels_present_after_reload, time_range_from — no replay reads them from the page and the recording showed no line to read
+  warning: note: 06-report no longer publishes auto_refresh_interval_options_in_settings, changes_made — no replay reads them from the page and the recording showed no line to read
+  warning: warning: 07-open's instruction asks to report panel_2, panel_3, and no replay can publish them: nothing in its procedure reads them from the page, so export dropped them — re-record the step so the value is read, not only reported
+  warning: note: 07-open no longer publishes changes_made — no replay reads it from the page and the recording showed no line to read
+  warning: note: 02-create: added a read for main_aria_label to s_1e53f1 (page.getByRole('button', { name: 'Change Visualization', exact: true }); seen on the next instruction's start page)
+  warning: warning: 7 value(s) KNOWN to be this run's survived unslotted — a replay will act on or wait for the recording's value (non-fatal outside locators):
+  s_4fd681.steps[6].expect.urlPattern: "fwgr74-n1" (var) in "http://127.0.0.1:3000/d/{{v4}}/fwgr74-n1-bench-dashboard?from=:id&refresh=:id&timezone=browser&to=now"
+  s_4fd681.steps[7].expect.urlPattern: "fwgr74-n1" (var) in "http://127.0.0.1:3000/d/{{v4}}/fwgr74-n1-bench-dashboard?editview=settings&from=:id&refresh=:id&timezone=browser&to=now"
+  s_6b2c30.steps[0].expect.urlPattern: "fwgr74-n1" (var) in "http://127.0.0.1:3000/d/{{v4}}/fwgr74-n1-bench-dashboard?from=:id&timezone=browser&to=now"
+  s_6b2c30.steps[1].expect.urlPattern: "fwgr74-n1" (var) in "http://127.0.0.1:3000/d/{{v4}}/fwgr74-n1-bench-dashboard?from=:id&refresh=:id&timezone=browser&to=now"
+  s_6b2c30.steps[2].expect.urlPattern: "fwgr74-n1" (var) in "http://127.0.0.1:3000/d/{{v4}}/fwgr74-n1-bench-dashboard?from=:id&refresh=:id&timezone=browser&to=now"
+  s_6b2c30.steps[3].expect.urlPattern: "fwgr74-n1" (var) in "http://127.0.0.1:3000/d/{{v4}}/fwgr74-n1-bench-dashboard?from=:id&refresh=:id&timezone=browser&to=now"
+  s_6b2c30.steps[4].expect.urlPattern: "fwgr74-n1" (var) in "http://127.0.0.1:3000/d/{{v4}}/fwgr74-n1-bench-dashboard?from=:id&refresh=:id&timezone=browser&to=now"
+  warning: warning: 239 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[0].instruction: "Dashboards" (output) in "Open http://127.0.0.1:3000/ . If the Grafana login page appears, sign in with username admin and password typed exactly as this text: {{env:APP_PASSWORD}} . If "
+  flow.steps[0].instruction: "admin" (output) in "Open http://127.0.0.1:3000/ . If the Grafana login page appears, sign in with username admin and password typed exactly as this text: {{env:APP_PASSWORD}} . If "
+  flow.steps[0].params.v2: "admin" (output) in "admin"
+  flow.steps[0].route: "bench-service-health" (output) in "http://127.0.0.1:3000/d/bench-service-health/service-health"
+  flow.steps[1].instruction: "TestData" (output) in "Create a new dashboard in Grafana. Add a 'Stat' visualization panel. Title the panel exactly '{{runid}} Availability'. For the panel's query, use the 'TestData'"
+  warning: {{01-open.dashboard_uid_from_url}} (used by 07-open) can only be re-observed by model recovery, and 07-open's procedure types or locates by it — so `sitelooper spec` will REFUSE to compile this flow (unsourced-ref) until 01-open reads dashboard_uid_from_url from an element. Re-record 01-open now, while this session is still open.
+  warning: 01-open reports dashboard_uid_from_url, but no segment of the procedure it pins (s_133f3e, through its last segment s_9d32f6) re-reads it from the page — a replay without the model will succeed without that value; re-record so a read for it lands in s_9d32f6.
+arm=sitelooper model=z-ai/glm-5.3 runid=fwgr74-n1 stop=completed
+turns=8 wall=482.0s
+commands=7 cmdTime=425.2s cmdBytes=15803 timeouts=0
+orchestrator in=11539 cw=0 cr=30976 out=12980
+inner prompt=2786217 cached=2590336 completion=33168
+spend=$0.1387 maxUsd=3
+learn: A_n=0 replayed=0/7 full=0 repaired=0 compiled=7 variants=0
+-> /home/user/sitelooper/bench/results/fwgr74-n1-sitelooper-result.json
+
+fwgr74-n1: objectives passed 6/6
+  obj 1: PASS — all 3 provisioned titles reported
+  obj 2: PASS — type=stat, datasource ok=true
+  obj 3: PASS — type=text, content includes runid=true
+  obj 4: PASS — tags=["bench"], time=now-6h..now
+  obj 5: PASS — refresh="1m"
+  obj 6: PASS — uid bfz9vi4fv54aoe reported
+
+[sweep] run 2/3: fwgr74-n2 (replay flow fwgr74, no orchestrator)
+[reset] grafana: deleted leftover dashboard "fwgr74-n1 Bench Dashboard" (200)
+[reset] grafana: deleted leftover dashboard "Service Health" (400)
+[sweep] fwgr74-n2: 2 drift ticket(s) → fwgr74-n2-drift.json
+
+fwgr74-n2: objectives passed 6/6
+  obj 1: PASS — all 3 provisioned titles reported
+  obj 2: PASS — type=stat, datasource ok=true
+  obj 3: PASS — type=text, content includes runid=true
+  obj 4: PASS — tags=["bench"], time=now-6h..now
+  obj 5: PASS — refresh="1m"
+  obj 6: PASS — uid efz9w2gas5lhcc reported
+
+[sweep] run 3/3: fwgr74-n3 (replay flow fwgr74, no orchestrator)
+[reset] grafana: deleted leftover dashboard "fwgr74-n2 Bench Dashboard" (200)
+[reset] grafana: deleted leftover dashboard "Service Health" (400)
+[sweep] fwgr74-n3: 2 drift ticket(s) → fwgr74-n3-drift.json
+
+fwgr74-n3: objectives passed 6/6
+  obj 1: PASS — all 3 provisioned titles reported
+  obj 2: PASS — type=stat, datasource ok=true
+  obj 3: PASS — type=text, content includes runid=true
+  obj 4: PASS — tags=["bench"], time=now-6h..now
+  obj 5: PASS — refresh="1m"
+  obj 6: PASS — uid bfz9wbacrpxc0d reported
+
+Learning sweep fwgr74 (K=3)
+┌─────────┬───┬─────────────┬──────────┬─────────────┬───────┬──────┬───────────┬──────┬──────────────┬────────┐
+│ (index) │ n │ runid       │ verified │ stop        │ turns │ cmds │ total_usd │ A_n  │ replayed     │ wall_s │
+├─────────┼───┼─────────────┼──────────┼─────────────┼───────┼──────┼───────────┼──────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwgr74-n1' │ '6/6'    │ 'completed' │ 8     │ 7    │ 0.1387    │ 0    │ '0/7'        │ 482    │
+│ 1       │ 2 │ 'fwgr74-n2' │ '6/6'    │ 'success'   │ 9     │ 7    │ 0.0046    │ 0.86 │ '7/7 (flow)' │ 162    │
+│ 2       │ 3 │ 'fwgr74-n3' │ '6/6'    │ 'success'   │ 11    │ 7    │ 0.0053    │ 0.86 │ '7/7 (flow)' │ 143    │
+└─────────┴───┴─────────────┴──────────┴─────────────┴───────┴──────┴───────────┴──────┴──────────────┴────────┘
+http://127.0.0.1:3000
+  s_06c8e9  validated    6 steps  3/3 (100%)
+           Open {{v1}} . If the Grafana login page appears, sign in with username {{v2}} and password typed exactly as th…
+  s_10a4aa  validated    2 steps  3/3 (100%)
+           Open {{v1}} . If the Grafana login page appears, sign in with username {{v2}} and password typed exactly as th…
+  s_133f3e  validated    1 steps  3/3 (100%)
+           Open {{v1}} . If the Grafana login page appears, sign in with username {{v2}} and password typed exactly as th…
+  s_1e53f1  validated   18 steps  3/3 (100%)
+           Create a new dashboard in Grafana. Add a 'Stat' visualization panel. Title the panel exactly '{{v1}} Availabil…
+  s_459510  validated   14 steps  3/3 (100%)
+           On the dashboard '{{v1}}' (currently open at http://127.0.0.1:3000/d/bfz9vi4fv54ao/{{v3}}), add a new Text pan…
+  s_4fd681  validated   18 steps  3/3 (100%)
+           Final verification of the dashboard '{{v1}}'. Navigate the browser to the bare URL {{v3}} (no query parameters…
+  s_6b2c30  validated   12 steps  3/3 (100%)
+           On the dashboard '{{v1}}' (open at {{v3}}), set the dashboard's auto-refresh interval to '1m' using the refres…
+  s_934239  validated    2 steps  3/3 (100%)
+           Create a new dashboard in Grafana. Add a 'Stat' visualization panel. Title the panel exactly '{{v1}} Availabil…
+  s_9d32f6  validated   10 steps  3/3 (100%)
+           Open {{v1}} . If the Grafana login page appears, sign in with username {{v2}} and password typed exactly as th…
+  s_c60d4f  validated    9 steps  3/3 (100%)
+           Create a new dashboard in Grafana. Add a 'Stat' visualization panel. Title the panel exactly '{{v1}} Availabil…
+  s_de3331  validated   18 steps  3/3 (100%)
+           On the dashboard '{{v1}}' (open at {{v3}}), do two things and make sure they are PERSISTED in the saved dashbo…
+  s_006cea  provisional  1 steps  1/1 (100%)
+           Read-only check: open the provisioned dashboard 'Service health' (at {{v2}}) and report the exact title of eve…
+  s_1754d5  provisional  9 steps  1/1 (100%)
+           Read-only check: open the provisioned dashboard '{{v2}}' (at http://127.0.0.1:3000/d/'bench-service-health' (r…
+  s_500853  provisional 17 steps  1/1 (100%)
+           Read-only check: open the provisioned dashboard 'Service health' (at {{v2}}) and report the exact title of eve…
+  s_561803  provisional  3 steps  1/1 (100%)
+           Read-only check: open the provisioned dashboard '{{v2}}' (at http://127.0.0.1:3000/d/'bench-service-health' (r…
+  s_97bee6  provisional 16 steps  1/1 (100%)
+           Read-only check: open the provisioned dashboard '{{v2}}' (at http://127.0.0.1:3000/d/'bench-service-health' (r…
+  s_f560a4  provisional  3 steps  1/1 (100%)
+           Read-only check: open the provisioned dashboard '{{v2}}' (at http://127.0.0.1:3000/d/'bench-service-health' (r…
+store: /home/user/sitelooper/bench/results/fwgr74-skills
+
+summary: /home/user/sitelooper/bench/results/fwgr74-sweep.json
