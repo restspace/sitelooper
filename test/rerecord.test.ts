@@ -16,7 +16,7 @@ import {
   stepLine,
   stepOf,
   unpinStep,
-  type RerecordRun, recordedFromRuns, rethreadUrlRefs } from '../src/spec/rerecord.js';
+  type RerecordRun, recordedFromRuns, rethreadUrlRefs, chainToRetire } from '../src/spec/rerecord.js';
 
 // `rerecord` is one pure decision wrapped in a flow run: which fields of a step
 // survive being unpinned, and whether the runs that followed prove the new
@@ -144,6 +144,22 @@ describe('rethreadUrlRefs', () => {
   it('changes nothing without an end url, or when no reported value is a url part', () => {
     expect(rethreadUrlRefs(flow, '01-open', undefined)).toEqual({ flow, rewired: [] });
     expect(rethreadUrlRefs(flow, '01-open', 'http://127.0.0.1:3000/dashboards').rewired).toEqual([]);
+  });
+});
+
+describe('chainToRetire', () => {
+  it('names the previous pin and every segment of its chain, and nothing without a pin', () => {
+    const skills = [
+      { id: 's_head', seq: { chain: 'c1' } },
+      { id: 's_mid', seq: { chain: 'c1' } },
+      { id: 's_tail', seq: { chain: 'c1' } },
+      { id: 's_other', seq: { chain: 'c2' } },
+      { id: 's_lone' },
+    ];
+    expect(chainToRetire(skills, 's_head')).toEqual(['s_head', 's_mid', 's_tail']);
+    expect(chainToRetire(skills, 's_lone')).toEqual(['s_lone']);
+    expect(chainToRetire(skills, undefined)).toEqual([]);
+    expect(chainToRetire(skills, 's_gone')).toEqual([]);
   });
 });
 

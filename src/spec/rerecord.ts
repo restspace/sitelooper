@@ -256,6 +256,23 @@ export function rethreadUrlRefs(flow: Flow, stepId: string, endUrl: string | und
 }
 
 /**
+ * The skills a re-record must retire so the store's re-pin rule cannot hand
+ * the step back the procedure it was asked to replace: the previous pin and
+ * every segment of its chain. odoo fwod88-cv2 re-recorded 03-create four
+ * times; run 2 of each pair replayed the OLD chain (still a candidate: unpinned,
+ * never demoted) clean, decideRepin re-pinned it, and the compile refused the
+ * same unsourced-ref again — the old procedure was the one that never read the
+ * value. Returns the ids to demote (empty when nothing was pinned).
+ */
+export function chainToRetire(skills: readonly { id: string; seq?: { chain: string } }[], pinned: string | undefined): string[] {
+  if (!pinned) return [];
+  const head = skills.find((s) => s.id === pinned);
+  if (!head) return [];
+  const members = head.seq ? skills.filter((s) => s.seq?.chain === head.seq!.chain) : [head];
+  return [...new Set([pinned, ...members.map((s) => s.id)])];
+}
+
+/**
  * The values a re-record leaves as the step's record: the run with the most
  * reported values (the recording run, usually run 1 — a replay drops what it
  * could not re-read), or null when no run reported any. unpinStep empties
