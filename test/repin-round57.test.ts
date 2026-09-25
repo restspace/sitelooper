@@ -114,6 +114,33 @@ describe('2. pinEndsElsewhere (fwsi9 n3 04-report: s_9df3b0 replayed 14/14, the 
     expect(pinEndsElsewhere(store, 's_list', 's_view')).toMatch(/ends on .*#Opportunity .*starts on .*#Opportunity\/view/);
   });
 
+  it('(c) the query string is view state, not a route, unless both sides carry a key with different literals (fwop15-cv2)', () => {
+    const OP = 'http://127.0.0.1:8090';
+    const mk = (id: string, urlPattern: string, endPattern: string): Skill => ({
+      id, origin: OP, template: 't', params: {}, preconditions: { urlPattern },
+      steps: [{ tool: 'click', args: { target: '@e1' }, locators: {}, expect: { urlPattern: endPattern } }],
+      stats: { uses: 1, successes: 1, partial: 0, created: 't', failedAtStep: {}, fallthroughs: 0 },
+      status: 'provisional', provenance: { session: 's', instruction: 't', created: 't' },
+    });
+    const WP = `${OP}/projects/bench-project/work_packages`;
+    const store = storeOf('openproject', [
+      // 02-open's pin: starts on the work-package list with its view state in the query
+      mk('s_next', `${WP}?query_props=:var`, `${WP}/create_new?query_props=:var&type=:id`),
+      // the five refused 01-open recordings ended here…
+      mk('s_bare', WP, WP),
+      mk('s_json', WP, `${WP}?query_props={"c":["id","subject"],"f":[{"n":"status","o":"*","v":[]}],"pp":20,"pa":1}`),
+      // …and one on the project overview, which IS another page
+      mk('s_project', `${OP}/projects/bench-project`, `${OP}/projects/bench-project`),
+      // an app that routes by query (kanboard): two literal controllers are two pages
+      mk('s_board', `${OP}/`, `${OP}/?controller=BoardViewController&action=show&project_id=:id`),
+      mk('s_task', `${OP}/?controller=TaskViewController&action=show&task_id=:id`, `${OP}/?controller=TaskViewController&action=show&task_id=:id`),
+    ]);
+    expect(pinEndsElsewhere(store, 's_bare', 's_next')).toBeNull();
+    expect(pinEndsElsewhere(store, 's_json', 's_next')).toBeNull();
+    expect(pinEndsElsewhere(store, 's_project', 's_next')).toMatch(/ends on \S+\/projects\/bench-project \(s_project\)/);
+    expect(pinEndsElsewhere(store, 's_board', 's_task')).toMatch(/ends on .*BoardViewController/);
+  });
+
   it('(a) a next pin that is itself demoted is not judged against', () => {
     // a candidate that really does end elsewhere — back on the asset list
     const listEnd: Skill = {
