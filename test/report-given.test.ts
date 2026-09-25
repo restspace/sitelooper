@@ -207,3 +207,47 @@ describe('a withheld given value makes the step partial only when its instructio
     ).toEqual([]);
   });
 });
+
+/**
+ * Round 63, Ghost fwgh17 04-open: s_99b340, the chain's last segment, reads
+ * the admin posts list; an earlier segment loaded the post's public URL (the
+ * instruction's `{{v5}}`) and read its title. The template's
+ * `public_url: "{{v5}}"` was judged on the admin list alone and withheld as
+ * given, and both replays were partial. A url the chain's page LANDED on is
+ * observed (GivenEvidence.visited); one it never loaded stays given.
+ */
+describe('a given url the chain loaded is observed (round 63, fwgh17 04-open)', () => {
+  const ghost = {
+    id: 's_99b340',
+    origin: 'http://127.0.0.1:8099',
+    template: 'publish the post and load its public URL {{v5}}',
+    params: { v1: { example: 'fwgh17-n1 Bench Post', usedIn: [] }, v5: { example: 'http://127.0.0.1:8099/fwgh17-n1-bench-post/', usedIn: [] } },
+    preconditions: {},
+    steps: [],
+    reportTemplate: { summary: '', values: { public_url: '{{v5}}', admin_status: 'Published' } },
+    stats: { runs: 1, successes: 1, failures: 0 },
+  } as unknown as Skill;
+  const params = { v1: 'fwgh17-n2 Bench Post', v5: 'http://127.0.0.1:8099/fwgh17-n2-bench-post/' };
+  const adminList = ['Posts', 'fwgh17-n2 Bench Post', 'By Bench Admin in Bench News - 01 Sep 2026', 'Published', 'http://127.0.0.1:8099/ghost/#/posts?type=published'];
+
+  it('n2: the public url the chain loaded in an earlier segment is published', () => {
+    const visited = ['http://127.0.0.1:8099/ghost/#/posts?type=draft', 'http://127.0.0.1:8099/fwgh17-n2-bench-post/', 'http://127.0.0.1:8099/ghost/#/posts?type=published'];
+    const r = synthesizeReport(ghost, params, { admin_status: 'Published' }, adminList, { visited });
+    expect(r.evidence?.values?.public_url).toBe('http://127.0.0.1:8099/fwgh17-n2-bench-post/');
+  });
+
+  it('a public url the chain never loaded stays given', () => {
+    const r = synthesizeReport(ghost, params, { admin_status: 'Published' }, adminList, { visited: ['http://127.0.0.1:8099/ghost/#/posts?type=published'] });
+    expect(r.evidence?.values?.public_url).toBeUndefined();
+    expect(unobservedGiven('{{v5}}', params, adminList, { typed: [], live: [], visited: [] })).toEqual(['v5']);
+  });
+});
+
+describe('the visited rule is the whole url, never a word inside it (round 63)', () => {
+  it('a label is not observed by a url that happens to carry it', () => {
+    const p = { v7: 'bug' };
+    expect(unobservedGiven('{{v7}}', p, [], { typed: [], live: [], visited: ['http://127.0.0.1:8095/bench/bench-repo/issues?labels=bug'] })).toEqual(['v7']);
+    // A trailing slash or a fragment does not make it another url.
+    expect(unobservedGiven('{{v5}}', { v5: 'http://h/post/' }, [], { typed: [], live: [], visited: ['http://h/post#top'] })).toEqual([]);
+  });
+});

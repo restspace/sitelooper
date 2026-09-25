@@ -2530,12 +2530,39 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
    * involved at all. Returns a finished result when the replay completed, a
    * prelude for the agent when it stopped part-way, or nothing when no skill
    * matched (the common case, and free: one store read, no page round trip).
+   *
+   * The urls the replay's page lands on are kept for its report (round 63,
+   * Ghost fwgh17 04-open): a given url the chain LOADED — in any segment, not
+   * only the page it ends on — was observed there (execution/report.ts
+   * GivenEvidence.visited), as the artifact's step body keeps the same trail.
    */
   private async replayDirect(
     instruction: string,
     screenshotDir: string,
     signal: AbortSignal,
     progress: (m: string) => void,
+    chosen?: { id: string; params?: Record<string, string> },
+  ) {
+    let trail: ReturnType<typeof urlTrail> | null = null;
+    try {
+      trail = urlTrail(await this.browser.getPage());
+    } catch {
+      trail = null;
+    }
+    try {
+      return await this.replayDirectOnce(instruction, screenshotDir, signal, progress, trail?.urls ?? [], chosen);
+    } finally {
+      trail?.stop();
+    }
+  }
+
+  private async replayDirectOnce(
+    instruction: string,
+    screenshotDir: string,
+    signal: AbortSignal,
+    progress: (m: string) => void,
+    /** The urls the page has landed on since this replay began (urlTrail): what a given url is observed by. */
+    visited: readonly string[],
     /** Flow replay pins the skill (and may supply its params); without it, fall back to a validated template match. */
     chosen?: { id: string; params?: Record<string, string> },
     /**
@@ -2849,6 +2876,7 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
       instruction,
       chain: [...earlier.map((e) => e.skill), last],
       committed: agg.committed,
+      visited,
     });
     if (withheld.length) progress(`[replay] withheld ${withheld.length} report value(s) whose recorded text this run's page did not show: ${withheld.join(', ')}`);
     if (given.length) {

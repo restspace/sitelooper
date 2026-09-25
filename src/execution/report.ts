@@ -147,6 +147,13 @@ export interface GivenEvidence {
    * Absent means none.
    */
   committed?: readonly string[];
+  /**
+   * The urls this run's page LANDED on while the chain ran, in any segment
+   * (urlTrail) — not only the page it ends on (round 63, Ghost fwgh17 04-open:
+   * the chain loaded the given public URL, read its title, and went back to
+   * the admin list). A given value one of them shows was observed there.
+   */
+  visited?: readonly string[];
 }
 
 /*
@@ -253,11 +260,21 @@ export function unobservedGiven(template: string, params: Record<string, string>
   if (templateLiterals(template).length) return [];
   const typed = new Set(evidence.typed);
   const lines = [...(shown ?? []), ...evidence.live].map((line) => ` ${wordRun(line)} `);
+  // A url the chain LOADED observes a value that IS that url — the whole of
+  // it, never a word inside it: a label "bug" is not observed by a
+  // `?labels=bug` the page once had.
+  const landed = new Set((evidence.visited ?? []).map(sameUrl));
   return templateMarkers(template).filter((slot) => {
     if (!slot.startsWith('v') || typed.has(slot)) return false;
     const run = wordRun(params[slot] ?? '');
-    return run !== '' && !lines.some((line) => line.includes(` ${run} `));
+    if (run === '' || landed.has(sameUrl(params[slot] ?? ''))) return false;
+    return !lines.some((line) => line.includes(` ${run} `));
   });
+}
+
+/** A url as the visited rule compares it: trimmed, its fragment and a trailing slash dropped. */
+function sameUrl(url: string): string {
+  return url.trim().split('#')[0].replace(/\/+$/, '');
 }
 
 /** Whether a template value is withheld as given, not observed: it would publish, but for its unobserved slots. */

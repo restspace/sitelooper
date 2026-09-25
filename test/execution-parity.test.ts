@@ -4885,6 +4885,105 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
     }, 120_000);
   });
 
+  /**
+   * Round 63, Ghost fwgh17 04-open: a GIVEN url this run LOADED. The
+   * instruction gave the post's public URL (v5) and asked for it; the recorded
+   * chain loads it in one segment (goto {{v5}}, reading the page title) and
+   * goes back to the admin list in the last. The report is judged on the page
+   * the chain ENDS on, which is not that url, so round 60's given rule withheld
+   * public_url as "only the step's own parameter" and both replays were
+   * partial — though the run had gone there and read it. A url the chain's
+   * page landed on is observed, in both runners; one it never loaded stays
+   * given (the control).
+   */
+  describe('a given url the chain loaded is observed (round 63, fwgh17 04-open)', () => {
+    const instruction = 'Publish the post, then load its public URL {{v5}} and report the public URL and the page title.';
+    const values = { public_url: '{{v5}}' };
+    const read = (selector: string, label: string): SkillStep => ({ tool: 'read', args: { target: '(read-back)', what: 'text' }, label, locators: { target: [{ kind: 'css', selector }] } });
+    const skillParams = (): Record<string, SkillParam> => ({ v5: { example: 'http://127.0.0.1:8099/fwgh17-n1-bench-post/', usedIn: [1], known: true } });
+    const partsOf = (visit: string): SkillStep[][] => [
+      [{ tool: 'goto', args: { url: visit }, locators: {} }, read('.sidebar h4', 'public_page_title')],
+      [{ tool: 'goto', args: { url: `${origin}/echo-lab` }, locators: {} }, read('#rerender', 'admin_status')],
+    ];
+    const chainOf = (visit: string): { skills: Skill[]; spec: SpecFlow } => {
+      const parts = partsOf(visit);
+      const skills = parts.map((steps, i): Skill => ({
+        ...skillOf(steps),
+        id: `s_pub${i}`,
+        template: instruction,
+        params: skillParams(),
+        preconditions: { urlPattern: i === 0 ? `${origin}/` : `${origin}/assignee` },
+        seq: { chain: 's_pub', index: i, of: parts.length },
+        ...(i === parts.length - 1 ? { reportTemplate: { summary: '', values } } : {}),
+      }));
+      const spec = specOf(parts[0]);
+      spec.steps[0].instruction = instruction;
+      spec.steps[0].outputs = ['public_page_title', 'admin_status', 'public_url'];
+      spec.steps[0].segments = skills.map((s, i) => ({
+        id: s.id,
+        template: s.template,
+        params: skillParams(),
+        preconditions: s.preconditions,
+        steps: s.steps,
+        ...(i === skills.length - 1 ? { report: { summary: '', values } } : {}),
+      }));
+      return { skills, spec };
+    };
+
+    /** The daemon: the chain's segments through run_skill, the url trail the flow runner keeps, then its report assembly. */
+    async function daemonOf(skills: Skill[], params: Record<string, string>): Promise<{ values: Record<string, string>; given: string[] }> {
+      const session = new BrowserSession({ session: `parity-visited-${Date.now()}`, persist: false, learn: true });
+      try {
+        const page = await session.getPage();
+        await page.goto(`${origin}/`);
+        for (const skill of skills) session.learn!.put(skill);
+        const trail = urlTrail(page);
+        const live: Record<string, string> = {};
+        for (const skill of skills) {
+          const out = await executeTool(session, 'run_skill', { id: skill.id, params }, os.tmpdir());
+          const r = out.replay as ReplayResult;
+          expect(r?.ok, r?.reason ?? String(out.result)).toBe(true);
+          Object.assign(live, r.values);
+        }
+        trail.stop();
+        const opts = { chain: skills, instruction, visited: trail.urls } as Parameters<typeof replayReport>[4];
+        const r = await replayReport(() => session.getPage(), skills[skills.length - 1], params, live, opts);
+        return { values: Object.fromEntries(Object.entries(r.report.evidence?.values ?? {}).map(([k, v]) => [k, String(v)])), given: r.given };
+      } finally {
+        await session.close();
+      }
+    }
+
+    it('both runners publish the public url the chain loaded in an earlier segment', async () => {
+      const { skills, spec } = chainOf('{{v5}}');
+      const params = { v5: `${origin}/assignee` };
+      reset(0);
+      const daemon = await daemonOf(skills, params);
+      reset(0);
+      const emitted = await emittedOf(spec, params);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      expect(daemon.values.public_url).toBe(`${origin}/assignee`);
+      expect(daemon.given).toEqual([]);
+      expect(emitted.outputs['01-clear.public_url']).toBe(`${origin}/assignee`);
+      expect((emitted.referenceOnly ?? []).includes('public_url')).toBe(false);
+      expect(emitted.warnings?.filter((w) => /public_url is given/.test(w))).toEqual([]);
+    }, 120_000);
+
+    it('neither runner publishes a given url the chain never loaded (it stays given)', async () => {
+      const { skills, spec } = chainOf(`${origin}/assignee`);
+      const params = { v5: `${origin}/never-loaded` };
+      reset(0);
+      const daemon = await daemonOf(skills, params);
+      reset(0);
+      const emitted = await emittedOf(spec, params);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      expect(daemon.values.public_url).toBeUndefined();
+      expect(daemon.given).toEqual(['public_url']);
+      expect(emitted.outputs['01-clear.public_url']).toBeUndefined();
+      expect(emitted.warnings?.some((w) => /public_url is given, not observed/.test(w)), emitted.warnings?.join('\n')).toBe(true);
+    }, 120_000);
+  });
+
   describe('echo reads', () => {
     it('both runners flag a read that echoes the filled value, and only that read', async () => {
       const steps: SkillStep[] = [
