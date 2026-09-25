@@ -24,3 +24,6 @@ Status (2026-09-25):
   byte-identical loop). The hold leaves a durable trace on the report entry (RecordedReport.sourcingAsk),
   counted by bench/ab-metrics.mjs. Confirmation batch: bench/sweep-prompts/fwop19, fwsi16, fwgt16, fwec16,
   fwgh19 (the eval-heavy apps) and fwrd94, fwod90 (controls), all with the flag on.
+- design-site-facts.md (2026-09-26): one per-origin store of OBSERVED facts (URL route, display format, value
+  class), counted before relied on, snapshotted into the artifact; stage 0 shadow, then one consumer class per
+  stage. Written after the round 54-65 survey; not started.
