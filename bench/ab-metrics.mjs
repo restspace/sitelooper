@@ -75,6 +75,13 @@ function metrics(dir, base) {
     row.rec_evals = steps.filter((s) => s.tool === 'eval').length;
     row.rec_failed_steps = steps.filter((s) => s.failed).length;
     row.rec_screenshot_steps = steps.filter((s) => s.tool === 'screenshot').length;
+    // The sourcing hold (SITELOOPER_SOURCING_HOLD): how often it fired, how
+    // often the retry answered with a labelled read, and how often the model
+    // changed data after it instead (RecordedReport.sourcingAsk).
+    const holds = script.filter((e) => e.k === 'report' && e.sourcingAsk).map((e) => e.sourcingAsk);
+    row.rec_sourcing_holds = holds.length;
+    row.rec_sourcing_labelled = holds.filter((h) => (h.labelled ?? []).length > 0).length;
+    row.rec_sourcing_gestures_after = holds.reduce((n, h) => n + (h.gesturesAfter ?? []).length, 0);
   }
 
   const trace = readJsonl(f('-n1-trace.jsonl'));

@@ -15,7 +15,8 @@ import { admitsIncompletion, artefactKeys, backfillReadValues, flattenComposedVa
 import { executeTool, toolDefsFor, type ToolExecution } from './tools.js';
 import { visionSettings } from './vision.js';
 import { captureReadBack, captureReadBackAt, coreReadBack, savedSelectionReadBack, selectionReadBack, setIdentityHints, shownReadBack, titleReadBack, visibleTextsWithin } from '../daemon/recorder.js';
-import { describeOutcome, pinPart, sourceReadBacks, type ReadBackDecider, type ReadBackTarget } from './readback.js';
+import { describeOutcome, pinPart, sightValues, sourceReadBacks, type ReadBackDecider, type ReadBackTarget } from './readback.js';
+import { SOURCING_HOLD_MIN_MS, applyCommentaryPrePass, decideSourcingHold, sourcingAskMessage, sourcingHoldOn, splitCommentary, type TierVerdict } from './sourcing.js';
 
 /** Tools that change the page URL, staleing every existing snapshot's refs. */
 const NAVIGATION_TOOLS = new Set(['goto', 'back', 'tabs']);
@@ -325,14 +326,30 @@ export type BailReason = 'turn-cap' | 'timeout' | 'stalled' | 'stopped' | 'inval
  */
 interface ReportHold {
   name: string;
-  check: (report: Report) => { message: string; transcript: string; progress: string } | null;
+  check: (report: Report) => HoldAsk | null | Promise<HoldAsk | null>;
 }
 
-/** The first hold not yet asked that has something to ask about `report`. */
-function firstHold(holds: ReportHold[], asked: Set<string>, report: Report): (ReturnType<ReportHold['check']> & { name: string }) | null {
+interface HoldAsk {
+  message: string;
+  transcript: string;
+  progress: string;
+}
+
+/**
+ * The first hold not yet asked that has something to ask about `report`. A
+ * hold's check may be async (the sourcing hold sweeps the live page); one
+ * that throws asks nothing — a wedged page must never turn a good report
+ * into no report.
+ */
+async function firstHold(holds: ReportHold[], asked: Set<string>, report: Report): Promise<(HoldAsk & { name: string }) | null> {
   for (const hold of holds) {
     if (asked.has(hold.name)) continue;
-    const hit = hold.check(report);
+    let hit: HoldAsk | null = null;
+    try {
+      hit = await hold.check(report);
+    } catch {
+      hit = null;
+    }
     if (hit) return { name: hold.name, ...hit };
   }
   return null;
@@ -433,8 +450,72 @@ export async function runInstruction(
         };
       },
     },
+    {
+      // Asked-for values no element shows and nothing this instruction read
+      // (hygiene design §4, behind SITELOOPER_SOURCING_HOLD): the same
+      // read-back tiers finish runs, as a dry run over a copy of the report
+      // that files nothing, then the page sweep's proof of absence. Never on
+      // top of a naming hold (one extra turn at most), never near the
+      // deadline, never when the page cannot be asked.
+      name: 'sourcing',
+      check: async (report) => {
+        if (!sourcingHoldOn() || report.status !== 'success' || !browser.script || !browser.isOpen) return null;
+        if (holdsAsked.has('naming') || Date.now() + SOURCING_HOLD_MIN_MS > deadline) return null;
+        const script = browser.script;
+        const page = await browser.getPage().catch(() => null);
+        if (!page) return null;
+        const text = opts.recordAs?.text ?? instruction;
+        const draft: Report = structuredClone(report);
+        const reads = script.readsThisInstruction();
+        positionDatumKeys(draft, reads);
+        flattenComposedValues(draft);
+        promoteLabelledReads(draft, reads);
+        backfillReadValues(draft, reads);
+        const values = draft.evidence?.values ?? {};
+        const listed = new Set([...(skill.listed ?? []), ...(skill.invoked ? [skill.invoked] : [])]);
+        for (const k of artefactKeys(values, { screenshots, skills: (id) => listed.has(id) || Boolean(browser.learn?.get(id)) })) delete values[k];
+        const steps = script.stepsThisInstruction?.() ?? [];
+        const pin = (part: string, partName: string) => pinPart(page, part, partName);
+        const verdict = async (key: string, value: string): Promise<TierVerdict> => {
+          if (await captureReadBack(page, value, key)) return 'sourced';
+          if (await titleReadBack(page, value, key).catch(() => null)) return 'sourced';
+          if (selectionReadBack(steps, value, key)) return 'sourced';
+          if (await savedSelectionReadBack(page, steps, value, key).catch(() => null)) return 'sourced';
+          // The composite tiers rewrite the report they are given: a throwaway copy each.
+          if ((await flattenProvenComposite(structuredClone(draft), key, pin)).names.length) return 'sourced';
+          if ((await flattenContainedComposite(structuredClone(draft), key, await visibleTextsWithin(page, value), text, pin)).names.length) return 'sourced';
+          if (await shownReadBack(steps, draft, key, text)) return 'sourced';
+          if (coreReadBack(steps, value, key, values)) return 'sourced';
+          // A head the page shows is sourced: the stage 3 pre-pass in finish publishes it.
+          const split = splitCommentary(value);
+          if (split && (await captureReadBack(page, split.head, key))) return 'sourced';
+          const sighting = (await sightValues(page, [value])).get(value.trim());
+          if (!sighting || sighting.incomplete || sighting.truncated || sighting.candidates.length || sighting.extra) return 'unknown';
+          return 'absent';
+        };
+        const decision = await decideSourcingHold({
+          instruction: text,
+          values,
+          alreadyRead: script.readResultsThisInstruction(),
+          alertTexts: [...steps.flatMap((s) => s.diff?.alerts ?? []), ...(report.evidence?.capturedDialogs ?? [])],
+          verdict,
+          evalResults: steps.flatMap((s) => (s.tool === 'eval' && typeof s.evalResult === 'string' ? [s.evalResult] : [])),
+        });
+        if (!decision.held.length) return null;
+        const keys = decision.held.map((h) => h.key);
+        sourcingHold.held = { keys, readsBefore: reads.length };
+        script.noteSourcingAsk?.(keys);
+        return {
+          message: sourcingAskMessage(decision.held),
+          transcript: `report held for sourcing: ${keys.join(', ')}`,
+          progress: `holding success report for sourcing: ${keys.join(', ')}`,
+        };
+      },
+    },
   ];
   const holdsAsked = new Set<string>();
+  /** The sourcing hold that fired, so the retry can be scored: did it add a labelled read, did it change data. (A holder: it is set inside the hold's closure.) */
+  const sourcingHold: { held: { keys: string[]; readsBefore: number } | null } = { held: null };
   let capWarned = false;
   let unproductiveTurns = 0;
   // Recent state-changing calls with their outcomes, for cycle detection —
@@ -677,6 +758,25 @@ export async function runInstruction(
                 for (const step of contained.pinned) browser.script.addStep(step);
                 opts.onProgress?.(`[report] ${name} is element texts the page shows, labelled: split into ${contained.names.join(', ')} (read-back)`);
                 continue;
+              }
+              // Stage 3 (hygiene design §4, behind SITELOOPER_SOURCING_HOLD):
+              // `head + commentary` whose head the page shows publishes the
+              // head; the commentary goes into the summary.
+              if (sourcingHoldOn()) {
+                const headed = await applyCommentaryPrePass(
+                  report,
+                  async (head, key) => {
+                    const step = await captureReadBack(page, head, key);
+                    if (!step) return false;
+                    browser.script!.addStep(step);
+                    return true;
+                  },
+                  [name],
+                );
+                if (headed.length) {
+                  opts.onProgress?.(`[report] ${name} is a value the page shows plus commentary: published the head (read-back), commentary kept in the summary`);
+                  continue;
+                }
               }
               // Not on THIS page, but shown on an earlier one of this
               // instruction (Gitea fwgt10 01-open: the issue titles on the
@@ -1152,13 +1252,21 @@ export async function runInstruction(
           // The report is schema-valid and will be accepted unless one of the
           // holds has something to ask first — see `holds`.
           const roomToHold = turn < opts.maxTurns && Date.now() < deadline;
-          const hold = roomToHold ? firstHold(holds, holdsAsked, validation.report) : null;
+          const hold = roomToHold ? await firstHold(holds, holdsAsked, validation.report) : null;
           if (hold) {
             holdsAsked.add(hold.name);
             state.messages.push({ role: 'tool', tool_call_id: call.id, content: hold.message });
             transcript.push(hold.transcript);
             opts.onProgress?.(`[turn ${turn}] ${hold.progress}`);
             continue;
+          }
+          if (sourcingHold.held && browser.script) {
+            const added = browser.script.readsThisInstruction().slice(sourcingHold.held.readsBefore);
+            const labelled = added.filter((r) => r.label).map((r) => r.label as string);
+            const line = `sourcing retry: ${added.length} read(s) added, ${labelled.length} labelled${labelled.length ? ` (${labelled.join(', ')})` : ''}; asked for ${sourcingHold.held.keys.join(', ')}`;
+            browser.script.noteSourcingRetry?.(added.length, labelled);
+            transcript.push(line);
+            opts.onProgress?.(`[turn ${turn}] ${line}`);
           }
           if (holdsAsked.has('naming')) {
             if (Object.keys(validation.report.evidence?.values ?? {}).length) browser.script?.noteNamingAnswered?.();
@@ -1232,6 +1340,17 @@ export async function runInstruction(
       if (execution.stepMs) (turnTiming.steps ??= []).push(...execution.stepMs);
       actions.push({ tool: call.name, args: summary, ok: !execution.isError });
       noteGesture(call.name, summary, execution);
+      if (sourcingHold.held) {
+        // The one way the sourcing hold can make a recording worse: the model
+        // re-does work instead of reading. Named in the transcript and the
+        // progress log so a sweep can count it.
+        const gestures = call.name === 'batch' ? (execution.stepMs ?? []).filter((st) => GESTURE_TOOLS.has(st.tool)).map((st) => st.tool) : GESTURE_TOOLS.has(call.name) ? [call.name] : [];
+        for (const g of gestures) {
+          browser.script?.noteSourcingGesture?.(g);
+          transcript.push(`state-changing gesture after the sourcing hold: ${g}`);
+          opts.onProgress?.(`[turn ${turn}] state-changing gesture after the sourcing hold: ${g} ${summary}`);
+        }
+      }
       state.recordTrace({ turn, tool: call.name, args: call.args, ok: !execution.isError, result: execution.result.slice(0, TRACE_RESULT_CHARS) });
       // After the recorder has filed this step: its locator chain is the exact
       // identity of the element the agent acted on, which is what an observer
