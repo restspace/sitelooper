@@ -1,0 +1,191 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/vgt2v-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/vgt2v-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/vgt2v-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/bench/results/vgt2v-spec-spec-tmp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/vgt2v-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "vgt2v.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/vgt2v-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "vgt2v.spec.ts",
+      "file": "vgt2v.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "vgt2v",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 49897,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper warn] 01-open: report value signed_in_user is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 01-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-create\n"
+                    },
+                    {
+                      "text": "[sitelooper drift] 03-set s_7d4617/15 target: primary getByText('vgt2v-spec', { exact: true }) missed; used #2 getByRole('heading', { name: /^[\\s\\p{Co}\\p{So}\\p{Cf}]*vgt2v-spec\\s+Bench\\s+Issue\\s+#7[\\s\\p{Co}\\p{So}\\p{Cf}]*$/u }) (#1 absent)\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-set\n"
+                    },
+                    {
+                      "text": "[sitelooper drift] 04-open s_22f994/9 target: primary getByText('vgt2v-spec', { exact: true }) missed; used #2 getByRole('heading', { name: /^[\\s\\p{Co}\\p{So}\\p{Cf}]*vgt2v-spec\\s+Bench\\s+Issue\\s+#7[\\s\\p{Co}\\p{So}\\p{Cf}]*$/u }) (#1 absent)\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 05-set\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 06-add\n"
+                    },
+                    {
+                      "text": "[sitelooper drift] 07-change s_f16738/4 target: primary locator('#issue-4 > div > div:nth-of-type(2) > div:nth-of-type(1) > p') missed; used #2 locator('[data-sitelooper-point=\"510,316\"]') (#1 absent)\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 07-change\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-open: Open http://127.0.0.1:8095/ in the browser. Sign in with username 'admin' and password exactly the literal text {{env:APP_PASSWORD}} (type that text verbatim into the password field; it gets filled in when typed). If already signed in, skip sign-in. Then navigate to the repository 'bench/bench-repo' and open its Issues tab. Report the titles of all OPEN issues whose title starts with 'Seed:', exactly as displayed on the page.",
+                      "duration": 16427
+                    },
+                    {
+                      "title": "02-create: In the repository bench/bench-repo at http://127.0.0.1:8095/bench/bench-repo, create a NEW issue with the title exactly '{{runid}} Bench Issue' and a description (markdown text area) that includes the text '{{runid}}' (for example: 'Bench issue created for run {{runid}}.'). Submit it. Do NOT modify any issue whose title starts with 'Seed:'. After submitting, report the new issue's title, its number as the app displays it (Gitea shows it as #<number>), and confirm the description text shown on the issue page.",
+                      "duration": 9707
+                    },
+                    {
+                      "title": "03-set: On the issue page for issue {{02-create.issue_number}} titled '{{runid}} Bench Issue' in bench/bench-repo ({{02-create.url}}), set the issue's labels so that it has EXACTLY the two labels 'bug' and 'priority-high' and no others. Use the Labels picker in the issue's sidebar. A label only counts once the app has applied it and it is displayed on the issue page (not merely ticked in the open menu). After applying, verify the issue page shows exactly the labels 'bug' and 'priority-high' and report exactly which labels are displayed on the issue.",
+                      "duration": 10667
+                    },
+                    {
+                      "title": "04-open: On the issue page for issue {{02-create.issue_number}} titled '{{runid}} Bench Issue' in bench/bench-repo ({{02-create.url}}), assign the issue to the user 'bench-assignee' using the Assignees picker in the issue's sidebar. The assignment only counts once the app has applied it and the assignee is displayed on the issue page (not merely ticked in the open menu). After applying, verify the issue page shows 'bench-assignee' as the assignee and report exactly what is displayed in the Assignees section of the sidebar.",
+                      "duration": 5388
+                    },
+                    {
+                      "title": "05-set: On the issue page for issue {{02-create.issue_number}} titled '{{runid}} Bench Issue' in bench/bench-repo ({{02-create.url}}), set the issue's milestone to 'Bench Milestone' using the Milestone picker in the issue's sidebar. The milestone only counts once the app has applied it and it is displayed on the issue page (not merely ticked in the open menu). After applying, verify the issue page shows 'Bench Milestone' as the milestone and report exactly what is displayed in the Milestone section of the sidebar.",
+                      "duration": 1764
+                    },
+                    {
+                      "title": "06-add: On the issue page for issue {{02-create.issue_number}} titled '{{runid}} Bench Issue' in bench/bench-repo ({{02-create.url}}), add a comment whose text includes '{{runid}}' (for example: 'Comment for run {{runid}}.'). Type it in the markdown comment text area and submit it. After submitting, verify the comment appears on the issue page and report the comment text as displayed.",
+                      "duration": 4088
+                    },
+                    {
+                      "title": "07-change: Verification only, do not change anything. Open {{02-create.url}} and report, from the page as displayed: (1) the issue title, (2) the issue number exactly as the app displays it (Gitea shows it as #<number>), (3) the description text, (4) the exact list of labels shown on the issue, (5) the assignee shown in the sidebar, (6) the milestone shown in the sidebar, (7) the text of any comments on the issue. Then open {{01-open.url}} and report the titles of all open issues whose title starts with 'Seed:'.",
+                      "duration": 1072
+                    }
+                  ],
+                  "startTime": "2026-09-25T03:58:51.554Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": "W3NpdGVsb29wZXIgZHJpZnRdIDAzLXNldCBzXzdkNDYxNy8xNSB0YXJnZXQ6IHByaW1hcnkgZ2V0QnlUZXh0KCd2Z3Qydi1zcGVjJywgeyBleGFjdDogdHJ1ZSB9KSBtaXNzZWQ7IHVzZWQgIzIgZ2V0QnlSb2xlKCdoZWFkaW5nJywgeyBuYW1lOiAvXltcc1xwe0NvfVxwe1NvfVxwe0NmfV0qdmd0MnYtc3BlY1xzK0JlbmNoXHMrSXNzdWVccysjN1tcc1xwe0NvfVxwe1NvfVxwe0NmfV0qJC91IH0pICgjMSBhYnNlbnQpCltzaXRlbG9vcGVyIGRyaWZ0XSAwNC1vcGVuIHNfMjJmOTk0LzkgdGFyZ2V0OiBwcmltYXJ5IGdldEJ5VGV4dCgndmd0MnYtc3BlYycsIHsgZXhhY3Q6IHRydWUgfSkgbWlzc2VkOyB1c2VkICMyIGdldEJ5Um9sZSgnaGVhZGluZycsIHsgbmFtZTogL15bXHNccHtDb31ccHtTb31ccHtDZn1dKnZndDJ2LXNwZWNccytCZW5jaFxzK0lzc3VlXHMrIzdbXHNccHtDb31ccHtTb31ccHtDZn1dKiQvdSB9KSAoIzEgYWJzZW50KQpbc2l0ZWxvb3BlciBkcmlmdF0gMDctY2hhbmdlIHNfZjE2NzM4LzQgdGFyZ2V0OiBwcmltYXJ5IGxvY2F0b3IoJyNpc3N1ZS00ID4gZGl2ID4gZGl2Om50aC1vZi10eXBlKDIpID4gZGl2Om50aC1vZi10eXBlKDEpID4gcCcpIG1pc3NlZDsgdXNlZCAjMiBsb2NhdG9yKCdbZGF0YS1zaXRlbG9vcGVyLXBvaW50PSI1MTAsMzE2Il0nKSAoIzEgYWJzZW50KQ=="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "19cd96ba284c43f60bfa-80f70a4e98b7ca676bd0",
+          "file": "vgt2v.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-25T03:58:49.498Z",
+    "duration": 52424.328,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

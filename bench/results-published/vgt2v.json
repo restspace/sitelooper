@@ -1,0 +1,599 @@
+{
+  "name": "vgt2v",
+  "origin": "http://127.0.0.1:8095",
+  "startUrl": "http://127.0.0.1:8095/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-open",
+      "instruction": "Open http://127.0.0.1:8095/ in the browser. Sign in with username 'admin' and password exactly the literal text {{env:APP_PASSWORD}} (type that text verbatim into the password field; it gets filled in when typed). If already signed in, skip sign-in. Then navigate to the repository 'bench/bench-repo' and open its Issues tab. Report the titles of all OPEN issues whose title starts with 'Seed:', exactly as displayed on the page.",
+      "skill": "s_05111c",
+      "params": {
+        "v1": "http://127.0.0.1:8095/",
+        "v2": "admin",
+        "v3": "{{env:APP_PASSWORD}}"
+      },
+      "outputs": [
+        "open_count",
+        "closed_count",
+        "issues_tab_link",
+        "repo_owner_link",
+        "repo_name_link",
+        "open_count_link",
+        "closed_count_link",
+        "signed_in_user",
+        "seed_issue_title_1",
+        "seed_issue_title_2",
+        "open_issue_titles_seed_1",
+        "open_issue_titles_seed_2",
+        "open_issue_titles_seed_3",
+        "seed_issue_number_1",
+        "seed_issue_number_2",
+        "seed_issue_number_3"
+      ],
+      "recorded": {
+        "open_count": "3",
+        "closed_count": "0",
+        "issues_tab_link": "Issues",
+        "repo_owner_link": "bench",
+        "repo_name_link": "bench-repo",
+        "open_count_link": "3 Open",
+        "closed_count_link": "0 Closed",
+        "signed_in_user": "admin",
+        "seed_issue_title_1": "Seed: ship repaired device",
+        "seed_issue_title_2": "Seed: order missing parts",
+        "host": "127.0.0.1",
+        "open_issue_titles_seed_1": "Seed: ship repaired device",
+        "open_issue_titles_seed_2": "Seed: order missing parts",
+        "open_issue_titles_seed_3": "Seed: triage inbox",
+        "seed_issue_number_1": "#3",
+        "seed_issue_number_2": "#2",
+        "seed_issue_number_3": "#1",
+        "url": "http://127.0.0.1:8095/bench/bench-repo/issues"
+      },
+      "route": "http://127.0.0.1:8095/bench/bench-repo/issues",
+      "outputEvidence": {
+        "open_count": {
+          "same": 2,
+          "differed": 0
+        },
+        "closed_count": {
+          "same": 2,
+          "differed": 0
+        },
+        "issues_tab_link": {
+          "same": 2,
+          "differed": 0
+        },
+        "repo_owner_link": {
+          "same": 2,
+          "differed": 0
+        },
+        "repo_name_link": {
+          "same": 2,
+          "differed": 0
+        },
+        "open_count_link": {
+          "same": 2,
+          "differed": 0
+        },
+        "closed_count_link": {
+          "same": 2,
+          "differed": 0
+        },
+        "signed_in_user": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "seed_issue_title_1": {
+          "same": 2,
+          "differed": 0
+        },
+        "seed_issue_title_2": {
+          "same": 2,
+          "differed": 0
+        },
+        "host": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "open_issue_titles_seed_1": {
+          "same": 2,
+          "differed": 0
+        },
+        "open_issue_titles_seed_2": {
+          "same": 2,
+          "differed": 0
+        },
+        "open_issue_titles_seed_3": {
+          "same": 2,
+          "differed": 0
+        },
+        "seed_issue_number_1": {
+          "same": 2,
+          "differed": 0
+        },
+        "seed_issue_number_2": {
+          "same": 2,
+          "differed": 0
+        },
+        "seed_issue_number_3": {
+          "same": 2,
+          "differed": 0
+        },
+        "url": {
+          "same": 2,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "02-create",
+      "instruction": "In the repository bench/bench-repo at http://127.0.0.1:8095/bench/bench-repo, create a NEW issue with the title exactly '{{runid}} Bench Issue' and a description (markdown text area) that includes the text '{{runid}}' (for example: 'Bench issue created for run {{runid}}.'). Submit it. Do NOT modify any issue whose title starts with 'Seed:'. After submitting, report the new issue's title, its number as the app displays it (Gitea shows it as #<number>), and confirm the description text shown on the issue page.",
+      "skill": "s_944f46",
+      "params": {
+        "v1": "bench",
+        "v2": "bench-repo",
+        "v3": "127.0.0.1",
+        "v5": "{{runid}} Bench Issue",
+        "v4": "{{runid}}",
+        "v6": "Bench issue created for run {{runid}}."
+      },
+      "outputs": [
+        "issue_title",
+        "issue_number",
+        "issue_description_shown",
+        "issue_status",
+        "opened_by",
+        "run_id"
+      ],
+      "recorded": {
+        "issue_title": "vgt2v-n1 Bench Issue",
+        "issue_number": "#4",
+        "issue_description_shown": "Bench issue created for run vgt2v-n1.",
+        "issue_status": "Open",
+        "opened_by": "admin",
+        "run_id": "vgt2v-n1",
+        "url": "http://127.0.0.1:8095/bench/bench-repo/issues/4",
+        "url.p3": "4"
+      },
+      "route": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "outputEvidence": {
+        "issue_title": {
+          "same": 0,
+          "differed": 2
+        },
+        "issue_number": {
+          "same": 0,
+          "differed": 2
+        },
+        "issue_description_shown": {
+          "same": 0,
+          "differed": 2
+        },
+        "issue_status": {
+          "same": 2,
+          "differed": 0
+        },
+        "opened_by": {
+          "same": 2,
+          "differed": 0
+        },
+        "run_id": {
+          "same": 0,
+          "differed": 2
+        },
+        "url": {
+          "same": 0,
+          "differed": 2
+        },
+        "url.p3": {
+          "same": 0,
+          "differed": 2
+        }
+      }
+    },
+    {
+      "id": "03-set",
+      "instruction": "On the issue page for issue {{02-create.issue_number}} titled '{{runid}} Bench Issue' in bench/bench-repo ({{02-create.url}}), set the issue's labels so that it has EXACTLY the two labels 'bug' and 'priority-high' and no others. Use the Labels picker in the issue's sidebar. A label only counts once the app has applied it and it is displayed on the issue page (not merely ticked in the open menu). After applying, verify the issue page shows exactly the labels 'bug' and 'priority-high' and report exactly which labels are displayed on the issue.",
+      "skill": "s_7d4617",
+      "params": {
+        "v1": "{{02-create.issue_number}}",
+        "v2": "{{02-create.issue_title}}",
+        "v3": "{{runid}}",
+        "v4": "{{01-open.repo_owner_link}}",
+        "v5": "{{01-open.repo_name_link}}",
+        "v6": "{{02-create.url}}"
+      },
+      "outputs": [
+        "issue_page_url",
+        "issue_number",
+        "issue_title",
+        "timeline_entry"
+      ],
+      "recorded": {
+        "issue_page_url": "http://127.0.0.1:8095/bench/bench-repo/issues/4",
+        "issue_number": "#4",
+        "issue_title": "vgt2v-n1 Bench Issue",
+        "labels_displayed": "bug, priority-high",
+        "label_count": "2",
+        "timeline_entry": "admin added the bug priority-high labels now"
+      },
+      "route": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "outputEvidence": {
+        "issue_page_url": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "issue_number": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "issue_title": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "labels_displayed": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "label_count": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "timeline_entry": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        }
+      }
+    },
+    {
+      "id": "04-open",
+      "instruction": "On the issue page for issue {{02-create.issue_number}} titled '{{runid}} Bench Issue' in bench/bench-repo ({{02-create.url}}), assign the issue to the user 'bench-assignee' using the Assignees picker in the issue's sidebar. The assignment only counts once the app has applied it and the assignee is displayed on the issue page (not merely ticked in the open menu). After applying, verify the issue page shows 'bench-assignee' as the assignee and report exactly what is displayed in the Assignees section of the sidebar.",
+      "skill": "s_22f994",
+      "params": {
+        "v1": "{{02-create.issue_number}}",
+        "v2": "{{02-create.issue_title}}",
+        "v3": "{{runid}}",
+        "v4": "{{01-open.repo_owner_link}}",
+        "v5": "{{01-open.repo_name_link}}",
+        "v6": "{{02-create.url}}"
+      },
+      "outputs": [
+        "issue_page_url",
+        "issue_number",
+        "issue_title",
+        "sidebar_assignees_display",
+        "assignee_username",
+        "timeline_entry"
+      ],
+      "recorded": {
+        "issue_page_url": "http://127.0.0.1:8095/bench/bench-repo/issues/4",
+        "issue_number": "#4",
+        "issue_title": "vgt2v-n1 Bench Issue",
+        "sidebar_assignees_display": "bench-assignee (Bench Assignee)",
+        "assignee_username": "bench-assignee",
+        "timeline_entry": "bench-assignee was assigned by admin now"
+      },
+      "route": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "outputEvidence": {
+        "issue_page_url": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "issue_number": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "issue_title": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "sidebar_assignees_display": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "assignee_username": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "timeline_entry": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        }
+      }
+    },
+    {
+      "id": "05-set",
+      "instruction": "On the issue page for issue {{02-create.issue_number}} titled '{{runid}} Bench Issue' in bench/bench-repo ({{02-create.url}}), set the issue's milestone to 'Bench Milestone' using the Milestone picker in the issue's sidebar. The milestone only counts once the app has applied it and it is displayed on the issue page (not merely ticked in the open menu). After applying, verify the issue page shows 'Bench Milestone' as the milestone and report exactly what is displayed in the Milestone section of the sidebar.",
+      "skill": "s_f6516f",
+      "params": {
+        "v1": "{{runid}} Bench Issue",
+        "v3": "bench",
+        "v4": "bench-repo",
+        "v5": "{{02-create.url}}",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "issue_page_url",
+        "issue_number",
+        "issue_title",
+        "sidebar_milestone_display",
+        "milestone_name",
+        "timeline_entry"
+      ],
+      "recorded": {
+        "issue_page_url": "http://127.0.0.1:8095/bench/bench-repo/issues/4",
+        "issue_number": "#4",
+        "issue_title": "vgt2v-n1 Bench Issue",
+        "sidebar_milestone_display": "Bench Milestone",
+        "milestone_name": "Bench Milestone",
+        "timeline_entry": "admin added this to the Bench Milestone milestone now"
+      },
+      "route": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "outputEvidence": {
+        "issue_page_url": {
+          "same": 0,
+          "differed": 2
+        },
+        "issue_number": {
+          "same": 0,
+          "differed": 2
+        },
+        "issue_title": {
+          "same": 0,
+          "differed": 2
+        },
+        "sidebar_milestone_display": {
+          "same": 2,
+          "differed": 0
+        },
+        "milestone_name": {
+          "same": 2,
+          "differed": 0
+        },
+        "timeline_entry": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        }
+      }
+    },
+    {
+      "id": "06-add",
+      "instruction": "On the issue page for issue {{02-create.issue_number}} titled '{{runid}} Bench Issue' in bench/bench-repo ({{02-create.url}}), add a comment whose text includes '{{runid}}' (for example: 'Comment for run {{runid}}.'). Type it in the markdown comment text area and submit it. After submitting, verify the comment appears on the issue page and report the comment text as displayed.",
+      "skill": "s_d0b928",
+      "params": {
+        "v1": "{{runid}} Bench Issue",
+        "v3": "bench",
+        "v4": "bench-repo",
+        "v5": "{{02-create.url}}",
+        "v2": "{{runid}}",
+        "v7": "Comment for run {{runid}}."
+      },
+      "outputs": [
+        "issue_page_url",
+        "issue_number",
+        "comment_text_displayed",
+        "comment_anchor",
+        "run_id",
+        "comment_anchor_id"
+      ],
+      "recorded": {
+        "issue_page_url": "http://127.0.0.1:8095/bench/bench-repo/issues/4",
+        "issue_number": "#4",
+        "comment_text_displayed": "Comment for run vgt2v-n1.",
+        "comment_anchor": "#issuecomment-5",
+        "commented_by": "admin",
+        "run_id": "vgt2v-n1",
+        "comment_anchor_id": "issuecomment-5",
+        "url": "http://127.0.0.1:8095/bench/bench-repo/issues/4#issuecomment-5",
+        "url.h0": "issuecomment-5"
+      },
+      "route": "http://127.0.0.1:8095/bench/bench-repo/issues/:id#:id",
+      "outputEvidence": {
+        "issue_page_url": {
+          "same": 0,
+          "differed": 2
+        },
+        "issue_number": {
+          "same": 0,
+          "differed": 2
+        },
+        "comment_text_displayed": {
+          "same": 0,
+          "differed": 2
+        },
+        "comment_anchor": {
+          "same": 0,
+          "differed": 2
+        },
+        "commented_by": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "run_id": {
+          "same": 0,
+          "differed": 2
+        },
+        "comment_anchor_id": {
+          "same": 0,
+          "differed": 2
+        },
+        "url": {
+          "same": 0,
+          "differed": 2
+        },
+        "url.h0": {
+          "same": 0,
+          "differed": 2
+        }
+      }
+    },
+    {
+      "id": "07-change",
+      "instruction": "Verification only, do not change anything. Open {{02-create.url}} and report, from the page as displayed: (1) the issue title, (2) the issue number exactly as the app displays it (Gitea shows it as #<number>), (3) the description text, (4) the exact list of labels shown on the issue, (5) the assignee shown in the sidebar, (6) the milestone shown in the sidebar, (7) the text of any comments on the issue. Then open {{01-open.url}} and report the titles of all open issues whose title starts with 'Seed:'.",
+      "skill": "s_e00ccc",
+      "params": {
+        "v3": "127.0.0.1",
+        "v4": "bench",
+        "v5": "bench-repo",
+        "v1": "Open",
+        "v2": "{{02-create.url}}",
+        "v6": "{{runid}}"
+      },
+      "outputs": [
+        "issue_title",
+        "issue_number",
+        "description_text",
+        "sidebar_assignee",
+        "comment_text",
+        "open_issue_count",
+        "run_id"
+      ],
+      "recorded": {
+        "issue_title": "vgt2v-n1 Bench Issue",
+        "issue_number": "#4",
+        "description_text": "Bench issue created for run vgt2v-n1.",
+        "labels_displayed": "bug, priority-high",
+        "sidebar_assignee": "bench-assignee (Bench Assignee)",
+        "sidebar_milestone": "Bench Milestone",
+        "comment_text": "Comment for run vgt2v-n1.",
+        "open_seed_issue_titles": "Seed: ship repaired device, Seed: order missing parts, Seed: triage inbox",
+        "open_seed_issue_numbers": "#3, #2, #1",
+        "open_issue_count": "4",
+        "seed_issue_title_1": "Seed: ship repaired device",
+        "seed_issue_title_2": "Seed: order missing parts",
+        "seed_issue_title_3": "Seed: triage inbox",
+        "run_id": "vgt2v-n1"
+      },
+      "route": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "outputEvidence": {
+        "issue_title": {
+          "same": 0,
+          "differed": 2
+        },
+        "issue_number": {
+          "same": 0,
+          "differed": 2
+        },
+        "description_text": {
+          "same": 0,
+          "differed": 2
+        },
+        "labels_displayed": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "sidebar_assignee": {
+          "same": 0,
+          "differed": 2
+        },
+        "sidebar_milestone": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "comment_text": {
+          "same": 0,
+          "differed": 2
+        },
+        "open_seed_issue_titles": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "open_seed_issue_numbers": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "open_issue_count": {
+          "same": 2,
+          "differed": 0
+        },
+        "seed_issue_title_1": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "seed_issue_title_2": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "seed_issue_title_3": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "run_id": {
+          "same": 0,
+          "differed": 2
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "session": "vgt2v-n1",
+    "created": "2026-09-25T03:43:36.234Z",
+    "model": "xiaomi/mimo-v2.6-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "01-open",
+      "outputs": [
+        "host"
+      ]
+    },
+    {
+      "stepId": "03-set",
+      "outputs": [
+        "labels_displayed",
+        "label_count"
+      ]
+    },
+    {
+      "stepId": "06-add",
+      "outputs": [
+        "commented_by"
+      ]
+    },
+    {
+      "stepId": "07-change",
+      "outputs": [
+        "labels_displayed",
+        "sidebar_milestone",
+        "open_seed_issue_titles",
+        "open_seed_issue_numbers",
+        "seed_issue_title_1",
+        "seed_issue_title_2",
+        "seed_issue_title_3"
+      ]
+    }
+  ]
+}

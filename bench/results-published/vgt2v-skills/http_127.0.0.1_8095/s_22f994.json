@@ -1,0 +1,381 @@
+{
+ "id": "s_22f994",
+ "origin": "http://127.0.0.1:8095",
+ "template": "On the issue page for issue {{v1}} titled '{{v2}}' in {{v4}}/{{v5}} ({{v6}}), assign the issue to the user 'bench-assignee' using the Assignees picker in the issue's sidebar. The assignment only counts once the app has applied it and the assignee is displayed on the issue page (not merely ticked in the open menu). After applying, verify the issue page shows 'bench-assignee' as the assignee and report exactly what is displayed in the Assignees section of the sidebar.",
+ "params": {
+  "v1": {
+   "example": "#5",
+   "usedIn": [
+    9
+   ],
+   "known": true,
+   "binding": "02-create.issue_number"
+  },
+  "v2": {
+   "example": "vgt2v-n2 Bench Issue",
+   "usedIn": [
+    9
+   ],
+   "known": true,
+   "binding": "output:i2:issue_title"
+  },
+  "v3": {
+   "example": "vgt2v-n2",
+   "usedIn": [
+    4,
+    8,
+    9
+   ],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v4": {
+   "example": "bench",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i1:repo_owner_link"
+  },
+  "v5": {
+   "example": "bench-repo",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i1:repo_name_link"
+  },
+  "v6": {
+   "example": "http://127.0.0.1:8095/bench/bench-repo/issues/5",
+   "usedIn": [],
+   "known": true,
+   "binding": "02-create.url"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8095/{{v4}}/{{v5}}/issues/:id"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e446"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(9) > div:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 1098,
+      "y": 538,
+      "w": 270,
+      "h": 16,
+      "role": "combobox",
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/{{v4}}/{{v5}}/issues/:id",
+    "addedContains": [
+     "- combobox \"Assignees Clear assignees admin bench-assignee (Bench Assignee)\"",
+     "- listbox \"Clear assignees admin bench-assignee (Bench Assignee)\"",
+     "- textbox \"Filter Assignee\"",
+     "- link \"bench-assignee (Bench Assignee)\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_793e7e",
+    "step": 1
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e533"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#_aria_dropdown_menu_85 > div:nth-of-type(2) > a:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 1098,
+      "y": 718,
+      "w": 268,
+      "h": 39,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/{{v4}}/{{v5}}/issues/:id",
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_793e7e",
+    "step": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e460"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#_aria_dropdown_menu_85 > div:nth-of-type(2) > a:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 1098,
+      "y": 718,
+      "w": 268,
+      "h": 39,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/{{v4}}/{{v5}}/issues/:id",
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e150"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "text",
+      "text": "Bench issue created for run {{v3}}.",
+      "nth": 0
+     },
+     {
+      "kind": "css",
+      "selector": "#issue-5 > div > div:nth-of-type(2) > div:nth-of-type(1) > p"
+     },
+     {
+      "kind": "point",
+      "x": 510,
+      "y": 316,
+      "w": 814,
+      "h": 20,
+      "role": null,
+      "tag": "p",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/{{v4}}/{{v5}}/issues/:id",
+    "addedContains": [
+     "- combobox \"Assignees\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e446"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(9) > div:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 1098,
+      "y": 538,
+      "w": 270,
+      "h": 16,
+      "role": "combobox",
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/{{v4}}/{{v5}}/issues/:id",
+    "addedContains": [
+     "- combobox \"Assignees Clear assignees admin bench-assignee (Bench Assignee)\"",
+     "- listbox \"Clear assignees admin bench-assignee (Bench Assignee)\"",
+     "- textbox \"Filter Assignee\"",
+     "- link \"bench-assignee (Bench Assignee)\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e460"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#_aria_dropdown_menu_85 > div:nth-of-type(2) > a:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 1098,
+      "y": 718,
+      "w": 268,
+      "h": 39,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/{{v4}}/{{v5}}/issues/:id",
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "press",
+   "args": {
+    "key": "Escape"
+   },
+   "locators": {},
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/{{v4}}/{{v5}}/issues/:id",
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e150"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "text",
+      "text": "Bench issue created for run {{v3}}.",
+      "nth": 0
+     },
+     {
+      "kind": "css",
+      "selector": "#issue-5 > div > div:nth-of-type(2) > div:nth-of-type(1) > p"
+     },
+     {
+      "kind": "point",
+      "x": 510,
+      "y": 316,
+      "w": 814,
+      "h": 20,
+      "role": null,
+      "tag": "p",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/{{v4}}/{{v5}}/issues/:id",
+    "addedContains": [
+     "- link \"bench-assignee\"",
+     "- combobox \"Assignees\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text",
+    "frame": "{{=}} Bench Issue #{{*}}",
+    "scopedBy": "v3",
+    "slotFrame": "{{v2}} #{{*}}",
+    "frameMark": "v3"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "text",
+      "text": "{{v3}}",
+      "seen": {
+       "hit": 0,
+       "miss": 1
+      }
+     },
+     {
+      "kind": "role",
+      "role": "heading",
+      "name": "{{v2}} {{v1}}",
+      "seen": {
+       "hit": 1,
+       "miss": 0
+      }
+     },
+     {
+      "kind": "css",
+      "selector": "#issue-title-display > h1"
+     },
+     {
+      "kind": "point",
+      "x": 548,
+      "y": 172,
+      "w": 1032.4,
+      "h": 36,
+      "role": "heading",
+      "tag": "h1",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "ref"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "Assigned issue {{v1}} '{{v2}}' ({{v4}}/{{v5}}) to 'bench-assignee' using the sidebar Assignees picker, and the assignment is applied and verified. The first clicks only ticked the item in the open menu while the sidebar still read \"No Assignees\"; the assignment committed once I re-ticked the item (internal combo value \"3\") and closed the dropdown by clicking outside. Verified three ways: the sidebar Assignees section now displays \"bench-assignee (Bench Assignee)\" with \"No Assignees\" gone, the issue timeline shows \"bench-assignee was assigned by admin now\", and the raw server response contains the username-display span for bench-assignee. The labels bug and priority-high from the prior task are still displayed correctly, and no Seed: issue was touched.",
+  "values": {
+   "ref": "{{v3}}"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 2,
+  "successes": 2,
+  "partial": 0,
+  "created": "2026-09-25T03:57:23.359Z",
+  "failedAtStep": {},
+  "fallthroughs": 1,
+  "verifiedContract": 2,
+  "lastUsed": "2026-09-25T03:58:29.861Z"
+ },
+ "status": "validated",
+ "variantOf": "s_793e7e",
+ "provenance": {
+  "session": "vgt2v-n2",
+  "instruction": "On the issue page for issue #5 titled 'vgt2v-n2 Bench Issue' in bench/bench-repo (http://127.0.0.1:8095/bench/bench-repo/issues/5), assign the issue to the user 'bench-assignee' using the Assignees picker in the issue's sidebar. The assignment only counts once the app has applied it and the assignee is displayed on the issue page (not merely ticked in the open menu). After applying, verify the issue page shows 'bench-assignee' as the assignee and report exactly what is displayed in the Assignees section of the sidebar.",
+  "model": "xiaomi/mimo-v2.6-flash",
+  "created": "2026-09-25T03:57:23.359Z"
+ },
+ "revision": 3
+}
