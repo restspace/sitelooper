@@ -5,6 +5,7 @@ import type { RecordedEntry, RecordedInstruction } from '../daemon/recorder.js';
 import { shadowVerdicts, writeShadow } from './shadow.js';
 import { compileSkills, escapeRe, fillParams, samePageContexts, sameProcedure, urlMatches, urlPattern, variantStart } from './compile.js';
 import { landedOnRecordedPage } from '../execution/gates.js';
+import { urlDiff } from '../execution/url.js';
 import type { Page } from 'playwright-core';
 import { classifyReportValue, derivesFromParams, observedSummary, referenceValue, reportNeedsPage, shownForReport, templateSource, templateValue, typedSlots, unshownLiterals, type GivenEvidence } from '../execution/report.js';
 import { ComponentStore, learnRecipes } from './components.js';
@@ -1376,7 +1377,7 @@ export function pinEndsElsewhere(store: SkillStore, candidateId: string, nextPin
   const start = head.preconditions.urlPattern;
   const end = [...tail.steps].reverse().find((s) => s.expect?.urlPattern)?.expect?.urlPattern ?? tail.preconditions.urlPattern;
   const byFragment = routesByFragment(store, cand.origin);
-  if (!start || !end || routeOf(start, byFragment) === routeOf(end, byFragment)) return null;
+  if (!start || !end || routesAgree(start, end, byFragment)) return null;
   return `its procedure ends on ${end} (${tail.id}), and the next step's procedure (${head.id}) starts on ${start} without navigating there: it would leave the next step on the wrong page`;
 }
 
@@ -1387,8 +1388,29 @@ export function pinEndsElsewhere(store: SkillStore, candidateId: string, nextPin
  * of `/hardware/:id`, one page (fwsi9-n3 04-report).
  */
 function routeOf(pattern: string, byFragment: boolean): string {
-  const route = pattern.replace(/\{\{[^{}]*\}\}|:id\b/g, '*');
+  const route = pattern.replace(/\{\{[^{}]*\}\}|:id\b|:var\b/g, '*');
   return byFragment ? route : route.replace(/#.*$/, '');
+}
+
+/**
+ * Whether a candidate's end and the next pin's start are the same route: as
+ * routes textually, else by the replay gate's own url rule (urlDiff, read
+ * either way round). The query string is view state there: a key only one
+ * side carries is not a different page, a wildcard matches any value, and
+ * only a key BOTH carry with two different literals separates pages
+ * (kanboard's `?controller=…`). fwop15-cv2: every re-record of 01-open ended
+ * on `…/work_packages` or `…/work_packages?query_props={…filters…}` and 02's
+ * pin starts on `…/work_packages?query_props=:var` — the page 02 replays on
+ * without complaint — and all five were refused on the query string alone.
+ */
+function routesAgree(start: string, end: string, byFragment: boolean): boolean {
+  if (routeOf(start, byFragment) === routeOf(end, byFragment)) return true;
+  const strip = (u: string): string => (byFragment ? u : u.replace(/#.*$/, ''));
+  const agree = (pattern: string, url: string): boolean => {
+    const d = urlDiff(pattern, url);
+    return d !== null && d.length === 0;
+  };
+  return agree(strip(start), strip(end)) || agree(strip(end), strip(start));
 }
 
 /**
