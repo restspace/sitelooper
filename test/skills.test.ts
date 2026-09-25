@@ -6,6 +6,7 @@ import type { InstructionResult } from '../src/agent/loop.js';
 import type { RecordedEntry, RecordedStep, StepDiff } from '../src/daemon/recorder.js';
 import { lineShows, specOf } from '../src/skills/replay.js';
 import { maskVolatile, stranded } from '../src/skills/compile.js';
+import { maskCounters } from '../src/execution/text.js';
 import { digitDominant } from '../src/skills/shape.js';
 import { roleName, volatileMatcher } from '../src/shared/text.js';
 import { recordCandidateEvidence, retired } from '../src/skills/repair.js';
@@ -308,6 +309,11 @@ describe('cross-instruction url record-id slotting (fwod29)', () => {
   });
 });
 
+/** `entries` as a full replay of `skill` records them: every step carries `via`, none is the model's own gesture. */
+function asReplayed(entries: RecordedEntry[], skill = 's_replayed'): RecordedEntry[] {
+  return entries.map((e, i) => (e.k === 'step' ? { ...e, via: { skill, step: i } } : e));
+}
+
 function recording(): RecordedEntry[] {
   return [
     { k: 'instruction', text: INSTRUCTION, url: `${ORIGIN}/#/tickets/t15`, fingerprint: [1, 0, 0] },
@@ -339,6 +345,14 @@ describe('volatile expectations and whitespace identity (fwkb3, fwod31)', () => 
     expect(maskVolatile('- cell "2026-12-31"')).toBe('- cell "{{*}}"');
     expect(maskVolatile('- row "Su Mo Tu We Th Fr Sa"')).toBe('- row "Su Mo Tu We Th Fr Sa"');
     expect(maskVolatile('- link "RD-1015"')).toBe('- link "RD-1015"');
+  });
+  // fwod88-cv3 01-signin: odoo's user menu is "6 3 YourCompany" — activity and message counts, then the company.
+  it('masks leading counters in a named control, and only those', () => {
+    expect(maskCounters('- menu "6 3 YourCompany"')).toBe('- menu "{{*}} YourCompany"');
+    expect(maskCounters('- button "12 Notifications"')).toBe('- button "{{*}} Notifications"');
+    for (const l of ['- cell "3"', '- menu "YourCompany"', '- cell "6 3 YourCompany"', '- link "2026 Report"', '- menu "3"', '- button "3.00 Total"']) {
+      expect(maskCounters(l), l).toBe(l);
+    }
   });
   // fwgh3 01-signin: ghost's "1 minute ago" had aged by the replays.
   it('masks relative times, and only them', () => {
@@ -1563,7 +1577,7 @@ describe('learnFromInstruction', () => {
     const full = learnFromInstruction(store, {
       result: result('success', { ...noSkill, invoked: base.id, stepsReplayed: 7, stepsTotal: 7, deterministicActions: 7, totalActions: 7 }),
       instruction: INSTRUCTION,
-      entries: recording(),
+      entries: asReplayed(recording()),
       session: 's',
     });
     expect(full).toEqual({ outcome: { skill: base.id, status: 'validated', ok: true } });
@@ -1587,12 +1601,27 @@ describe('learnFromInstruction', () => {
     const promoted = learnFromInstruction(store, {
       result: result('success', { ...noSkill, invoked: variant.id, stepsReplayed: 7, stepsTotal: 7 }),
       instruction: INSTRUCTION,
-      entries: recording(),
+      entries: asReplayed(recording()),
       session: 's',
     });
     expect(promoted?.superseded).toBe(base.id);
     expect(store.get(base.id)?.status).toBe('demoted');
     expect(store.get(variant.id)?.status).toBe('validated');
+  });
+
+  // fwop15-cv 01-open: s_713d1c (the sign-in) replayed in full, the model then opened the project and read the
+  // subjects — seven gestures beyond the replay — and nothing was compiled, four times over.
+  it('compiles the whole recording when a full replay was driven past by the model, so the step has a candidate', () => {
+    const store = new SkillStore(path.join(tmp, 'driven-past'));
+    const base = compileSkill({ entries: recording(), instruction: INSTRUCTION, report, session: 's', now: '2026-01-01T00:00:00Z' })!;
+    store.put(base);
+    const full = { ...noSkill, invoked: base.id, stepsReplayed: 7, stepsTotal: 7, deterministicActions: 7, totalActions: 14 };
+    // The recording: the replayed steps (via), then the model's own gestures.
+    const entries = [...asReplayed(recording(), base.id), ...recording().filter((e) => e.k === 'step')];
+    const learned = learnFromInstruction(store, { result: result('success', full), instruction: INSTRUCTION, entries, session: 's', now: '2026-01-02T00:00:00Z' });
+    expect(learned?.outcome).toEqual({ skill: base.id, status: 'validated', ok: true });
+    expect(learned?.compiled ?? learned?.merged).toBeTruthy();
+    expect(store.all().length).toBeGreaterThan(1);
   });
 
   /**
@@ -1704,7 +1733,7 @@ describe('learnFromInstruction', () => {
       learnFromInstruction(store, {
         result: result('success', { ...noSkill, invoked: id, stepsReplayed: 7, stepsTotal: 7, deterministicActions: 7, totalActions: 7 }),
         instruction: INSTRUCTION,
-        entries: recording(),
+        entries: asReplayed(recording()),
         session: 's',
         now: '2026-01-04T00:00:00Z',
       });

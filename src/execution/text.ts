@@ -67,6 +67,22 @@ export function maskVolatile(line: string): string {
   return line.replace(VOLATILE_TOKEN, WILDCARD);
 }
 
+/**
+ * Counters at the head of a control's name: odoo's user menu is
+ * `- menu "6 3 YourCompany"` — the activity and message counts, then the
+ * company. The counts are how much has happened since the recording, not the
+ * control; the artifact insisted on "6 3" and failed a sign-in the daemon
+ * had replayed clean (fwod88-cv3). Only a leading run of short integers that
+ * a word follows, on a named control, is masked — `- cell "3"` and a bare
+ * number stay what they are. Applied to expectation lines beside maskVolatile
+ * (expect.ts), in both runners.
+ */
+const LEADING_COUNTERS = /^(- (?:menu|menuitem|button|link|tab|treeitem) ")(\d{1,3}(?: \d{1,3})*) (?=[\p{L}])/u;
+
+export function maskCounters(line: string): string {
+  return line.replace(LEADING_COUNTERS, `$1${WILDCARD} `);
+}
+
 /** A value interpolated into a pattern is DATA: its own metacharacters must not become pattern. */
 export function escapeRe(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');

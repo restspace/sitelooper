@@ -154,9 +154,16 @@ export function learnFromInstruction(
     // recipe learning must never break instruction learning
   }
 
-  // A clean full replay has nothing new to teach; a repair does.
+  // A clean full replay has nothing new to teach; a repair does. A full
+  // replay the model then drove PAST is a partial-coverage procedure, and
+  // what it did not cover is this recording's to teach: fwop15-cv's 01-open
+  // replayed s_713d1c (the sign-in) in full four times, the model opened the
+  // project and read the subjects each time, nothing was compiled, and the
+  // re-pin rule refused the sign-in for not carrying the step — every time.
+  // Compiled whole (variantOf undefined), the recording is the candidate
+  // decideRepin falls back to.
   const fullReplay = sk?.invoked && !sk.refused && sk.stepsReplayed === sk.stepsTotal;
-  if (fullReplay) return Object.keys(out).length ? out : null;
+  if (fullReplay && agentGesturesOutsideReplay(input.entries) <= MAX_STRAY_GESTURES_FOR_PIN) return Object.keys(out).length ? out : null;
   const variantOf = sk?.invoked && !sk.refused && sk.stepsReplayed < sk.stepsTotal ? sk.invoked : undefined;
 
   // The replayed step that stopped this replay, when it stopped part-way: the
@@ -1254,12 +1261,17 @@ export function decideRepin(input: {
   const { step, outcome } = input;
   // A full replay of the incumbent itself leaves nothing to move.
   if (outcome?.ok && outcome.skill === step.skill) return null;
-  const replayed = outcome?.ok ? outcome : undefined;
+  // A replayed skill the model drove past did not carry the step; the whole
+  // recording this run compiled (learnFromInstruction's full-replay-plus-
+  // gestures path) is the candidate instead, judged by the same gates below.
+  const carried = !(outcome?.ok && input.stray > MAX_STRAY_GESTURES_FOR_PIN);
+  if (outcome?.ok && !carried) {
+    const whole = input.compiled && input.compiled.skill !== outcome.skill && input.compiled.skill !== step.skill ? input.compiled : undefined;
+    if (!whole) return { refused: `not re-pinning ${outcome.skill} — the model drove ${input.stray} gesture(s) beyond its replay, so it did not carry the step` };
+  }
+  const replayed = outcome?.ok && carried ? outcome : undefined;
   const cand = replayed ?? input.compiled;
   if (!cand || cand.skill === step.skill) return null;
-  if (replayed && input.stray > MAX_STRAY_GESTURES_FOR_PIN) {
-    return { refused: `not re-pinning ${cand.skill} — the model drove ${input.stray} gesture(s) beyond its replay, so it did not carry the step` };
-  }
   if (input.mintedLeaks?.length) {
     return { refused: `not re-pinning ${cand.skill} — its navigation carries an identifier this run made (${input.mintedLeaks.slice(0, 3).join(', ')}), so it would replay onto this run's record` };
   }

@@ -9,7 +9,7 @@ import { executeTool } from '../agent/tools.js';
 import { urlPattern as compiledUrlPattern, carryOpener, dropAbsentReadLocators, dropDeadReadLocators, fillParams, markReadsProven, stranded, stripRunValueCandidates, urlMatches, urlParts } from '../skills/compile.js';
 import type { DriftTicket } from '../skills/repair.js';
 import type { Page } from 'playwright-core';
-import { agentGesturesOutsideReplay, bindSkill, canAdoptPin, decideRepin, instructionEntry, learnFromInstruction, matchTemplate, pinCarriesFailedStep, pinEndsElsewhere, pinStartsElsewhere, pinStatus, publishedOutputs, replayReport, selectCandidates } from '../skills/learn.js';
+import { MAX_STRAY_GESTURES_FOR_PIN, agentGesturesOutsideReplay, bindSkill, canAdoptPin, decideRepin, instructionEntry, learnFromInstruction, matchTemplate, pinCarriesFailedStep, pinEndsElsewhere, pinStartsElsewhere, pinStatus, publishedOutputs, replayReport, selectCandidates } from '../skills/learn.js';
 import { threadStepParams } from '../skills/rethread.js';
 import { buildFlow, consumedReportedOutputs, consumedUrlOutputs, ignorableRefs, jsonLeaves, lintFlowRefs, lintUnboundParams, lintUnpublishedOutputs, listFlows, liveReadsFor, liveReadsForRecovery, loadFlow, loadFlowFile, lookupOutput, mutatingIntent, noteOutputEvidence, pruneUnsourcedOutputs, recoveryRoute, remapParams, resolveInstruction, resolveStepParams, softResolveInstruction, saveFlow, staleInstructionIds, taskConstants, textMints, unbankedMutations, unreportedOutputs, urlOutputs, varyingValues, type RunSpecific } from '../skills/flow.js';
 import { applyRelabelToEntries, applyRelabelToSkills, relabelCases, requestRelabelPlan, runValueKeyRenames } from '../skills/relabel.js';
@@ -2147,7 +2147,13 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
         const compiledId = learned?.whole ?? learned?.compiled ?? learned?.merged;
         const compiledSkill = compiledId ? this.browser.learn.get(compiledId) : null;
         const compiled = compiledSkill ? { skill: compiledSkill.id, status: compiledSkill.status } : undefined;
-        const candidateId = outcome?.ok ? outcome.skill : compiled?.skill;
+        // A replayed skill the model drove past (more than MAX_STRAY_GESTURES_FOR_PIN
+        // gestures after it) did not carry the step: the whole recording this
+        // run compiled is the candidate, not the partial procedure (fwop15-cv).
+        const stray = agentGesturesOutsideReplay(recoveryEntries);
+        const carried = !(outcome?.ok && stray > MAX_STRAY_GESTURES_FOR_PIN);
+        if (outcome?.ok && !carried && compiled) opts.progress(`[flow ${flow.name}] ${step.id}: ${outcome.skill} replayed in full but the model drove ${stray} gesture(s) beyond it — the whole recording ${compiled.skill} is the candidate`);
+        const candidateId = outcome?.ok && carried ? outcome.skill : compiled?.skill;
         // The pin is a procedure, so its health is its chain's: a demoted
         // segment anywhere in it is what the compile will refuse (pinStatus).
         const incumbentSkill = step.skill ? this.browser.learn.get(step.skill) : null;
@@ -2189,7 +2195,7 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
           outcome,
           compiled,
           incumbent,
-          stray: agentGesturesOutsideReplay(recoveryEntries),
+          stray,
           adoptable,
           mintedLeaks,
           startsElsewhere: candidateId ? pinStartsElsewhere(this.browser.learn, candidateId, instructionEntry(recoveryEntries)?.url) : null,
