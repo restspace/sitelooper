@@ -1,7 +1,7 @@
 import type { Page } from 'playwright-core';
 import { WILDCARD, escapeRe, maskVolatile } from './text.js';
 import { fillParams } from './url.js';
-import { captureLines, describeCoverage, lineShows, type LineDialect, type ObservationCoverage } from './snapshot.js';
+import { captureLines, describeCoverage, lineShows, NAME_CAP, type FullNameLook, type LineDialect, type ObservationCoverage } from './snapshot.js';
 
 /**
  * The content-expectation verdict both execution targets share: given what a
@@ -279,7 +279,17 @@ export interface ChangeObservation {
    * are rendered in the dialect the step's recorded lines are in — a diff in
    * one dialect judged against lines in another would miss by construction.
    */
-  live: () => Promise<LiveLines | null>;
+  live: (look?: FullNameLook) => Promise<LiveLines | null>;
+}
+
+/** The roles recorded lines name (`- row "…"` → row): what a FullNameLook names in full. */
+export function lineRoles(lines: readonly string[]): string[] {
+  const roles = new Set<string>();
+  for (const l of lines) {
+    const m = /^-?\s*([A-Za-z][\w-]*)\s+"/.exec(l.trim());
+    if (m) roles.add(m[1]);
+  }
+  return [...roles];
 }
 
 /** The step, as the verdict needs to know it. */
@@ -432,6 +442,21 @@ async function changesVerdict(
     const live = await obs.live();
     if (!live) return { shown: false, complete: false, why: 'the page could not be read' };
     if (lineShows(live.lines, lines)) return { shown: true, complete: live.complete, why: '' };
+    // A NAME PAST THE CAP (round 63, openproject fwop17 04-create): an
+    // element named by its text is observed with no name once that text is
+    // longer than NAME_CAP, and an attribute name is cut there, so a line
+    // whose value this run made longer than the recording's can be on the
+    // page and never in a capped look. Looked for once more, with the
+    // elements of the roles the lines name named in full; said when that is
+    // what found it.
+    const roles = lineRoles(lines);
+    if (roles.length) {
+      const full = await obs.live({ fullNameRoles: roles });
+      if (full && lineShows(full.lines, lines)) {
+        warnings.push(`step ${tag}: its recorded page change was found only by its full name, which is longer than the ${NAME_CAP} characters a look names an element by`);
+        return { shown: true, complete: full.complete, why: '' };
+      }
+    }
     return { shown: false, complete: live.complete, why: live.complete ? '' : live.coverage ? describeCoverage(live.coverage) || 'coverage unknown' : 'coverage unknown' };
   };
   // A line carrying a {{vN}} slot is HARD (below). A {{dN}} derived marker

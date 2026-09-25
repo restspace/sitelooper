@@ -597,3 +597,36 @@ describe('the emitted adapter', () => {
     expect(bodiesOf(plain)).not.toContain('absentDialog');
   });
 });
+
+describe('a recorded line whose name this run took past the name cap (round 63, fwop17)', () => {
+  const ROW = '- row "44 Work package leaf at level 0. {{v3}} {{*}} {{*}} - Normal"';
+  const v3 = 'fwop17-spec Bench Work Package';
+  const full = `- row "44 Work package leaf at level 0. ${v3} TASK New - Normal"`;
+  /** A page whose capped look shows the row unnamed, and whose look with rows named in full shows its name. */
+  const capped = (): ChangeObservation & { asked: (string[] | undefined)[] } => {
+    const asked: (string[] | undefined)[] = [];
+    return {
+      asked,
+      added: ['- row ""'],
+      live: async (look) => {
+        asked.push(look?.fullNameRoles);
+        return { lines: look?.fullNameRoles?.includes('row') ? [full] : ['- row ""'], complete: true };
+      },
+    };
+  };
+
+  it('looks again with the roles the line names named in full, and says so when that found it', async () => {
+    expect(full.length - '- row ""'.length).toBeGreaterThan(80);
+    const obs = capped();
+    const verdict = await expectedChangesVerdict([ROW], { v3 }, ctx(), obs);
+    expect(verdict.stop).toBeUndefined();
+    expect(obs.asked).toEqual([undefined, ['row']]);
+    expect(verdict.warnings.join(' ')).toMatch(/found only by its full name, which is longer than the 80 characters/);
+  });
+
+  it('still stops when the full-name look does not show it either', async () => {
+    const obs: ChangeObservation = { added: [], live: async () => ({ lines: ['- row "44 Work package leaf at level 0. another subject TASK New - Normal"'], complete: true }) };
+    const verdict = await expectedChangesVerdict([ROW], { v3 }, ctx(), obs);
+    expect(verdict.stop).toMatch(/did not show/);
+  });
+});

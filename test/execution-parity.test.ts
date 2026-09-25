@@ -6918,6 +6918,56 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
   });
 
   /**
+   * Round 63, openproject fwop17 04-create s_9e1cdb/5: the Save's recorded
+   * effect is the new row, `- row "{{d1}} Work package leaf at level 0. {{v3}}
+   * {{*}} {{*}} - Normal"`. The observation names an element by its text only
+   * while that text is at most 80 characters (snapshot.ts namesOf). n1's row
+   * read 79 with subject "fwop17-n1 Bench Work Package"; the compiled run's
+   * "fwop17-spec …" made it 81, the row was observed with no name at all, and
+   * the step stopped ("did not show … as it did when recorded") with the work
+   * package saved. n2 and n3 carried a runid as long as n1's. Either runner
+   * stops on a value that long; both now look again, with the full name of
+   * each element of a role the unmatched line names, before judging.
+   */
+  describe('a recorded row whose name this run’s value takes past the name cap (round 63, fwop17)', () => {
+    const LONG = 'rec-2 Bench Record with a subject long enough to take its row past the cap';
+    const run = (mode: string, value: string) => {
+      const steps: SkillStep[] = [
+        { tool: 'goto', args: { url: `${origin}/row-save/${mode}` }, locators: {} },
+        { tool: 'fill', args: { target: '@e1', value: '{{v1}}' }, locators: { target: [{ kind: 'label', label: 'Subject' }] } },
+        {
+          tool: 'click',
+          args: { target: '@e2' },
+          locators: { target: [{ kind: 'role', role: 'button', name: 'Save' }] },
+          expect: { addedContains: ['- row "47 {{v1}} {{*}}"'], lineDialect: 2 },
+        },
+      ];
+      const params: Record<string, SkillParam> = { v1: { example: 'rec-1 Bench Record', usedIn: [2] } };
+      const skill: Skill = { ...skillOf(steps), params };
+      const base = specOf(steps);
+      const spec: SpecFlow = { ...base, steps: [{ ...base.steps[0], params: { v1: value }, segments: [{ ...base.steps[0].segments[0], params }] }] };
+      return bothOf(skill, spec, { v1: value });
+    };
+
+    it('both runners find the row whose full name is past the cap', async () => {
+      expect(`47 ${LONG} New`.length).toBeGreaterThan(80);
+      const { replay, emitted, replayLog, emittedLog } = await run('600000', LONG);
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      expect(replayLog).toEqual([`commit:row:${LONG}`]);
+      expect(emittedLog).toEqual([`commit:row:${LONG}`]);
+    }, 120_000);
+
+    it('both runners still stop when no such row appears, however long the value', async () => {
+      const { replay, emitted } = await run('never', LONG);
+      expect(replay.ok).toBe(false);
+      expect(emitted.ok).toBe(false);
+      expect(replay.reason).toMatch(/did not show "- row .* as it did when recorded/);
+      expect(emitted.reason ?? '').toMatch(/the recorded page change did not appear|did not show "- row/);
+    }, 120_000);
+  });
+
+  /**
    * Round 60, ghost fwgh14 rule A: 02-create's editor autosave routed the page
    * to `#/editor/post/<id>` and the step went back to the posts list, so its
    * end url carried no id and 03-open was handed n1's. A step publishes a url

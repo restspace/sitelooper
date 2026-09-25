@@ -1113,7 +1113,7 @@ const HELPERS: { token: string; source: string[] }[] = [
       '      async () => {',
       '        last = await expectedChangesVerdict(recorded, p, ctx, {',
       '          added: addedLines(linesBefore, linesAfter ?? (await capturePageLines(page, dialect))),',
-      '          live: () => captureLines(page, dialect),',
+      '          live: (look) => captureLines(page, dialect, look),',
       '        });',
       '        return last.stop ?? null;',
       '      },',
