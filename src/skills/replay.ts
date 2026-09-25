@@ -1107,7 +1107,7 @@ export async function replaySkill(
       const identifying = targetChain.flatMap((c, i) => (structural(c) || snapshotRefCandidate(c) ? [] : [i]));
       const verdict = await positionalClickVerdict(
         page,
-        targetHit ? { locator: targetHit.locator, index: targetHit.index, structural: structural(targetHit.candidate), missed: targetHit.missed } : null,
+        targetHit ? { locator: targetHit.locator, index: targetHit.index, structural: structural(targetHit.candidate), point: targetHit.candidate.kind === 'point', missed: targetHit.missed } : null,
         identifying,
         alreadyAddedLines(skill.steps, clickAt),
         recordedAccessibleName(targetChain),

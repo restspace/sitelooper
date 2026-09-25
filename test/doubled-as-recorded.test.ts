@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import type { RecordedEntry } from '../src/daemon/recorder.js';
 import { compileSkills } from '../src/skills/compile.js';
 import { recordedDoubled } from '../src/execution/refill.js';
-import { alreadyAddedLines } from '../src/execution/positional.js';
+import { alreadyAddedLines, positionalOnly } from '../src/execution/positional.js';
 import type { SkillStep } from '../src/skills/store.js';
 
 /**
@@ -90,5 +90,18 @@ describe('alreadyAddedLines: the lines an adding-only click may be skipped on (f
     const t = [...steps];
     t[edit] = { ...t[edit], tool: 'press' };
     expect(alreadyAddedLines(t, edit)).toEqual([]);
+  });
+});
+
+describe('positionalOnly: a recorded point is not a positional guess (verify-round61, "recorded points")', () => {
+  it('a structural path hit after every identifying rung missed is positional', () => {
+    expect(positionalOnly({ structural: true, missed: [0, 1] }, [0, 1])).toBe(true);
+  });
+  it('a point hit is the recording's own way to the element', () => {
+    expect(positionalOnly({ structural: true, point: true, missed: [0] }, [0])).toBe(false);
+  });
+  it('a hit by an identifying rung, or a chain with none, is not asked about', () => {
+    expect(positionalOnly({ structural: false, missed: [] }, [0])).toBe(false);
+    expect(positionalOnly({ structural: true, missed: [0] }, [])).toBe(false);
   });
 });

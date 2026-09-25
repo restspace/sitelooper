@@ -54,10 +54,18 @@ export function recordedAccessibleName(
  * resolved. A chain with no identifying rung was always positional, and is
  * not what this asks about. `identifying` is the stored-chain indices of the
  * identifying rungs; `missed` the indices the resolution passed over.
+ *
+ * A hit by a recorded POINT is never position alone (`hit.point`): the policy
+ * only takes a point when an element of the recorded kind sits under it
+ * (markPoint), and it is the yardstick that refuses a path landing far from
+ * the recorded box — it is how the recording found that very element, not a
+ * guess at a slot (the "recorded points" parity cells: a point's click on the
+ * near Mark, with the recorded primary gone, is the recorded click).
  */
-export function positionalOnly(hit: { structural: boolean; missed: readonly number[] } | null, identifying: readonly number[]): boolean {
+export function positionalOnly(hit: { structural: boolean; point?: boolean; missed: readonly number[] } | null, identifying: readonly number[]): boolean {
   if (!identifying.length) return false;
   if (!hit) return true;
+  if (hit.point) return false;
   return hit.structural && identifying.every((i) => hit.missed.includes(i));
 }
 
@@ -162,7 +170,7 @@ async function everyLineShows(page: Page, lines: readonly string[], params: Reco
  */
 export async function positionalClickVerdict(
   page: Page,
-  hit: { locator: Locator; index: number; structural: boolean; missed: readonly number[] } | null,
+  hit: { locator: Locator; index: number; structural: boolean; point?: boolean; missed: readonly number[] } | null,
   identifying: readonly number[],
   lines: readonly string[],
   want: { by: 'role' | 'label' | 'text'; role?: string; name: string } | null,

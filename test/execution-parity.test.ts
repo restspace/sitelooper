@@ -6028,6 +6028,7 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
       { tool: 'click', args: { target: '@e1' }, locators: { target: chain } },
     ];
     const gone: LocatorCandidate = { kind: 'role', role: 'button', name: 'Gone' };
+    const goneId: LocatorCandidate = { kind: 'testid', attr: 'data-testid', value: 'gone' };
     const farGuess: LocatorCandidate = { kind: 'css', selector: '#far > button:nth-of-type(1)' };
 
     it('both runners resolve a recorded point to the element of the recorded kind under it', async () => {
@@ -6055,12 +6056,24 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
       expect(guarded.replay.ok, guarded.replay.reason ?? '').toBe(true);
       expect(guarded.emitted.ok, guarded.emitted.reason ?? '').toBe(true);
 
-      const unguarded = await both(farSteps([gone, farGuess]), 0);
+      // No point and no recorded NAME (the vanished primary is a testid):
+      // nothing is left to hold the guess to, and both take it.
+      const unguarded = await both(farSteps([goneId, farGuess]), 0);
       expect(unguarded.replayLog).toEqual(['mark:far']);
       expect(unguarded.emittedLog).toEqual(['mark:far']);
       expect(unguarded.replay.ok, unguarded.replay.reason ?? '').toBe(true);
       expect(unguarded.emitted.ok, unguarded.emitted.reason ?? '').toBe(true);
-    }, 240_000);
+
+      // No point, but the chain RECORDED a name ("Gone") the guess's element
+      // does not carry: round 61's R2(b) (grafana fwgr73 05-open) holds a
+      // positional-only click to the recorded accessible name, so both stop
+      // before acting rather than click a Mark nobody recorded.
+      const named = await both(farSteps([gone, farGuess]), 0);
+      expect(named.replayLog).toEqual([]);
+      expect(named.emittedLog).toEqual([]);
+      expect(named.replay.reason).toMatch(/positional fallback #2 is not the recorded "Gone"/);
+      expect(named.emitted.reason).toMatch(/positional fallback #2 is not the recorded "Gone"/);
+    }, 300_000);
   });
 
   // -------------------------------------------------------------------------

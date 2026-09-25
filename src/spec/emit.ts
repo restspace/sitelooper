@@ -1204,6 +1204,7 @@ const HELPERS: { token: string; source: string[] }[] = [
       '  page: Page,',
       '  hit: Resolution | null,',
       '  identifying: number[],',
+      '  points: number[],',
       '  lines: string[],',
       "  want: { by: 'role' | 'label' | 'text'; role?: string; name: string } | null,",
       '  p: Record<string, string>,',
@@ -1212,7 +1213,7 @@ const HELPERS: { token: string; source: string[] }[] = [
       '): Promise<boolean> {',
       '  const verdict = await positionalClickVerdict(',
       '    page,',
-      '    hit ? { locator: hit.locator, index: hit.index, structural: hit.structural, missed: hit.missed.map((m) => m.index) } : null,',
+      '    hit ? { locator: hit.locator, index: hit.index, structural: hit.structural, point: points.includes(hit.index), missed: hit.missed.map((m) => m.index) } : null,',
       '    identifying,',
       '    lines,',
       '    want,',
@@ -1947,7 +1948,9 @@ function positionalClickLines(
   if (want) noteSlots(want.name, ctx);
   const where = q(`${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex}`);
   const dialect = step.expect?.lineDialect === 2 ? ', 2' : '';
-  const args = `[${identifying.join(', ')}], [${lines.map(q).join(', ')}], ${want ? JSON.stringify(want) : 'null'}, p, ${where}${dialect}`;
+  // A recorded point's hit is the recording's own way to the element, never a positional guess (positionalOnly).
+  const points = chain.flatMap((c, i) => (c.kind === 'point' ? [i] : []));
+  const args = `[${identifying.join(', ')}], [${points.join(', ')}], [${lines.map(q).join(', ')}], ${want ? JSON.stringify(want) : 'null'}, p, ${where}${dialect}`;
   return {
     miss: lines.length ? `.catch(async (error: unknown) => { if (await positionalClick(page, null, ${args})) return null; throw error; })` : '',
     hit: (name: string) => `if (await positionalClick(page, ${name}, ${args})) return { status: 'skipped' };`,
