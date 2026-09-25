@@ -4043,6 +4043,70 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
     }, 240_000);
   });
 
+  describe('a pick recorded as committing the highlight replays as a pick by name (round 62, fwsi13 03-create)', () => {
+    /**
+     * snipeit fwsi13-n1 03-create typed the model into a select2 search (its
+     * one result highlighted) and clicked the widget's combobox, which closed
+     * it and committed the highlight. Compiled from that shape, the click is a
+     * click on the option by name: both runners wait for the option and pick
+     * it, even when the results arrive after the typing's own settle — where
+     * the recorded click would have closed the list with nothing highlighted.
+     */
+    const compiled = (url: string): SkillStep[] => {
+      const name = 'Bench Laptops - Bench Manufacturer Bench Laptop Model';
+      const entries: RecordedEntry[] = [
+        { k: 'instruction', text: "set the model to 'Bench Laptop Model' and save", url },
+        { k: 'step', tool: 'goto', args: { url }, locators: {}, diff: { url, alerts: [], added: [], dialect: 2 } },
+        {
+          k: 'step',
+          tool: 'click',
+          args: { target: '@e1' },
+          locators: { target: { expr: 'x', verified: true, raw: '@e1', chain: [{ kind: 'role', role: 'combobox', name: 'Select a Model' }] } },
+          diff: { url, alerts: [], added: ['- searchbox ""'], dialect: 2 },
+        },
+        {
+          k: 'step',
+          tool: 'type',
+          args: { target: '#q', text: 'Bench Laptop Model' },
+          locators: { target: { expr: 'x', verified: true, raw: '#q', chain: [{ kind: 'css', selector: '#q' }] } },
+          diff: { url, alerts: [], added: ['- searchbox "": Bench Laptop Model', `- listbox "${name}"`, `- option "${name}"`], dialect: 2 },
+        },
+        {
+          k: 'step',
+          tool: 'click',
+          args: { target: '@e2' },
+          locators: { target: { expr: 'x', verified: true, raw: '@e2', chain: [{ kind: 'css', selector: '#sel' }] } },
+          diff: { url, alerts: [], added: [`- combobox "×${name}"`], removed: [`- option "${name}"`], dialect: 2 },
+        },
+        {
+          k: 'step',
+          tool: 'click',
+          args: { target: '@e3' },
+          locators: { target: { expr: 'x', verified: true, raw: '@e3', chain: [{ kind: 'role', role: 'button', name: 'Save' }] } },
+          diff: { url, alerts: [], added: [], dialect: 2 },
+        },
+      ];
+      const steps = compileSkills({ entries, instruction: "set the model to 'Bench Laptop Model' and save", report: { status: 'success', summary: 'ok' }, session: 's' }).flatMap((sk) => sk.steps);
+      // The typed model is the procedure's slot; both runners get it filled.
+      return JSON.parse(JSON.stringify(steps).split('{{v1}}').join('Bench Laptop Model')) as SkillStep[];
+    };
+
+    it('both runners pick the named option (the recorded target, a hidden native select, picks nothing)', async () => {
+      const steps = compiled(`${origin}/select-late`);
+      const pickStep = steps.find((s) => s.tool === 'click' && String(s.args.target).startsWith('role=option'));
+      expect(pickStep, JSON.stringify(steps.map((s) => s.args.target))).toBeTruthy();
+      for (const url of [`${origin}/select-late`]) {
+        const at = steps.map((st) => (st.tool === 'goto' ? { ...st, args: { url } } : st));
+        const run = await both(at, 0);
+        expect(run.replay.ok, `${url}: ${run.replay.reason ?? ''}`).toBe(true);
+        expect(run.emitted.ok, `${url}: ${run.emitted.reason ?? ''}`).toBe(true);
+        await new Promise((r) => setTimeout(r, 300));
+        expect(run.replayLog, url).toEqual(['commit:model:Bench Laptops - Bench Manufacturer Bench Laptop Model', 'commit:save:asset']);
+        expect(run.emittedLog, url).toEqual(run.replayLog);
+      }
+    }, 240_000);
+  });
+
   describe('a picker click whose target went with the picker its entry opened (round 59, fwsi10 03-create)', () => {
     /**
      * snipeit fwsi10-n1 03-create filled the purchase date (opening the date

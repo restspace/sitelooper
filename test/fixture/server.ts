@@ -1377,6 +1377,43 @@ document.getElementById('add').addEventListener('click', () => fetch('/commit/ad
  * `/picker` starts with no picker and the field already holding the date (a
  * replay whose picker closed after its fill); `/picker?open=1` with it open.
  */
+/**
+ * A select2-like model picker (round 62, snipeit fwsi13 03-create): a
+ * combobox "Select a Model"; typing into its search lists the matching option
+ * only after a delay (the results request), highlighted; clicking the option
+ * picks it — the combobox reads "×<name>" and posts `/commit/model/<name>`.
+ * Clicking the combobox itself with the list open closes it and, like
+ * select2's selectOnClose, picks whatever is highlighted AT THAT MOMENT —
+ * nothing, when the results have not arrived yet.
+ */
+const SELECT_LATE = () => `<!doctype html><html><head><meta charset="utf-8"><title>Model</title></head><body>
+<h1>New asset</h1>
+<select id="sel" aria-hidden="true" style="width:5px;height:1px"><option value="">-</option></select><span role="combobox" aria-label="Select a Model" id="combo" tabindex="0">Select a Model</span>
+<div id="drop" hidden><input type="search" id="q" aria-label=""><ul role="listbox" id="list"></ul></div>
+<button id="save" type="button">Save</button>
+<script>
+const combo = document.getElementById('combo'), drop = document.getElementById('drop'), q = document.getElementById('q'), list = document.getElementById('list');
+let highlighted = null, timer = null;
+const pick = async (name) => { combo.textContent = '×' + name; combo.setAttribute('aria-label', '×' + name); drop.hidden = true; list.innerHTML = ''; highlighted = null; await fetch('/commit/model/' + encodeURIComponent(name), { method: 'POST' }); };
+combo.addEventListener('click', () => {
+  if (drop.hidden) { drop.hidden = false; q.focus(); return; }
+  const h = highlighted; drop.hidden = true; list.innerHTML = ''; highlighted = null; clearTimeout(timer);
+  if (h) pick(h);
+});
+q.addEventListener('input', () => {
+  clearTimeout(timer);
+  timer = setTimeout(() => {
+    const name = 'Bench Laptops - Bench Manufacturer ' + q.value;
+    list.innerHTML = '';
+    const li = document.createElement('li'); li.setAttribute('role', 'option'); li.textContent = name; li.className = 'highlighted';
+    li.addEventListener('click', () => pick(name));
+    list.appendChild(li); highlighted = name;
+  }, 200);
+});
+document.getElementById('save').addEventListener('click', () => fetch('/commit/save/asset', { method: 'POST' }));
+</script>
+</body></html>`;
+
 const PICKER = (open: boolean) => `<!doctype html><html><head><meta charset="utf-8"><title>Picker</title></head><body>
 <h1>New asset</h1>
 <label for="date">Purchase Date</label><input id="date" value="${open ? '' : '2026-03-15'}">
@@ -2126,6 +2163,7 @@ export async function createFixtureServer(initialCount = 10): Promise<FixtureSer
       if (url === '/modal' || url === '/modal?open=1') return html(MODAL(url.endsWith('open=1')));
       if (url === '/filters' || url.startsWith('/filters?')) return html(FILTERS(url.includes('open=1'), url.includes('stuck=1')));
       if (url === '/picker' || url.startsWith('/picker?')) return html(PICKER(url.includes('open=1')));
+      if (url === '/select-late' || url.startsWith('/select-late?')) return html(SELECT_LATE());
       if (url === '/price' || url === '/price?stuck=1') return html(PRICE(url.endsWith('stuck=1')));
       if (url === '/imagelink') return html(IMAGE_LINK);
       if (url === '/hashposts') return html(HASH_POSTS);

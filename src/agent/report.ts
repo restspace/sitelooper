@@ -127,6 +127,33 @@ function toScalar(v: unknown): string | number | boolean | null {
   return text.length > VALUE_CHARS ? text.slice(0, VALUE_CHARS - 1) + '…' : text;
 }
 
+/** At most this many fields are made from one record value. */
+const MAX_RECORD_FIELDS = 60;
+
+/**
+ * A value that is a record (a plain object) or a list of records, as one
+ * scalar per field: `key_field`, or `key_<n>_field` for the n-th record (from
+ * 1). Null for anything else — a scalar, a list of scalars (toScalar joins
+ * those), a list mixing records and scalars. Field names keep their letters,
+ * digits and underscores; a nested value goes through toScalar.
+ */
+function recordFields(key: string, v: unknown): [string, string | number | boolean][] | null {
+  const isRecord = (x: unknown): x is Record<string, unknown> => typeof x === 'object' && x !== null && !Array.isArray(x);
+  const records = isRecord(v) ? [v] : Array.isArray(v) && v.length && v.every(isRecord) ? v : null;
+  if (!records) return null;
+  const out: [string, string | number | boolean][] = [];
+  records.forEach((r, i) => {
+    for (const [field, value] of Object.entries(r)) {
+      if (value === null || value === undefined || out.length >= MAX_RECORD_FIELDS) continue;
+      const name = field.replace(/[^\p{L}\p{N}_]+/gu, '_').replace(/^_+|_+$/g, '') || 'value';
+      const scalar = toScalar(value);
+      if (scalar === null) continue;
+      out.push([Array.isArray(v) ? `${key}_${i + 1}_${name}` : `${key}_${name}`, scalar]);
+    }
+  });
+  return out.length ? out : null;
+}
+
 function safeJson(v: unknown): string {
   try {
     return JSON.stringify(v) ?? String(v);
@@ -193,6 +220,17 @@ function coerce(input: unknown): { value: Record<string, unknown>; notes: string
         if (v === undefined || v === null) {
           fixed.push(k);
           continue; // JSON has no undefined; drop rather than invent a value
+        }
+        // Records — an object, or a list of them — become one value per field
+        // (`assets_1_tag`, `assets_1_name`), each a string a later read can be
+        // matched to. snipeit fwsi13-n1 02-report reported its seed assets as
+        // [{tag, name}, …], and String() made each "[object Object]": the names
+        // reached no value, no read and no replay's report (n2, n3 obj 1).
+        const fields = recordFields(k, v);
+        if (fields) {
+          for (const [fk, fv] of fields) if (!(fk in vals) && !(fk in (ev.values as Record<string, unknown>))) vals[fk] = fv;
+          fixed.push(k);
+          continue;
         }
         const scalar = toScalar(v);
         if (scalar !== v) fixed.push(k);

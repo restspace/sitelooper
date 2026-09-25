@@ -15,6 +15,7 @@ import { MAX_ADDED_LINES as MAX_DIFF_LINES } from '../execution/snapshot.js';
 import { hideEffectLines } from '../execution/toggle.js';
 import { recordedDoubled } from '../execution/refill.js';
 import { collapseTogglePairs, dropSupersededSets, sameControl } from './toggles.js';
+import { namedHighlightPicks } from './highlight-pick.js';
 import { locatingSlots, scopeReadBySlot } from './readscope.js';
 import { keyPicks } from './key-pick.js';
 
@@ -692,7 +693,7 @@ export function compileSkills(input: CompileInput): Skill[] {
   // whose value the run actually reported; drop the rest.
   /** What the recording-level passes dropped, noted on the first segment (built below). */
   const recordingNotes: TransformNote[] = [];
-  const replayable = dropSupersededSets(collapseTogglePairs(expandListReads(dropEvalAssignedCandidates(creditUncreditedPopups(steps, recordingNotes), recordingNotes), reportValues))).filter((step) => {
+  const replayable = dropSupersededSets(collapseTogglePairs(expandListReads(dropEvalAssignedCandidates(creditUncreditedPopups(namedHighlightPicks(steps), recordingNotes), recordingNotes), reportValues))).filter((step) => {
     if (step.tool === 'screenshot' || step.tool === 'eval') return false;
     // A bare tab listing (`tabs` with no switch_to) is the agent looking, like
     // a screenshot: it changes nothing and publishes nothing. openproject
