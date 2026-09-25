@@ -163,14 +163,29 @@ A later step of this flow uses these values, so before you report, read each one
   return file;
 }
 
+/** Re-records of one step the re-pin rule refused so far: the second attempt gets a third run, a third attempt is not made. */
+const refusedRerecords = new Map();
+
 function rerecord(k, step, why, outputs) {
   const instruction = instructionFor(step, outputs);
-  const r = run(`round ${k} rerecord ${step} (${why})${outputs?.length ? ` — asked to read ${outputs.join(', ')}` : ''}`, process.execPath, [cli, 'rerecord', flowJson, step, '--var', `runid=${args.tag}-r${k}n{n}`, '--runs', String(args.runs), '--reset-cmd', resetCmd, ...(instruction ? ['--instruction-file', instruction] : []), '--json'], { json: true, live: true });
+  // A step refused once is tried again with --runs 3 (rerecordVerdict's own
+  // suggestion: a flaky procedure may replay clean on the third run); the
+  // loop stops before a third attempt (fwop15-cv: four identical refusals,
+  // 150 model turns).
+  const runCount = refusedRerecords.get(step) ? Math.max(args.runs, 3) : args.runs;
+  const r = run(`round ${k} rerecord ${step} (${why})${outputs?.length ? ` — asked to read ${outputs.join(', ')}` : ''}${runCount !== args.runs ? ` — ${runCount} runs (refused before)` : ''}`, process.execPath, [cli, 'rerecord', flowJson, step, '--var', `runid=${args.tag}-r${k}n{n}`, '--runs', String(runCount), '--reset-cmd', resetCmd, ...(instruction ? ['--instruction-file', instruction] : []), '--json'], { json: true, live: true });
   const j = r.json ?? {};
   const runs = (j.runs ?? []).map((x) => ({ status: x.status, tier: x.tier, turns: x.turns, repinned: x.repinned }));
   report.flowRuns += runs.length;
   report.modelTurns += runs.reduce((n, x) => n + (x.turns ?? 0), 0);
-  return { step, why, ok: j.ok ?? (r.status === 0), pinned: j.pinned ?? null, runs, diagnostics: (j.diagnostics ?? []).map((d) => `${d.code}: ${d.what ?? d.line ?? ''}`.slice(0, 300)), exit: r.status, dry: r.dry ?? false };
+  const ok = j.ok ?? (r.status === 0);
+  if (!ok && !r.dry) refusedRerecords.set(step, (refusedRerecords.get(step) ?? 0) + 1);
+  return { step, why, ok, pinned: j.pinned ?? null, runs, attempt: refusedRerecords.get(step) ?? 0, diagnostics: (j.diagnostics ?? []).map((d) => `${d.code}: ${d.what ?? d.line ?? ''}`.slice(0, 300)), exit: r.status, dry: r.dry ?? false };
+}
+
+/** Whether the loop may re-record `step` again: not after two refusals. */
+function mayRerecord(step) {
+  return (refusedRerecords.get(step) ?? 0) < 2;
 }
 
 function artifact(k) {
@@ -237,6 +252,7 @@ for (let k = 1; k <= args.maxRounds && !verdict; k++) {
   if (round.compile.refused) {
     log(`round ${k}: compile refused (${round.compile.codes.join(', ') || round.compile.outcome}); rerecord steps: ${round.compile.steps.join(', ') || 'NONE'}`);
     if (!round.compile.steps.length) { verdict = { status: 'stuck', why: 'compile refused with no rerecord action', blockers: round.compile.blockers.slice(0, 10) }; break; }
+    if (!mayRerecord(round.compile.steps[0])) { verdict = { status: 'stuck-repin', why: `${round.compile.steps[0]} was re-recorded twice and the store's re-pin rule refused both: its procedure does not replay clean` }; break; }
     round.rerecords.push(rerecord(k, round.compile.steps[0], `compile refusal${round.compile.steps.length > 1 ? `; also named: ${round.compile.steps.slice(1).join(', ')}` : ''}`, round.compile.missing.get(round.compile.steps[0])));
     save();
     if (args.dry) { verdict = { status: 'dry', why: 'dry run stops at the first live command' }; break; }
@@ -264,6 +280,7 @@ for (let k = 1; k <= args.maxRounds && !verdict; k++) {
   // The producer the artifact blames outranks the consumers repair lists; then flow order.
   const steps = [...new Set([...round.artifact.anchors, ...round.repair.needsRerecord])].sort((a, b) => (order.get(a) ?? 1e9) - (order.get(b) ?? 1e9));
   if (!steps.length) { verdict = { status: 'stuck', why: 'artifact failed, repair did not converge, and no step to re-record was named' }; break; }
+  if (!mayRerecord(steps[0])) { verdict = { status: 'stuck-repin', why: `${steps[0]} was re-recorded twice and the store's re-pin rule refused both: its procedure does not replay clean` }; break; }
   round.rerecords.push(rerecord(k, steps[0], `${round.repair.needsRerecord.length ? 'repair: needs-rerecord' : 'artifact failed at this step'}${steps.length > 1 ? `; also named: ${steps.slice(1).join(', ')}` : ''}`, round.artifact.missing.get(steps[0])));
   save();
 }
