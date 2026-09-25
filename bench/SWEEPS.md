@@ -403,3 +403,22 @@ no objective. One element-scoped false positive was found (fwec13) and fixed.
 - verify-round61: 2 recorded-point parity failures (R2), fixed. verify-round61c: 1 failure (the journal
   drain had no bound on a never-committing navigation), fixed in 364708a2 and passing locally; main is
   re-verified alongside round 62.
+
+## Round 62 (f508e0d): seventh confirmation, 8 apps (rd, kb stable) — 4/8 green (6/10 counting the stable pair)
+
+| round | runid | app | verified | replay model-free | compiled | green | notes |
+|---|---|---|---|---|---|---|---|
+| 62 | fwod87 | od | 6/6 ×3 | yes | pass 6/6 | **yes** | three in a row |
+| 62 | fwop16 | op | 7/7 ×3 | yes | pass 5/7+2 n/a | **yes** | first since 57; round 61's link-click rule held |
+| 62 | fwec14 | ec | 7/7 ×3 | yes | pass 5/7+2 n/a | **yes** | |
+| 62 | fwgh16 | gh | 7/7 ×3 | yes | pass 5/7+2 n/a | **yes** | |
+| 62 | fwgr74 | gr | 6/6 ×3 | no: 07-open 9/11 turns | refused (unsourced-ref) | no | a uid read off 01-open's url was threaded under its report key |
+| 62 | fwvk13 | vk | 7/7 ×3 | no: 03-set 16/34 turns | FAIL 0/7 | no | round 60's visited-url rule let another route's p1 win; plus a login refill race in the shared pre-submit check |
+| 62 | fwgt13 | gt | 7/7, 4/7, 4/7 | yes, 0 turns | pass 2/7 | no | **SILENT WRONG DATA**: coalesceControls (since 2026-08-23) folded ArrowDown ×3 into one press; keyboard picks landed on the wrong items |
+| 62 | fwsi13 | si | 7/7, 0/7, 6/7 | no: n2 73 turns | pass | no | a select2 pick committed whatever was highlighted; a cleared pre-fill detour; a record list flattened to [object Object] |
+
+Round 62 fixes (merged to main b6966d3; verify-round62 PASS: 2631 / 2852 / 199 parity): key presses never folded; journal-named
+key picks and select2 highlight picks compile to picks by name; a reported url value binds to its url part; visited url parts
+compare within their route; the pre-submit refill re-checks a replaced document; an off-record healed or positional read is not
+published; a journal-proven restore detour is dropped (`was` recorded); report records flattened. Phase C shadow rules fixed and
+keyPick added: abandonedEdit, flashCause, linkClick and pickerNetState agree on every observed case (phase D candidates).
