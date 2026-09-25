@@ -441,3 +441,33 @@ loaded is observed; origins read the step's end value; a navigation keeps its la
 
 Vision A/B (MiMo, 18 runs, vision on vs off): clean (both replays model-free and compiled pass) 3/9 with vision vs 5/9 without. No
 evidence that vision helps; within noise at n=3 per cell. Full metrics pending.
+
+## Round 64 (71d955d): final ten-app confirmation — 6/10 green
+
+| round | runid | app | verified | replay model-free | compiled | green | notes |
+|---|---|---|---|---|---|---|---|
+| 64 | fwrd93 | rd | 6/6 ×3 | yes | pass 6/6 | **yes** | |
+| 64 | fwec15 | ec | 7/7 ×3 | yes | pass 5/7+2 n/a | **yes** | |
+| 64 | fwod89 | od | 6/6 ×3 | yes | pass 6/6 | **yes** | round 63's keyPick and self-naming fixes held |
+| 64 | fwgh18 | gh | 7/7 ×3 | yes | pass 5/7+2 n/a | **yes** | round 63's given-url fix held |
+| 64 | fwsi15 | si | 7/7 ×3 | yes | pass 5/7+2 n/a | **yes** | round 63's origin and minted-fill fixes held |
+| 64 | fwgr76 | gr | 6/6 ×3 | yes | pass 4/6+2 n/a | **yes** | first fire stopped at pre-flight (stale container main); re-fired |
+| 64 | fwkb45 | kb | 6/6 ×3 | yes | refused (not compilable) | no | earlier outputs that were ordinary words ("text", "open") were slotted, including every read's `what` mode |
+| 64 | fwvk15 | vk | 7/7 ×3 | no: 18 / 15 turns | FAIL at 02-open | no | a text read's link matched 4 elements with the same text (sidebar + task rows), so it was ambiguous, and a later reference was empty |
+| 64 | fwop18 | op | 7/7, 6/7, 6/7 | yes | pass 5/7+2 n/a | no | replays reported success but omitted the "Seed:" subjects (not listed unanswered); the recording model wrote them from reads no rule links |
+| 64 | fwgt15 | gt | 7/7, 6/7, 6/7 | no: n2 61 turns; n3 0 | FAIL at 04-add | no | the label click's recorded point missed; an inline heal clicked the dropdown instead of "bug", and n3 reported success with the label missing |
+
+Round 64 fixes, pushed and NOT merged or verified (the run stopped after this round's results, as asked):
+- fix/round64-kb 071a3deb: a mode arg is never slotted; a run output is slotted only where the flow could reference it. The unit suite passes; no change in the corpus.
+- fix/round64-vk df20fe8f: a text read resolves when every match reads the same text. Replay and artifact were compared on a new fixture.
+- fix/round64-op 23f15c95: a report clause's "those/these" and "how many" count as asks, so export warns and the replay lists them unanswered.
+- Open: the fwgt15 inline heal onto the wrong element (no fix yet).
+
+Vision A/B full metrics (bench/ab-metrics.mjs, 9 runs per arm). Vision on vs off:
+- clean runs: 3/9 vs 5/9;
+- replay model turns: 226 vs 210;
+- replays failing an objective: 3 vs 0;
+- recording inner cost: $2.43 vs $1.94;
+- recording wall time: 156 vs 172 minutes.
+
+Verdict: vision does not help; keep it off by default.
