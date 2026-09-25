@@ -1,0 +1,153 @@
+{
+  "flow": "fwsi13",
+  "status": "halted",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_7cdc1f; observed admin_nav_visible_1=Admin Settings, admin_nav_visible_4=Alerts, landing_url=http://127.0.0.1:8098/, landing_page_heading=Dashboard, page_title=Dashboard :: Bench Assets, login_alert=Success: \n×\nYou have successfully logged in..",
+      "values": {
+        "admin_nav_visible_1": "Admin Settings",
+        "admin_nav_visible_4": "Alerts",
+        "landing_url": "http://127.0.0.1:8098/",
+        "landing_page_heading": "Dashboard",
+        "page_title": "Dashboard :: Bench Assets",
+        "login_alert": "Success: \n×\nYou have successfully logged in."
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "12/12",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_7cdc1f: step 2: skipped read — no element matched any known locator for target (tried 1: page.getByRole('link', { name: 'Bench Admin', exact: true }))",
+        "s_7cdc1f: step 3: skipped read — no element matched any known locator for target (tried 1: page.getByRole('link', { name: 'Users', exact: true }))"
+      ],
+      "unreported": [
+        "admin_nav_visible_2",
+        "admin_nav_visible_3"
+      ]
+    },
+    {
+      "id": "02-report",
+      "status": "success",
+      "summary": "Replayed stored procedure s_675311; observed seed_asset_tag_1=SEED-0001, seed_asset_tag_2=SEED-0002, seed_asset_tag_3=SEED-0003, table_thead_th=Name, table_thead_th_2=Model.",
+      "values": {
+        "seed_asset_tag_1": "SEED-0001",
+        "seed_asset_tag_2": "SEED-0002",
+        "seed_asset_tag_3": "SEED-0003",
+        "table_thead_th": "Name",
+        "table_thead_th_2": "Model"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "12/12",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "filter_applied"
+      ]
+    },
+    {
+      "id": "03-create",
+      "status": "blocked",
+      "summary": "The asset 'fwsi13-n2 Bench Asset' was NOT created in this run. The create-asset form at /hardware/create was fully and correctly filled (name, model 'Bench Laptop Model' chosen from the searchable dropdown, status 'Ready to Deploy', default location 'Bench Office' chosen from the searchable dropdown, purchase date 2026-03-15), but the Asset Tag field left empty for auto-assignment was rejected on Save with an inline \"This field is required\" validation alert — Snipe-IT did not auto-assign a tag from the empty field, so the submit never went through. Investigating the form's \"new!\" button: clicking it adds a second tag row (\"Asset Tag 2\") pre-filled with the auto-increment prefix \"BA-\" (the next auto-assigned tag would be BA-something), but the first row remains empty and required; deleting either row always removes the \"BA-\" row, never the empty required one, and I could not make the auto-assigned row the only/first row before hitting the turn cap. The form currently has asset_tags[1]=\"\" (invalid, required) and asset_tags[2]=\"BA-\" (the auto-assigned value). No confirmation message, no assigned asset tag, and no asset detail page exist to report because the asset was never saved. Recommendation: the model \"Bench Laptop Model\" exists; the block is purely that this Snipe-IT build requires a non-empty asset tag on this form, and the auto-assign path is the \"new!\" button's pre-filled \"BA-\" row — an operator should fill/keep that row and submit.",
+      "values": {
+        "asset_name_field_value": "fwsi13-n2 Bench Asset",
+        "purchase_date_field_value": "2026-03-15",
+        "model_selected": "Bench Laptop Model",
+        "status_selected": "Ready to Deploy",
+        "default_location_selected": "Bench Office",
+        "asset_tags_row1_value": "",
+        "asset_tags_row2_autoprefix_value": "BA-",
+        "save_validation_alert": "This field is required (on Asset Tag row 1)",
+        "final_url": "http://127.0.0.1:8098/hardware/create",
+        "assigned_asset_tag": "NOT ASSIGNED — asset was not created"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_40b664 stopped at step 8 — after step 8 the page did not show \"- combobox \\\"×{{*}} - {{*}} Bench Laptop Model\\\"\" / \"- textbox \\\"{{*}} - {{*}} Bench Laptop Model\\\"\" as it did when recorded — the step ran but probably acted on the wrong element",
+      "replayed": "7/20",
+      "repaired": false,
+      "turns": 73
+    }
+  ],
+  "passed": 2,
+  "total": 5,
+  "repinned": 0,
+  "drift": 3,
+  "driftTickets": [
+    {
+      "flow": "fwsi13",
+      "step": "01-open",
+      "skill": "s_7cdc1f",
+      "atStep": "2",
+      "key": "target",
+      "similarity": 0.993,
+      "missedLocator": "page.getByRole('link', { name: 'Bench Admin', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8098/",
+      "pageUrl": "http://127.0.0.1:8098/"
+    },
+    {
+      "flow": "fwsi13",
+      "step": "01-open",
+      "skill": "s_7cdc1f",
+      "atStep": "3",
+      "key": "target",
+      "similarity": 0.993,
+      "missedLocator": "page.getByRole('link', { name: 'Users', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8098/",
+      "pageUrl": "http://127.0.0.1:8098/"
+    },
+    {
+      "flow": "fwsi13",
+      "step": "03-create",
+      "skill": "s_40b664",
+      "similarity": 1.001,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_40b664 stopped at step 8 — after step 8 the page did not show \"- combobox \\\"×{{*}} - {{*}} Bench Laptop Model\\\"\" / \"- textbox \\\"{{*}} - {{*}} Bench Laptop Model\\\"\" as it did when recorded — the step ran but probably acted on the wrong element",
+      "reason": "after step 8 the page did not show \"- combobox \\\"×{{*}} - {{*}} Bench Laptop Model\\\"\" / \"- textbox \\\"{{*}} - {{*}} Bench Laptop Model\\\"\" as it did when recorded — the step ran but probably acted on the wrong element",
+      "pageUrlPattern": "http://127.0.0.1:8098/hardware/create",
+      "pageUrl": "http://127.0.0.1:8098/hardware/create"
+    }
+  ],
+  "wallMs": 215440,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 1147003,
+    "completionTokens": 14400,
+    "cachedTokens": 1104704
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 433373,
+      "completionTokens": 9992,
+      "cachedTokens": 407808
+    },
+    "z-ai/glm-5.3": {
+      "promptTokens": 713630,
+      "completionTokens": 4408,
+      "cachedTokens": 696896
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ],
+    "z-ai/glm-5.3": [
+      "Wafer"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "halted",
+  "nextActions": []
+}

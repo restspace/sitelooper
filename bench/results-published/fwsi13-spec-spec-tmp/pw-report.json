@@ -1,0 +1,177 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwsi13-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwsi13-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwsi13-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/bench/results/fwsi13-spec-spec-tmp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwsi13-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwsi13.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwsi13-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwsi13.spec.ts",
+      "file": "fwsi13.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwsi13",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 91346,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper skip] 01-open s_7cdc1f/2 target: read target not found — value left empty\n"
+                    },
+                    {
+                      "text": "[sitelooper skip] 01-open s_7cdc1f/3 target: read target not found — value left empty\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 01-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-report\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 03-create: report value default_location is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-create\n"
+                    },
+                    {
+                      "text": "[sitelooper skip] 04-set s_73b74c/10 target: read target not found — value left empty\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-set\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 05-open\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-open: Open http://127.0.0.1:8098/ and sign in with username 'admin' and password '{{env:APP_PASSWORD}}' (type the password exactly as that literal text). Verify you reach the dashboard/admin area and report what page you land on.",
+                      "duration": 16025
+                    },
+                    {
+                      "title": "02-report: Go to Assets > Asset List (the assets index at /hardware). Filter/search the asset list so that only assets whose name starts with 'Seed:' are shown (use the name search filter). Then report, for every asset shown, its asset tag and its name exactly as displayed in the table. List them all.",
+                      "duration": 6677
+                    },
+                    {
+                      "title": "03-create: Create a new asset in Snipe-IT: go to Assets > 'Add Asset' (the create-asset form at /hardware/create). Fill in the asset name exactly '{{runid}} Bench Asset'. Set the {{02-report.table_thead_th_2}} to 'Bench Laptop {{02-report.table_thead_th_2}}' by choosing that option from the searchable dropdown (actually select the option, do not just type it). Set the Status to 'Ready to Deploy' by choosing it from the status dropdown. Set the Default Location to 'Bench Office' by choosing that option from the searchable dropdown. Set the Purchase Date to 2026-03-15. Leave the asset tag field empty so Snipe-IT auto-assigns one. Fill any other required fields with sensible existing values (do not create new models/locations/users). Save the asset. Then report the confirmation message shown and the asset tag Snipe-IT assigned, plus the values shown on the asset's detail page for name, model, status, default location and purchase date.",
+                      "duration": 50384
+                    },
+                    {
+                      "title": "04-set: On the asset detail page for asset '{{runid}} Bench Asset' (asset tag {{03-create.assigned_asset_tag}}, at /hardware/{{03-create.url.p1}}), perform a Check Out: click the 'Check Out' action for this asset. In the checkout form, set the 'Checked Out To' user to 'Bench Assignee' by actually selecting that option from the searchable dropdown (do not just type it). Add a note whose text includes the runid '{{runid}}' (for example: 'Checked out for bench run {{runid}}'). Fill any other required fields with sensible existing values (do not create new users/locations). Submit the checkout. Then verify on the asset's detail page that it is now checked out to 'Bench Assignee' and report the status label, the assignee shown, and the note text displayed.",
+                      "duration": 16029
+                    },
+                    {
+                      "title": "05-open: Open the asset detail page for the asset named '{{runid}} Bench Asset' (asset tag {{03-create.assigned_asset_tag}}, at /hardware/{{03-create.url.p1}}). Read the live page and report exactly: (1) the asset tag as displayed, (2) the asset name, (3) the model, (4) the status label, (5) the default location, (6) the purchase date, (7) the user it is checked out to, and (8) the note text on the checkout entry in the History tab. Do not change anything — read only.",
+                      "duration": 1434
+                    }
+                  ],
+                  "startTime": "2026-09-25T02:15:01.129Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": ""
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "f88d4bbac757803b251c-ef520bf8904bd2b37966",
+          "file": "fwsi13.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-25T02:14:59.079Z",
+    "duration": 93615.262,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}
