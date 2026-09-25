@@ -94,6 +94,10 @@ export function isDataShaped(value: string): boolean {
   const folded = foldValue(value);
   if (!folded || folded.length > READ_BACK_MAX_VALUE_CHARS) return false;
   if (VERDICTS.has(folded)) return false;
+  // A verdict with commentary is still a verdict: fwrd94 07-set held for
+  // `errors_shown` = "none — the action succeeded with no refusal", a wasted turn.
+  const head = splitCommentary(value)?.head;
+  if (head && VERDICTS.has(foldValue(head))) return false;
   return /[\p{L}\p{N}]/u.test(folded);
 }
 

@@ -284,17 +284,24 @@ export interface ObservedRead {
 export function promoteLabelledReads(report: Report, reads: ObservedRead[]): string[] {
   if (report.status !== 'success') return [];
   const values: Record<string, string | number | boolean | null> = { ...(report.evidence?.values ?? {}) };
-  const present = new Set(Object.values(values).map((v) => String(v).trim()));
   const added: string[] = [];
   for (const read of reads) {
     if (!read.label || read.values.length !== 1) continue;
     const v = read.values[0].trim();
-    if (!v || v.length > VALUE_CHARS || present.has(v)) continue;
+    // A labelled read is its own element, so a value another key already holds
+    // is NOT a reason to drop it: two labelled reads with equal text are two
+    // facts about two elements (odoo fwod90 03-open read untaxed_amount, equal
+    // to line_subtotal on a one-line order; unpromoted, the read fell to
+    // compile's value matching, was credited to line_subtotal, and the asked
+    // key had "nothing reads it"). Compile binds a labelled read by its label
+    // before it matches by value (readLabel), so both keys get their own read.
+    // Only a label that names an existing key is skipped: same fact, same name.
+    if (!v || v.length > VALUE_CHARS) continue;
+    if (read.label in values && String(values[read.label]).trim() === v) continue;
     // The model vouched for this value by labelling it, so an unusable label
     // falls back rather than dropping the value (same stance as addEvidenceValue).
     const name = uniqueName(slug(read.label) ?? 'value', values);
     values[name] = v;
-    present.add(v);
     added.push(name);
   }
   if (added.length) (report.evidence ??= {}).values = values;

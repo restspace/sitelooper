@@ -443,20 +443,25 @@ describe('promoteLabelledReads', () => {
     expect(report.evidence?.values).toEqual({ order_reference: 'S00021' });
   });
 
-  it('ignores bulk reads, present values, and reads without labels', () => {
+  it('ignores bulk reads and reads without labels, and keeps a labelled read whose text another key holds', () => {
     const report: Report = {
       status: 'success',
       summary: 'Read the table.',
       evidence: { values: { total: '85.00' } },
     };
+    // A labelled read of the SAME text under another name is another element
+    // (fwod90: untaxed_amount beside line_subtotal on a one-line order); it is
+    // promoted, and compile binds it by its label. A label already reported
+    // with that value is the same fact and is not doubled.
     expect(
       promoteLabelledReads(report, [
         { target: 'td', values: ['a', 'b'], label: 'rows' },
         { target: '@e5', values: ['85.00'], label: 'unit_price' },
+        { target: '@e7', values: ['85.00'], label: 'total' },
         { target: '@e6', values: ['SO-99'] },
       ]),
-    ).toEqual([]);
-    expect(report.evidence?.values).toEqual({ total: '85.00' });
+    ).toEqual(['unit_price']);
+    expect(report.evidence?.values).toEqual({ total: '85.00', unit_price: '85.00' });
   });
 
   it('an unusable label falls back rather than dropping the value', () => {

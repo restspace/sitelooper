@@ -40,6 +40,10 @@ describe('isDataShaped', () => {
     expect(isDataShaped('0')).toBe(false);
     expect(isDataShaped('   ')).toBe(false);
     expect(isDataShaped('x'.repeat(81))).toBe(false);
+    // fwrd94 07-set: a verdict with commentary is a verdict.
+    expect(isDataShaped('none — the action succeeded with no refusal')).toBe(false);
+    expect(isDataShaped('No (the button was disabled)')).toBe(false);
+    expect(isDataShaped('Ready to Deploy (badge: Deployed)')).toBe(true);
   });
 });
 
