@@ -55,6 +55,25 @@ function ownEvents(step: RecordedStep): JournalEvent[] {
   return [...(step.journal?.ev ?? []), ...(step.journal?.gap?.ev ?? [])].filter((e) => e.c?.[0] === 'in' && e.c[1] === w && e.also === undefined);
 }
 
+/**
+ * The control a pick key ACTIVATED, from its own journal window: the element
+ * its click landed on (`hit`, type `c`) when that element is no option of a
+ * picker — a button, say. Then the key pressed that control, and any option's
+ * state that changed in the window is the control's consequence, not a pick.
+ * odoo fwod88-n1 08-open seq 230: Enter on the cancel wizard's own button
+ * (`hit c button "Cancel"`); the order became Cancelled and the status bar's
+ * radio "Sales Order" lost aria-checked. Read as a pick, compile replaced the
+ * press with a click on that radio, which n2 found disabled. gitea fwgt13's
+ * Enters click the option itself (`hit c link "bug"`), and stay picks.
+ */
+export function activatedControl(step: RecordedStep): string | null {
+  const key = keyOf(step);
+  if (!key || !PICK_KEYS.has(key) || !step.journal) return null;
+  const clicked = ownEvents(step).filter((e) => e.k === 'hit' && e.ty === 'c');
+  const control = clicked.find((e) => !OPTION_ROLE.test(String(e.d ?? '')));
+  return control ? String(control.d) : null;
+}
+
 /** The key a press step pressed (`press` with `key`, or `text` for a single key). */
 export function keyOf(step: RecordedStep): string | null {
   if (step.tool !== 'press') return null;
@@ -78,6 +97,8 @@ export function pickedByKey(step: RecordedStep): KeyPick | null {
   const own = ownEvents(step).filter((e) => e.k === 'state' && OPTION_ROLE.test(String(e.d ?? '')));
   const pick = PICK_KEYS.has(key);
   if (!pick && !MOVE_KEYS.has(key)) return null;
+  // A key that pressed a control picked nothing (activatedControl).
+  if (pick && activatedControl(step)) return null;
   if (pick) {
     const toggled = own.filter((e) => typeof e.on === 'boolean' && e.a !== 'aria-expanded');
     const names = new Set(toggled.map((e) => nameOf(e.d)));
@@ -114,7 +135,7 @@ export function keyPicks(steps: readonly RecordedStep[]): Map<number, KeyPick> {
       if (p) highlighted = p;
       continue;
     }
-    if (!PICK_KEYS.has(key)) {
+    if (!PICK_KEYS.has(key) || activatedControl(s)) {
       highlighted = null;
       continue;
     }
