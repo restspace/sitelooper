@@ -649,6 +649,28 @@ export function buildFlow(
       // replay cannot fill goes to recovery; there is no literal fallback,
       // because agreement across runs does not show the app owns a value
       // (see `RunSpecific` and notes/PLAN-evidence-over-shape.md).
+      //
+      // ...but reference it WHERE A REPLAY CAN RE-OBSERVE IT. A value that is
+      // a part of the url this step ENDED on, and that no read of the step
+      // returned, was read off that url: its source is the url position, not
+      // the report. grafana fwgr74 01-open ended on
+      // `/d/bench-service-health/service-health` and reported
+      // `dashboard_uid_from_url: "bench-service-health"`; the slug was not
+      // minted as `url.p1` above (it does not look like an id), so 07-open was
+      // threaded through the report key, which no tier-A replay republishes —
+      // both replays fell to the model and the compile refused. As
+      // `{{01-open.url.p1}}` it is a consumed url part, which both runners
+      // publish from the step's end url whatever it looks like (urlOutputs'
+      // `wanted`, the artifact's urlPartWhen) — the linkMintedParts rule, for a
+      // part the step's report named rather than its own mutation.
+      const atUrl = g.endUrl ? urlParts(g.endUrl).find((p) => p.value === value) : undefined;
+      const readBack = g.steps.some((s) => (s.tool === 'read' || s.tool === 'read_all') && typeof s.result === 'string' && s.result.includes(value));
+      if (atUrl && !readBack && !produced.some((p) => p.stepId === id && p.output === `url.${atUrl.label}`)) {
+        const urlOutput = `url.${atUrl.label}`;
+        produced.push({ stepId: id, output: urlOutput, value });
+        if (!(urlOutput in step.recorded)) step.recorded = { ...step.recorded, [urlOutput]: value };
+        continue;
+      }
       produced.push({ stepId: id, output, value });
       // An id can be minted where no url ever carries it: an app that saves
       // over its own API answers with JSON, and the run reads that answer
