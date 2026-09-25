@@ -1,0 +1,90 @@
+
+[sweep] run 1/3: fwec14-n1 (store: /home/user/sitelooper/bench/results/fwec14-skills)
+[harness] espocrm: defaulting APP_URL
+[harness] espocrm: defaulting APP_EMAIL
+[harness] espocrm: defaulting APP_PASSWORD
+[reset] espocrm: no leftover bench opportunities
+[harness] espocrm responded 200 at http://127.0.0.1:8097/
+stopped: fwec14-n1
+  flow "fwec14" saved: 5 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwec14.json
+  warning: note: 02-find no longer publishes matching_count, pager — no replay reads them from the page and the recording showed no line to read
+  warning: note: 03-create no longer publishes currency, amount_displayed — no replay reads them from the page and the recording showed no line to read
+  warning: note: 04-edit no longer publishes stream_post_author, stream_post_input_placeholder, assigned_user_after_cancel — no replay reads them from the page and the recording showed no line to read
+  warning: warning: 05-verify's instruction asks to report amount_with_currency, and no replay can publish it: nothing in its procedure reads it from the page, so export dropped it — re-record the step so the value is read, not only reported
+  warning: note: 05-verify no longer publishes stream_contains_runid — no replay reads it from the page and the recording showed no line to read
+  warning: warning: 227 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[0].instruction: "admin" (output) in "Sign in to EspoCRM at http://127.0.0.1:8097/ with username admin and password {{env:APP_PASSWORD}} (type the password text exactly as given). After signing in, "
+  flow.steps[2].instruction: "Bench Assignee" (output) in "Create a new Opportunity in EspoCRM with these exact values: Name = '{{runid}} Bench Opportunity'; Account = the account named 'Bench Account' (this is a link f"
+  flow.steps[2].instruction: "Bench Account" (output) in "Create a new Opportunity in EspoCRM with these exact values: Name = '{{runid}} Bench Opportunity'; Account = the account named 'Bench Account' (this is a link f"
+  flow.steps[2].instruction: "description" (output) in "Create a new Opportunity in EspoCRM with these exact values: Name = '{{runid}} Bench Opportunity'; Account = the account named 'Bench Account' (this is a link f"
+  flow.steps[2].instruction: "Negotiation" (output) in "Create a new Opportunity in EspoCRM with these exact values: Name = '{{runid}} Bench Opportunity'; Account = the account named 'Bench Account' (this is a link f"
+arm=sitelooper model=z-ai/glm-5.3 runid=fwec14-n1 stop=completed
+turns=7 wall=289.8s
+commands=6 cmdTime=272.6s cmdBytes=7669 timeouts=0
+orchestrator in=14576 cw=0 cr=11584 out=1817
+inner prompt=1359241 cached=1259136 completion=16503
+spend=$0.0603 maxUsd=3
+learn: A_n=0 replayed=0/5 full=0 repaired=0 compiled=5 variants=0
+-> /home/user/sitelooper/bench/results/fwec14-n1-sitelooper-result.json
+
+fwec14-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: PASS — id=6ab5d65d777ffee1e, account=Bench Account, description includes runid=true
+  obj 3: PASS — stage=Negotiation
+  obj 4: PASS — amount=12500 USD, closeDate=2026-12-31
+  obj 5: PASS — assignedUser=Bench Assignee
+  obj 6: PASS — 1 post(s), 1 carrying the runid
+  obj 7: PASS — record id 6ab5d65d777ffee1e reported
+
+[sweep] run 2/3: fwec14-n2 (replay flow fwec14, no orchestrator)
+[reset] espocrm: deleted 1 leftover bench opportunit(ies)
+
+fwec14-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: PASS — id=6ab5d6eb315321d74, account=Bench Account, description includes runid=true
+  obj 3: PASS — stage=Negotiation
+  obj 4: PASS — amount=12500 USD, closeDate=2026-12-31
+  obj 5: PASS — assignedUser=Bench Assignee
+  obj 6: PASS — 1 post(s), 1 carrying the runid
+  obj 7: PASS — record id 6ab5d6eb315321d74 reported
+
+[sweep] run 3/3: fwec14-n3 (replay flow fwec14, no orchestrator)
+[reset] espocrm: deleted 1 leftover bench opportunit(ies)
+
+fwec14-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: PASS — id=6ab5d71830c932d38, account=Bench Account, description includes runid=true
+  obj 3: PASS — stage=Negotiation
+  obj 4: PASS — amount=12500 USD, closeDate=2026-12-31
+  obj 5: PASS — assignedUser=Bench Assignee
+  obj 6: PASS — 1 post(s), 1 carrying the runid
+  obj 7: PASS — record id 6ab5d71830c932d38 reported
+
+Learning sweep fwec14 (K=3)
+┌─────────┬───┬─────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid       │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼─────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwec14-n1' │ '7/7'    │ 'completed' │ 7     │ 6    │ 0.0603    │ 0   │ '0/5'        │ 290    │
+│ 1       │ 2 │ 'fwec14-n2' │ '7/7'    │ 'success'   │ 0     │ 5    │ 0         │ 1   │ '5/5 (flow)' │ 38     │
+│ 2       │ 3 │ 'fwec14-n3' │ '7/7'    │ 'success'   │ 0     │ 5    │ 0         │ 1   │ '5/5 (flow)' │ 38     │
+└─────────┴───┴─────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:8097
+  s_1aa581  validated   16 steps  3/3 (100%)
+           Go to the Opportunities list. Find all opportunities whose Name starts with 'Seed:' (use the list search/filte…
+  s_37a88d  validated    9 steps  3/3 (100%)
+           Create a new Opportunity in EspoCRM with these exact values: Name = '{{v2}}'; Account = the account named 'Ben…
+  s_6153f2  validated   18 steps  3/3 (100%)
+           Verify the opportunity '{{v1}}' at {{v3}} on its read-only detail page. Report exactly as shown: (1) the recor…
+  s_9326bf  validated    1 steps  3/3 (100%)
+           Go to the Opportunities list. Find all opportunities whose Name starts with 'Seed:' (use the list search/filte…
+  s_b907d1  validated   28 steps  3/3 (100%)
+           Create a new Opportunity in EspoCRM with these exact values: Name = '{{v2}}'; Account = the account named 'Ben…
+  s_bf734d  validated    1 steps  3/3 (100%)
+           Create a new Opportunity in EspoCRM with these exact values: Name = '{{v2}}'; Account = the account named 'Ben…
+  s_e363db  validated   11 steps  3/3 (100%)
+           Sign in to EspoCRM at http://127.0.0.1:8097/ with username admin and password {{v1}} (type the password text e…
+  s_ebcb00  validated   11 steps  3/3 (100%)
+           On the opportunity '{{v1}}' detail page ({{v3}}), if the page is currently in edit mode, cancel/close the edit…
+store: /home/user/sitelooper/bench/results/fwec14-skills
+
+summary: /home/user/sitelooper/bench/results/fwec14-sweep.json
