@@ -1,0 +1,280 @@
+{
+  "tag": "fwsi14-cv",
+  "from": "fwsi14",
+  "target": "snipeit",
+  "maxRounds": 4,
+  "rerecordRuns": 2,
+  "rounds": [
+    {
+      "k": 1,
+      "compile": {
+        "outcome": "compiled",
+        "refused": false,
+        "codes": [],
+        "missingOutputs": {},
+        "blockers": [],
+        "steps": [],
+        "flowFile": "/home/user/sitelooper/bench/results/fwsi14-cv-c1-compile/fwsi14-cv.flow.ts",
+        "missing": {}
+      },
+      "rerecords": [
+        {
+          "step": "02-create",
+          "why": "repair: needs-rerecord; also named: 03-open",
+          "ok": false,
+          "pinned": null,
+          "runs": [
+            {
+              "status": "blocked",
+              "tier": null,
+              "turns": 0,
+              "repinned": null
+            },
+            {
+              "status": "blocked",
+              "tier": null,
+              "turns": 0,
+              "repinned": null
+            }
+          ],
+          "diagnostics": [
+            "needs-rerecord: 02-create has no procedure after re-recording — nothing was pinned to it"
+          ],
+          "exit": 1,
+          "dry": false
+        }
+      ],
+      "artifact": {
+        "tag": "fwsi14-cv-c1",
+        "exitCode": 1,
+        "stats": {
+          "total": 1,
+          "passed": 0,
+          "failed": 1,
+          "skipped": 0
+        },
+        "driftCount": 1,
+        "verified": "5/5",
+        "failLines": [],
+        "errors": [
+          "Error: after 03-open s_911eab/1 expected url http://127.0.0.1:8098/hardware/4/edit but browser is at http://127.0.0.1:8098/hardware/4#history"
+        ],
+        "anchors": [
+          "03-open",
+          "02-create"
+        ],
+        "missing": {},
+        "missingOutputs": {},
+        "passed": false,
+        "dry": false
+      },
+      "repair": {
+        "exit": 3,
+        "outcome": "not-converged",
+        "refused": null,
+        "converged": false,
+        "specCheck": null,
+        "runs": [
+          {
+            "label": "run 1",
+            "passed": 3,
+            "total": 3,
+            "status": "success",
+            "tickets": 2
+          },
+          {
+            "label": "converge 1/1",
+            "passed": 3,
+            "total": 3,
+            "status": "success",
+            "tickets": 1
+          }
+        ],
+        "needsRerecord": [
+          "03-open"
+        ],
+        "changes": [
+          "01-signin: candidate promoted: page.locator('#assetsListingTable tr', { hasText: '{{v4}} Reception Laptop' }).locator('td:nth-of-type(2)') now primary (was #1) — s_3992cb step 10 target",
+          "01-signin: candidate promoted: page.locator('#assetsListingTable tr', { hasText: '{{v4}} Reception Laptop' }).locator('td:nth-of-type(3)') now primary (was #1) — s_3992cb step 11 target",
+          "01-signin: candidate promoted: page.locator('#assetsListingTable tr', { hasText: '{{v4}} Training Laptop' }).locator('td:nth-of-type(2)') now primary (was #1) — s_3992cb step 12 target",
+          "01-signin: candidate promoted: page.locator('#assetsListingTable tr', { hasText: '{{v4}} Training Laptop' }).locator('td:nth-of-type(3)') now primary (was #1) — s_3992cb step 13 target",
+          "01-signin: candidate promoted: page.locator('#assetsListingTable tr', { hasText: '{{v4}} Spare Laptop' }).locator('td:nth-of-type(2)') now primary (was #1) — s_3992cb step 14 target",
+          "01-signin: candidate promoted: page.locator('#assetsListingTable tr', { hasText: '{{v4}} Spare Laptop' }).locator('td:nth-of-type(3)') now primary (was #1) — s_3992cb step 15 target",
+          "02-create: candidate promoted: page.locator('#select2-rtd_location_id_location_select-container') now primary (was #3) — s_b54fd2 step 9 target",
+          "02-create: candidate promoted: page.locator('#assetsListingTable tr', { hasText: '{{v2}}' }).locator('td:nth-of-type(13) > a') now primary (was #1) — s_572316 step 4 target",
+          "02-create: candidate promoted: page.locator('#select2-assigned_user_select-results li.select2-results__option', { hasText: 'Bench Assignee (bench-assignee)' }) now primary (was #1) — s_dc05e2 step 2 target",
+          "02-create: candidate promoted: page.locator('#assetsListingTable tr', { hasText: 'Bench Assignee (bench-assignee)' }).locator('td:nth-of-type(2)') now primary (was #1) — s_044c1e step 1 target",
+          "02-create: candidate promoted: page.locator('#assetsListingTable tr', { hasText: 'Bench Assignee (bench-assignee)' }).locator('td:nth-of-type(3) > span > a') now primary (was #1) — s_044c1e step 2 target",
+          "03-open: candidate promoted: page.locator('.col-md-3') now primary (was #1) — s_c53d15 step 2 target"
+        ],
+        "repaired": "/home/user/sitelooper/bench/results/fwsi14-cv-c1-compile/fwsi14-cv.flow.ts",
+        "dry": false
+      }
+    },
+    {
+      "k": 2,
+      "compile": {
+        "outcome": "blocked",
+        "refused": true,
+        "codes": [
+          "unsourced-ref@03-open"
+        ],
+        "missingOutputs": {
+          "02-create": [
+            "asset_tag"
+          ]
+        },
+        "blockers": [
+          "1 step(s) have no converged procedure: 02-create",
+          "TODO: no converged procedure for \"In Snipe-IT, create a new asset named '{{runid}} Bench Asset', model 'Bench Laptop Model' (choose from searchable dropdown), status label 'Ready to Deploy', default location 'Bench Office', purchase d…\""
+        ],
+        "steps": [
+          "02-create"
+        ],
+        "flowFile": "/home/user/sitelooper/bench/results/fwsi14-cv-c2-compile/fwsi14-cv.flow.ts",
+        "missing": {}
+      },
+      "rerecords": [
+        {
+          "step": "02-create",
+          "why": "compile refusal",
+          "ok": false,
+          "pinned": null,
+          "runs": [
+            {
+              "status": "blocked",
+              "tier": null,
+              "turns": 0,
+              "repinned": null
+            },
+            {
+              "status": "blocked",
+              "tier": null,
+              "turns": 0,
+              "repinned": null
+            }
+          ],
+          "diagnostics": [
+            "needs-rerecord: 02-create has no procedure after re-recording — nothing was pinned to it"
+          ],
+          "exit": 1,
+          "dry": false
+        }
+      ],
+      "artifact": null,
+      "repair": null
+    },
+    {
+      "k": 3,
+      "compile": {
+        "outcome": "blocked",
+        "refused": true,
+        "codes": [
+          "unsourced-ref@03-open"
+        ],
+        "missingOutputs": {
+          "02-create": [
+            "asset_tag"
+          ]
+        },
+        "blockers": [
+          "1 step(s) have no converged procedure: 02-create",
+          "TODO: no converged procedure for \"In Snipe-IT, create a new asset named '{{runid}} Bench Asset', model 'Bench Laptop Model' (choose from searchable dropdown), status label 'Ready to Deploy', default location 'Bench Office', purchase d…\""
+        ],
+        "steps": [
+          "02-create"
+        ],
+        "flowFile": "/home/user/sitelooper/bench/results/fwsi14-cv-c3-compile/fwsi14-cv.flow.ts",
+        "missing": {}
+      },
+      "rerecords": [
+        {
+          "step": "02-create",
+          "why": "compile refusal",
+          "ok": false,
+          "pinned": null,
+          "runs": [
+            {
+              "status": "blocked",
+              "tier": null,
+              "turns": 0,
+              "repinned": null
+            },
+            {
+              "status": "blocked",
+              "tier": null,
+              "turns": 0,
+              "repinned": null
+            }
+          ],
+          "diagnostics": [
+            "needs-rerecord: 02-create has no procedure after re-recording — nothing was pinned to it"
+          ],
+          "exit": 1,
+          "dry": false
+        }
+      ],
+      "artifact": null,
+      "repair": null
+    },
+    {
+      "k": 4,
+      "compile": {
+        "outcome": "blocked",
+        "refused": true,
+        "codes": [
+          "unsourced-ref@03-open"
+        ],
+        "missingOutputs": {
+          "02-create": [
+            "asset_tag"
+          ]
+        },
+        "blockers": [
+          "1 step(s) have no converged procedure: 02-create",
+          "TODO: no converged procedure for \"In Snipe-IT, create a new asset named '{{runid}} Bench Asset', model 'Bench Laptop Model' (choose from searchable dropdown), status label 'Ready to Deploy', default location 'Bench Office', purchase d…\""
+        ],
+        "steps": [
+          "02-create"
+        ],
+        "flowFile": "/home/user/sitelooper/bench/results/fwsi14-cv-c4-compile/fwsi14-cv.flow.ts",
+        "missing": {}
+      },
+      "rerecords": [
+        {
+          "step": "02-create",
+          "why": "compile refusal",
+          "ok": false,
+          "pinned": null,
+          "runs": [
+            {
+              "status": "blocked",
+              "tier": null,
+              "turns": 0,
+              "repinned": null
+            },
+            {
+              "status": "blocked",
+              "tier": null,
+              "turns": 0,
+              "repinned": null
+            }
+          ],
+          "diagnostics": [
+            "needs-rerecord: 02-create has no procedure after re-recording — nothing was pinned to it"
+          ],
+          "exit": 1,
+          "dry": false
+        }
+      ],
+      "artifact": null,
+      "repair": null
+    }
+  ],
+  "verdict": {
+    "status": "exhausted",
+    "why": "4 round(s) without a passing artifact"
+  },
+  "flowRuns": 10,
+  "modelTurns": 0
+}
