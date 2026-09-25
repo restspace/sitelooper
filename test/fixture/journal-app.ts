@@ -2,7 +2,7 @@
  * A small app for the recorder-journal browser tests: one page per attribution
  * rule, served over HTTP (the journal listens to real requests).
  *
- *  /                  a form: Save POSTs the title and answers a minted id;
+ *  /                  a form (a Tag the app pre-fills): Save POSTs the title and answers a minted id;
  *                     Nothing does nothing; Slow asks a 2.5 s endpoint
  *  /?poll=1           the same, polling /api/poll every 150 ms, with a ticking clock
  *  /search            a search box that fetches (and pushes the url) 400 ms after typing stops
@@ -19,6 +19,7 @@ import type { AddressInfo } from 'node:net';
 const FORM = (poll: boolean) => `<!doctype html><html><head><title>Journal form</title></head><body>
 <h1 id="clock">00:00:00</h1>
 <label for="title">Title</label><input id="title">
+<label for="tag">Tag</label><input id="tag" value="BA-00004">
 <button id="save" type="button">Save</button>
 <button id="noop" type="button">Nothing</button>
 <button id="slow" type="button">Slow</button>

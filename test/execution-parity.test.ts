@@ -48,6 +48,7 @@ import { flattenContainedComposite, flattenProvenComposite, planContainedParts, 
 import { carryOpener, compileSkills } from '../src/skills/compile.js';
 import { FIXTURE_TOTP_SEED, createFixtureServer, type FixtureServer } from './fixture/server.js';
 import { hotpCode, totpSeed } from '../src/execution/totp.js';
+import { valueHash } from '../src/daemon/journal-attribute.js';
 
 const enabled = process.env.BP_PARITY_TESTS === '1';
 const d = enabled ? describe : describe.skip;
@@ -4104,6 +4105,75 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
         expect(run.replayLog, url).toEqual(['commit:model:Bench Laptops - Bench Manufacturer Bench Laptop Model', 'commit:save:asset']);
         expect(run.emittedLog, url).toEqual(run.replayLog);
       }
+    }, 240_000);
+  });
+
+  describe('a pre-filled field cleared and restored around a failed save compiles away on the journal\'s proof (round 62, fwsi13 03-create)', () => {
+    /**
+     * snipeit fwsi13-n1 03-create cleared the Asset Tag the app pre-fills,
+     * Save failed ("This field is required"), and the model filled the tag it
+     * had cleared back and saved. The journal proves the restore (the clear's
+     * `was` hash is the restoring fill's `h`), the failed save wrote nothing
+     * and the later save's POST carried the restored value. Compiled, both
+     * runners leave the app's pre-filled tag alone and save it — a tag that
+     * differs on every load, as Snipe-IT's next tag does; the recorded
+     * procedure would clear it and save the recording's literal.
+     */
+    const t0 = 1_790_000_000_000;
+    const at = (w: number, dt: number) => ({ t: t0 + w * 1000 + dt, c: ['in', w, 'gesture'] as ['in', number, string] });
+    const box = { kind: 'role', role: 'textbox', name: 'Asset Tag' } as const;
+    const save = { kind: 'role', role: 'button', name: 'Save' } as const;
+    const compiled = (url: string): SkillStep[] => {
+      const entries: RecordedEntry[] = [
+        { k: 'instruction', text: 'create an asset and save it', url },
+        { k: 'step', tool: 'goto', args: { url }, locators: {}, diff: { url, alerts: [], added: [], dialect: 2 } },
+        {
+          k: 'step',
+          tool: 'fill',
+          args: { target: '@e1', value: '' },
+          locators: { target: { expr: 'x', verified: true, raw: '@e1', chain: [box, { kind: 'css', selector: '#tag' }] } },
+          diff: { url, alerts: [], added: ['- textbox "Asset Tag"'], removed: ['- textbox "Asset Tag": BA-00004'], dialect: 2 },
+          journal: { w: 1, ev: [{ ...at(1, 10), k: 'val', f: 'textbox "Asset Tag"', len: 0, h: valueHash(''), was: valueHash('BA-00004') }] },
+        },
+        {
+          k: 'step',
+          tool: 'click',
+          args: { target: '@e2' },
+          locators: { target: { expr: 'x', verified: true, raw: '@e2', chain: [save, { kind: 'css', selector: '#save' }] } },
+          diff: { url, alerts: ['This field is required'], added: ['- alert "This field is required"'], dialect: 2 },
+          journal: { w: 2, ev: [{ ...at(2, 5), k: 'foc', dir: 'in', d: 'textbox "Asset Tag"' }, { ...at(2, 6), k: 'show', d: 'alert "This field is required"' }] },
+        },
+        {
+          k: 'step',
+          tool: 'fill',
+          args: { target: '#tag', value: 'BA-00004' },
+          locators: { target: { expr: 'x', verified: true, raw: '#tag', chain: [{ kind: 'css', selector: '#tag' }, box] } },
+          diff: { url, alerts: [], added: ['- textbox "Asset Tag": BA-00004'], dialect: 2 },
+          journal: { w: 3, ev: [{ ...at(3, 10), k: 'val', f: 'textbox "Asset Tag"', len: 8, h: valueHash('BA-00004'), was: valueHash('') }] },
+        },
+        {
+          k: 'step',
+          tool: 'click',
+          args: { target: '#save' },
+          locators: { target: { expr: 'x', verified: true, raw: '#save', chain: [{ kind: 'css', selector: '#save' }, save] } },
+          diff: { url, alerts: ['Asset created'], added: ['- status "Asset created"'], dialect: 2 },
+          journal: { w: 4, ev: [{ ...at(4, 5), k: 'req', m: 'POST', e: `${origin}/commit/save/BA-00004`, rt: 'fetch', carries: [3], s: 200 }] },
+        },
+      ];
+      return compileSkills({ entries, instruction: 'create an asset and save it', report: { status: 'success', summary: 'saved' }, session: 's' }).flatMap((sk) => sk.steps);
+    };
+
+    it('both runners save the tag the app pre-filled (the recording cleared it and saved its literal)', async () => {
+      const steps = compiled(`${origin}/prefilled-tag`);
+      expect(JSON.stringify(steps.map((s) => s.args)), 'the literal tag is not in the procedure').not.toContain('BA-00004');
+      const run = await both(steps, 0);
+      expect(run.replay.ok, run.replay.reason ?? '').toBe(true);
+      expect(run.emitted.ok, run.emitted.reason ?? '').toBe(true);
+      await new Promise((r) => setTimeout(r, 300));
+      expect(run.replayLog).toHaveLength(1);
+      expect(run.replayLog[0]).toMatch(/^commit:save:BA-001\d\d$/);
+      expect(run.emittedLog).toHaveLength(1);
+      expect(run.emittedLog[0]).toMatch(/^commit:save:BA-001\d\d$/);
     }, 240_000);
   });
 

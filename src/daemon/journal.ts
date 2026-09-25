@@ -469,6 +469,8 @@ export class Journal {
         delete e.h;
         e.pw = 1;
       }
+      // What the field held before: a credential's hash is scrubbed as `h` is.
+      if (e.k === 'val' && typeof e.was === 'string' && secret.has(e.was)) delete e.was;
       if (e.k === 'val' && typeof e.h === 'string') {
         const eq = this.typedWindow(e.h);
         if (eq !== undefined) e.eq = eq;
