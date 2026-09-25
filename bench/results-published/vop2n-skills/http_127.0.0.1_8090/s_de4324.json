@@ -1,0 +1,67 @@
+{
+ "id": "s_de4324",
+ "origin": "http://127.0.0.1:8090",
+ "template": "On the OpenProject work package details page for work package #{{v1}} ('{{v2}}' in Bench Project, currently open at /projects/bench-project/work_packages/details/43), edit the following fields in place (fields become editable when clicked and save automatically, there is no page-wide Save button): (1) set the Assignee to the user named 'Bench Assignee' — this is an autocomplete field, so you must type the name and then actually select the 'Bench Assignee' option from the dropdown that appears, not just type it; (2) set the Status to 'In progress'; (3) set the Finish date to {{v4}}. Then report the values actually displayed on the page for Assignee, Status and Finish date after saving.",
+ "params": {
+  "v1": {
+   "example": "43",
+   "usedIn": [
+    1
+   ],
+   "known": true,
+   "binding": "03-create.url.p4"
+  },
+  "v2": {
+   "example": "vop2n-n3 Bench Work Package",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i3:work_package_subject"
+  },
+  "v3": {
+   "example": "vop2n-n3",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v4": {
+   "example": "2026-12-31",
+   "usedIn": []
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:id/overview"
+ },
+ "steps": [
+  {
+   "tool": "goto",
+   "args": {
+    "url": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/{{v1}}/overview"
+   },
+   "locators": {}
+  }
+ ],
+ "contract": 4,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-25T05:04:09.909Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 4
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_7e5aa5",
+  "index": 0,
+  "of": 2
+ },
+ "variantOf": "s_8a1366",
+ "provenance": {
+  "session": "vop2n-n3",
+  "instruction": "On the OpenProject work package details page for work package #43 ('vop2n-n3 Bench Work Package' in Bench Project, currently open at /projects/bench-project/work_packages/details/43), edit the following fields in place (fields become editable when clicked and save automatically, there is no page-wide Save button): (1) set the Assignee to the user named 'Bench Assignee' — this is an autocomplete field, so you must type the name and then actually select the 'Bench Assignee' option from the dropdown that appears, not just type it; (2) set the Status to 'In progress'; (3) set the Finish date to 2026-12-31. Then report the values actually displayed on the page for Assignee, Status and Finish date after saving.",
+  "model": "xiaomi/mimo-v2.6-flash",
+  "created": "2026-09-25T05:04:09.909Z"
+ },
+ "revision": 1
+}

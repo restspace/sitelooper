@@ -1,0 +1,38 @@
+{
+  "arm": "spec",
+  "runid": "vop2n-spec",
+  "target": "openproject",
+  "flow": "vop2n.json",
+  "flowName": "vop2n",
+  "skillsDir": "/home/user/sitelooper/bench/results/vop2n-skills",
+  "compiled": true,
+  "flowFile": "bench/results/vop2n-spec-spec-tmp/vop2n.flow.ts",
+  "specFile": "bench/results/vop2n-spec-spec-tmp/vop2n.spec.ts",
+  "wallMs": 43239,
+  "exitCode": 1,
+  "timedOut": false,
+  "costUsd": 0,
+  "stats": {
+    "total": 1,
+    "passed": 0,
+    "failed": 1,
+    "skipped": 0
+  },
+  "tests": [
+    {
+      "title": "vop2n",
+      "status": "unexpected",
+      "ok": false,
+      "durationMs": 39548,
+      "error": "Error: after 04-open s_8a1366/1 expected url http://127.0.0.1:8090/projects/bench-project/work_packages/details/44/overview but browser is at http://127.0.0.1:8090/projects/bench-project/work_packages/details/38/overview",
+      "drift": []
+    }
+  ],
+  "drift": [],
+  "driftCount": 0,
+  "evidence": [
+    "vop2n-spec-spec-failure.png",
+    "vop2n-spec-spec-error-context.md"
+  ],
+  "logTail": " step] 02-open\n[sitelooper warn] 03-create s_786548/2: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear\n[sitelooper warn] 03-create s_eaf788/1: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear\n[sitelooper recipe] filled via recipe contenteditable/set-value (r_7b1e49); value verified on the component\n[sitelooper warn] 03-create s_eaf788/2: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear\n[sitelooper warn] 03-create s_eaf788/3: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear\n[sitelooper warn] 03-create s_eaf788/4: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear\n[sitelooper warn] 03-create s_eaf788/5: the field already held the value this type enters (restored after the recording saw it emptied), so it was cleared first rather than typed onto\n[sitelooper warn] 03-create s_eaf788/5: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear\n[sitelooper step] 03-create\n  ✘  1 vop2n.spec.ts:9:1 › vop2n (39.5s)\n\n\n  1) vop2n.spec.ts:9:1 › vop2n › 04-open: On the OpenProject work package details page for work package #{{03-create.url.p4}} ('{{runid}} Bench Work Package' in Bench Project, currently open at /projects/bench-project/work_packages/details/{{03-create.url.p4}}), edit the following fields in place (fields become editable when clicked and save automatically, there is no page-wide Save button): (1) set the Assignee to the user named 'Bench Assignee' — this is an autocomplete field, so you must type the name and then actually select the 'Bench Assignee' option from the dropdown that appears, not just type it; (2) set the Status to 'In progress'; (3) set the Finish date to 2026-12-31. Then report the values actually displayed on the page for Assignee, Status and Finish date after saving. \n\n    Error: after 04-open s_8a1366/1 expected url http://127.0.0.1:8090/projects/bench-project/work_packages/details/44/overview but browser is at http://127.0.0.1:8090/projects/bench-project/work_packages/details/38/overview\n\n       at vop2n.flow.ts:11860\n\n      11858 |   // (navigationTarget), whether or not the step goes on to stop.\n      11859 |   if (verdict.diffs) volatile.push(...verdict.diffs);\n    > 11860 |   if (verdict.stop) throw new Error(verdict.stop);\n            |                           ^\n      11861 | }\n      11862 |\n      11863 | /**\n        at urlEffect (/home/user/sitelooper/bench/results/vop2n-spec-spec-tmp/vop2n.flow.ts:11860:27)\n        at Object.verify (/home/user/sitelooper/bench/results/vop2n-spec-spec-tmp/vop2n.flow.ts:14004:19)\n        at runStepLifecycle (/home/user/sitelooper/bench/results/vop2n-spec-spec-tmp/vop2n.flow.ts:7714:24)\n        at Object.04-open (/home/user/sitelooper/bench/results/vop2n-spec-spec-tmp/vop2n.flow.ts:13957:9)\n        at /home/user/sitelooper/bench/results/vop2n-spec-spec-tmp/vop2n.flow.ts:15493:7\n        at runFlow (/home/user/sitelooper/bench/results/vop2n-spec-spec-tmp/vop2n.flow.ts:15492:5)\n        at /home/user/sitelooper/bench/results/vop2n-spec-spec-tmp/vop2n.spec.ts:14:21\n\n    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────\n    \n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────\n    test-results/vop2n-vop2n/test-failed-1.png\n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    Error Context: test-results/vop2n-vop2n/error-context.md\n\n  1 failed\n    vop2n.spec.ts:9:1 › vop2n ──────────────────────────────────────────────────────────────────────\n"
+}

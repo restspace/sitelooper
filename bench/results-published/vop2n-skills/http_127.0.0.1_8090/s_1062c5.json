@@ -1,0 +1,509 @@
+{
+ "id": "s_1062c5",
+ "origin": "http://127.0.0.1:8090",
+ "template": "On the OpenProject work package details page for work package #{{v1}} ('{{v2}}' in Bench Project, currently open at /projects/bench-project/work_packages/details/43), edit the following fields in place (fields become editable when clicked and save automatically, there is no page-wide Save button): (1) set the Assignee to the user named 'Bench Assignee' — this is an autocomplete field, so you must type the name and then actually select the 'Bench Assignee' option from the dropdown that appears, not just type it; (2) set the Status to 'In progress'; (3) set the Finish date to {{v4}}. Then report the values actually displayed on the page for Assignee, Status and Finish date after saving.",
+ "params": {
+  "v1": {
+   "example": "43",
+   "usedIn": [
+    2
+   ],
+   "known": true,
+   "binding": "03-create.url.p4"
+  },
+  "v2": {
+   "example": "vop2n-n3 Bench Work Package",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i3:work_package_subject"
+  },
+  "v3": {
+   "example": "vop2n-n3",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v4": {
+   "example": "2026-12-31",
+   "usedIn": [
+    7
+   ]
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/{{v1}}/overview",
+  "requireText": [
+   "{{v3}}"
+  ]
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e384"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Assignee No value: Edit",
+      "nth": 2
+     },
+     {
+      "kind": "css",
+      "selector": "table > tbody:nth-of-type(1) > tr:nth-of-type(4) > td:nth-of-type(6) > span > span"
+     },
+     {
+      "kind": "point",
+      "x": 866,
+      "y": 344,
+      "w": 140.4,
+      "h": 30,
+      "role": "button",
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/{{v1}}/overview",
+    "addedContains": [
+     "- cell \"Assignee Type to search\"",
+     "- combobox \"Search\"",
+     "- listbox \"Options List\"",
+     "- option \"BA Bench Assignee bench-assignee@example.com\"",
+     "- button \"Invite\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "type",
+   "args": {
+    "target": "role=combobox[name=\"Search\"]",
+    "text": "Bench Assignee"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "role=combobox[name=\"Search\"]"
+     },
+     {
+      "kind": "role",
+      "role": "combobox",
+      "name": "Search"
+     },
+     {
+      "kind": "css",
+      "selector": "#wp-{{v1}}-inline-edit--field-assignee > div:nth-of-type(1) > div > div:nth-of-type(2) > input"
+     },
+     {
+      "kind": "point",
+      "x": 761,
+      "y": 343,
+      "w": 78.4,
+      "h": 16,
+      "role": "combobox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/{{v1}}/overview",
+    "addedContains": [
+     "- cell \"Assignee ×\"",
+     "- combobox \"Search\": {{*}}",
+     "- button \"Clear all\"",
+     "- option \"BA Bench Assigneebench-assignee@example.com\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e732"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "scoped",
+      "container": "div.ng-option",
+      "hasText": "Bench Assignee"
+     },
+     {
+      "kind": "role",
+      "role": "option",
+      "name": "BA Bench Assigneebench-assignee@example.com"
+     },
+     {
+      "kind": "css",
+      "selector": "html > body > ng-dropdown-panel > div:nth-of-type(1) > div:nth-of-type(2) > div"
+     },
+     {
+      "kind": "point",
+      "x": 861,
+      "y": 377,
+      "w": 298,
+      "h": 37.3,
+      "role": "option",
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/{{v1}}/overview",
+    "alertContains": "Successful update.",
+    "addedContains": [
+     "- button \"Close popup\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=button[name=\"Edit the status of the work package\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "role=button[name=\"Edit the status of the work package\"]"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Edit the status of the work package"
+     },
+     {
+      "kind": "css",
+      "selector": "wp-single-view > div > div:nth-of-type(1) > wp-status-button > div > button"
+     },
+     {
+      "kind": "point",
+      "x": 902,
+      "y": 325,
+      "w": 59.1,
+      "h": 32,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/{{v1}}/overview",
+    "addedContains": [
+     "- menu \"New In progress Closed On hold Rejected\"",
+     "- menuitem \"New\"",
+     "- menuitem \"In progress\"",
+     "- menuitem \"Closed\"",
+     "- menuitem \"On hold\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=menuitem[name=\"In progress\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "role=menuitem[name=\"In progress\"]"
+     },
+     {
+      "kind": "role",
+      "role": "menuitem",
+      "name": "In progress"
+     },
+     {
+      "kind": "css",
+      "selector": "#wp-status-context-menu > ul > li:nth-of-type(2) > button"
+     },
+     {
+      "kind": "point",
+      "x": 929,
+      "y": 390,
+      "w": 111,
+      "h": 30,
+      "role": "menuitem",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/{{v1}}/overview",
+    "alertContains": "Successful update.",
+    "addedContains": [
+     "- button \"Close popup\"",
+     "- cell \"In progress\"",
+     "- button \"Status In progress: Edit\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=button[name=\"Start date : Edit\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "role=button[name=\"Start date : Edit\"]"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Start date : Edit"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(6) > div:nth-of-type(2) > op-editable-attribute-field > div > div:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 1100,
+      "y": 1112,
+      "w": 175.6,
+      "h": 23,
+      "role": "button",
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/{{v1}}/overview",
+    "addedContains": [
+     "- dialog \"\"",
+     "- tab \"Dates\"",
+     "- tab \"Predecessors 0\"",
+     "- tab \"Successors 0\"",
+     "- tab \"Children 0\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e956",
+    "value": "{{v4}}"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Finish date"
+     },
+     {
+      "kind": "label",
+      "label": "Finish date"
+     },
+     {
+      "kind": "id",
+      "selector": "#work_package_due_date"
+     },
+     {
+      "kind": "css",
+      "selector": "#work_package_due_date"
+     },
+     {
+      "kind": "point",
+      "x": 647,
+      "y": 373,
+      "w": 183,
+      "h": 32,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/{{v1}}/overview",
+    "addedContains": [
+     "- textbox \"Finish date\": {{v4}}",
+     "- spinbutton \"Year\": {{*}}"
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "@e956",
+    "what": "value",
+    "label": "finish_date_input"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Finish date"
+     },
+     {
+      "kind": "label",
+      "label": "Finish date"
+     },
+     {
+      "kind": "id",
+      "selector": "#work_package_due_date"
+     },
+     {
+      "kind": "css",
+      "selector": "#work_package_due_date"
+     },
+     {
+      "kind": "point",
+      "x": 647,
+      "y": 358,
+      "w": 183,
+      "h": 32,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "finish_date_input"
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e1061"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Save"
+     },
+     {
+      "kind": "css",
+      "selector": "#work-packages-date-picker-dialog-content-component > div:nth-of-type(2) > button:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 895,
+      "y": 688,
+      "w": 57.9,
+      "h": 32,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/{{v1}}/overview",
+    "alertContains": "Successful update.",
+    "addedContains": [
+     "- button \"Close popup\"",
+     "- button \"Start date : Edit\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Start date : Edit"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(6) > div:nth-of-type(2) > op-editable-attribute-field > div > div:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 1093,
+      "y": 603,
+      "w": 162.4,
+      "h": 23,
+      "role": "button",
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "date_field_text"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "what": "title"
+   },
+   "locators": {},
+   "label": "page_title"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "On the work package #{{v1}} details page (/projects/bench-project/work_packages/details/{{v1}}/overview, title \"Task: {{v2}} (#43)\"), I set the three fields in place: selected \"Bench Assignee\" from the open autocomplete dropdown (each change returned a \"Successful update.\" alert), chose Status \"In progress\" from the status menu, and entered Finish date {{v4}} in the date dialog, clicking its Save. Read back from the live DOM after saving: Assignee displays \"Bench Assignee\", Status displays \"In progress\", and the date field displays \"no start date - 12/31/2026\" (i.e. finish date {{v4}}, start date empty). The work package's type (Task) and subject were not changed.",
+  "values": {
+   "work_package": "#{{v1}} {{v2}}",
+   "assignee_displayed": "Bench Assignee",
+   "status_displayed": "In progress",
+   "finish_date_displayed": "12/31/2026 ({{v4}})",
+   "date_field_text": "no start date - 12/31/2026",
+   "page_title": "Task: {{v2}} (#43) | Work Packages | Bench Project | OpenProject",
+   "finish_date_input": "{{v4}}",
+   "ref": "{{v3}}"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-25T05:04:09.909Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_7e5aa5",
+  "index": 1,
+  "of": 2
+ },
+ "variantOf": "s_8a1366",
+ "provenance": {
+  "session": "vop2n-n3",
+  "instruction": "On the OpenProject work package details page for work package #43 ('vop2n-n3 Bench Work Package' in Bench Project, currently open at /projects/bench-project/work_packages/details/43), edit the following fields in place (fields become editable when clicked and save automatically, there is no page-wide Save button): (1) set the Assignee to the user named 'Bench Assignee' — this is an autocomplete field, so you must type the name and then actually select the 'Bench Assignee' option from the dropdown that appears, not just type it; (2) set the Status to 'In progress'; (3) set the Finish date to 2026-12-31. Then report the values actually displayed on the page for Assignee, Status and Finish date after saving.",
+  "model": "xiaomi/mimo-v2.6-flash",
+  "created": "2026-09-25T05:04:09.909Z"
+ },
+ "revision": 1
+}

@@ -1,0 +1,118 @@
+
+[sweep] run 1/3: vop2n-n1 (store: /home/user/sitelooper/bench/results/vop2n-skills)
+[harness] openproject: defaulting APP_URL
+[harness] openproject: defaulting APP_EMAIL
+[harness] openproject: defaulting APP_PASSWORD
+[reset] openproject: no leftover bench work packages
+[harness] openproject responded 302 at http://127.0.0.1:8090/
+stopped: vop2n-n1
+  flow "vop2n" saved: 6 step(s), vars runid → /home/user/sitelooper/bench/results/flows/vop2n.json
+  warning: note: 4 goal/report value(s) carrying a value this run made were slotted or dropped:
+  s_cb4a2b.reportTemplate.values.ref dropped (recorded literal of a value this run made)
+  s_cb4a2b.reportTemplate.summary dropped (narrates a value this run made)
+  s_d043b6.reportTemplate.values.ref dropped (recorded literal of a value this run made)
+  s_d043b6.reportTemplate.summary dropped (narrates a value this run made)
+  warning: note: 01-signin no longer publishes ref — no replay reads it from the page and the recording showed no line to read
+  warning: note: 02-open no longer publishes ref — no replay reads it from the page and the recording showed no line to read
+  warning: warning: 21 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  s_0dd8be.template: "41" (url) in "On the OpenProject work package details page for work package #{{v1}} ('{{v2}}' in Bench Project, currently open at /projects/bench-project/work_packages/detail"
+  s_0dd8be.reportTemplate.summary: "Seed: triage inbox" (output) in "Edited work package #{{v1}} ('{{v2}}') in place on its details page: set Assignee to 'Bench Assignee' via the autocomplete (typed and selected the 'Bench Assign"
+  s_1dce48.steps[2].expect.urlPattern: "http://127.0.0.1:8090/?first_time_user=true" (output) in "http://127.0.0.1:8090/?first_time_user=true"
+  s_8a1366.template: "41" (url) in "On the OpenProject work package details page for work package #{{v1}} ('{{v2}}' in Bench Project, currently open at /projects/bench-project/work_packages/detail"
+  s_8c930f.reportTemplate.summary: "38" (url) in "Read-only verification complete; nothing was modified. Work package #{{v1}} details page shows: ID #{{v1}}, subject '{{v2}}', type Task, description 'Bench work"
+arm=sitelooper model=z-ai/glm-5.3 runid=vop2n-n1 stop=completed
+turns=8 wall=2054.6s
+commands=7 cmdTime=2022.7s cmdBytes=7002 timeouts=0
+orchestrator in=5744 cw=0 cr=25216 out=2914
+inner prompt=2263829 cached=1979584 completion=33347
+spend=$0.6975 maxUsd=3
+learn: A_n=0 replayed=0/6 full=0 repaired=0 compiled=6 variants=0
+-> /home/user/sitelooper/bench/results/vop2n-n1-sitelooper-result.json
+
+vop2n-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed subjects reported
+  obj 2: PASS — type=Task, description includes runid=true
+  obj 3: PASS — assignee=Bench Assignee
+  obj 4: PASS — status=In progress
+  obj 5: PASS — finish date=2026-12-31, want 2026-12-31
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — work package id 41 reported
+
+[sweep] run 2/3: vop2n-n2 (replay flow vop2n, no orchestrator)
+[reset] openproject: deleted 1 leftover bench work package(s)
+[sweep] vop2n-n2: 2 drift ticket(s) → vop2n-n2-drift.json
+
+vop2n-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed subjects reported
+  obj 2: PASS — type=Task, description includes runid=true
+  obj 3: PASS — assignee=Bench Assignee
+  obj 4: PASS — status=In progress
+  obj 5: PASS — finish date=2026-12-31, want 2026-12-31
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — work package id 42 reported
+
+[sweep] run 3/3: vop2n-n3 (replay flow vop2n, no orchestrator)
+[reset] openproject: deleted 1 leftover bench work package(s)
+[sweep] vop2n-n3: 2 drift ticket(s) → vop2n-n3-drift.json
+
+vop2n-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed subjects reported
+  obj 2: PASS — type=Task, description includes runid=true
+  obj 3: PASS — assignee=Bench Assignee
+  obj 4: PASS — status=In progress
+  obj 5: PASS — finish date=2026-12-31, want 2026-12-31
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — work package id 43 reported
+
+Learning sweep vop2n (K=3)
+┌─────────┬───┬────────────┬──────────┬─────────────┬───────┬──────┬───────────┬──────┬──────────────┬────────┐
+│ (index) │ n │ runid      │ verified │ stop        │ turns │ cmds │ total_usd │ A_n  │ replayed     │ wall_s │
+├─────────┼───┼────────────┼──────────┼─────────────┼───────┼──────┼───────────┼──────┼──────────────┼────────┤
+│ 0       │ 1 │ 'vop2n-n1' │ '7/7'    │ 'completed' │ 8     │ 7    │ 0.6975    │ 0    │ '0/6'        │ 2055   │
+│ 1       │ 2 │ 'vop2n-n2' │ '7/7'    │ 'success'   │ 0     │ 6    │ 0         │ 1    │ '6/6 (flow)' │ 62     │
+│ 2       │ 3 │ 'vop2n-n3' │ '7/7'    │ 'success'   │ 27    │ 6    │ 0.0265    │ 0.83 │ '6/6 (flow)' │ 487    │
+└─────────┴───┴────────────┴──────────┴─────────────┴───────┴──────┴───────────┴──────┴──────────────┴────────┘
+http://127.0.0.1:8090
+  s_01a29a  validated    1 steps  3/3 (100%)
+           Verification task, do not modify anything. Open the OpenProject work package details page for work package #{{…
+  s_1dce48  validated    3 steps  3/3 (100%)
+           Sign in to OpenProject with username admin and password {{env:APP_PASSWORD}} (type the password text exactly a…
+  s_48dec2  validated    1 steps  3/3 (100%)
+           Verification task, do not modify anything. Open the OpenProject work package details page for work package #{{…
+  s_4eaa9d  validated    2 steps  3/3 (100%)
+           Navigate to the project named '{{v1}}' in OpenProject and open its work packages list. Report the subjects of …
+  s_7114fe  validated    1 steps  3/3 (100%)
+           Verification task, do not modify anything. Open the OpenProject work package details page for work package #{{…
+  s_786548  validated    2 steps  3/3 (100%)
+           In the OpenProject project 'Bench Project', create a new work package of type 'Task' with the subject '{{v2}}'…
+  s_8a1366  validated   10 steps  2/3 (67%)
+           On the OpenProject work package details page for work package #{{v1}} ('{{v2}}' in Bench Project, currently op…
+  s_8c930f  validated    1 steps  3/3 (100%)
+           Verification task, do not modify anything. Open the OpenProject work package details page for work package #{{…
+  s_b67be6  validated    3 steps  3/3 (100%)
+           On the OpenProject work package details page for work package #{{v1}} ('{{v2}}' in Bench Project), add a comme…
+  s_c31292  validated    1 steps  3/3 (100%)
+           Navigate to the project named '{{v1}}' in OpenProject and open its work packages list. Report the subjects of …
+  s_cb4a2b  validated    5 steps  3/3 (100%)
+           Navigate to the project named '{{v1}}' in OpenProject and open its work packages list. Report the subjects of …
+  s_ce4e2d  validated    2 steps  3/3 (100%)
+           In the OpenProject project 'Bench Project', create a new work package of type 'Task' with the subject '{{v2}}'…
+  s_d043b6  validated    3 steps  3/3 (100%)
+           Sign in to OpenProject with username admin and password {{env:APP_PASSWORD}} (type the password text exactly a…
+  s_d368c6  validated    1 steps  3/3 (100%)
+           On the OpenProject work package details page for work package #{{v1}} ('{{v2}}' in Bench Project), add a comme…
+  s_eaf788  validated    6 steps  3/3 (100%)
+           In the OpenProject project 'Bench Project', create a new work package of type 'Task' with the subject '{{v2}}'…
+  s_fea1a3  validated    2 steps  3/3 (100%)
+           Navigate to the project named '{{v1}}' in OpenProject and open its work packages list. Report the subjects of …
+  s_0dd8be  validated    1 steps  2/2 (100%)
+           On the OpenProject work package details page for work package #{{v1}} ('{{v2}}' in Bench Project, currently op…
+  s_bf3101  validated    3 steps  2/2 (100%)
+           On the OpenProject work package details page for work package #{{v1}} ('{{v2}}' in Bench Project, currently op…
+  s_1062c5  provisional 11 steps  1/1 (100%)  variant of s_8a1366
+           On the OpenProject work package details page for work package #{{v1}} ('{{v2}}' in Bench Project, currently op…
+  s_de4324  provisional  1 steps  1/1 (100%)  variant of s_8a1366
+           On the OpenProject work package details page for work package #{{v1}} ('{{v2}}' in Bench Project, currently op…
+store: /home/user/sitelooper/bench/results/vop2n-skills
+
+summary: /home/user/sitelooper/bench/results/vop2n-sweep.json

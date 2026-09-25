@@ -1,0 +1,166 @@
+{
+  "flow": "vop2n",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_d043b6; observed landing_url=http://127.0.0.1:8090/.",
+      "values": {
+        "landing_url": "http://127.0.0.1:8090/"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "6/6",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_d043b6: step 1: skipped — it closes the dialog \"Welcome to OpenProject, Bench Admin\" with \"Close\", and that dialog is not open this time: already in effect"
+      ]
+    },
+    {
+      "id": "02-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_cb4a2b; observed page_title=All open | Work Packages | Bench Project | OpenProject, seed_subject_triage_inbox=Seed: triage inbox, seed_subject_order_missing_parts=Seed: order missing parts, table_tbody_tr_td_subjec_3=Seed: ship repaired device.",
+      "values": {
+        "page_title": "All open | Work Packages | Bench Project | OpenProject",
+        "seed_subject_triage_inbox": "Seed: triage inbox",
+        "seed_subject_order_missing_parts": "Seed: order missing parts",
+        "table_tbody_tr_td_subjec_3": "Seed: ship repaired device"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "10/10",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_ce4e2d; observed ref=vop2n-n3, work_package_title=Task: vop2n-n3 Bench Work Package (#43) | Work Packages | Bench Project | OpenProject, work_package_subject=vop2n-n3 Bench Work Package.",
+      "values": {
+        "ref": "vop2n-n3",
+        "work_package_title": "Task: vop2n-n3 Bench Work Package (#43) | Work Packages | Bench Project | OpenProject",
+        "work_package_subject": "vop2n-n3 Bench Work Package"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "10/10",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_786548: step 2: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear",
+        "s_eaf788: step 1: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear",
+        "s_eaf788: step 2: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear",
+        "s_eaf788: step 3: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear",
+        "s_eaf788: step 4: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear",
+        "s_eaf788: step 5: the field already held the value this type enters (restored after the recording saw it emptied), so it was cleared first rather than typed onto",
+        "s_eaf788: step 5: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear"
+      ]
+    },
+    {
+      "id": "04-open",
+      "status": "success",
+      "summary": "On the work package #43 details page (/projects/bench-project/work_packages/details/43/overview, title \"Task: vop2n-n3 Bench Work Package (#43)\"), I set the three fields in place: selected \"Bench Assignee\" from the open autocomplete dropdown (each change returned a \"Successful update.\" alert), chose Status \"In progress\" from the status menu, and entered Finish date 2026-12-31 in the date dialog, clicking its Save. Read back from the live DOM after saving: Assignee displays \"Bench Assignee\", Status displays \"In progress\", and the date field displays \"no start date - 12/31/2026\" (i.e. finish date 2026-12-31, start date empty). The work package's type (Task) and subject were not changed.",
+      "values": {
+        "work_package": "#43 vop2n-n3 Bench Work Package",
+        "assignee_displayed": "Bench Assignee",
+        "status_displayed": "In progress",
+        "finish_date_displayed": "12/31/2026 (2026-12-31)",
+        "date_field_text": "no start date - 12/31/2026",
+        "page_title": "Task: vop2n-n3 Bench Work Package (#43) | Work Packages | Bench Project | OpenProject",
+        "finish_date_input": "2026-12-31",
+        "ref": "vop2n-n3"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_8a1366 stopped at step 1 — after step 1 expected url http://127.0.0.1:8090/projects/bench-project/work_packages/details/43/overview but browser is at http://127.0.0.1:8090/projects/bench-project/work_packages/details/38/overview",
+      "replayed": "0/10",
+      "repaired": false,
+      "turns": 27
+    },
+    {
+      "id": "05-add",
+      "status": "success",
+      "summary": "Replayed stored procedure s_b67be6; observed ref=vop2n-n3.",
+      "values": {
+        "ref": "vop2n-n3"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "4/4",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "06-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_8c930f; observed ref=vop2n-n3.",
+      "values": {
+        "ref": "vop2n-n3"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "4/4",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 6,
+  "total": 6,
+  "repinned": 0,
+  "drift": 2,
+  "driftTickets": [
+    {
+      "flow": "vop2n",
+      "step": "01-signin",
+      "skill": "s_d043b6",
+      "atStep": "1",
+      "key": "target",
+      "similarity": 0.846,
+      "missedLocator": "page.getByRole('button', { name: 'Close', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8090/",
+      "pageUrl": "http://127.0.0.1:8090/"
+    },
+    {
+      "flow": "vop2n",
+      "step": "04-open",
+      "skill": "s_8a1366",
+      "similarity": 0.998,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_8a1366 stopped at step 1 — after step 1 expected url http://127.0.0.1:8090/projects/bench-project/work_packages/details/43/overview but browser is at http://127.0.0.1:8090/projects/bench-project/work_packages/details/38/overview",
+      "reason": "after step 1 expected url http://127.0.0.1:8090/projects/bench-project/work_packages/details/43/overview but browser is at http://127.0.0.1:8090/projects/bench-project/work_packages/details/38/overview",
+      "pageUrlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:id/overview",
+      "pageUrl": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/38/overview"
+    }
+  ],
+  "wallMs": 487351,
+  "model": "xiaomi/mimo-v2.6-flash",
+  "usage": {
+    "promptTokens": 683168,
+    "completionTokens": 28528,
+    "cachedTokens": 562176
+  },
+  "usageByModel": {
+    "xiaomi/mimo-v2.6-flash": {
+      "promptTokens": 683168,
+      "completionTokens": 28528,
+      "cachedTokens": 562176
+    }
+  },
+  "servedByModel": {
+    "xiaomi/mimo-v2.6-flash": [
+      "Xiaomi"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

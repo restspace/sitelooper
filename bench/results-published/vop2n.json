@@ -1,0 +1,239 @@
+{
+  "name": "vop2n",
+  "origin": "http://127.0.0.1:8090",
+  "startUrl": "http://127.0.0.1:8090/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-signin",
+      "instruction": "Sign in to OpenProject with username admin and password {{env:APP_PASSWORD}} (type the password text exactly as {{env:APP_PASSWORD}}). After signing in, confirm you are logged in as admin and report what page you land on.",
+      "skill": "s_1dce48",
+      "params": {},
+      "outputs": [
+        "landing_url"
+      ],
+      "recorded": {
+        "landing_url": "http://127.0.0.1:8090/?first_time_user=true",
+        "ref": "vop2n-n1",
+        "url": "http://127.0.0.1:8090/?first_time_user=true"
+      },
+      "route": "http://127.0.0.1:8090/",
+      "outputEvidence": {
+        "landing_url": {
+          "same": 0,
+          "differed": 1
+        },
+        "ref": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "02-open",
+      "instruction": "Navigate to the project named 'Bench Project' in OpenProject and open its work packages list. Report the subjects of all work packages whose subject starts with 'Seed:' exactly as displayed. Do not modify anything.",
+      "skill": "s_fea1a3",
+      "params": {
+        "v1": "Bench Project"
+      },
+      "outputs": [
+        "page_title",
+        "seed_subject_triage_inbox",
+        "seed_subject_order_missing_parts",
+        "table_tbody_tr_td_subjec_3"
+      ],
+      "recorded": {
+        "page_title": "All open | Work Packages | Bench Project | OpenProject",
+        "seed_subject_triage_inbox": "Seed: triage inbox",
+        "seed_subject_order_missing_parts": "Seed: order missing parts",
+        "table_tbody_tr_td_subjec_3": "Seed: ship repaired device",
+        "ref": "vop2n-n1",
+        "url": "http://127.0.0.1:8090/projects/bench-project/work_packages"
+      },
+      "route": "http://127.0.0.1:8090/projects/bench-project/work_packages",
+      "outputEvidence": {
+        "page_title": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_subject_triage_inbox": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_subject_order_missing_parts": {
+          "same": 1,
+          "differed": 0
+        },
+        "table_tbody_tr_td_subjec_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "ref": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "03-create",
+      "instruction": "In the OpenProject project 'Bench Project', create a new work package of type 'Task' with the subject '{{runid}} Bench Work Package' and a description that contains the text '{{runid}}' (e.g. 'Bench work package created for run {{runid}}'). Save it and report the work package's numeric ID as displayed (OpenProject shows it like #1234) and confirm the subject and type shown on the work package page.",
+      "skill": "s_786548",
+      "params": {
+        "v2": "{{runid}} Bench Work Package",
+        "v1": "{{runid}}",
+        "v3": "Bench work package created for run {{runid}}"
+      },
+      "outputs": [
+        "work_package_title",
+        "work_package_subject",
+        "ref"
+      ],
+      "recorded": {
+        "work_package_title": "Task: vop2n-n1 Bench Work Package (#41) | Work Packages | Bench Project | OpenProject",
+        "work_package_subject": "vop2n-n1 Bench Work Package",
+        "ref": "vop2n-n1",
+        "url": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/41/overview",
+        "url.p4": "41"
+      },
+      "route": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:id/overview",
+      "outputEvidence": {
+        "work_package_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "work_package_subject": {
+          "same": 0,
+          "differed": 1
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        },
+        "url.p4": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "04-open",
+      "instruction": "On the OpenProject work package details page for work package #{{03-create.url.p4}} ('{{runid}} Bench Work Package' in Bench Project, currently open at /projects/bench-project/work_packages/details/{{03-create.url.p4}}), edit the following fields in place (fields become editable when clicked and save automatically, there is no page-wide Save button): (1) set the Assignee to the user named 'Bench Assignee' — this is an autocomplete field, so you must type the name and then actually select the 'Bench Assignee' option from the dropdown that appears, not just type it; (2) set the Status to 'In progress'; (3) set the Finish date to 2026-12-31. Then report the values actually displayed on the page for Assignee, Status and Finish date after saving.",
+      "skill": "s_8a1366",
+      "params": {
+        "v1": "{{03-create.url.p4}}",
+        "v2": "{{runid}} Bench Work Package",
+        "v4": "2026-12-31",
+        "v3": "{{runid}}"
+      },
+      "outputs": [
+        "ref"
+      ],
+      "recorded": {
+        "ref": "vop2n-n1"
+      },
+      "route": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:id/overview",
+      "outputEvidence": {
+        "ref": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "05-add",
+      "instruction": "On the OpenProject work package details page for work package #{{03-create.url.p4}} ('{{runid}} Bench Work Package' in Bench Project), add a comment whose text includes '{{runid}}' (e.g. 'Comment for run {{runid}}'). Submit the comment and then report the comment text as it is displayed on the page, along with the author shown.",
+      "skill": "s_d368c6",
+      "params": {
+        "v1": "{{03-create.url.p4}}",
+        "v2": "{{runid}} Bench Work Package",
+        "v3": "{{runid}}",
+        "v4": "Comment for run {{runid}}"
+      },
+      "outputs": [
+        "ref"
+      ],
+      "recorded": {
+        "ref": "vop2n-n1",
+        "url": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/41/activity"
+      },
+      "route": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:id/activity",
+      "outputEvidence": {
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "06-open",
+      "instruction": "Verification task, do not modify anything. Open the OpenProject work package details page for work package #{{03-create.url.p4}} ('{{runid}} Bench Work Package' in Bench Project) and report exactly what is displayed for: its numeric ID, subject, type, description text, Assignee, Status, Finish date, and the text of any comments in its activity feed. Then open the Bench Project work packages list and report the subjects and Assignee/Status values of the three work packages whose subjects start with 'Seed:' ({{02-open.seed_subject_triage_inbox}}, {{02-open.seed_subject_order_missing_parts}}, {{02-open.table_tbody_tr_td_subjec_3}}) to confirm they are unmodified.",
+      "skill": "s_48dec2",
+      "params": {
+        "v1": "{{03-create.url.p4}}",
+        "v2": "{{runid}} Bench Work Package",
+        "v4": "{{02-open.seed_subject_triage_inbox}}",
+        "v5": "{{02-open.seed_subject_order_missing_parts}}",
+        "v6": "{{02-open.table_tbody_tr_td_subjec_3}}",
+        "v3": "{{runid}}"
+      },
+      "outputs": [
+        "ref"
+      ],
+      "recorded": {
+        "ref": "vop2n-n1"
+      },
+      "route": "http://127.0.0.1:8090/projects/bench-project/work_packages",
+      "outputEvidence": {
+        "ref": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "session": "vop2n-n1",
+    "created": "2026-09-25T04:55:02.437Z",
+    "model": "xiaomi/mimo-v2.6-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "01-signin",
+      "outputs": [
+        "ref"
+      ]
+    },
+    {
+      "stepId": "02-open",
+      "outputs": [
+        "ref"
+      ]
+    }
+  ]
+}
