@@ -26,7 +26,7 @@ import { jevMatchSkill, jevPickLiteral } from '../skills/paraphrase-jev.js';
 import { readBackDecider } from '../agent/readback-jev.js';
 import type { ReadBackDecider } from '../agent/readback.js';
 import { setInlineHealer } from '../skills/replay.js';
-import { RunLedger, bindingKey, linkMintedParts, unseenGotoParts, describeLeaks, evidenced, fatal, navigationLeaks, scanForLeaks, slotKnownRunValues, urlVarianceValues, withoutOwnOutputs, type Leak } from '../skills/ledger.js';
+import { RunLedger, linkMintedParts, unseenGotoParts, describeLeaks, evidenced, fatal, navigationLeaks, scanForLeaks, slotKnownRunValues, urlVarianceValues, withoutOwnOutputs, type Leak } from '../skills/ledger.js';
 import { quarantineLeakedSteps } from '../spec/rerecord.js';
 import { rerecordFix } from '../spec/diagnostics.js';
 import { originOf, type Skill } from '../skills/store.js';
@@ -469,9 +469,8 @@ ${describeLeaks(leaks.slice(0, 6))}`);
 
   /** The run's values keyed by their ORIGIN, so a param can bind to where a value comes from. */
   private knownValues(): Record<string, string> {
-    const out: Record<string, string> = {};
-    for (const e of this.ledger.all()) out[bindingKey(e.binding)] = e.value;
-    return out;
+    // Two values one origin showed: the latest sighting (ledger.ts byOrigin).
+    return this.ledger.byOrigin();
   }
 
   /**

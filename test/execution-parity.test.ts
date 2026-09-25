@@ -4177,6 +4177,38 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
     }, 240_000);
   });
 
+  describe('a navigation whose landing raised the alert the recording saw goes on (round 63, fwsi14 03-open)', () => {
+    /**
+     * snipeit fwsi14-n1 #95 `goto …/hardware/4/edit` landed on the edit form,
+     * whose status help "This asset can be checked out." renders in a live
+     * region. Compiled with no expectation (a navigation's diff is its
+     * landing), both replays stopped: "step 1 raised an alert the recording
+     * never saw". The goto now expects the alert its landing raised.
+     */
+    it('both runners take the landing\'s recorded alert as expected and save', async () => {
+      const url = `${origin}/edit-notice`;
+      const entries: RecordedEntry[] = [
+        { k: 'instruction', text: 'open the edit form and save it', url: `${origin}/` },
+        { k: 'step', tool: 'goto', args: { url }, locators: {}, diff: { url, alerts: ['This asset can be checked out.'], added: ['- heading "Edit asset"', '- status "This asset can be checked out."'], dialect: 2 } },
+        {
+          k: 'step',
+          tool: 'click',
+          args: { target: '#save' },
+          locators: { target: { expr: 'x', verified: true, raw: '#save', chain: [{ kind: 'css', selector: '#save' }, { kind: 'role', role: 'button', name: 'Save' }] } },
+          diff: { url, alerts: [], added: [], dialect: 2 },
+        },
+      ];
+      const steps = compileSkills({ entries, instruction: 'open the edit form and save it', report: { status: 'success', summary: 'saved' }, session: 's' }).flatMap((sk) => sk.steps);
+      expect(steps[0].expect?.alertContains).toBe('This asset can be checked out.');
+      const run = await both(steps, 0);
+      expect(run.replay.ok, run.replay.reason ?? '').toBe(true);
+      expect(run.emitted.ok, run.emitted.reason ?? '').toBe(true);
+      await new Promise((r) => setTimeout(r, 300));
+      expect(run.replayLog).toEqual(['commit:save:ok']);
+      expect(run.emittedLog).toEqual(['commit:save:ok']);
+    }, 240_000);
+  });
+
   describe('a picker click whose target went with the picker its entry opened (round 59, fwsi10 03-create)', () => {
     /**
      * snipeit fwsi10-n1 03-create filled the purchase date (opening the date
