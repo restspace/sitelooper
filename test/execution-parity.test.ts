@@ -6834,4 +6834,40 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
       expect(replayLog).toEqual(emittedLog);
     }, 240_000);
   });
+
+  /**
+   * Round 62, vikunja fwvk13 01-signin: s_38a508 fills user and password twice
+   * (the recording refilled after /login replaced its document) and clicks
+   * Login. The daemon survived the reload on both replays; the compiled run
+   * clicked Login on an EMPTY form ("Please provide a username/password") and
+   * stopped on its url gate with neither a refill nor a lost-submit retry
+   * logged. Each variant below runs through both runners, with the login's
+   * mutation log as the oracle: before the submit (a reload 500ms after the
+   * first value; a reload the moment the pre-submit check blurs the password —
+   * a reload landing INSIDE that check; the fields cleared with no reload),
+   * and at the submit (the first click reloads instead of submitting).
+   */
+  describe('a sign-in whose page reloads or clears around the submit (round 62, fwvk13)', () => {
+    const steps = (mode: string): SkillStep[] => {
+      const user: SkillStep = { tool: 'fill', args: { target: '@e1', value: 'admin' }, locators: { target: [{ kind: 'label', label: 'Username' }] } };
+      const pass: SkillStep = { tool: 'fill', args: { target: '@e2', value: 'pass-x62' }, locators: { target: [{ kind: 'css', selector: '#password' }] } };
+      return [
+        { tool: 'goto', args: { url: `${origin}/reload-login/${mode}` }, locators: {} },
+        user,
+        pass,
+        user,
+        pass,
+        { tool: 'click', args: { target: '@e3' }, locators: { target: [{ kind: 'role', role: 'button', name: 'Sign in' }] }, expect: { urlPattern: `${origin}/signed-in` } },
+      ];
+    };
+    for (const mode of ['delay-500', 'blur', 'clear-500', 'submit']) {
+      it(`both runners sign in once (${mode})`, async () => {
+        const { replay, emitted, replayLog, emittedLog } = await both(steps(mode), 0);
+        expect(replay.ok, replay.reason ?? '').toBe(true);
+        expect(emitted.ok, emitted.reason ?? '').toBe(true);
+        expect(replayLog).toEqual(['commit:login:admin:pass-x62']);
+        expect(emittedLog).toEqual(['commit:login:admin:pass-x62']);
+      }, 180_000);
+    }
+  });
 });

@@ -234,42 +234,55 @@ export async function restoreStandingFills(page: Page, ledger: StandingFills, to
   ledger.submitted = undefined;
   if (role !== 'submit' || !standing.length) return [];
   const url = page.url();
-  const doc = await documentOf(page);
+  let doc = await documentOf(page);
   const deadline = Date.now() + STANDING_FILL_ATTACH_MS;
   let refilled = 0;
   let failed = 0;
   let reloaded = false;
   let keyed = 0;
-  // The submit is about to take focus off the field that has it; take it off
-  // first, so a widget that rebuilds its value on blur (fwec2) has done so
-  // before the fields are looked at.
-  for (const fill of standing) if (fill.url === url) await blurIfPlain(fill.locator);
-  for (const fill of standing) {
-    if (fill.url !== url) continue;
-    const gone = replaced(fill, doc);
-    reloaded ||= gone;
-    const now = gone ? await inputValueOnceBuilt(fill.locator, deadline) : await inputValueNow(fill.locator);
-    if (now !== '') continue;
-    try {
-      const value = typeof fill.value === 'function' ? await fill.value() : fill.value;
-      await reactSafeFill(fill.locator, value);
-      await blurIfPlain(fill.locator);
-      let held = await inputValueNow(fill.locator);
-      // Set, and gone again at the blur: a widget that keeps its own copy of
-      // the value, built from key events. Typed, as a person would.
-      if (!held) {
-        await typeInto(fill.locator, value);
+  // A RELOAD INSIDE THE CHECK (round 62, vikunja fwvk13 01-signin): the page
+  // replaced its document after the check had read the fields and before the
+  // submit, which went out on the new, empty form with nothing refilled — and
+  // the record of the submit named that new document, so no lost submit was
+  // seen either. The check ends by asking which document it is in; a new one
+  // on the same url is checked again (its fields waited for and refilled as
+  // any replaced document's), once.
+  for (let pass = 0; pass < 2; pass++) {
+    // The submit is about to take focus off the field that has it; take it off
+    // first, so a widget that rebuilds its value on blur (fwec2) has done so
+    // before the fields are looked at.
+    for (const fill of standing) if (fill.url === url) await blurIfPlain(fill.locator);
+    for (const fill of standing) {
+      if (fill.url !== url) continue;
+      const gone = replaced(fill, doc);
+      reloaded ||= gone;
+      const now = gone ? await inputValueOnceBuilt(fill.locator, deadline) : await inputValueNow(fill.locator);
+      if (now !== '') continue;
+      try {
+        const value = typeof fill.value === 'function' ? await fill.value() : fill.value;
+        await reactSafeFill(fill.locator, value);
         await blurIfPlain(fill.locator);
-        held = await inputValueNow(fill.locator);
-        if (held) keyed++;
+        let held = await inputValueNow(fill.locator);
+        // Set, and gone again at the blur: a widget that keeps its own copy of
+        // the value, built from key events. Typed, as a person would.
+        if (!held) {
+          await typeInto(fill.locator, value);
+          await blurIfPlain(fill.locator);
+          held = await inputValueNow(fill.locator);
+          if (held) keyed++;
+        }
+        if (held !== null && sameValue(held, value)) refilled++;
+        else failed++;
+      } catch {
+        failed++;
       }
-      if (held !== null && sameValue(held, value)) refilled++;
-      else failed++;
-    } catch {
-      failed++;
     }
+    const after = await documentOf(page);
+    const again = pass === 0 && after !== null && doc !== null && after !== doc && page.url() === url;
+    doc = after;
+    if (!again) break;
   }
-  ledger.submitted = { fills: standing, doc: await documentOf(page), url: page.url() };
+  ledger.submitted = { fills: standing, doc, url: page.url() };
   if (!refilled && !failed) return [];
   const why = reloaded ? 'the page replaced its document after the fills ran' : 'the page rebuilt its form, or dropped the value when the field lost focus, after the fills were checked';
   const what = `${refilled + failed} field(s) this procedure filled were empty again before this ${tool} (${why})${keyed ? `; ${keyed} of them kept only a value typed key by key` : ''}`;

@@ -192,6 +192,35 @@ describe('a replaced document (fwvk2 n2 01-open)', () => {
   });
 });
 
+describe('a reload landing inside the pre-submit check (round 62, vikunja fwvk13 01-signin)', () => {
+  /** The page replaces its document after the check has read the fields and before it finishes: the next documentOf sees the new one, whose form is empty. */
+  function reloadAtNextDocumentRead(state: { doc: number }, page: Page, ...fields: { state: { value: string | null } }[]) {
+    vi.mocked(page.evaluate).mockImplementationOnce(async () => state.doc).mockImplementationOnce(async () => {
+      state.doc = 2000;
+      for (const f of fields) f.state.value = '';
+      return state.doc;
+    });
+  }
+
+  it('checks the new document’s fields again, and refills them before the submit', async () => {
+    const { state, page } = fakePage();
+    const user = field('#username', 'admin');
+    const pass = field('#password', 'pass-x62');
+    const ledger = await ledgerOf(page, [user.loc, 'admin'], [pass.loc, 'pass-x62']);
+    reloadAtNextDocumentRead(state, page, user, pass);
+    vi.mocked(reactSafeFill).mockImplementation(async (loc: Locator, value: string) => {
+      (loc === user.loc ? user : pass).state.value = value;
+    });
+    const warnings = await restoreStandingFills(page, ledger, 'click', 'step 5');
+    expect(vi.mocked(reactSafeFill).mock.calls).toEqual([
+      [user.loc, 'admin'],
+      [pass.loc, 'pass-x62'],
+    ]);
+    expect(warnings).toEqual(['step 5: 2 field(s) this procedure filled were empty again before this click (the page replaced its document after the fills ran) — refilled once']);
+    expect(ledger.submitted?.doc).toBe(2000);
+  });
+});
+
 describe('a value dropped at blur (fwec2 n1 03-create)', () => {
   it('takes the page’s own formatting of the value as the value, and an empty field as nothing', async () => {
     const { sameValue } = await import('../src/execution/refill.js');
