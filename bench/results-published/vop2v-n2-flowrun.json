@@ -1,0 +1,345 @@
+{
+  "flow": "vop2v",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Signed in to OpenProject as admin (the earlier fill/submit already took effect — the login form was gone and the app was already authenticated). Verified on the live DOM: the user menu dialog shows \"Bench Admin\" with avatar \"BA\", plus signed-in-only links (My page, My activity, Account settings, Administration, Sign out), and the side menu shows Home/My page/Projects/Work packages etc. Currently on the OpenProject home/dashboard page \"Welcome to OpenProject!\" at http://127.0.0.1:8090/.",
+      "values": {
+        "page_url": "http://127.0.0.1:8090/",
+        "signed_in_user": "Bench Admin",
+        "user_avatar_initials": "BA",
+        "page_heading": "Welcome to OpenProject!",
+        "page_title": "OpenProject",
+        "ref": "vop2v-n2"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_f81595 stopped at step 1 — no element matched any known locator for target (tried 3: page.getByRole('button', { name: 'Save', exact: true }), page.locator('#user-form > div:nth-of-type(4) > div > button:nth-of-type(2)'), elementAt(908, 547) /* button */)",
+      "replayed": "0/6",
+      "repaired": false,
+      "turns": 9,
+      "unreported": [
+        "user_initials",
+        "page"
+      ]
+    },
+    {
+      "id": "02-open",
+      "status": "success",
+      "summary": "Total work packages listed: 3.",
+      "unanswered": [
+        "total_work_packages"
+      ],
+      "values": {
+        "project_nav_link": "Project",
+        "seed_work_package_1_id": "38",
+        "seed_work_package_1_subject": "Seed: triage inbox",
+        "seed_work_package_2_id": "39",
+        "seed_work_package_2_subject": "Seed: order missing parts",
+        "seed_work_package_3_id": "40",
+        "seed_work_package_3_subject": "Seed: ship repaired device",
+        "list_indicator": "(1 - 3/3)",
+        "project_name": "Bench Project"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "12/12",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "Created a new work package in Bench Project: ID #42, subject \"vop2v-n2 Bench Work Package\", type TASK, status New.",
+      "values": {
+        "ref": "vop2v-n2",
+        "work_package_id": "42",
+        "id_as_displayed": "#42",
+        "subject": "vop2v-n2 Bench Work Package",
+        "description": "Bench work package created for run vop2v-n2",
+        "type": "TASK",
+        "status": "New"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "14/14",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_c6bf32: step 2: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear",
+        "s_6084a2: step 1: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear",
+        "s_6084a2: step 2: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear",
+        "s_6084a2: step 3: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear",
+        "s_6084a2: step 4: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear",
+        "s_881a4a: step 7: the target chain is dead and was not healed inline — the step is a synthesized read no run has ever resolved, so nothing about it has drifted",
+        "s_881a4a: step 7: skipped read — no element matched any known locator for target (tried 1: page.getByRole('alert', { name: 'Successful creation.', exact: true }))"
+      ],
+      "unreported": [
+        "creation_alert"
+      ]
+    },
+    {
+      "id": "04-set",
+      "status": "success",
+      "summary": "Replayed stored procedure s_525763; observed work_package=#42 vop2v-n2 Bench Work Package, assignee_title_attr=Bench Assignee, assignee_field_display=BA\nBench Assignee.",
+      "values": {
+        "work_package": "#42 vop2v-n2 Bench Work Package",
+        "assignee_title_attr": "Bench Assignee",
+        "assignee_field_display": "BA\nBench Assignee"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "5/5",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_525763: step 1: url segment(s) differ from recorded (41→42) — treated as volatile",
+        "s_525763: step 2: url segment(s) differ from recorded (41→42) — treated as volatile",
+        "s_525763: step 5: the target chain is dead and was not healed inline — the step is a synthesized read no run has ever resolved, so nothing about it has drifted",
+        "s_525763: step 5: skipped read — no element matched any known locator for target (tried 1: page.getByRole('alert', { name: 'Successful update.', exact: true }))"
+      ],
+      "unreported": [
+        "saved_alert"
+      ]
+    },
+    {
+      "id": "05-change",
+      "status": "success",
+      "summary": "Replayed stored procedure s_61e055; observed work_package=#42 vop2v-n2 Bench Work Package, ref=vop2v-n2.",
+      "values": {
+        "work_package": "#42 vop2v-n2 Bench Work Package",
+        "ref": "vop2v-n2"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "5/5",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_61e055: step 1: url segment(s) differ from recorded (41→42) — treated as volatile",
+        "s_61e055: step 2: url segment(s) differ from recorded (41→42) — treated as volatile",
+        "s_61e055: step 3: read 'status_field_display' returned a value the skill itself set/selected ('In progress') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_61e055: step 4: read 'status_aria_label' returned a value the skill itself set/selected ('In progress') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_61e055: step 5: the target chain is dead and was not healed inline — the step is a synthesized read no run has ever resolved, so nothing about it has drifted",
+        "s_61e055: step 5: skipped read — no element matched any known locator for target (tried 1: page.getByRole('alert', { name: 'Successful update.', exact: true }))"
+      ],
+      "unreported": [
+        "status_field_display",
+        "status_aria_label",
+        "saved_alert"
+      ]
+    },
+    {
+      "id": "06-set",
+      "status": "success",
+      "summary": "Replayed stored procedure s_4dc556; observed date_field_display=no start date - 12/31/2026, date_row_label=Date, ref=vop2v-n2.",
+      "values": {
+        "date_field_display": "no start date - 12/31/2026",
+        "date_row_label": "Date",
+        "ref": "vop2v-n2"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "7/7",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_4dc556: step 1: url segment(s) differ from recorded (41→42) — treated as volatile",
+        "s_4dc556: step 2: url segment(s) differ from recorded (41→42) — treated as volatile",
+        "s_4dc556: step 3: url segment(s) differ from recorded (41→42) — treated as volatile",
+        "s_4dc556: step 7: the target chain is dead and was not healed inline — the step is a synthesized read no run has ever resolved, so nothing about it has drifted",
+        "s_4dc556: step 7: skipped read — no element matched any known locator for target (tried 1: page.getByRole('alert', { name: 'Successful update.', exact: true }))"
+      ],
+      "unreported": [
+        "saved_alert"
+      ]
+    },
+    {
+      "id": "07-add",
+      "status": "success",
+      "summary": "Replayed stored procedure s_cddfc7; observed work_package=#42 vop2v-n2 Bench Work Package, ref=vop2v-n2, commented_by=Bench Admin.",
+      "values": {
+        "work_package": "#42 vop2v-n2 Bench Work Package",
+        "ref": "vop2v-n2",
+        "commented_by": "Bench Admin"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "6/6",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_e89b86: step 1: url segment(s) differ from recorded (41→42) — treated as volatile",
+        "s_cddfc7: step 1: url segment(s) differ from recorded (41→42) — treated as volatile",
+        "s_cddfc7: step 2: url segment(s) differ from recorded (41→42) — treated as volatile",
+        "s_cddfc7: step 3: url segment(s) differ from recorded (41→42) — treated as volatile",
+        "s_cddfc7: step 4: primary locator did not resolve; used fallback #2 elementAt(1072, 423) /* p */",
+        "s_cddfc7: step 4: read 'comment_text_as_displayed' returned a value the skill itself set/selected ('Comment for run vop2v-n2') — confirms the control, not persistence; dropped from the report's confident values"
+      ],
+      "unreported": [
+        "comment_text_as_displayed"
+      ]
+    },
+    {
+      "id": "08-open",
+      "status": "success",
+      "summary": "Read back work package #42 on its Overview tab without changing anything (page: /projects/bench-project/work_packages/details/42/overview): (1) ID shown as \"#42\" (\"#42: Created by Bench Admin. Last updated on 09/25/2026 6:32 AM.\"); (2) subject \"vop2v-n2 Bench Work Package\"; (3) type \"TASK\"; (4) description \"Bench work package created for run vop2v-n2\".",
+      "unanswered": [
+        "comment_text",
+        "comment_visible"
+      ],
+      "values": {
+        "ref": "vop2v-n2",
+        "id_as_displayed": "#42",
+        "subject": "vop2v-n2 Bench Work Package",
+        "description": "Bench work package created for run vop2v-n2",
+        "status": "In progress",
+        "finish_date_shown": "no start date - 12/31/2026",
+        "last_updated": "09/25/2026 6:32 AM",
+        "assignee": "BA\nBench Assignee",
+        "type": "TASK"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "9/9",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "comment_text"
+      ]
+    },
+    {
+      "id": "09-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_948fbc; observed filter_count=1, seed_subjects_1=Seed: triage inbox, seed_subjects_2=Seed: order missing parts, seed_subjects_3=Seed: ship repaired device, list_indicator=(1 - 4/4).",
+      "unanswered": [
+        "total_work_packages",
+        "seed_count"
+      ],
+      "values": {
+        "filter_count": "1",
+        "seed_subjects_1": "Seed: triage inbox",
+        "seed_subjects_2": "Seed: order missing parts",
+        "seed_subjects_3": "Seed: ship repaired device",
+        "list_indicator": "(1 - 4/4)"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "8/8",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 9,
+  "total": 9,
+  "repinned": 0,
+  "drift": 6,
+  "driftTickets": [
+    {
+      "flow": "vop2v",
+      "step": "01-signin",
+      "skill": "s_f81595",
+      "atStep": "1",
+      "key": "target",
+      "similarity": 0.846,
+      "missedLocator": "page.getByRole('button', { name: 'Save', exact: true })",
+      "fallbackUsed": null,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:8090/",
+      "pageUrl": "http://127.0.0.1:8090/"
+    },
+    {
+      "flow": "vop2v",
+      "step": "03-create",
+      "skill": "s_881a4a",
+      "atStep": "7",
+      "key": "target",
+      "similarity": 0.999,
+      "missedLocator": "page.getByRole('alert', { name: 'Successful creation.', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:id/overview",
+      "pageUrl": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/42/overview"
+    },
+    {
+      "flow": "vop2v",
+      "step": "04-set",
+      "skill": "s_525763",
+      "atStep": "5",
+      "key": "target",
+      "similarity": 0.998,
+      "missedLocator": "page.getByRole('alert', { name: 'Successful update.', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:id/overview",
+      "pageUrl": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/42/overview"
+    },
+    {
+      "flow": "vop2v",
+      "step": "05-change",
+      "skill": "s_61e055",
+      "atStep": "5",
+      "key": "target",
+      "similarity": 0.997,
+      "missedLocator": "page.getByRole('alert', { name: 'Successful update.', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:id/overview",
+      "pageUrl": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/42/overview"
+    },
+    {
+      "flow": "vop2v",
+      "step": "06-set",
+      "skill": "s_4dc556",
+      "atStep": "7",
+      "key": "target",
+      "similarity": 0.997,
+      "missedLocator": "page.getByRole('alert', { name: 'Successful update.', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:id/overview",
+      "pageUrl": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/42/overview"
+    },
+    {
+      "flow": "vop2v",
+      "step": "07-add",
+      "skill": "s_cddfc7",
+      "atStep": "4",
+      "key": "target",
+      "similarity": 1.004,
+      "missedLocator": "page.locator('#work-packages-activities-tab-journals-item-component-show-63 > div > div:nth-of-type(1) > div > p')",
+      "fallbackUsed": "elementAt(1072, 423) /* p */",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:id/activity",
+      "pageUrl": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/42/activity"
+    }
+  ],
+  "wallMs": 169289,
+  "model": "xiaomi/mimo-v2.6-flash",
+  "usage": {
+    "promptTokens": 106009,
+    "completionTokens": 1272,
+    "cachedTokens": 81216
+  },
+  "usageByModel": {
+    "xiaomi/mimo-v2.6-flash": {
+      "promptTokens": 106009,
+      "completionTokens": 1272,
+      "cachedTokens": 81216
+    }
+  },
+  "servedByModel": {
+    "xiaomi/mimo-v2.6-flash": [
+      "Xiaomi"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}
