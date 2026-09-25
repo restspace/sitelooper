@@ -1,0 +1,172 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwgh19-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwgh19-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwgh19-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/bench/results/fwgh19-spec-spec-tmp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwgh19-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwgh19.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwgh19-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwgh19.spec.ts",
+      "file": "fwgh19.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwgh19",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 51095,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper step] 01-signin\n"
+                    },
+                    {
+                      "text": "[sitelooper recipe] filled via recipe contenteditable/set-value (r_7b1e49); value verified on the component\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 02-create s_f48ebd/2: read 'url_slug' returned a value the skill itself set/selected ('fwgh19-spec-bench-post') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 02-create s_f48ebd/3: read 'excerpt' returned a value the skill itself set/selected ('Excerpt for fwgh19-spec') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 02-create s_f48ebd/5: read 'post_title' returned a value the skill itself set/selected ('fwgh19-spec Bench Post') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 02-create s_f48ebd/7: read 'tag' returned a value the skill itself set/selected ('Bench News') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 02-create s_f48ebd/8: read 'body_paragraph' returned a value the skill itself set/selected ('This is the fwgh19-spec bench post.') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 02-create: report value publish_date is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-create\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-open\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-signin: Sign in to Ghost admin at http://127.0.0.1:8099/ghost/ with email admin@bench.local and password typed exactly as the text {{env:APP_PASSWORD}}. Then list the titles of all published posts whose title starts with 'Seed:', exactly as shown.",
+                      "duration": 10412
+                    },
+                    {
+                      "title": "02-create: Create a new post titled '{{runid}} Bench Post'. In the body editor type exactly one paragraph containing the text '{{runid}}' (e.g. 'This is the {{runid}} bench post.'). Open the post settings panel: set the custom excerpt to include {{runid}} (e.g. 'Excerpt for {{runid}}'), set the URL slug to something with the runid, set the publish date to 2026-09-01 (time can be e.g. 12:00), and in the tags field select the EXISTING tag 'Bench News' from its suggestions (do not create a new tag; do not pick 'Bench Newsletter'). Then publish the post via Ghost's publish confirmation flow — because the publish date 2026-09-01 is in the future, Ghost may schedule instead of publish; if so, change the date so it publishes immediately (but keep an actual publish, not scheduled). Verify the post is published, visible to public, tag Bench News only, excerpt includes {{runid}}, and report the exact URL slug shown in the post settings.",
+                      "duration": 37854
+                    },
+                    {
+                      "title": "03-open: Open the post '{{runid}} Bench Post' in Ghost admin, open its settings panel, and report the exact publish date and time, the post status, and the URL slug as currently shown. Also confirm the body paragraph containing {{runid}} appears exactly once.",
+                      "duration": 1782
+                    }
+                  ],
+                  "startTime": "2026-09-25T11:19:40.642Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": ""
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fe1fae1c1130471fb475-4396a521dc98b1def11d",
+          "file": "fwgh19.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-25T11:19:38.765Z",
+    "duration": 53143.441,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

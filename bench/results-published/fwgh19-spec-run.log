@@ -1,0 +1,10 @@
+[spec-replay] resetting ghost
+[reset] ghost: deleted 1 post(s) (earlier runs' and non-seed)
+[spec-replay] compiling: /opt/node22/bin/node /home/user/sitelooper/bin/sitelooper.js compile bench/results/flows/fwgh19.json --out /home/user/sitelooper/bench/results/fwgh19-spec-spec-tmp --overwrite-spec
+flow: /home/user/sitelooper/bench/results/fwgh19-spec-spec-tmp/fwgh19.flow.ts
+spec: /home/user/sitelooper/bench/results/fwgh19-spec-spec-tmp/fwgh19.spec.ts
+warning 03-open: 03-open changed nothing when it was recorded, though its instruction asks for a change
+  why: 03-open changed nothing: its instruction asks to confirm, the recording made no state-changing action, and the page already showed 'fwgh19-n1 Bench Post' before it ran. The step may be redundant.
+  fix: sitelooper rerecord bench/results/flows/fwgh19.json 03-open
+[spec-replay] running: npx playwright test --config /home/user/sitelooper/bench/results/fwgh19-spec-spec-tmp/playwright.config.mjs
+[spec-replay] fwgh19-spec: 1/1 passed, exit=0, 54s, 0 drift line(s) — result written

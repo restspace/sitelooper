@@ -1,0 +1,102 @@
+
+[sweep] run 1/3: fwgh19-n1 (store: /home/user/sitelooper/bench/results/fwgh19-skills)
+[harness] ghost: defaulting APP_URL
+[harness] ghost: defaulting APP_EMAIL
+[harness] ghost: defaulting APP_PASSWORD
+[reset] ghost: no posts to delete
+[harness] ghost responded 200 at http://127.0.0.1:8099/
+stopped: fwgh19-n1
+  flow "fwgh19" saved: 3 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwgh19.json
+  warning: note: 01-signin no longer publishes seed_post_count — no replay reads it from the page and the recording showed no line to read
+  warning: note: 02-create no longer publishes status, published_posts_total — no replay reads them from the page and the recording showed no line to read
+  warning: warning: 03-open's instruction asks to report post_status, and no replay can publish it: nothing in its procedure reads it from the page, so export dropped it — re-record the step so the value is read, not only reported
+  warning: note: 03-open no longer publishes post_id, timezone — no replay reads them from the page and the recording showed no line to read
+  warning: warning: noop-step: 03-open changed nothing: its instruction asks to confirm, the recording made no state-changing action, and the page already showed 'fwgh19-n1 Bench Post' before it ran. The step may be redundant.
+  warning: warning: 1 value(s) KNOWN to be this run's survived unslotted — a replay will act on or wait for the recording's value (non-fatal outside locators):
+  flow.warnings[0]: "fwgh19-n1" (var) in "noop-step: 03-open changed nothing: its instruction asks to confirm, the recording made no state-changing action, and the page already showed 'fwgh19-n1 Bench P"
+  warning: warning: 77 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[1].instruction: "Bench News" (output) in "Create a new post titled '{{runid}} Bench Post'. In the body editor type exactly one paragraph containing the text '{{runid}}' (e.g. 'This is the {{runid}} benc"
+  flow.steps[1].instruction: "2026-09-01" (output) in "Create a new post titled '{{runid}} Bench Post'. In the body editor type exactly one paragraph containing the text '{{runid}}' (e.g. 'This is the {{runid}} benc"
+  flow.steps[1].instruction: "12:00" (output) in "Create a new post titled '{{runid}} Bench Post'. In the body editor type exactly one paragraph containing the text '{{runid}}' (e.g. 'This is the {{runid}} benc"
+  flow.steps[1].params.v5: "12:00" (output) in "12:00"
+  flow.warnings[0]: "fwgh19-n1 Bench Post" (output) in "noop-step: 03-open changed nothing: its instruction asks to confirm, the recording made no state-changing action, and the page already showed 'fwgh19-n1 Bench P"
+arm=sitelooper model=z-ai/glm-5.3 runid=fwgh19-n1 stop=completed
+turns=4 wall=190.8s
+commands=3 cmdTime=177.8s cmdBytes=4002 timeouts=0
+orchestrator in=4048 cw=0 cr=9536 out=923
+inner prompt=823646 cached=753920 completion=11940
+spend=$0.0322 maxUsd=3
+learn: A_n=0 replayed=0/3 full=0 repaired=0 compiled=3 variants=0
+-> /home/user/sitelooper/bench/results/fwgh19-n1-sitelooper-result.json
+
+fwgh19-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — fwgh19-n1-bench-post, body includes runid=true
+  obj 3: PASS — tags=Bench News (bench-news), want only the seeded Bench News (bench-news)
+  obj 4: PASS — custom excerpt="Excerpt for fwgh19-n1"
+  obj 5: PASS — status=published, visibility=public
+  obj 6: PASS — published_at=2026-09-01T12:00:00.000Z, want 2026-09-01
+  obj 7: PASS — slug fwgh19-n1-bench-post reported
+
+[sweep] run 2/3: fwgh19-n2 (replay flow fwgh19, no orchestrator)
+[reset] ghost: deleted 1 post(s) (earlier runs' and non-seed)
+
+fwgh19-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — fwgh19-n2-bench-post, body includes runid=true
+  obj 3: PASS — tags=Bench News (bench-news), want only the seeded Bench News (bench-news)
+  obj 4: PASS — custom excerpt="Excerpt for fwgh19-n2"
+  obj 5: PASS — status=published, visibility=public
+  obj 6: PASS — published_at=2026-09-01T12:00:00.000Z, want 2026-09-01
+  obj 7: PASS — slug fwgh19-n2-bench-post reported
+
+[sweep] run 3/3: fwgh19-n3 (replay flow fwgh19, no orchestrator)
+[reset] ghost: deleted 1 post(s) (earlier runs' and non-seed)
+
+fwgh19-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — fwgh19-n3-bench-post, body includes runid=true
+  obj 3: PASS — tags=Bench News (bench-news), want only the seeded Bench News (bench-news)
+  obj 4: PASS — custom excerpt="Excerpt for fwgh19-n3"
+  obj 5: PASS — status=published, visibility=public
+  obj 6: PASS — published_at=2026-09-01T12:00:00.000Z, want 2026-09-01
+  obj 7: PASS — slug fwgh19-n3-bench-post reported
+
+Learning sweep fwgh19 (K=3)
+┌─────────┬───┬─────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid       │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼─────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwgh19-n1' │ '7/7'    │ 'completed' │ 4     │ 3    │ 0.0322    │ 0   │ '0/3'        │ 191    │
+│ 1       │ 2 │ 'fwgh19-n2' │ '7/7'    │ 'success'   │ 0     │ 3    │ 0         │ 1   │ '3/3 (flow)' │ 52     │
+│ 2       │ 3 │ 'fwgh19-n3' │ '7/7'    │ 'success'   │ 0     │ 3    │ 0         │ 1   │ '3/3 (flow)' │ 52     │
+└─────────┴───┴─────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:8099
+  s_3d5088  validated    7 steps  3/3 (100%)
+           Open the post '{{v1}}' in Ghost admin, open its settings panel, and report the exact publish date and time, th…
+  s_4c9c73  validated    1 steps  3/3 (100%)
+           Sign in to Ghost admin at {{v1}} with email {{v2}} and password typed exactly as the text {{v3}}. Then list th…
+  s_77f154  validated    1 steps  3/3 (100%)
+           Sign in to Ghost admin at {{v1}} with email {{v2}} and password typed exactly as the text {{v3}}. Then list th…
+  s_7d1cd7  validated    3 steps  3/3 (100%)
+           Sign in to Ghost admin at {{v1}} with email {{v2}} and password typed exactly as the text {{v3}}. Then list th…
+  s_810693  validated    2 steps  3/3 (100%)
+           Create a new post titled '{{v2}}'. In the body editor type exactly one paragraph containing the text '{{v1}}' …
+  s_a3930a  validated    1 steps  3/3 (100%)
+           Create a new post titled '{{v2}}'. In the body editor type exactly one paragraph containing the text '{{v1}}' …
+  s_a66d3c  validated    1 steps  3/3 (100%)
+           Create a new post titled '{{v2}}'. In the body editor type exactly one paragraph containing the text '{{v1}}' …
+  s_ad80d8  validated    7 steps  3/3 (100%)
+           Open the post '{{v1}}' in Ghost admin, open its settings panel, and report the exact publish date and time, th…
+  s_b771d4  validated    5 steps  3/3 (100%)
+           Sign in to Ghost admin at {{v1}} with email {{v2}} and password typed exactly as the text {{v3}}. Then list th…
+  s_c34985  validated   15 steps  3/3 (100%)
+           Create a new post titled '{{v2}}'. In the body editor type exactly one paragraph containing the text '{{v1}}' …
+  s_d3418d  validated    4 steps  3/3 (100%)
+           Create a new post titled '{{v2}}'. In the body editor type exactly one paragraph containing the text '{{v1}}' …
+  s_f1a648  validated    2 steps  3/3 (100%)
+           Create a new post titled '{{v2}}'. In the body editor type exactly one paragraph containing the text '{{v1}}' …
+  s_f48ebd  validated    9 steps  3/3 (100%)
+           Create a new post titled '{{v2}}'. In the body editor type exactly one paragraph containing the text '{{v1}}' …
+store: /home/user/sitelooper/bench/results/fwgh19-skills
+
+summary: /home/user/sitelooper/bench/results/fwgh19-sweep.json
