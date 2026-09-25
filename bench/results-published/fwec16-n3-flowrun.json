@@ -1,0 +1,112 @@
+{
+  "flow": "fwec16",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_24a089; observed matching_opportunity_1=Seed: training package, matching_opportunity_2=Seed: pilot expansion, matching_opportunity_3=Seed: annual support renewal.",
+      "values": {
+        "matching_opportunity_1": "Seed: training package",
+        "matching_opportunity_2": "Seed: pilot expansion",
+        "matching_opportunity_3": "Seed: annual support renewal"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "8/8",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_abc622; observed record_id=6ab65864ace50cd37, stage=Negotiation, name=fwec16-n3 Bench Opportunity, account=Bench Account, amount=$12,500.00, assigned_user=Bench Assignee, close_date_display=Dec 31.",
+      "values": {
+        "record_id": "6ab65864ace50cd37",
+        "stage": "Negotiation",
+        "name": "fwec16-n3 Bench Opportunity",
+        "account": "Bench Account",
+        "amount": "$12,500.00",
+        "assigned_user": "Bench Assignee",
+        "close_date_display": "Dec 31"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "41/41",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_ae8cff: step 6: 2 field(s) this procedure filled were empty again before this click (the page rebuilt its form, or dropped the value when the field lost focus, after the fills were checked) — refilled once",
+        "s_ae8cff: step 13: read 'description' returned a value the skill itself set/selected ('fwec16-n3') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_ae8cff: step 17: 2 field(s) this procedure filled were empty again before this press (the page rebuilt its form, or dropped the value when the field lost focus, after the fills were checked); 1 of them kept only a value typed key by key — refilled once",
+        "s_ae8cff: step 18: read 'close_date_full' returned a value the skill itself set/selected ('2026-12-31') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_ae8cff: step 21: the field already held the value this type enters (restored after the recording saw it emptied), so it was cleared first rather than typed onto",
+        "s_ae8cff: step 24: read 'close_date_full' returned a value the skill itself set/selected ('2026-12-31') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_ae8cff: step 32: read 'close_date_full' returned a value the skill itself set/selected ('2026-12-31') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_abc622: step 5: primary locator did not resolve; used fallback #2 page.locator('.field[data-name=\"assignedUser\"]')"
+      ],
+      "unreported": [
+        "description",
+        "close_date_full"
+      ]
+    },
+    {
+      "id": "03-verify",
+      "status": "success",
+      "summary": "Replayed stored procedure s_585995; observed record_id=6ab65864ace50cd37, close_date_detail_display=Dec 31, close_date_field_value=2026-12-31, record_reference=fwec16-n3, post_time=11:18.",
+      "values": {
+        "record_id": "6ab65864ace50cd37",
+        "close_date_detail_display": "Dec 31",
+        "close_date_field_value": "2026-12-31",
+        "record_reference": "fwec16-n3",
+        "post_time": "11:18"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "9/9",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_585995: step 8: read 'post_text' returned a value the skill itself set/selected ('fwec16-n3 bench note') — confirms the control, not persistence; dropped from the report's confident values"
+      ],
+      "unreported": [
+        "post_text"
+      ]
+    }
+  ],
+  "passed": 3,
+  "total": 3,
+  "repinned": 0,
+  "drift": 1,
+  "driftTickets": [
+    {
+      "flow": "fwec16",
+      "step": "02-create",
+      "skill": "s_abc622",
+      "atStep": "5",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.getByText('Bench Assignee', { exact: true })",
+      "fallbackUsed": "page.locator('.field[data-name=\"assignedUser\"]')",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8097/#Opportunity/view/:id",
+      "pageUrl": "http://127.0.0.1:8097/#Opportunity/view/6ab65864ace50cd37"
+    }
+  ],
+  "wallMs": 112344,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "cachedTokens": 0
+  },
+  "usageByModel": {},
+  "servedByModel": {},
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}
