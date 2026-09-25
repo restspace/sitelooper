@@ -6701,6 +6701,43 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
       expect(ids(emittedLog, 'publish')).toEqual(ids(emittedLog, 'create'));
     }, 180_000);
 
+    it('both runners publish the visited id when the producer ends on another route with a part at that label (round 62, fwvk13)', async () => {
+      // 02-create of fwvk13 ended on /projects/2/5, whose p1 is the project:
+      // the task's id at p1 on /tasks/:id must not be read off the end url.
+      const toBoard: SkillStep = { tool: 'click', args: { target: '@e4' }, locators: { target: [{ kind: 'role', role: 'link', name: 'Board' }] } };
+      const steps = [...create(false).slice(0, 2), toBoard];
+      reset(0);
+      let trail: ReturnType<typeof urlTrail> | null = null;
+      const first = await replayOf({ ...skillOf(steps), id: 's_hash_create' }, {}, async (page) => {
+        trail = urlTrail(page);
+      });
+      const urls = trail ? [...(trail as ReturnType<typeof urlTrail>).urls] : [];
+      const published = visitedUrlPart(urls, urls[urls.length - 1] ?? '', 'h2', ROUTE());
+      const second = await replayOf({ ...skillOf(open()), id: 's_hash_open', params: V1 }, { v1: published ?? '' });
+      const replayLog = [...fx.log];
+      reset(0);
+      const spec: SpecFlow = {
+        version: 1,
+        name: 'parity-hash-board',
+        origin,
+        startUrl: `${origin}/`,
+        vars: [],
+        steps: [
+          { id: '01-create', instruction: 'create a post', params: {}, outputs: [], urlRoutes: { 'url.h2': ROUTE() }, segments: [{ id: 's_hash_create', template: 'create a post', params: {}, preconditions: { urlPattern: `${origin}/` }, steps }] },
+          { id: '02-open', instruction: 'publish {{01-create.url.h2}}', params: { v1: '{{01-create.url.h2}}' }, outputs: [], segments: [{ id: 's_hash_open', template: 'publish {{v1}}', params: V1, preconditions: { urlPattern: `${origin}/` }, steps: open() }] },
+        ],
+      };
+      const emitted = await emittedFlowOf(spec);
+      const emittedLog = [...fx.log];
+      expect(first.ok, first.reason ?? '').toBe(true);
+      expect(second.ok, second.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      expect(published).toBe(ids(replayLog, 'create')[0]);
+      expect(ids(replayLog, 'publish')).toEqual(ids(replayLog, 'create'));
+      expect(ids(emittedLog, 'create')).toHaveLength(1);
+      expect(ids(emittedLog, 'publish')).toEqual(ids(emittedLog, 'create'));
+    }, 180_000);
+
     it('a record the producer backed out of for another is not the one published (control)', async () => {
       const { published, replayLog, emitted, emittedLog } = await run(true);
       expect(emitted.ok, emitted.reason ?? '').toBe(true);

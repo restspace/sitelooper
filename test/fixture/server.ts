@@ -1227,6 +1227,8 @@ document.getElementById('save').addEventListener('click', () => {
  * A hash-routed editor (round 60, ghost fwgh14): "New post" mints a post and
  * routes to '#/editor/post/<id>' (Ghost's autosave does the same), "Posts"
  * routes back to the list, and a step that went back ends on '#/posts'.
+ * "Board" routes to '#/board/view/5' (round 62, vikunja fwvk13): a page whose
+ * url has a part at the post id's label (h2) on another route.
  * Opening '#/editor/post/<id>' directly shows "Post <id>" and a Publish that
  * posts commit:publish:<id>. Every create posts commit:create:<id>.
  */
@@ -1238,7 +1240,7 @@ const render = () => {
   const at = '#/editor/post/';
   const m = location.hash.startsWith(at) ? [location.hash, location.hash.slice(at.length)] : null;
   if (m) {
-    view.innerHTML = '<h1></h1><button id="publish" type="button">Publish</button> <a href="#/posts">Posts</a>';
+    view.innerHTML = '<h1></h1><button id="publish" type="button">Publish</button> <a href="#/posts">Posts</a> <a href="#/board/view/5">Board</a>';
     view.querySelector('h1').textContent = 'Post ' + m[1];
     view.querySelector('#publish').onclick = () => fetch('/commit/publish/' + m[1], { method: 'POST' });
   } else {
