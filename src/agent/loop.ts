@@ -505,6 +505,10 @@ export async function runInstruction(
         const keys = decision.held.map((h) => h.key);
         sourcingHold.held = { keys, readsBefore: reads.length };
         script.noteSourcingAsk?.(keys);
+        // As the naming hold does: the retry is asked to change one thing and
+        // models drop the rest — fwop19 04-open came back with values {} and
+        // published nothing. Every value the held report named is kept.
+        heldValues = report.evidence?.values;
         return {
           message: sourcingAskMessage(decision.held),
           transcript: `report held for sourcing: ${keys.join(', ')}`,
@@ -1268,15 +1272,32 @@ export async function runInstruction(
             transcript.push(line);
             opts.onProgress?.(`[turn ${turn}] ${line}`);
           }
-          if (holdsAsked.has('naming')) {
-            if (Object.keys(validation.report.evidence?.values ?? {}).length) browser.script?.noteNamingAnswered?.();
+          if (holdsAsked.has('naming') && Object.keys(validation.report.evidence?.values ?? {}).length) browser.script?.noteNamingAnswered?.();
+          if (heldValues && sourcingHold.held && browser.script) {
+            // A key the hold asked about that the retry READ under that label
+            // is answered by the page, not by the held (unsourced) value: the
+            // read's text goes under the key unless the retry set it itself.
+            // (A labelled read_all is not promoted by promoteLabelledReads —
+            // its label names a table — so it is put there here.)
+            const added = browser.script.readsThisInstruction().slice(sourcingHold.held.readsBefore);
+            const keep = { ...heldValues };
+            for (const key of sourcingHold.held.keys) {
+              const read = added.find((r) => r.label === key);
+              if (!read) continue;
+              delete keep[key];
+              const text = read.values.join(', ');
+              const values = (validation.report.evidence ??= {}).values ?? {};
+              if (text && !(key in values)) validation.report.evidence.values = { ...values, [key]: text };
+            }
+            heldValues = keep;
+          }
+          if (heldValues && (holdsAsked.has('naming') || holdsAsked.has('sourcing'))) {
             // The retry asked for the report "unchanged except…"; models drop
             // things anyway — sometimes the whole evidence block. Keep every
             // value either report named — see mergeReportValues for the
-            // trace that made this necessary.
-            if (heldValues) {
-              (validation.report.evidence ??= {}).values = mergeReportValues(heldValues, validation.report.evidence.values);
-            }
+            // trace that made this necessary. The sourcing hold's retry is
+            // merged the same way (fwop19 04-open lost every value).
+            (validation.report.evidence ??= {}).values = mergeReportValues(heldValues, validation.report.evidence.values);
           }
           // A repaired payload is accepted, not silently rewritten: the caller
           // and the transcript both see what was changed on the agent's behalf.
