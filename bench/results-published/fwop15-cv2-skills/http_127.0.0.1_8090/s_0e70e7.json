@@ -1,0 +1,112 @@
+{
+ "id": "s_0e70e7",
+ "origin": "http://127.0.0.1:8090",
+ "template": "In the project '{{v1}}' ({{v3}}/bench-project), create a new work package of type Task with subject exactly '{{v5}}'. Set its description to text that includes '{{v4}}' (e.g. '{{v6}}'). Set the Assignee to the user 'Bench Assignee' — this is an autocomplete field, so you must pick the 'Bench Assignee' option from the dropdown that appears, not just type the name. Set the Status to 'In progress'. Set the Finish date to {{v7}}. Save/create the work package. Then open the created work package's page and report: its numeric ID as displayed (shown like #123), the subject, the assignee shown, the status shown, the finish date shown, and the description text.",
+ "params": {
+  "v1": {
+   "example": "Bench Project",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i1:project_name"
+  },
+  "v3": {
+   "example": "http://127.0.0.1:8090/projects/bench-project",
+   "usedIn": [],
+   "known": true,
+   "binding": "01-open.project_url"
+  },
+  "v4": {
+   "example": "fwop15-cv2-r2n0",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v5": {
+   "example": "fwop15-cv2-r2n0 Bench Work Package",
+   "usedIn": [],
+   "known": true
+  },
+  "v6": {
+   "example": "Bench work package for run fwop15-cv2-r2n0",
+   "usedIn": [],
+   "known": true
+  },
+  "v7": {
+   "example": "2026-12-31",
+   "usedIn": []
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8090/projects/bench-project"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e72"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "link",
+      "name": "Work packages"
+     },
+     {
+      "kind": "id",
+      "selector": "#main-menu-work-packages"
+     },
+     {
+      "kind": "css",
+      "selector": "#main-menu-work-packages"
+     },
+     {
+      "kind": "point",
+      "x": 122,
+      "y": 188,
+      "w": 219,
+      "h": 36,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages",
+    "addedContains": [
+     "- link \"Go back one menu level\"",
+     "- textbox \"Search\"",
+     "- button \"Default\"",
+     "- link \"All open\"",
+     "- link \"Latest activity\""
+    ],
+    "lineDialect": 2
+   }
+  }
+ ],
+ "contract": 2,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-25T20:51:13.491Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_8b15a3",
+  "index": 0,
+  "of": 4
+ },
+ "provenance": {
+  "session": "rerecord-muhfkxus-0",
+  "instruction": "In the project 'Bench Project' (http://127.0.0.1:8090/projects/bench-project/bench-project), create a new work package of type Task with subject exactly 'fwop15-cv2-r2n0 Bench Work Package'. Set its description to text that includes 'fwop15-cv2-r2n0' (e.g. 'Bench work package for run fwop15-cv2-r2n0'). Set the Assignee to the user 'Bench Assignee' — this is an autocomplete field, so you must pick the 'Bench Assignee' option from the dropdown that appears, not just type the name. Set the Status to 'In progress'. Set the Finish date to 2026-12-31. Save/create the work package. Then open the created work package's page and report: its numeric ID as displayed (shown like #123), the subject, the assignee shown, the status shown, the finish date shown, and the description text.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-25T20:51:13.491Z"
+ },
+ "revision": 1
+}
