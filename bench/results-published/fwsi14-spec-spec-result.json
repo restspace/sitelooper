@@ -1,0 +1,42 @@
+{
+  "arm": "spec",
+  "runid": "fwsi14-spec",
+  "target": "snipeit",
+  "flow": "fwsi14.json",
+  "flowName": "fwsi14",
+  "skillsDir": "/home/user/sitelooper/bench/results/fwsi14-skills",
+  "compiled": true,
+  "flowFile": "bench/results/fwsi14-spec-spec-tmp/fwsi14.flow.ts",
+  "specFile": "bench/results/fwsi14-spec-spec-tmp/fwsi14.spec.ts",
+  "wallMs": 80677,
+  "exitCode": 1,
+  "timedOut": false,
+  "costUsd": 0,
+  "stats": {
+    "total": 1,
+    "passed": 0,
+    "failed": 1,
+    "skipped": 0
+  },
+  "tests": [
+    {
+      "title": "fwsi14",
+      "status": "unexpected",
+      "ok": false,
+      "durationMs": 76886,
+      "error": "Error: after 03-open s_911eab/1 expected url http://127.0.0.1:8098/hardware/7/edit but browser is at http://127.0.0.1:8098/hardware/7#history",
+      "drift": [
+        "[sitelooper drift] 02-create s_b54fd2/9 target: used #4 locator('#select2-rtd_location_id_location_select-container') (#2 ambiguous)"
+      ]
+    }
+  ],
+  "drift": [
+    "[sitelooper drift] 02-create s_b54fd2/9 target: used #4 locator('#select2-rtd_location_id_location_select-container') (#2 ambiguous)"
+  ],
+  "driftCount": 1,
+  "evidence": [
+    "fwsi14-spec-spec-failure.png",
+    "fwsi14-spec-spec-error-context.md"
+  ],
+  "logTail": "\nRunning 1 test using 1 worker\n\n[sitelooper step] 01-signin\n[sitelooper drift] 02-create s_b54fd2/9 target: used #4 locator('#select2-rtd_location_id_location_select-container') (#2 ambiguous)\n[sitelooper step] 02-create\n  ✘  1 fwsi14.spec.ts:9:1 › fwsi14 (1.3m)\n\n\n  1) fwsi14.spec.ts:9:1 › fwsi14 › 03-open: In Snipe-IT, open the asset page for asset tag {{02-create.asset_tag}} (name '{{runid}} Bench Asset'). Verify on the page: model is 'Bench Laptop Model', status 'Ready to Deploy' (deployed status may show as 'Checked out' — report the actual status label shown, but confirm status was set to Ready to Deploy), location 'Bench Office', purchase date 2026-03-15, and it is checked out to user 'Bench Assignee' with a checkout note containing '{{runid}}'. If the checkout did NOT go through (asset not assigned to Bench Assignee), perform the checkout now: check out to user 'Bench Assignee' with note '{{runid}} checkout note'. Report each of these values as actually shown. \n\n    Error: after 03-open s_911eab/1 expected url http://127.0.0.1:8098/hardware/7/edit but browser is at http://127.0.0.1:8098/hardware/7#history\n\n       at fwsi14.flow.ts:12520\n\n      12518 |   // (navigationTarget), whether or not the step goes on to stop.\n      12519 |   if (verdict.diffs) volatile.push(...verdict.diffs);\n    > 12520 |   if (verdict.stop) throw new Error(verdict.stop);\n            |                           ^\n      12521 | }\n      12522 |\n      12523 | /**\n        at urlEffect (/home/user/sitelooper/bench/results/fwsi14-spec-spec-tmp/fwsi14.flow.ts:12520:27)\n        at Object.verify (/home/user/sitelooper/bench/results/fwsi14-spec-spec-tmp/fwsi14.flow.ts:15907:13)\n        at runStepLifecycle (/home/user/sitelooper/bench/results/fwsi14-spec-spec-tmp/fwsi14.flow.ts:8545:24)\n        at Object.03-open (/home/user/sitelooper/bench/results/fwsi14-spec-spec-tmp/fwsi14.flow.ts:15863:9)\n        at /home/user/sitelooper/bench/results/fwsi14-spec-spec-tmp/fwsi14.flow.ts:16528:7\n        at runFlow (/home/user/sitelooper/bench/results/fwsi14-spec-spec-tmp/fwsi14.flow.ts:16527:5)\n        at /home/user/sitelooper/bench/results/fwsi14-spec-spec-tmp/fwsi14.spec.ts:14:21\n\n    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────\n    [sitelooper drift] 02-create s_b54fd2/9 target: used #4 locator('#select2-rtd_location_id_location_select-container') (#2 ambiguous)\n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────\n    test-results/fwsi14-fwsi14/test-failed-1.png\n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    Error Context: test-results/fwsi14-fwsi14/error-context.md\n\n  1 failed\n    fwsi14.spec.ts:9:1 › fwsi14 ────────────────────────────────────────────────────────────────────\n"
+}

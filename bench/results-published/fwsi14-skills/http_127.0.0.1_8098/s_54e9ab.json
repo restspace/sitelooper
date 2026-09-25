@@ -1,0 +1,69 @@
+{
+ "id": "s_54e9ab",
+ "origin": "http://127.0.0.1:8098",
+ "template": "Sign in to Snipe-IT at {{v1}} with username {{v2}} and password {{v3}} (type that exact text). Then go to Assets list, search for assets whose name starts with '{{v4}}', and report each asset's name and asset tag exactly as shown.",
+ "params": {
+  "v1": {
+   "example": "http://127.0.0.1:8098/",
+   "usedIn": [
+    2
+   ]
+  },
+  "v2": {
+   "example": "admin",
+   "usedIn": []
+  },
+  "v3": {
+   "example": "{{env:APP_PASSWORD}}",
+   "usedIn": []
+  },
+  "v4": {
+   "example": "Seed:",
+   "usedIn": []
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8098/"
+ },
+ "steps": [
+  {
+   "tool": "read",
+   "args": {
+    "what": "url"
+   },
+   "locators": {},
+   "label": "initial_page_url"
+  },
+  {
+   "tool": "goto",
+   "args": {
+    "url": "{{v1}}"
+   },
+   "locators": {}
+  }
+ ],
+ "contract": 4,
+ "stats": {
+  "uses": 3,
+  "successes": 3,
+  "partial": 0,
+  "created": "2026-09-25T04:59:24.672Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 4,
+  "lastUsed": "2026-09-25T05:09:30.677Z"
+ },
+ "status": "validated",
+ "seq": {
+  "chain": "s_d649d4",
+  "index": 0,
+  "of": 4
+ },
+ "provenance": {
+  "session": "fwsi14-n1",
+  "instruction": "Sign in to Snipe-IT at http://127.0.0.1:8098/ with username admin and password {{env:APP_PASSWORD}} (type that exact text). Then go to Assets list, search for assets whose name starts with 'Seed:', and report each asset's name and asset tag exactly as shown.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-25T04:59:24.672Z"
+ },
+ "revision": 3
+}

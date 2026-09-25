@@ -1,0 +1,176 @@
+{
+  "flow": "fwsi14",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_3992cb; observed initial_page_url=http://127.0.0.1:8098/login, asset1_tag=SEED-0001, asset1_name=Seed: Reception Laptop, asset2_tag=SEED-0002, asset2_name=Seed: Training Laptop, asset3_tag=SEED-0003, asset3_name=Seed: Spare Laptop, assets_count_after_search=Showing 1 to 3 of 3 rows.",
+      "values": {
+        "initial_page_url": "http://127.0.0.1:8098/login",
+        "asset1_tag": "SEED-0001",
+        "asset1_name": "Seed: Reception Laptop",
+        "asset2_tag": "SEED-0002",
+        "asset2_name": "Seed: Training Laptop",
+        "asset3_tag": "SEED-0003",
+        "asset3_name": "Seed: Spare Laptop",
+        "assets_count_after_search": "Showing 1 to 3 of 3 rows"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "21/21",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "The replayed segments had already created the asset, so I searched the Assets list for 'fwsi14-n3' and found it (it had simply not been checked out yet, and the earlier attempt to look it up by the wrong tag 'BA-00004' had returned no rows). From the row's Checkout action I opened the checkout form for BA-00006, chose user 'Bench Assignee (bench-assignee)' from the searchable user dropdown, entered note \"Checkout for fwsi14-n3 bench task\", and submitted — the app returned \"Success: Asset checked out successfully.\" The asset view page's history now shows both the create action and the checkout to Bench Assignee with that note, and the Assets list row shows status Deployed with a Checkin action, confirming no duplicate was created.",
+      "values": {
+        "asset_tag": "BA-00006",
+        "asset_name": "fwsi14-n3 Bench Asset",
+        "model": "Bench Laptop Model",
+        "location": "Bench Office",
+        "assigned_user": "Bench Assignee (bench-assignee)",
+        "checkout_note": "Checkout for fwsi14-n3 bench task",
+        "checkout_result": "Success: Asset checked out successfully.",
+        "history_rows": "2026-09-25 05:09 AM Bench Admin create new fwsi14-n3 Bench Asset #BA-00006 - Bench Laptop Model; 2026-09-25 05:10 AM Bench Admin checkout fwsi14-n3 Bench Asset #BA-00006 - Bench Laptop Model → Bench Assignee (note: Checkout for fwsi14-n3 bench task) Current Location: [id: 1] Bench Office",
+        "table_tbody_tr_td": "Checkout",
+        "table_tbody_tr_td_2": "Checkin",
+        "ref": "fwsi14-n3",
+        "ref_2": "BA-00004",
+        "status_1": "Ready to Deploy",
+        "status_2": "Deployed"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_bc3a9e stopped at step 2 — after step 2 expected url http://127.0.0.1:8098/hardware/:id but browser is at http://127.0.0.1:8098/hardware",
+      "replayed": "1/2",
+      "repaired": false,
+      "turns": 16,
+      "warnings": [
+        "s_b99aea: step 9: a better-ranked locator did not resolve; used fallback #4 page.locator('#select2-rtd_location_id_location_select-container')",
+        "s_bc3a9e: step 2: after step 2 expected url http://127.0.0.1:8098/hardware/:id but browser is at http://127.0.0.1:8098/hardware — the page replaced its document under this press and its form is empty again, so it is repeated once after a refill",
+        "s_bc3a9e: step 2: 1 field(s) this procedure filled were empty again before this press (the page replaced its document after the fills ran) — refilled once"
+      ],
+      "repinned": "s_564e5a",
+      "repinParams": {
+        "v1": "{{runid}}",
+        "v2": "{{runid}} Bench Asset",
+        "v3": "2026-03-15"
+      },
+      "unreported": [
+        "user_selected",
+        "dropdown_option_asset",
+        "dropdown_option_user",
+        "checkout_note_reference"
+      ]
+    },
+    {
+      "id": "03-open",
+      "status": "success",
+      "summary": "Opened the BA-00006 asset page (http://127.0.0.1:8098/hardware/6) via the \"Lookup by Asset Tag\" box. All requested values are as specified on the page: the Details panel shows Asset Tag BA-00006, Asset Name \"fwsi14-n3 Bench Asset\", status displayed as \"Ready to Deploy\" with a \"Deployed\" state marker, Default Location \"Bench Office\", and \"Bench Assignee\" as the checked-out user; the left info panel shows Model \"Bench Laptop Model\" and \"Purchased 2026-03-15\". The checkout had already gone through (Checkouts: 1), so no new checkout was performed — the History tab shows a 2026-09-25 05:10 AM checkout row for \"fwsi14-n3 Bench Asset #BA-00006 - Bench Laptop Model\" to Bench Assignee with note \"Checkout for fwsi14-n3 bench task\" (which contains 'fwsi14-n3') and Current Location [id: 1] Bench Office.",
+      "values": {
+        "asset_tag": "BA-00006",
+        "asset_name": "fwsi14-n3 Bench Asset",
+        "model_shown": "Bench Laptop Model",
+        "status_label_shown": "Ready to Deploy (Deployed)",
+        "default_location_shown": "Bench Office",
+        "purchase_date_shown": "Purchased 2026-03-15 - 6 months 1 week ago",
+        "checked_out_to_shown": "Bench Assignee",
+        "checkout_note_shown": "Checkout for fwsi14-n3 bench task",
+        "checkouts_count": "1",
+        "last_checkout": "2026-09-25 (about a minute before the check)",
+        "history_checkout_row": "2026-09-25 05:10 AM  Bench Admin  checkout  fwsi14-n3 Bench Asset #BA-00006 - Bench Laptop Model  Bench Assignee  1  Checkout for fwsi14-n3 bench task | Current Location: [id: 1] Bench Office",
+        "action_taken": "none - checkout already present, so no second checkout was issued",
+        "status_label_shown_2": "Status Labels",
+        "left_panels_text": "Copy to Clipboard\nBench Laptop Model\n Model No.\nCopy to Clipboard\n \nCopy to Clipboard\nBench Laptops\n Bench Manufacturer\n Purchased 2026-03-15 - 6 months 1 week ago\n BYOD\n Requestable\n Created By Bench Admin\n Created 2026-09-25 05:09 AM\n Updated 2026-09-25 05:10 AM",
+        "ref": "fwsi14-n3"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_63d79e stopped at step 1 — step 1 raised an alert the recording never saw: This asset can be checked out.",
+      "replayed": "0/1",
+      "repaired": false,
+      "turns": 18,
+      "repinned": "s_eab1c3",
+      "repinParams": {
+        "v1": "{{02-create.asset_tag}}",
+        "v2": "{{runid}} Bench Asset",
+        "v3": "{{runid}}",
+        "v4": "Bench Laptop Model",
+        "v5": "Ready to Deploy",
+        "v6": "Bench Office"
+      },
+      "unreported": [
+        "purchase_date_value",
+        "edit_status_id",
+        "edit_model_id",
+        "edit_asset_name",
+        "edit_status_label",
+        "edit_model_label",
+        "edit_location_label",
+        "location_field_label",
+        "checkout_note_text"
+      ]
+    }
+  ],
+  "passed": 3,
+  "total": 3,
+  "repinned": 2,
+  "drift": 2,
+  "driftTickets": [
+    {
+      "flow": "fwsi14",
+      "step": "02-create",
+      "skill": "s_b99aea",
+      "atStep": "9",
+      "key": "target",
+      "similarity": 0.999,
+      "missedLocator": "page.getByRole('combobox', { name: 'Select a Location', exact: true }).nth(1)",
+      "fallbackUsed": "page.locator('#select2-rtd_location_id_location_select-container')",
+      "fallbackIndex": 3,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:8098/hardware",
+      "pageUrl": "http://127.0.0.1:8098/hardware"
+    },
+    {
+      "flow": "fwsi14",
+      "step": "03-open",
+      "skill": "s_63d79e",
+      "similarity": 0.999,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_63d79e stopped at step 1 — step 1 raised an alert the recording never saw: This asset can be checked out.",
+      "reason": "step 1 raised an alert the recording never saw: This asset can be checked out.",
+      "pageUrlPattern": "http://127.0.0.1:8098/hardware/:id/edit",
+      "pageUrl": "http://127.0.0.1:8098/hardware/4/edit"
+    }
+  ],
+  "wallMs": 155230,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 516686,
+    "completionTokens": 10072,
+    "cachedTokens": 467072
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 516686,
+      "completionTokens": 10072,
+      "cachedTokens": 467072
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}
