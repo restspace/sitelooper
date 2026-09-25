@@ -1,0 +1,613 @@
+{
+  "name": "vop3v",
+  "origin": "http://127.0.0.1:8090",
+  "startUrl": "http://127.0.0.1:8090/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-signin",
+      "instruction": "Sign in to OpenProject with username admin and password {{env:APP_PASSWORD}} (type the password text exactly as {{env:APP_PASSWORD}}). After signing in, report what page you land on and the name of the signed-in user shown in the UI.",
+      "skill": "s_8fcc20",
+      "params": {
+        "v1": "admin"
+      },
+      "outputs": [
+        "username_entered",
+        "user_avatar_initials"
+      ],
+      "recorded": {
+        "signed_in_user": "Bench Admin",
+        "username_entered": "admin",
+        "landing_page": "OpenProject home (Welcome to OpenProject!)",
+        "user_avatar_initials": "BA",
+        "url": "http://127.0.0.1:8090/?first_time_user=true"
+      },
+      "route": "http://127.0.0.1:8090/",
+      "outputEvidence": {
+        "signed_in_user": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "username_entered": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "landing_page": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "user_avatar_initials": {
+          "same": 1,
+          "differed": 0
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "02-open",
+      "instruction": "Navigate to the project named 'Bench Project' and open its work packages list (the Work packages tab of that project). Report the subjects of all work packages whose subject starts with 'Seed:', exactly as displayed, one per line. Do not modify anything — this is read-only. Also report the total number of work packages shown in the list.",
+      "skill": "s_b4e08a",
+      "params": {
+        "v1": "Bench Project"
+      },
+      "outputs": [
+        "projects_list_url",
+        "total_work_packages_shown",
+        "pagination_text",
+        "subject_1",
+        "subject_2",
+        "subject_3",
+        "breadcrumb_home_link_text",
+        "breadcrumb_project_name",
+        "work_packages_all_open_filter",
+        "work_package_ids_1",
+        "work_package_ids_2",
+        "work_package_ids_3"
+      ],
+      "recorded": {
+        "projects_list_url": "http://127.0.0.1:8090/projects",
+        "work_packages_list_url": "http://127.0.0.1:8090/projects/bench-project/work_packages",
+        "total_work_packages_shown": "3",
+        "pagination_text": "(1 - 3/3) You are on the only page.",
+        "subject_1": "Seed: triage inbox",
+        "subject_2": "Seed: order missing parts",
+        "subject_3": "Seed: ship repaired device",
+        "breadcrumb_home_link_text": "Project",
+        "breadcrumb_project_name": "Bench Project",
+        "work_packages_all_open_filter": "All open",
+        "work_package_ids_1": "38",
+        "work_package_ids_2": "39",
+        "work_package_ids_3": "40",
+        "url": "http://127.0.0.1:8090/projects/bench-project/work_packages"
+      },
+      "route": "http://127.0.0.1:8090/projects/bench-project/work_packages",
+      "outputEvidence": {
+        "projects_list_url": {
+          "same": 1,
+          "differed": 0
+        },
+        "work_packages_list_url": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "total_work_packages_shown": {
+          "same": 1,
+          "differed": 0
+        },
+        "pagination_text": {
+          "same": 0,
+          "differed": 1
+        },
+        "subject_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "subject_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "subject_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "breadcrumb_home_link_text": {
+          "same": 1,
+          "differed": 0
+        },
+        "breadcrumb_project_name": {
+          "same": 1,
+          "differed": 0
+        },
+        "work_packages_all_open_filter": {
+          "same": 0,
+          "differed": 0,
+          "empty": 1
+        },
+        "work_package_ids_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "work_package_ids_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "work_package_ids_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "03-create",
+      "instruction": "In the project 'Bench Project', create a new work package of type 'Task' with the subject exactly '{{runid}} Bench Work Package' and a description that includes the text '{{runid}}' (e.g. 'Bench work package created for run {{runid}}'). Save it. Then report the work package's numeric ID exactly as the app displays it (OpenProject shows it as #<number>), and confirm the subject and description shown on the work package's detail page.",
+      "skill": "s_48a3c7",
+      "params": {
+        "v1": "Bench Project",
+        "v4": "{{runid}} Bench Work Package",
+        "v3": "{{runid}}",
+        "v5": "Bench work package created for run {{runid}}"
+      },
+      "outputs": [
+        "work_package_id_displayed",
+        "page_title",
+        "subject_confirmed",
+        "description_confirmed",
+        "detail_url",
+        "save_alert",
+        "content_heading",
+        "breadcrumb_home_link_text",
+        "work_package_type",
+        "breadcrumb_project_name",
+        "run_reference"
+      ],
+      "recorded": {
+        "work_package_id_displayed": "#41",
+        "page_title": "Task: vop3v-n1 Bench Work Package (#41) | Bench Project | OpenProject",
+        "subject_confirmed": "vop3v-n1 Bench Work Package",
+        "description_confirmed": "Bench work package created for run vop3v-n1",
+        "detail_url": "http://127.0.0.1:8090/projects/bench-project/work_packages/41/activity",
+        "save_alert": "Successful update.",
+        "content_heading": "Content",
+        "breadcrumb_home_link_text": "Project",
+        "work_package_type": "Task",
+        "breadcrumb_project_name": "Bench Project",
+        "run_reference": "vop3v-n1",
+        "url": "http://127.0.0.1:8090/projects/bench-project/work_packages/41/activity",
+        "url.p3": "41"
+      },
+      "route": "http://127.0.0.1:8090/projects/bench-project/work_packages/:id/activity",
+      "outputEvidence": {
+        "work_package_id_displayed": {
+          "same": 0,
+          "differed": 1
+        },
+        "page_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "subject_confirmed": {
+          "same": 0,
+          "differed": 1
+        },
+        "description_confirmed": {
+          "same": 0,
+          "differed": 1
+        },
+        "detail_url": {
+          "same": 0,
+          "differed": 1
+        },
+        "save_alert": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "content_heading": {
+          "same": 1,
+          "differed": 0
+        },
+        "breadcrumb_home_link_text": {
+          "same": 1,
+          "differed": 0
+        },
+        "work_package_type": {
+          "same": 0,
+          "differed": 1
+        },
+        "breadcrumb_project_name": {
+          "same": 1,
+          "differed": 0
+        },
+        "run_reference": {
+          "same": 0,
+          "differed": 1
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        },
+        "url.p3": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "04-set",
+      "instruction": "On the work package detail page for work package {{03-create.work_package_id_displayed}} ('{{runid}} Bench Work Package') in Bench Project, set the Assignee field to the user named 'Bench Assignee'. The Assignee field is an autocomplete: click it, type 'Bench Assignee', wait for the dropdown of matching users, and actually click/choose the 'Bench Assignee' option from the dropdown so it is selected (not merely typed). The field saves automatically. Then report the assignee value now displayed on the page.",
+      "skill": "s_900b05",
+      "params": {
+        "v1": "{{03-create.work_package_id_displayed}}",
+        "v3": "{{runid}} Bench Work Package",
+        "v5": "Bench Project",
+        "v4": "{{runid}}"
+      },
+      "outputs": [
+        "assignee_displayed",
+        "work_package_id_displayed",
+        "subject",
+        "page_title",
+        "save_alert"
+      ],
+      "recorded": {
+        "assignee_displayed": "Bench Assignee",
+        "assignee_email": "bench-assignee@example.com",
+        "work_package_id_displayed": "#41",
+        "subject": "vop3v-n1 Bench Work Package",
+        "page_title": "Task: vop3v-n1 Bench Work Package (#41) | Bench Project | OpenProject",
+        "save_alert": "Successful update."
+      },
+      "route": "http://127.0.0.1:8090/projects/bench-project/work_packages/:id/activity",
+      "urlVariance": [
+        "41",
+        "42"
+      ],
+      "outputEvidence": {
+        "assignee_displayed": {
+          "same": 1,
+          "differed": 0
+        },
+        "assignee_email": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "work_package_id_displayed": {
+          "same": 0,
+          "differed": 1
+        },
+        "subject": {
+          "same": 0,
+          "differed": 1
+        },
+        "page_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "save_alert": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        }
+      }
+    },
+    {
+      "id": "05-set",
+      "instruction": "On the work package detail page for work package {{03-create.work_package_id_displayed}} ('{{runid}} Bench Work Package') in Bench Project, set the Status field to 'In progress'. The status is edited in place: click the status field, choose 'In progress' from the options, and it saves automatically. Then report the status value now displayed on the page.",
+      "skill": "s_979cad",
+      "params": {
+        "v1": "{{03-create.work_package_id_displayed}}",
+        "v3": "{{runid}} Bench Work Package",
+        "v5": "Bench Project",
+        "v4": "{{runid}}"
+      },
+      "outputs": [
+        "status_displayed",
+        "work_package_id_displayed",
+        "subject",
+        "page_title",
+        "save_alert",
+        "run_reference"
+      ],
+      "recorded": {
+        "status_displayed": "In progress",
+        "work_package_id_displayed": "#41",
+        "subject": "vop3v-n1 Bench Work Package",
+        "page_title": "Task: vop3v-n1 Bench Work Package (#41) | Bench Project | OpenProject",
+        "save_alert": "Successful update.",
+        "run_reference": "vop3v-n1"
+      },
+      "route": "http://127.0.0.1:8090/projects/bench-project/work_packages/:id/activity",
+      "urlVariance": [
+        "41",
+        "42"
+      ],
+      "outputEvidence": {
+        "status_displayed": {
+          "same": 1,
+          "differed": 0
+        },
+        "work_package_id_displayed": {
+          "same": 0,
+          "differed": 1
+        },
+        "subject": {
+          "same": 0,
+          "differed": 1
+        },
+        "page_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "save_alert": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "run_reference": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "06-set",
+      "instruction": "On the work package detail page for work package {{03-create.work_package_id_displayed}} ('{{runid}} Bench Work Package') in Bench Project, set the Finish date field to 2026-12-31. The date field is edited in place: click it, enter the date 2026-12-31 (December 31, 2026), and it saves automatically. Then report the finish date value now displayed on the page.",
+      "skill": "s_ec3687",
+      "params": {
+        "v1": "{{03-create.work_package_id_displayed}}",
+        "v3": "{{runid}} Bench Work Package",
+        "v5": "Bench Project",
+        "v4": "{{runid}}"
+      },
+      "outputs": [
+        "finish_date_displayed",
+        "date_field_text",
+        "work_package_id_displayed",
+        "subject",
+        "page_title",
+        "save_alert",
+        "run_reference"
+      ],
+      "recorded": {
+        "finish_date_displayed": "12/31/2026",
+        "date_field_text": "no start date - 12/31/2026",
+        "work_package_id_displayed": "#41",
+        "subject": "vop3v-n1 Bench Work Package",
+        "page_title": "Task: vop3v-n1 Bench Work Package (#41) | Bench Project | OpenProject",
+        "save_alert": "Successful update.",
+        "run_reference": "vop3v-n1"
+      },
+      "route": "http://127.0.0.1:8090/projects/bench-project/work_packages/:id/activity",
+      "urlVariance": [
+        "41",
+        "42"
+      ],
+      "outputEvidence": {
+        "finish_date_displayed": {
+          "same": 1,
+          "differed": 0
+        },
+        "date_field_text": {
+          "same": 1,
+          "differed": 0
+        },
+        "work_package_id_displayed": {
+          "same": 0,
+          "differed": 1
+        },
+        "subject": {
+          "same": 0,
+          "differed": 1
+        },
+        "page_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "save_alert": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "run_reference": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "07-add",
+      "instruction": "On the work package detail page for work package {{03-create.work_package_id_displayed}} ('{{runid}} Bench Work Package') in Bench Project, add a comment whose text includes '{{runid}}' (e.g. 'Comment for run {{runid}}'). Submit the comment. Then report the comment text as it now appears in the activity/comments area of the page.",
+      "skill": "s_99314c",
+      "params": {
+        "v1": "{{03-create.work_package_id_displayed}}",
+        "v3": "{{runid}} Bench Work Package",
+        "v5": "Bench Project",
+        "v4": "{{runid}}",
+        "v7": "Comment for run {{runid}}"
+      },
+      "outputs": [
+        "comment_text",
+        "comment_author",
+        "work_package_id_displayed",
+        "subject",
+        "page_title",
+        "run_reference"
+      ],
+      "recorded": {
+        "comment_text": "Comment for run vop3v-n1",
+        "comment_author": "Bench Admin",
+        "work_package_id_displayed": "#41",
+        "subject": "vop3v-n1 Bench Work Package",
+        "page_title": "Task: vop3v-n1 Bench Work Package (#41) | Bench Project | OpenProject",
+        "run_reference": "vop3v-n1"
+      },
+      "route": "http://127.0.0.1:8090/projects/bench-project/work_packages/:id/activity",
+      "urlVariance": [
+        "41",
+        "42"
+      ],
+      "outputEvidence": {
+        "comment_text": {
+          "same": 0,
+          "differed": 1
+        },
+        "comment_author": {
+          "same": 1,
+          "differed": 0
+        },
+        "work_package_id_displayed": {
+          "same": 0,
+          "differed": 1
+        },
+        "subject": {
+          "same": 0,
+          "differed": 1
+        },
+        "page_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "run_reference": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "08-open",
+      "instruction": "Open the work package detail page for work package {{03-create.work_package_id_displayed}} ('{{runid}} Bench Work Package') in Bench Project and verify, reading only (do not change anything): (a) the numeric ID displayed as #<number>, (b) the subject, (c) the type, (d) the description text, (e) the assignee, (f) the status, (g) the finish date, (h) the text of the most recent comment. Report each of these values exactly as displayed on the page.",
+      "skill": "s_af7c2d",
+      "params": {
+        "v1": "{{03-create.work_package_id_displayed}}",
+        "v3": "{{runid}} Bench Work Package",
+        "v5": "Bench Project",
+        "v2": "{{03-create.url.p3}}",
+        "v4": "{{runid}}"
+      },
+      "outputs": [
+        "id",
+        "subject",
+        "type",
+        "description",
+        "assignee",
+        "status",
+        "finish_date",
+        "date_field_text",
+        "most_recent_comment",
+        "comment_author",
+        "page_title",
+        "run_reference"
+      ],
+      "recorded": {
+        "id": "#41",
+        "subject": "vop3v-n1 Bench Work Package",
+        "type": "Task",
+        "description": "Bench work package created for run vop3v-n1",
+        "assignee": "Bench Assignee",
+        "status": "In progress",
+        "finish_date": "12/31/2026",
+        "date_field_text": "no start date - 12/31/2026",
+        "most_recent_comment": "Comment for run vop3v-n1",
+        "comment_author": "Bench Admin",
+        "page_title": "Task: vop3v-n1 Bench Work Package (#41) | Bench Project | OpenProject",
+        "run_reference": "vop3v-n1"
+      },
+      "outputEvidence": {
+        "id": {
+          "same": 0,
+          "differed": 1
+        },
+        "subject": {
+          "same": 0,
+          "differed": 1
+        },
+        "type": {
+          "same": 0,
+          "differed": 1
+        },
+        "description": {
+          "same": 0,
+          "differed": 1
+        },
+        "assignee": {
+          "same": 1,
+          "differed": 0
+        },
+        "status": {
+          "same": 1,
+          "differed": 0
+        },
+        "finish_date": {
+          "same": 1,
+          "differed": 0
+        },
+        "date_field_text": {
+          "same": 1,
+          "differed": 0
+        },
+        "most_recent_comment": {
+          "same": 0,
+          "differed": 1
+        },
+        "comment_author": {
+          "same": 1,
+          "differed": 0
+        },
+        "page_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "run_reference": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "session": "vop3v-n1",
+    "created": "2026-09-25T05:51:27.935Z",
+    "model": "xiaomi/mimo-v2.6-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "01-signin",
+      "outputs": [
+        "signed_in_user",
+        "landing_page"
+      ]
+    },
+    {
+      "stepId": "02-open",
+      "outputs": [
+        "work_packages_list_url"
+      ]
+    },
+    {
+      "stepId": "04-set",
+      "outputs": [
+        "assignee_email"
+      ]
+    }
+  ]
+}
