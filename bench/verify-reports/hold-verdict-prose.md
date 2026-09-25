@@ -2,6 +2,8 @@
 
 Commit: `dced1309` — report: a labelled read is promoted even when another key holds the same text (fwod90 03-open untaxed_amount)
 
+(A prior verification run on this branch's earlier head, `6e44dc7d`, is superseded by this one: `fix/hold-verdict-prose` gained one more commit — `dced1309`, a bench-log-only commit — after that run published its report. This report re-verifies the branch's current head.)
+
 Chromium: revision **1228**, installed via `npx playwright install --with-deps chromium` into `/opt/pw-browsers/chromium-1228`. `playwright-core`'s bundled `browsers.json` resolved `chromium.executablePath()` to `/opt/pw-browsers/chromium-1228/chrome-linux64/chrome` directly (verified before running tests); no `SITELOOPER_EXECUTABLE` override was needed. The box's pre-existing `/opt/pw-browsers/chromium-1194` (and the `chromium` symlink pointing at it) was left in place but not used.
 
 ## a. `npx vitest run --pool=forks --poolOptions.forks.maxForks=4`
@@ -61,6 +63,8 @@ Test Files  1 passed (1)
 | fwgh19 | compiled |
 
 No runid present in both files changed status. This matches the expectation that this branch (which only touches `src/agent/sourcing.ts`'s `isDataShaped`, affecting record time) leaves compile-time status unaffected.
+
+Full snapshot copied to `bench/corpus-snapshots/hvp-dced1309.json` (the prior run's `bench/corpus-snapshots/hvp-6e44dc7d.json` is left in place).
 
 ## Overall: PASS
 
