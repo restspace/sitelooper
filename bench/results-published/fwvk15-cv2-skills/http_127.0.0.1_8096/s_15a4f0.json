@@ -1,0 +1,84 @@
+{
+ "id": "s_15a4f0",
+ "origin": "http://127.0.0.1:8096",
+ "template": "Open the project named '2' from the sidebar and list the titles of all tasks in it whose title starts with 'Seed:', exactly as displayed. Do not modify anything. Report the exact titles.",
+ "params": {},
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8096/"
+ },
+ "steps": [
+  {
+   "tool": "wait_for",
+   "args": {
+    "target": "text=Vikunja is loading…",
+    "state": "hidden",
+    "timeout_ms": 8000
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "text=Vikunja is loading…"
+     }
+    ]
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=link[name=\"Projects\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > aside > nav:nth-of-type(1) > menu > li:nth-of-type(3) > a"
+     },
+     {
+      "kind": "point",
+      "x": 150,
+      "y": 190,
+      "w": 300,
+      "h": 44,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8096/projects",
+    "addedContains": [
+     "- checkbox \"Show Archived\"",
+     "- link \"NEW SAVED FILTER\"",
+     "- link \"NEW PROJECT\""
+    ],
+    "lineDialect": 2
+   }
+  }
+ ],
+ "contract": 2,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-25T13:50:55.498Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_1a6297",
+  "index": 0,
+  "of": 4
+ },
+ "provenance": {
+  "session": "rerecord-muh0pitt-0",
+  "instruction": "Open the project named '2' from the sidebar and list the titles of all tasks in it whose title starts with 'Seed:', exactly as displayed. Do not modify anything. Report the exact titles.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-25T13:50:55.498Z"
+ },
+ "revision": 1
+}

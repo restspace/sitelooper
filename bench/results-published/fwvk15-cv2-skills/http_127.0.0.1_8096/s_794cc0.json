@@ -1,0 +1,116 @@
+{
+ "id": "s_794cc0",
+ "origin": "http://127.0.0.1:8096",
+ "template": "On the task detail page for the task titled '{{v1}}' (identifier {{v3}}, url {{v4}}), set the due date to 2026-12-31 ({{v5}} 31, 2026) and set the priority to 'High'. These fields edit in place and save automatically when changed or when you click away — there is no Save button for the whole page. After setting both, verify on the page that the due date shows 2026-12-31 and the priority shows High, and report exactly what the page displays for each.",
+ "params": {
+  "v1": {
+   "example": "fwvk15-cv2-r4n1 Bench Task",
+   "usedIn": [
+    1
+   ],
+   "known": true,
+   "binding": "output:i3:task_title"
+  },
+  "v2": {
+   "example": "fwvk15-cv2-r4n1",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v3": {
+   "example": "BENCH-19",
+   "usedIn": [],
+   "known": true,
+   "binding": "03-create.task_identifier"
+  },
+  "v4": {
+   "example": "http://127.0.0.1:8096/projects/2/5",
+   "usedIn": [],
+   "known": true,
+   "binding": "03-create.url"
+  },
+  "v5": {
+   "example": "December",
+   "usedIn": []
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8096/projects/:id/:id"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e479"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "link",
+      "name": "{{v1}}"
+     },
+     {
+      "kind": "css",
+      "selector": "ul > div:nth-of-type(1) > div > div:nth-of-type(2) > span:nth-of-type(1) > a"
+     },
+     {
+      "kind": "point",
+      "x": 473,
+      "y": 230,
+      "w": 210.9,
+      "h": 22,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "mints": {
+    "at": "p1"
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8096/tasks/{{d1}}",
+    "addedContains": [
+     "- button \"{{v3}}\"",
+     "- heading \"{{v3}}\"",
+     "- heading \"{{v1}}\"",
+     "- heading \"Description\"",
+     "- button \"Edit\""
+    ],
+    "lineDialect": 2
+   }
+  }
+ ],
+ "derived": {
+  "d1": {
+   "step": 1,
+   "at": "p1",
+   "example": "35"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-25T14:15:40.769Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_06334d",
+  "index": 0,
+  "of": 2
+ },
+ "provenance": {
+  "session": "rerecord-muh1fgpn-1",
+  "instruction": "On the task detail page for the task titled 'fwvk15-cv2-r4n1 Bench Task' (identifier BENCH-19, url http://127.0.0.1:8096/projects/2/5), set the due date to 2026-12-31 (December 31, 2026) and set the priority to 'High'. These fields edit in place and save automatically when changed or when you click away — there is no Save button for the whole page. After setting both, verify on the page that the due date shows 2026-12-31 and the priority shows High, and report exactly what the page displays for each.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-25T14:15:40.769Z"
+ },
+ "revision": 1
+}
