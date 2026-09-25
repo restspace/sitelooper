@@ -1,0 +1,356 @@
+{
+  "flow": "fwgt15",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_b6cf7a; observed issues_page_url=http://127.0.0.1:8095/bench/bench-repo/issues, open_issues_count=3, closed_issues_count=0, issue_3_title=Seed: ship repaired device, issue_2_title=Seed: order missing parts, issue_1_title=Seed: triage inbox, open_seed_issue_titles_1=Seed: ship repaired device, open_seed_issue_titles_2=Seed: order missing parts, open_seed_issue_titles_3=Seed: triage inbox.",
+      "values": {
+        "issues_page_url": "http://127.0.0.1:8095/bench/bench-repo/issues",
+        "open_issues_count": "3",
+        "closed_issues_count": "0",
+        "issue_3_title": "Seed: ship repaired device",
+        "issue_2_title": "Seed: order missing parts",
+        "issue_1_title": "Seed: triage inbox",
+        "open_seed_issue_titles_1": "Seed: ship repaired device",
+        "open_seed_issue_titles_2": "Seed: order missing parts",
+        "open_seed_issue_titles_3": "Seed: triage inbox"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "15/15",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_333b1b; observed issue_number=#5, issue_title=fwgt15-n2 Bench Issue, issue_heading=fwgt15-n2 Bench Issue #5, page_title=#5 - fwgt15-n2 Bench Issue - bench-repo - Gitea: Git with a cup of tea, issues_tab_count=Issues\n4, benchmark_id=fwgt15-n2.",
+      "values": {
+        "issue_number": "#5",
+        "issue_title": "fwgt15-n2 Bench Issue",
+        "issue_heading": "fwgt15-n2 Bench Issue #5",
+        "page_title": "#5 - fwgt15-n2 Bench Issue - bench-repo - Gitea: Git with a cup of tea",
+        "issues_tab_count": "Issues\n4",
+        "benchmark_id": "fwgt15-n2"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "10/10",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_5e9f7a; observed applied_label_link=No labels.",
+      "values": {
+        "applied_label_link": "No labels"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "3/3",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_5e9f7a: step 1: skipped read — no element matched any known locator for target (tried 3: page.getByRole('link', { name: 'bug', exact: true }).nth(1), page.locator('div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2) > a'), elementAt(980, 360) /* link */)",
+        "s_5e9f7a: step 3: primary locator did not resolve; used fallback #2 page.locator('div > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2)')"
+      ]
+    },
+    {
+      "id": "04-add",
+      "status": "success",
+      "summary": "Added the 'priority-high' label to issue #5 (fwgt15-n2 Bench Issue) in bench/bench-repo via the Labels picker: opened the sidebar Labels dropdown, clicked the 'priority-high' menu item (its class became 'item muted checked' and the hidden label_ids input became '2'), then closed the menu by clicking the page heading, which triggered Gitea's save. Verified after a full page reload: the sidebar Labels section displays 'priority-high'. Note: 'No labels' is not an actual label — it is Gitea's placeholder shown when an issue has no labels; it was not removed, and the issue now displays exactly one label: 'priority-high'.",
+      "values": {
+        "issue_number": "#5",
+        "issue_title": "fwgt15-n2 Bench Issue",
+        "labels_displayed_on_issue": "priority-high",
+        "ph_item_class_after_click": "item muted checked",
+        "label_ids_value_after_click": "2",
+        "sidebar_labels_after_reload": "priority-high",
+        "sidebar_labels_section_text": "Labels: priority-high (Milestone: No Milestone; Projects: No projects; Assignees: No Assignees)",
+        "issue_page_url": "http://127.0.0.1:8095/bench/bench-repo/issues/5",
+        "ref": "fwgt15-n2",
+        "ref_2": "aria_dropdown_menu_32"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_418503 stopped at step 3 — after step 3 the page did not show \"- combobox \\\"Labels Clear labels No labels documentation enhancement {{*}}\\\"\" / \"- listbox \\\"Clear labels No labels documentation enhancement {{*}}\\\"\" as it did when recorded — the step ran but probably acted on the wrong element",
+      "replayed": "2/9",
+      "repaired": false,
+      "turns": 53,
+      "warnings": [
+        "s_418503: step 1: primary locator did not resolve; used fallback #2 page.locator('#_aria_dropdown_menu_32 > div:nth-of-type(2) > a:nth-of-type(5)')"
+      ],
+      "unreported": [
+        "priority_high_label_option_url",
+        "ph_item_class_after_clic",
+        "ph_item_class_after_chec",
+        "sidebar_labels_rendered",
+        "bug_label_link"
+      ]
+    },
+    {
+      "id": "05-change",
+      "status": "success",
+      "summary": "Assigned issue #5 (fwgt15-n2 Bench Issue) in bench/bench-repo to 'bench-assignee' via the sidebar Assignees picker: opened the dropdown, clicked the 'bench-assignee' item (it became 'item muted checked', hidden field assignee_ids=3), then closed the menu by clicking the page heading, which committed the change. Verified after a full page reload — the issue sidebar displays 'Assignees: bench-assignee (Bench Assignee)'; the label 'priority-high' remains displayed.",
+      "values": {
+        "issue_number": "#5",
+        "issue_title": "fwgt15-n2 Bench Issue",
+        "assignee_displayed": "bench-assignee (Bench Assignee)",
+        "assignee_full_name": "Bench Assignee",
+        "assignee_ids_hidden_input": "3",
+        "sidebar_labels": "priority-high",
+        "url_after_checkmark_clic": "http://127.0.0.1:8095/bench/bench-repo/issues/5",
+        "ref": "fwgt15-n2",
+        "sidebar_text_after_reload_1": "Assignees",
+        "sidebar_text_after_reload_2": "bench-assignee",
+        "sidebar_text_after_reload_3": "(Bench Assignee)"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_f5cc73 stopped at step 12 — the press was recorded picking div \"Clear assignees\" and picked nothing — stopped rather than go on without that pick",
+      "replayed": "11/27",
+      "repaired": false,
+      "turns": 8,
+      "unreported": [
+        "assignee_user_id",
+        "issue_page_url",
+        "assignees_sidebar_heading",
+        "assignee_picker_admin_entry",
+        "issue_sidebar_combo_nth__3_1",
+        "issue_sidebar_combo_nth__3_2"
+      ]
+    },
+    {
+      "id": "06-set",
+      "status": "success",
+      "summary": "Set bench/bench-repo issue #4's milestone to 'Bench Milestone' using the sidebar Milestone picker.",
+      "values": {
+        "issue_url_after_milestone_click": "http://127.0.0.1:8095/bench/bench-repo/issues/5",
+        "milestone_displayed": "Bench Milestone",
+        "milestone_id": "1"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "6/6",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "07-add",
+      "status": "success",
+      "summary": "Replayed stored procedure s_3f58c7; observed comment_anchor=issuecomment-11, comment_text_displayed=Comment for run fwgt15-n2., benchmark_id=fwgt15-n2.",
+      "values": {
+        "comment_anchor": "issuecomment-11",
+        "comment_text_displayed": "Comment for run fwgt15-n2.",
+        "benchmark_id": "fwgt15-n2"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "7/7",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_3f58c7: step 3: primary locator did not resolve; used fallback #2 page.locator('#issuecomment-11 > div > div:nth-of-type(2) > div:nth-of-type(1) > p')"
+      ]
+    },
+    {
+      "id": "08-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_39c2c9; observed g_comment_texts=Comment for run fwgt15-n2., a_issue_number_and_title_1=#5, a_issue_number_and_title_2=fwgt15-n2 Bench Issue, sidebar_assignees_heading=Assignees, sidebar_assignee_fullname=(Bench Assignee), sidebar_assignee_entry_fullname=(Bench Assignee), e_assignee_displayed=bench-assignee\n(Bench Assignee), sidebar_milestone_section_text=Milestone\nBench Milestone, f_milestone_displayed=Bench Milestone, benchmark_id=fwgt15-n2.",
+      "unanswered": [
+        "seed_open_issue_titles"
+      ],
+      "values": {
+        "g_comment_texts": "Comment for run fwgt15-n2.",
+        "a_issue_number_and_title_1": "#5",
+        "a_issue_number_and_title_2": "fwgt15-n2 Bench Issue",
+        "sidebar_assignees_heading": "Assignees",
+        "sidebar_assignee_fullname": "(Bench Assignee)",
+        "sidebar_assignee_entry_fullname": "(Bench Assignee)",
+        "e_assignee_displayed": "bench-assignee\n(Bench Assignee)",
+        "sidebar_milestone_section_text": "Milestone\nBench Milestone",
+        "f_milestone_displayed": "Bench Milestone",
+        "benchmark_id": "fwgt15-n2"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "14/14",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_39c2c9: step 6: skipped read — no element matched any known locator for target (tried 2: page.locator('#issuecomment-3 > span:nth-of-type(2) > a'), elementAt(214, 510) /* link */)",
+        "s_39c2c9: step 8: skipped read — no element matched any known locator for target (tried 2: page.locator('#issuecomment-3 > span:nth-of-type(2) > a'), elementAt(214, 510) /* link */)",
+        "s_39c2c9: step 11: skipped read — no element matched any known locator for target (tried 1: elementAt(510, 659) /* p */)",
+        "s_39c2c9: step 14: primary locator did not resolve; used fallback #2 page.locator('#issue-title-display > h1')"
+      ],
+      "unreported": [
+        "sidebar_assignee_name",
+        "sidebar_assignee_entry_name"
+      ]
+    }
+  ],
+  "passed": 8,
+  "total": 8,
+  "repinned": 0,
+  "drift": 9,
+  "driftTickets": [
+    {
+      "flow": "fwgt15",
+      "step": "03-open",
+      "skill": "s_5e9f7a",
+      "atStep": "1",
+      "key": "target",
+      "similarity": 0.983,
+      "missedLocator": "page.getByRole('link', { name: 'bug', exact: true }).nth(1)",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "pageUrl": "http://127.0.0.1:8095/bench/bench-repo/issues/5"
+    },
+    {
+      "flow": "fwgt15",
+      "step": "03-open",
+      "skill": "s_5e9f7a",
+      "atStep": "3",
+      "key": "target",
+      "similarity": 0.983,
+      "missedLocator": "page.locator('.labels-list >> nth=1')",
+      "fallbackUsed": "page.locator('div > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2)')",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "pageUrl": "http://127.0.0.1:8095/bench/bench-repo/issues/5"
+    },
+    {
+      "flow": "fwgt15",
+      "step": "04-add",
+      "skill": "s_418503",
+      "atStep": "1",
+      "key": "target",
+      "similarity": 0.983,
+      "missedLocator": "page.getByRole('link', { name: 'priority-high', exact: true })",
+      "fallbackUsed": "page.locator('#_aria_dropdown_menu_32 > div:nth-of-type(2) > a:nth-of-type(5)')",
+      "fallbackIndex": 1,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "pageUrl": "http://127.0.0.1:8095/bench/bench-repo/issues/5"
+    },
+    {
+      "flow": "fwgt15",
+      "step": "05-change",
+      "skill": "s_f5cc73",
+      "similarity": 0.996,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_f5cc73 stopped at step 12 — the press was recorded picking div \"Clear assignees\" and picked nothing — stopped rather than go on without that pick",
+      "reason": "the press was recorded picking div \"Clear assignees\" and picked nothing — stopped rather than go on without that pick",
+      "pageUrlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "pageUrl": "http://127.0.0.1:8095/bench/bench-repo/issues/5"
+    },
+    {
+      "flow": "fwgt15",
+      "step": "07-add",
+      "skill": "s_3f58c7",
+      "atStep": "3",
+      "key": "target",
+      "similarity": 0.997,
+      "missedLocator": "page.getByText('Comment for run fwgt15-n2.', { exact: true })",
+      "fallbackUsed": "page.locator('#issuecomment-11 > div > div:nth-of-type(2) > div:nth-of-type(1) > p')",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "pageUrl": "http://127.0.0.1:8095/bench/bench-repo/issues/5"
+    },
+    {
+      "flow": "fwgt15",
+      "step": "08-open",
+      "skill": "s_39c2c9",
+      "atStep": "6",
+      "key": "target",
+      "similarity": 0.997,
+      "missedLocator": "page.locator('#issuecomment-3 > span:nth-of-type(2) > a')",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "pageUrl": "http://127.0.0.1:8095/bench/bench-repo/issues/5"
+    },
+    {
+      "flow": "fwgt15",
+      "step": "08-open",
+      "skill": "s_39c2c9",
+      "atStep": "8",
+      "key": "target",
+      "similarity": 0.997,
+      "missedLocator": "page.locator('#issuecomment-3 > span:nth-of-type(2) > a')",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "pageUrl": "http://127.0.0.1:8095/bench/bench-repo/issues/5"
+    },
+    {
+      "flow": "fwgt15",
+      "step": "08-open",
+      "skill": "s_39c2c9",
+      "atStep": "11",
+      "key": "target",
+      "similarity": 0.997,
+      "missedLocator": "elementAt(510, 659) /* p */",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "pageUrl": "http://127.0.0.1:8095/bench/bench-repo/issues/5"
+    },
+    {
+      "flow": "fwgt15",
+      "step": "08-open",
+      "skill": "s_39c2c9",
+      "atStep": "14",
+      "key": "target",
+      "similarity": 0.997,
+      "missedLocator": "page.getByRole('heading', { name: 'fwgt15-n2 Bench Issue #4', exact: true })",
+      "fallbackUsed": "page.locator('#issue-title-display > h1')",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "pageUrl": "http://127.0.0.1:8095/bench/bench-repo/issues/5"
+    }
+  ],
+  "wallMs": 671981,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 1625640,
+    "completionTokens": 85440,
+    "cachedTokens": 1441536
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 996129,
+      "completionTokens": 16268,
+      "cachedTokens": 897024
+    },
+    "z-ai/glm-5.3": {
+      "promptTokens": 629511,
+      "completionTokens": 69172,
+      "cachedTokens": 544512
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ],
+    "z-ai/glm-5.3": [
+      "Wafer",
+      "Together"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

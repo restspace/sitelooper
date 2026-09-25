@@ -1,0 +1,45 @@
+
+Running 1 test using 1 worker
+
+[sitelooper step] 01-open
+[sitelooper step] 02-create
+[sitelooper skip] 03-open s_5e9f7a/1 target: no locator recorded — value left empty
+[sitelooper drift] 03-open s_5e9f7a/3 target: primary locator('.labels-list').nth(1) missed; used #2 locator('div > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2)') (#1 absent)
+[sitelooper step] 03-open
+  ✘  1 fwgt15.spec.ts:9:1 › fwgt15 (27.1s)
+
+
+  1) fwgt15.spec.ts:9:1 › fwgt15 › 04-add: On the issue page {{02-create.url}}, the issue currently has the label '{{03-open.applied_label_link}}'. Add the label 'priority-high' to it using the Labels picker in the issue sidebar. The picker is a dropdown menu listing available labels with checkboxes — open it, tick/select the 'priority-high' entry, then close the menu (click elsewhere or press Escape) so Gitea saves the change. The goal is that the issue page ends up displaying BOTH labels '{{03-open.applied_label_link}}' and 'priority-high' on the issue itself (not just ticked inside the open menu). If clicking the menu item does not apply it, try alternatives such as keyboard navigation (arrow keys + Enter) or clicking the item's checkbox/label element. Verify at the end by reading the sidebar label list, and report the labels displayed. Do not remove the '{{03-open.applied_label_link}}' label. 
+
+    Error: none of 1 recorded locators resolved at 04-add s_e18531/3 target (page is at http://127.0.0.1:8095/bench/bench-repo/issues/7): locator('[data-sitelooper-point="988,595"]')
+
+       at fwgt15.flow.ts:13019
+
+      13017 | /** The stop for a chain that resolved nothing, shared by `pick` and `pickOrNavigate`. */
+      13018 | function pickMiss(page: Page, candidates: CandidateObservation[], where: string, note?: string): Error {
+    > 13019 |   return new Error(
+            |          ^
+      13020 |     // The url and the recorded step are half the answer whenever a chain
+      13021 |     // misses wholesale: a locator that named the control on the day it was
+      13022 |     // recorded usually misses because the page is not the page the step
+        at pickMiss (/home/user/sitelooper/bench/results/fwgt15-spec-spec-tmp/fwgt15.flow.ts:13019:10)
+        at pickOrNavigate (/home/user/sitelooper/bench/results/fwgt15-spec-spec-tmp/fwgt15.flow.ts:13069:9)
+        at Object.act (/home/user/sitelooper/bench/results/fwgt15-spec-spec-tmp/fwgt15.flow.ts:14609:22)
+        at runStepLifecycle (/home/user/sitelooper/bench/results/fwgt15-spec-spec-tmp/fwgt15.flow.ts:8721:18)
+        at Object.04-add (/home/user/sitelooper/bench/results/fwgt15-spec-spec-tmp/fwgt15.flow.ts:14602:5)
+        at /home/user/sitelooper/bench/results/fwgt15-spec-spec-tmp/fwgt15.flow.ts:17268:7
+        at runFlow (/home/user/sitelooper/bench/results/fwgt15-spec-spec-tmp/fwgt15.flow.ts:17267:5)
+        at /home/user/sitelooper/bench/results/fwgt15-spec-spec-tmp/fwgt15.spec.ts:14:21
+
+    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    [sitelooper drift] 03-open s_5e9f7a/3 target: primary locator('.labels-list').nth(1) missed; used #2 locator('div > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2)') (#1 absent)
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/fwgt15-fwgt15/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/fwgt15-fwgt15/error-context.md
+
+  1 failed
+    fwgt15.spec.ts:9:1 › fwgt15 ────────────────────────────────────────────────────────────────────
