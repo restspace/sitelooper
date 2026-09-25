@@ -1,0 +1,13 @@
+[spec-replay] resetting repairdesk
+[reset] repairdesk: reloaded seed via http://127.0.0.1:4180/__reset
+[spec-replay] compiling: /opt/node22/bin/node /home/user/sitelooper/bin/sitelooper.js compile bench/results/flows/fwrd93.json --out /home/user/sitelooper/bench/results/fwrd93-spec-spec-tmp --overwrite-spec
+flow: /home/user/sitelooper/bench/results/fwrd93-spec-spec-tmp/fwrd93.flow.ts
+spec: /home/user/sitelooper/bench/results/fwrd93-spec-spec-tmp/fwrd93.spec.ts
+warning 07-report: 07-report read a value that contradicts what the previous step reported
+  why: 07-report read status_after_fresh_load "Ready" right after 06-change reported "Draft"; 06-change's change may not have landed and a later step may be retrying it. Re-record 06-change.
+  fix: sitelooper rerecord bench/results/flows/fwrd93.json 06-change
+warning 12-open: 12-open read a value that contradicts what the previous step reported
+  why: 12-open read ticket_reference "RD-1015" right after 11-archive reported "RD-1016"; 11-archive's change may not have landed and a later step may be retrying it. Re-record 11-archive.
+  fix: sitelooper rerecord bench/results/flows/fwrd93.json 11-archive
+[spec-replay] running: npx playwright test --config /home/user/sitelooper/bench/results/fwrd93-spec-spec-tmp/playwright.config.mjs
+[spec-replay] fwrd93-spec: 1/1 passed, exit=0, 109s, 0 drift line(s) — result written
