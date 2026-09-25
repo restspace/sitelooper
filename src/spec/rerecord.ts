@@ -3,6 +3,7 @@ import path from 'node:path';
 import type { Flow, FlowStep } from '../skills/flow.js';
 import type { FlowStepResult } from '../shared/protocol.js';
 import { formatDiagnostic, rerecordFix, type Diagnostic } from './diagnostics.js';
+import { urlParts } from '../execution/url.js';
 
 /**
  * `sitelooper rerecord <flow> <step>` — throw one step's recording away and
@@ -206,6 +207,53 @@ export function stepLine(stepId: string, run: RerecordRun): string {
 export type RerecordVerdict =
   | { ok: true; pinned: string; runs: number }
   | { ok: false; pinned?: string; diagnostic: RerecordDiagnostic };
+
+/**
+ * After a re-record of `stepId`: reference the values it reported WHERE A
+ * REPLAY RE-OBSERVES THEM. Export's buildFlow does this for a fresh recording
+ * (round 62, grafana fwgr74: a reported value equal to a part of the url the
+ * step ended on is referenced as `{{step.url.<label>}}`, which both runners
+ * publish from the end url) — but a re-record never re-exports, so a consumer
+ * still bound to the report key `{{01-open.dashboard_uid_from_url}}` refused
+ * unsourced-ref after every one of fwgr74-cv2's four re-records. The end url
+ * witness is the one the flow already recorded for the step (`recorded.url`;
+ * a flow run result carries no url), which is stable for a slug and, for a
+ * minted id, is a part the landing rule mints anyway. Every later step's
+ * instruction and params are rewritten; the step records the part too.
+ * Returns the references it rewired, for the log.
+ */
+export function rethreadUrlRefs(flow: Flow, stepId: string, endUrl: string | undefined): { flow: Flow; rewired: string[] } {
+  const idx = flow.steps.findIndex((s) => s.id === stepId);
+  if (idx < 0 || !endUrl) return { flow, rewired: [] };
+  const step = flow.steps[idx];
+  const parts = urlParts(endUrl);
+  const byKey = new Map<string, string>();
+  for (const [key, value] of Object.entries(step.recorded ?? {})) {
+    if (key === 'url' || key.startsWith('url.') || typeof value !== 'string' || !value.trim()) continue;
+    const at = parts.find((p) => p.value === value.trim());
+    if (at) byKey.set(key, `url.${at.label}`);
+  }
+  if (!byKey.size) return { flow, rewired: [] };
+  const rewired: string[] = [];
+  const rewrite = (text: string): string =>
+    text.replace(/\{\{([\w-]+)\.([\w.-]+?)(#[\w.-]+)?\}\}/g, (whole, sid: string, out: string, hash: string | undefined) => {
+      if (sid !== stepId || hash) return whole;
+      const part = byKey.get(out);
+      if (!part) return whole;
+      rewired.push(`{{${sid}.${out}}} -> {{${sid}.${part}}}`);
+      return `{{${sid}.${part}}}`;
+    });
+  const steps = flow.steps.map((s, i) => {
+    if (i <= idx) return s;
+    const params = s.params ? Object.fromEntries(Object.entries(s.params).map(([k, v]) => [k, typeof v === 'string' ? rewrite(v) : v])) : s.params;
+    return { ...s, instruction: rewrite(s.instruction), ...(params ? { params } : {}) };
+  });
+  if (!rewired.length) return { flow, rewired: [] };
+  const recorded: Record<string, string> = { ...(step.recorded ?? {}), url: endUrl };
+  for (const [key, part] of byKey) if (!(part in recorded)) recorded[part] = step.recorded[key];
+  steps[idx] = { ...step, recorded };
+  return { flow: { ...flow, steps }, rewired: [...new Set(rewired)] };
+}
 
 /**
  * The values a re-record leaves as the step's record: the run with the most

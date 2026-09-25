@@ -16,7 +16,7 @@ import {
   stepLine,
   stepOf,
   unpinStep,
-  type RerecordRun, recordedFromRuns } from '../src/spec/rerecord.js';
+  type RerecordRun, recordedFromRuns, rethreadUrlRefs } from '../src/spec/rerecord.js';
 
 // `rerecord` is one pure decision wrapped in a flow run: which fields of a step
 // survive being unpinned, and whether the runs that followed prove the new
@@ -117,6 +117,33 @@ describe('recordedFromRuns', () => {
     expect(recordedFromRuns([run({ dashboard_uid_from_url: 'abc123', dashboard_title: 'Service health' }), run({ dashboard_title: 'Service health' })])).toEqual({ dashboard_uid_from_url: 'abc123', dashboard_title: 'Service health' });
     expect(recordedFromRuns([run(), run({})])).toBeNull();
     expect(recordedFromRuns([])).toBeNull();
+  });
+});
+
+describe('rethreadUrlRefs', () => {
+  const flow = {
+    name: 'gr',
+    vars: [],
+    steps: [
+      { id: '01-open', instruction: 'open the dashboard and report its uid', outputs: ['dashboard_uid_from_url'], recorded: { dashboard_uid_from_url: 'bench-service-health', dashboard_title: 'Service Health' } },
+      { id: '07-open', instruction: 'open http://127.0.0.1:3000/d/{{01-open.dashboard_uid_from_url}}/service-health and report {{01-open.dashboard_title}}', outputs: [], recorded: {}, params: { v2: 'http://127.0.0.1:3000/d/{{01-open.dashboard_uid_from_url}}/service-health' } },
+    ],
+  } as unknown as Flow;
+  const url = 'http://127.0.0.1:3000/d/bench-service-health/service-health?from=now-6h';
+
+  it('rewrites every later reference to a reported value that is a part of the end url, and records the part', () => {
+    const out = rethreadUrlRefs(flow, '01-open', url);
+    expect(out.rewired).toEqual(['{{01-open.dashboard_uid_from_url}} -> {{01-open.url.p1}}']);
+    expect(out.flow.steps[1].instruction).toBe('open http://127.0.0.1:3000/d/{{01-open.url.p1}}/service-health and report {{01-open.dashboard_title}}');
+    expect(out.flow.steps[1].params).toEqual({ v2: 'http://127.0.0.1:3000/d/{{01-open.url.p1}}/service-health' });
+    expect(out.flow.steps[0].recorded).toEqual({ dashboard_uid_from_url: 'bench-service-health', dashboard_title: 'Service Health', 'url.p1': 'bench-service-health', url });
+    // The input is untouched.
+    expect(flow.steps[1].params).toEqual({ v2: 'http://127.0.0.1:3000/d/{{01-open.dashboard_uid_from_url}}/service-health' });
+  });
+
+  it('changes nothing without an end url, or when no reported value is a url part', () => {
+    expect(rethreadUrlRefs(flow, '01-open', undefined)).toEqual({ flow, rewired: [] });
+    expect(rethreadUrlRefs(flow, '01-open', 'http://127.0.0.1:3000/dashboards').rewired).toEqual([]);
   });
 });
 

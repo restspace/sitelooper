@@ -35,6 +35,7 @@ import {
   RerecordError,
   rerecordVerdict,
   recordedFromRuns,
+  rethreadUrlRefs,
   stepLine,
   stepNote,
   stepOf,
@@ -2092,9 +2093,15 @@ async function rerecordFlowCommand(
     const recorded = recordedFromRuns(runs);
     if (recorded) {
       after.recorded = recorded;
-      saveFlow(loadedAfter.flow, stagedInput.flowFile);
       say(`  ${stepId}: recorded ${Object.keys(recorded).length} value(s) from the re-recording run`);
     }
+    // …and reference them where a replay re-observes them (rethreadUrlRefs):
+    // a value that is a part of the step's end url is a url part to every
+    // later step, not a report key. The end url is the one the flow recorded
+    // before the re-record (the run result carries none).
+    const rethreaded = rethreadUrlRefs(loadedAfter.flow, stepId, typeof previous?.recorded?.url === 'string' ? previous.recorded.url : undefined);
+    for (const line of rethreaded.rewired) say(`  ${stepId}: ${line} (a url part both runners publish)`);
+    if (recorded || rethreaded.rewired.length) saveFlow(rethreaded.flow, stagedInput.flowFile);
   }
   const persisted = persistRerecordInput(input, stagedInput, verdict.ok);
   // The recipe snapshot the rewritten file now carries, where it moved.
