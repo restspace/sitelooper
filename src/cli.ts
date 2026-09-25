@@ -34,6 +34,7 @@ import {
   formatRerecordDiagnostic,
   RerecordError,
   rerecordVerdict,
+  recordedFromRuns,
   stepLine,
   stepNote,
   stepOf,
@@ -2078,9 +2079,23 @@ async function rerecordFlowCommand(
   const verdict = rerecordVerdict({ file, stepId, runs });
   // The daemon writes re-pins back into the flow file it was given, so the
   // authoritative answer to "what is this step pinned to now" is on disk.
-  const after = loadFlowFile(stagedInput.flowFile)?.flow.steps.find((s) => s.id === stepId);
+  const loadedAfter = loadFlowFile(stagedInput.flowFile);
+  const after = loadedAfter?.flow.steps.find((s) => s.id === stepId);
   const pinned = after?.skill ?? verdict.pinned;
   const skill = pinned ? stagedInput.store.get(pinned) : null;
+  // The step's own recorded values. unpinStep empties `recorded`, and only
+  // export ever fills it — so after a re-record, compile rules keyed on the
+  // recorded value (a url part a later step references: fwgr74-cv re-recorded
+  // 01-open four times and refused unsourced-ref four times) had nothing to
+  // read. The values the re-recording run reported are the step's record now.
+  if (verdict.ok && loadedAfter && after) {
+    const recorded = recordedFromRuns(runs);
+    if (recorded) {
+      after.recorded = recorded;
+      saveFlow(loadedAfter.flow, stagedInput.flowFile);
+      say(`  ${stepId}: recorded ${Object.keys(recorded).length} value(s) from the re-recording run`);
+    }
+  }
   const persisted = persistRerecordInput(input, stagedInput, verdict.ok);
   // The recipe snapshot the rewritten file now carries, where it moved.
   for (const line of persisted.recipeChanges ?? []) say(`  ${line}`);
