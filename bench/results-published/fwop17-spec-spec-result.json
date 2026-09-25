@@ -1,0 +1,38 @@
+{
+  "arm": "spec",
+  "runid": "fwop17-spec",
+  "target": "openproject",
+  "flow": "fwop17.json",
+  "flowName": "fwop17",
+  "skillsDir": "/home/user/sitelooper/bench/results/fwop17-skills",
+  "compiled": true,
+  "flowFile": "bench/results/fwop17-spec-spec-tmp/fwop17.flow.ts",
+  "specFile": "bench/results/fwop17-spec-spec-tmp/fwop17.spec.ts",
+  "wallMs": 42946,
+  "exitCode": 1,
+  "timedOut": false,
+  "costUsd": 0,
+  "stats": {
+    "total": 1,
+    "passed": 0,
+    "failed": 1,
+    "skipped": 0
+  },
+  "tests": [
+    {
+      "title": "fwop17",
+      "status": "unexpected",
+      "ok": false,
+      "durationMs": 39196,
+      "error": "Error: 04-create s_9e1cdb/5: the recorded page change did not appear\n\n04-create s_9e1cdb/5: the recorded page change did not appear\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeNull\u001b[2m()\u001b[22m\n\nReceived: \u001b[31m\"after step 04-create s_9e1cdb/5 the page did not show \\\"- row \\\\\\\"44 Work package leaf at level 0. fwop17-spec Bench Work Package {{*}} {{*}} - Normal\\\\\\\"\\\" as it did when recorded — the step ran but probably acted on the wrong element\"\u001b[39m\n\nCall Log:\n- Timeout 5000ms exceeded while waiting on the predicate",
+      "drift": []
+    }
+  ],
+  "drift": [],
+  "driftCount": 0,
+  "evidence": [
+    "fwop17-spec-spec-failure.png",
+    "fwop17-spec-spec-error-context.md"
+  ],
+  "logTail": "eport's confident values\n[sitelooper step] 02-open\n[sitelooper step] 03-change\n[sitelooper warn] 04-create s_ff5f38/2: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear\n[sitelooper warn] 04-create s_9e1cdb/1: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear\n[sitelooper warn] 04-create s_9e1cdb/2: read 'work_package_subject' returned a value the skill itself set/selected ('fwop17-spec Bench Work Package') — confirms the control, not persistence; dropped from the report's confident values\n[sitelooper warn] 04-create s_9e1cdb/3: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear\n[sitelooper recipe] filled via recipe contenteditable/set-value (r_7b1e49); value verified on the component\n[sitelooper warn] 04-create s_9e1cdb/4: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear\n  ✘  1 fwop17.spec.ts:9:1 › fwop17 (39.2s)\n\n\n  1) fwop17.spec.ts:9:1 › fwop17 › 04-create: In the OpenProject project 'Bench Project', create a new work package of type 'Task' with subject exactly '{{runid}} Bench Work Package' and a description that includes the text '{{runid}}' (e.g. 'Bench work package for run {{runid}}'). Save it, then open the work package's own page and report: its subject, its type, its numeric ID as displayed (OpenProject shows it as #<number>), and confirm the description text contains {{runid}}. Do not modify any work package whose subject starts with 'Seed:'. \n\n    Error: 04-create s_9e1cdb/5: the recorded page change did not appear\n\n    04-create s_9e1cdb/5: the recorded page change did not appear\n\n    expect(received).toBeNull()\n\n    Received: \"after step 04-create s_9e1cdb/5 the page did not show \\\"- row \\\\\\\"44 Work package leaf at level 0. fwop17-spec Bench Work Package {{*}} {{*}} - Normal\\\\\\\"\\\" as it did when recorded — the step ran but probably acted on the wrong element\"\n\n    Call Log:\n    - Timeout 5000ms exceeded while waiting on the predicate\n\n       at fwop17.flow.ts:13950\n\n      13948 |       { timeout: EXPECT_WAIT_MS, message: `${ctx.tag}: the recorded page change did not appear` },\n      13949 |     )\n    > 13950 |     .toBeNull();\n            |      ^\n      13951 |   for (const warning of last.warnings) console.log(`[sitelooper warn] ${warning}`);\n      13952 |   if (last.unobserved) console.log(`[sitelooper unobserved] ${ctx.tag}: the page could not be captured, or observed in full, after the action`);\n      13953 |   return last;\n        at expectChanges (/home/user/sitelooper/bench/results/fwop17-spec-spec-tmp/fwop17.flow.ts:13950:6)\n        at Object.verify (/home/user/sitelooper/bench/results/fwop17-spec-spec-tmp/fwop17.flow.ts:15809:36)\n        at runStepLifecycle (/home/user/sitelooper/bench/results/fwop17-spec-spec-tmp/fwop17.flow.ts:9110:24)\n        at Object.04-create (/home/user/sitelooper/bench/results/fwop17-spec-spec-tmp/fwop17.flow.ts:15760:9)\n        at /home/user/sitelooper/bench/results/fwop17-spec-spec-tmp/fwop17.flow.ts:18174:7\n        at runFlow (/home/user/sitelooper/bench/results/fwop17-spec-spec-tmp/fwop17.flow.ts:18173:5)\n        at /home/user/sitelooper/bench/results/fwop17-spec-spec-tmp/fwop17.spec.ts:14:21\n\n    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────\n    \n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────\n    test-results/fwop17-fwop17/test-failed-1.png\n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    Error Context: test-results/fwop17-fwop17/error-context.md\n\n  1 failed\n    fwop17.spec.ts:9:1 › fwop17 ────────────────────────────────────────────────────────────────────\n"
+}

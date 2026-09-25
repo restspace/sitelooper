@@ -1,0 +1,122 @@
+
+[sweep] run 1/3: fwop17-n1 (store: /home/user/sitelooper/bench/results/fwop17-skills)
+[harness] openproject: defaulting APP_URL
+[harness] openproject: defaulting APP_EMAIL
+[harness] openproject: defaulting APP_PASSWORD
+[reset] openproject: no leftover bench work packages
+[harness] openproject responded 302 at http://127.0.0.1:8090/
+stopped: fwop17-n1
+  flow "fwop17" saved: 9 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwop17.json
+  warning: note: 01-open no longer publishes user_menu_items, home_page_headings — no replay reads them from the page and the recording showed no line to read
+  warning: note: 02-open no longer publishes pagination, types_and_status — no replay reads them from the page and the recording showed no line to read
+  warning: note: 03-change no longer publishes seed_work_packages_with_id_and_status, count_of_seed_work_packages, types — no replay reads them from the page and the recording showed no line to read
+  warning: note: 04-create no longer publishes description_contains_fwop17_n1 — no replay reads it from the page and the recording showed no line to read
+  warning: note: 05-set no longer publishes assignee_field_display, assignee_selected_option, assignee_button_accessible_name — no replay reads them from the page and the recording showed no line to read
+  warning: note: 08-add no longer publishes activity_entry_author, activity_entry_label, comment_anchor, comment_anchor_id — no replay reads them from the page and the recording showed no line to read
+  warning: warning: 09-open's instruction asks to report assignee_field_value, and no replay can publish it: nothing in its procedure reads it from the page, so export dropped it — re-record the step so the value is read, not only reported
+  warning: note: 09-open no longer publishes comment_anchor, project, details_header_text, comment_anchor_id — no replay reads them from the page and the recording showed no line to read
+  warning: note: 01-open: added a read for avatar_initials to s_02b369 (page.getByRole('button', { name: 'BA', exact: true }); seen on the next instruction's start page)
+  warning: note: 05-set: added a read for save_confirmation_alert to s_5201ef (page.getByRole('alert', { name: 'Successful update.', exact: true }); seen on the instruction's own page)
+  warning: note: 06-change: added a read for status_field_accessible_name to s_36c6de (page.getByRole('button', { name: 'Status In progress: Edit', exact: true }); seen on the next instruction's start page)
+  warning: note: 06-change: added a read for save_confirmation_alert to s_36c6de (page.getByRole('alert', { name: 'Successful update.', exact: true }); seen on the instruction's own page)
+  warning: note: 07-set: added a read for save_confirmation_alert to s_3e24fd (page.getByRole('alert', { name: 'Successful update.', exact: true }); seen on the instruction's own page)
+  warning: warning: 204 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[1].instruction: "Bench Project" (output) in "Navigate to the project named 'Bench Project' in OpenProject (e.g. via the Projects menu), then open its work packages list. Find all work packages in that proj"
+  flow.steps[2].instruction: "Bench Project" (output) in "On the Bench Project work packages list page ({{02-open.url}}), change the filters so that ALL work packages are shown regardless of status (e.g. remove the sta"
+  flow.steps[2].params.v1: "Bench Project" (output) in "Bench Project"
+  flow.steps[3].instruction: "Bench Project" (output) in "In the OpenProject project 'Bench Project', create a new work package of type 'Task' with subject exactly '{{runid}} Bench Work Package' and a description that "
+  flow.steps[3].instruction: "Task" (output) in "In the OpenProject project 'Bench Project', create a new work package of type 'Task' with subject exactly '{{runid}} Bench Work Package' and a description that "
+arm=sitelooper model=z-ai/glm-5.3 runid=fwop17-n1 stop=completed
+turns=10 wall=540.1s
+commands=9 cmdTime=512.3s cmdBytes=12425 timeouts=0
+orchestrator in=6899 cw=0 cr=42752 out=3859
+inner prompt=3715368 cached=3506688 completion=34471
+spend=$0.1009 maxUsd=3
+learn: A_n=0 replayed=0/9 full=0 repaired=0 compiled=9 variants=0
+-> /home/user/sitelooper/bench/results/fwop17-n1-sitelooper-result.json
+
+fwop17-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed subjects reported
+  obj 2: PASS — type=Task, description includes runid=true
+  obj 3: PASS — assignee=Bench Assignee
+  obj 4: PASS — status=In progress
+  obj 5: PASS — finish date=2026-12-31, want 2026-12-31
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — work package id 41 reported
+
+[sweep] run 2/3: fwop17-n2 (replay flow fwop17, no orchestrator)
+[reset] openproject: deleted 1 leftover bench work package(s)
+[sweep] fwop17-n2: 7 drift ticket(s) → fwop17-n2-drift.json
+
+fwop17-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed subjects reported
+  obj 2: PASS — type=Task, description includes runid=true
+  obj 3: PASS — assignee=Bench Assignee
+  obj 4: PASS — status=In progress
+  obj 5: PASS — finish date=2026-12-31, want 2026-12-31
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — work package id 42 reported
+
+[sweep] run 3/3: fwop17-n3 (replay flow fwop17, no orchestrator)
+[reset] openproject: deleted 1 leftover bench work package(s)
+[sweep] fwop17-n3: 8 drift ticket(s) → fwop17-n3-drift.json
+
+fwop17-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed subjects reported
+  obj 2: PASS — type=Task, description includes runid=true
+  obj 3: PASS — assignee=Bench Assignee
+  obj 4: PASS — status=In progress
+  obj 5: PASS — finish date=2026-12-31, want 2026-12-31
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — work package id 43 reported
+
+Learning sweep fwop17 (K=3)
+┌─────────┬───┬─────────────┬──────────┬─────────────┬───────┬──────┬───────────┬──────┬──────────────┬────────┐
+│ (index) │ n │ runid       │ verified │ stop        │ turns │ cmds │ total_usd │ A_n  │ replayed     │ wall_s │
+├─────────┼───┼─────────────┼──────────┼─────────────┼───────┼──────┼───────────┼──────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwop17-n1' │ '7/7'    │ 'completed' │ 10    │ 9    │ 0.1009    │ 0    │ '0/9'        │ 540    │
+│ 1       │ 2 │ 'fwop17-n2' │ '7/7'    │ 'success'   │ 8     │ 9    │ 0.0049    │ 0.89 │ '9/9 (flow)' │ 132    │
+│ 2       │ 3 │ 'fwop17-n3' │ '7/7'    │ 'success'   │ 0     │ 9    │ 0         │ 1    │ '9/9 (flow)' │ 96     │
+└─────────┴───┴─────────────┴──────────┴─────────────┴───────┴──────┴───────────┴──────┴──────────────┴────────┘
+http://127.0.0.1:8090
+  s_02b369  validated    5 steps  3/3 (100%)
+           Open {{v1}} in the browser. If not already signed in, sign in with username 'admin' and password '{{env:APP_PA…
+  s_195cd1  validated    2 steps  3/3 (100%)
+           Navigate to the project named 'Bench Project' in OpenProject (e.g. via the Projects menu), then open its work …
+  s_1a0f85  validated   11 steps  3/3 (100%)
+           Navigate to the project named 'Bench Project' in OpenProject (e.g. via the Projects menu), then open its work …
+  s_36c6de  validated    8 steps  3/3 (100%)
+           On the OpenProject work package page for work package {{v1}} ('{{v3}}', at http://127.0.0.1:8090/projects/benc…
+  s_3bab61  validated    6 steps  3/3 (100%)
+           Open the OpenProject work package page for work package {{v1}} ('{{v3}}') at http://127.0.0.1:8090/projects/be…
+  s_3e24fd  validated   12 steps  3/3 (100%)
+           On the OpenProject work package page for work package {{v1}} ('{{v3}}', at http://127.0.0.1:8090/projects/benc…
+  s_5c5122  validated    1 steps  3/3 (100%)
+           On the OpenProject work package page for work package {{v1}} ('{{v3}}', at http://127.0.0.1:8090/projects/benc…
+  s_781c1b  validated    6 steps  3/3 (100%)
+           On the {{v1}} work packages list page (http://127.0.0.1:8090/projects/bench-project/work_packages), change the…
+  s_849b94  validated    3 steps  3/3 (100%)
+           Open {{v1}} in the browser. If not already signed in, sign in with username 'admin' and password '{{env:APP_PA…
+  s_9e1cdb  validated    5 steps  3/3 (100%)
+           In the OpenProject project '{{v1}}', create a new work package of type 'Task' with subject exactly '{{v3}}' an…
+  s_d05170  validated    2 steps  3/3 (100%)
+           Open the OpenProject work package page for work package {{v1}} ('{{v3}}') at http://127.0.0.1:8090/projects/be…
+  s_d220ed  validated    1 steps  3/3 (100%)
+           Open {{v1}} in the browser. If not already signed in, sign in with username 'admin' and password '{{env:APP_PA…
+  s_d9fa8c  validated    9 steps  3/3 (100%)
+           In the OpenProject project '{{v1}}', create a new work package of type 'Task' with subject exactly '{{v3}}' an…
+  s_dadac7  validated    4 steps  3/3 (100%)
+           Navigate to the project named 'Bench Project' in OpenProject (e.g. via the Projects menu), then open its work …
+  s_e86a44  validated    4 steps  3/3 (100%)
+           On the OpenProject work package page for work package {{v1}} ('{{v3}}', at http://127.0.0.1:8090/projects/benc…
+  s_f9da22  validated    5 steps  3/3 (100%)
+           Open the OpenProject work package page for work package {{v1}} ('{{v3}}') at http://127.0.0.1:8090/projects/be…
+  s_ff5f38  validated    2 steps  3/3 (100%)
+           In the OpenProject project '{{v1}}', create a new work package of type 'Task' with subject exactly '{{v3}}' an…
+  s_5201ef  provisional  8 steps  1/2 (50%)
+           On the OpenProject work package page for work package {{v1}} ('{{v3}}', at http://127.0.0.1:8090/projects/benc…
+  s_a7af97  validated    3 steps  2/2 (100%)  variant of s_5201ef
+           On the OpenProject work package page for work package {{v1}} ('{{v3}} Bench Work Package', at {{v4}}/details/{…
+store: /home/user/sitelooper/bench/results/fwop17-skills
+
+summary: /home/user/sitelooper/bench/results/fwop17-sweep.json

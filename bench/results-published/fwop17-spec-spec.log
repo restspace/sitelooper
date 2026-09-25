@@ -1,0 +1,60 @@
+
+Running 1 test using 1 worker
+
+[sitelooper skip] 01-open s_02b369/1: closes the dialog "Welcome to OpenProject, Bench Admin" with "Close", which is not open — already in effect
+[sitelooper skip] 01-open s_02b369/5 target: no locator recorded — value left empty
+[sitelooper step] 01-open
+[sitelooper warn] 02-open s_1a0f85/4: read 'view' returned a value the skill itself set/selected ('Default: All open') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper step] 02-open
+[sitelooper step] 03-change
+[sitelooper warn] 04-create s_ff5f38/2: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear
+[sitelooper warn] 04-create s_9e1cdb/1: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear
+[sitelooper warn] 04-create s_9e1cdb/2: read 'work_package_subject' returned a value the skill itself set/selected ('fwop17-spec Bench Work Package') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper warn] 04-create s_9e1cdb/3: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear
+[sitelooper recipe] filled via recipe contenteditable/set-value (r_7b1e49); value verified on the component
+[sitelooper warn] 04-create s_9e1cdb/4: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear
+  ✘  1 fwop17.spec.ts:9:1 › fwop17 (39.2s)
+
+
+  1) fwop17.spec.ts:9:1 › fwop17 › 04-create: In the OpenProject project 'Bench Project', create a new work package of type 'Task' with subject exactly '{{runid}} Bench Work Package' and a description that includes the text '{{runid}}' (e.g. 'Bench work package for run {{runid}}'). Save it, then open the work package's own page and report: its subject, its type, its numeric ID as displayed (OpenProject shows it as #<number>), and confirm the description text contains {{runid}}. Do not modify any work package whose subject starts with 'Seed:'. 
+
+    Error: 04-create s_9e1cdb/5: the recorded page change did not appear
+
+    04-create s_9e1cdb/5: the recorded page change did not appear
+
+    expect(received).toBeNull()
+
+    Received: "after step 04-create s_9e1cdb/5 the page did not show \"- row \\\"44 Work package leaf at level 0. fwop17-spec Bench Work Package {{*}} {{*}} - Normal\\\"\" as it did when recorded — the step ran but probably acted on the wrong element"
+
+    Call Log:
+    - Timeout 5000ms exceeded while waiting on the predicate
+
+       at fwop17.flow.ts:13950
+
+      13948 |       { timeout: EXPECT_WAIT_MS, message: `${ctx.tag}: the recorded page change did not appear` },
+      13949 |     )
+    > 13950 |     .toBeNull();
+            |      ^
+      13951 |   for (const warning of last.warnings) console.log(`[sitelooper warn] ${warning}`);
+      13952 |   if (last.unobserved) console.log(`[sitelooper unobserved] ${ctx.tag}: the page could not be captured, or observed in full, after the action`);
+      13953 |   return last;
+        at expectChanges (/home/user/sitelooper/bench/results/fwop17-spec-spec-tmp/fwop17.flow.ts:13950:6)
+        at Object.verify (/home/user/sitelooper/bench/results/fwop17-spec-spec-tmp/fwop17.flow.ts:15809:36)
+        at runStepLifecycle (/home/user/sitelooper/bench/results/fwop17-spec-spec-tmp/fwop17.flow.ts:9110:24)
+        at Object.04-create (/home/user/sitelooper/bench/results/fwop17-spec-spec-tmp/fwop17.flow.ts:15760:9)
+        at /home/user/sitelooper/bench/results/fwop17-spec-spec-tmp/fwop17.flow.ts:18174:7
+        at runFlow (/home/user/sitelooper/bench/results/fwop17-spec-spec-tmp/fwop17.flow.ts:18173:5)
+        at /home/user/sitelooper/bench/results/fwop17-spec-spec-tmp/fwop17.spec.ts:14:21
+
+    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/fwop17-fwop17/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/fwop17-fwop17/error-context.md
+
+  1 failed
+    fwop17.spec.ts:9:1 › fwop17 ────────────────────────────────────────────────────────────────────

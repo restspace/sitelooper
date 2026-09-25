@@ -1,0 +1,195 @@
+{
+ "id": "s_a7af97",
+ "origin": "http://127.0.0.1:8090",
+ "template": "On the OpenProject work package page for work package {{v1}} ('{{v3}} Bench Work Package', at {{v4}}/details/{{v2}}/overview), set the Assignee field to the user named 'Bench Assignee'. The assignee field is an autocomplete: click it, type 'Bench Assignee', wait for the dropdown of matching users to appear, and actually select the 'Bench Assignee' option from the dropdown (a value only counts once an option from the dropdown has been chosen, not merely typed). The field saves automatically in place. Then verify the Assignee field on the page now displays 'Bench Assignee' and report exactly what it shows.",
+ "params": {
+  "v1": {
+   "example": "#42",
+   "usedIn": [],
+   "known": true,
+   "binding": "04-create.work_package_id"
+  },
+  "v2": {
+   "example": "42",
+   "usedIn": [],
+   "known": true,
+   "binding": "04-create.url.p4"
+  },
+  "v3": {
+   "example": "fwop17-n2",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v4": {
+   "example": "http://127.0.0.1:8090/projects/bench-project/work_packages",
+   "usedIn": [],
+   "known": true,
+   "binding": "02-open.url"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/{{v2}}/overview?query_props={\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "[data-field-name=\"assignee\"] >> nth=4"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Assignee No value: Edit",
+      "nth": 4
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div:nth-of-type(2) > op-editable-attribute-field > div > div:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 1062,
+      "y": 687,
+      "w": 100,
+      "h": 23,
+      "role": "button",
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/{{v2}}/overview?query_props={\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}",
+    "addedContains": [
+     "- combobox \"Search\"",
+     "- listbox \"Options List\"",
+     "- option \"BA Bench Assignee bench-assignee@example.com\"",
+     "- button \"Invite\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_5201ef",
+    "step": 1
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "[role=\"option\"] >> nth=1"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "role=option >> nth=1"
+     },
+     {
+      "kind": "css",
+      "selector": "html > body > ng-dropdown-panel > div:nth-of-type(1) > div:nth-of-type(2) > div"
+     },
+     {
+      "kind": "point",
+      "x": 1162,
+      "y": 724,
+      "w": 298,
+      "h": 37.3,
+      "role": "option",
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/{{v2}}/overview?query_props={\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}",
+    "alertContains": "Successful update.",
+    "addedContains": [
+     "- button \"Close popup\"",
+     "- combobox \"Search in OpenProject\"",
+     "- cell \"BABench Assignee\"",
+     "- button \"Assignee Bench Assignee: Edit\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "label": "assignee_field_display",
+    "target": "@e1489",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Assignee Bench Assignee: Edit",
+      "nth": 1
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div:nth-of-type(2) > op-editable-attribute-field > div > div:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 1080,
+      "y": 691,
+      "w": 136.4,
+      "h": 32,
+      "role": "button",
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "assignee_field_display"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "The stored procedure s_5201ef stopped after clicking the Assignee field (its \"type\" step timed out), so I continued manually: the assignee autocomplete was still open and already listed matching users, and I selected the \"Bench Assignee\" option (\"BA Bench Assignee bench-assignee@example.com\") from the dropdown. The page then showed the \"Successful update.\" confirmation, the dropdown closed, and the Assignee field in the Overview details sidebar now renders 'Bench Assignee'. No other work package was touched.",
+  "values": {
+   "work_package": "{{v1}} {{v3}} Bench Work Package",
+   "url": "{{v4}}/details/{{v2}}/overview",
+   "assignee_option_selected": "BA Bench Assignee bench-assignee@example.com",
+   "save_confirmation_alert": "Successful update.",
+   "assignee_field_display": "BA\nBench Assignee",
+   "assignee_field_accessible_name": "Assignee Bench Assignee: Edit",
+   "assignee_avatar_initials": "BA",
+   "role_option": "BA\n Bench Assignee bench-assignee@example.com"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 2,
+  "successes": 2,
+  "partial": 0,
+  "created": "2026-09-25T04:41:08.881Z",
+  "failedAtStep": {},
+  "fallthroughs": 1,
+  "verifiedContract": 2,
+  "lastUsed": "2026-09-25T04:42:49.190Z"
+ },
+ "status": "validated",
+ "variantOf": "s_5201ef",
+ "provenance": {
+  "session": "fwop17-n2",
+  "instruction": "On the OpenProject work package page for work package #42 ('fwop17-n2 Bench Work Package', at http://127.0.0.1:8090/projects/bench-project/work_packages/details/42/overview), set the Assignee field to the user named 'Bench Assignee'. The assignee field is an autocomplete: click it, type 'Bench Assignee', wait for the dropdown of matching users to appear, and actually select the 'Bench Assignee' option from the dropdown (a value only counts once an option from the dropdown has been chosen, not merely typed). The field saves automatically in place. Then verify the Assignee field on the page now displays 'Bench Assignee' and report exactly what it shows.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-25T04:41:08.881Z",
+  "transforms": [
+   {
+    "name": "unfreezeExpectations",
+    "at": 2,
+    "reason": "recorded page change(s) only the recording run could produce: [\"- button \\\"Close popup\\\"\",\"- combobox \\\"Search in OpenProject\\\"\",\"- cell \\\"BABench Assignee\\\"\",\"- button \\\"Assignee Bench Assignee: Edit\\\"\",\"- button \\\"Assignee Bench Assignee: Edit\\\"\"] → [\"- button \\\"Close popup\\\"\",\"- combobox \\\"Search in OpenProject\\\"\",\"- cell \\\"BABench Assignee\\\"\",\"- button \\\"Assignee Bench Assignee: Edit\\\"\"]"
+   }
+  ]
+ },
+ "revision": 2
+}
