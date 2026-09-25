@@ -124,6 +124,14 @@ function compile(k) {
   const r = run(`round ${k} compile`, process.execPath, [cli, 'compile', flowJson, '--out', tmp, '--overwrite-spec', '--json'], { json: true });
   const j = r.json ?? {};
   const errors = (j.diagnostics ?? []).filter((d) => d.severity === 'error');
+  // The outputs the refusals say nobody publishes, by producer step: a
+  // re-record of that step is told to READ them (odoo fwod88-cv2: the model
+  // re-created the quotation but never read its reference, four times).
+  const missing = new Map();
+  for (const d of errors) {
+    const m = /\{\{([\w-]+)\.([\w.-]+?)\}\}, and nothing has ever published/.exec(String(d.what ?? ''));
+    if (m) missing.set(m[1], [...new Set([...(missing.get(m[1]) ?? []), m[2]])]);
+  }
   // The steps the diagnostics say to re-record, in FLOW order: an unsourced
   // reference names its producer (03-create) beside the consumer's own pin
   // (08-open), and re-recording the producer first usually clears the rest.
@@ -135,14 +143,29 @@ function compile(k) {
     outcome: j.outcome ?? `exit ${r.status}`,
     refused: Boolean(j.refused) || j.compilable === false || r.status !== 0,
     codes: [...new Set(errors.map((d) => `${d.code}@${d.step ?? '-'}`))],
+    missingOutputs: Object.fromEntries(missing),
     blockers: j.compileBlockers ?? [],
     steps,
     flowFile: j.flowFile ? path.resolve(repoRoot, j.flowFile) : path.join(tmp, `${args.tag}.flow.ts`),
+    missing,
   };
 }
 
-function rerecord(k, step, why) {
-  const r = run(`round ${k} rerecord ${step} (${why})`, process.execPath, [cli, 'rerecord', flowJson, step, '--var', `runid=${args.tag}-r${k}n{n}`, '--runs', String(args.runs), '--reset-cmd', resetCmd, '--json'], { json: true, live: true });
+/** The re-record instruction: the step's own, plus the outputs a later step needs read from the page. */
+function instructionFor(step, outputs) {
+  const live = JSON.parse(fs.readFileSync(flowJson, 'utf8')).steps.find((st) => st.id === step);
+  const base = live?.instruction ?? '';
+  if (!outputs?.length) return null;
+  const file = path.join(outDir, `${args.tag}-${step}-instruction.txt`);
+  fs.writeFileSync(file, `${base}
+
+A later step of this flow uses these values, so before you report, read each one from the page with \`read\` (label=<name>) and report it under exactly this name: ${outputs.join(', ')}.`);
+  return file;
+}
+
+function rerecord(k, step, why, outputs) {
+  const instruction = instructionFor(step, outputs);
+  const r = run(`round ${k} rerecord ${step} (${why})${outputs?.length ? ` — asked to read ${outputs.join(', ')}` : ''}`, process.execPath, [cli, 'rerecord', flowJson, step, '--var', `runid=${args.tag}-r${k}n{n}`, '--runs', String(args.runs), '--reset-cmd', resetCmd, ...(instruction ? ['--instruction-file', instruction] : []), '--json'], { json: true, live: true });
   const j = r.json ?? {};
   const runs = (j.runs ?? []).map((x) => ({ status: x.status, tier: x.tier, turns: x.turns, repinned: x.repinned }));
   report.flowRuns += runs.length;
@@ -175,13 +198,17 @@ function artifact(k) {
   // ("01-signin s_5fccd8/2: …", "… (01-signin s_9e6344/2 target)") and `@step` anchors.
   const texts = [...errors, ...(res?.drift ?? []).map(String)].map(String);
   const producers = texts.flatMap((e) => [...e.matchAll(/needs \{\{([\w-]+)\./g)].map((m) => m[1]));
+  // …and WHAT the producer must read: "02-open needs {{01-signin.visible_projects_2}}"
+  // (fwvk15-cv2 re-recorded 01-signin four times without being told).
+  const missing = new Map();
+  for (const e of texts) for (const m of e.matchAll(/needs \{\{([\w-]+)\.([\w.-]+?)\}\}/g)) missing.set(m[1], [...new Set([...(missing.get(m[1]) ?? []), m[2]])]);
   const sites = texts.flatMap((e) => [
     ...[...e.matchAll(/@step\s+([\w-]+)/g)].map((m) => m[1]),
     ...[...e.matchAll(/(?:^|[\s(:])([\w-]+) s_[0-9a-f]{6}\/\d+\b/g)].map((m) => m[1]),
   ]);
   const anchors = [...new Set([...producers, ...sites])];
   const passed = Boolean(res) && res.exitCode === 0 && (res.stats?.failed ?? 1) === 0 && !failLines.length && (verified === 'n/a' || !verified.includes('FAIL'));
-  return { tag, exitCode: res?.exitCode ?? null, stats: res?.stats ?? null, driftCount: res?.driftCount ?? null, verified, failLines, errors: errors.map((e) => e.slice(0, 400)), anchors, passed, dry: args.dry };
+  return { tag, exitCode: res?.exitCode ?? null, stats: res?.stats ?? null, driftCount: res?.driftCount ?? null, verified, failLines, errors: errors.map((e) => e.slice(0, 400)), anchors, missing, missingOutputs: Object.fromEntries(missing), passed, dry: args.dry };
 }
 
 function repair(k, flowFile) {
@@ -210,7 +237,7 @@ for (let k = 1; k <= args.maxRounds && !verdict; k++) {
   if (round.compile.refused) {
     log(`round ${k}: compile refused (${round.compile.codes.join(', ') || round.compile.outcome}); rerecord steps: ${round.compile.steps.join(', ') || 'NONE'}`);
     if (!round.compile.steps.length) { verdict = { status: 'stuck', why: 'compile refused with no rerecord action', blockers: round.compile.blockers.slice(0, 10) }; break; }
-    round.rerecords.push(rerecord(k, round.compile.steps[0], `compile refusal${round.compile.steps.length > 1 ? `; also named: ${round.compile.steps.slice(1).join(', ')}` : ''}`));
+    round.rerecords.push(rerecord(k, round.compile.steps[0], `compile refusal${round.compile.steps.length > 1 ? `; also named: ${round.compile.steps.slice(1).join(', ')}` : ''}`, round.compile.missing.get(round.compile.steps[0])));
     save();
     if (args.dry) { verdict = { status: 'dry', why: 'dry run stops at the first live command' }; break; }
     continue;
@@ -227,7 +254,7 @@ for (let k = 1; k <= args.maxRounds && !verdict; k++) {
   // The producer the artifact blames outranks the consumers repair lists; then flow order.
   const steps = [...new Set([...round.artifact.anchors, ...round.repair.needsRerecord])].sort((a, b) => (order.get(a) ?? 1e9) - (order.get(b) ?? 1e9));
   if (!steps.length) { verdict = { status: 'stuck', why: 'artifact failed, repair did not converge, and no step to re-record was named' }; break; }
-  round.rerecords.push(rerecord(k, steps[0], `${round.repair.needsRerecord.length ? 'repair: needs-rerecord' : 'artifact failed at this step'}${steps.length > 1 ? `; also named: ${steps.slice(1).join(', ')}` : ''}`));
+  round.rerecords.push(rerecord(k, steps[0], `${round.repair.needsRerecord.length ? 'repair: needs-rerecord' : 'artifact failed at this step'}${steps.length > 1 ? `; also named: ${steps.slice(1).join(', ')}` : ''}`, round.artifact.missing.get(steps[0])));
   save();
 }
 report.verdict = verdict ?? { status: 'exhausted', why: `${args.maxRounds} round(s) without a passing artifact` };

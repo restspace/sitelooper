@@ -35,6 +35,8 @@ import {
   RerecordError,
   rerecordVerdict,
   recordedFromRuns,
+  rethreadUrlRefs,
+  chainToRetire,
   stepLine,
   stepNote,
   stepOf,
@@ -2048,6 +2050,21 @@ async function rerecordFlowCommand(
   const stagedInput = stageRerecordInput(input, patched);
   say(`re-recording ${flow.name} step ${stepId} (${runsWanted} run(s))`);
   say(`  unpinned ${previous?.skill ?? '(no procedure)'}${instruction ? ', with a new instruction' : ''}; old recording kept at ${backup}`);
+  // The procedure being replaced is retired for the duration: unpinned but
+  // still a candidate, the old chain replays clean (it did the work; it just
+  // never read the value a later step needs) and the re-pin rule hands it
+  // straight back (fwod88-cv2, four times). Demoted, it is skipped by
+  // selectCandidates; restored to its old status if the re-record fails, so a
+  // failed attempt leaves the store as it was.
+  const retired = chainToRetire(stagedInput.store.all(), previous?.skill);
+  const retiredStatus = new Map<string, Skill['status']>();
+  for (const id of retired) {
+    const sk = stagedInput.store.get(id);
+    if (!sk || sk.status === 'demoted') continue;
+    retiredStatus.set(id, sk.status);
+    stagedInput.store.update(id, (cur) => ({ ...cur, status: 'demoted' }));
+  }
+  if (retiredStatus.size) say(`  retired ${[...retiredStatus.keys()].join(', ')} (the procedure being replaced cannot be re-pinned; restored if this re-record fails)`);
 
   const runs: RerecordRun[] = [];
   for (let i = 0; i < runsWanted; i++) {
@@ -2077,6 +2094,7 @@ async function rerecordFlowCommand(
   }
 
   const verdict = rerecordVerdict({ file, stepId, runs });
+  if (!verdict.ok) for (const [id, status] of retiredStatus) stagedInput.store.update(id, (cur) => ({ ...cur, status }));
   // The daemon writes re-pins back into the flow file it was given, so the
   // authoritative answer to "what is this step pinned to now" is on disk.
   const loadedAfter = loadFlowFile(stagedInput.flowFile);
@@ -2092,9 +2110,15 @@ async function rerecordFlowCommand(
     const recorded = recordedFromRuns(runs);
     if (recorded) {
       after.recorded = recorded;
-      saveFlow(loadedAfter.flow, stagedInput.flowFile);
       say(`  ${stepId}: recorded ${Object.keys(recorded).length} value(s) from the re-recording run`);
     }
+    // …and reference them where a replay re-observes them (rethreadUrlRefs):
+    // a value that is a part of the step's end url is a url part to every
+    // later step, not a report key. The end url is the one the flow recorded
+    // before the re-record (the run result carries none).
+    const rethreaded = rethreadUrlRefs(loadedAfter.flow, stepId, typeof previous?.recorded?.url === 'string' ? previous.recorded.url : undefined);
+    for (const line of rethreaded.rewired) say(`  ${stepId}: ${line} (a url part both runners publish)`);
+    if (recorded || rethreaded.rewired.length) saveFlow(rethreaded.flow, stagedInput.flowFile);
   }
   const persisted = persistRerecordInput(input, stagedInput, verdict.ok);
   // The recipe snapshot the rewritten file now carries, where it moved.
