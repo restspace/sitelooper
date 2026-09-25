@@ -1,0 +1,152 @@
+
+[sweep] run 1/3: fwod88-n1 (store: /home/user/sitelooper/bench/results/fwod88-skills)
+[harness] odoo: defaulting APP_URL
+[harness] odoo: defaulting APP_EMAIL
+[harness] odoo: defaulting APP_PASSWORD
+[reset] odoo: no leftover bench customers
+[harness] odoo responded 303 at http://127.0.0.1:8069/
+stopped: fwod88-n1
+  flow "fwod88" saved: 9 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwod88.json
+  warning: note: 14 goal/report value(s) carrying a value this run made were slotted or dropped:
+  s_3735c5.reportTemplate.summary slotted "21" → {{v2}}
+  s_435d85.reportTemplate.values.customer_name dropped (recorded literal of a value this run made)
+  s_435d85.reportTemplate.values.verification slotted "21" → {{v2}}
+  s_435d85.reportTemplate.summary slotted "21" → {{v2}}
+  s_56a55c.reportTemplate.summary dropped (narrates a value this run made)
+  s_6a2d0a.reportTemplate.summary slotted "21" → {{v2}}
+  s_a393b7.reportTemplate.summary slotted "21" → {{v2}}
+  s_e259b1.reportTemplate.summary dropped (narrates a value this run made)
+  s_ee6358.goal.requireText[0] dropped (names a value this run made, with no slot to bind it)
+  s_ee6358.reportTemplate.values.statusbar_button_create_invoice dropped (recorded literal of a value this run made)
+  s_ee6358.reportTemplate.values.statusbar_button_cancel dropped (recorded literal of a value this run made)
+  s_ee6358.reportTemplate.values.statusbar_buttons_now_1 dropped (recorded literal of a value this run made)
+  s_ee6358.reportTemplate.values.statusbar_buttons_now_4 dropped (recorded literal of a value this run made)
+  s_ee6358.reportTemplate.summary dropped (narrates a value this run made)
+  warning: warning: 04-open's instruction asks to report untaxed_amount, and only a recorded literal backs it: no read in its procedure publishes it, so a replay reports it only if the page it ends on shows that exact text — re-record the step so the value is read where it is shown
+  warning: note: 01-signin no longer publishes landed_page, user_menu_items — no replay reads them from the page and the recording showed no line to read
+  warning: note: 02-create no longer publishes record_model — no replay reads it from the page and the recording showed no line to read
+  warning: warning: 03-create's instruction asks to report untaxed_amount, and no replay can publish it: nothing in its procedure reads it from the page, so export dropped it — re-record the step so the value is read, not only reported
+  warning: note: 03-create no longer publishes line_subtotal, order_lines_table_subtotal, acoustic_screens_product_code — no replay reads them from the page and the recording showed no line to read
+  warning: note: 04-open no longer publishes line1_product, line1_quantity, line1_unit_price, line1_subtotal, line2_subtotal, taxes, line1_subtotal_table, line2_subtotal_table, customizable_desk_product_code, acoustic_screens_product_code — no replay reads them from the page and the recording showed no line to read
+  warning: warning: 05-open's instruction asks to report order_lines, and no replay can publish it: nothing in its procedure reads it from the page, so export dropped it — re-record the step so the value is read, not only reported
+  warning: note: 05-open no longer publishes line2_taxes, list_view_total — no replay reads them from the page and the recording showed no line to read
+  warning: note: 06-open no longer publishes breadcrumb_heading_level, ref_2 — no replay reads them from the page and the recording showed no line to read
+  warning: note: 07-open no longer publishes status_shown, statusbar_values, statusbar_stage_quotation, o_statusbar_status_o_arr_3, o_statusbar_status_o_arr_4, breadcrumb_heading_level — no replay reads them from the page and the recording showed no line to read
+  warning: warning: 08-open's instruction asks to report status_shown, and no replay can publish it: nothing in its procedure reads it from the page, so export dropped it — re-record the step so the value is read, not only reported
+  warning: note: 08-open no longer publishes statusbar_stages, chatter_notifications, cancel_dialog_button_name, statusbar_stage_sales_order, statusbar_stage_quotation, o_statusbar_status_o_arr_4, o_statusbar_status_o_arr_5, breadcrumb_heading_level — no replay reads them from the page and the recording showed no line to read
+  warning: warning: 09-report's instruction asks to report status_checked_stage, and no replay can publish it: nothing in its procedure reads it from the page, so export dropped it — re-record the step so the value is read, not only reported
+  warning: note: 09-report no longer publishes statusbar_state, read_only, breadcrumb_heading_level, acoustic_screens_product_code — no replay reads them from the page and the recording showed no line to read
+  warning: warning: contradicted-step: 09-report read statusbar_buttons_after_reload_1 "Preview" right after 08-open reported "Cancelled"; 08-open's change may not have landed and a later step may be retrying it. Re-record 08-open.
+  warning: warning: 317 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[0].instruction: "admin" (output) in "Sign in to this Odoo login page with email/login 'admin' and password exactly the text {{env:APP_PASSWORD}} (type it literally as that placeholder text, it will"
+  flow.steps[0].params.v1: "admin" (output) in "admin"
+  flow.steps[1].instruction: "Benchville" (output) in "Create a new customer contact in this Odoo 17 backend named exactly '{{runid}} Bench Customer' with the City field set to 'Benchville'. Use the Contacts app (or"
+  flow.steps[1].params.v3: "Benchville" (output) in "Benchville"
+  flow.steps[1].route: "res.partner" (output) in "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=res.partner&view_type=form"
+arm=sitelooper model=z-ai/glm-5.3 runid=fwod88-n1 stop=completed
+turns=11 wall=664.0s
+commands=10 cmdTime=633.9s cmdBytes=15457 timeouts=0
+orchestrator in=8482 cw=0 cr=50432 out=3123
+inner prompt=4782303 cached=4500480 completion=49867
+spend=$0.125 maxUsd=3
+learn: A_n=0 replayed=0/9 full=0 repaired=0 compiled=9 variants=0
+-> /home/user/sitelooper/bench/results/fwod88-n1-sitelooper-result.json
+
+fwod88-n1: objectives passed 6/6
+  obj 1: PASS — city="Benchville"
+  obj 2: PASS — orders for customer: 1, lines: 2
+  obj 3: PASS — 2 lines, 2 distinct products
+  obj 4: PASS — quantities: 5, 2
+  obj 5: PASS — state tracking shows confirmation
+  obj 6: PASS — final state=cancel, ref=S00021
+
+[sweep] run 2/3: fwod88-n2 (replay flow fwod88, no orchestrator)
+[reset] odoo: deleted 1 leftover bench order(s)
+[reset] odoo: deleted 1 leftover bench customer(s)
+[sweep] fwod88-n2: 4 drift ticket(s) → fwod88-n2-drift.json
+
+fwod88-n2: objectives passed 6/6
+  obj 1: PASS — city="Benchville"
+  obj 2: PASS — orders for customer: 1, lines: 2
+  obj 3: PASS — 2 lines, 2 distinct products
+  obj 4: PASS — quantities: 5, 2
+  obj 5: PASS — state tracking shows confirmation
+  obj 6: PASS — final state=cancel, ref=S00022
+
+[sweep] run 3/3: fwod88-n3 (replay flow fwod88, no orchestrator)
+[reset] odoo: deleted 1 leftover bench order(s)
+[reset] odoo: deleted 1 leftover bench customer(s)
+[sweep] fwod88-n3: 3 drift ticket(s) → fwod88-n3-drift.json
+
+fwod88-n3: objectives passed 6/6
+  obj 1: PASS — city="Benchville"
+  obj 2: PASS — orders for customer: 1, lines: 2
+  obj 3: PASS — 2 lines, 2 distinct products
+  obj 4: PASS — quantities: 5, 2
+  obj 5: PASS — state tracking shows confirmation
+  obj 6: PASS — final state=cancel, ref=S00023
+
+Learning sweep fwod88 (K=3)
+┌─────────┬───┬─────────────┬──────────┬─────────────┬───────┬──────┬───────────┬──────┬──────────────┬────────┐
+│ (index) │ n │ runid       │ verified │ stop        │ turns │ cmds │ total_usd │ A_n  │ replayed     │ wall_s │
+├─────────┼───┼─────────────┼──────────┼─────────────┼───────┼──────┼───────────┼──────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwod88-n1' │ '6/6'    │ 'completed' │ 11    │ 10   │ 0.125     │ 0    │ '0/9'        │ 664    │
+│ 1       │ 2 │ 'fwod88-n2' │ '6/6'    │ 'success'   │ 10    │ 9    │ 0.008     │ 0.89 │ '9/9 (flow)' │ 280    │
+│ 2       │ 3 │ 'fwod88-n3' │ '6/6'    │ 'success'   │ 48    │ 9    │ 0.0342    │ 0.33 │ '9/9 (flow)' │ 300    │
+└─────────┴───┴─────────────┴──────────┴─────────────┴───────┴──────┴───────────┴──────┴──────────────┴────────┘
+http://127.0.0.1:8069
+  s_14a5cf  validated   26 steps  3/3 (100%)
+           Open the existing quotation {{v1}} (reference {{v1}}, for customer '{{v3}}') in this Odoo 17 Sales app — you c…
+  s_1efddc  validated    3 steps  3/3 (100%)
+           Create a new customer contact in this Odoo 17 backend named exactly '{{v2}}' with the City field set to '{{v3}…
+  s_32c253  validated    1 steps  3/3 (100%)
+           Create a new customer contact in this Odoo 17 backend named exactly '{{v2}}' with the City field set to '{{v3}…
+  s_350c00  validated    2 steps  3/3 (100%)
+           In this Odoo 17 backend, create a new Quotation in the Sales app for the customer '{{v1}}' (the customer field…
+  s_5085e6  validated    9 steps  3/3 (100%)
+           In this Odoo 17 backend, create a new Quotation in the Sales app for the customer '{{v1}}' (the customer field…
+  s_56a55c  validated   13 steps  3/3 (100%)
+           In this Odoo 17 backend, create a new Quotation in the Sales app for the customer '{{v1}}' (the customer field…
+  s_5fccd8  validated    9 steps  3/3 (100%)
+           Sign in to this Odoo login page with email/login '{{v1}}' and password exactly the text {{v2}} (type it litera…
+  s_622ed9  validated    3 steps  3/3 (100%)
+           Create a new customer contact in this Odoo 17 backend named exactly '{{v2}}' with the City field set to '{{v3}…
+  s_92518e  validated    1 steps  3/3 (100%)
+           In this Odoo 17 backend, create a new Quotation in the Sales app for the customer '{{v1}}' (the customer field…
+  s_d42ff1  validated    3 steps  3/3 (100%)
+           Create a new customer contact in this Odoo 17 backend named exactly '{{v2}}' with the City field set to '{{v3}…
+  s_d76ccf  validated    1 steps  3/3 (100%)
+           Create a new customer contact in this Odoo 17 backend named exactly '{{v2}}' with the City field set to '{{v3}…
+  s_e259b1  validated    6 steps  3/3 (100%)
+           Create a new customer contact in this Odoo 17 backend named exactly '{{v2}}' with the City field set to '{{v3}…
+  s_e72532  validated    3 steps  3/3 (100%)
+           Sign in to this Odoo login page with email/login '{{v1}}' and password exactly the text {{v2}} (type it litera…
+  s_21b460  validated    1 steps  2/2 (100%)
+           Open the quotation {{v1}} (sale.order id {{v2}}, URL {{v3}}) in this Odoo 17 Sales app and report the EXACT cu…
+  s_3735c5  validated   16 steps  2/2 (100%)
+           Open the quotation {{v1}} (sale.order id {{v2}}, URL {{v3}}) in this Odoo 17 Sales app and report the EXACT cu…
+  s_435d85  validated   26 steps  2/2 (100%)
+           Open the quotation {{v1}} (sale.order id {{v2}}, URL {{v3}}) in this Odoo 17 Sales app. Change the FIRST order…
+  s_6a2d0a  provisional 26 steps  1/2 (50%)
+           Open the sales order {{v1}} (sale.order id {{v2}}, URL {{v3}}) in this Odoo 17 Sales app and CANCEL it: click …
+  s_a393b7  validated    1 steps  2/2 (100%)
+           Open the existing quotation {{v1}} (reference {{v1}}, for customer '{{v3}}') in this Odoo 17 Sales app — you c…
+  s_dc8e25  validated   23 steps  2/2 (100%)
+           Do a final verification of the sales order {{v1}} (sale.order id {{v2}}, URL {{v3}}) in this Odoo 17 Sales app…
+  s_ee6358  validated   21 steps  2/2 (100%)
+           Open the quotation {{v1}} (sale.order id {{v2}}, URL {{v3}}) in this Odoo 17 Sales app and CONFIRM it: click t…
+  s_48a189  provisional 24 steps  1/1 (100%)
+           Open the quotation (sale.order id {{v1}}, URL {{v2}}) in this Odoo 17 Sales app. Change the FIRST order line's…
+  s_48f0bc  provisional 24 steps  1/1 (100%)  variant of s_6a2d0a
+           Open the sales order {{v1}} (sale.order id {{v2}}, URL {{v3}}) in this Odoo 17 Sales app and CANCEL it: click …
+  s_ab0222  provisional 21 steps  1/1 (100%)
+           Open the quotation (sale.order id {{v1}}, URL {{v2}}) in this Odoo 17 Sales app and report the EXACT current s…
+  s_e9d6a1  provisional 16 steps  1/1 (100%)
+           Open the sales order (sale.order id {{v1}}, URL {{v2}}) in this Odoo 17 Sales app and CANCEL it: click the '{{…
+  s_f40cf5  provisional 23 steps  1/1 (100%)
+           Do a final verification of the sales order (sale.order id {{v1}}, URL {{v2}}) in this Odoo 17 Sales app: reloa…
+  s_f713ce  provisional 26 steps  1/1 (100%)
+           Open the quotation (sale.order id {{v1}}, URL {{v2}}) in this Odoo 17 Sales app and CONFIRM it: click the 'Con…
+store: /home/user/sitelooper/bench/results/fwod88-skills
+
+summary: /home/user/sitelooper/bench/results/fwod88-sweep.json

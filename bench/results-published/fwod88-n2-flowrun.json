@@ -1,0 +1,367 @@
+{
+  "flow": "fwod88",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_5fccd8; observed login_used=admin, preferences_menu_item=Change My Preferences, final_url=http://127.0.0.1:8069/web#action=123&cids=1&menu_id=81, logged_in_user_email=admin@yourcompany.example.com, logged_in_user_name=Mitchell Admin.",
+      "values": {
+        "login_used": "admin",
+        "preferences_menu_item": "Change My Preferences",
+        "final_url": "http://127.0.0.1:8069/web#action=123&cids=1&menu_id=81",
+        "logged_in_user_email": "admin@yourcompany.example.com",
+        "logged_in_user_name": "Mitchell Admin"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "12/12",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_e259b1; observed record_id=45, company_type=Company, sales_count=0, invoiced=£ 0.00, customer_reference_code=fwod88-n2.",
+      "values": {
+        "record_id": "45",
+        "company_type": "Company",
+        "sales_count": "0",
+        "invoiced": "£ 0.00",
+        "customer_reference_code": "fwod88-n2"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "17/17",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_e259b1: step 1: read 'saved_contact_city' returned a value the skill itself set/selected ('Benchville') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_e259b1: step 2: read 'saved_contact_name' returned a value the skill itself set/selected ('fwod88-n2 Bench Customer') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_e259b1: step 6: primary locator did not resolve; used fallback #2 page.getByText('fwod88-n2 Bench Customer', { exact: true })"
+      ],
+      "unreported": [
+        "saved_contact_name",
+        "saved_contact_city"
+      ]
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_56a55c; observed sale_order_id=22, untaxed_amount_row=Untaxed Amount\t£ 885.00, quotation_reference=S00022, quotation_url=http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=22, customer_city=Benchville, product_name=[FURN_6666] Acoustic Bloc Screens, quantity=3.00, tax_amount=£ 177.00, taxes=20%, total=£ 1,062.00, unit_price=295.00, status=Quotation.",
+      "values": {
+        "sale_order_id": "22",
+        "untaxed_amount_row": "Untaxed Amount\t£ 885.00",
+        "quotation_reference": "S00022",
+        "quotation_url": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=22",
+        "customer_city": "Benchville",
+        "product_name": "[FURN_6666] Acoustic Bloc Screens",
+        "quantity": "3.00",
+        "tax_amount": "£ 177.00",
+        "taxes": "20%",
+        "total": "£ 1,062.00",
+        "unit_price": "295.00",
+        "status": "Quotation"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "25/25",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_56a55c: step 2: primary locator did not resolve; used fallback #2 page.locator('div:nth-of-type(2) > div > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > h1')",
+        "s_56a55c: step 4: read 'customer_name' returned a value the skill itself set/selected ('fwod88-n2 Bench Customer') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_56a55c: report value ref is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)"
+      ],
+      "unreported": [
+        "customer_name",
+        "ref"
+      ]
+    },
+    {
+      "id": "04-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_a393b7; observed line2_unit_price=140.00, quotation_reference=S00022.",
+      "unanswered": [
+        "untaxed_amount"
+      ],
+      "values": {
+        "line2_unit_price": "140.00",
+        "quotation_reference": "S00022"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "27/27",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_14a5cf: step 13: read 'stray_product_name' returned a value the skill itself set/selected ('Customizable Desk') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_14a5cf: step 18: read 'line2_product' returned '[E-COM11] Cabinet with Doors' from a control this step set, and nothing committed it since — it shows the control, however the app formats it, not what the app stored; dropped from the report's confident values",
+        "s_14a5cf: step 19: read 'line2_quantity' returned '2.00' from a control this step set, and nothing committed it since — it shows the control, however the app formats it, not what the app stored; dropped from the report's confident values",
+        "s_14a5cf: step 22: read 'line2_product' returned '[E-COM11] Cabinet with Doors' from a control this step set, and nothing committed it since — it shows the control, however the app formats it, not what the app stored; dropped from the report's confident values",
+        "s_14a5cf: step 23: read 'line2_quantity' returned '2.00' from a control this step set, and nothing committed it since — it shows the control, however the app formats it, not what the app stored; dropped from the report's confident values",
+        "s_a393b7: report value sale_order_id is given, not observed: it is built only from the step's own parameters, and neither this run's page nor any of its reads shows it — withheld"
+      ],
+      "unreported": [
+        "sale_order_id",
+        "line2_product",
+        "line2_quantity",
+        "stray_product_name"
+      ]
+    },
+    {
+      "id": "05-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_3735c5; observed sale_order_id=22, quotation_reference=S00022, customer=fwod88-n2 Bench Customer, city=Benchville, line1_product=[FURN_6666] Acoustic Bloc Screens, line1_quantity=3.00, line1_unit_price=295.00, line1_subtotal=£ 885.00, line2_product=[E-COM11] Cabinet with Doors, line2_quantity=2.00, line2_unit_price=140.00, line2_subtotal=£ 280.00, untaxed_amount=£ 1,165.00, taxes_20pct=£ 233.00, total=£ 1,398.00, line1_taxes=20%, acoustic_screens_product_code=FURN_6666.",
+      "unanswered": [
+        "order_lines"
+      ],
+      "values": {
+        "sale_order_id": "22",
+        "quotation_reference": "S00022",
+        "customer": "fwod88-n2 Bench Customer",
+        "city": "Benchville",
+        "line1_product": "[FURN_6666] Acoustic Bloc Screens",
+        "line1_quantity": "3.00",
+        "line1_unit_price": "295.00",
+        "line1_subtotal": "£ 885.00",
+        "line2_product": "[E-COM11] Cabinet with Doors",
+        "line2_quantity": "2.00",
+        "line2_unit_price": "140.00",
+        "line2_subtotal": "£ 280.00",
+        "untaxed_amount": "£ 1,165.00",
+        "taxes_20pct": "£ 233.00",
+        "total": "£ 1,398.00",
+        "line1_taxes": "20%",
+        "acoustic_screens_product_code": "FURN_6666"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "17/17",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_3735c5: step 1: primary locator did not resolve; used fallback #2 page.locator('div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > h1 > div > span')"
+      ]
+    },
+    {
+      "id": "06-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_435d85; observed sale_order_id=22, line1_product_name=[FURN_6666] Acoustic Bloc Screens, line1_quantity_before=3.00, line1_unit_price=295.00, untaxed_amount_row=Untaxed Amount\t£ 1,755.00, quotation_reference=S00022, customer_name=fwod88-n2 Bench Customer, line1_quantity=5.00, line1_subtotal=£ 1,475.00, line2_product_name=[E-COM11] Cabinet with Doors, line2_quantity=2.00, line2_unit_price=140.00, line2_subtotal=£ 280.00, untaxed_amount=£ 1,755.00, taxes_20pct=£ 351.00, total=£ 2,106.00, total_row_label=Total, total_row_currency_symbol=£ 2, total_row_amount=106.00.",
+      "values": {
+        "sale_order_id": "22",
+        "line1_product_name": "[FURN_6666] Acoustic Bloc Screens",
+        "line1_quantity_before": "3.00",
+        "line1_unit_price": "295.00",
+        "untaxed_amount_row": "Untaxed Amount\t£ 1,755.00",
+        "quotation_reference": "S00022",
+        "customer_name": "fwod88-n2 Bench Customer",
+        "line1_quantity": "5.00",
+        "line1_subtotal": "£ 1,475.00",
+        "line2_product_name": "[E-COM11] Cabinet with Doors",
+        "line2_quantity": "2.00",
+        "line2_unit_price": "140.00",
+        "line2_subtotal": "£ 280.00",
+        "untaxed_amount": "£ 1,755.00",
+        "taxes_20pct": "£ 351.00",
+        "total": "£ 2,106.00",
+        "total_row_label": "Total",
+        "total_row_currency_symbol": "£ 2",
+        "total_row_amount": "106.00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "26/26",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "07-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_ee6358; observed sale_order_id=22, statusbar_text=Sales Order\nQuotation Sent\nQuotation, order_reference=S00022, statusbar_button_create_invoice=Create Invoice, statusbar_button_send_by_email=Send by Email, statusbar_button_preview=Preview, statusbar_button_cancel=Cancel, final_url_after_confirm=http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=22, confirmation_date=09/25/2026 04:42:42, untaxed_amount=£ 1,755.00, statusbar_stage_quotation_sent=Quotation Sent, statusbar_buttons_now_1=Create Invoice, statusbar_buttons_now_2=Send by Email, statusbar_buttons_now_3=Preview, statusbar_buttons_now_4=Cancel, customer_name=fwod88-n2 Bench Customer, customer_city=Benchville.",
+      "values": {
+        "sale_order_id": "22",
+        "statusbar_text": "Sales Order\nQuotation Sent\nQuotation",
+        "order_reference": "S00022",
+        "statusbar_button_create_invoice": "Create Invoice",
+        "statusbar_button_send_by_email": "Send by Email",
+        "statusbar_button_preview": "Preview",
+        "statusbar_button_cancel": "Cancel",
+        "final_url_after_confirm": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=22",
+        "confirmation_date": "09/25/2026 04:42:42",
+        "untaxed_amount": "£ 1,755.00",
+        "statusbar_stage_quotation_sent": "Quotation Sent",
+        "statusbar_buttons_now_1": "Create Invoice",
+        "statusbar_buttons_now_2": "Send by Email",
+        "statusbar_buttons_now_3": "Preview",
+        "statusbar_buttons_now_4": "Cancel",
+        "customer_name": "fwod88-n2 Bench Customer",
+        "customer_city": "Benchville"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "21/21",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "08-open",
+      "status": "success",
+      "summary": "Completed the cancellation of sales order S00022 (sale.order id 22) on the Odoo 17 Sales order form. A replay of procedure s_6a2d0a had already opened the order and triggered the \"Cancel Sales Order\" confirmation wizard, stopping at a click on a disabled control; I observed the open wizard and clicked its \"Cancel\" (action_cancel) button, which confirmed the cancellation. The live page now shows the order reference \"S00022\" in the breadcrumb/title, the status bar radio \"Cancelled\" is the checked stage, a status-bar notification reads \"Sales Order Cancelled (Status)\", and the status-bar button area now contains only \"Preview\" and \"Set to Quotation\" — the \"Cancel\" button (along with Create Invoice / Send by Email) is gone.",
+      "values": {
+        "order_reference": "S00022",
+        "statusbar_stages": "Cancelled\nSales Order\nQuotation Sent\nQuotation",
+        "checked_stage": "Cancelled",
+        "system_notification": "Mitchell Admin\n- now\nSales OrderCancelled(Status)",
+        "cancel_button_present": "no",
+        "final_url": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=22",
+        "modal_content_footer_but": "Cancel",
+        "o_statusbar_buttons_butt": "Preview",
+        "o_statusbar_buttons_butt_2": "Set to Quotation",
+        "statusbar_buttons_now_1": "Preview",
+        "statusbar_buttons_now_2": "Set to Quotation"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_6a2d0a stopped at step 14 — click failed: click NOT dispatched: the control is disabled, so the app would ignore it. Make whatever enables it true first (a required field, a selection, a finished load), then click it. [outcome: not dispatched]",
+      "replayed": "13/26",
+      "repaired": false,
+      "turns": 10,
+      "unreported": [
+        "sale_order_id",
+        "cancel_wizard_text",
+        "customer_name",
+        "customer_city",
+        "statusbar_stage_quotation_sent",
+        "statusbar_button_preview",
+        "statusbar_button_cancel",
+        "customer_1",
+        "customer_2"
+      ]
+    },
+    {
+      "id": "09-report",
+      "status": "success",
+      "summary": "(c) Customer: \"fwod88-n2 Bench Customer\". (d) Untaxed Amount: £1,755.00.",
+      "unanswered": [
+        "status_checked_stage"
+      ],
+      "values": {
+        "sale_order_id": "22",
+        "untaxed_amount_after_rel": "Untaxed Amount\t£ 1,755.00",
+        "tax_row_after_reload": "TAX 20%\t\n£ 351.00",
+        "total_row_after_reload": "Total\t£ 2,106.00",
+        "order_reference": "S00022",
+        "customer_name": "fwod88-n2 Bench Customer",
+        "customer_city_shown_with_name": "Benchville",
+        "untaxed_amount": "£ 1,755.00",
+        "tax_20pct": "£ 351.00",
+        "total": "£ 2,106.00",
+        "confirmation_date": "09/25/2026 04:42:42",
+        "expiration": "10/25/2026",
+        "line1_product": "[FURN_6666] Acoustic Bloc Screens",
+        "line1_quantity": "5.00",
+        "line1_unit_price": "295.00",
+        "line1_subtotal": "£ 1,475.00",
+        "line2_product": "[E-COM11] Cabinet with Doors",
+        "line2_quantity": "2.00",
+        "line2_unit_price": "140.00",
+        "line2_subtotal": "£ 280.00",
+        "statusbar_buttons_after_reload_1": "Preview",
+        "statusbar_buttons_after_reload_2": "Set to Quotation",
+        "customer_reference_code": "fwod88-n2"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "23/23",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 9,
+  "total": 9,
+  "repinned": 0,
+  "drift": 4,
+  "driftTickets": [
+    {
+      "flow": "fwod88",
+      "step": "02-create",
+      "skill": "s_e259b1",
+      "atStep": "6",
+      "key": "target",
+      "similarity": 0.995,
+      "missedLocator": "page.getByText('fwod88-n2', { exact: true })",
+      "fallbackUsed": "page.getByText('fwod88-n2 Bench Customer', { exact: true })",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=res.partner&view_type=form",
+      "pageUrl": "http://127.0.0.1:8069/web#id=45&cids=1&menu_id=109&action=156&model=res.partner&view_type=form"
+    },
+    {
+      "flow": "fwod88",
+      "step": "03-create",
+      "skill": "s_56a55c",
+      "atStep": "2",
+      "key": "target",
+      "similarity": 1.002,
+      "missedLocator": "page.getByRole('heading', { name: 'S00021', exact: true })",
+      "fallbackUsed": "page.locator('div:nth-of-type(2) > div > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > h1')",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "pageUrl": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=22"
+    },
+    {
+      "flow": "fwod88",
+      "step": "05-open",
+      "skill": "s_3735c5",
+      "atStep": "1",
+      "key": "target",
+      "similarity": 1.002,
+      "missedLocator": "page.getByText('S00022', { exact: true })",
+      "fallbackUsed": "page.locator('div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > h1 > div > span')",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "pageUrl": "http://127.0.0.1:8069/web#id=22&cids=1&menu_id=194&action=316&model=sale.order&view_type=form"
+    },
+    {
+      "flow": "fwod88",
+      "step": "08-open",
+      "skill": "s_6a2d0a",
+      "similarity": 1,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_6a2d0a stopped at step 14 — click failed: click NOT dispatched: the control is disabled, so the app would ignore it. Make whatever enables it true first (a required field, a selection, a finished load), then click it. [outcome: not dispatched]",
+      "reason": "click failed: click NOT dispatched: the control is disabled, so the app would ignore it. Make whatever enables it true first (a required field, a selection, a finished load), then click it. [outcome: not dispatched]",
+      "pageUrlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "pageUrl": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=22"
+    }
+  ],
+  "wallMs": 279647,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 184504,
+    "completionTokens": 6107,
+    "cachedTokens": 158720
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 184504,
+      "completionTokens": 6107,
+      "cachedTokens": 158720
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

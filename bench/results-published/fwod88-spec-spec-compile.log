@@ -1,0 +1,26 @@
+warning 09-report: 09-report read a value that contradicts what the previous step reported
+  why: 09-report read statusbar_buttons_after_reload_1 "Preview" right after 08-open reported "Cancelled"; 08-open's change may not have landed and a later step may be retrying it. Re-record 08-open.
+  fix: sitelooper rerecord bench/results/flows/fwod88.json 08-open
+error 04-open: slot v1 is bound to {{03-create.quotation_reference}}, and nothing has ever published quotation_reference
+  why: 03-create's only source for quotation_reference is a read the flow export synthesized from the value the recording reported — no run has resolved it or read a value back through it. 04-open types or locates by v1, so the artifact would stop here on every run, part-way through the flow and with everything earlier already done.
+  fix: re-record 03-create so it reads quotation_reference from an element (`sitelooper rerecord <flow file> 03-create`), or take {{03-create.quotation_reference}} out of 04-open's v1
+error 05-open: slot v1 is bound to {{03-create.quotation_reference}}, and nothing has ever published quotation_reference
+  why: 03-create's only source for quotation_reference is a read the flow export synthesized from the value the recording reported — no run has resolved it or read a value back through it. 05-open types or locates by v1, so the artifact would stop here on every run, part-way through the flow and with everything earlier already done.
+  fix: re-record 03-create so it reads quotation_reference from an element (`sitelooper rerecord <flow file> 03-create`), or take {{03-create.quotation_reference}} out of 05-open's v1
+error 06-open: slot v1 is bound to {{03-create.quotation_reference}}, and nothing has ever published quotation_reference
+  why: 03-create's only source for quotation_reference is a read the flow export synthesized from the value the recording reported — no run has resolved it or read a value back through it. 06-open types or locates by v1, so the artifact would stop here on every run, part-way through the flow and with everything earlier already done.
+  fix: re-record 03-create so it reads quotation_reference from an element (`sitelooper rerecord <flow file> 03-create`), or take {{03-create.quotation_reference}} out of 06-open's v1
+error 07-open: slot v1 is bound to {{03-create.quotation_reference}}, and nothing has ever published quotation_reference
+  why: 03-create's only source for quotation_reference is a read the flow export synthesized from the value the recording reported — no run has resolved it or read a value back through it. 07-open types or locates by v1, so the artifact would stop here on every run, part-way through the flow and with everything earlier already done.
+  fix: re-record 03-create so it reads quotation_reference from an element (`sitelooper rerecord <flow file> 03-create`), or take {{03-create.quotation_reference}} out of 07-open's v1
+error 08-open: slot v1 is bound to {{03-create.quotation_reference}}, and nothing has ever published quotation_reference
+  why: 03-create's only source for quotation_reference is a read the flow export synthesized from the value the recording reported — no run has resolved it or read a value back through it. 08-open types or locates by v1, so the artifact would stop here on every run, part-way through the flow and with everything earlier already done.
+  fix: re-record 03-create so it reads quotation_reference from an element (`sitelooper rerecord <flow file> 03-create`), or take {{03-create.quotation_reference}} out of 08-open's v1
+error 09-report: slot v1 is bound to {{03-create.quotation_reference}}, and nothing has ever published quotation_reference
+  why: 03-create's only source for quotation_reference is a read the flow export synthesized from the value the recording reported — no run has resolved it or read a value back through it. 09-report types or locates by v1, so the artifact would stop here on every run, part-way through the flow and with everything earlier already done.
+  fix: re-record 03-create so it reads quotation_reference from an element (`sitelooper rerecord <flow file> 03-create`), or take {{03-create.quotation_reference}} out of 09-report's v1
+
+nothing written: the error(s) above are about the RECORDING, not the app — a compiled spec would fail at a locator and read as drift.
+re-record the step(s) with the fix command above.
+  warning: 03-create: step 2 (read quotation_reference) has no locator left — it publishes nothing, as replay skips it
+sitelooper: refused: unsourced-ref — see the diagnostics above

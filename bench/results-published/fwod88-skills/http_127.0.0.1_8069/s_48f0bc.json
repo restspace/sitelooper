@@ -1,0 +1,814 @@
+{
+ "id": "s_48f0bc",
+ "origin": "http://127.0.0.1:8069",
+ "template": "Open the sales order {{v1}} (sale.order id {{v2}}, URL {{v3}}) in this Odoo 17 Sales app and CANCEL it: click the '{{v6}}' button (in the status bar buttons area, next to {{v7}} / {{v8}} / {{v9}}). If a confirmation dialog appears asking to confirm the cancellation, accept it. Then report: (a) the order reference shown in the breadcrumb/title, and (b) the status the app now shows in the status bar (e.g. 'Cancelled'), and (c) whether the {{v6}} button is gone. Do not wait for network idle; wait for concrete page state.",
+ "params": {
+  "v1": {
+   "example": "S00022",
+   "usedIn": [
+    17
+   ],
+   "known": true,
+   "binding": "03-create.quotation_reference"
+  },
+  "v2": {
+   "example": "22",
+   "usedIn": [],
+   "known": true,
+   "binding": "07-open.url.q.id"
+  },
+  "v3": {
+   "example": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=22",
+   "usedIn": [
+    6,
+    10
+   ],
+   "known": true,
+   "binding": "03-create.url"
+  },
+  "v6": {
+   "example": "Cancel",
+   "usedIn": [
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    9,
+    11,
+    13,
+    14
+   ],
+   "known": true,
+   "binding": "07-open.statusbar_button_cancel"
+  },
+  "v7": {
+   "example": "Create Invoice",
+   "usedIn": [],
+   "known": true,
+   "binding": "07-open.statusbar_button_create_invoice"
+  },
+  "v8": {
+   "example": "Send by Email",
+   "usedIn": [],
+   "known": true,
+   "binding": "07-open.statusbar_button_send_by_email"
+  },
+  "v9": {
+   "example": "Preview",
+   "usedIn": [],
+   "known": true,
+   "binding": "07-open.statusbar_button_preview"
+  },
+  "v10": {
+   "example": "fwod88-n2",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id={{v2}}&menu_id=:id&model=sale.order&view_type=form"
+ },
+ "steps": [
+  {
+   "tool": "dialog_expect",
+   "args": {
+    "action": "accept"
+   },
+   "locators": {},
+   "via": {
+    "skill": "s_6a2d0a",
+    "step": 1
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e3841"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "{{v6}}"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > button:nth-of-type(4)"
+     },
+     {
+      "kind": "point",
+      "x": 357,
+      "y": 129,
+      "w": 65.6,
+      "h": 33,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=316&cids=:id&id={{v2}}&menu_id=194&model=sale.order&view_type=form",
+    "alertContains": "Are you sure you want to cancel this order?",
+    "addedContains": [
+     "- dialog \"\"",
+     "- heading \"{{v6}} Sales Order\"",
+     "- button \"Close\"",
+     "- button \"Send and cancel\"",
+     "- button \"Discard\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_6a2d0a",
+    "step": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e4163"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "{{v6}}",
+      "nth": 1
+     },
+     {
+      "kind": "css",
+      "selector": "div > div > div > footer > footer > button:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 334,
+      "y": 661,
+      "w": 65.6,
+      "h": 33,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=316&cids=:id&id={{v2}}&menu_id=194&model=sale.order&view_type=form",
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_6a2d0a",
+    "step": 3
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": ".o_dialog:has(.modal-title:has-text(\"{{v6}} Sales Order\")) button:has-text(\"{{v6}}\") >> nth=0"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Send and cancel"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div > div > footer > footer > button:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 230,
+      "y": 661,
+      "w": 126.3,
+      "h": 33,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=316&cids=:id&id={{v2}}&menu_id=194&model=sale.order&view_type=form",
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_6a2d0a",
+    "step": 4
+   }
+  },
+  {
+   "tool": "wait_for",
+   "args": {
+    "target": ".o_dialog:has(.modal-title:has-text(\"{{v6}} Sales Order\"))",
+    "state": "hidden",
+    "timeout_ms": 10000
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#dialog_3"
+     },
+     {
+      "kind": "id",
+      "selector": "#dialog_3"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 900,
+      "w": 1280,
+      "h": 0,
+      "role": null,
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "via": {
+    "skill": "s_6a2d0a",
+    "step": 5
+   }
+  },
+  {
+   "tool": "goto",
+   "args": {
+    "url": "{{v3}}"
+   },
+   "locators": {},
+   "via": {
+    "skill": "s_6a2d0a",
+    "step": 6
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e3841"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "{{v6}}",
+      "nth": 0
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > button:nth-of-type(4)"
+     },
+     {
+      "kind": "point",
+      "x": 357,
+      "y": 129,
+      "w": 65.6,
+      "h": 33,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=316&cids=:id&id={{v2}}&menu_id=194&model=sale.order&view_type=form",
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_6a2d0a",
+    "step": 7
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e4163"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "{{v6}}",
+      "nth": 1
+     },
+     {
+      "kind": "css",
+      "selector": "div > div > div > footer > footer > button:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 334,
+      "y": 661,
+      "w": 65.6,
+      "h": 33,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=316&cids=:id&id={{v2}}&menu_id=194&model=sale.order&view_type=form",
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_6a2d0a",
+    "step": 8
+   }
+  },
+  {
+   "tool": "wait_for",
+   "args": {
+    "state": "hidden",
+    "target": ".o_dialog:has(.modal-title:has-text(\"{{v6}} Sales Order\"))",
+    "timeout_ms": 10000
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#dialog_3"
+     },
+     {
+      "kind": "id",
+      "selector": "#dialog_3"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 900,
+      "w": 1280,
+      "h": 0,
+      "role": null,
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "via": {
+    "skill": "s_6a2d0a",
+    "step": 9
+   }
+  },
+  {
+   "tool": "goto",
+   "args": {
+    "url": "{{v3}}"
+   },
+   "locators": {},
+   "via": {
+    "skill": "s_6a2d0a",
+    "step": 10
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e3841"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "{{v6}}",
+      "nth": 0
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > button:nth-of-type(4)"
+     },
+     {
+      "kind": "point",
+      "x": 357,
+      "y": 129,
+      "w": 65.6,
+      "h": 33,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=316&cids=:id&id={{v2}}&menu_id=194&model=sale.order&view_type=form",
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_6a2d0a",
+    "step": 11
+   }
+  },
+  {
+   "tool": "press",
+   "args": {
+    "key": "Escape"
+   },
+   "locators": {},
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=316&cids=:id&id={{v2}}&menu_id=194&model=sale.order&view_type=form",
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_6a2d0a",
+    "step": 12
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e3841"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "{{v6}}",
+      "nth": 0
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > button:nth-of-type(4)"
+     },
+     {
+      "kind": "point",
+      "x": 357,
+      "y": 129,
+      "w": 65.6,
+      "h": 33,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=316&cids=:id&id={{v2}}&menu_id=194&model=sale.order&view_type=form",
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_6a2d0a",
+    "step": 13
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e3712"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "{{v6}}",
+      "nth": 1
+     },
+     {
+      "kind": "css",
+      "selector": "div > div > div > footer > footer > button:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 334,
+      "y": 661,
+      "w": 65.6,
+      "h": 33,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=316&cids=:id&id={{v2}}&menu_id=194&model=sale.order&view_type=form",
+    "addedContains": [
+     "- radio \"Cancelled\" [disabled]",
+     "- row \"Product Description Quantity Unit Price Taxes Tax excl.\"",
+     "- link \"[FURN_6666] Acoustic Bloc Screens\"",
+     "- link \"[E-COM11] Cabinet with Doors\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "@e3391",
+    "what": "text",
+    "label": "statusbar_stages"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "radiogroup",
+      "name": "Statusbar"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div"
+     },
+     {
+      "kind": "point",
+      "x": 1052,
+      "y": 129,
+      "w": 424.1,
+      "h": 33,
+      "role": "radiogroup",
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "statusbar_stages"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "@e3809",
+    "what": "text",
+    "label": "system_notification"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "group",
+      "name": "System notification",
+      "nth": 0
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div > div:nth-of-type(2) > div > div > div:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 887,
+      "w": 1280,
+      "h": 53,
+      "role": "group",
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "system_notification"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "@e3394",
+    "what": "text",
+    "label": "order_reference_title",
+    "scopedBy": "v1"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "heading",
+      "name": "{{v1}}"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > h1"
+     },
+     {
+      "kind": "point",
+      "x": 490,
+      "y": 206,
+      "w": 898.5,
+      "h": 55,
+      "role": "heading",
+      "tag": "h1",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "order_reference"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": ".o_statusbar_buttons button",
+    "what": "text",
+    "label": "o_statusbar_buttons_butt"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".o_statusbar_buttons button",
+      "nth": 0
+     }
+    ]
+   },
+   "label": "o_statusbar_buttons_butt"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": ".o_statusbar_buttons button",
+    "what": "text",
+    "label": "o_statusbar_buttons_butt_2"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".o_statusbar_buttons button",
+      "nth": 1
+     }
+    ]
+   },
+   "label": "o_statusbar_buttons_butt_2"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "what": "url",
+    "label": "final_url"
+   },
+   "locators": {},
+   "label": "final_url"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > button:nth-of-type(1) > span",
+      "nth": 0
+     },
+     {
+      "kind": "point",
+      "x": 52,
+      "y": 129,
+      "w": 49.8,
+      "h": 16,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "o_statusbar_buttons_butt"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > button:nth-of-type(2) > span",
+      "nth": 1
+     },
+     {
+      "kind": "point",
+      "x": 153,
+      "y": 129,
+      "w": 101.2,
+      "h": 16,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "o_statusbar_buttons_butt_2"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > button:nth-of-type(1) > span",
+      "nth": 0
+     },
+     {
+      "kind": "point",
+      "x": 52,
+      "y": 129,
+      "w": 49.8,
+      "h": 16,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "statusbar_buttons_now_1"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > button:nth-of-type(2) > span",
+      "nth": 1
+     },
+     {
+      "kind": "point",
+      "x": 153,
+      "y": 129,
+      "w": 101.2,
+      "h": 16,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "statusbar_buttons_now_2"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "Completed the cancellation of sales order {{v1}} (sale.order id 22) on the Odoo 17 Sales order form. A replay of procedure s_6a2d0a had already opened the order and triggered the \"{{v6}} Sales Order\" confirmation wizard, stopping at a click on a disabled control; I observed the open wizard and clicked its \"{{v6}}\" (action_cancel) button, which confirmed the cancellation. The live page now shows the order reference \"{{v1}}\" in the breadcrumb/title, the status bar radio \"Cancelled\" is the checked stage, a status-bar notification reads \"Sales Order Cancelled (Status)\", and the status-bar button area now contains only \"{{v9}}\" and \"Set to Quotation\" — the \"{{v6}}\" button (along with {{v7}} / {{v8}}) is gone.",
+  "values": {
+   "order_reference": "{{v1}}",
+   "statusbar_stages": "Cancelled\nSales Order\nQuotation Sent\nQuotation",
+   "checked_stage": "Cancelled",
+   "system_notification": "Mitchell Admin\n- now\nSales OrderCancelled(Status)",
+   "cancel_button_present": "no",
+   "final_url": "{{v3}}",
+   "modal_content_footer_but": "{{v6}}",
+   "o_statusbar_buttons_butt": "{{v9}}",
+   "o_statusbar_buttons_butt_2": "Set to Quotation",
+   "statusbar_buttons_now_1": "{{v9}}",
+   "statusbar_buttons_now_2": "Set to Quotation"
+  }
+ },
+ "contract": 4,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-25T04:44:49.611Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 4
+ },
+ "status": "provisional",
+ "variantOf": "s_6a2d0a",
+ "provenance": {
+  "session": "fwod88-n2",
+  "instruction": "Open the sales order S00022 (sale.order id 22, URL http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=22) in this Odoo 17 Sales app and CANCEL it: click the 'Cancel' button (in the status bar buttons area, next to Create Invoice / Send by Email / Preview). If a confirmation dialog appears asking to confirm the cancellation, accept it. Then report: (a) the order reference shown in the breadcrumb/title, and (b) the status the app now shows in the status bar (e.g. 'Cancelled'), and (c) whether the Cancel button is gone. Do not wait for network idle; wait for concrete page state.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-25T04:44:49.611Z",
+  "transforms": [
+   {
+    "name": "unfreezeExpectations",
+    "at": 14,
+    "reason": "recorded page change(s) only the recording run could produce: [\"- button \\\"Set to Quotation\\\"\",\"- radio \\\"Cancelled\\\" [disabled]\",\"- row \\\"Product Description Quantity Unit Price Taxes Tax excl.\\\"\",\"- link \\\"[FURN_6666] Acoustic Bloc Screens\\\"\",\"- link \\\"[E-COM11] Cabinet with Doors\\\"\"] → [\"- radio \\\"Cancelled\\\" [disabled]\",\"- row \\\"Product Description Quantity Unit Price Taxes Tax excl.\\\"\",\"- link \\\"[FURN_6666] Acoustic Bloc Screens\\\"\",\"- link \\\"[E-COM11] Cabinet with Doors\\\"\"]"
+   }
+  ]
+ },
+ "revision": 1
+}
