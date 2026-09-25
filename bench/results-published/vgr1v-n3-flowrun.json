@@ -1,0 +1,212 @@
+{
+  "flow": "vgr1v",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_080c77; observed panel_title_1=Request rate, panel_title_2=Error count, panel_title_3=Latency by endpoint, panel_count=3, dashboard_title=Service Health, panel_titles_1=Request rate, panel_titles_2=Error count, panel_titles_3=Latency by endpoint.",
+      "values": {
+        "panel_title_1": "Request rate",
+        "panel_title_2": "Error count",
+        "panel_title_3": "Latency by endpoint",
+        "panel_count": "3",
+        "dashboard_title": "Service Health",
+        "panel_titles_1": "Request rate",
+        "panel_titles_2": "Error count",
+        "panel_titles_3": "Latency by endpoint"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "23/23",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_0a2556: step 3: read 'username' returned a value the skill itself set/selected ('admin') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_0a2556: step 4: read 'username' returned a value the skill itself set/selected ('admin') — confirms the control, not persistence; dropped from the report's confident values"
+      ],
+      "unreported": [
+        "username"
+      ]
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_36330f; observed dashboard_uid=ffza58jz2vshse, run_id=vgr1v-n3, data_source=TestData, dashboard_url=http://127.0.0.1:3000/d/ffza58jz2vshse/vgr1v-n3-bench-dashboard?from=now-6h&to=now&timezone=browser&showCategory=Panel%20options, dashboard_title=vgr1v-n3 Bench Dashboard, panel_title=vgr1v-n3 Availability, page_title=vgr1v-n3 Bench Dashboard - Dashboards - Grafana.",
+      "values": {
+        "dashboard_uid": "ffza58jz2vshse",
+        "run_id": "vgr1v-n3",
+        "data_source": "TestData",
+        "dashboard_url": "http://127.0.0.1:3000/d/ffza58jz2vshse/vgr1v-n3-bench-dashboard?from=now-6h&to=now&timezone=browser&showCategory=Panel%20options",
+        "dashboard_title": "vgr1v-n3 Bench Dashboard",
+        "panel_title": "vgr1v-n3 Availability",
+        "page_title": "vgr1v-n3 Bench Dashboard - Dashboards - Grafana"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "20/20",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-add",
+      "status": "success",
+      "summary": "Replayed stored procedure s_625861; observed ref=vgr1v-n3-bench-dashboard, panel_title=vgr1v-n3 Notes, panel_text_content=Benchmark notes for run vgr1v-n3, dashboard_title=vgr1v-n3 Bench Dashboard, other_panels=vgr1v-n3 Availability, ref_2=vgr1v-n3.",
+      "values": {
+        "ref": "vgr1v-n3-bench-dashboard",
+        "panel_title": "vgr1v-n3 Notes",
+        "panel_text_content": "Benchmark notes for run vgr1v-n3",
+        "dashboard_title": "vgr1v-n3 Bench Dashboard",
+        "other_panels": "vgr1v-n3 Availability",
+        "ref_2": "vgr1v-n3"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "16/16",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "save_alert",
+        "dashboard_url",
+        "run_id",
+        "dashboard_slug"
+      ]
+    },
+    {
+      "id": "04-add",
+      "status": "success",
+      "summary": "Replayed stored procedure s_98fedb; observed dashboard_tags=bench, dashboard_title=vgr1v-n3 Bench Dashboard.",
+      "unanswered": [
+        "time_picker"
+      ],
+      "values": {
+        "dashboard_tags": "bench",
+        "dashboard_title": "vgr1v-n3 Bench Dashboard"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "8/8",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_98fedb: step 6: expected alert containing \"{{03-add.save_alert}}\""
+      ],
+      "unreported": [
+        "tags",
+        "time_range_label",
+        "save_alert",
+        "run_id"
+      ],
+      "repinned": "s_98fedb",
+      "repinParams": {
+        "v1": "{{02-create.dashboard_title}}",
+        "v2": "{{runid}}",
+        "v3": "{{03-add.url.p1}}",
+        "v4": "{{03-add.url.p2}}",
+        "v5": "{{03-add.save_alert}}"
+      }
+    },
+    {
+      "id": "05-set",
+      "status": "success",
+      "summary": "Replayed stored procedure s_49500d; observed dashboard_url=http://127.0.0.1:3000/d/ffza58jz2vshse/vgr1v-n3-bench-dashboard?from=now-6h&to=now&timezone=browser&showCategory=Panel%20options&refresh=1m, dashboard_title=vgr1v-n3 Bench Dashboard.",
+      "values": {
+        "dashboard_url": "http://127.0.0.1:3000/d/ffza58jz2vshse/vgr1v-n3-bench-dashboard?from=now-6h&to=now&timezone=browser&showCategory=Panel%20options&refresh=1m",
+        "dashboard_title": "vgr1v-n3 Bench Dashboard"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "11/11",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_49500d: step 9: expected alert containing \"{{03-add.save_alert}}\"",
+        "s_49500d: step 10: read 'auto_refresh_value' returned '1m' from a control this step set, and nothing committed it since — it shows the control, however the app formats it, not what the app stored; dropped from the report's confident values"
+      ],
+      "repinned": "s_49500d",
+      "repinParams": {
+        "v1": "{{02-create.dashboard_title}}",
+        "v2": "{{runid}}",
+        "v3": "{{04-add.url.p1}}",
+        "v4": "{{04-add.url.p2}}",
+        "v5": "{{03-add.save_alert}}"
+      },
+      "unreported": [
+        "auto_refresh",
+        "save_alert"
+      ]
+    },
+    {
+      "id": "06-edit",
+      "status": "success",
+      "summary": "Replayed stored procedure s_083e29; observed settings_title_field=vgr1v-n3 Bench Dashboard, current_url_with_settings=http://127.0.0.1:3000/d/ffza58jz2vshse/vgr1v-n3-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m&editview=settings, dashboard_slug=vgr1v-n3-bench-dashboard, address_bar_url=http://127.0.0.1:3000/d/ffza58jz2vshse/vgr1v-n3-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m, panel_titles=vgr1v-n3 Notes | vgr1v-n3 Availability, time_range=Time range selected: Last 6 hours, auto_refresh=1m, dashboard_title=vgr1v-n3 Bench Dashboard, tags=bench, run_id=vgr1v-n3.",
+      "unanswered": [
+        "time_from"
+      ],
+      "values": {
+        "settings_title_field": "vgr1v-n3 Bench Dashboard",
+        "current_url_with_settings": "http://127.0.0.1:3000/d/ffza58jz2vshse/vgr1v-n3-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m&editview=settings",
+        "dashboard_slug": "vgr1v-n3-bench-dashboard",
+        "address_bar_url": "http://127.0.0.1:3000/d/ffza58jz2vshse/vgr1v-n3-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m",
+        "panel_titles": "vgr1v-n3 Notes | vgr1v-n3 Availability",
+        "time_range": "Time range selected: Last 6 hours",
+        "auto_refresh": "1m",
+        "dashboard_title": "vgr1v-n3 Bench Dashboard",
+        "tags": "bench",
+        "run_id": "vgr1v-n3"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "10/10",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "panel_title_1",
+        "panel_title_2"
+      ]
+    },
+    {
+      "id": "07-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_fd1a78; observed uid=ffza58jz2vshse.",
+      "unanswered": [
+        "dashboard_title",
+        "tags",
+        "time_from",
+        "time_to",
+        "refresh",
+        "panel_1_title",
+        "panel_1_type",
+        "panel_2_title",
+        "panel_2_type"
+      ],
+      "values": {
+        "uid": "ffza58jz2vshse"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "1/1",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 7,
+  "total": 7,
+  "repinned": 2,
+  "drift": 0,
+  "wallMs": 90888,
+  "model": "xiaomi/mimo-v2.6-flash",
+  "usage": {
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "cachedTokens": 0
+  },
+  "usageByModel": {},
+  "servedByModel": {},
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

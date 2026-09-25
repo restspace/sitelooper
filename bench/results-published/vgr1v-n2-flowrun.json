@@ -1,0 +1,226 @@
+{
+  "flow": "vgr1v",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_080c77; observed panel_title_1=Request rate, panel_title_2=Error count, panel_title_3=Latency by endpoint, panel_count=3, dashboard_title=Service Health, panel_titles_1=Request rate, panel_titles_2=Error count, panel_titles_3=Latency by endpoint.",
+      "values": {
+        "panel_title_1": "Request rate",
+        "panel_title_2": "Error count",
+        "panel_title_3": "Latency by endpoint",
+        "panel_count": "3",
+        "dashboard_title": "Service Health",
+        "panel_titles_1": "Request rate",
+        "panel_titles_2": "Error count",
+        "panel_titles_3": "Latency by endpoint"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "23/23",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_0a2556: step 3: read 'username' returned a value the skill itself set/selected ('admin') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_0a2556: step 4: read 'username' returned a value the skill itself set/selected ('admin') — confirms the control, not persistence; dropped from the report's confident values"
+      ],
+      "unreported": [
+        "username"
+      ]
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_36330f; observed dashboard_uid=dfza4qo9gdl34c, run_id=vgr1v-n2, data_source=TestData, dashboard_url=http://127.0.0.1:3000/d/dfza4qo9gdl34c/vgr1v-n2-bench-dashboard?from=now-6h&to=now&timezone=browser&showCategory=Panel%20options, dashboard_title=vgr1v-n2 Bench Dashboard, panel_title=vgr1v-n2 Availability, page_title=vgr1v-n2 Bench Dashboard - Dashboards - Grafana.",
+      "values": {
+        "dashboard_uid": "dfza4qo9gdl34c",
+        "run_id": "vgr1v-n2",
+        "data_source": "TestData",
+        "dashboard_url": "http://127.0.0.1:3000/d/dfza4qo9gdl34c/vgr1v-n2-bench-dashboard?from=now-6h&to=now&timezone=browser&showCategory=Panel%20options",
+        "dashboard_title": "vgr1v-n2 Bench Dashboard",
+        "panel_title": "vgr1v-n2 Availability",
+        "page_title": "vgr1v-n2 Bench Dashboard - Dashboards - Grafana"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "20/20",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-add",
+      "status": "success",
+      "summary": "Continued the interrupted procedure from step 10: clicked Save dashboard, confirmed with the existing name, and Grafana showed a \"Dashboard saved\" alert. The dashboard at /d/dfza4qo9gdl34c/vgr1v-n2-bench-dashboard now displays two panels — \"vgr1v-n2 Notes\" (Text panel, content \"Benchmark notes for run vgr1v-n2\") and \"vgr1v-n2 Availability\" — with no unsaved-changes indicator.",
+      "values": {
+        "save_alert": "Dashboard saved",
+        "panel_title": "vgr1v-n2 Notes",
+        "panel_text_content": "Benchmark notes for run vgr1v-n2",
+        "dashboard_title": "vgr1v-n2 Bench Dashboard",
+        "other_panels": "vgr1v-n2 Availability",
+        "ref": "vgr1v-n2-bench-dashboard",
+        "ref_2": "vgr1v-n2"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_4a69d0 stopped at step 10 — after step 10 expected url http://127.0.0.1:3000/d/dfza4qo9gdl34c/vgr1v-n2-bench-dashboard?from=:id&showCategory=Text&timezone=browser&to=now but browser is at http://127.0.0.1:3000/d/dfza4qo9gdl34c/vgr1v-n2-bench-dashboard?from=now-6h&showCategory=Panel options&timezone=browser&to=now",
+      "replayed": "9/18",
+      "repaired": false,
+      "turns": 6,
+      "warnings": [
+        "s_4a69d0: step 8: the panel this toggle shows (- radio \"Markdown\" [checked]) is already showing — a click would hide it; skipped as already in effect"
+      ],
+      "unreported": [
+        "dashboard_url",
+        "run_id",
+        "dashboard_slug"
+      ]
+    },
+    {
+      "id": "04-add",
+      "status": "success",
+      "summary": "Added the tag \"bench\" via dashboard Settings → General, verified it appears in the Tags list, confirmed the time picker already showed \"Last 6 hours\", opened Save dashboard, ticked the \"Update default time range\" checkbox, and saved — a \"Dashboard saved\" alert appeared. After saving, the settings Tags list shows \"bench\" and the time picker shows \"Last 6 hours\".",
+      "values": {
+        "save_alert": "Dashboard saved",
+        "dashboard_tags": "bench",
+        "time_range_picker": "Time range selected: Last 6 hours",
+        "update_default_time_range_checkbox": "checked",
+        "dashboard_title": "vgr1v-n2 Bench Dashboard"
+      },
+      "tier": null,
+      "recovered": true,
+      "fellBack": "every candidate refused — s_92882c: not on the page this procedure starts from (expects http://127.0.0.1:3000/d/dfza4qo9gdl34c/vgr1v-n2-bench-dashboard?from=:id&showCategory=Text&timezone=browser&to=now, browser is at http://127.0.0.1:3000/d/dfza4qo9gdl34c/vgr1v-n2-bench-dashboard?from=now-6h&showCategory=Panel options&timezone=browser&to=now) — nothing was run",
+      "replayed": null,
+      "repaired": false,
+      "turns": 8,
+      "unreported": [
+        "tags",
+        "time_range_label",
+        "run_id"
+      ]
+    },
+    {
+      "id": "05-set",
+      "status": "success",
+      "summary": "Opened the time picker's Auto refresh menu and selected 1m; the top bar refresh button then showed \"1m\" (tooltip: \"current interval 1 minute selected\"). Clicking Save dashboard initially showed \"No changes to save\" until the save dialog's refresh-related checkbox was ticked (registering 1 change), after which Save was clicked and a \"Dashboard saved\" alert appeared. Verified after the save: the top bar shows auto-refresh 1m and the time picker shows Last 6 hours.",
+      "values": {
+        "dashboard_url": "http://127.0.0.1:3000/d/dfza4qo9gdl34c/vgr1v-n2-bench-dashboard?from=now-6h&to=now&timezone=browser&showCategory=Panel%20options&refresh=1m",
+        "auto_refresh_value": "1m",
+        "refresh_button_label": "Choose refresh time interval with current interval 1 minute selected",
+        "save_alert": "Dashboard saved",
+        "time_range_picker": "Time range selected: Last 6 hours",
+        "dashboard_title": "vgr1v-n2 Bench Dashboard"
+      },
+      "tier": null,
+      "recovered": true,
+      "fellBack": "every candidate refused — s_0e51fa: not on the page this procedure starts from (expects http://127.0.0.1:3000/d/dfza4qo9gdl34c/vgr1v-n2-bench-dashboard?from=:id&showCategory=Text&timezone=browser&to=now, browser is at http://127.0.0.1:3000/d/dfza4qo9gdl34c/vgr1v-n2-bench-dashboard?from=now-6h&showCategory=Panel options&timezone=browser&to=now) — nothing was run",
+      "replayed": null,
+      "repaired": false,
+      "turns": 16,
+      "unreported": [
+        "auto_refresh"
+      ]
+    },
+    {
+      "id": "06-edit",
+      "status": "success",
+      "summary": "Replayed stored procedure s_083e29; observed settings_title_field=vgr1v-n2 Bench Dashboard, current_url_with_settings=http://127.0.0.1:3000/d/dfza4qo9gdl34c/vgr1v-n2-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m&editview=settings, dashboard_slug=vgr1v-n2-bench-dashboard, address_bar_url=http://127.0.0.1:3000/d/dfza4qo9gdl34c/vgr1v-n2-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m, panel_titles=vgr1v-n2 Notes | vgr1v-n2 Availability, time_range=Time range selected: Last 6 hours, auto_refresh=1m, dashboard_title=vgr1v-n2 Bench Dashboard, tags=bench, run_id=vgr1v-n2.",
+      "unanswered": [
+        "time_from"
+      ],
+      "values": {
+        "settings_title_field": "vgr1v-n2 Bench Dashboard",
+        "current_url_with_settings": "http://127.0.0.1:3000/d/dfza4qo9gdl34c/vgr1v-n2-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m&editview=settings",
+        "dashboard_slug": "vgr1v-n2-bench-dashboard",
+        "address_bar_url": "http://127.0.0.1:3000/d/dfza4qo9gdl34c/vgr1v-n2-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m",
+        "panel_titles": "vgr1v-n2 Notes | vgr1v-n2 Availability",
+        "time_range": "Time range selected: Last 6 hours",
+        "auto_refresh": "1m",
+        "dashboard_title": "vgr1v-n2 Bench Dashboard",
+        "tags": "bench",
+        "run_id": "vgr1v-n2"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "10/10",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_083e29: step 6: url segment(s) differ from recorded (ffza3zti93uv4c→dfza4qo9gdl34c) — treated as volatile",
+        "s_083e29: step 7: url segment(s) differ from recorded (ffza3zti93uv4c→dfza4qo9gdl34c) — treated as volatile"
+      ],
+      "unreported": [
+        "panel_title_1",
+        "panel_title_2"
+      ]
+    },
+    {
+      "id": "07-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_fd1a78; observed uid=dfza4qo9gdl34c.",
+      "unanswered": [
+        "dashboard_title",
+        "tags",
+        "time_from",
+        "time_to",
+        "refresh",
+        "panel_1_title",
+        "panel_1_type",
+        "panel_2_title",
+        "panel_2_type"
+      ],
+      "values": {
+        "uid": "dfza4qo9gdl34c"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "1/1",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 7,
+  "total": 7,
+  "repinned": 0,
+  "drift": 1,
+  "driftTickets": [
+    {
+      "flow": "vgr1v",
+      "step": "03-add",
+      "skill": "s_4a69d0",
+      "similarity": 1,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_4a69d0 stopped at step 10 — after step 10 expected url http://127.0.0.1:3000/d/dfza4qo9gdl34c/vgr1v-n2-bench-dashboard?from=:id&showCategory=Text&timezone=browser&to=now but browser is at http://127.0.0.1:3000/d/dfza4qo9gdl34c/vgr1v-n2-bench-dashboard?from=now-6h&showCategory=Panel options&timezone=browser&to=now",
+      "reason": "after step 10 expected url http://127.0.0.1:3000/d/dfza4qo9gdl34c/vgr1v-n2-bench-dashboard?from=:id&showCategory=Text&timezone=browser&to=now but browser is at http://127.0.0.1:3000/d/dfza4qo9gdl34c/vgr1v-n2-bench-dashboard?from=now-6h&showCategory=Panel options&timezone=browser&to=now",
+      "pageUrlPattern": "http://127.0.0.1:3000/d/dfza4qo9gdl34c/:id?from=:id&showCategory=Panel options&timezone=browser&to=now",
+      "pageUrl": "http://127.0.0.1:3000/d/dfza4qo9gdl34c/vgr1v-n2-bench-dashboard?from=now-6h&to=now&timezone=browser&showCategory=Panel%20options"
+    }
+  ],
+  "wallMs": 329973,
+  "model": "xiaomi/mimo-v2.6-flash",
+  "usage": {
+    "promptTokens": 478733,
+    "completionTokens": 6283,
+    "cachedTokens": 398016
+  },
+  "usageByModel": {
+    "xiaomi/mimo-v2.6-flash": {
+      "promptTokens": 478733,
+      "completionTokens": 6283,
+      "cachedTokens": 398016
+    }
+  },
+  "servedByModel": {
+    "xiaomi/mimo-v2.6-flash": [
+      "Xiaomi"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

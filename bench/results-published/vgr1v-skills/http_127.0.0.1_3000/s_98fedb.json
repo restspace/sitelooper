@@ -1,0 +1,439 @@
+{
+ "id": "s_98fedb",
+ "origin": "http://127.0.0.1:3000",
+ "template": "On the Grafana dashboard named {{v1}} (URL http://127.0.0.1:3000/d/{{v3}}/{{v4}}), do two things and save: (1) Add the tag bench to the dashboard - open the dashboard settings (gear/cog icon in the top bar), go to the General settings section, and add a tag named bench, then save/apply the settings. (2) Set the dashboard time range to the last 6 hours using the time picker in the top bar (choose Last 6 hours). Then click the Save dashboard button in the top bar; in the save dialog, make sure the checkbox labeled 'Update default time range' (or similar wording about saving the current time range as the dashboard default) IS TICKED, then confirm the save. Verify the save succeeded (a '{{v5}}' alert appears). Report the tags shown in the dashboard settings and the time range shown in the time picker after saving.",
+ "params": {
+  "v1": {
+   "example": "vgr1v-n2 Bench Dashboard",
+   "usedIn": [
+    8
+   ],
+   "known": true,
+   "binding": "output:i2:dashboard_title"
+  },
+  "v2": {
+   "example": "vgr1v-n2",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v3": {
+   "example": "dfza4qo9gdl34c",
+   "usedIn": [],
+   "known": true,
+   "binding": "03-add.url.p1"
+  },
+  "v4": {
+   "example": "vgr1v-n2-bench-dashboard",
+   "usedIn": [],
+   "known": true,
+   "binding": "03-add.url.p2"
+  },
+  "v5": {
+   "example": "Dashboard saved",
+   "usedIn": [],
+   "known": true,
+   "binding": "03-add.save_alert"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:3000/d/{{v3}}/{{v4}}?from=:id&showCategory=Panel options&timezone=browser&to=now"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e536"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid Dashboard settings"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Settings"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid Nav toolbar\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div > div:nth-of-type(3) > button"
+     },
+     {
+      "kind": "point",
+      "x": 962,
+      "y": 60,
+      "w": 63.8,
+      "h": 24,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v3}}/{{v4}}?editview=settings&from=:id&showCategory=Panel options&timezone=browser&to=now",
+    "addedContains": [
+     "- link \"{{v1}}\"",
+     "- button \"Back to dashboard\"",
+     "- heading \"Settings\"",
+     "- tab \"General\"",
+     "- tab \"Annotations\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e751",
+    "value": "bench"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Tags"
+     },
+     {
+      "kind": "label",
+      "label": "Tags"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "New tag (enter key to add)"
+     },
+     {
+      "kind": "id",
+      "selector": "#tags-input"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"input-wrapper\"] input"
+     },
+     {
+      "kind": "css",
+      "selector": "#tags-input"
+     },
+     {
+      "kind": "point",
+      "x": 192,
+      "y": 414,
+      "w": 320,
+      "h": 32,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v3}}/{{v4}}",
+    "addedContains": [
+     "- textbox \"New tag (enter key to add)\": {{*}}",
+     "- button \"Add\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=button[name=\"Add\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "role=button[name=\"Add\"]"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Add"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"input-wrapper\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div > div > div > div > button"
+     },
+     {
+      "kind": "point",
+      "x": 322,
+      "y": 414,
+      "w": 59.6,
+      "h": 32,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v3}}/{{v4}}?editview=settings&from=:id&showCategory=Panel options&timezone=browser&to=now",
+    "addedContains": [
+     "- textbox \"New tag (enter key to add)\"",
+     "- button \"Add\" [disabled]",
+     "- button \"Remove \\\"bench\\\" tag\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e692"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid Save dashboard button"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Save dashboard"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid Nav toolbar\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(1) > div > div:nth-of-type(3) > div > button:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 1140,
+      "y": 60,
+      "w": 109.4,
+      "h": 24,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v3}}/{{v4}}?editview=settings&from=:id&showCategory=Panel options&timezone=browser&to=now",
+    "addedContains": [
+     "- dialog \"\"",
+     "- dialog \"Drawer title Save dashboard\"",
+     "- button \"Close\"",
+     "- heading \"Save dashboard\"",
+     "- tab \"Details\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "check",
+   "args": {
+    "target": "@e928",
+    "checked": true
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "Dashboard settings Save Dashboard Modal Save timerange checkbox"
+     },
+     {
+      "kind": "role",
+      "role": "checkbox",
+      "name": "Update default time rangeWill make current time range the new default"
+     },
+     {
+      "kind": "label",
+      "label": "Update default time rangeWill make current time range the new default"
+     },
+     {
+      "kind": "id",
+      "selector": "#save-timerange"
+     },
+     {
+      "kind": "css",
+      "selector": "#save-timerange"
+     },
+     {
+      "kind": "point",
+      "x": 798,
+      "y": 155,
+      "w": 284.5,
+      "h": 36,
+      "role": "checkbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v3}}/{{v4}}?editview=settings&from=:id&showCategory=Panel options&timezone=browser&to=now",
+    "addedContains": [
+     "- tab \"Changes2\"",
+     "- checkbox \"Update default time rangeWill make current time range the new default\" [checked]"
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e942"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid Save dashboard drawer button"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Save"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(3) > div:nth-of-type(1) > div > div > div:nth-of-type(3) > button:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 776,
+      "y": 372,
+      "w": 65.4,
+      "h": 32,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v3}}/{{v4}}?editview=settings&from=:id&showCategory=Panel options&timezone=browser&to=now",
+    "alertContains": "{{v5}}",
+    "addedContains": [
+     "- button \"Back to dashboard\"",
+     "- button \"Save dashboard\"",
+     "- button \"More save options\"",
+     "- button \"Toggle top search bar\"",
+     "- button \"Close alert\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div > div > ul > li > span"
+     },
+     {
+      "kind": "point",
+      "x": 55,
+      "y": 450,
+      "w": 36.6,
+      "h": 22,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "dashboard_tags"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text",
+    "scopedBy": "v1"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid {{v1}} breadcrumb"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid Nav toolbar\"] a",
+      "nth": 2
+     },
+     {
+      "kind": "css",
+      "selector": "header > div:nth-of-type(2) > nav > ol > li:nth-of-type(3) > a"
+     },
+     {
+      "kind": "point",
+      "x": 317,
+      "y": 60,
+      "w": 183.3,
+      "h": 22,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "dashboard_title"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "Added the tag \"bench\" via dashboard Settings → General, verified it appears in the Tags list, confirmed the time picker already showed \"Last 6 hours\", opened Save dashboard, ticked the \"Update default time range\" checkbox, and saved — a \"{{v5}}\" alert appeared. After saving, the settings Tags list shows \"bench\" and the time picker shows \"Last 6 hours\".",
+  "values": {
+   "save_alert": "{{v5}}",
+   "dashboard_tags": "bench",
+   "time_range_picker": "Time range selected: Last 6 hours",
+   "update_default_time_range_checkbox": "checked",
+   "dashboard_title": "{{v1}}"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 2,
+  "successes": 2,
+  "partial": 0,
+  "created": "2026-09-25T03:08:06.617Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2,
+  "lastUsed": "2026-09-25T03:12:02.581Z"
+ },
+ "status": "validated",
+ "provenance": {
+  "session": "vgr1v-n2",
+  "instruction": "On the Grafana dashboard named vgr1v-n2 Bench Dashboard (URL http://127.0.0.1:3000/d/dfza4qo9gdl34c/vgr1v-n2-bench-dashboard), do two things and save: (1) Add the tag bench to the dashboard - open the dashboard settings (gear/cog icon in the top bar), go to the General settings section, and add a tag named bench, then save/apply the settings. (2) Set the dashboard time range to the last 6 hours using the time picker in the top bar (choose Last 6 hours). Then click the Save dashboard button in the top bar; in the save dialog, make sure the checkbox labeled 'Update default time range' (or similar wording about saving the current time range as the dashboard default) IS TICKED, then confirm the save. Verify the save succeeded (a 'Dashboard saved' alert appears). Report the tags shown in the dashboard settings and the time range shown in the time picker after saving.",
+  "model": "xiaomi/mimo-v2.6-flash",
+  "created": "2026-09-25T03:08:06.617Z"
+ },
+ "revision": 2
+}

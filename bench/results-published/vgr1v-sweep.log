@@ -1,0 +1,115 @@
+
+[sweep] run 1/3: vgr1v-n1 (store: /home/user/sitelooper/bench/results/vgr1v-skills)
+[harness] grafana: defaulting APP_URL
+[harness] grafana: defaulting APP_EMAIL
+[harness] grafana: defaulting APP_PASSWORD
+[reset] grafana: deleted leftover dashboard "Service Health" (400)
+[harness] grafana responded 302 at http://127.0.0.1:3000/
+stopped: vgr1v-n1
+  flow "vgr1v" saved: 7 step(s), vars runid → /home/user/sitelooper/bench/results/flows/vgr1v.json
+  warning: note: 7 goal/report value(s) carrying a value this run made were slotted or dropped:
+  s_fd1a78.reportTemplate.values.dashboard_title dropped (recorded literal of a value this run made)
+  s_fd1a78.reportTemplate.values.panel_1_title dropped (recorded literal of a value this run made)
+  s_fd1a78.reportTemplate.values.panel_2_title dropped (recorded literal of a value this run made)
+  s_fd1a78.reportTemplate.values.text_panel_content dropped (recorded literal of a value this run made)
+  s_fd1a78.reportTemplate.values.run_id dropped (recorded literal of a value this run made)
+  s_fd1a78.reportTemplate.values.dashboard_slug dropped (recorded literal of a value this run made)
+  s_fd1a78.reportTemplate.summary dropped (narrates a value this run made)
+  warning: note: 02-create no longer publishes visualization, scenario — no replay reads them from the page and the recording showed no line to read
+  warning: note: 03-add no longer publishes visualization — no replay reads it from the page and the recording showed no line to read
+  warning: note: 04-add no longer publishes tag_chips, save_checkbox_label — no replay reads them from the page and the recording showed no line to read
+  warning: warning: 06-edit's instruction asks to report time_from, and no replay can publish it: nothing in its procedure reads it from the page, so export dropped it — re-record the step so the value is read, not only reported
+  warning: note: 06-edit no longer publishes panel_count, time_range_label — no replay reads them from the page and the recording showed no line to read
+  warning: warning: 07-open's instruction asks to report dashboard_title, tags, time_from, time_to, refresh, panel_1_title, panel_1_type, panel_2_title, panel_2_type, and no replay can publish them: nothing in its procedure reads them from the page, so export dropped them — re-record the step so the value is read, not only reported
+  warning: note: 07-open no longer publishes text_panel_content, panel_count, dashboard_version, run_id, dashboard_slug, updated_at_timestamp — no replay reads them from the page and the recording showed no line to read
+  warning: note: 03-add: added a read for save_alert to s_4a69d0 (page.getByRole('status', { name: 'Dashboard saved', exact: true }); seen on the instruction's own page)
+  warning: warning: 239 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[0].instruction: "admin" (output) in "Open http://127.0.0.1:3000/ in the browser. If the Grafana sign-in page appears, sign in with username admin and password {{env:APP_PASSWORD}} - type the exact "
+  flow.steps[0].instruction: "text" (output) in "Open http://127.0.0.1:3000/ in the browser. If the Grafana sign-in page appears, sign in with username admin and password {{env:APP_PASSWORD}} - type the exact "
+  flow.steps[1].instruction: "Random Walk" (output) in "In Grafana, create a NEW dashboard (from the Dashboards menu / New dashboard, choose Add visualization). Add a panel of type Stat (visualization type Stat). Set"
+  flow.steps[1].instruction: "TestData" (output) in "In Grafana, create a NEW dashboard (from the Dashboards menu / New dashboard, choose Add visualization). Add a panel of type Stat (visualization type Stat). Set"
+  flow.steps[1].instruction: "Stat" (output) in "In Grafana, create a NEW dashboard (from the Dashboards menu / New dashboard, choose Add visualization). Add a panel of type Stat (visualization type Stat). Set"
+arm=sitelooper model=z-ai/glm-5.3 runid=vgr1v-n1 stop=completed
+turns=8 wall=1003.9s
+commands=7 cmdTime=847.0s cmdBytes=8276 timeouts=0
+orchestrator in=11796 cw=0 cr=24704 out=12262
+inner prompt=2360314 cached=2018432 completion=21643
+spend=$0.1366 maxUsd=3
+learn: A_n=0 replayed=0/7 full=0 repaired=0 compiled=7 variants=0
+-> /home/user/sitelooper/bench/results/vgr1v-n1-sitelooper-result.json
+
+vgr1v-n1: objectives passed 6/6
+  obj 1: PASS — all 3 provisioned titles reported
+  obj 2: PASS — type=stat, datasource ok=true
+  obj 3: PASS — type=text, content includes runid=true
+  obj 4: PASS — tags=["bench"], time=now-6h..now
+  obj 5: PASS — refresh="1m"
+  obj 6: PASS — uid ffza3zti93uv4c reported
+
+[sweep] run 2/3: vgr1v-n2 (replay flow vgr1v, no orchestrator)
+[reset] grafana: deleted leftover dashboard "Service Health" (400)
+[reset] grafana: deleted leftover dashboard "vgr1v-n1 Bench Dashboard" (200)
+[sweep] vgr1v-n2: 1 drift ticket(s) → vgr1v-n2-drift.json
+
+vgr1v-n2: objectives passed 6/6
+  obj 1: PASS — all 3 provisioned titles reported
+  obj 2: PASS — type=stat, datasource ok=true
+  obj 3: PASS — type=text, content includes runid=true
+  obj 4: PASS — tags=["bench"], time=now-6h..now
+  obj 5: PASS — refresh="1m"
+  obj 6: PASS — uid dfza4qo9gdl34c reported
+
+[sweep] run 3/3: vgr1v-n3 (replay flow vgr1v, no orchestrator)
+[reset] grafana: deleted leftover dashboard "Service Health" (400)
+[reset] grafana: deleted leftover dashboard "vgr1v-n2 Bench Dashboard" (200)
+
+vgr1v-n3: objectives passed 6/6
+  obj 1: PASS — all 3 provisioned titles reported
+  obj 2: PASS — type=stat, datasource ok=true
+  obj 3: PASS — type=text, content includes runid=true
+  obj 4: PASS — tags=["bench"], time=now-6h..now
+  obj 5: PASS — refresh="1m"
+  obj 6: PASS — uid ffza58jz2vshse reported
+
+Learning sweep vgr1v (K=3)
+┌─────────┬───┬────────────┬──────────┬─────────────┬───────┬──────┬───────────┬──────┬──────────────┬────────┐
+│ (index) │ n │ runid      │ verified │ stop        │ turns │ cmds │ total_usd │ A_n  │ replayed     │ wall_s │
+├─────────┼───┼────────────┼──────────┼─────────────┼───────┼──────┼───────────┼──────┼──────────────┼────────┤
+│ 0       │ 1 │ 'vgr1v-n1' │ '6/6'    │ 'completed' │ 8     │ 7    │ 0.1366    │ 0    │ '0/7'        │ 1004   │
+│ 1       │ 2 │ 'vgr1v-n2' │ '6/6'    │ 'success'   │ 30    │ 7    │ 0.0142    │ 0.57 │ '7/7 (flow)' │ 330    │
+│ 2       │ 3 │ 'vgr1v-n3' │ '6/6'    │ 'success'   │ 0     │ 7    │ 0         │ 1    │ '7/7 (flow)' │ 91     │
+└─────────┴───┴────────────┴──────────┴─────────────┴───────┴──────┴───────────┴──────┴──────────────┴────────┘
+http://127.0.0.1:3000
+  s_080c77  validated   14 steps  3/3 (100%)
+           Open {{v1}} in the browser. If the Grafana sign-in page appears, sign in with username admin and password {{en…
+  s_083e29  validated   10 steps  3/3 (100%)
+           In the browser, navigate to the Grafana dashboard named {{v1}} by opening the URL {{v5}} (a fresh load, not ed…
+  s_0a2556  validated    6 steps  3/3 (100%)
+           Open {{v1}} in the browser. If the Grafana sign-in page appears, sign in with username admin and password {{en…
+  s_143bd1  validated   14 steps  3/3 (100%)
+           In Grafana, create a NEW dashboard (from the Dashboards menu / New dashboard, choose Add visualization). Add a…
+  s_36330f  validated    4 steps  3/3 (100%)
+           In Grafana, create a NEW dashboard (from the Dashboards menu / New dashboard, choose Add visualization). Add a…
+  s_481422  validated    2 steps  3/3 (100%)
+           In Grafana, create a NEW dashboard (from the Dashboards menu / New dashboard, choose Add visualization). Add a…
+  s_7c27d0  validated    1 steps  3/3 (100%)
+           Open {{v1}} in the browser. If the Grafana sign-in page appears, sign in with username admin and password {{en…
+  s_c1f496  validated    2 steps  3/3 (100%)
+           Open {{v1}} in the browser. If the Grafana sign-in page appears, sign in with username admin and password {{en…
+  s_fd1a78  validated    1 steps  3/3 (100%)
+           In the browser, open the URL {{v2}} (this returns the saved dashboard JSON; if the browser shows it as a downl…
+  s_49500d  validated   11 steps  2/2 (100%)
+           On the Grafana dashboard named {{v1}} (URL http://127.0.0.1:3000/d/{{v3}}/{{v4}}), set the dashboard's auto-re…
+  s_4a69d0  demoted     18 steps  1/2 (50%)
+           On the Grafana dashboard named {{v1}} (URL http://127.0.0.1:3000/d/{{v3}}/{{v4}}), add a NEW panel of visualiz…
+  s_625861  validated   16 steps  2/2 (100%)  variant of s_4a69d0
+           On the Grafana dashboard named {{v1}} (URL http://127.0.0.1:3000/d/{{v3}}/{{v4}}), add a NEW panel of visualiz…
+  s_98fedb  validated    8 steps  2/2 (100%)
+           On the Grafana dashboard named {{v1}} (URL http://127.0.0.1:3000/d/{{v3}}/{{v4}}), do two things and save: (1)…
+  s_0e51fa  provisional  7 steps  1/1 (100%)
+           On the Grafana dashboard named {{v1}} (URL http://127.0.0.1:3000/d/{{v3}}/{{v4}}), set the dashboard's auto-re…
+  s_92882c  provisional 16 steps  1/1 (100%)
+           On the Grafana dashboard named {{v1}} (URL http://127.0.0.1:3000/d/{{v3}}/{{v4}}), do two things and save: (1)…
+store: /home/user/sitelooper/bench/results/vgr1v-skills
+
+summary: /home/user/sitelooper/bench/results/vgr1v-sweep.json
