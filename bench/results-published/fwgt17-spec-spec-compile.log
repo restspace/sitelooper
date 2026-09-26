@@ -1,0 +1,7 @@
+error 08-report: slot v5 is bound to {{03-open.labels_picker_state}}, and nothing has ever published labels_picker_state
+  why: nothing in 03-open's procedure reads labels_picker_state from the page, and no report value derives it from a parameter, so no run can publish it. The recording's own value is not a substitute: passing it would make every replay work run 1's record. 08-report types or locates by v5, so the artifact would stop here on every run, part-way through the flow and with everything earlier already done.
+  fix: re-record 03-open so it reads labels_picker_state from an element (`sitelooper rerecord <flow file> 03-open`), or take {{03-open.labels_picker_state}} out of 08-report's v5
+
+nothing written: the error(s) above are about the RECORDING, not the app — a compiled spec would fail at a locator and read as drift.
+re-record the step(s) with the fix command above.
+sitelooper: refused: unsourced-ref — see the diagnostics above
