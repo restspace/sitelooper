@@ -1,0 +1,254 @@
+{
+  "flow": "vop2v",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Sign-in completed: after submitting the login form (username admin, the {{env:APP_PASSWORD}} marker) the app landed on the OpenProject home/dashboard page at http://127.0.0.1:8090/ (\"Welcome to OpenProject!\" dashboard). Signed-in state verified via the User menu (Administration/Sign out links present) and the Account settings page at /my/account, whose form shows Username \"admin\" (read-only), First name \"Bench\", Last name \"Admin\", Email admin@example.net — confirming the session is the admin user. The previously failing segment s_da3d84 (a \"Save\" button click) was not needed; no submit/save was re-issued.",
+      "values": {
+        "first_name": "Bench",
+        "username": "admin",
+        "last_name": "Admin",
+        "email": "admin@example.net",
+        "landed_page_after_login": "http://127.0.0.1:8090/ (OpenProject dashboard)"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_da3d84 stopped at step 1 — no element matched any known locator for target (tried 3: page.getByRole('button', { name: 'Save', exact: true }), page.locator('#user-form > div:nth-of-type(4) > div > button:nth-of-type(2)'), elementAt(908, 547) /* button */)",
+      "replayed": "0/5",
+      "repaired": false,
+      "turns": 7,
+      "unreported": [
+        "current_page_url",
+        "login_username",
+        "user_menu_contents",
+        "user_menu_initials",
+        "landing_page_url",
+        "landing_page_heading"
+      ]
+    },
+    {
+      "id": "02-open",
+      "status": "success",
+      "summary": "Navigated to project 'Bench Project' via the All projects menu and opened its work packages list at http://127.0.0.1:8090/projects/bench-project/work_packages (\"All open\" view, footer shows 1 - 3/3). The list contains exactly 3 work packages, all starting with 'Seed:', in displayed order: \"Seed: triage inbox\" (#38), \"Seed: order missing parts\" (#39), \"Seed: ship repaired device\" (#40). Nothing was modified (no create/edit/save performed).",
+      "values": {
+        "work_packages_total": "3 (1 - 3/3)",
+        "seed_work_packages_1": "Seed: triage inbox",
+        "seed_work_packages_2": "Seed: order missing parts",
+        "seed_work_packages_3": "Seed: ship repaired device"
+      },
+      "tier": "B",
+      "recovered": true,
+      "fellBack": "every candidate refused — s_b2766b: not on the page this procedure starts from (expects http://127.0.0.1:8090/, browser is at http://127.0.0.1:8090/my/account) — nothing was run",
+      "replayed": "0/1",
+      "repaired": false,
+      "turns": 9,
+      "unreported": [
+        "work_package_1",
+        "work_package_2",
+        "work_package_3",
+        "row_range",
+        "pagination_text",
+        "view",
+        "projects_link",
+        "bench_project_link"
+      ]
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_482282; observed run_reference=vop2v-n2, work_packages_view_filter=All open, work_package_page_url=http://127.0.0.1:8090/projects/bench-project/work_packages/42/activity, work_package_id=#42, subject=vop2v-n2 Bench Work Package, status=New, page_title=Task: vop2v-n2 Bench Work Package (#42) | Bench Project | OpenProject, create_button=Create, main_class_work_package__1=TASK, main_class_work_package__2_2=vop2v-n2 Bench Work Package, type=TASK, created_by_line=#42: Created by Bench Admin. Last updated on 09/25/2026 5:22 PM., main_class_work_package__3=#42: Created by Bench Admin. Last updated on 09/25/2026 5:22 PM., main_table_tbody_tr=Create, created_by_user=Bench Admin.",
+      "values": {
+        "run_reference": "vop2v-n2",
+        "work_packages_view_filter": "All open",
+        "work_package_page_url": "http://127.0.0.1:8090/projects/bench-project/work_packages/42/activity",
+        "work_package_id": "#42",
+        "subject": "vop2v-n2 Bench Work Package",
+        "status": "New",
+        "page_title": "Task: vop2v-n2 Bench Work Package (#42) | Bench Project | OpenProject",
+        "create_button": "Create",
+        "main_class_work_package__1": "TASK",
+        "main_class_work_package__2_2": "vop2v-n2 Bench Work Package",
+        "type": "TASK",
+        "created_by_line": "#42: Created by Bench Admin. Last updated on 09/25/2026 5:22 PM.",
+        "main_class_work_package__3": "#42: Created by Bench Admin. Last updated on 09/25/2026 5:22 PM.",
+        "main_table_tbody_tr": "Create",
+        "created_by_user": "Bench Admin"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "21/21",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_8b415b: step 2: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear",
+        "s_715cb4: step 2: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear",
+        "s_715cb4: step 3: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear",
+        "s_715cb4: step 4: read 'description' returned a value the skill itself set/selected ('Bench work package created for run vop2v-n2') — confirms the control, not persistence; dropped from the report's confident values"
+      ]
+    },
+    {
+      "id": "04-edit",
+      "status": "success",
+      "summary": "Values now displayed on the page: Assignee = Bench Assignee, Status = In progress, Finish date = 12/31/2026.",
+      "values": {
+        "assignee_edit_button": "Assignee Bench Assignee: Edit",
+        "assignee": "Bench Assignee",
+        "finish_date": "12/31/2026",
+        "date_row_display": "no start date - 12/31/2026",
+        "run_reference": "vop2v-n2"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "13/13",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_b3785c: step 5: none of the 1 expected page change(s) appeared in the step diff (found on the page instead)",
+        "s_b3785c: step 5: expected alert containing \"Successful update.\"",
+        "s_b3785c: step 8: expected alert containing \"Successful update.\"",
+        "s_b3785c: step 10: read 'status' returned a value the skill itself set/selected ('In progress') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_b3785c: report value finish_date_iso is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)"
+      ],
+      "unreported": [
+        "status",
+        "finish_date_iso"
+      ]
+    },
+    {
+      "id": "05-add",
+      "status": "success",
+      "summary": "Replayed stored procedure s_316430; observed run_reference=vop2v-n2.",
+      "values": {
+        "run_reference": "vop2v-n2"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "5/5",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_316430: step 4: primary locator did not resolve; used fallback #2 elementAt(1069, 350) /* p */",
+        "s_316430: step 4: read 'comment_text' returned a value the skill itself set/selected ('Comment for run vop2v-n2') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_316430: step 5: read 'comment_field_placeholder_after_submit' returned a value the skill itself set/selected ('Add a comment. Type @ to notify people.') — confirms the control, not persistence; dropped from the report's confident values"
+      ],
+      "unreported": [
+        "comment_text",
+        "activity_entry"
+      ]
+    },
+    {
+      "id": "06-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_f2520c; observed run_reference=vop2v-n2, id=#42, id_line=#42: Created by Bench Admin. Last updated on 09/25/2026 5:22 PM., subject=vop2v-n2 Bench Work Package, description=Bench work package created for run vop2v-n2, assignee=Bench Assignee, status=In progress, finish_date=12/31/2026, date_row=no start date - 12/31/2026, comment_text=Comment for run vop2v-n2, page_title=Task: vop2v-n2 Bench Work Package (#42) | Bench Project | OpenProject, type=TASK.",
+      "values": {
+        "run_reference": "vop2v-n2",
+        "id": "#42",
+        "id_line": "#42: Created by Bench Admin. Last updated on 09/25/2026 5:22 PM.",
+        "subject": "vop2v-n2 Bench Work Package",
+        "description": "Bench work package created for run vop2v-n2",
+        "assignee": "Bench Assignee",
+        "status": "In progress",
+        "finish_date": "12/31/2026",
+        "date_row": "no start date - 12/31/2026",
+        "comment_text": "Comment for run vop2v-n2",
+        "page_title": "Task: vop2v-n2 Bench Work Package (#42) | Bench Project | OpenProject",
+        "type": "TASK"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "11/11",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_f2520c: step 9: primary locator did not resolve; used fallback #2 elementAt(1069, 350) /* p */"
+      ]
+    }
+  ],
+  "passed": 6,
+  "total": 6,
+  "repinned": 0,
+  "drift": 4,
+  "driftTickets": [
+    {
+      "flow": "vop2v",
+      "step": "01-open",
+      "skill": "s_da3d84",
+      "atStep": "1",
+      "key": "target",
+      "similarity": 0.846,
+      "missedLocator": "page.getByRole('button', { name: 'Save', exact: true })",
+      "fallbackUsed": null,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:8090/",
+      "pageUrl": "http://127.0.0.1:8090/"
+    },
+    {
+      "flow": "vop2v",
+      "step": "02-open",
+      "skill": "s_b2766b",
+      "similarity": 0.717,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "every candidate refused — s_b2766b: not on the page this procedure starts from (expects http://127.0.0.1:8090/, browser is at http://127.0.0.1:8090/my/account) — nothing was run",
+      "reason": "not on the page this procedure starts from (expects http://127.0.0.1:8090/, browser is at http://127.0.0.1:8090/my/account) — nothing was run",
+      "pageUrlPattern": "http://127.0.0.1:8090/my/account",
+      "pageUrl": "http://127.0.0.1:8090/my/account"
+    },
+    {
+      "flow": "vop2v",
+      "step": "05-add",
+      "skill": "s_316430",
+      "atStep": "4",
+      "key": "target",
+      "similarity": 1.001,
+      "missedLocator": "page.locator('#work-packages-activities-tab-journals-item-component-show-63 > div > div:nth-of-type(1) > div > p')",
+      "fallbackUsed": "elementAt(1069, 350) /* p */",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/:id/activity",
+      "pageUrl": "http://127.0.0.1:8090/projects/bench-project/work_packages/42/activity"
+    },
+    {
+      "flow": "vop2v",
+      "step": "06-open",
+      "skill": "s_f2520c",
+      "atStep": "9",
+      "key": "target",
+      "similarity": 0.999,
+      "missedLocator": "page.locator('#work-packages-activities-tab-journals-item-component-show-63 > div > div:nth-of-type(1) > div > p')",
+      "fallbackUsed": "elementAt(1069, 350) /* p */",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/:id/activity",
+      "pageUrl": "http://127.0.0.1:8090/projects/bench-project/work_packages/42/activity"
+    }
+  ],
+  "wallMs": 125699,
+  "model": "xiaomi/mimo-v2.6-flash",
+  "usage": {
+    "promptTokens": 190937,
+    "completionTokens": 2529,
+    "cachedTokens": 148480
+  },
+  "usageByModel": {
+    "xiaomi/mimo-v2.6-flash": {
+      "promptTokens": 190937,
+      "completionTokens": 2529,
+      "cachedTokens": 148480
+    }
+  },
+  "servedByModel": {
+    "xiaomi/mimo-v2.6-flash": [
+      "Xiaomi"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

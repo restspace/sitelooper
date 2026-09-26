@@ -1,0 +1,265 @@
+{
+  "flow": "vop2v",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Sign-in with username admin and the supplied password succeeded: the login form submitted and the browser landed on the OpenProject home page (http://127.0.0.1:8090/, \"OpenProject\" dashboard with the user menu \"BA\"). I verified the session by opening the user menu → Account settings (/my/account), where the profile shows Username \"admin\", First name \"Bench\", Last name \"Admin\", Email admin@example.net, and the \"BA\" avatar — confirming I am signed in as admin.",
+      "values": {
+        "first_name": "Bench",
+        "username": "admin",
+        "last_name": "Admin",
+        "email": "admin@example.net",
+        "landed_page": "OpenProject home (http://127.0.0.1:8090/) after login",
+        "current_page": "Account settings (/my/account)"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_da3d84 stopped at step 1 — no element matched any known locator for target (tried 3: page.getByRole('button', { name: 'Save', exact: true }), page.locator('#user-form > div:nth-of-type(4) > div > button:nth-of-type(2)'), elementAt(908, 547) /* button */)",
+      "replayed": "0/5",
+      "repaired": false,
+      "turns": 5,
+      "unreported": [
+        "current_page_url",
+        "login_username",
+        "user_menu_contents",
+        "user_menu_initials",
+        "landing_page_url",
+        "landing_page_heading"
+      ],
+      "repinned": "s_19c00c",
+      "repinParams": {
+        "v1": "http://127.0.0.1:8090/",
+        "v2": "{{env:APP_PASSWORD}}"
+      }
+    },
+    {
+      "id": "02-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_273ca3; observed seed_work_packages_1=Seed: triage inbox, seed_work_packages_2=Seed: order missing parts, seed_work_packages_3=Seed: ship repaired device.",
+      "values": {
+        "seed_work_packages_1": "Seed: triage inbox",
+        "seed_work_packages_2": "Seed: order missing parts",
+        "seed_work_packages_3": "Seed: ship repaired device"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "7/7",
+      "repaired": false,
+      "turns": 0,
+      "repinned": "s_2f4155",
+      "repinParams": {
+        "v1": "{{01-open.first_name}}"
+      },
+      "unreported": [
+        "work_package_1",
+        "work_package_2",
+        "work_package_3",
+        "row_range",
+        "pagination_text",
+        "view",
+        "projects_link",
+        "bench_project_link"
+      ]
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_482282; observed run_reference=vop2v-n3, work_packages_view_filter=All open, work_package_page_url=http://127.0.0.1:8090/projects/bench-project/work_packages/43/activity, work_package_id=#43, subject=vop2v-n3 Bench Work Package, status=New, page_title=Task: vop2v-n3 Bench Work Package (#43) | Bench Project | OpenProject, create_button=Create, main_class_work_package__1=TASK, main_class_work_package__2_2=vop2v-n3 Bench Work Package, type=TASK, created_by_line=#43: Created by Bench Admin. Last updated on 09/25/2026 5:24 PM., main_class_work_package__3=#43: Created by Bench Admin. Last updated on 09/25/2026 5:24 PM., created_by_user=Bench Admin.",
+      "values": {
+        "run_reference": "vop2v-n3",
+        "work_packages_view_filter": "All open",
+        "work_package_page_url": "http://127.0.0.1:8090/projects/bench-project/work_packages/43/activity",
+        "work_package_id": "#43",
+        "subject": "vop2v-n3 Bench Work Package",
+        "status": "New",
+        "page_title": "Task: vop2v-n3 Bench Work Package (#43) | Bench Project | OpenProject",
+        "create_button": "Create",
+        "main_class_work_package__1": "TASK",
+        "main_class_work_package__2_2": "vop2v-n3 Bench Work Package",
+        "type": "TASK",
+        "created_by_line": "#43: Created by Bench Admin. Last updated on 09/25/2026 5:24 PM.",
+        "main_class_work_package__3": "#43: Created by Bench Admin. Last updated on 09/25/2026 5:24 PM.",
+        "created_by_user": "Bench Admin"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "21/21",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_8b415b: step 2: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear",
+        "s_715cb4: step 2: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear",
+        "s_715cb4: step 3: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear",
+        "s_715cb4: step 4: read 'description' returned a value the skill itself set/selected ('Bench work package created for run vop2v-n3') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_482282: step 12: skipped read — no element matched any known locator for target (none recorded)"
+      ],
+      "unreported": [
+        "main_table_tbody_tr"
+      ]
+    },
+    {
+      "id": "04-edit",
+      "status": "success",
+      "summary": "Values now displayed on the page: Assignee = Bench Assignee, Status = In progress, Finish date = 12/31/2026.",
+      "values": {
+        "assignee_edit_button": "Assignee Bench Assignee: Edit",
+        "assignee": "Bench Assignee",
+        "finish_date": "12/31/2026",
+        "date_row_display": "no start date - 12/31/2026",
+        "run_reference": "vop2v-n3"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "13/13",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_b3785c: step 5: none of the 1 expected page change(s) appeared in the step diff (found on the page instead)",
+        "s_b3785c: step 5: expected alert containing \"Successful update.\"",
+        "s_b3785c: step 8: expected alert containing \"Successful update.\"",
+        "s_b3785c: step 10: read 'status' returned a value the skill itself set/selected ('In progress') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_b3785c: report value finish_date_iso is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)"
+      ],
+      "unreported": [
+        "status",
+        "finish_date_iso"
+      ]
+    },
+    {
+      "id": "05-add",
+      "status": "success",
+      "summary": "Replayed stored procedure s_316430; observed run_reference=vop2v-n3.",
+      "values": {
+        "run_reference": "vop2v-n3"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "5/5",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_316430: step 4: primary locator did not resolve; used fallback #2 elementAt(1069, 350) /* p */",
+        "s_316430: step 4: read 'comment_text' returned a value the skill itself set/selected ('Comment for run vop2v-n3') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_316430: step 5: read 'comment_field_placeholder_after_submit' returned a value the skill itself set/selected ('Add a comment. Type @ to notify people.') — confirms the control, not persistence; dropped from the report's confident values"
+      ],
+      "unreported": [
+        "comment_text",
+        "activity_entry"
+      ]
+    },
+    {
+      "id": "06-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_f2520c; observed run_reference=vop2v-n3, id=#43, id_line=#43: Created by Bench Admin. Last updated on 09/25/2026 5:24 PM., subject=vop2v-n3 Bench Work Package, description=Bench work package created for run vop2v-n3, assignee=Bench Assignee, status=In progress, finish_date=12/31/2026, date_row=no start date - 12/31/2026, comment_text=Comment for run vop2v-n3, page_title=Task: vop2v-n3 Bench Work Package (#43) | Bench Project | OpenProject, type=TASK.",
+      "values": {
+        "run_reference": "vop2v-n3",
+        "id": "#43",
+        "id_line": "#43: Created by Bench Admin. Last updated on 09/25/2026 5:24 PM.",
+        "subject": "vop2v-n3 Bench Work Package",
+        "description": "Bench work package created for run vop2v-n3",
+        "assignee": "Bench Assignee",
+        "status": "In progress",
+        "finish_date": "12/31/2026",
+        "date_row": "no start date - 12/31/2026",
+        "comment_text": "Comment for run vop2v-n3",
+        "page_title": "Task: vop2v-n3 Bench Work Package (#43) | Bench Project | OpenProject",
+        "type": "TASK"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "11/11",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_f2520c: step 9: primary locator did not resolve; used fallback #2 elementAt(1069, 350) /* p */"
+      ]
+    }
+  ],
+  "passed": 6,
+  "total": 6,
+  "repinned": 2,
+  "drift": 4,
+  "driftTickets": [
+    {
+      "flow": "vop2v",
+      "step": "01-open",
+      "skill": "s_da3d84",
+      "atStep": "1",
+      "key": "target",
+      "similarity": 0.846,
+      "missedLocator": "page.getByRole('button', { name: 'Save', exact: true })",
+      "fallbackUsed": null,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:8090/",
+      "pageUrl": "http://127.0.0.1:8090/"
+    },
+    {
+      "flow": "vop2v",
+      "step": "03-create",
+      "skill": "s_482282",
+      "atStep": "12",
+      "key": "target",
+      "similarity": 1.001,
+      "missedLocator": "(none recorded)",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/:id/activity",
+      "pageUrl": "http://127.0.0.1:8090/projects/bench-project/work_packages/43/activity"
+    },
+    {
+      "flow": "vop2v",
+      "step": "05-add",
+      "skill": "s_316430",
+      "atStep": "4",
+      "key": "target",
+      "similarity": 1.001,
+      "missedLocator": "page.locator('#work-packages-activities-tab-journals-item-component-show-63 > div > div:nth-of-type(1) > div > p')",
+      "fallbackUsed": "elementAt(1069, 350) /* p */",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/:id/activity",
+      "pageUrl": "http://127.0.0.1:8090/projects/bench-project/work_packages/43/activity"
+    },
+    {
+      "flow": "vop2v",
+      "step": "06-open",
+      "skill": "s_f2520c",
+      "atStep": "9",
+      "key": "target",
+      "similarity": 0.999,
+      "missedLocator": "page.locator('#work-packages-activities-tab-journals-item-component-show-63 > div > div:nth-of-type(1) > div > p')",
+      "fallbackUsed": "elementAt(1069, 350) /* p */",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/:id/activity",
+      "pageUrl": "http://127.0.0.1:8090/projects/bench-project/work_packages/43/activity"
+    }
+  ],
+  "wallMs": 86899,
+  "model": "xiaomi/mimo-v2.6-flash",
+  "usage": {
+    "promptTokens": 58810,
+    "completionTokens": 794,
+    "cachedTokens": 47168
+  },
+  "usageByModel": {
+    "xiaomi/mimo-v2.6-flash": {
+      "promptTokens": 58810,
+      "completionTokens": 794,
+      "cachedTokens": 47168
+    }
+  },
+  "servedByModel": {
+    "xiaomi/mimo-v2.6-flash": [
+      "Xiaomi"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}
