@@ -1,0 +1,310 @@
+{
+ "id": "s_18ba5e",
+ "origin": "http://127.0.0.1:8090",
+ "template": "In {{v1}}, open work package {{v2}} (subject '{{v4}}') in project '{{v6}}'. Set its Finish date to 2026-12-31 by editing the finish date field in place (click it, enter the date 12/31/2026 or 2026-12-31 as the app expects, let it save). Then report the finish date value now displayed on the work package page, exactly as shown.",
+ "params": {
+  "v1": {
+   "example": "OpenProject",
+   "usedIn": [],
+   "known": true,
+   "binding": "01-signin.page_title"
+  },
+  "v2": {
+   "example": "#43",
+   "usedIn": [],
+   "known": true,
+   "binding": "03-create.work_package_id"
+  },
+  "v4": {
+   "example": "fwop21-n3 Bench Work Package",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i3:subject_value"
+  },
+  "v5": {
+   "example": "fwop21-n3",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v6": {
+   "example": "Bench Project",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i3:project_name"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:id/overview?query_props={\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e1916"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Start date : Edit"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(6) > div:nth-of-type(2) > op-editable-attribute-field > div > div:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 1100,
+      "y": 1289,
+      "w": 175.6,
+      "h": 23,
+      "role": "button",
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/43/overview?query_props={\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}",
+    "addedContains": [
+     "- dialog \"\"",
+     "- tab \"Dates\"",
+     "- tab \"Predecessors 0\"",
+     "- tab \"Successors 0\"",
+     "- tab \"Children 0\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_9c9088",
+    "step": 1
+   }
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e1977",
+    "value": "2026-12-31"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Finish date"
+     },
+     {
+      "kind": "label",
+      "label": "Finish date"
+     },
+     {
+      "kind": "id",
+      "selector": "#work_package_due_date"
+     },
+     {
+      "kind": "css",
+      "selector": "#work_package_due_date"
+     },
+     {
+      "kind": "point",
+      "x": 647,
+      "y": 373,
+      "w": 183,
+      "h": 32,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/43/overview",
+    "addedContains": [
+     "- textbox \"Finish date\": {{*}}",
+     "- spinbutton \"Year\": {{*}}"
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_9c9088",
+    "step": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e1744"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > span:nth-of-type(33)"
+     },
+     {
+      "kind": "text",
+      "text": "31",
+      "nth": 0
+     },
+     {
+      "kind": "point",
+      "x": 531,
+      "y": 611,
+      "w": 37,
+      "h": 30,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/43/overview?query_props={\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}",
+    "addedContains": [
+     "- textbox \"Finish date\": {{*}}"
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e1771"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Save"
+     },
+     {
+      "kind": "css",
+      "selector": "#work-packages-date-picker-dialog-content-component > div:nth-of-type(2) > button:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 895,
+      "y": 688,
+      "w": 57.9,
+      "h": 32,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/43/overview?query_props={\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}",
+    "alertContains": "Successful update.",
+    "addedContains": [
+     "- button \"Close popup\"",
+     "- button \"Start date : Edit\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "wp-overview-tab > wp-single-view > div > div:nth-of-type(1) > div > span:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 999,
+      "y": -134,
+      "w": 20,
+      "h": 14,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "work_package_id"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Start date : Edit"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(6) > div:nth-of-type(2) > op-editable-attribute-field > div > div:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 1093,
+      "y": 661,
+      "w": 162.4,
+      "h": 23,
+      "role": "button",
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "finish_date_after_displayed"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "what": "title"
+   },
+   "locators": {},
+   "label": "page_title"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "The replay had already opened work package {{v2}} and filled the Finish date field; I continued from there. The Finish date textbox was empty after the failed type, so I set the date by clicking 31 in the open December 2026 date picker (the field then showed 2026-12-31), clicked Save (page reported \"Successful update.\"), and then read the value back from the live details pane: the combined date field now displays \"no start date - 12/31/2026\", i.e. Finish date = 12/31/2026. Nothing else was modified.",
+  "values": {
+   "work_package_id": "{{v2}}",
+   "subject": "{{v4}}",
+   "finish_date_input_after_picker": "2026-12-31",
+   "finish_date_after_displayed": "no start date - 12/31/2026",
+   "page_title": "Task: {{v4}} ({{v2}}) | Work Packages | {{v6}} | {{v1}}"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-26T09:41:38.953Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2
+ },
+ "status": "provisional",
+ "variantOf": "s_9c9088",
+ "provenance": {
+  "session": "fwop21-n3",
+  "instruction": "In OpenProject, open work package #43 (subject 'fwop21-n3 Bench Work Package') in project 'Bench Project'. Set its Finish date to 2026-12-31 by editing the finish date field in place (click it, enter the date 12/31/2026 or 2026-12-31 as the app expects, let it save). Then report the finish date value now displayed on the work package page, exactly as shown.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-26T09:41:38.953Z"
+ },
+ "revision": 1
+}

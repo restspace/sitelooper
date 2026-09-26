@@ -1,0 +1,76 @@
+
+Running 1 test using 1 worker
+
+[sitelooper skip] 01-signin s_69f4a1/1: closes the dialog "Welcome to OpenProject, Bench Admin" with "Close", which is not open — already in effect
+[sitelooper skip] 01-signin s_69f4a1/6 target: no locator recorded — value left empty
+[sitelooper step] 01-signin
+[sitelooper warn] 02-open s_f0b16a/2: the field already held the value this type enters (restored after the recording saw it emptied), so it was cleared first rather than typed onto
+[sitelooper warn] step 02-open s_f0b16a/2: none of the 1 expected page change(s) appeared in the step diff (found on the page instead)
+[sitelooper step] 02-open
+[sitelooper warn] 03-create s_36f71c/2: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear
+[sitelooper warn] 03-create s_be5bb7/1: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear
+[sitelooper warn] 03-create s_be5bb7/3: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear
+[sitelooper recipe] filled via recipe contenteditable/set-value (r_7b1e49); value verified on the component
+[sitelooper warn] 03-create s_be5bb7/4: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear
+[sitelooper warn] 03-create s_be5bb7/5: read 'description_saved' returned a value the skill itself set/selected ('Bench work package for run fwop21-spec') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper warn] 03-create s_be5bb7/6: read 'item_1_value' returned a value the skill itself set/selected ('fwop21-spec Bench Work Package') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper warn] step 03-create s_be5bb7/7: its recorded page change was found only by its full name, which is longer than the 80 characters a look names an element by
+[sitelooper drift] 03-create s_4ed6d3/4 target: primary getByText('fwop21-spec Bench Work Package', { exact: true }) missed; used #2 locator('.work-packages--details--subject').first() (#1 ambiguous)
+[sitelooper drift] 03-create s_4ed6d3/5 target: primary getByText('fwop21-spec Bench Work Package', { exact: true }) missed; used #2 locator('.work-packages--details--subject').nth(1) (#1 ambiguous)
+[sitelooper skip] 03-create s_4ed6d3/13 target: no locator recorded — value left empty
+[sitelooper skip] 03-create s_4ed6d3/14 target: no locator recorded — value left empty
+[sitelooper skip] 03-create s_4ed6d3/24 target: no locator recorded — value left empty
+[sitelooper warn] 03-create: report value description_text is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)
+[sitelooper warn] 03-create: report value description_shown is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)
+[sitelooper step] 03-create
+[sitelooper skip] 04-open s_0b508d/11 target: no locator recorded — value left empty
+[sitelooper step] 04-open
+[sitelooper skip] 05-open s_8b649b/8 target: no locator recorded — value left empty
+[sitelooper step] 05-open
+[sitelooper warn] 06-open s_9c9088/3: the field already held the value this type enters (restored after the recording saw it emptied), so it was cleared first rather than typed onto
+  ✘  1 fwop21.spec.ts:9:1 › fwop21 (1.4m)
+
+
+  1) fwop21.spec.ts:9:1 › fwop21 › 06-open: In {{01-signin.page_title}}, open work package {{03-create.work_package_id}} (subject '{{runid}} Bench Work Package') in project 'Bench Project'. Set its Finish date to 2026-12-31 by editing the finish date field in place (click it, enter the date 12/31/2026 or 2026-12-31 as the app expects, let it save). Then report the finish date value now displayed on the work package page, exactly as shown. 
+
+    Error: 06-open s_9c9088/3: the recorded page change did not appear
+
+    06-open s_9c9088/3: the recorded page change did not appear
+
+    expect(received).toBeNull()
+
+    Received: "after step 06-open s_9c9088/3 none of the 1 recorded page change(s) appeared (e.g. \"- textbox \\\"Finish date\\\": {{*}}\") — the step ran but did not have its recorded effect"
+
+    Call Log:
+    - Timeout 5000ms exceeded while waiting on the predicate
+
+       at fwop21.flow.ts:16637
+
+      16635 |       { timeout: EXPECT_WAIT_MS, message: `${ctx.tag}: the recorded page change did not appear` },
+      16636 |     )
+    > 16637 |     .toBeNull();
+            |      ^
+      16638 |   for (const warning of last.warnings) console.log(`[sitelooper warn] ${warning}`);
+      16639 |   if (last.unobserved) console.log(`[sitelooper unobserved] ${ctx.tag}: the page could not be captured, or observed in full, after the action`);
+      16640 |   return last;
+        at expectChanges (/home/user/sitelooper/bench/results/fwop21-spec-spec-tmp/fwop21.flow.ts:16637:6)
+        at Object.verify (/home/user/sitelooper/bench/results/fwop21-spec-spec-tmp/fwop21.flow.ts:20187:32)
+        at runStepLifecycle (/home/user/sitelooper/bench/results/fwop21-spec-spec-tmp/fwop21.flow.ts:11691:24)
+        at Object.06-open (/home/user/sitelooper/bench/results/fwop21-spec-spec-tmp/fwop21.flow.ts:20147:5)
+        at /home/user/sitelooper/bench/results/fwop21-spec-spec-tmp/fwop21.flow.ts:22035:7
+        at runFlow (/home/user/sitelooper/bench/results/fwop21-spec-spec-tmp/fwop21.flow.ts:22034:5)
+        at /home/user/sitelooper/bench/results/fwop21-spec-spec-tmp/fwop21.spec.ts:14:21
+
+    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    [sitelooper drift] 03-create s_4ed6d3/4 target: primary getByText('fwop21-spec Bench Work Package', { exact: true }) missed; used #2 locator('.work-packages--details--subject').first() (#1 ambiguous)
+    [sitelooper drift] 03-create s_4ed6d3/5 target: primary getByText('fwop21-spec Bench Work Package', ...
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/fwop21-fwop21/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/fwop21-fwop21/error-context.md
+
+  1 failed
+    fwop21.spec.ts:9:1 › fwop21 ────────────────────────────────────────────────────────────────────

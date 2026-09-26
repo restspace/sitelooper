@@ -1,0 +1,44 @@
+{
+  "arm": "spec",
+  "runid": "fwop21-spec",
+  "target": "openproject",
+  "flow": "fwop21.json",
+  "flowName": "fwop21",
+  "skillsDir": "/home/user/sitelooper/bench/results/fwop21-skills",
+  "compiled": true,
+  "flowFile": "bench/results/fwop21-spec-spec-tmp/fwop21.flow.ts",
+  "specFile": "bench/results/fwop21-spec-spec-tmp/fwop21.spec.ts",
+  "wallMs": 88070,
+  "exitCode": 1,
+  "timedOut": false,
+  "costUsd": 0,
+  "stats": {
+    "total": 1,
+    "passed": 0,
+    "failed": 1,
+    "skipped": 0
+  },
+  "tests": [
+    {
+      "title": "fwop21",
+      "status": "unexpected",
+      "ok": false,
+      "durationMs": 84645,
+      "error": "Error: 06-open s_9c9088/3: the recorded page change did not appear\n\n06-open s_9c9088/3: the recorded page change did not appear\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeNull\u001b[2m()\u001b[22m\n\nReceived: \u001b[31m\"after step 06-open s_9c9088/3 none of the 1 recorded page change(s) appeared (e.g. \\\"- textbox \\\\\\\"Finish date\\\\\\\": {{*}}\\\") — the step ran but did not have its recorded effect\"\u001b[39m\n\nCall Log:\n- Timeout 5000ms exceeded while waiting on the predicate",
+      "drift": [
+        "[sitelooper drift] 03-create s_4ed6d3/4 target: primary getByText('fwop21-spec Bench Work Package', { exact: true }) missed; used #2 locator('.work-packages--details--subject').first() (#1 ambiguous)",
+        "[sitelooper drift] 03-create s_4ed6d3/5 target: primary getByText('fwop21-spec Bench Work Package', { exact: true }) missed; used #2 locator('.work-packages--details--subject').nth(1) (#1 ambiguous)"
+      ]
+    }
+  ],
+  "drift": [
+    "[sitelooper drift] 03-create s_4ed6d3/4 target: primary getByText('fwop21-spec Bench Work Package', { exact: true }) missed; used #2 locator('.work-packages--details--subject').first() (#1 ambiguous)",
+    "[sitelooper drift] 03-create s_4ed6d3/5 target: primary getByText('fwop21-spec Bench Work Package', { exact: true }) missed; used #2 locator('.work-packages--details--subject').nth(1) (#1 ambiguous)"
+  ],
+  "driftCount": 2,
+  "evidence": [
+    "fwop21-spec-spec-failure.png",
+    "fwop21-spec-spec-error-context.md"
+  ],
+  "logTail": "no locator recorded — value left empty\n[sitelooper warn] 03-create: report value description_text is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)\n[sitelooper warn] 03-create: report value description_shown is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)\n[sitelooper step] 03-create\n[sitelooper skip] 04-open s_0b508d/11 target: no locator recorded — value left empty\n[sitelooper step] 04-open\n[sitelooper skip] 05-open s_8b649b/8 target: no locator recorded — value left empty\n[sitelooper step] 05-open\n[sitelooper warn] 06-open s_9c9088/3: the field already held the value this type enters (restored after the recording saw it emptied), so it was cleared first rather than typed onto\n  ✘  1 fwop21.spec.ts:9:1 › fwop21 (1.4m)\n\n\n  1) fwop21.spec.ts:9:1 › fwop21 › 06-open: In {{01-signin.page_title}}, open work package {{03-create.work_package_id}} (subject '{{runid}} Bench Work Package') in project 'Bench Project'. Set its Finish date to 2026-12-31 by editing the finish date field in place (click it, enter the date 12/31/2026 or 2026-12-31 as the app expects, let it save). Then report the finish date value now displayed on the work package page, exactly as shown. \n\n    Error: 06-open s_9c9088/3: the recorded page change did not appear\n\n    06-open s_9c9088/3: the recorded page change did not appear\n\n    expect(received).toBeNull()\n\n    Received: \"after step 06-open s_9c9088/3 none of the 1 recorded page change(s) appeared (e.g. \\\"- textbox \\\\\\\"Finish date\\\\\\\": {{*}}\\\") — the step ran but did not have its recorded effect\"\n\n    Call Log:\n    - Timeout 5000ms exceeded while waiting on the predicate\n\n       at fwop21.flow.ts:16637\n\n      16635 |       { timeout: EXPECT_WAIT_MS, message: `${ctx.tag}: the recorded page change did not appear` },\n      16636 |     )\n    > 16637 |     .toBeNull();\n            |      ^\n      16638 |   for (const warning of last.warnings) console.log(`[sitelooper warn] ${warning}`);\n      16639 |   if (last.unobserved) console.log(`[sitelooper unobserved] ${ctx.tag}: the page could not be captured, or observed in full, after the action`);\n      16640 |   return last;\n        at expectChanges (/home/user/sitelooper/bench/results/fwop21-spec-spec-tmp/fwop21.flow.ts:16637:6)\n        at Object.verify (/home/user/sitelooper/bench/results/fwop21-spec-spec-tmp/fwop21.flow.ts:20187:32)\n        at runStepLifecycle (/home/user/sitelooper/bench/results/fwop21-spec-spec-tmp/fwop21.flow.ts:11691:24)\n        at Object.06-open (/home/user/sitelooper/bench/results/fwop21-spec-spec-tmp/fwop21.flow.ts:20147:5)\n        at /home/user/sitelooper/bench/results/fwop21-spec-spec-tmp/fwop21.flow.ts:22035:7\n        at runFlow (/home/user/sitelooper/bench/results/fwop21-spec-spec-tmp/fwop21.flow.ts:22034:5)\n        at /home/user/sitelooper/bench/results/fwop21-spec-spec-tmp/fwop21.spec.ts:14:21\n\n    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────\n    [sitelooper drift] 03-create s_4ed6d3/4 target: primary getByText('fwop21-spec Bench Work Package', { exact: true }) missed; used #2 locator('.work-packages--details--subject').first() (#1 ambiguous)\n    [sitelooper drift] 03-create s_4ed6d3/5 target: primary getByText('fwop21-spec Bench Work Package', ...\n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────\n    test-results/fwop21-fwop21/test-failed-1.png\n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    Error Context: test-results/fwop21-fwop21/error-context.md\n\n  1 failed\n    fwop21.spec.ts:9:1 › fwop21 ────────────────────────────────────────────────────────────────────\n"
+}
