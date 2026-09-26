@@ -182,6 +182,33 @@ function validateSpecShape(v: unknown): asserts v is SpecFlow {
   });
 
   if (flow.recipes !== undefined) validateRecipeSnapshot(flow.recipes);
+  if (flow.facts !== undefined) validateFactSnapshots(flow.facts);
+}
+
+/**
+ * `FLOW.facts` (SiteFacts[], src/execution/facts.ts): one snapshot per
+ * origin, `{ version: 1, origin, facts: [...] }`. The artifact's readers walk
+ * `facts` with array methods, so a malformed snapshot is refused here, naming
+ * the field, rather than failing at run time or in the literal's type check.
+ */
+function validateFactSnapshots(v: unknown): void {
+  if (!Array.isArray(v)) throw new LiftError('FLOW.facts must be an array of { version: 1, origin, facts: [...] }');
+  v.forEach((raw, i) => {
+    const where = `FLOW.facts[${i}]`;
+    if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) throw new LiftError(`${where}: not an object`);
+    const sf = raw as Record<string, unknown>;
+    if (sf.version !== 1) throw new LiftError(`${where}.version must be 1 (found ${JSON.stringify(sf.version)})`);
+    if (typeof sf.origin !== 'string') throw new LiftError(`${where}: missing string "origin"`);
+    if (!Array.isArray(sf.facts)) throw new LiftError(`${where} (origin "${sf.origin}"): "facts" must be an array`);
+    sf.facts.forEach((rawFact, j) => {
+      const at = `${where} (origin "${sf.origin}"), facts[${j}]`;
+      if (typeof rawFact !== 'object' || rawFact === null || Array.isArray(rawFact)) throw new LiftError(`${at}: not an object`);
+      const f = rawFact as Record<string, unknown>;
+      if (typeof f.k !== 'string') throw new LiftError(`${at}: missing string "k"`);
+      if (typeof f.key !== 'string') throw new LiftError(`${at}: missing string "key"`);
+      if (f.v === undefined) throw new LiftError(`${at}: missing "v"`);
+    });
+  });
 }
 
 /**

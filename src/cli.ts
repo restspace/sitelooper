@@ -18,7 +18,8 @@ import { buildSystemOne, resolveSystemOneConfig } from './agent/system-one.js';
 import { compileFlow } from './spec/index.js';
 import { foldTicketEvidence, mintVars, notConverged, reorderByEvidence } from './spec/repair.js';
 import { emitFlowFile } from './spec/emit.js';
-import { carryFingerprints, carryRecipeSnapshot, flowToSpec, type SpecFlow } from './spec/ir.js';
+import { carryFactSnapshot, carryFingerprints, carryRecipeSnapshot, flowToSpec, type SpecFlow } from './spec/ir.js';
+import { summarise } from './execution/facts.js';
 import { ComponentStore } from './skills/components.js';
 import { LiftError, liftFlowFile } from './spec/lift.js';
 import { diffSpecChanges, foldPatchedVariants, reloadStaged, rerecordDiagnostics, stageRepair } from './spec/repair.js';
@@ -1156,8 +1157,10 @@ async function compileCommand(positional: string[], flags: Map<string, string | 
   } catch (err) {
     fail(`compile failed: ${(err as Error).message}`, 2);
   }
+  // What the artifact knows about each origin it runs on (SpecFlow.facts).
+  const facts = (result.spec.facts ?? []).map(summarise);
   if (json) {
-    emitJson(result, 'compiled', result.refused || !result.compilable ? 'blocked' : 'compiled', result.diagnostics.flatMap((d) => d.action ? [d.action] : []));
+    emitJson({ ...result, facts }, 'compiled', result.refused || !result.compilable ? 'blocked' : 'compiled', result.diagnostics.flatMap((d) => d.action ? [d.action] : []));
   } else {
     // Diagnostics FIRST — what is wrong, the evidence, and the command that
     // fixes it — ahead of the file list, which is not what a caller needs when
@@ -1175,6 +1178,7 @@ async function compileCommand(positional: string[], flags: Map<string, string | 
     // Anything the emitter said that no diagnostic above already carries.
     const reported = new Set(result.diagnostics.map(diagnosticLine));
     for (const w of result.warnings) if (!reported.has(w)) console.error(`  warning: ${w}`);
+    for (const f of facts) console.log(`facts ${f.origin}: ${f.relied} relied (${f.hard} hard), ${f.advisory} advisory`);
   }
   if (result.refused) {
     const codes = [...new Set(result.diagnostics.filter((d) => d.severity === 'error').map((d) => d.code))];
@@ -1873,6 +1877,10 @@ async function repairFlowCommand(
   const fingerprints = carryFingerprints(before, finalSpec);
   recipeLines.push(...fingerprints.changes);
   recipeDiagnostics.push(...fingerprints.diagnostics);
+  // The site facts are refreshed from the live store every time: the runs
+  // above observed into it, and the artifact reads what it holds now.
+  const factsCarried = carryFactSnapshot(before.facts, finalSpec);
+  if (factsCarried.changed) recipeLines.push(`facts: ${factsCarried.changed} origin snapshot(s) refreshed from the site-facts store`);
   const finalDiff = diffSpecChanges(before, finalSpec);
   if (finalDiff.lines.join('\n') !== diff.lines.join('\n')) {
     diff = finalDiff;
