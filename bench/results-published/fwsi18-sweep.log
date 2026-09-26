@@ -1,0 +1,135 @@
+
+[sweep] run 1/3: fwsi18-n1 (store: /home/user/sitelooper/bench/results/fwsi18-skills)
+[harness] snipeit: defaulting APP_URL
+[harness] snipeit: defaulting APP_EMAIL
+[harness] snipeit: defaulting APP_PASSWORD
+[reset] snipeit: no leftover bench assets
+[harness] snipeit responded 302 at http://127.0.0.1:8098/
+stopped: fwsi18-n1
+  flow "fwsi18" saved: 6 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwsi18.json
+  warning: note: 01-signin no longer publishes post_login_url — no replay reads it from the page and the recording showed no line to read
+  warning: note: 02-find no longer publishes assets_with_Seed_prefix — no replay reads it from the page and the recording showed no line to read
+  warning: note: 03-create no longer publishes default_location, created_by, item_1, item_2, label, label_2 — no replay reads them from the page and the recording showed no line to read
+  warning: note: 03-create: added a read for status_verify to s_86f9d0 (page.getByRole('link', { name: 'Ready to Deploy', exact: true }); seen on the next instruction's start page)
+  warning: warning: 428 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.startUrl: "http://127.0.0.1:8098/" (output) in "http://127.0.0.1:8098/"
+  flow.steps[0].instruction: "Snipe-IT" (output) in "Sign in to this Snipe-IT app with username 'admin' and password '{{env:APP_PASSWORD}}' (type the password text exactly as given, including the braces). Submit t"
+  flow.steps[0].instruction: "admin" (output) in "Sign in to this Snipe-IT app with username 'admin' and password '{{env:APP_PASSWORD}}' (type the password text exactly as given, including the braces). Submit t"
+  flow.steps[0].params.v1: "admin" (output) in "admin"
+  flow.steps[0].route: "http://127.0.0.1:8098/" (output) in "http://127.0.0.1:8098/"
+arm=sitelooper model=z-ai/glm-5.3 runid=fwsi18-n1 stop=completed
+turns=16 wall=565.5s
+commands=15 cmdTime=421.1s cmdBytes=27107 timeouts=0
+orchestrator in=15662 cw=0 cr=91648 out=18452
+inner prompt=2629134 cached=2429952 completion=43737
+spend=$0.1909 maxUsd=3
+learn: A_n=0 replayed=0/6 full=0 repaired=0 compiled=6 variants=0
+-> /home/user/sitelooper/bench/results/fwsi18-n1-sitelooper-result.json
+
+fwsi18-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed tags and names reported
+  obj 2: PASS — BA-00004, model=Bench Laptop Model, status=Ready to Deploy
+  obj 3: PASS — default location=Bench Office
+  obj 4: PASS — purchase date=2026-03-15
+  obj 5: PASS — assigned to=Bench Assignee (user bench-assignee)
+  obj 6: PASS — 1 checkout(s), 1 with a note carrying the runid
+  obj 7: PASS — asset tag BA-00004 reported
+
+[sweep] run 2/3: fwsi18-n2 (replay flow fwsi18, no orchestrator)
+[reset] snipeit: deleted 1 leftover bench asset(s)
+[sweep] fwsi18-n2: 3 drift ticket(s) → fwsi18-n2-drift.json
+
+fwsi18-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed tags and names reported
+  obj 2: PASS — BA-00005, model=Bench Laptop Model, status=Ready to Deploy
+  obj 3: PASS — default location=Bench Office
+  obj 4: PASS — purchase date=2026-03-15
+  obj 5: PASS — assigned to=Bench Assignee (user bench-assignee)
+  obj 6: PASS — 1 checkout(s), 1 with a note carrying the runid
+  obj 7: PASS — asset tag BA-00005 reported
+
+[sweep] run 3/3: fwsi18-n3 (replay flow fwsi18, no orchestrator)
+[reset] snipeit: deleted 1 leftover bench asset(s)
+[sweep] fwsi18-n3: 3 drift ticket(s) → fwsi18-n3-drift.json
+
+fwsi18-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed tags and names reported
+  obj 2: PASS — BA-00006, model=Bench Laptop Model, status=Ready to Deploy
+  obj 3: PASS — default location=Bench Office
+  obj 4: PASS — purchase date=2026-03-15
+  obj 5: PASS — assigned to=Bench Assignee (user bench-assignee)
+  obj 6: PASS — 1 checkout(s), 1 with a note carrying the runid
+  obj 7: PASS — asset tag BA-00006 reported
+
+Learning sweep fwsi18 (K=3)
+┌─────────┬───┬─────────────┬──────────┬─────────────┬───────┬──────┬───────────┬──────┬──────────────┬────────┐
+│ (index) │ n │ runid       │ verified │ stop        │ turns │ cmds │ total_usd │ A_n  │ replayed     │ wall_s │
+├─────────┼───┼─────────────┼──────────┼─────────────┼───────┼──────┼───────────┼──────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwsi18-n1' │ '7/7'    │ 'completed' │ 16    │ 15   │ 0.1909    │ 0    │ '0/6'        │ 565    │
+│ 1       │ 2 │ 'fwsi18-n2' │ '7/7'    │ 'success'   │ 3     │ 6    │ 0.0027    │ 0.83 │ '6/6 (flow)' │ 96     │
+│ 2       │ 3 │ 'fwsi18-n3' │ '7/7'    │ 'success'   │ 5     │ 6    │ 0.0045    │ 0.83 │ '6/6 (flow)' │ 105    │
+└─────────┴───┴─────────────┴──────────┴─────────────┴───────┴──────┴───────────┴──────┴──────────────┴────────┘
+http://127.0.0.1:8098
+  s_0a526d  validated    1 steps  3/3 (100%)
+           On the asset page for asset tag {{v1}} ({{v2}} '{{v3}}', url {{v7}}), perform a CHECK OUT of this asset (this …
+  s_0efef5  validated    1 steps  3/3 (100%)
+           Open the asset page for asset tag {{v1}} ({{v8}}). Verify and report exactly: (1) the Purchase Date shown on t…
+  s_14d870  validated   20 steps  3/3 (100%)
+           Create a new asset in this Snipe-IT app: go to Assets -> Create New (or the 'New Asset' button). Fill in: Asse…
+  s_175256  validated    5 steps  3/3 (100%)
+           Go to the Assets list (Assets -> List All, or the asset listing page). Find every asset whose NAME starts with…
+  s_1855f3  validated    9 steps  3/3 (100%)
+           Open the asset page for asset tag {{v1}} ({{v8}}). Verify and report exactly: (1) the Purchase Date shown on t…
+  s_1eeb48  validated    1 steps  3/3 (100%)
+           Create a new asset in this Snipe-IT app: go to Assets -> Create New (or the 'New Asset' button). Fill in: Asse…
+  s_2c6580  validated    3 steps  3/3 (100%)
+           Open the asset page for asset tag {{v1}} ({{v8}}). Verify and report exactly: (1) the Purchase Date shown on t…
+  s_2c6fb6  validated    5 steps  3/3 (100%)
+           On the asset page for asset tag {{v1}} ({{v2}} '{{v3}}', url {{v7}}), perform a CHECK OUT of this asset (this …
+  s_3c4061  validated    8 steps  3/3 (100%)
+           On the asset page for asset tag {{v1}} ({{v2}} '{{v3}}', url {{v7}}), perform a CHECK OUT of this asset (this …
+  s_43f313  validated    2 steps  3/3 (100%)
+           Create a new asset in this Snipe-IT app: go to Assets -> Create New (or the 'New Asset' button). Fill in: Asse…
+  s_611e32  validated    1 steps  3/3 (100%)
+           On the asset page for asset tag {{v1}} ({{v2}} '{{v3}}', url {{v7}}), perform a CHECK OUT of this asset (this …
+  s_6434b4  validated    1 steps  3/3 (100%)
+           On the asset page for asset tag {{v1}} ({{v2}} '{{v3}}', url {{v7}}), perform a CHECK OUT of this asset (this …
+  s_73f7a7  validated    1 steps  3/3 (100%)
+           On the asset page for asset tag {{v1}} ({{v2}} '{{v3}}', url {{v7}}), perform a CHECK OUT of this asset (this …
+  s_742d92  validated    3 steps  3/3 (100%)
+           Sign in to this Snipe-IT app with username '{{v1}}' and password '{{v2}}' (type the password text exactly as g…
+  s_7aad51  validated    3 steps  3/3 (100%)
+           Sign in to this Snipe-IT app with username '{{v1}}' and password '{{v2}}' (type the password text exactly as g…
+  s_86f9d0  validated   11 steps  3/3 (100%)
+           Create a new asset in this Snipe-IT app: go to Assets -> Create New (or the 'New Asset' button). Fill in: Asse…
+  s_bb5cb8  validated    1 steps  3/3 (100%)
+           Open the edit page for asset {{v1}} ({{v8}}). Read the Purchase Date field's current value and report it exact…
+  s_bb897e  validated    6 steps  3/3 (100%)
+           Create a new asset in this Snipe-IT app: go to Assets -> Create New (or the 'New Asset' button). Fill in: Asse…
+  s_c832e7  validated    1 steps  3/3 (100%)
+           On the asset page for asset tag {{v1}} ({{v2}} '{{v3}}', url {{v7}}), perform a CHECK OUT of this asset (this …
+  s_cc698c  validated    1 steps  3/3 (100%)
+           Go to the Assets list (Assets -> List All, or the asset listing page). Find every asset whose NAME starts with…
+  s_d3e1b8  validated    1 steps  3/3 (100%)
+           Create a new asset in this Snipe-IT app: go to Assets -> Create New (or the 'New Asset' button). Fill in: Asse…
+  s_d5d63a  provisional  5 steps  1/3 (33%)
+           Open the edit page for asset {{v1}} ({{v8}}). Read the Purchase Date field's current value and report it exact…
+  s_395813  provisional  6 steps  1/1 (100%)
+           Open the edit page for asset {{v1}} ({{v7}}). Read the Purchase Date field's current value and report it exact…
+  s_40c04b  provisional  8 steps  1/1 (100%)  variant of s_d5d63a
+           Open the edit page for asset {{v1}} ({{v7}}). Read the Purchase Date field's current value and report it exact…
+  s_4cc8b7  provisional  1 steps  1/1 (100%)
+           Open the edit page for asset {{v1}} ({{v7}}). Read the Purchase Date field's current value and report it exact…
+  s_872db0  provisional  1 steps  1/1 (100%)
+           Open the edit page for asset {{v1}} ({{v7}}). Read the Purchase Date field's current value and report it exact…
+  s_89aeef  provisional  6 steps  1/1 (100%)  variant of s_d5d63a
+           Open the edit page for asset {{v1}} ({{v7}}). Read the Purchase Date field's current value and report it exact…
+  s_902037  provisional  8 steps  1/1 (100%)
+           Open the edit page for asset {{v1}} ({{v7}}). Read the Purchase Date field's current value and report it exact…
+  s_9d960d  provisional  8 steps  1/1 (100%)
+           Open the edit page for asset {{v1}} ({{v7}}). Read the Purchase Date field's current value and report it exact…
+  s_d4a3f0  provisional  8 steps  1/1 (100%)  variant of s_d5d63a
+           Open the edit page for asset {{v1}} ({{v7}}). Read the Purchase Date field's current value and report it exact…
+store: /home/user/sitelooper/bench/results/fwsi18-skills
+
+summary: /home/user/sitelooper/bench/results/fwsi18-sweep.json

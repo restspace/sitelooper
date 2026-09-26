@@ -1,0 +1,59 @@
+
+Running 1 test using 1 worker
+
+[sitelooper step] 01-signin
+[sitelooper step] 02-find
+[sitelooper skip] 03-create s_14d870/1 target: no locator recorded — value left empty
+[sitelooper warn] 03-create s_14d870/6: read 'asset_name' returned a value the skill itself set/selected ('fwsi18-spec Bench Asset') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper warn] 03-create s_14d870/7: read 'purchase_date' returned a value the skill itself set/selected ('2026-03-15') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper warn] 03-create s_14d870/15: read 'asset_name' returned a value the skill itself set/selected ('fwsi18-spec Bench Asset') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper warn] 03-create s_14d870/16: read 'purchase_date' returned a value the skill itself set/selected ('2026-03-15') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper warn] 03-create s_14d870/17: read 'model_verify' returned a value the skill itself set/selected ('×
+Bench Laptops - Bench Manufacturer Bench Laptop Model') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper warn] 03-create s_14d870/18: read 'status' returned a value the skill itself set/selected ('Ready to Deploy') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper warn] 03-create s_14d870/19: read 'default_location_verify' returned a value the skill itself set/selected ('×
+Bench Office') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper skip] 03-create s_86f9d0/1 target: read target not found — value left empty
+[sitelooper warn] 03-create: report value purchase_date_field is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)
+[sitelooper warn] 03-create: report value purchase_date_verify is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)
+[sitelooper step] 03-create
+[sitelooper warn] 04-edit s_2c6fb6/4: read 'checkout_note_field' returned a value the skill itself set/selected ('Checkout note for run fwsi18-spec') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper skip] 04-edit s_3c4061/7 target: read target not found — value left empty
+[sitelooper step] 04-edit
+[sitelooper step] 05-open
+  ✘  1 fwsi18.spec.ts:9:1 › fwsi18 (1.2m)
+
+
+  1) fwsi18.spec.ts:9:1 › fwsi18 › 06-open: Open the edit page for asset {{03-create.asset_tag}} ({{03-create.url}}/edit). Read the Purchase Date field's current value and report it exactly. Also read the Status field's currently selected value and the Default Location field's currently selected value, and the Model field's currently selected value. Do NOT save or change anything — just read and report, then leave the page. 
+
+    Error: 06-open s_d5d63a/5 raised an alert the recording never saw: This asset has been deleted. You must restore it before you can assign it to someone.
+
+       at fwsi18.flow.ts:14536
+
+      14534 |   const verdict = alertVerdict(before, after ? after.alerts : null, ctx, after ? after.complete : true);
+      14535 |   for (const line of verdict.warnings) logWarning(line);
+    > 14536 |   if (verdict.stop) throw new Error(verdict.stop);
+            |                           ^
+      14537 | }
+      14538 |
+      14539 | /**
+        at alertGate (/home/user/sitelooper/bench/results/fwsi18-spec-spec-tmp/fwsi18.flow.ts:14536:27)
+        at Object.verify (/home/user/sitelooper/bench/results/fwsi18-spec-spec-tmp/fwsi18.flow.ts:18984:9)
+        at runStepLifecycle (/home/user/sitelooper/bench/results/fwsi18-spec-spec-tmp/fwsi18.flow.ts:10466:37)
+        at Object.06-open (/home/user/sitelooper/bench/results/fwsi18-spec-spec-tmp/fwsi18.flow.ts:18964:5)
+        at /home/user/sitelooper/bench/results/fwsi18-spec-spec-tmp/fwsi18.flow.ts:19046:7
+        at runFlow (/home/user/sitelooper/bench/results/fwsi18-spec-spec-tmp/fwsi18.flow.ts:19045:5)
+        at /home/user/sitelooper/bench/results/fwsi18-spec-spec-tmp/fwsi18.spec.ts:14:21
+
+    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/fwsi18-fwsi18/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/fwsi18-fwsi18/error-context.md
+
+  1 failed
+    fwsi18.spec.ts:9:1 › fwsi18 ────────────────────────────────────────────────────────────────────
