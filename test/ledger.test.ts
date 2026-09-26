@@ -719,3 +719,80 @@ describe('a value the compiling instruction itself reported is an output, not an
     expect(call).toMatch(/withoutOwnOutputs\(this\.knownValues\(\), ledgerStep\)/);
   });
 });
+
+describe('addUrlIds with site facts (stage 1, consumer 3)', () => {
+  // Soft facts over two sessions: reliable, as a fact the ledger learned by variance is.
+  const factsOf = async (origin: string, obs: { k: 'route.query' | 'route.path'; key: string; v: string }[], sessions = ['n1', 'n2']) => {
+    const { emptyFacts, observeFact } = await import('../src/execution/facts.js');
+    const sf = emptyFacts(origin);
+    for (const session of sessions) for (const o of obs) observeFact(sf, { ...o, hard: false, session });
+    return sf;
+  };
+  const KB = 'http://kb.test';
+  const kbTask = `${KB}/?controller=TaskViewController&action=show&task_id=4`;
+
+  it('a query key with a reliable identity fact is admitted on the first run, past the digit rule (kanboard fwkb41)', async () => {
+    // No facts: the query string is not a url part, and nothing is banked.
+    expect(new RunLedger().addUrlIds(kbTask, 'i1', [])).toEqual([]);
+    const sf = await factsOf(KB, [{ k: 'route.query', key: `${KB}/?task_id`, v: 'identity' }]);
+    const [e, ...rest] = new RunLedger().addUrlIds(kbTask, 'i1', [], {}, sf);
+    expect(rest).toEqual([]);
+    expect(e).toMatchObject({ value: '4', binding: { from: 'url', step: 'i1', label: 'q.task_id' }, kind: 'identifier', basis: 'shape', positional: true });
+    // ...and a hash-state key the `id`-only digit rule refuses today.
+    const OD = 'http://od.test';
+    const order = `${OD}/web#model=sale.order&order_id=22`;
+    const parts = [{ label: 'q.model', value: 'sale.order' }, { label: 'q.order_id', value: '22' }];
+    expect(new RunLedger().addUrlIds(order, 'i1', parts)).toEqual([]);
+    const od = await factsOf(OD, [{ k: 'route.query', key: `${OD}/web?order_id`, v: 'identity' }]);
+    expect(new RunLedger().addUrlIds(order, 'i1', parts, {}, od).map((b) => [b.binding.from === 'url' ? b.binding.label : '', b.value])).toEqual([['q.order_id', '22']]);
+  });
+
+  it('an advisory fact (one soft session) decides nothing', async () => {
+    const sf = await factsOf(KB, [{ k: 'route.query', key: `${KB}/?task_id`, v: 'identity' }], ['n1']);
+    expect(new RunLedger().addUrlIds(kbTask, 'i1', [], {}, sf)).toEqual([]);
+  });
+
+  it('a key with a reliable routing fact is never admitted, whatever its digits or variance', async () => {
+    const sf = await factsOf('http://x', [{ k: 'route.query', key: 'http://x/web?menu', v: 'routing' }]);
+    const taught = () => {
+      const l = new RunLedger();
+      l.seedVariance(['7', '12345']);
+      return l;
+    };
+    // Today: a run that watched the value change banks it.
+    expect(taught().addUrlIds('http://x/web#menu=7', 'i1', [{ label: 'q.menu', value: '7' }])).toHaveLength(1);
+    expect(taught().addUrlIds('http://x/web#menu=7', 'i1', [{ label: 'q.menu', value: '7' }], {}, sf)).toEqual([]);
+    // ...nor through a link a mutation minted.
+    expect(new RunLedger().addUrlIds('http://x/web?menu=12345', 'i1', [], { linkMinted: [{ label: 'q.menu', value: '12345' }] }, sf)).toEqual([]);
+  });
+
+  it('a path position with a reliable identity fact is admitted as vouched', async () => {
+    // vikunja-like: a one-digit project id nothing landed, refused today.
+    const parts = [{ label: 'p0', value: 'projects' }, { label: 'p1', value: '7' }];
+    expect(new RunLedger().addUrlIds('http://vk.test/projects/7', 'i1', parts)).toEqual([]);
+    const vk = await factsOf('http://vk.test', [{ k: 'route.path', key: 'http://vk.test/projects/*#1', v: 'identity' }]);
+    const [e] = new RunLedger().addUrlIds('http://vk.test/projects/7', 'i1', parts, {}, vk);
+    expect(e).toMatchObject({ value: '7', kind: 'identifier', basis: 'shape', positional: true });
+    // A letters-only uid shape does not admit: the fact is keyed with p1 as an identity part (fwgr78).
+    const gr = 'http://gr.test/d/abcd/bench';
+    const grParts = [{ label: 'p0', value: 'd' }, { label: 'p1', value: 'abcd' }, { label: 'p2', value: 'bench' }];
+    expect(new RunLedger().addUrlIds(gr, 'i1', grParts)).toEqual([]);
+    const g = await factsOf('http://gr.test', [{ k: 'route.path', key: 'http://gr.test/d/*/bench#1', v: 'identity' }]);
+    expect(new RunLedger().addUrlIds(gr, 'i1', grParts, {}, g).map((b) => b.value)).toEqual(['abcd']);
+  });
+
+  it('with no reliable fact, byte-identical to no facts', async () => {
+    const { emptyFacts } = await import('../src/execution/facts.js');
+    const url = 'http://x/web#cids=1&menu_id=181&action=315&id=44';
+    const parts = [
+      { label: 'q.cids', value: '1' },
+      { label: 'q.menu_id', value: '181' },
+      { label: 'q.action', value: '315' },
+      { label: 'q.id', value: '44' },
+    ];
+    const plain = new RunLedger();
+    const withEmpty = new RunLedger();
+    expect(withEmpty.addUrlIds(url, 'i1', parts, {}, emptyFacts('http://x'))).toEqual(plain.addUrlIds(url, 'i1', parts));
+    expect(withEmpty.all()).toEqual(plain.all());
+  });
+});

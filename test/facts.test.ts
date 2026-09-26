@@ -44,6 +44,19 @@ describe('routeTemplateOf', () => {
   it('returns non-urls unchanged', () => {
     expect(routeTemplateOf('not a url')).toBe('not a url');
   });
+  it('writes an identity part * even without digits (grafana letters-only uid, fwgr78)', () => {
+    const url = 'http://gr.test/d/afzexqoxkzoqod/overview?orgId=1';
+    expect(routeTemplateOf(url)).toBe('http://gr.test/d/afzexqoxkzoqod/overview');
+    expect(routeTemplateOf(url, ['p1=afzexqoxkzoqod'])).toBe('http://gr.test/d/*/overview');
+    // two sessions' uids key alike once p1 is named
+    expect(routeTemplateOf('http://gr.test/d/bqzzyxwvutsrqp/overview', ['p1=bqzzyxwvutsrqp'])).toBe('http://gr.test/d/*/overview');
+    // the label must name this position and this value; query labels and others are ignored
+    expect(routeTemplateOf(url, ['p2=afzexqoxkzoqod', 'p1=other', 'q.orgId=1'])).toBe('http://gr.test/d/afzexqoxkzoqod/overview');
+    expect(routeTemplateOf(url, [])).toBe(routeTemplateOf(url));
+    // a fragment-path part by its h<i> label
+    expect(routeTemplateOf('http://espo.test/#Opportunity/view/abc', ['h2=abc'])).toBe('http://espo.test/#Opportunity/view/*');
+    expect(routeTemplateOf('http://espo.test/#Opportunity/view/abc', ['p2=abc'])).toBe('http://espo.test/#Opportunity/view/abc');
+  });
 });
 
 describe('values: fold, hash, shape', () => {

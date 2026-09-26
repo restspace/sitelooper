@@ -327,7 +327,10 @@ Both snapshot and restore stop `mongod` and `rs2-server`, move the bytes, and re
   `facts_agree`, `facts_disagree`. All seven are `0` for a store with no site-facts.json (every stored
   run before this feature). `node bench/facts-report.mjs <skills dir>` (or `--dir <dir> --base <runid>`,
   repeatable) prints every fact and every `facts.*` shadow disagreement with its evidence — the stage 0
-  exit review reads this before any consumer switches off the shadow.
+  exit review reads this before any consumer switches off the shadow. Since stage 1
+  (notes/design/site-facts-stage1-contract.md), a shadow row a consumer actually switched on carries
+  `applied: true`, which the report prints on every row that has it (a `DISAGREE`/`APPLIED` suffix or line)
+  rather than only on disagreements.
 
 ## Known gaps
 

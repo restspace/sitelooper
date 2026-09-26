@@ -20,8 +20,9 @@
 
 /** How a later run obtains its own value for a slot. */
 import type { RecordedEntry, RecordedStep } from '../daemon/recorder.js';
+import { factFor, routeTemplateOf, type FactKind, type SiteFacts } from '../execution/facts.js';
 import { isMutatingAction } from '../execution/lifecycle.js';
-import { urlParts as urlPartsOf, urlShapeOf, type UrlSegDiff } from '../execution/url.js';
+import { originOf, urlParts as urlPartsOf, urlShapeOf, type UrlSegDiff } from '../execution/url.js';
 import { MIN_ID_LEN, looksLikeId, tokenPattern } from './shape.js';
 import type { Skill } from './store.js';
 
@@ -157,6 +158,34 @@ export function pathIdPart(part: { label: string; value: string }): boolean {
  */
 export function pathDigitPart(part: { label: string; value: string }): boolean {
   return /^(p|h)\d+$/.test(part.label) && /^\d{1,10}$/.test(part.value);
+}
+
+/**
+ * The site-facts key of a labelled url part (design-site-facts.md §2):
+ * `route.path` at a path index (`p1` → `${route}#1`, a hash-route index `h2`
+ * → `${route}#h2`), or `route.query` for a `q.<key>` (hash state and query
+ * string share the `?key` spelling, as urlPart reads them). The route is
+ * `routeTemplateOf(url, identityParts)`: the url parts known to be records
+ * (`p<i>=<v>` / `h<i>=<v>`) written `*` whatever their characters, so a
+ * letters-only grafana uid does not freeze inside the key (fwgr78). Null when
+ * the url is not a url. The one definition: facts-value.ts urlFactKey writes
+ * through it and addUrlIds reads through it.
+ */
+export function urlPartFactKey(url: string, label: string, identityParts: readonly string[] = []): { k: FactKind; key: string } | null {
+  if (!originOf(url)) return null;
+  const route = routeTemplateOf(url, identityParts);
+  if (label.startsWith('q.')) return { k: 'route.query', key: `${route}?${label.slice(2)}` };
+  const m = /^([ph])(\d+)$/.exec(label);
+  if (!m) return null;
+  return { k: 'route.path', key: `${route}#${m[1] === 'p' ? '' : 'h'}${m[2]}` };
+}
+
+/** The reliable string fact about a url part, or null (no store, no reliable fact, or not a url). */
+function partFact(facts: SiteFacts | undefined, url: string, label: string, identityParts: readonly string[]): string | null {
+  if (!facts) return null;
+  const at = urlPartFactKey(url, label, identityParts);
+  const v = at ? factFor(facts, at.k, at.key)?.v : undefined;
+  return typeof v === 'string' ? v : null;
 }
 
 /**
@@ -533,9 +562,20 @@ export class RunLedger {
     parts: { label: string; value: string }[],
     /** `landedLabels`: the parts a goto LANDED (unseenGotoParts) — landed at those positions only. */
     opts: { landed?: boolean; landedLabels?: readonly string[]; linkMinted?: readonly { label: string; value: string }[] } = {},
+    /**
+     * The origin's site facts (design-site-facts.md §2 consumer 3; stage 1).
+     * Only a RELIABLE fact speaks: a query key known `identity` on this route
+     * is admitted on the first run, past the shape test and the `id`-only
+     * digit rule (kanboard's `task_id`, vikunja's ids); a key known `routing`
+     * is never admitted, whatever its digits or its variance; a path position
+     * known `identity` is admitted as vouched. Absent, or no reliable fact
+     * about a part, and the rules below run exactly as they always have.
+     */
+    facts?: SiteFacts,
   ): LedgerEntry[] {
     const out: LedgerEntry[] = [];
-    for (const part of parts) {
+    const { verdict, scan } = this.urlFactVerdicts(url, parts, facts);
+    for (const part of scan) {
       // Shown again at the position it was banked at, by the same step: this
       // origin's value is this one again (byOrigin).
       const again = this.entries.find((e) => e.value === part.value.trim() && e.binding.from === 'url' && e.binding.step === step && e.binding.label === part.label);
@@ -543,6 +583,11 @@ export class RunLedger {
         this.sighted.set(again, ++this.sightings);
         continue;
       }
+      // A reliable `routing` fact: this key selects the page, it never holds a record.
+      const fact = verdict.get(part.label);
+      if (fact === 'routing' && part.label.startsWith('q.')) continue;
+      // A reliable `identity` fact: the position holds a record on this route.
+      const factId = fact === 'identity';
       // `landed`: the caller saw a step's own non-navigation action land this
       // url, so a path digit run in it is that step's record id at any length
       // (pathDigitPart). Below the floor it is banked for its position only.
@@ -564,8 +609,9 @@ export class RunLedger {
       // `action=315` stops being banked because runs demonstrated the app
       // reproduces it, not because we hard-coded a rule about digits.
       const runSpecific = this.runSpecific(part.value);
-      if (landedId) {
-        // Admitted on provenance, the landing, before any shape is asked.
+      if (landedId || factId) {
+        // Admitted on provenance, the landing, before any shape is asked —
+        // or on a reliable identity fact, which is provenance from earlier sessions.
       } else if (!runSpecific && !looksLikeId(part.value, 'first-run') && !idPositionPart(part)) continue;
       // A pure-digit QUERY param the app does not call `id` is routing
       // vocabulary, not a record: fwod29 banked odoo's `action=315` and
@@ -576,7 +622,12 @@ export class RunLedger {
       // Evidence overrides it: that patch is a standing guess about what
       // digits in a query param mean, and a run that watched this exact value
       // change is not guessing.
-      if (!runSpecific && /^\d+$/.test(part.value) && part.label.startsWith('q.') && !idPositionPart(part)) continue;
+      // A reliable identity fact overrides it too: the app was watched minting
+      // records under this key (kanboard fwkb41's `task_id=4`).
+      if (!runSpecific && !factId && /^\d+$/.test(part.value) && part.label.startsWith('q.') && !idPositionPart(part)) continue;
+      // Vouched by the fact alone: banked for its position only below the
+      // floor, as a landed path digit is.
+      const factOnly = factId && !runSpecific && !idPositionPart(part) && !landedId;
       const entry = this.add(
         part.value,
         { from: 'url', step, label: part.label },
@@ -593,8 +644,10 @@ export class RunLedger {
         {
           kind: 'identifier',
           basis: runSpecific ? 'variance' : idPositionPart(part) ? 'position' : 'shape',
-          vouched: runSpecific || idPositionPart(part) || pathIdPart(part) || landedId,
-          ...(landedId && !pathIdPart(part) && part.value.length < MIN_ID_LEN ? { positional: true as const } : {}),
+          // A fact-admitted part keeps `shape` (as a linkMinted part does): the
+          // fact entitles it to be BANKED, not to refuse a recording (fatal).
+          vouched: runSpecific || idPositionPart(part) || pathIdPart(part) || landedId || factId,
+          ...((landedId || factOnly) && !pathIdPart(part) && part.value.length < MIN_ID_LEN ? { positional: true as const } : {}),
         },
       );
       if (entry) out.push(entry);
@@ -604,6 +657,8 @@ export class RunLedger {
     // fwkb41's `task_id=4` is below the floor, so it is banked for its position
     // only, as a landed path digit is.
     for (const part of opts.linkMinted ?? []) {
+      // ...except at a key a reliable fact says routes: never admitted.
+      if (part.label.startsWith('q.') && verdict.get(part.label) === 'routing') continue;
       const entry = this.add(
         part.value,
         { from: 'url', step, label: part.label },
@@ -612,6 +667,53 @@ export class RunLedger {
       if (entry) out.push(entry);
     }
     return out;
+  }
+
+  /**
+   * What the origin's reliable facts say about each part of `url` (label →
+   * fact value), and the parts addUrlIds walks: `parts` as given, plus — only
+   * where a reliable `identity` fact names it — an ordinary query-string key
+   * urlParts does not enumerate (kanboard's `?task_id=4`, read as urlPart
+   * reads `q.<key>`: hash state first, then the query string). With no facts
+   * the verdicts are empty and the walk is `parts`, untouched.
+   *
+   * Keys are built as the value observer writes them (urlPartFactKey): the
+   * route with the url's known record parts written `*` — the path parts this
+   * ledger already holds at their label, a path position under test itself,
+   * and every path position a reliable identity fact vouches, before any
+   * query key is asked about.
+   */
+  private urlFactVerdicts(
+    url: string,
+    parts: { label: string; value: string }[],
+    facts: SiteFacts | undefined,
+  ): { verdict: Map<string, string>; scan: { label: string; value: string }[] } {
+    const verdict = new Map<string, string>();
+    if (!facts) return { verdict, scan: parts };
+    const pathLabel = (label: string) => /^[ph]\d+$/.test(label);
+    const tag = (p: { label: string; value: string }) => `${p.label}=${p.value}`;
+    const held = parts
+      .filter((p) => pathLabel(p.label) && this.entries.some((e) => e.binding.from === 'url' && e.binding.label === p.label && e.value === p.value.trim()))
+      .map(tag);
+    const identityParts = [...held];
+    for (const p of parts) {
+      if (!pathLabel(p.label)) continue;
+      const self = tag(p);
+      const v = partFact(facts, url, p.label, held.includes(self) ? held : [...held, self]);
+      if (!v) continue;
+      verdict.set(p.label, v);
+      if (v === 'identity' && !identityParts.includes(self)) identityParts.push(self);
+    }
+    const extra: { label: string; value: string }[] = [];
+    for (const [key, value] of urlShapeOf(url)?.query ?? []) {
+      if (!parts.some((p) => p.label === `q.${key}`)) extra.push({ label: `q.${key}`, value });
+    }
+    for (const p of [...parts, ...extra]) {
+      if (!p.label.startsWith('q.')) continue;
+      const v = partFact(facts, url, p.label, identityParts);
+      if (v) verdict.set(p.label, v);
+    }
+    return { verdict, scan: [...parts, ...extra.filter((p) => verdict.get(p.label) === 'identity')] };
   }
 
   /**

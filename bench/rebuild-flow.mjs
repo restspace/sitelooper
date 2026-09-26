@@ -233,7 +233,10 @@ function storeFrom(entries, known, valuesByInstruction) {
   const bank = (group, stepId, values) => {
     for (const e of group) {
       const url = e.k === 'step' ? e.diff?.url : e.k === 'instruction' ? e.url : undefined;
-      if (url) ledger.addUrlIds(url, stepId, urlParts(url), { landed: e.k === 'step' && e.tool !== 'goto' && e.tool !== 'back' });
+      // Site facts (the daemon passes the origin's snapshot): the rebuild's own
+      // store (storeFrom) carries no site facts, so `undefined` — addUrlIds'
+      // rules run exactly as with no fact store.
+      if (url) ledger.addUrlIds(url, stepId, urlParts(url), { landed: e.k === 'step' && e.tool !== 'goto' && e.tool !== 'back' }, undefined);
       if (e.k === 'report') {
         const vals = e.status === 'success' && values ? values : (e.values ?? {});
         for (const [name, value] of Object.entries(vals)) {

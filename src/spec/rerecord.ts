@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import type { Flow, FlowStep } from '../skills/flow.js';
+import { identityPosition, type Flow, type FlowStep } from '../skills/flow.js';
+import type { SiteFacts } from '../execution/facts.js';
 import type { FlowStepResult } from '../shared/protocol.js';
 import { formatDiagnostic, rerecordFix, type Diagnostic } from './diagnostics.js';
 import { urlParts } from '../execution/url.js';
@@ -221,8 +222,16 @@ export type RerecordVerdict =
  * minted id, is a part the landing rule mints anyway. Every later step's
  * instruction and params are rewritten; the step records the part too.
  * Returns the references it rewired, for the log.
+ *
+ * `sf` (site facts stage 1, consumer 4): the origin's facts snapshot. A value
+ * the end url carries at more than one position threads to the position a
+ * reliable `route.path` `identity` fact names — the record, not a slug that
+ * happens to spell the same (referencablePart's facts arm, flow.ts
+ * identityPosition). A value found at any part is threaded whatever it looks
+ * like, as before; without `sf`, or with no reliable fact, the first part
+ * carrying the value, as before.
  */
-export function rethreadUrlRefs(flow: Flow, stepId: string, endUrl: string | undefined): { flow: Flow; rewired: string[] } {
+export function rethreadUrlRefs(flow: Flow, stepId: string, endUrl: string | undefined, sf?: SiteFacts): { flow: Flow; rewired: string[] } {
   const idx = flow.steps.findIndex((s) => s.id === stepId);
   if (idx < 0 || !endUrl) return { flow, rewired: [] };
   const step = flow.steps[idx];
@@ -230,7 +239,8 @@ export function rethreadUrlRefs(flow: Flow, stepId: string, endUrl: string | und
   const byKey = new Map<string, string>();
   for (const [key, value] of Object.entries(step.recorded ?? {})) {
     if (key === 'url' || key.startsWith('url.') || typeof value !== 'string' || !value.trim()) continue;
-    const at = parts.find((p) => p.value === value.trim());
+    const carrying = parts.filter((p) => p.value === value.trim());
+    const at = (sf ? carrying.find((p) => identityPosition(sf, endUrl, p)) : undefined) ?? carrying[0];
     if (at) byKey.set(key, `url.${at.label}`);
   }
   if (!byKey.size) return { flow, rewired: [] };

@@ -12,6 +12,7 @@ import { mintedShape, originOf as urlOriginOf, routeAt, urlPart, urlShapeOf } fr
 import { idPositionPart, linkMintedParts, pathDigitPart, pathIdPart, unseenGotoParts } from './ledger.js';
 import { MIN_ID_LEN, looksLikeId, tokenPattern } from './shape.js';
 import { statedPlainly, threadStepParams } from './rethread.js';
+import { factFor, routeTemplateOf, type SiteFacts } from '../execution/facts.js';
 
 /**
  * A flow is the resolved path a session took: the instructions the caller
@@ -201,8 +202,27 @@ export type RunSpecific = (value: string) => boolean;
  * `{{02-create.url.p4}}` was minted, published or banked, so 06-open's goto
  * kept 41 literally and every replay opened a deleted work package.
  */
-export function referencablePart(part: { label: string; value: string }, runSpecific?: RunSpecific): boolean {
-  return Boolean(runSpecific?.(part.value)) || (part.value.length >= MIN_ID_LEN && looksLikeId(part.value, 'first-run')) || idPositionPart(part) || pathIdPart(part);
+export function referencablePart(part: { label: string; value: string }, runSpecific?: RunSpecific, sf?: SiteFacts, url?: string): boolean {
+  return Boolean(runSpecific?.(part.value)) || (part.value.length >= MIN_ID_LEN && looksLikeId(part.value, 'first-run')) || idPositionPart(part) || pathIdPart(part) || (sf !== undefined && url !== undefined && identityPosition(sf, url, part));
+}
+
+/**
+ * SITE FACTS stage 1 (consumer 4): the url part sits at a path position the
+ * origin's facts RELIABLY know is a record (`route.path` = `identity`, keyed
+ * `${route}#<i>` for `p<i>` and `${route}#h<i>` for a hash-route `h<i>`, as
+ * skills/facts-value.ts urlFactKey writes them). A letters-only grafana uid
+ * at `p1` (fwgr74) is a reference on the first run, which neither the shape
+ * nor the position arm can see. The route is read both ways — plain, and with
+ * this part as an identity part (routeTemplateOf's `identityParts`), since an
+ * observer that already knew the part was a record wrote it `*`. Query keys
+ * are not positions: the ledger's `identity` query facts are Piece H's.
+ */
+export function identityPosition(sf: SiteFacts, url: string, part: { label: string; value: string }): boolean {
+  const m = /^([ph])(\d+)$/.exec(part.label);
+  if (!m) return false;
+  const at = `${m[1] === 'p' ? '' : 'h'}${m[2]}`;
+  const routes = new Set([routeTemplateOf(url), routeTemplateOf(url, [`${part.label}=${part.value}`])]);
+  return [...routes].some((r) => factFor(sf, 'route.path', `${r}#${at}`)?.v === 'identity');
 }
 
 /**
@@ -394,6 +414,13 @@ export function buildFlow(
      * has nothing to consult and falls back to position and shape.
      */
     runSpecific?: RunSpecific;
+    /**
+     * The origin's site facts snapshot (skills/facts.ts): a url part at a
+     * position a reliable `route.path` fact knows is a record is minted as a
+     * reference whatever it looks like (referencablePart's facts arm). Absent:
+     * position and shape alone, as before.
+     */
+    facts?: SiteFacts;
   },
 ): Flow | null {
   const groups = resolveGroups(groupByInstruction(entries));
@@ -547,8 +574,8 @@ export function buildFlow(
         // A digit run at a path position that this step's own action LANDED
         // is its record id at any length (ledger.ts pathDigitPart): provenance,
         // not characters. Below the floor it is referenced only at its path.
-        const landed = !referencablePart(part, opts.runSpecific) && pathDigitPart(part) && landedByAction(g, part, entries);
-        if (!fresh || !(referencablePart(part, opts.runSpecific) || landed)) continue;
+        const landed = !referencablePart(part, opts.runSpecific, opts.facts, g.endUrl) && pathDigitPart(part) && landedByAction(g, part, entries);
+        if (!fresh || !(referencablePart(part, opts.runSpecific, opts.facts, g.endUrl) || landed)) continue;
         if (produced.some((p) => p.value === part.value) || varEntries.some(([, v]) => v === part.value)) continue;
         const path = part.value.length < 2 ? pathTo(g.endUrl, part.label) : undefined;
         minted.push({ stepId: id, output: `url.${part.label}`, value: part.value, ...(path ? { path } : {}) });
@@ -595,8 +622,8 @@ export function buildFlow(
       for (const [label, at] of lastAt) {
         const part = { label, value: at.value };
         const output = `url.${label}`;
-        const landed = !referencablePart(part, opts.runSpecific) && pathDigitPart(part) && landedByAction(g, part, entries);
-        if (startParts.has(part.value) || !(referencablePart(part, opts.runSpecific) || landed)) continue;
+        const landed = !referencablePart(part, opts.runSpecific, opts.facts, at.url) && pathDigitPart(part) && landedByAction(g, part, entries);
+        if (startParts.has(part.value) || !(referencablePart(part, opts.runSpecific, opts.facts, at.url) || landed)) continue;
         if (produced.some((p) => p.value === part.value) || varEntries.some(([, v]) => v === part.value)) continue;
         if (minted.some((m) => m.output === output || m.value === part.value)) continue;
         const route = routeAt(at.url, label);

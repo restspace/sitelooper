@@ -84,7 +84,9 @@ describe('compile snapshots the site facts of every origin the flow runs on', ()
     const source = emitFlowFile(spec, { tier: 'plain' }).source;
     expect(source).toContain(`const FACTS: SiteFacts[] = ${JSON.stringify(spec.facts)};`);
     expect(source).toContain('const siteFactsAt = (url: string): SiteFacts =>');
-    expect(source).toContain('void siteFactsAt;');
+    expect(source).not.toContain('void siteFactsAt;');
+    // stage 1: the two url gates read it
+    expect(source).toContain('preconditionVerdictWithFacts(siteFactsAt(url), pattern, url, p, similarity, mints)');
     expect(source).toMatch(/function emptyFacts\(/);
     const lifted = liftFlowFile(source).spec;
     expect(lifted.facts).toEqual(spec.facts);

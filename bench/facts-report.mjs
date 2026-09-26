@@ -91,10 +91,16 @@ function report(storeDir) {
   const origins = readSiteFacts(storeDir);
   const shadow = readFactShadowRows(storeDir);
   const disagreements = shadow.filter((r) => !r.agree);
-  return { storeDir, origins, shadow, disagreements };
+  const applied = shadow.filter((r) => r.applied === true);
+  return { storeDir, origins, shadow, disagreements, applied };
 }
 
-function printReport({ storeDir, origins, shadow, disagreements }) {
+/** A shadow row's `applied` suffix, printed only when the field is present (stage 1+ rows). */
+function appliedSuffix(r) {
+  return r.applied === undefined ? '' : `  applied=${r.applied}`;
+}
+
+function printReport({ storeDir, origins, shadow, disagreements, applied }) {
   console.log(`== ${storeDir} ==`);
   const totalFacts = origins.reduce((n, o) => n + o.facts.length, 0);
   console.log(`facts: ${totalFacts} across ${origins.length} origin(s)`);
@@ -106,10 +112,14 @@ function printReport({ storeDir, origins, shadow, disagreements }) {
       );
     }
   }
-  console.log(`shadow (facts.*): ${shadow.length} rows, ${disagreements.length} disagreement(s)`);
+  console.log(`shadow (facts.*): ${shadow.length} rows, ${disagreements.length} disagreement(s), ${applied.length} applied`);
   for (const r of disagreements) {
     const evidence = Array.isArray(r.evidence) ? r.evidence.map(formatEvidenceItem).join(' | ') : String(r.evidence ?? '');
-    console.log(`  DISAGREE ${r.rule}  fact=${r.fact}  heuristic=${r.heuristic}  evidence=[${evidence}]`);
+    console.log(`  DISAGREE ${r.rule}  fact=${r.fact}  heuristic=${r.heuristic}  evidence=[${evidence}]${appliedSuffix(r)}`);
+  }
+  for (const r of applied) {
+    const evidence = Array.isArray(r.evidence) ? r.evidence.map(formatEvidenceItem).join(' | ') : String(r.evidence ?? '');
+    console.log(`  APPLIED ${r.rule}  fact=${r.fact}  heuristic=${r.heuristic}  agree=${r.agree}  evidence=[${evidence}]`);
   }
 }
 

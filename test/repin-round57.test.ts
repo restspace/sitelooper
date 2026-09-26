@@ -22,6 +22,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { pageEffectDemoted, pinEndsElsewhere, pinStatus } from '../src/skills/learn.js';
 import { SkillStore, type Skill } from '../src/skills/store.js';
 import { flowToSpec } from '../src/spec/ir.js';
+import { factStoreFor, takeFactRows } from '../src/skills/facts-url.js';
 
 const FIXTURE = path.join(path.dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1')), 'fixture', 'fwsi9-skills');
 const load = (id: string): Skill => JSON.parse(fs.readFileSync(path.join(FIXTURE, `${id}.json`), 'utf8'));
@@ -139,6 +140,37 @@ describe('2. pinEndsElsewhere (fwsi9 n3 04-report: s_9df3b0 replayed 14/14, the 
     expect(pinEndsElsewhere(store, 's_json', 's_next')).toBeNull();
     expect(pinEndsElsewhere(store, 's_project', 's_next')).toMatch(/ends on \S+\/projects\/bench-project \(s_project\)/);
     expect(pinEndsElsewhere(store, 's_board', 's_task')).toMatch(/ends on .*BoardViewController/);
+  });
+
+  it('(d) site facts stage 1: a reliable `query_props = state` fact makes two literal view states one route (fwop15)', () => {
+    const OP = 'http://127.0.0.1:8090';
+    const WP = `${OP}/projects/bench-project/work_packages`;
+    const mk = (id: string, urlPattern: string, endPattern: string): Skill => ({
+      id, origin: OP, template: 't', params: {}, preconditions: { urlPattern },
+      steps: [{ tool: 'click', args: { target: '@e1' }, locators: {}, expect: { urlPattern: endPattern } }],
+      stats: { uses: 1, successes: 1, partial: 0, created: 't', failedAtStep: {}, fallthroughs: 0 },
+      status: 'provisional', provenance: { session: 's', instruction: 't', created: 't' },
+    });
+    // both sides carry query_props with two different literals: today's
+    // routesAgree (routeOf and urlDiff alike) calls them two pages
+    const skills = [
+      mk('s_next', `${WP}?query_props=%7B%22pp%22%3A20%7D`, `${WP}/create_new`),
+      mk('s_json', WP, `${WP}?query_props=%7B%22pp%22%3A50%7D`),
+    ];
+    const plain = storeOf('op-facts-none', skills);
+    expect(pinEndsElsewhere(plain, 's_json', 's_next')).toMatch(/ends on .*query_props/);
+    expect(takeFactRows(plain)).toEqual([]);
+    const store = storeOf('op-facts', skills);
+    // the recording and one replay each watched one step add or change query_props on the same page
+    const at = '2026-09-26T00:00:00.000Z';
+    factStoreFor(store.dir).observe(OP, [
+      { k: 'route.query', key: `${WP}?query_props`, v: 'state', hard: false, session: 'rec', at },
+      { k: 'route.query', key: `${WP}?query_props`, v: 'state', hard: false, session: 'replay-1', at },
+    ]);
+    expect(pinEndsElsewhere(store, 's_json', 's_next')).toBeNull();
+    const rows = takeFactRows(store);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({ rule: 'facts.routesAgree', fact: 'agree', heuristic: 'differ', applied: true });
   });
 
   it('(a) a next pin that is itself demoted is not judged against', () => {

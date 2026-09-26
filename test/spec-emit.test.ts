@@ -1327,7 +1327,7 @@ describe('preconditions, minting and loops', () => {
     expect(out.indexOf("await preconditionGate('http://app.test/items', page.url()")).toBeLessThan(out.indexOf('// @step 01-do s_test1/1'));
     expect(out).toContain('function preconditionVerdict(');
     // the adapter passes what it knows about the fingerprint: null here (none recorded)
-    expect(out).toContain('const verdict = preconditionVerdict(pattern, url, p, similarity, mints);');
+    expect(out).toContain('const verdict = preconditionVerdictWithFacts(siteFactsAt(url), pattern, url, p, similarity, mints);');
     expect(out).toContain('if (verdict.refuse) throw new Error(`${where}: ${verdict.refuse} — nothing of this segment has run`);');
     expect(syntaxErrors(out)).toEqual([]);
     // the verdict, run from the artifact

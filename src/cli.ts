@@ -10,7 +10,8 @@ import { encodeFrame, LineDecoder, storeMismatch, type FlowRunResult, type Frame
 import { aliasLegacyEnv, sessionNames, sessionsDir, socketPath, validateSessionName } from './shared/paths.js';
 import { candidateExpr } from './daemon/recorder.js';
 import { fillParams } from './skills/compile.js';
-import { SkillStore, skillsDir, successRate, type Skill } from './skills/store.js';
+import { SkillStore, originOf, skillsDir, successRate, type Skill } from './skills/store.js';
+import { factStoreFor } from './skills/facts-url.js';
 import { listFlows, loadFlow, loadFlowFile, saveFlow, type Flow } from './skills/flow.js';
 import { drainDrift, llmProposer, triage, type DrainSummary, type DriftTicket } from './skills/repair.js';
 import { cascadeProposer } from './skills/repair-jev.js';
@@ -2124,7 +2125,10 @@ async function rerecordFlowCommand(
     // a value that is a part of the step's end url is a url part to every
     // later step, not a report key. The end url is the one the flow recorded
     // before the re-record (the run result carries none).
-    const rethreaded = rethreadUrlRefs(loadedAfter.flow, stepId, typeof previous?.recorded?.url === 'string' ? previous.recorded.url : undefined);
+    // The origin's site facts (stage 1): a reliable identity position decides which part a value threads to.
+    const endUrl = typeof previous?.recorded?.url === 'string' ? previous.recorded.url : undefined;
+    const endOrigin = endUrl ? originOf(endUrl) : null;
+    const rethreaded = rethreadUrlRefs(loadedAfter.flow, stepId, endUrl, endOrigin ? factStoreFor(stagedInput.store.dir).snapshot(endOrigin) : undefined);
     for (const line of rethreaded.rewired) say(`  ${stepId}: ${line} (a url part both runners publish)`);
     if (recorded || rethreaded.rewired.length) saveFlow(rethreaded.flow, stagedInput.flowFile);
   }

@@ -3,7 +3,9 @@ import type { InstructionResult, SkillRecord } from '../agent/loop.js';
 import type { Report } from '../agent/report.js';
 import type { RecordedEntry, RecordedInstruction } from '../daemon/recorder.js';
 import { shadowVerdicts, writeShadow } from './shadow.js';
-import { flushRouteObservations, noteRoutesAgree, observeRouting, takeFactRows } from './facts-url.js';
+import { bufferFactRow, factStoreFor, flushRouteObservations, observeRouting, routesAgreeShadow, takeFactRows } from './facts-url.js';
+import { routesAgreeByFacts, type RoutesAgree } from '../execution/facts-route.js';
+import { rewriteOrigins } from './facts-rewrite.js';
 import { shadowClassify, takeFormatShadowRows } from './facts-format.js';
 import { compileSkills, escapeRe, fillParams, samePageContexts, sameProcedure, urlMatches, urlPattern, variantStart } from './compile.js';
 import { landedOnRecordedPage } from '../execution/gates.js';
@@ -197,6 +199,10 @@ export function learnFromInstruction(
   // SITE FACTS: two procedures one query literal apart on pages that do not
   // fingerprint alike prove that key routes (a soft `route.query` fact).
   observeRouting(store, skills, input.session);
+  // SITE FACTS stage 1 (consumer 5, skills/facts-rewrite.ts): a reliable
+  // `state` query key or `anchor` fragment widens the origin's STORED
+  // patterns (never a step or a locator). Nothing without a reliable fact.
+  rewriteOrigins(store, skills.map((s) => s.origin));
   // SHADOW (skills/shadow.ts): what the journal's facts say beside what the
   // heuristics decided, to a report next to the store. Changes nothing learned.
   // The site-facts rows this session buffered (replays of stored skills the
@@ -1353,7 +1359,13 @@ export function pinStartsElsewhere(store: SkillStore, candidateId: string, stepS
     ? (store.list(cand.origin).find((s) => s.seq?.chain === cand.seq!.chain && s.seq.index === 0) ?? cand)
     : cand;
   const pattern = head.preconditions.urlPattern;
-  if (!pattern || landedOnRecordedPage(pattern, stepStartUrl)) return null;
+  if (!pattern) return null;
+  // SITE FACTS stage 1 (consumer 1): a reliable route fact decides whether
+  // the step's start page is the head's route (a `state` query key never
+  // separates them; a one-sided `routing` key does; an `anchor` fragment is
+  // the same page). No reliable fact: the strict landing rule, as before.
+  const startsHere = (p: string, u: string, byFragment: boolean): boolean => landedOnRecordedPage(byFragment ? p : p.replace(/#.*$/, ''), byFragment ? u : u.replace(/#.*$/, ''));
+  if (agreeWithFacts(store, cand.origin, pattern, stepStartUrl, true, startsHere, landedOnRecordedPage(pattern, stepStartUrl), `pinStartsElsewhere ${head.id}`)) return null;
   return `its procedure starts on ${pattern} (${head.id}), and this step began on ${urlPattern(stepStartUrl)}: it covers only what follows something the step had to do first`;
 }
 
@@ -1393,12 +1405,34 @@ export function pinEndsElsewhere(store: SkillStore, candidateId: string, nextPin
   const start = head.preconditions.urlPattern;
   const end = [...tail.steps].reverse().find((s) => s.expect?.urlPattern)?.expect?.urlPattern ?? tail.preconditions.urlPattern;
   const byFragment = routesByFragment(store, cand.origin);
-  const agree = Boolean(start && end) && routesAgree(start!, end, byFragment);
-  // SHADOW (site facts): the same question decided by the origin's route
-  // facts, beside this answer, for the session's shadow report.
-  if (start && end) noteRoutesAgree(store, cand.origin, start, end, byFragment, routesAgree, agree, `pinEndsElsewhere ${tail.id} -> ${head.id}`);
+  // SITE FACTS stage 1 (consumer 1): a reliable route fact's verdict
+  // replaces today's routesAgree; the shadow row is written either way.
+  const agree = Boolean(start && end) && agreeWithFacts(store, cand.origin, start!, end, byFragment, routesAgree, routesAgree(start!, end, byFragment), `pinEndsElsewhere ${tail.id} -> ${head.id}`);
   if (!start || !end || agree) return null;
   return `its procedure ends on ${end} (${tail.id}), and the next step's procedure (${head.id}) starts on ${start} without navigating there: it would leave the next step on the wrong page`;
+}
+
+/**
+ * Two routes agree, decided by the origin's site facts where a RELIABLE fact
+ * settles it (execution/facts-route.ts routesAgreeByFacts: `state` query keys
+ * dropped, a one-sided `routing` key separating, a `route.fragment` replacing
+ * `byFragment`), else `heuristic` — today's verdict, unchanged. The
+ * `facts.routesAgree` shadow row is buffered whenever any fact bears on the
+ * pair, with `applied: true` when the fact decided. Never throws: a fact that
+ * cannot be read is a fact that does not decide.
+ */
+function agreeWithFacts(store: SkillStore, origin: string, start: string, end: string, byFragment: boolean, today: RoutesAgree, heuristic: boolean, step: string): boolean {
+  try {
+    const sf = factStoreFor(store.dir).read(origin);
+    const r = routesAgreeByFacts(sf, start, end, byFragment, today);
+    const applied = Boolean(r?.decided);
+    const row = routesAgreeShadow(sf, start, end, byFragment, today, heuristic, step);
+    if (row && applied) Object.assign(row, { applied: true });
+    bufferFactRow(store, row);
+    return applied ? r!.agree : heuristic;
+  } catch {
+    return heuristic;
+  }
 }
 
 /**

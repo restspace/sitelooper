@@ -401,10 +401,13 @@ const HELPERS: { token: string; source: string[] }[] = [
       ' * fingerprints: both describe the page as the segment found it, not where a',
       ' * navigation in flight landed during the measurement. Async so the call site',
       ' * must await it: a gate that could be left un-awaited is one that can',
-      ' * silently become a no-op.',
+      ' * silently become a no-op. Decided as replay decides it: through',
+      ' * preconditionVerdictWithFacts (src/execution/facts-route.ts) over the facts',
+      ' * snapshot this file carries for the url (siteFactsAt), which is the plain',
+      ' * preconditionVerdict wherever no reliable site fact bears on the url.',
       ' */',
       "async function preconditionGate(pattern: string, url: string, p: Record<string, string>, where: string, similarity: number | null | 'unmeasured', mints: { at: string; step: number }[] = []): Promise<void> {",
-      '  const verdict = preconditionVerdict(pattern, url, p, similarity, mints);',
+      '  const verdict = preconditionVerdictWithFacts(siteFactsAt(url), pattern, url, p, similarity, mints);',
       '  for (const line of verdict.warnings) logWarning(`${where}: ${line}`);',
       '  if (verdict.refuse) throw new Error(`${where}: ${verdict.refuse} — nothing of this segment has run`);',
       '}',
@@ -2385,14 +2388,15 @@ function emitSkillStep(recorded: SkillStep, segment: SpecSegment, index: number,
   // recording never saw only stops a step whose page changes did not confirm
   // it worked. Each is the shared verdict; see the helpers.
   const checks: string[] = [`errorPageGate(page, ${q(where)});`];
-  // Replay's gotoLanding gate, second in its order: a goto that landed on another view of what it asked for.
+  // Replay's gotoLanding gate, second in its order: a goto that landed on another view of what it asked for,
+  // decided from the carried site facts where a reliable one bears on it (landingVerdictWithFacts), as replay.
   if (step.tool === 'goto' && typeof step.args.url === 'string') {
     noteSlots(step.args.url, ctx);
     // Judged against where the goto was actually SENT — the retargeted url
     // when this segment's volatility evidence redirected it, as replay judges
     // its own (mutated) `args.url`.
     const sent = nav ? `${nav}.url` : src(step.args.url);
-    checks.push(`{ const landing = gotoLandingVerdict(${sent}, page.url(), ${q(where)}); if (landing) throw new Error(landing); }`);
+    checks.push(`{ const landed = page.url(); const landing = landingVerdictWithFacts(siteFactsAt(landed), ${sent}, landed, ${q(where)}); if (landing) throw new Error(landing); }`);
   }
   effectLines(step, ctx, checks, observed);
   // A read raises no alert of its own (replay exempts it), unless the
@@ -4284,8 +4288,6 @@ export function emitFlowFile(spec: SpecFlow, o: EmitOptions): { source: string; 
   out.push('  run.warnings = [];');
   if (followsPages) out.push('  run.page = undefined;');
   out.push('  const outputs = run.outputs;');
-  // Stage 0 of site facts: carried and reachable, read by nothing yet.
-  out.push('  void siteFactsAt;');
   out.push('  try {');
   // Judged, never applied: the browser belongs to the test runner (the
   // scaffold applies RECORDED_USE; a mobile project may deliberately differ).

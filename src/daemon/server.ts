@@ -26,7 +26,8 @@ import { jevMatchSkill, jevPickLiteral } from '../skills/paraphrase-jev.js';
 import { readBackDecider } from '../agent/readback-jev.js';
 import type { ReadBackDecider } from '../agent/readback.js';
 import { setInlineHealer } from '../skills/replay.js';
-import { flushSiteFacts } from '../skills/facts-url.js';
+import { factStoreFor, flushSiteFacts } from '../skills/facts-url.js';
+import { rewriteOrigins } from '../skills/facts-rewrite.js';
 import { RunLedger, linkMintedParts, unseenGotoParts, describeLeaks, evidenced, fatal, navigationLeaks, scanForLeaks, slotKnownRunValues, urlVarianceValues, withoutOwnOutputs, type Leak } from '../skills/ledger.js';
 import { quarantineLeakedSteps } from '../spec/rerecord.js';
 import { rerecordFix } from '../spec/diagnostics.js';
@@ -143,7 +144,10 @@ export class Daemon {
       if (url) {
         const parts = urlParts(url);
         const admitOpts = { landed: e.k === 'step' && e.tool !== 'goto' && e.tool !== 'back', landedLabels, linkMinted };
-        const admitted = this.ledger.addUrlIds(url, stepId, parts, admitOpts);
+        // Site facts (stage 1, consumer 3): the origin's reliable route facts
+        // admit or refuse a part the rules alone would not; a daemon with no
+        // learn store has no facts and the rules run unchanged.
+        const admitted = this.ledger.addUrlIds(url, stepId, parts, admitOpts, this.valueFacts()?.snapshot(url));
         // Site facts (stage 0, shadow only): what the admission proves.
         this.valueFacts()?.noteUrl(url, parts, admitOpts, admitted, this.factVars());
         factUrl = url;
@@ -1290,6 +1294,8 @@ ${describeLeaks(leaks.slice(0, 6))}`);
       // of an existing flow (runFlow seeds the ledger), which is exactly when
       // there is a second run's worth of evidence to build on.
       runSpecific: this.runSpecific,
+      // SITE FACTS stage 1: a reliable `route.path` identity position mints a url reference on the first run.
+      facts: factStoreFor(store.dir).snapshot(origin),
     });
     if (!flow || !flow.steps.length) throw new Error('nothing to export — no successful instruction was recorded');
     // The browser this session recorded in: replay and the compiled artifact
@@ -2550,6 +2556,8 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
     if (updated || evidenceChanged || varianceNoted) saveFlow(flow, flowFile);
     // SITE FACTS (stage 0, skills/facts-url.ts): this run's route observations and facts.* shadow rows.
     flushSiteFacts(this.browser.learn, this.valueFacts()?.session ?? this.opts.session, `flow ${flow.name}`);
+    // SITE FACTS stage 1 (skills/facts-rewrite.ts): a fact this run made reliable widens the origin's stored patterns.
+    rewriteOrigins(this.browser.learn, [flow.origin, originOf(flow.startUrl)]);
 
     const passed =stepResults.filter((r) => r.status === 'success').length;
     return {
