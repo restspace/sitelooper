@@ -30,11 +30,16 @@ noted in §6 as a one-line add.
 Principles, in the order they matter:
 1. **Observed, never asserted.** A fact is written by the runner from page evidence. The model never writes
    one (the same reason the model does not record its intent: an observation can be checked, a claim cannot).
-2. **Counted before relied on.** A fact carries `n` (observations), `sessions` (distinct recording or replay
-   sessions) and `contra` (contradicting observations). A gate may RELY on a fact only at `sessions >= 2`
-   and `contra == 0`; below that it is ADVISORY (logged beside today's heuristic, never deciding). A
-   contradiction drops a fact back to advisory and is logged; two contradictions in different sessions
-   retire it.
+2. **Counted before relied on, unless proven.** A fact carries `n` (observations), `sessions` (distinct
+   recording or replay sessions), `contra` (contradicting observations) and `hard`. A HARD fact is one whose
+   observation is a structural proof by the runner (the app rendered this typed value as that text at this
+   control; this fragment carries a path; this query value was minted by the link the run just added): it is
+   relied on from its first observation. A SOFT fact is statistical (a position that never varied, a shape
+   two values share, a key two procedures differ on) and is relied on only at `sessions >= 2`. In both cases
+   `contra` must be 0: a contradiction drops the fact to ADVISORY (logged beside today's heuristic, never
+   deciding) and is logged; two contradictions in different sessions retire it. Which observations are hard is
+   fixed per kind in §2-4 (user decision 2026-09-26: prefer one-session hard facts wherever the runner can be
+   sure).
 3. **One snapshot, both runners.** Compile freezes the origin's facts into the artifact (`FLOW.facts`, the
    recipes pattern), and the decision functions live in a shared execution module, so the daemon and the
    compiled spec decide alike. No parity gap can come from the store.
@@ -64,12 +69,13 @@ interface Fact {
   n: number;              // observations
   sessions: string[];     // distinct session ids, capped at 8 (the count is what matters)
   contra: number;         // contradicting observations
+  hard: boolean;          // a structural proof (relied on from n=1) vs statistical (sessions >= 2)
   first: string; last: string;   // ISO times
   ev?: string;            // one short line of evidence for the last observation (scrubbed, <= 120 chars)
 }
 ```
 
-`reliable(f)` = `f.sessions.length >= 2 && f.contra === 0`. `advisory(f)` = everything else present.
+`reliable(f)` = `f.contra === 0 && (f.hard || f.sessions.length >= 2)`. `advisory(f)` = everything else present.
 `observe(store, fact)` merges by `(k, key)`: same `v` bumps `n` and adds the session; a different `v` bumps
 `contra` on the stored fact and records the new one as advisory. Facts of one origin are capped (2000) with
 least-recently-observed eviction, so a busy app cannot grow the file without bound.
@@ -102,9 +108,9 @@ and slot marker written `*`: the same key sitemap.ts uses for a page.
 
 | fact | key | value | observed when | by whom |
 |---|---|---|---|---|
-| `route.fragment` | origin | `'path' \| 'state' \| 'anchor'` | any url on the origin carries a fragment: `/`-shaped, `=`-shaped, or a bare word (urlShapeOf's own split, url.ts:126-130) | recorder at every step diff; replay at every url expectation |
-| `route.query` | `<route>?<key>` | `'state' \| 'identity' \| 'routing'` | `state`: the same route, same identity parts, seen with the key absent and present, or with two values, within one session and no record change between (fwop15's `query_props`; grafana's `refresh`). `identity`: the ledger admitted the key's value as a record (idPositionPart, linkMintedParts, variance: ledger.ts:530-615) — write the admission out. `routing`: two stored procedures on the same path whose preconditions differ only in this key's literal and whose fingerprints differ (kanboard's `controller`) | recorder (diffs), ledger at `addUrlIds`, compile at `variantStart` |
-| `route.path` | `<route>#<index>` | `'identity' \| 'constant'` | identity when `discoverMinted` (compile.ts:1582) or the ledger's path admission banks the position; constant when the position held the same literal across `sessions >= 2` while other positions varied | compile, ledger |
+| `route.fragment` | origin | `'path' \| 'state' \| 'anchor'` | any url on the origin carries a fragment: `/`-shaped, `=`-shaped, or a bare word (urlShapeOf's own split, url.ts:126-130). HARD | recorder at every step diff; replay at every url expectation |
+| `route.query` | `<route>?<key>` | `'state' \| 'identity' \| 'routing'` | `state`: the same route with the same identity parts seen with the key absent and present, or with two values, within one session and no record change between (fwop15's `query_props`; grafana's `refresh`): HARD. `identity`: the ledger admitted the key's value as a record by provenance (linkMintedParts, a landed mint: ledger.ts:530-615): HARD; by variance across runs: SOFT. `routing`: two stored procedures on the same path whose preconditions differ only in this key's literal and whose fingerprints differ (kanboard's `controller`): SOFT | recorder (diffs), ledger at `addUrlIds`, compile at `variantStart` |
+| `route.path` | `<route>#<index>` | `'identity' \| 'constant'` | identity when `discoverMinted` (compile.ts:1582) or the ledger's landed path admission banks the position: HARD; constant when the position held the same literal across `sessions >= 2` while other positions varied: SOFT | compile, ledger |
 
 **Consumers, in the order they switch (stage 1).**
 1. `routesAgree` (learn.ts:1406): a `route.query` fact of `state` makes the key irrelevant to the route; of
@@ -117,6 +123,12 @@ and slot marker written `*`: the same key sitemap.ts uses for a page.
    never admitted, whatever its digits.
 4. `rethreadUrlRefs` (spec/rerecord.ts:225) and `referencablePart` (flow.ts:204): a reported value equal
    to an `identity` position threads as `url.<label>` on the first run.
+5. **Stored procedures are rewritten** (user decision 2026-09-26): when a `route.query` fact of `state`
+   becomes reliable, every stored procedure on that origin whose `preconditions.urlPattern` or a step's
+   `expect.urlPattern` carries the key with a literal is rewritten to `key=:var` through `store.update`
+   (revision bumped, `factRewrites: [{k, key, at}]` noted on the skill); a `route.fragment` of `anchor`
+   strips the bare anchor from those patterns. Only patterns are rewritten, never steps or locators, and a
+   later contradiction does not un-rewrite (a wildcard is never wrong, only weaker).
 
 Fallback everywhere: no reliable fact means today's rule, unchanged. Survey rows decided: fwop15-cv2,
 fwsi9 (#history), fwsi7's goto landing, fwvk13 (another route's p1), fwkb41 (`task_id=4`), fwgr74 (uid
@@ -129,7 +141,7 @@ off the url), fwop5 (id at another path position), odoo's `cids`/`menu_id`.
 
 | fact | value | observed when |
 |---|---|---|
-| `format` | `{ kind: 'thousands' \| 'decimals' \| 'affix' \| 'upper' \| 'date' \| 'trim' \| 'twice' \| 'counter', from: <typed or reported>, to: <rendered>, tpl?: <pattern> }` | (a) a typed slot's value later found at its control or in a diff line in another spelling: refill.ts `sameValue` already computes digit equality for typing safety (`12500` vs `12,500.00`); record what it saw. (b) the read-back cascade pins by containment or core: `frame` (`#{{=}}`, `{{=}} Bench Task`) IS the affix fact; record it under the key, not only on the read. (c) `sweepFrame` (agent/readback.ts:338-344) counts a textContent/innerText mismatch as `extra`: a hidden duplicate or a text-transform; record `twice`/`upper` for that role and name. (d) `maskCounters` matches: record `counter` for the control name so the mask becomes per-origin evidence rather than a global regex. (e) `page.title()` vs a reported value differing only by a suffix (" - Odoo"): `affix` on the title |
+| `format` | `{ kind: 'thousands' \| 'decimals' \| 'affix' \| 'upper' \| 'date' \| 'trim' \| 'twice' \| 'counter', tpl?: <pattern with {{=}} for the value> }` | (a) a typed slot's value later found at its own control or in a diff line in another spelling: refill.ts `sameValue` already computes digit equality for typing safety (`12500` vs `12,500.00`); record what it saw: HARD (the runner watched the app transform its own input). (b) the read-back cascade pins by containment or core: `frame` (`#{{=}}`, `{{=}} Bench Task`) IS the affix fact; record it under the key: HARD when the value is a proven mint or unique on the page, SOFT otherwise. (c) `sweepFrame` (agent/readback.ts:338-344) counts a textContent/innerText mismatch as `extra`: a hidden duplicate or a text-transform; record `twice`/`upper` for that role and name: HARD. (d) `maskCounters` matches: record `counter` for the control name: SOFT (a regex match is not a proof). (e) `page.title()` vs a reported value differing only by a suffix (" - Odoo"): `affix` on the title: HARD |
 
 Only the transformation is stored (`from`→`to` as a pattern with the value cut out, `{{=}}`), never the
 value: `{kind:'thousands', tpl:'#,###'}`, `{kind:'affix', tpl:'#{{=}}'}`, `{kind:'upper'}`.
@@ -155,8 +167,8 @@ by `<route>|<label>` (the url part or report key that carries them).
 
 | fact | value | observed when |
 |---|---|---|
-| `value.class` (by hash) | `'constant' \| 'mint' \| 'credential'` | `constant`: taskConstants / offeredBeforeReported (flow.ts:880/917) decided it, or it was an option/menuitem/column text in a diff before any report; `mint`: the ledger banked it with basis position/variance/landed; `credential`: the scrub filed it ambiguous (shared/secrets.ts:50) |
-| `value.shape` (by `<route>\|<label>`) | `{ re: <regex source>, n }` | two minted values under one label share a shape: `S0002[0-9]`, `BA-0000[0-9]` → `^S\d{5}$`, `^BA-\d{5}$` (shape.ts's own tokeniser, generalising digits to `\d` runs and keeping letter runs and punctuation) |
+| `value.class` (by hash) | `'constant' \| 'mint' \| 'credential'` | `constant`: offeredBeforeReported (flow.ts:917) decided it, or it was an option/menuitem/column text in a diff before any report: HARD; stated by an instruction (taskConstants' other arm): SOFT. `mint`: the ledger banked it with basis position or landed: HARD; by variance: SOFT. `credential`: the scrub filed it ambiguous (shared/secrets.ts:50): HARD |
+| `value.shape` (by `<route>\|<label>`) | `{ re: <regex source>, n }` | two DISTINCT minted values under one label share a shape: `S0002[0-9]`, `BA-0000[0-9]` → `^S\d{5}$`, `^BA-\d{5}$` (shape.ts's own tokeniser, generalising digits to `\d` runs and keeping letter runs and punctuation): HARD once two distinct values agree, in one session or two |
 
 **Consumers (stage 3).**
 1. Ledger `add` prior (ledger.ts:468): a reliable `constant` is never an identifier whatever its shape
@@ -207,12 +219,11 @@ fallback (100-200 lines each plus fixture tests).
 - A user-editable facts file (declaring "query_props is state" by hand): deliberately not now. Every fact
   here is observed; a declared fact would need its own provenance kind and its own trust rule.
 
-## 7. Open questions for the user
+## 7. Decisions (user, 2026-09-26)
 
-1. Is one facts file per origin the right unit, or per site (an app spanning origins)? The store is per
-   origin today and this follows it; a cross-origin app would hold the same fact twice.
-2. Should a reliable fact be allowed to OVERRIDE a stored skill's own pattern (rewrite `:var` into a
-   procedure's urlPattern), or only inform gates? This design only informs gates; rewriting stored
-   procedures from facts is a later, separate decision.
-3. The reliability bar (2 sessions, 0 contradictions) is a guess; the stage 0 shadow numbers will say
-   whether 2 is enough or too eager.
+1. The unit is the ORIGIN, never merged: one facts file per origin directory. A cross-origin app holds a
+   fact once per origin it was observed on.
+2. A reliable fact MAY rewrite a stored procedure's url pattern (§2 consumer 5); patterns only, never steps.
+3. Reliability: hard facts from one observation, soft facts from two sessions, zero contradictions in both
+   cases (§0 principle 2). The stage 0 shadow numbers will say whether any kind is misfiled hard or soft.
+4. No cap on the cloud runs of the sequence in §5; the five-boxes-per-hour rule stands.
