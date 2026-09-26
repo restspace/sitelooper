@@ -160,7 +160,7 @@ export class Daemon {
           // commentaryReport): the model's conclusion, which no replay can
           // re-observe. Banked, it became a known value every later compile
           // slotted and an identity marker no run could fill (gitea fwgt17).
-          if (commentaryReport(entries, name, String(value))) continue;
+          if (commentaryReport(entries, name, String(value), this.factVars())) continue;
           const banked = this.ledger.add(String(value), { from: 'output', step: stepId, name });
           this.valueFacts()?.noteReport(factUrl, name, String(value), banked, this.factVars());
         }

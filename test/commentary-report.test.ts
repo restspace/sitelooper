@@ -83,6 +83,9 @@ describe('commentaryReport, the shared predicate', () => {
     const group = recording().slice(4, 7); // the labels instruction, its click, its report
     expect(commentaryReport(group, 'labels_picker_state', 'closed')).toBe(true);
     expect(commentaryReport(group, 'labels_picker_state', 'LB-00931')).toBe(false); // id-shaped
+    expect(commentaryReport(group, 'labels_picker_state', 'fx1 Availability', ['fx1'])).toBe(false); // embeds a var
+    expect(commentaryReport(group, 'labels_picker_state', '£565.00')).toBe(true); // and, shown as "£ 565.00" on a line, not:
+    expect(commentaryReport([...group.slice(0, 2), { k: 'step', tool: 'click', args: { target: '@e9' }, locators: {}, diff: { url: ISSUE, alerts: [], added: ['- cell "£ 565.00"'] } } as RecordedEntry, group[2]], 'labels_picker_state', '£565.00')).toBe(false);
     expect(commentaryReport(group.slice(1), 'labels_picker_state', 'closed')).toBe(false); // no instruction entry
     expect(commentaryReport(recording({ evidence: false }).slice(4, 7), 'labels_picker_state', 'closed')).toBe(false); // no evidence
     // Whole tokens, case aside: "Close Issue" on the start page does not show "closed"; a line carrying the word does.

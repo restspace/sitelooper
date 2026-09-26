@@ -652,7 +652,7 @@ export function buildFlow(
       // list columns did in round 65. A value an earlier run watched change
       // is the run's whatever its key (`RunSpecific`); a value a read of this
       // instruction returned is re-observed by a tier-A replay and stays.
-      if (!opts.runSpecific?.(value) && commentaryReport([g.instruction, ...g.steps, ...(groups[i + 1] ? [groups[i + 1].instruction] : [])], output, value)) continue;
+      if (!opts.runSpecific?.(value) && commentaryReport([g.instruction, ...g.steps, ...(groups[i + 1] ? [groups[i + 1].instruction] : [])], output, value, varEntries.map(([, vv]) => vv))) continue;
       // statedBeforeShown for the evidence and the cases.
       if (statedBeforeShown(entries, g.instruction, value)) continue;
       // And the same question asked of the PAGE rather than the task: a value
@@ -858,7 +858,9 @@ export function selfNamingReadDrops(
  * evidence for the instruction (a synthetic one) proves nothing, and the
  * value is threaded as before — run 1 references what it cannot judge. Two
  * more things it never touches: a value earlier runs watched change
- * (`RunSpecific`, the caller's guard) and one shaped like a record id
+ * (`RunSpecific`, the caller's guard), one that embeds a declared var's value
+ * (the runid inside a typed title: the run's own by construction) and one
+ * shaped like a record id
  * (shape.ts looksLikeId, the ledger's first-run prior): an id the page did
  * not show in a captured line is still an id, and a literal id makes every
  * replay act on run 1's record — the direction this file may never err in.
@@ -880,24 +882,44 @@ export function selfNamingReadDrops(
  * definition of an unsourced value (notes/design/design-recording-hygiene.md
  * §4), applied after the fact to every reported value, asked or not.
  */
-export function commentaryReport(group: readonly RecordedEntry[], _output: string, value: string): boolean {
+export function commentaryReport(group: readonly RecordedEntry[], _output: string, value: string, vars: Iterable<string> = []): boolean {
   const instruction = group.find((e): e is RecordedInstruction => e.k === 'instruction');
   if (!instruction) return false;
   const v = String(value ?? '').trim();
   if (!v || looksLikeId(v, 'first-run')) return false;
-  const shown = new RegExp(`(^|[^\\p{L}\\p{N}_])${escapeRe(v.replace(/\s+/g, ' '))}(?=$|[^\\p{L}\\p{N}_])`, 'iu');
-  const carries = (text: unknown): boolean => typeof text === 'string' && shown.test(text.replace(/\s+/g, ' '));
+  // A value that embeds a declared var (the runid inside a typed title) is
+  // the run's own by construction, whatever the page captures caught.
+  for (const raw of vars) {
+    const vv = String(raw ?? '').trim();
+    if (vv.length >= 2 && replaceToken(v, vv, ' ') !== v) return false;
+  }
+  // Whole-token, case aside, whitespace folded: odoo renders a reported
+  // "£565.00" as "£ 565.00" (a no-break space), so every whitespace run is
+  // removed from both sides before the look, and a boundary is asked only
+  // where the value's own edge is a letter or digit ("£" needs no gap before
+  // it; "565" must not match inside "1565").
+  const compact = (t: string): string => t.replace(/[\s\u00a0]+/g, '');
+  const cv = compact(v);
+  const left = /^[\p{L}\p{N}]/u.test(cv) ? '(?<![\\p{L}\\p{N}])' : '';
+  const right = /[\p{L}\p{N}]$/u.test(cv) ? '(?![\\p{L}\\p{N}])' : '';
+  const shown = new RegExp(`${left}${escapeRe(cv)}${right}`, 'iu');
+  const carries = (text: unknown): boolean => typeof text === 'string' && shown.test(compact(text));
   let evidence = false;
   for (const e of group) {
     // The instruction's own start page, and the NEXT instruction's when the
     // caller appends it: the page this instruction ENDED on, whole.
     if (e.k === 'instruction') {
-      if (e.startText) evidence = true;
+      // A start page cut at its budget proves nothing about what it lacks
+      // (deriveGoal's rule): it still counts for what it shows.
+      if (e.startText && e.startTextComplete !== false) evidence = true;
       if (carries(e.startText)) return false;
       continue;
     }
     if (e.k !== 'step') continue;
     if (e.diff) evidence = true;
+    // What the run typed or chose is what the run made; a read's or an
+    // eval's result is what the page gave back.
+    if (carries(e.args?.value) || carries(e.args?.text) || carries(e.args?.option)) return false;
     if (carries(e.result) || carries(e.diff?.url)) return false;
     for (const line of e.diff?.added ?? []) if (carries(line)) return false;
   }

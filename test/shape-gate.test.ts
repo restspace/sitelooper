@@ -101,13 +101,16 @@ const INVENTORY: { file: string; fn: Fn; calls: number; question: string; fails:
   {
     file: 'src/skills/flow.ts',
     fn: 'looksLikeId',
-    calls: 2,
-    question: 'is this url part / json leaf a reference?',
+    calls: 3,
+    question: 'is this url part / json leaf a reference? — and, in commentaryReport, is this reported value the page never showed still an id?',
     fails: 'silence',
     note:
       'referencablePart (shared by buildFlow minting and urlOutputs) and ' +
       'jsonLeaves. Both consult runSpecific first. The reported-VALUE path ' +
-      'beside them references everything and lets evidence demote.',
+      'beside them references everything and lets evidence demote — except ' +
+      'a value no captured page line showed (commentaryReport), which is not ' +
+      'threaded unless it is shaped like an id: there the shape keeps the ' +
+      'reference, never removes one (fails toward threading).',
   },
   {
     file: 'src/skills/compile.ts',

@@ -238,7 +238,7 @@ function storeFrom(entries, known, valuesByInstruction) {
         const vals = e.status === 'success' && values ? values : (e.values ?? {});
         for (const [name, value] of Object.entries(vals)) {
           // The daemon skips the model's commentary about the page (flow.ts commentaryReport).
-          if (commentaryReport(group, name, String(value))) continue;
+          if (commentaryReport(group, name, String(value), Object.values(known))) continue;
           ledger.add(String(value), { from: 'output', step: stepId, name });
         }
       }
