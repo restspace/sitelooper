@@ -554,6 +554,16 @@ after that point is invalid, verifies (no model) are not. fwop15-cv2 and fwod88-
 for the top-up.
 
 
+## Round 66 (main 357b983e = 37a9390a + prompts): the CONTROL batch on the merged guard fix and fixed driver (hold on), five apps — in progress
+
+Fired 07:33 UTC 2026-09-26, all five at once, as the comparison for the stage-0 site-facts batch that follows
+(feat/site-facts-0, shadow only). Same prompts and measures as round 65.
+
+| round | runid | app | verified | replay model-free | compiled | green | notes |
+|---|---|---|---|---|---|---|---|
+| 66 | fwop20 | op | 7/7 ×3 | yes (n2, n3 4/4 flow, 0 turns) | pass, drift 1 (5/7, 2 UNVERIFIABLE report-only) | **yes** | n1 5 turns / $0.064 / 361 s; 02-create step 8 (read save_alert) has no locator left, publishes nothing; 11 shadow rows |
+| 66 | fwsi17 | si | 7/7 ×3 | n2 NO: 03-create fell back (17 turns: `s_d84dc3 stopped at step 2 — none of the 1 recorded page change(s) appeared ("- listbox Bench Assignee")`), n3 yes 4/4 | pass, drift 0 (5/7, 2 UNVERIFIABLE) | no (n2) | the round-65 refusal (unsourced-ref on 01-signin.model/.status) is gone: compiled and passed; the assignee listbox effect is timing (n3 replayed it clean) |
+
 ## Convergence experiment, batch 2 (main 3df960b2: a driven-past full replay compiles whole, counters masked, stuck-repin stop; credit restored 16:30)
 
 | run | from | class | verdict | flow runs | model turns | what decided it |
