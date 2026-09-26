@@ -318,6 +318,16 @@ Both snapshot and restore stop `mongod` and `rs2-server`, move the bytes, and re
 - **Pin versions**: agent-browser version, sitelooper commit, model IDs, date.
 - Known tool bugs that cost wall-clock time (e.g. agent-browser's cold-start hang) are reported
   **separately** rather than folded into a headline, in either direction.
+- **`bench/ab-metrics.mjs` rows are read only from published files** — see the file's own header
+  comment for the full list per source file. Since stage 0 of site facts
+  (notes/design/design-site-facts.md), a run whose published store carries a `<origin>/site-facts.json`
+  also gets: `facts_written` (observed facts across every origin), `facts_hard` / `facts_soft` (by
+  `hard`), `facts_relied` (facts that are `reliable()`: no live contradiction, and either hard or seen
+  in 2+ sessions), and, from `shadow.jsonl` rows whose `rule` starts with `facts.`, `facts_shadow_rows`,
+  `facts_agree`, `facts_disagree`. All seven are `0` for a store with no site-facts.json (every stored
+  run before this feature). `node bench/facts-report.mjs <skills dir>` (or `--dir <dir> --base <runid>`,
+  repeatable) prints every fact and every `facts.*` shadow disagreement with its evidence — the stage 0
+  exit review reads this before any consumer switches off the shadow.
 
 ## Known gaps
 

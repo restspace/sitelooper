@@ -30,6 +30,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { totpCode, type TotpClock } from '../execution/totp.js';
+import { valueHash } from '../execution/facts.js';
 
 const SECRET_RE = /\{\{env:([A-Za-z_][A-Za-z0-9_]*)\}\}/g;
 /** Either kind of marker, for the paths that resolve both (the dispatch). */
@@ -49,6 +50,21 @@ const ledger = new Map<string, string>();
  */
 const ambiguousLedger = new Map<string, string>();
 
+/**
+ * valueHash (execution/facts.ts) of every value this session filed as an
+ * AMBIGUOUS credential — resolved from a marker onto ambiguousLedger, or met
+ * as a literal in a password field (markLiteralCredentialValue). Hashes only:
+ * the site-facts observer (skills/facts-value.ts) files each as a
+ * `value.class` `credential` fact, and the value itself never leaves this
+ * module. Read by nothing that scrubs, so it changes no scrubbing.
+ */
+const ambiguousHashes = new Set<string>();
+
+/** The hashes of this session's ambiguous credential values (see ambiguousHashes), for the site-facts observer. */
+export function ambiguousCredentialHashes(): string[] {
+  return [...ambiguousHashes];
+}
+
 /** Snapshot lines of password fields a secret was typed into this session (`textbox "Password": admin`). */
 const passwordLines = new Set<string>();
 
@@ -64,8 +80,10 @@ function heldByPlainVariable(name: string, value: string, env: NodeJS.ProcessEnv
  * is scrubbed everywhere, as it always was, whatever else holds its value.
  */
 function bankResolved(name: string, value: string): void {
-  if (CREDENTIAL_NAME.test(name) && heldByPlainVariable(name, value)) ambiguousLedger.set(value, `{{env:${name}}}`);
-  else ledger.set(value, `{{env:${name}}}`);
+  if (CREDENTIAL_NAME.test(name) && heldByPlainVariable(name, value)) {
+    ambiguousLedger.set(value, `{{env:${name}}}`);
+    ambiguousHashes.add(valueHash(value));
+  } else ledger.set(value, `{{env:${name}}}`);
 }
 
 /**
@@ -195,6 +213,7 @@ export function scrubSecretsDeep<T>(value: T): T {
 export function clearSecretLedger(): void {
   ledger.clear();
   ambiguousLedger.clear();
+  ambiguousHashes.clear();
   passwordLines.clear();
 }
 
@@ -315,6 +334,7 @@ export function markLiteralCredentialValue(value: string, passwordField: boolean
   const whole = credentialVars(env).find((v) => v.value === value && (!v.ambiguous || passwordField));
   if (whole) {
     if (!whole.ambiguous) ledger.set(whole.value, `{{env:${whole.name}}}`);
+    else ambiguousHashes.add(valueHash(whole.value));
     return { value: `{{env:${whole.name}}}`, names: [whole.name] };
   }
   const marked = markLiteralCredentials(value, env);

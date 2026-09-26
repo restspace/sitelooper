@@ -28,6 +28,7 @@ import { feedbackLines, feedbackText, journalFeedbackOn } from '../daemon/journa
 import { contractWeakening } from '../skills/contract.js';
 import { urlPattern as compiledUrlPattern } from '../skills/compile.js';
 import { renderReplay, replaySkill, type ReplayResult } from '../skills/replay.js';
+import { hasWriteRequest, noteRecordedUrl, replayFactsFor, samePageOf } from '../skills/facts-url.js';
 import type { ToolDef } from './llm.js';
 
 const TARGET = {
@@ -620,6 +621,8 @@ async function executeSkill(
       // in-process; a model's run_skill never carries one (a Set is not JSON).
       ...(args.echoLedger instanceof Set ? { echoLedger: args.echoLedger as Set<string> } : {}),
       exec: async (tool, stepArgs, resolved, via, action) => runStep(session, tool, stepArgs, screenshotDir, signal, { resolved, via, expect: action?.expect }),
+      // Site facts (stage 0): the daemon's url observer and landing shadows. Observes only.
+      facts: replayFactsFor(store),
     }),
   );
   // Mechanism 2 (PLAN-replay-v2): a url segment that soft-matched and was
@@ -880,12 +883,15 @@ note: this link points to ${verdict.link.href}, and its navigation had not commi
     // the effect gates as the same `diff === undefined`.
     let captureFailed = false;
     let fingerprintAfter: number[] | undefined;
+    // Site facts (stage 0): whether the step left the browser on the page it found.
+    let samePage: boolean | undefined;
     if (wantDiff && !before) captureFailed = true;
     if (wantDiff && before) {
       const after = verdict ? await captureSignature(page!) : await settledSignature(page!);
       capturedAt = Date.now();
       if (after) {
         totals = diffTotals(before.lines, after.lines);
+        samePage = samePageOf(before, after);
         gapAfter = { lines: after.lines, url: after.url };
         // Recorded in CURRENT_DIALECT (the signature's lines), and tagged so:
         // compile carries the tag onto the step's expectation, and every runner
@@ -964,6 +970,10 @@ note: this link points to ${verdict.link.href}, and its navigation had not commi
       ...(context.page !== undefined ? { page: context.page } : {}),
       ...(context.effect ? { effect: context.effect, afterUrl: context.afterPage?.url() } : {}),
     });
+    // SITE FACTS (stage 0, skills/facts-url.ts): the page url after the
+    // committed step, for the session's route observer. In memory until the
+    // daemon learns the instruction; observes only, never throws.
+    if (pending && session.learn) noteRecordedUrl(session.learn, () => diff?.url ?? page?.url() ?? '', { minted: hasWriteRequest(journaled), ...(samePage !== undefined ? { samePage } : {}) });
     // Stage 4, behind SITELOOPER_JOURNAL_FEEDBACK=on: the journal's facts about
     // this gesture, told to the model after the recording took the result.
     if (journaled && journal && journalFeedbackOn() && windowKindOf(name) === 'gesture') {

@@ -253,6 +253,11 @@ function census(src: string): string[] {
 }
 
 const ALLOWLIST: Record<string, { hits: string[]; answers: string }> = {
+  'src/skills/facts-url.ts': {
+    hits: ['[a-z0-9]*', '[a-z0-9]*'],
+    answers:
+      'drops a site-facts evidence line that names a bench run id (fwop15-n1), so a run name never becomes the evidence of a stored fact — hygiene of what is written, never a judgment about the page; the fact itself is unchanged',
+  },
   'src/agent/actor.ts': {
     hits: ['[A-Z0-9]*'],
     answers:

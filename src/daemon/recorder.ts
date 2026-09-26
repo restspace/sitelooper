@@ -16,6 +16,7 @@ import { flattenContainedComposite, type Report } from '../agent/report.js';
 import { evalResultForRecord } from './eval-result.js';
 import type { StepEvidence, StepFailure } from './step-evidence.js';
 import type { StepJournal } from './journal.js';
+import { counterObservations, formatSession, frameObservation, observeOnPage, observeTypedValue, setFormatSession, shadowReadBack, titleObservation } from '../skills/facts-format.js';
 
 /**
  * One way of finding an element, in a form that can be rebuilt into a Locator
@@ -519,7 +520,13 @@ export class ScriptRecorder {
   constructor(private readonly session: string) {
     this.load();
     this.priorCount = this.entries.length;
+    // Site facts (skills/facts-format.ts): the session the daemon's display
+    // format observers write under. Observers only, never a decision.
+    setFormatSession(session);
   }
+
+  /** The page a prepared fill/type ran on, for the format observer at its commit (never serialised). */
+  private readonly typedOn = new WeakMap<RecordedStep, Page>();
 
   /** Entries recorded by THIS take — what a flow export may build from. */
   entriesThisTake(): RecordedEntry[] {
@@ -828,7 +835,9 @@ export class ScriptRecorder {
         if (described?.chain?.length) linkedFrom = described;
       }
     }
-    return { k: 'step', tool, args, locators, ...(component ? { component } : {}), ...(linkedFrom ? { linkedFrom } : {}) };
+    const prepared: RecordedStep = { k: 'step', tool, args, locators, ...(component ? { component } : {}), ...(linkedFrom ? { linkedFrom } : {}) };
+    if (TYPED_TOOLS.has(tool)) this.typedOn.set(prepared, page);
+    return prepared;
   }
 
   /** Commit a prepared step once the action succeeded. Failed actions are dropped. */
@@ -862,6 +871,72 @@ export class ScriptRecorder {
       ...(extra.journal ? { journal: extra.journal } : {}),
     };
     this.append(RESULT_TOOLS.has(step.tool) ? { ...entry, result } : step.tool === 'eval' ? { ...entry, evalResult: evalResultForRecord(result) } : entry);
+    this.observeFormats(step, entry);
+  }
+
+  /**
+   * Site facts, display format (skills/facts-format.ts), after a commit:
+   * (a) a fill/type's control read back against what was typed, and (d)
+   * counters leading a named control in the step's added lines. Observation
+   * only, never awaited and never thrown: the step is already recorded.
+   */
+  private observeFormats(prepared: RecordedStep, entry: RecordedStep): void {
+    try {
+      const added = entry.diff?.added;
+      if (added?.length && entry.diff?.url) observeOnPage(entry.diff.url, counterObservations(entry.diff.url, added), this.session);
+      const page = this.typedOn.get(prepared);
+      if (!page || page.isClosed()) return;
+      const typed = typeof entry.args.value === 'string' ? entry.args.value : typeof entry.args.text === 'string' ? entry.args.text : null;
+      const target = entry.locators.target;
+      if (typed === null || !target || target.frame) return;
+      const chain = target.chain ?? [];
+      const role = chain.find((c): c is Extract<LocatorCandidate, { kind: 'role' }> => c.kind === 'role');
+      const label = chain.find((c): c is Extract<LocatorCandidate, { kind: 'label' }> => c.kind === 'label');
+      const point = chain.find((c): c is Extract<LocatorCandidate, { kind: 'point' }> => c.kind === 'point');
+      const named = role ? { role: role.role, name: role.name } : label ? { role: point?.role ?? 'textbox', name: label.label } : null;
+      const first = chain.find((c) => c.kind !== 'point');
+      if (!named || !first) return;
+      void observeTypedValue(page, this.session, { ...named, locator: makeLocator(page, first) }, typed).catch(() => 0);
+    } catch {
+      // recording must never break the run it is observing
+    }
+  }
+}
+
+/** The tools whose typed text the format observer compares with what the control shows. */
+const TYPED_TOOLS = new Set(['fill', 'type']);
+
+/**
+ * Write format observations built from the page's url, under the daemon's
+ * recording session (skills/facts-format.ts); nothing without one. Never
+ * throws: an observer is a missing fact at worst.
+ */
+function observeFormatsOn(page: Page, build: (url: string) => Parameters<typeof observeOnPage>[1]): void {
+  try {
+    if (!formatSession()) return;
+    const url = page.url();
+    observeOnPage(url, build(url));
+  } catch {
+    // an observer never breaks the read-back it watches
+  }
+}
+
+/**
+ * Site facts (b): a read-back pinned by containment records its frame as the
+ * affix the report key is shown with — HARD when the page's url names the
+ * value as its record (recordIdsOf) or the page shows the value's text once,
+ * SOFT otherwise. Exported for the read-back cascade (agent/readback.ts),
+ * whose pin carries no key; captureReadBackAt calls it when given one.
+ */
+export async function noteReadBackFrame(page: Page, value: string, frame: string, key: string): Promise<void> {
+  try {
+    if (!formatSession() || !key) return;
+    const v = value.trim();
+    const url = page.url();
+    const proven = recordIdsOf(url).includes(v) || (await page.getByText(v).count().catch(() => 0)) === 1;
+    observeOnPage(url, [frameObservation(url, key, frame, proven)]);
+  } catch {
+    // an observer never breaks the read-back it watches
   }
 }
 
@@ -1103,6 +1178,10 @@ export async function titleReadBack(page: Page, value: string, label: string): P
   const want = value.replace(/\s+/g, ' ').trim();
   if (!want) return null;
   const title = ((await page.title().catch(() => '')) ?? '').replace(/\s+/g, ' ').trim();
+  // Site facts (e): a title that is the value plus an affix ("S00023 - Odoo")
+  // is how this route titles its record. Observed only; the answer below is
+  // unchanged.
+  if (title !== want) observeFormatsOn(page, (url) => [titleObservation(url, title, want)]);
   if (title !== want) return null;
   // No target, as a url read has none: nothing on the page is resolved for it.
   return { k: 'step', tool: 'read', args: { what: 'title' }, locators: {}, result: JSON.stringify(want), label };
@@ -1186,6 +1265,15 @@ async function fieldReadBack(page: Page, loc: Locator, v: string, label: string)
 }
 
 export async function captureReadBack(page: Page, value: string, label?: string): Promise<RecordedStep | null> {
+  const step = await captureReadBackExact(page, value, label);
+  // Site facts, SHADOW (facts.readback): where the exact text match failed,
+  // would a reliable rendering of the value under this report key have
+  // pinned it? Logged beside what was decided; the answer is unchanged.
+  if (label && formatSession()) await shadowReadBack(page, value, label, step !== null, (text) => page.getByText(foldedTextRe(text)).count());
+  return step;
+}
+
+async function captureReadBackExact(page: Page, value: string, label?: string): Promise<RecordedStep | null> {
   const v = value.trim();
   const want = foldValue(v);
   // The floor was "too short to be distinctive": a one-character value was
@@ -1703,7 +1791,7 @@ function visibleTextsIn(page: Page, value: string): Promise<string[]> {
     .catch(() => []);
 }
 
-export async function captureReadBackAt(page: Page, value: string, selector: string): Promise<RecordedStep | null> {
+export async function captureReadBackAt(page: Page, value: string, selector: string, key?: string): Promise<RecordedStep | null> {
   const v = value.trim();
   // Same floor and same fold as captureReadBack/captureFormValue: one rule for
   // "are these two strings the same value", three sites. 1, not 2 — a
@@ -1770,7 +1858,12 @@ export async function captureReadBackAt(page: Page, value: string, selector: str
     // ...and what else on that line this run made is not the frame's to keep:
     // fwgt4 s_4580f2's "{{=}} Bench Issue #4" carried the issue the recording
     // created, and missed "#5" on every replay (recordIdsOf, unfreezeFrame).
-    return await readBackFromHandle(page, handle, v, 'text', unfreezeFrame(frame, recordIdsOf(page.url())));
+    const framed = await readBackFromHandle(page, handle, v, 'text', unfreezeFrame(frame, recordIdsOf(page.url())));
+    // Site facts (b): the frame is how this report key is shown. Observed
+    // only when the caller named the key (the read-back cascade observes its
+    // own pins, whose verifier is handed no key).
+    if (framed && key && typeof framed.args.frame === 'string') await noteReadBackFrame(page, v, framed.args.frame, key);
+    return framed;
   } finally {
     await handle.dispose().catch(() => {});
   }
