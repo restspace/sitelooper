@@ -554,6 +554,21 @@ after that point is invalid, verifies (no model) are not. fwop15-cv2 and fwod88-
 for the top-up.
 
 
+## Round 68 (main 287d586b: site facts stage 1 merged — URL route facts decide, patterns rewritten) — in progress
+
+Stage-1 exit runs (bench/converge.mjs, the two the design names) and the five-app batch, fired 15:07 and 17:20 UTC.
+
+| run | app | verdict | flow runs | model turns | notes |
+|---|---|---|---|---|---|
+| fwsi14-cv4 | si | **CONVERGED** round 2 | 4 | 36 | the stage-1 exit case: round 1's artifact failed as every cv3 round had (`after 03-open expected …/hardware/4/edit but browser is at …/hardware/4#history`); the re-record pinned s_b580eb, the `route.fragment = anchor` fact (hard, 3 sessions by then) rewrote the stored patterns, and round 2 compiled and passed 5/5. cv3 had exhausted after 16 runs / 141 turns on this exact failure |
+| fwop15-cv4 | op | exhausted | 14 | 189 | NOT the fact path: 135 facts rows, 0 applied — no reliable `query_props = state` fact existed for the fact to decide (the recording's runs never saw the key absent and present on one page), so 01-open re-pinned at round 1 through the round-65 routesAgree fix instead, exactly as cv3 did. The artifact then failed at 01-open s_fbd2c0/4 ("recorded page change did not appear"), and rounds 3-4 re-recorded 02-create twice (43, 47 turns) into locator misses: the openproject in-place editor's timing class, not a route matter. The exit criterion "re-pins on the fact" is therefore not exercised here; the fact path is proven by test/facts-stage1-corpus.test.ts (fwop15-cv2's query_props) only |
+
+| round | runid | app | verified | replay model-free | compiled | green | facts | shadow facts.* | notes |
+|---|---|---|---|---|---|---|---|---|---|
+| 68 | fwsi19 | si | 7/7 ×3 | yes (n2, n3 4/4 flow, 0 turns) | pass, drift 1 (5/7, 2 UNVERIFIABLE) | **yes** | 26 relied (20 hard), 4 advisory | 50 rows, 0 applied, 0 disagree | the cleanest snipeit on record; no stage-1 decision was needed |
+| 68 | fwgt20 | gt | 7/7 ×3 | NO: n2 05-open and 11-open every candidate refused (16 + 22 turns), n3 06-create bound no params (7) | Playwright pass, drift 5; verifier *** DUPLICATE WORK *** (issues #10 and #11 titled fwgt20-spec Bench Issue) → 5/7 with the attribution caveat | no | 28 relied (21 hard), 5 advisory | 30 rows, **2 applied** (facts.landing pass/pass, gate s_1a3e82), 0 disagree; **2 factRewrites** (route.fragment anchor stripped from s_1a3e82 and s_e81d43: `…/issues/:id`) | the first stored-pattern rewrites and applied rows in the wild, both agreeing with the heuristic. The duplicate is the RECORDING's: an 11-step n1 that signed in twice and created the issue twice (03-create, 06-create, 07-create), which the compile's redo/undo rules did not fold; the artifact ran both creates. Not a facts matter |
+| 68 | fwop22 | op | 7/7 ×3 | NO: n2 74 turns (02-open type timeout on the Search combobox, 03-create/04-set/08-open refused or stopped), n3 14 turns | FAIL at 02-open (`locator.evaluate: Timeout 10000ms` typing into "Search in OpenProject"), 0/7 | no | 41 relied (39 hard), 9 advisory | 43 rows, 0 applied, 1 disagree (facts.ledger: constant vs identifier, the same hash as round 67's) | a recording that navigated by the global search box; the search combobox never accepted the typed text under Playwright. Timing/recording class, no stage-1 decision involved |
+
 ## Round 67 (main de6c0cb5: site facts stage 0 merged — observers and shadow rows, no decision changes) — 1/5 green, 3/5 compiled and passed; facts on every app, 299 shadow rows, 292 agree (97.7%)
 
 Fired 09:24-09:36 UTC 2026-09-26 on the round-66 prompts plus F1-F3 (the facts report, the secret check, observer
