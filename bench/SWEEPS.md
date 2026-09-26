@@ -554,6 +554,28 @@ after that point is invalid, verifies (no model) are not. fwop15-cv2 and fwod88-
 for the top-up.
 
 
+## Round 70 (main 65f435b0: site facts stages 0-3 all merged — the FULL fact system, first sweep) — 4/5 green
+
+Fired 19:17-19:26 UTC 2026-09-26 on the round-68 prompts plus F5 (no digit-cut or var affix fact) and F6 (applied value
+rows; no n2/n3 value naming another run). Stage 2 (display formats) and stage 3 (value classes, the heal guard, the
+compile re-slotting) were verified together (verify-site-facts-2 PASS, verify-site-facts-3 PASS, corpus 0 changes).
+
+| round | runid | app | verified | replay model-free | compiled | green | facts | applied (fact/heuristic) | notes |
+|---|---|---|---|---|---|---|---|---|---|
+| 70 | fwsi21 | si | 7/7 ×3 | yes (4/4 flow, 0 turns ×2) | pass, drift 1 (5/7, 2 UNVERIFIABLE) | **yes** | 42 relied (38 hard) | 17: strip 1 strip/keep + 1 keep, ledger 6, landing 6, routesAgree 3; 4 factRewrites | the strip took a candidate naming the run's asset id at p1 out of a chain (the fact says mint) |
+| 70 | fwgt22 | gt | 7/7 ×3 | yes (8/8 flow, 0 turns ×2) | pass, drift 11 (5/7, 2 UNVERIFIABLE) | **yes** | 27 relied (15 hard) | 13: strip 1 strip/keep, landing 2, routesAgree 2, ledger 8; 3 factRewrites | the FIRST gitea with both replays at 0 turns; drift 11 is the label picker healing by point, as every round |
+| 70 | fwod96 | od | 6/6 ×3 | yes (7/7 flow, 0 turns ×2) | pass, drift 0 (6/6) | **yes** | 24 relied (18 hard) | 37: routesAgree 24, ledger 8, strip 2 strip/keep + 3 keep | round 68's customer-pick failure is gone: the heal guard and the re-slotted typed prefix ("{{v2}} Bench") were both live; 8 shadow disagreements, none applied against the heuristic except the two strips of candidates naming the order id |
+| 70 | fwgr81 | gr | 6/6 ×3 | yes (6/6 flow, 0 turns ×2) | pass, drift 0 (4/6, 2 UNVERIFIABLE) | **yes** | 7 relied (5 hard) | 8: ledger 4, landing 3, strip 1; 1 factRewrite | second green grafana running |
+| 70 | fwop24 | op | n1 7/7; n2 1/7; n3 1/7 | NO: every step from 02-open fell to recovery (n2 98 turns, n3 79) on `unresolved reference 01-signin.admin_first_name` | REFUSED unsourced-ref: `03-create: slot v2 is bound to {{01-signin.admin_first_name}}, and nothing has ever published admin_first_name` | no | 33 relied (30 hard) | 23: strip 6 strip/keep (candidates naming the work-package id, a reliable mint), 12 keep, ledger 5 | a NEW collision, not a facts decision: 01-signin reported `admin_first_name = "Bench"` (the seed admin is "Bench Admin"), and buildFlow threaded the word into every later instruction's quoted task names — '{{01-signin.admin_first_name}} Project', '{{runid}} {{01-signin.admin_first_name}} Work Package' — because "Bench" was shown on the page (not commentary), not stated before reported, not a fact constant. The reference then had no read to publish it. Fix: a reported value is never substituted INSIDE a quoted literal of an instruction unless it is the whole literal, run-specific, id-shaped or var-bearing (the author's quoted names are the task's own words) |
+
+Reading: on the full system the batch went from 2/5 (round 68) to 4/5 green, with every green app replaying at 0 model
+turns on both replays — the first time four apps have done that in one round. 98 fact decisions were applied across the
+five stores (routesAgree 29, ledger 31, strip 20, landing 11, and 12 stored-pattern rewrites); the ones that changed a
+heuristic's verdict were all strips of locator candidates naming a minted record id (11), exactly the leak the ledger's
+shape prior used to miss. No affix fact cut a digit or carried a var (F5 clean); no n2/n3 value named another run (F6
+clean); no observer error. The one failure is a threading collision of a kind the facts do not yet describe (a seed
+record's NAME reused as a task word): the quoted-literal guard above is the next rule, and openproject re-runs on it.
+
 ## Round 68 (main 287d586b: site facts stage 1 merged — URL route facts decide, patterns rewritten) — 2/5 green (si, gr), 3/5 compiled; stage-1 exit: fwsi14-cv4 converged
 
 Stage-1 exit runs (bench/converge.mjs, the two the design names) and the five-app batch, fired 15:07 and 17:20 UTC.
