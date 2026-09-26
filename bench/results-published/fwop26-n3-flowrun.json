@@ -1,0 +1,202 @@
+{
+  "flow": "fwop26",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_1b28e7; observed current_url=http://127.0.0.1:8090/projects, seed_subject_1=Seed: triage inbox, seed_subject_2=Seed: order missing parts, seed_subject_3=Seed: ship repaired device, projects_link_text=Project, seed_work_package_subjects_1=Seed: triage inbox, seed_work_package_subjects_2=Seed: order missing parts, seed_work_package_subjects_3=Seed: ship repaired device, project_link_text=Bench Project.",
+      "values": {
+        "current_url": "http://127.0.0.1:8090/projects",
+        "seed_subject_1": "Seed: triage inbox",
+        "seed_subject_2": "Seed: order missing parts",
+        "seed_subject_3": "Seed: ship repaired device",
+        "projects_link_text": "Project",
+        "seed_work_package_subjects_1": "Seed: triage inbox",
+        "seed_work_package_subjects_2": "Seed: order missing parts",
+        "seed_work_package_subjects_3": "Seed: ship repaired device",
+        "project_link_text": "Bench Project"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "20/20",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_30d870: step 1: skipped — it closes the dialog \"Welcome to OpenProject, Bench Admin\" with \"Close\", and that dialog is not open this time: already in effect"
+      ]
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_e5c577; observed wp_subject_value=fwop26-n3 Bench Work Package, run_reference=fwop26-n3, current_url=http://127.0.0.1:8090/projects/bench-project/work_packages/create_new?type=1, work_package_url=http://127.0.0.1:8090/projects/bench-project/work_packages/details/43/overview, page_title=Task: fwop26-n3 Bench Work Package (#43) | Work Packages | Bench Project | OpenProject, work_package_id=43, work_package_number_displayed=#43.",
+      "values": {
+        "wp_subject_value": "fwop26-n3 Bench Work Package",
+        "run_reference": "fwop26-n3",
+        "current_url": "http://127.0.0.1:8090/projects/bench-project/work_packages/create_new?type=1",
+        "work_package_url": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/43/overview",
+        "page_title": "Task: fwop26-n3 Bench Work Package (#43) | Work Packages | Bench Project | OpenProject",
+        "work_package_id": "43",
+        "work_package_number_displayed": "#43"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "15/15",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_e362f3: step 2: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear",
+        "s_18342c: step 2: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear",
+        "s_18342c: step 3: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear",
+        "s_18342c: step 4: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear",
+        "s_18342c: step 5: read 'subject' returned a value the skill itself set/selected ('fwop26-n3 Bench Work Package') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_18342c: step 6: read 'description' returned a value the skill itself set/selected ('Created for run fwop26-n3') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_e5c577: step 6: the target chain is dead and was not healed inline — the step is a synthesized read no run has ever resolved, so nothing about it has drifted",
+        "s_e5c577: step 6: skipped read — no element matched any known locator for target (tried 1: page.getByRole('alert', { name: 'Successful creation.', exact: true }))"
+      ],
+      "unreported": [
+        "subject",
+        "description",
+        "confirmation_alert"
+      ]
+    },
+    {
+      "id": "03-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_b35109; observed run_reference=fwop26-n3, final_url=http://127.0.0.1:8090/projects/bench-project/work_packages/details/43/overview, work_package_id=43, assignee_displayed=Bench Assignee, finish_date_displayed=12/31/2026, date_field_text=no start date - 12/31/2026.",
+      "values": {
+        "run_reference": "fwop26-n3",
+        "final_url": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/43/overview",
+        "work_package_id": "43",
+        "assignee_displayed": "Bench Assignee",
+        "finish_date_displayed": "12/31/2026",
+        "date_field_text": "no start date - 12/31/2026"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "15/15",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_b35109: step 4: expected alert containing \"Successful update.\"",
+        "s_b35109: step 7: read 'finish_date_input_value' returned a value the skill itself set/selected ('2026-12-31') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_b35109: step 8: expected alert containing \"Successful update.\"",
+        "s_b35109: step 9: skipped read — no element matched any known locator for target (tried 1: page.getByRole('alert', { name: 'Successful update.', exact: true }))",
+        "s_b35109: step 13: read 'status_displayed' returned a value the skill itself set/selected ('In progress') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_b35109: report value finish_date_typed_text is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)"
+      ],
+      "unreported": [
+        "status_displayed",
+        "finish_date_input_value",
+        "finish_date_typed_text",
+        "confirmation_alerts"
+      ]
+    },
+    {
+      "id": "04-add",
+      "status": "success",
+      "summary": "Replayed stored procedure s_84afcd; observed page_title_2=Task: fwop26-n3 Bench Work Package (#43) | Work Packages | Bench Project | OpenProject, page_title=Task: fwop26-n3 Bench Work Package (#43) | Work Packages | Bench Project | OpenProject, subject=fwop26-n3 Bench Work Package, displayed_id=#43, assignee=Bench Assignee, status=In progress, finish_date_displayed=12/31/2026, date_field_text=no start date - 12/31/2026, description=Created for run fwop26-n3, comment_author=Bench Admin, run_reference=fwop26-n3.",
+      "values": {
+        "page_title_2": "Task: fwop26-n3 Bench Work Package (#43) | Work Packages | Bench Project | OpenProject",
+        "page_title": "Task: fwop26-n3 Bench Work Package (#43) | Work Packages | Bench Project | OpenProject",
+        "subject": "fwop26-n3 Bench Work Package",
+        "displayed_id": "#43",
+        "assignee": "Bench Assignee",
+        "status": "In progress",
+        "finish_date_displayed": "12/31/2026",
+        "date_field_text": "no start date - 12/31/2026",
+        "description": "Created for run fwop26-n3",
+        "comment_author": "Bench Admin",
+        "run_reference": "fwop26-n3"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "22/22",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_91efe1: step 5: read 'comment_text_displayed' returned a value the skill itself set/selected ('Tracking run fwop26-n3.') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_84afcd: step 11: skipped read — no element matched any known locator for target (none recorded)",
+        "s_84afcd: report value comment_text_entered is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)"
+      ],
+      "unreported": [
+        "comment_text_displayed",
+        "type",
+        "comment_text_entered"
+      ]
+    }
+  ],
+  "passed": 4,
+  "total": 4,
+  "repinned": 0,
+  "drift": 4,
+  "driftTickets": [
+    {
+      "flow": "fwop26",
+      "step": "01-signin",
+      "skill": "s_30d870",
+      "atStep": "1",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.getByRole('button', { name: 'Close', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages",
+      "pageUrl": "http://127.0.0.1:8090/projects/bench-project/work_packages"
+    },
+    {
+      "flow": "fwop26",
+      "step": "02-create",
+      "skill": "s_e5c577",
+      "atStep": "6",
+      "key": "target",
+      "similarity": 0.999,
+      "missedLocator": "page.getByRole('alert', { name: 'Successful creation.', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:id/overview",
+      "pageUrl": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/43/overview"
+    },
+    {
+      "flow": "fwop26",
+      "step": "03-open",
+      "skill": "s_b35109",
+      "atStep": "9",
+      "key": "target",
+      "similarity": 0.998,
+      "missedLocator": "page.getByRole('alert', { name: 'Successful update.', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:id/overview",
+      "pageUrl": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/43/overview"
+    },
+    {
+      "flow": "fwop26",
+      "step": "04-add",
+      "skill": "s_84afcd",
+      "atStep": "11",
+      "key": "target",
+      "similarity": 0.997,
+      "missedLocator": "(none recorded)",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:id/overview",
+      "pageUrl": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/43/overview"
+    }
+  ],
+  "wallMs": 106734,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "cachedTokens": 0
+  },
+  "usageByModel": {},
+  "servedByModel": {},
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}
