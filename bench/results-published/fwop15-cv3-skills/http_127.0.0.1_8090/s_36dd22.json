@@ -1,0 +1,206 @@
+{
+ "id": "s_36dd22",
+ "origin": "http://127.0.0.1:8090",
+ "template": "Open {{v1}} and sign in with username {{v2}} and password {{v3}} (type the password text exactly as given, it will be filled in automatically). Then navigate to the project named 'Bench Project' and list the subjects of all work packages whose subject starts with '{{v4}}' exactly as shown on the page. Report those subjects verbatim.",
+ "params": {
+  "v1": {
+   "example": "http://127.0.0.1:8090/",
+   "usedIn": [
+    1
+   ]
+  },
+  "v2": {
+   "example": "admin",
+   "usedIn": [
+    2
+   ]
+  },
+  "v3": {
+   "example": "{{env:APP_PASSWORD}}",
+   "usedIn": [
+    3
+   ]
+  },
+  "v4": {
+   "example": "Seed:",
+   "usedIn": []
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8090/login"
+ },
+ "steps": [
+  {
+   "tool": "goto",
+   "args": {
+    "url": "{{v1}}"
+   },
+   "locators": {},
+   "via": {
+    "skill": "s_713d1c",
+    "step": 1
+   }
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e50",
+    "value": "{{v2}}"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "label",
+      "label": "Username *",
+      "nth": 1
+     },
+     {
+      "kind": "id",
+      "selector": "#username"
+     },
+     {
+      "kind": "css",
+      "selector": "#username"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 265,
+      "w": 469,
+      "h": 32,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8090/login",
+    "addedContains": [
+     "- textbox \"Username *\": {{v2}}"
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_713d1c",
+    "step": 2
+   }
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e55",
+    "value": "{{v3}}"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "label",
+      "label": "Password *",
+      "nth": 1
+     },
+     {
+      "kind": "id",
+      "selector": "#password"
+     },
+     {
+      "kind": "css",
+      "selector": "#password"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 338,
+      "w": 469,
+      "h": 32,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8090/login",
+    "addedContains": [
+     "- textbox \"Password *\": {{v3}}"
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_713d1c",
+    "step": 3
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e58"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Sign in",
+      "nth": 1
+     },
+     {
+      "kind": "css",
+      "selector": "#login-form > form > div > div:nth-of-type(3) > div:nth-of-type(1) > button"
+     },
+     {
+      "kind": "point",
+      "x": 440,
+      "y": 391,
+      "w": 68.8,
+      "h": 32,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8090/",
+    "addedContains": [
+     "- link \"Notifications\"",
+     "- button \"BA\"",
+     "- img \"User menu\"",
+     "- button \"Collapse project menu\"",
+     "- button \"All projects\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_713d1c",
+    "step": 4
+   }
+  }
+ ],
+ "contract": 4,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-25T23:59:43.688Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 4
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_45ccf7",
+  "index": 0,
+  "of": 5
+ },
+ "provenance": {
+  "session": "rerecord-muhmb8vj-1",
+  "instruction": "Open http://127.0.0.1:8090/ and sign in with username admin and password {{env:APP_PASSWORD}} (type the password text exactly as given, it will be filled in automatically). Then navigate to the project named 'Bench Project' and list the subjects of all work packages whose subject starts with 'Seed:' exactly as shown on the page. Report those subjects verbatim.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-25T23:59:43.688Z"
+ },
+ "revision": 1
+}
