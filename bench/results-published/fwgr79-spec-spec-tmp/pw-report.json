@@ -1,0 +1,186 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwgr79-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwgr79-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwgr79-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/bench/results/fwgr79-spec-spec-tmp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwgr79-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwgr79.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwgr79-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwgr79.spec.ts",
+      "file": "fwgr79.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwgr79",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 199883,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper step] 01-signin\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 02-create s_422e5f/7: read 'visualization' returned a value the skill itself set/selected ('Stat') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-create\n"
+                    },
+                    {
+                      "text": "[sitelooper recipe] filled via recipe monaco/set-value (r_f2510e); value verified on the component\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-open\n"
+                    },
+                    {
+                      "text": "[sitelooper recipe] filled via recipe monaco/set-value (r_f2510e); value verified on the component\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-set\n"
+                    },
+                    {
+                      "text": "[sitelooper recipe] filled via recipe monaco/set-value (r_f2510e); value verified on the component\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 05-set s_1abcc8/18: read 'auto_refresh_in_settings_after_reload' returned a value the skill itself set/selected ('1m') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 05-set s_1abcc8/41: read 'auto_refresh_in_settings_after_reload' returned a value the skill itself set/selected ('1m') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 05-set s_1abcc8/44: read 'auto_refresh_in_settings_after_reload' returned a value the skill itself set/selected ('1m') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 05-set\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-signin: Sign in to Grafana at http://127.0.0.1:3000/ with username admin and password {{env:APP_PASSWORD}} (type it exactly as that placeholder text). Then open the provisioned dashboard named 'Service health' and report the titles of its panels exactly as shown.",
+                      "duration": 26649
+                    },
+                    {
+                      "title": "02-create: Create a NEW dashboard in Grafana. Add a Stat visualization panel, set its title to '{{runid}} Availability', and set its query data source to 'TestData' (the test data data source, e.g. TestData DB). Then save the dashboard with the title '{{runid}} Bench Dashboard' (use Save dashboard from the save menu, fill in the dashboard name, and confirm). Verify the save succeeded (no unsaved-changes indicator) and report the dashboard's URL from the browser address bar.",
+                      "duration": 48207
+                    },
+                    {
+                      "title": "03-open: On the dashboard '{{runid}} Bench Dashboard' (currently open), add a Text panel titled '{{runid}} Notes' whose text content includes '{{runid}}'. Then save the dashboard (confirm save succeeded). Report the panel title and that the text content is visible on the dashboard.",
+                      "duration": 41660
+                    },
+                    {
+                      "title": "04-set: On the dashboard '{{runid}} Bench Dashboard', set the dashboard tag 'bench' (use dashboard settings, add the tag 'bench', save settings). Also set the time range to last 6 hours via the top time picker. Then save the dashboard making sure the 'Update default time range' box in the save dialog is ticked so the time range persists. Confirm save succeeded. Report the tag 'bench' is present in settings and the saved default time range is last 6 hours.",
+                      "duration": 44919
+                    },
+                    {
+                      "title": "05-set: On the dashboard '{{runid}} Bench Dashboard', set the auto-refresh interval to 1m via dashboard settings ({{04-set.time_options_section}}, Refresh interval = 1m), then save the dashboard and confirm the save. Verify via the JSON model (or the settings page after reload) that the auto-refresh/refresh interval is saved as 1m, and report the dashboard URL from the browser address bar.",
+                      "duration": 36904
+                    }
+                  ],
+                  "startTime": "2026-09-26T17:43:57.632Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": ""
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "a6f447307a2432801979-ec3b93e6a5d0e0796daa",
+          "file": "fwgr79.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-26T17:43:54.943Z",
+    "duration": 202797.854,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}
