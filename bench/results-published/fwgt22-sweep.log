@@ -1,0 +1,115 @@
+
+[sweep] run 1/3: fwgt22-n1 (store: /home/user/sitelooper/bench/results/fwgt22-skills)
+[harness] gitea: defaulting APP_URL
+[harness] gitea: defaulting APP_EMAIL
+[harness] gitea: defaulting APP_PASSWORD
+[reset] gitea: no leftover bench issues
+[harness] gitea responded 200 at http://127.0.0.1:8095/
+stopped: fwgt22-n1
+  flow "fwgt22" saved: 8 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwgt22.json
+  warning: note: 01-signin no longer publishes dashboard_sections — no replay reads it from the page and the recording showed no line to read
+  warning: warning: 02-open's instruction asks to report other_open_issue_titles, and no replay can publish it: nothing in its procedure reads it from the page, so export dropped it — re-record the step so the value is read, not only reported
+  warning: note: 03-create no longer publishes labels_assignees_milestone — no replay reads it from the page and the recording showed no line to read
+  warning: warning: 04-set's instruction asks to report sidebar_label_1, sidebar_label_2, and no replay can publish them: nothing in its procedure reads them from the page, so export dropped them — re-record the step so the value is read, not only reported
+  warning: note: 04-set no longer publishes label_count, selected_label_ids_confirmed — no replay reads them from the page and the recording showed no line to read
+  warning: note: 05-open no longer publishes assignee_filter_url, labels_still_set, assignees_menu_admin_entry — no replay reads them from the page and the recording showed no line to read
+  warning: note: 07-add no longer publishes comment_author, labels_still_set — no replay reads them from the page and the recording showed no line to read
+  warning: warning: 08-open's instruction asks to report sidebar_assignee_exact, sidebar_milestone, sidebar_label_1, sidebar_label_2, and no replay can publish them: nothing in its procedure reads them from the page, so export dropped them — re-record the step so the value is read, not only reported
+  warning: note: 08-open no longer publishes admin_profile_link — no replay reads it from the page and the recording showed no line to read
+  warning: note: 01-signin: added a read for signed_in_user to s_1c8204 (page.getByRole('menu', { name: 'admin', exact: true }); seen on the next instruction's start page)
+  warning: note: 06-set: added a read for milestone_in_sidebar to s_92682c (page.getByRole('link', { name: 'Bench Milestone', exact: true }); seen on the next instruction's start page)
+  warning: note: 07-add: added a read for milestone to s_fb7662 (page.getByRole('link', { name: 'Bench Milestone', exact: true }); seen on the next instruction's start page)
+  warning: warning: 280 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.startUrl: "http://127.0.0.1:8095/" (output) in "http://127.0.0.1:8095/"
+  flow.steps[0].instruction: "admin" (output) in "Sign in to Gitea: click the Sign In link/button, then on the login page enter username 'admin' and password exactly the text '{{env:APP_PASSWORD}}' (type it lit"
+  flow.steps[0].route: "http://127.0.0.1:8095/" (output) in "http://127.0.0.1:8095/"
+  flow.steps[1].instruction: "bench-repo" (output) in "Navigate to the repository 'bench/bench-repo' in Gitea (go to http://127.0.0.1:8095/bench/bench-repo), then open its Issues list (make sure to include OPEN issu"
+  flow.steps[1].instruction: "bench" (output) in "Navigate to the repository 'bench/bench-repo' in Gitea (go to http://127.0.0.1:8095/bench/bench-repo), then open its Issues list (make sure to include OPEN issu"
+arm=sitelooper model=z-ai/glm-5.3 runid=fwgt22-n1 stop=completed
+turns=10 wall=338.7s
+commands=9 cmdTime=299.8s cmdBytes=10551 timeouts=0
+orchestrator in=10673 cw=0 cr=32704 out=2528
+inner prompt=2085572 cached=1932032 completion=27971
+spend=$0.0808 maxUsd=3
+learn: A_n=0 replayed=0/8 full=0 repaired=0 compiled=8 variants=0
+-> /home/user/sitelooper/bench/results/fwgt22-n1-sitelooper-result.json
+
+fwgt22-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — #4, state=open, description includes runid=true
+  obj 3: PASS — labels=[bug, priority-high], want [bug, priority-high]
+  obj 4: PASS — assignees=[bench-assignee]
+  obj 5: PASS — milestone=Bench Milestone
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — issue #4 reported
+
+[sweep] run 2/3: fwgt22-n2 (replay flow fwgt22, no orchestrator)
+[reset] gitea: deleted 1 leftover bench issue(s)
+[sweep] fwgt22-n2: 12 drift ticket(s) → fwgt22-n2-drift.json
+
+fwgt22-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — #5, state=open, description includes runid=true
+  obj 3: PASS — labels=[bug, priority-high], want [bug, priority-high]
+  obj 4: PASS — assignees=[bench-assignee]
+  obj 5: PASS — milestone=Bench Milestone
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — issue #5 reported
+
+[sweep] run 3/3: fwgt22-n3 (replay flow fwgt22, no orchestrator)
+[reset] gitea: deleted 1 leftover bench issue(s)
+[sweep] fwgt22-n3: 12 drift ticket(s) → fwgt22-n3-drift.json
+
+fwgt22-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — #6, state=open, description includes runid=true
+  obj 3: PASS — labels=[bug, priority-high], want [bug, priority-high]
+  obj 4: PASS — assignees=[bench-assignee]
+  obj 5: PASS — milestone=Bench Milestone
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — issue #6 reported
+
+Learning sweep fwgt22 (K=3)
+┌─────────┬───┬─────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid       │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼─────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwgt22-n1' │ '7/7'    │ 'completed' │ 10    │ 9    │ 0.0808    │ 0   │ '0/8'        │ 339    │
+│ 1       │ 2 │ 'fwgt22-n2' │ '7/7'    │ 'success'   │ 0     │ 8    │ 0         │ 1   │ '8/8 (flow)' │ 63     │
+│ 2       │ 3 │ 'fwgt22-n3' │ '7/7'    │ 'success'   │ 0     │ 8    │ 0         │ 1   │ '8/8 (flow)' │ 63     │
+└─────────┴───┴─────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:8095
+  s_0908a8  validated    1 steps  3/3 (100%)
+           In the repository bench/bench-repo (http://127.0.0.1:8095/bench/bench-repo), create a NEW issue with title exa…
+  s_098230  validated    2 steps  3/3 (100%)
+           On the Gitea issue page {{v1}} (issue '{{v5}}'), add a comment using the markdown comment text area at the bot…
+  s_160f6b  validated   22 steps  3/3 (100%)
+           Open {{v1}} in Gitea and verify the issue page state after a fresh load. Report exactly: (1) the issue title a…
+  s_183374  validated   11 steps  3/3 (100%)
+           On the Gitea issue page {{v1}} (issue '{{v5}}'), use the Assignees picker in the issue's right-hand sidebar to…
+  s_1c8204  validated    3 steps  3/3 (100%)
+           Sign in to Gitea: click the Sign In link/button, then on the login page enter username 'admin' and password ex…
+  s_240968  validated    1 steps  3/3 (100%)
+           Navigate to the repository 'bench/bench-repo' in Gitea (go to {{v1}}), then open its Issues list (make sure to…
+  s_28fdf2  validated    3 steps  3/3 (100%)
+           In the repository bench/bench-repo (http://127.0.0.1:8095/bench/bench-repo), create a NEW issue with title exa…
+  s_3dc51b  validated    1 steps  3/3 (100%)
+           Sign in to Gitea: click the Sign In link/button, then on the login page enter username 'admin' and password ex…
+  s_556757  validated    8 steps  3/3 (100%)
+           In the repository bench/bench-repo (http://127.0.0.1:8095/bench/bench-repo), create a NEW issue with title exa…
+  s_5fb44b  validated   19 steps  3/3 (100%)
+           On the Gitea issue page {{v1}} (issue '{{v5}}'), use the Labels picker in the issue's right-hand sidebar to se…
+  s_8f1d1a  validated    3 steps  3/3 (100%)
+           Sign in to Gitea: click the Sign In link/button, then on the login page enter username 'admin' and password ex…
+  s_92682c  validated   15 steps  3/3 (100%)
+           On the Gitea issue page {{v1}} (issue '{{v5}}'), use the Milestone picker in the issue's right-hand sidebar to…
+  s_bcae3b  validated    1 steps  3/3 (100%)
+           Navigate to the repository 'bench/bench-repo' in Gitea (go to {{v1}}), then open its Issues list (make sure to…
+  s_c4fceb  validated    1 steps  3/3 (100%)
+           Open {{v1}} in Gitea and verify the issue page state after a fresh load. Report exactly: (1) the issue title a…
+  s_d4fa0a  validated   10 steps  3/3 (100%)
+           Navigate to the repository 'bench/bench-repo' in Gitea (go to {{v1}}), then open its Issues list (make sure to…
+  s_fb7662  validated    8 steps  3/3 (100%)
+           On the Gitea issue page {{v1}} (issue '{{v5}}'), add a comment using the markdown comment text area at the bot…
+store: /home/user/sitelooper/bench/results/fwgt22-skills
+
+summary: /home/user/sitelooper/bench/results/fwgt22-sweep.json
