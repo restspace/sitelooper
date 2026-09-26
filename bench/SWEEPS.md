@@ -554,7 +554,7 @@ after that point is invalid, verifies (no model) are not. fwop15-cv2 and fwod88-
 for the top-up.
 
 
-## Round 66 (main 357b983e = 37a9390a + prompts): the CONTROL batch on the merged guard fix and fixed driver (hold on), five apps — in progress
+## Round 66 (main 357b983e = 37a9390a + prompts): the CONTROL batch on the merged guard fix and fixed driver (hold on), five apps — 2/5 green, 4/5 compiled and passed
 
 Fired 07:33 UTC 2026-09-26, all five at once, as the comparison for the stage-0 site-facts batch that follows
 (feat/site-facts-0, shadow only). Same prompts and measures as round 65.
@@ -563,6 +563,17 @@ Fired 07:33 UTC 2026-09-26, all five at once, as the comparison for the stage-0 
 |---|---|---|---|---|---|---|---|
 | 66 | fwop20 | op | 7/7 ×3 | yes (n2, n3 4/4 flow, 0 turns) | pass, drift 1 (5/7, 2 UNVERIFIABLE report-only) | **yes** | n1 5 turns / $0.064 / 361 s; 02-create step 8 (read save_alert) has no locator left, publishes nothing; 11 shadow rows |
 | 66 | fwsi17 | si | 7/7 ×3 | n2 NO: 03-create fell back (17 turns: `s_d84dc3 stopped at step 2 — none of the 1 recorded page change(s) appeared ("- listbox Bench Assignee")`), n3 yes 4/4 | pass, drift 0 (5/7, 2 UNVERIFIABLE) | no (n2) | the round-65 refusal (unsourced-ref on 01-signin.model/.status) is gone: compiled and passed; the assignee listbox effect is timing (n3 replayed it clean) |
+| 66 | fwod91 | od | 6/6 ×3 | yes (n2, n3 7/7 flow, 0 turns) | pass, drift 0 (6/6) | **yes** | n1 8 turns / $0.072 / 297 s; the cleanest odoo run on record: no modal, no hold |
+| 66 | fwgr77 | gr | 6/6 ×3 | NO: 04-open fell back on both replays (n2 11 turns, n3 40: `s_c6db9d stopped at step 23 — the page did not show "- button Time range selected: Last 6 hours"`; step 15 also `expected alert containing {{03-open.save_confirmation_alert}}`) | pass, drift 1 (4/6, 2 UNVERIFIABLE) | no (replays) | the compiled artifact passed what the daemon replay fell back on: the time-range button effect check reads the wrong element under the daemon; a runner PARITY gap the other way round from usual |
+| 66 | fwgt17 | gt | 7/7 ×3 | n2 NO: 03-open fell back (74 turns: `s_365e26 stopped at step 12 — none of the recorded page change(s) appeared (- combobox "Labels")`, step 9 `listbox "bug" already showing… skipped as already in effect`); n3 08-report 4 turns (unresolved ref) | REFUSED unsourced-ref: `08-report: slot v5 is bound to {{03-open.labels_picker_state}}, and nothing has ever published labels_picker_state` | no | the round-64/65 label-picker class again (fwgt15, fwgt16, fwgt15-cv2/cv3): the model REPORTS the picker state instead of reading it, the picker click is recorded as a toggle, and 08-report's procedure types by the reported value. Not a driver or guard matter; a record-time fix (label picker as a select-in-listbox step; the reported-but-never-read value held) is still open |
+
+Reading: on the merged guard fix and driver, and with no other change since round 65, the batch is 2/5 fully green
+(op, od; op is now green two rounds running after three convergence attempts fixed its re-pin), 4/5 compile and pass
+the artifact (si, gr too), 1/5 refused (gt, the label picker, open since round 64). The two replay fallbacks (si 03-create
+assignee listbox on n2 only; gr 04-open time-range button on both) are effect checks under the daemon that the compiled
+artifact passes: parity gaps worth a look after stage 0. Costs: n1 $0.06-0.57, 300-740 s. This is the comparison row
+set for round 67 (feat/site-facts-0, observers and shadow rows only): every round-67 result must match its round-66
+row here, and the new facts_* metrics and facts-report output are the measure.
 
 ## Convergence experiment, batch 2 (main 3df960b2: a driven-past full replay compiles whole, counters masked, stuck-repin stop; credit restored 16:30)
 
