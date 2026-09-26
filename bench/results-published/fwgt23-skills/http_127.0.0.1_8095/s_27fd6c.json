@@ -1,0 +1,1032 @@
+{
+ "id": "s_27fd6c",
+ "origin": "http://127.0.0.1:8095",
+ "template": "On issue {{v1}} '{{v2}}' at {{v4}}, set the assignee to the user 'bench-assignee' and the milestone to 'Bench Milestone', using the sidebar pickers. For each picker, make sure the change is actually committed and after a full page reload the sidebar shows Assignee 'bench-assignee' and Milestone 'Bench Milestone'. Do not change labels or anything else. Report the assignee and milestone shown in the sidebar after reload.",
+ "params": {
+  "v1": {
+   "example": "#5",
+   "usedIn": [
+    16,
+    27
+   ],
+   "known": true,
+   "binding": "03-report.issue_number"
+  },
+  "v2": {
+   "example": "fwgt23-n2 Bench Issue",
+   "usedIn": [
+    16,
+    27
+   ],
+   "known": true,
+   "binding": "output:i2:issue_title"
+  },
+  "v3": {
+   "example": "fwgt23-n2",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v4": {
+   "example": "http://127.0.0.1:8095/bench/bench-repo/issues/5",
+   "usedIn": [
+    5,
+    17,
+    25
+   ],
+   "known": true,
+   "binding": "02-create.url"
+  },
+  "v5": {
+   "example": "bench",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i1:repo_owner"
+  },
+  "v6": {
+   "example": "bench-repo",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i1:repo_name"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8095/{{v5}}/{{v6}}/issues/:id"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e283"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(5) > div:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 1098,
+      "y": 402,
+      "w": 270,
+      "h": 16,
+      "role": "combobox",
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/{{v5}}/{{v6}}/issues/:id",
+    "addedContains": [
+     "- combobox \"Milestone Clear milestone Open milestones Backlog Bench Milestone\"",
+     "- listbox \"Clear milestone Open milestones Backlog Bench Milestone\"",
+     "- textbox \"Filter Milestone\"",
+     "- link \"Backlog\"",
+     "- link \"Bench Milestone\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_bfcaf7",
+    "step": 1
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=link[name=\"Bench Milestone\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "link",
+      "name": "Bench Milestone"
+     },
+     {
+      "kind": "css",
+      "selector": "#_aria_dropdown_menu_37 > div:nth-of-type(2) > a:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 1089,
+      "y": 619,
+      "w": 249.4,
+      "h": 40,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/{{v5}}/{{v6}}/issues/:id",
+    "addedContains": [
+     "- combobox \"Milestone\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_bfcaf7",
+    "step": 2
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": ".issue-sidebar-combo .combo-value",
+    "what": "value",
+    "label": "labels_sidebar_value"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "input[name=\"label_ids\"]"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(3) > input"
+     }
+    ]
+   },
+   "label": "label_ids_hidden",
+   "via": {
+    "skill": "s_bfcaf7",
+    "step": 3
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": ".issue-sidebar-combo .combo-value",
+    "what": "value",
+    "label": "assignee_sidebar_value"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "input[name=\"milestone_id\"]"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(5) > input"
+     }
+    ]
+   },
+   "label": "milestone_id_hidden",
+   "via": {
+    "skill": "s_bfcaf7",
+    "step": 4
+   }
+  },
+  {
+   "tool": "goto",
+   "args": {
+    "url": "{{v4}}"
+   },
+   "locators": {},
+   "via": {
+    "skill": "s_bfcaf7",
+    "step": 5
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "label": "labels_sidebar_value",
+    "target": ".issue-sidebar-combo .combo-value",
+    "what": "value"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "input[name=\"label_ids\"]"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(3) > input"
+     }
+    ]
+   },
+   "label": "label_ids_hidden",
+   "via": {
+    "skill": "s_bfcaf7",
+    "step": 6
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "label": "assignee_sidebar_value",
+    "target": ".issue-sidebar-combo .combo-value",
+    "what": "value"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "input[name=\"milestone_id\"]"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(5) > input"
+     }
+    ]
+   },
+   "label": "milestone_id_hidden",
+   "via": {
+    "skill": "s_bfcaf7",
+    "step": 7
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "label": "labels_sidebar_value",
+    "target": ".issue-sidebar-combo .combo-value",
+    "what": "value"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "input[name=\"label_ids\"]"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(3) > input"
+     }
+    ]
+   },
+   "label": "label_ids_hidden",
+   "via": {
+    "skill": "s_bfcaf7",
+    "step": 8
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "label": "assignee_sidebar_value",
+    "target": ".issue-sidebar-combo .combo-value",
+    "what": "value"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "input[name=\"milestone_id\"]"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(5) > input"
+     }
+    ]
+   },
+   "label": "milestone_id_hidden",
+   "via": {
+    "skill": "s_bfcaf7",
+    "step": 9
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": ".issue-sidebar-combo >> nth=3"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(9)"
+     },
+     {
+      "kind": "point",
+      "x": 1098,
+      "y": 551,
+      "w": 270,
+      "h": 47,
+      "role": null,
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/{{v5}}/{{v6}}/issues/:id",
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_bfcaf7",
+    "step": 10
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e312"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(9) > div:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 1098,
+      "y": 538,
+      "w": 270,
+      "h": 16,
+      "role": "combobox",
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/{{v5}}/{{v6}}/issues/:id",
+    "addedContains": [
+     "- combobox \"Assignees Clear assignees admin {{*}} {{*}}\"",
+     "- listbox \"Clear assignees admin {{*}} {{*}}\"",
+     "- textbox \"Filter Assignee\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_bfcaf7",
+    "step": 11
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e312"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(9) > div:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 1098,
+      "y": 538,
+      "w": 270,
+      "h": 16,
+      "role": "combobox",
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/{{v5}}/{{v6}}/issues/:id",
+    "addedContains": [
+     "- combobox \"Assignees\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_bfcaf7",
+    "step": 12
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": ".issue-sidebar-combo >> nth=3 >> .ui.dropdown"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(9) > div:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 1098,
+      "y": 538,
+      "w": 270,
+      "h": 16,
+      "role": "combobox",
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/{{v5}}/{{v6}}/issues/:id",
+    "addedContains": [
+     "- combobox \"Assignees Clear assignees admin {{*}} {{*}}\"",
+     "- listbox \"Clear assignees admin {{*}} {{*}}\"",
+     "- textbox \"Filter Assignee\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_bfcaf7",
+    "step": 13
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e419"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#_aria_dropdown_menu_39 > div:nth-of-type(2) > a:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 1098,
+      "y": 718,
+      "w": 268,
+      "h": 39,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/{{v5}}/{{v6}}/issues/:id",
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_bfcaf7",
+    "step": 14
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e326"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#_aria_dropdown_menu_39 > div:nth-of-type(2) > a:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 1098,
+      "y": 718,
+      "w": 268,
+      "h": 39,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/{{v5}}/{{v6}}/issues/:id",
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e114"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "heading",
+      "name": "{{v2}} {{v1}}"
+     },
+     {
+      "kind": "css",
+      "selector": "#issue-title-display > h1"
+     },
+     {
+      "kind": "point",
+      "x": 548,
+      "y": 172,
+      "w": 1032.4,
+      "h": 36,
+      "role": "heading",
+      "tag": "h1",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/{{v5}}/{{v6}}/issues/:id",
+    "addedContains": [
+     "- combobox \"Assignees\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "goto",
+   "args": {
+    "url": "{{v4}}"
+   },
+   "locators": {}
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": ".issue-content-right input[name=\"assignee_ids\"], .issue-content-right input[name=\"milestone_id\"], .issue-content-right input[name=\"label_ids\"]",
+    "what": "value",
+    "label": "label_ids_hidden"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".issue-content-right input[name=\"assignee_ids\"], .issue-content-right input[name=\"milestone_id\"], .issue-content-right input[name=\"label_ids\"]",
+      "nth": 0
+     }
+    ]
+   },
+   "label": "label_ids_hidden"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": ".issue-content-right input[name=\"assignee_ids\"], .issue-content-right input[name=\"milestone_id\"], .issue-content-right input[name=\"label_ids\"]",
+    "what": "value",
+    "label": "milestone_id_hidden"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".issue-content-right input[name=\"assignee_ids\"], .issue-content-right input[name=\"milestone_id\"], .issue-content-right input[name=\"label_ids\"]",
+      "nth": 1
+     }
+    ]
+   },
+   "label": "milestone_id_hidden"
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e312"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(9) > div:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 1098,
+      "y": 538,
+      "w": 270,
+      "h": 16,
+      "role": "combobox",
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/{{v5}}/{{v6}}/issues/:id",
+    "addedContains": [
+     "- combobox \"Assignees Clear assignees admin {{*}} {{*}}\"",
+     "- listbox \"Clear assignees admin {{*}} {{*}}\"",
+     "- textbox \"Filter Assignee\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": ".issue-content-right .menu.visible .item >> nth=2"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#_aria_dropdown_menu_39 > div:nth-of-type(2) > a:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 1098,
+      "y": 718,
+      "w": 268,
+      "h": 39,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/{{v5}}/{{v6}}/issues/:id",
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": ".issue-content-right input[name=\"assignee_ids\"]",
+    "what": "value",
+    "label": "assignee_id"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".issue-content-right input[name=\"assignee_ids\"]"
+     },
+     {
+      "kind": "css",
+      "selector": "input[name=\"assignee_ids\"]"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(9) > input"
+     }
+    ]
+   },
+   "label": "assignee_hidden_input_value"
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "body"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "body"
+     },
+     {
+      "kind": "css",
+      "selector": "html > body"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 450,
+      "w": 1280,
+      "h": 900,
+      "role": null,
+      "tag": "body",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/{{v5}}/{{v6}}/issues/:id",
+    "addedContains": [
+     "- combobox \"Assignees\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "read_all",
+   "args": {
+    "target": ".issue-content-right .issue-sidebar-combo",
+    "what": "text",
+    "ready": true
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".issue-content-right .issue-sidebar-combo"
+     }
+    ]
+   },
+   "label": "sidebar_text_after_reload"
+  },
+  {
+   "tool": "goto",
+   "args": {
+    "url": "{{v4}}"
+   },
+   "locators": {}
+  },
+  {
+   "tool": "read_all",
+   "args": {
+    "target": ".issue-content-right .issue-sidebar-combo",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".issue-content-right .issue-sidebar-combo"
+     }
+    ]
+   },
+   "label": "sidebar_text_after_reload"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "what": "text",
+    "target": "@e114",
+    "label": "issue_number",
+    "scopedBy": "v2"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "heading",
+      "name": "{{v2}} {{v1}}"
+     },
+     {
+      "kind": "css",
+      "selector": "#issue-title-display > h1"
+     },
+     {
+      "kind": "point",
+      "x": 548,
+      "y": 172,
+      "w": 1032.4,
+      "h": 36,
+      "role": "heading",
+      "tag": "h1",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "issue_number_2"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "what": "text",
+    "target": "title",
+    "label": "issue_number",
+    "scopedBy": "v2"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "title"
+     },
+     {
+      "kind": "css",
+      "selector": "html > head > title"
+     }
+    ]
+   },
+   "label": "issue_number_3"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#issue-title-display > h1 > span"
+     },
+     {
+      "kind": "point",
+      "x": 431,
+      "y": 172,
+      "w": 47.2,
+      "h": 38,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "issue_number"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div:nth-of-type(1) > div > div:nth-of-type(2) > div:nth-of-type(1) > a:nth-of-type(2)",
+      "nth": 0
+     },
+     {
+      "kind": "point",
+      "x": 1026,
+      "y": 79,
+      "w": 22.9,
+      "h": 30,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "milestone_id_hidden"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "value"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "input[name=\"label_ids\"]"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(3) > input"
+     }
+    ]
+   },
+   "label": "label_ids_hidden"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#issuecomment-11 > span:nth-of-type(2) > a"
+     },
+     {
+      "kind": "point",
+      "x": 214,
+      "y": 524,
+      "w": 123.5,
+      "h": 16,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "assignee_shown_after_reload"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#issuecomment-11 > span:nth-of-type(2) > a"
+     },
+     {
+      "kind": "point",
+      "x": 214,
+      "y": 524,
+      "w": 123.5,
+      "h": 16,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "issue_content_right_menu_1"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(9) > div:nth-of-type(2) > a > span > span"
+     },
+     {
+      "kind": "point",
+      "x": 1165,
+      "y": 570,
+      "w": 122.1,
+      "h": 20,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "issue_content_right_menu_2_2"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "On issue {{v1}} \"{{v2}}\" the stale assignee was set and committed: I opened the sidebar Assignees picker, clicked the \"bench-assignee (Bench Assignee)\" item (which ticked it and set the sidebar's hidden assignee_ids input to \"3\"), then clicked outside the dropdown to commit it, which made the sidebar render \"bench-assignee (Bench Assignee)\". The Milestone \"Bench Milestone\" was already applied (sidebar hidden milestone_id = \"1\") from the earlier partial replay, and labels remained bug + priority-high (hidden label_ids = \"1,2\") — neither was touched. After a full page reload of /{{v5}}/{{v6}}/issues/5 the sidebar reads exactly: Labels = bug, priority-high; Milestone = Bench Milestone; Projects = No projects; Assignees = bench-assignee (Bench Assignee). (assignee_shown_after_reload: Bench Assignee)",
+  "values": {
+   "issue_number": "{{v1}}",
+   "assignee_shown_after_reload": "bench-assignee",
+   "milestone_shown_after_reload": "Bench Milestone",
+   "labels_shown_after_reload": "bug, priority-high",
+   "assignee_hidden_input_value": "3",
+   "milestone_id_hidden": "1",
+   "label_ids_hidden": "1,2",
+   "sidebar_text_after_reload": "Labels\nbug\npriority-high | Milestone\nBench Milestone | Projects\nNo projects | Assignees\nbench-assignee\n(Bench Assignee)",
+   "assignee_id": "3",
+   "issue_number_2": "{{v2}} {{v1}}",
+   "issue_number_3": "{{v1}} - {{v2}} - {{v6}} - Gitea: Git with a cup of tea",
+   "issue_content_right_inpu": "label_ids",
+   "issue_content_right_inpu_2": "milestone_id",
+   "issue_content_right_inpu_3": "assignee_ids",
+   "issue_content_right_menu_2": "item",
+   "ref": "{{v3}}",
+   "issue_content_right_menu_1": "bench-assignee",
+   "issue_content_right_menu_2_2": "(Bench Assignee)"
+  }
+ },
+ "contract": 4,
+ "stats": {
+  "uses": 2,
+  "successes": 1,
+  "partial": 1,
+  "created": "2026-09-26T21:57:08.092Z",
+  "failedAtStep": {
+   "11": 1
+  },
+  "fallthroughs": 0,
+  "verifiedContract": 4,
+  "lastUsed": "2026-09-26T22:04:52.077Z",
+  "recoveredStops": 1,
+  "lastFailedAt": 11
+ },
+ "status": "provisional",
+ "variantOf": "s_bfcaf7",
+ "provenance": {
+  "session": "fwgt23-n2",
+  "instruction": "On issue #5 'fwgt23-n2 Bench Issue' at http://127.0.0.1:8095/bench/bench-repo/issues/5, set the assignee to the user 'bench-assignee' and the milestone to 'Bench Milestone', using the sidebar pickers. For each picker, make sure the change is actually committed and after a full page reload the sidebar shows Assignee 'bench-assignee' and Milestone 'Bench Milestone'. Do not change labels or anything else. Report the assignee and milestone shown in the sidebar after reload.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-26T21:57:08.092Z",
+  "transforms": [
+   {
+    "name": "unfreezeExpectations",
+    "at": 11,
+    "reason": "recorded page change(s) only the recording run could produce: [\"- combobox \\\"Assignees Clear assignees admin bench-assignee (Bench Assignee)\\\"\",\"- listbox \\\"Clear assignees admin bench-assignee (Bench Assignee)\\\"\",\"- textbox \\\"Filter Assignee\\\"\",\"- link \\\"bench-assignee (Bench Assignee)\\\"\"] → [\"- combobox \\\"Assignees Clear assignees admin {{*}} {{*}}\\\"\",\"- listbox \\\"Clear assignees admin {{*}} {{*}}\\\"\",\"- textbox \\\"Filter Assignee\\\"\"]"
+   },
+   {
+    "name": "unfreezeExpectations",
+    "at": 13,
+    "reason": "recorded page change(s) only the recording run could produce: [\"- combobox \\\"Assignees Clear assignees admin bench-assignee (Bench Assignee)\\\"\",\"- listbox \\\"Clear assignees admin bench-assignee (Bench Assignee)\\\"\",\"- textbox \\\"Filter Assignee\\\"\",\"- link \\\"bench-assignee (Bench Assignee)\\\"\"] → [\"- combobox \\\"Assignees Clear assignees admin {{*}} {{*}}\\\"\",\"- listbox \\\"Clear assignees admin {{*}} {{*}}\\\"\",\"- textbox \\\"Filter Assignee\\\"\"]"
+   },
+   {
+    "name": "unfreezeExpectations",
+    "at": 20,
+    "reason": "recorded page change(s) only the recording run could produce: [\"- combobox \\\"Assignees Clear assignees admin bench-assignee (Bench Assignee)\\\"\",\"- listbox \\\"Clear assignees admin bench-assignee (Bench Assignee)\\\"\",\"- textbox \\\"Filter Assignee\\\"\",\"- link \\\"bench-assignee (Bench Assignee)\\\"\"] → [\"- combobox \\\"Assignees Clear assignees admin {{*}} {{*}}\\\"\",\"- listbox \\\"Clear assignees admin {{*}} {{*}}\\\"\",\"- textbox \\\"Filter Assignee\\\"\"]"
+   },
+   {
+    "name": "unfreezeExpectations",
+    "at": 23,
+    "reason": "recorded page change(s) only the recording run could produce: [\"- link \\\"bench-assignee\\\"\",\"- combobox \\\"Assignees\\\"\"] → [\"- combobox \\\"Assignees\\\"\"]"
+   }
+  ]
+ },
+ "revision": 2
+}

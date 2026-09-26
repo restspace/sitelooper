@@ -1,0 +1,38 @@
+{
+  "arm": "spec",
+  "runid": "fwgt23-spec",
+  "target": "gitea",
+  "flow": "fwgt23.json",
+  "flowName": "fwgt23",
+  "skillsDir": "/home/user/sitelooper/bench/results/fwgt23-skills",
+  "compiled": true,
+  "flowFile": "bench/results/fwgt23-spec-spec-tmp/fwgt23.flow.ts",
+  "specFile": "bench/results/fwgt23-spec-spec-tmp/fwgt23.spec.ts",
+  "wallMs": 33933,
+  "exitCode": 1,
+  "timedOut": false,
+  "costUsd": 0,
+  "stats": {
+    "total": 1,
+    "passed": 0,
+    "failed": 1,
+    "skipped": 0
+  },
+  "tests": [
+    {
+      "title": "fwgt23",
+      "status": "unexpected",
+      "ok": false,
+      "durationMs": 29680,
+      "error": "Error: none of 1 recorded locators resolved at 02-create s_bdd094/7 target (page is at http://127.0.0.1:8095/bench/bench-repo/issues/7): getByRole('link', { name: /^[\\s\\p{Co}\\p{So}\\p{Cf}]*Clear\\s+labels[\\s\\p{Co}\\p{So}\\p{Cf}]*$/u })",
+      "drift": []
+    }
+  ],
+  "drift": [],
+  "driftCount": 0,
+  "evidence": [
+    "fwgt23-spec-spec-failure.png",
+    "fwgt23-spec-spec-error-context.md"
+  ],
+  "logTail": "\nRunning 1 test using 1 worker\n\n[sitelooper step] 01-open\n[sitelooper warn] 02-create s_ce44e9/3: read 'issue_description' returned a value the skill itself set/selected ('Description for fwgt23-spec bench issue.\n\nThis issue mention…') — confirms the control, not persistence; dropped from the report's confident values\n  ✘  1 fwgt23.spec.ts:9:1 › fwgt23 (29.7s)\n\n\n  1) fwgt23.spec.ts:9:1 › fwgt23 › 02-create: In the repository bench/bench-repo, create a new issue with title exactly '{{runid}} Bench Issue'. In the description markdown text area write a description that includes the text {{runid}}. Submit the issue. Then in the created issue's sidebar set: labels to exactly bug and priority-high (both labels), assignee to the user bench-assignee, and milestone to 'Bench Milestone'. Wait for each picker choice to be applied and shown on the issue page (labels shown in sidebar, assignee shown, milestone shown) - not just ticked in the open menu. Then add a comment on the issue whose markdown text includes {{runid}} and submit it so it appears. Finally report the issue's number as Gitea displays it (as #<number>), the labels shown, the assignee shown, the milestone shown, and the comment text. Do not modify any issue whose title starts with 'Seed:'. \n\n    Error: none of 1 recorded locators resolved at 02-create s_bdd094/7 target (page is at http://127.0.0.1:8095/bench/bench-repo/issues/7): getByRole('link', { name: /^[\\s\\p{Co}\\p{So}\\p{Cf}]*Clear\\s+labels[\\s\\p{Co}\\p{So}\\p{Cf}]*$/u })\n\n       at fwgt23.flow.ts:14827\n\n      14825 | /** The stop for a chain that resolved nothing, shared by `pick` and `pickOrNavigate`. */\n      14826 | function pickMiss(page: Page, candidates: CandidateObservation[], where: string, note?: string): Error {\n    > 14827 |   return new Error(\n            |          ^\n      14828 |     // The url and the recorded step are half the answer whenever a chain\n      14829 |     // misses wholesale: a locator that named the control on the day it was\n      14830 |     // recorded usually misses because the page is not the page the step\n        at pickMiss (/home/user/sitelooper/bench/results/fwgt23-spec-spec-tmp/fwgt23.flow.ts:14827:10)\n        at pickOrNavigate (/home/user/sitelooper/bench/results/fwgt23-spec-spec-tmp/fwgt23.flow.ts:14877:9)\n        at Object.act (/home/user/sitelooper/bench/results/fwgt23-spec-spec-tmp/fwgt23.flow.ts:16624:27)\n        at runStepLifecycle (/home/user/sitelooper/bench/results/fwgt23-spec-spec-tmp/fwgt23.flow.ts:11483:18)\n        at Object.02-create (/home/user/sitelooper/bench/results/fwgt23-spec-spec-tmp/fwgt23.flow.ts:16616:9)\n        at /home/user/sitelooper/bench/results/fwgt23-spec-spec-tmp/fwgt23.flow.ts:19602:7\n        at runFlow (/home/user/sitelooper/bench/results/fwgt23-spec-spec-tmp/fwgt23.flow.ts:19601:5)\n        at /home/user/sitelooper/bench/results/fwgt23-spec-spec-tmp/fwgt23.spec.ts:14:21\n\n    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────\n    \n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────\n    test-results/fwgt23-fwgt23/test-failed-1.png\n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    Error Context: test-results/fwgt23-fwgt23/error-context.md\n\n  1 failed\n    fwgt23.spec.ts:9:1 › fwgt23 ────────────────────────────────────────────────────────────────────\n"
+}

@@ -1,0 +1,280 @@
+{
+  "flow": "fwgt23",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_062294; observed open_issue_count=3, closed_issue_count=0, seed_issue_1_title=Seed: ship repaired device, seed_issue_2_title=Seed: order missing parts, seed_issue_3_title=Seed: triage inbox, seed_issue_titles_1=Seed: ship repaired device, seed_issue_1_number=#3, seed_issue_titles_3=Seed: order missing parts, seed_issue_2_number=#2, seed_issue_titles_5=Seed: triage inbox, seed_issue_3_number=#1, repo_owner=bench, repo_name=bench-repo.",
+      "values": {
+        "open_issue_count": "3",
+        "closed_issue_count": "0",
+        "seed_issue_1_title": "Seed: ship repaired device",
+        "seed_issue_2_title": "Seed: order missing parts",
+        "seed_issue_3_title": "Seed: triage inbox",
+        "seed_issue_titles_1": "Seed: ship repaired device",
+        "seed_issue_1_number": "#3",
+        "seed_issue_titles_3": "Seed: order missing parts",
+        "seed_issue_2_number": "#2",
+        "seed_issue_titles_5": "Seed: triage inbox",
+        "seed_issue_3_number": "#1",
+        "repo_owner": "bench",
+        "repo_name": "bench-repo"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "21/21",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-create",
+      "status": "blocked",
+      "summary": "Issue #5 \"fwgt23-n2 Bench Issue\" exists with a description containing fwgt23-n2 and the \"bug\" label applied (verified via fresh reload of the sidebar). The remaining steps did NOT complete: priority-high could not be applied (the Labels dropdown's items are links to the issues-list filter URLs like /issues?labels=2, and clicking them never committed a change to the issue — repeated clicks, filter+Enter, and keyboard navigation all failed; sidebar after reload still shows only \"bug\"); assignee still \"No Assignees\" (bench-assignee item link points to /issues?assignee=3 and never committed); milestone still \"No Milestone\"; no comment was added. No Seed: issue was modified. The stored procedures matching this task could not be replayed — the run_skill calls kept failing on missing params before running anything, so the known-working approach was never executed.",
+      "values": {
+        "issue_number": "#5",
+        "issue_title": "fwgt23-n2 Bench Issue",
+        "labels_shown": "bug only (priority-high NOT applied)",
+        "assignee_shown": "No Assignees (bench-assignee not applied)",
+        "milestone_shown": "No Milestone (not applied)",
+        "comment_text": "none added"
+      },
+      "tier": "B",
+      "recovered": true,
+      "fellBack": "the flow step has no pinned skill",
+      "replayed": "0/10",
+      "repaired": false,
+      "turns": 148
+    },
+    {
+      "id": "03-report",
+      "status": "success",
+      "summary": "On issue #5 \"fwgt23-n2 Bench Issue\": the sidebar initially showed only \"bug\". I opened the sidebar Labels picker (combobox \"Labels\"), clicked the \"priority-high\" item (data-value=2), which ticked it in the menu, then clicked outside the dropdown (on the page body) to commit — whereupon the sidebar Labels list rendered both \"bug\" and \"priority-high\" (\"Labels\\nbug\\npriority-high\" read from the live sidebar). \"bug\" was already present so it was not touched, and nothing else was changed. A full page reload was then issued to the same URL (page reloaded as \"#5 - fwgt23-n2 Bench Issue\"), though the returned post-reload snapshot was truncated before the sidebar, so the post-reload sidebar text was not re-read in this run; the committed state was verified in the sidebar immediately before the reload.",
+      "values": {
+        "issue_number": "#5",
+        "labels_shown_before_reload": "bug, priority-high",
+        "labels_after_reload": "not re-read (post-reload snapshot was truncated before the sidebar)",
+        "commit_mechanism": "In this Gitea build the sidebar Labels picker item is an inert <a href=\"/bench/bench-repo/issues?labels=2\"> link: clicking it only toggles the menu tick ('item muted' -> 'item muted checked') and the real commit fires when focus leaves the dropdown (clicking elsewhere on the page). After that the sidebar list rendered a 'priority-high' link.",
+        "current_url": "http://127.0.0.1:8095/bench/bench-repo/issues/5",
+        "ph_class_before": "item muted",
+        "ph_class_after": "item muted checked",
+        "a_item": "item",
+        "issue_content_right_labe": "bug",
+        "issue_content_right_menu": "priority-high",
+        "ref": "fwgt23-n2"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_89dbb6 stopped at step 4 — every identifying locator missed, and the positional fallback #2 is not the recorded \"fwgt23-n2 Bench Issue #4\" — the element there carries another name, so it was not clicked",
+      "replayed": "3/10",
+      "repaired": false,
+      "turns": 30,
+      "warnings": [
+        "s_89dbb6: step 4: primary locator did not resolve; used fallback #2 page.locator('h1 >> nth=0')"
+      ],
+      "unreported": [
+        "labels_before",
+        "labels_shown_in_sidebar",
+        "milestone",
+        "assignees",
+        "priority_high_label",
+        "bench_ref"
+      ]
+    },
+    {
+      "id": "04-set",
+      "status": "success",
+      "summary": "On issue #5 \"fwgt23-n2 Bench Issue\" the stale assignee was set and committed: I opened the sidebar Assignees picker, clicked the \"bench-assignee (Bench Assignee)\" item (which ticked it and set the sidebar's hidden assignee_ids input to \"3\"), then clicked outside the dropdown to commit it, which made the sidebar render \"bench-assignee (Bench Assignee)\". The Milestone \"Bench Milestone\" was already applied (sidebar hidden milestone_id = \"1\") from the earlier partial replay, and labels remained bug + priority-high (hidden label_ids = \"1,2\") — neither was touched. After a full page reload of /bench/bench-repo/issues/5 the sidebar reads exactly: Labels = bug, priority-high; Milestone = Bench Milestone; Projects = No projects; Assignees = bench-assignee (Bench Assignee). (assignee_shown_after_reload: Bench Assignee)",
+      "values": {
+        "issue_number": "#5",
+        "assignee_shown_after_reload": "bench-assignee",
+        "milestone_shown_after_reload": "Bench Milestone",
+        "labels_shown_after_reload": "bug, priority-high",
+        "assignee_hidden_input_value": "3",
+        "milestone_id_hidden": "1",
+        "label_ids_hidden": "1,2",
+        "sidebar_text_after_reload": "Labels\nbug\npriority-high | Milestone\nBench Milestone | Projects\nNo projects | Assignees\nbench-assignee\n(Bench Assignee)",
+        "assignee_id": "3",
+        "issue_number_2": "fwgt23-n2 Bench Issue #5",
+        "issue_number_3": "#5 - fwgt23-n2 Bench Issue - bench-repo - Gitea: Git with a cup of tea",
+        "issue_content_right_inpu": "label_ids",
+        "issue_content_right_inpu_2": "milestone_id",
+        "issue_content_right_inpu_3": "assignee_ids",
+        "issue_content_right_menu_2": "item",
+        "ref": "fwgt23-n2",
+        "issue_content_right_menu_1": "bench-assignee",
+        "issue_content_right_menu_2_2": "(Bench Assignee)"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_bfcaf7 stopped at step 15 — every identifying locator missed, and the positional fallback #2 is not the recorded \"fwgt23-n2 Bench Issue #4\" — the element there carries another name, so it was not clicked",
+      "replayed": "14/22",
+      "repaired": false,
+      "turns": 17,
+      "warnings": [
+        "s_bfcaf7: step 15: primary locator did not resolve; used fallback #2 page.locator('h1 >> nth=0')"
+      ],
+      "unreported": [
+        "projects_shown",
+        "label_ids",
+        "bench_ref"
+      ]
+    },
+    {
+      "id": "05-add",
+      "status": "success",
+      "summary": "Replayed stored procedure s_005378; observed labels_shown_in_sidebar=bug, priority-high, milestone_shown_in_sidebar=Bench Milestone, bench_ref=fwgt23-n2, issue_number_as_displayed=#5, title=fwgt23-n2 Bench Issue, assignee_link_text=bench-assignee, label_ids=1,2, assignee_id=3, milestone_id=1, issue_state_after_reload=Open, repo_open_issue_count=4, assignee_shown_in_sidebar=bench-assignee, description=This is a description for fwgt23-n2., new_comment_text=fwgt23-n2 verification comment.",
+      "values": {
+        "labels_shown_in_sidebar": "bug, priority-high",
+        "milestone_shown_in_sidebar": "Bench Milestone",
+        "bench_ref": "fwgt23-n2",
+        "issue_number_as_displayed": "#5",
+        "title": "fwgt23-n2 Bench Issue",
+        "assignee_link_text": "bench-assignee",
+        "label_ids": "1,2",
+        "assignee_id": "3",
+        "milestone_id": "1",
+        "issue_state_after_reload": "Open",
+        "repo_open_issue_count": "4",
+        "assignee_shown_in_sidebar": "bench-assignee",
+        "description": "This is a description for fwgt23-n2.",
+        "new_comment_text": "fwgt23-n2 verification comment"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "16/16",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_005378: step 5: primary locator did not resolve; used fallback #2 elementAt(214, 524) /* link */",
+        "s_005378: step 11: primary locator did not resolve; used fallback #2 elementAt(214, 524) /* link */",
+        "s_005378: step 12: primary locator did not resolve; used fallback #2 elementAt(510, 316) /* p */"
+      ],
+      "unreported": [
+        "milestone_link_text"
+      ]
+    }
+  ],
+  "passed": 4,
+  "total": 5,
+  "repinned": 0,
+  "drift": 6,
+  "driftTickets": [
+    {
+      "flow": "fwgt23",
+      "step": "02-create",
+      "skill": "s_89dbb6",
+      "similarity": null,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "the flow step has no pinned skill",
+      "reason": "missing params: v1 (e.g. \"bench\"), v2 (e.g. \"bench-repo\"), v3 (e.g. \"fwgt23-n1 Bench Issue\"), v6 (e.g. \"http://127.0.0.1:8095/bench/bench-repo/issues/4\") — nothing was run",
+      "pageUrlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "pageUrl": "http://127.0.0.1:8095/bench/bench-repo/issues/5"
+    },
+    {
+      "flow": "fwgt23",
+      "step": "03-report",
+      "skill": "s_89dbb6",
+      "atStep": "4",
+      "key": "target",
+      "similarity": 1.002,
+      "missedLocator": "page.getByRole('heading', { name: 'fwgt23-n2 Bench Issue #4', exact: true })",
+      "fallbackUsed": "page.locator('h1 >> nth=0')",
+      "fallbackIndex": 1,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "pageUrl": "http://127.0.0.1:8095/bench/bench-repo/issues/5"
+    },
+    {
+      "flow": "fwgt23",
+      "step": "04-set",
+      "skill": "s_bfcaf7",
+      "atStep": "15",
+      "key": "target",
+      "similarity": 0.998,
+      "missedLocator": "page.getByRole('heading', { name: 'fwgt23-n2 Bench Issue #4', exact: true })",
+      "fallbackUsed": "page.locator('h1 >> nth=0')",
+      "fallbackIndex": 1,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "pageUrl": "http://127.0.0.1:8095/bench/bench-repo/issues/5"
+    },
+    {
+      "flow": "fwgt23",
+      "step": "05-add",
+      "skill": "s_005378",
+      "atStep": "5",
+      "key": "target",
+      "similarity": 0.996,
+      "missedLocator": "page.locator('#issuecomment-4 > span:nth-of-type(2) > a')",
+      "fallbackUsed": "elementAt(214, 524) /* link */",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "pageUrl": "http://127.0.0.1:8095/bench/bench-repo/issues/5"
+    },
+    {
+      "flow": "fwgt23",
+      "step": "05-add",
+      "skill": "s_005378",
+      "atStep": "11",
+      "key": "target",
+      "similarity": 0.996,
+      "missedLocator": "page.locator('#issuecomment-4 > span:nth-of-type(2) > a')",
+      "fallbackUsed": "elementAt(214, 524) /* link */",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "pageUrl": "http://127.0.0.1:8095/bench/bench-repo/issues/5"
+    },
+    {
+      "flow": "fwgt23",
+      "step": "05-add",
+      "skill": "s_005378",
+      "atStep": "12",
+      "key": "target",
+      "similarity": 0.996,
+      "missedLocator": "page.locator('#issue-4 > div > div:nth-of-type(2) > div:nth-of-type(1) > p')",
+      "fallbackUsed": "elementAt(510, 316) /* p */",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "pageUrl": "http://127.0.0.1:8095/bench/bench-repo/issues/5"
+    }
+  ],
+  "wallMs": 776913,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 4965561,
+    "completionTokens": 61321,
+    "cachedTokens": 4729088
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 3124793,
+      "completionTokens": 47196,
+      "cachedTokens": 2937472
+    },
+    "z-ai/glm-5.3": {
+      "promptTokens": 1840768,
+      "completionTokens": 14125,
+      "cachedTokens": 1791616
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ],
+    "z-ai/glm-5.3": [
+      "Wafer"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

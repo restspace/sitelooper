@@ -1,0 +1,535 @@
+{
+ "id": "s_85382d",
+ "origin": "http://127.0.0.1:8095",
+ "template": "Go to {{v1}} (issue titled '{{v6}}'). First report the labels currently shown in the issue sidebar. Then ensure the issue has exactly the two labels '{{v8}}' and '{{v9}}': open the Labels picker in the sidebar, tick '{{v9}}' if it is not already applied, and make sure the change is committed so that after a full page reload the sidebar shows both '{{v8}}' and '{{v9}}'. If '{{v8}}' is missing, re-add it too. Do not remove or change anything else. Report the labels shown in the sidebar after reload.",
+ "params": {
+  "v1": {
+   "example": "http://127.0.0.1:8095/bench/bench-repo/issues/6#issuecomment-19",
+   "usedIn": [
+    4
+   ],
+   "known": true,
+   "binding": "02-create.url"
+  },
+  "v3": {
+   "example": "bench",
+   "usedIn": [
+    14,
+    15
+   ],
+   "known": true,
+   "binding": "output:i1:repo_owner"
+  },
+  "v4": {
+   "example": "bench-repo",
+   "usedIn": [
+    15
+   ],
+   "known": true,
+   "binding": "output:i1:repo_name"
+  },
+  "v6": {
+   "example": "fwgt23-n3 Bench Issue",
+   "usedIn": [
+    5,
+    12
+   ],
+   "known": true,
+   "binding": "output:i2:issue_title"
+  },
+  "v7": {
+   "example": "fwgt23-n3",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v8": {
+   "example": "bug",
+   "usedIn": [
+    6
+   ],
+   "known": true,
+   "binding": "output:i2:issue_sidebar_combo_scro"
+  },
+  "v9": {
+   "example": "priority-high",
+   "usedIn": [
+    2,
+    7
+   ],
+   "known": true,
+   "binding": "output:i2:issue_sidebar_combo_scro_2"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8095/{{v3}}/{{v4}}/issues/:id"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e257"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 1098,
+      "y": 335,
+      "w": 270,
+      "h": 16,
+      "role": "combobox",
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/{{v3}}/{{v4}}/issues/:id",
+    "addedContains": [
+     "- combobox \"{{*}} Clear labels {{v8}} documentation enhancement {{v9}}\"",
+     "- listbox \"Clear labels {{v8}} documentation enhancement {{v9}}\"",
+     "- textbox \"Filter Label\"",
+     "- link \"Clear labels\"",
+     "- link \"documentation\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_89dbb6",
+    "step": 1
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e402"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "link",
+      "name": "{{v9}}",
+      "nth": 1
+     },
+     {
+      "kind": "css",
+      "selector": "#_aria_dropdown_menu_48 > div:nth-of-type(2) > a:nth-of-type(5)"
+     },
+     {
+      "kind": "point",
+      "x": 1089,
+      "y": 596,
+      "w": 249.4,
+      "h": 40,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/{{v3}}/{{v4}}/issues/:id",
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_89dbb6",
+    "step": 2
+   }
+  },
+  {
+   "tool": "press",
+   "args": {
+    "key": "Escape"
+   },
+   "locators": {},
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/{{v3}}/{{v4}}/issues/:id",
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "goto",
+   "args": {
+    "url": "{{v1}}"
+   },
+   "locators": {}
+  },
+  {
+   "tool": "read",
+   "args": {
+    "label": "issue_heading",
+    "target": "h1",
+    "what": "text",
+    "scopedBy": "v6"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "heading",
+      "name": "{{v6}} #6"
+     },
+     {
+      "kind": "css",
+      "selector": "h1"
+     },
+     {
+      "kind": "css",
+      "selector": "#issue-title-display > h1"
+     },
+     {
+      "kind": "point",
+      "x": 548,
+      "y": 172,
+      "w": 1032.4,
+      "h": 36,
+      "role": "heading",
+      "tag": "h1",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "issue_heading"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "label": "labels_shown_after_reload",
+    "target": "@e306",
+    "what": "text",
+    "scopedBy": "v8"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "link",
+      "name": "{{v8}}",
+      "nth": 2
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2) > a:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 980,
+      "y": 360,
+      "w": 34.8,
+      "h": 20.5,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "applied_label_1"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "label": "labels_shown_after_reload_2",
+    "target": "@e309",
+    "what": "text",
+    "scopedBy": "v9"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "link",
+      "name": "{{v9}}",
+      "nth": 2
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2) > a:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 1044,
+      "y": 360,
+      "w": 85.6,
+      "h": 20.5,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "applied_label_2"
+  },
+  {
+   "tool": "press",
+   "args": {
+    "key": "Escape"
+   },
+   "locators": {},
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/{{v3}}/{{v4}}/issues/:id",
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#issue-title-display > h1 > span"
+     },
+     {
+      "kind": "point",
+      "x": 431,
+      "y": 172,
+      "w": 47.2,
+      "h": 38,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "issue_number"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text",
+    "scopedBy": "v4"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(21) > span"
+     },
+     {
+      "kind": "point",
+      "x": 1080,
+      "y": 1088,
+      "w": 233.3,
+      "h": 20,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "issue_reference_shown"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(1) > a > strong"
+     },
+     {
+      "kind": "point",
+      "x": 989,
+      "y": 335,
+      "w": 51,
+      "h": 16,
+      "role": null,
+      "tag": "strong",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "sidebar_labels_header"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "value"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "input[data-old-title=\"{{v6}}\"]"
+     },
+     {
+      "kind": "css",
+      "selector": "#issue-title-editor > div:nth-of-type(1) > input"
+     }
+    ]
+   },
+   "label": "issue_title"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#issuecomment-18 > span:nth-of-type(2) > a"
+     },
+     {
+      "kind": "point",
+      "x": 214,
+      "y": 510,
+      "w": 123.5,
+      "h": 16,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "assignee_still_shown"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text",
+    "scopedBy": "v3"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "text",
+      "text": "{{v3}}"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div:nth-of-type(1) > div > div:nth-of-type(1) > div:nth-of-type(1) > a:nth-of-type(1)",
+      "nth": 0
+     },
+     {
+      "kind": "point",
+      "x": 91,
+      "y": 79,
+      "w": 55.2,
+      "h": 20,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "sidebar_reference_1"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text",
+    "frame": "Reference: {{v3}}/{{=}}",
+    "scopedBy": "v4"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "text",
+      "text": "Reference: {{v3}}/{{v4}}#6"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(21) > span"
+     },
+     {
+      "kind": "point",
+      "x": 1080,
+      "y": 1088,
+      "w": 233.3,
+      "h": 20,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "sidebar_reference_2"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "Instruction complete and verified. On issue #6 \"{{v6}}\" (heading \"{{v6}} #6\", reference \"{{v3}}/{{v4}}#6\") the sidebar showed exactly the two applied labels '{{v8}}' and '{{v9}}' before any action, so nothing needed ticking and I changed no data; the only action taken was pressing Escape to close the Labels picker left expanded by the replayed procedure. After a full page reload of {{v1}}, the sidebar shows exactly two applied labels, read verbatim from their links as \"{{v8}}\" and \"{{v9}}\". Milestone 'Bench Milestone' and assignee 'bench-assignee (Bench Assignee)' are unchanged. (assignee_still_shown: Bench Assignee)",
+  "values": {
+   "applied_label_1": "{{v8}}",
+   "applied_label_2": "{{v9}}",
+   "issue_heading": "{{v6}} #6",
+   "issue_number": "#6",
+   "issue_reference_shown": "Reference: {{v3}}/{{v4}}#6",
+   "labels_shown_after_reload": "{{v8}}, {{v9}}",
+   "priority_high_label": "{{v9}}",
+   "sidebar_labels_header": "Labels",
+   "issue_title": "{{v6}}",
+   "label_menu_items_visible": "{{v8}}, documentation, enhancement, {{v9}}",
+   "milestone_still_shown": "Bench Milestone",
+   "assignee_still_shown": "bench-assignee",
+   "labels_shown_after_reloa": "{{v8}}",
+   "labels_shown_after_reloa_2": "{{v9}}",
+   "ref": "{{v7}}",
+   "sidebar_reference_1": "{{v3}}",
+   "sidebar_reference_2": "{{v4}}#6"
+  }
+ },
+ "contract": 4,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-26T22:02:21.401Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 4
+ },
+ "status": "provisional",
+ "variantOf": "s_89dbb6",
+ "provenance": {
+  "session": "fwgt23-n3",
+  "instruction": "Go to http://127.0.0.1:8095/bench/bench-repo/issues/6#issuecomment-19 (issue titled 'fwgt23-n3 Bench Issue'). First report the labels currently shown in the issue sidebar. Then ensure the issue has exactly the two labels 'bug' and 'priority-high': open the Labels picker in the sidebar, tick 'priority-high' if it is not already applied, and make sure the change is committed so that after a full page reload the sidebar shows both 'bug' and 'priority-high'. If 'bug' is missing, re-add it too. Do not remove or change anything else. Report the labels shown in the sidebar after reload.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-26T22:02:21.401Z",
+  "transforms": [
+   {
+    "name": "unfreezeExpectations",
+    "at": 1,
+    "reason": "recorded page change(s) only the recording run could produce: [\"- combobox \\\"Labels Clear labels {{v8}} documentation enhancement {{v9}}\\\"\",\"- listbox \\\"Clear labels {{v8}} documentation enhancement {{v9}}\\\"\",\"- textbox \\\"Filter Label\\\"\",\"- link \\\"Clear labels\\\"\",\"- link \\\"documentation\\\"\"] → [\"- combobox \\\"{{*}} Clear labels {{v8}} documentation enhancement {{v9}}\\\"\",\"- listbox \\\"Clear labels {{v8}} documentation enhancement {{v9}}\\\"\",\"- textbox \\\"Filter Label\\\"\",\"- link \\\"Clear labels\\\"\",\"- link \\\"documentation\\\"\"]"
+   }
+  ]
+ },
+ "revision": 2,
+ "factRewrites": [
+  {
+   "k": "route.fragment",
+   "key": "",
+   "at": "2026-09-26T22:04:52.120Z"
+  }
+ ]
+}

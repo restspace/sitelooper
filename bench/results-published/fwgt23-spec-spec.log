@@ -1,0 +1,44 @@
+
+Running 1 test using 1 worker
+
+[sitelooper step] 01-open
+[sitelooper warn] 02-create s_ce44e9/3: read 'issue_description' returned a value the skill itself set/selected ('Description for fwgt23-spec bench issue.
+
+This issue mention…') — confirms the control, not persistence; dropped from the report's confident values
+  ✘  1 fwgt23.spec.ts:9:1 › fwgt23 (29.7s)
+
+
+  1) fwgt23.spec.ts:9:1 › fwgt23 › 02-create: In the repository bench/bench-repo, create a new issue with title exactly '{{runid}} Bench Issue'. In the description markdown text area write a description that includes the text {{runid}}. Submit the issue. Then in the created issue's sidebar set: labels to exactly bug and priority-high (both labels), assignee to the user bench-assignee, and milestone to 'Bench Milestone'. Wait for each picker choice to be applied and shown on the issue page (labels shown in sidebar, assignee shown, milestone shown) - not just ticked in the open menu. Then add a comment on the issue whose markdown text includes {{runid}} and submit it so it appears. Finally report the issue's number as Gitea displays it (as #<number>), the labels shown, the assignee shown, the milestone shown, and the comment text. Do not modify any issue whose title starts with 'Seed:'. 
+
+    Error: none of 1 recorded locators resolved at 02-create s_bdd094/7 target (page is at http://127.0.0.1:8095/bench/bench-repo/issues/7): getByRole('link', { name: /^[\s\p{Co}\p{So}\p{Cf}]*Clear\s+labels[\s\p{Co}\p{So}\p{Cf}]*$/u })
+
+       at fwgt23.flow.ts:14827
+
+      14825 | /** The stop for a chain that resolved nothing, shared by `pick` and `pickOrNavigate`. */
+      14826 | function pickMiss(page: Page, candidates: CandidateObservation[], where: string, note?: string): Error {
+    > 14827 |   return new Error(
+            |          ^
+      14828 |     // The url and the recorded step are half the answer whenever a chain
+      14829 |     // misses wholesale: a locator that named the control on the day it was
+      14830 |     // recorded usually misses because the page is not the page the step
+        at pickMiss (/home/user/sitelooper/bench/results/fwgt23-spec-spec-tmp/fwgt23.flow.ts:14827:10)
+        at pickOrNavigate (/home/user/sitelooper/bench/results/fwgt23-spec-spec-tmp/fwgt23.flow.ts:14877:9)
+        at Object.act (/home/user/sitelooper/bench/results/fwgt23-spec-spec-tmp/fwgt23.flow.ts:16624:27)
+        at runStepLifecycle (/home/user/sitelooper/bench/results/fwgt23-spec-spec-tmp/fwgt23.flow.ts:11483:18)
+        at Object.02-create (/home/user/sitelooper/bench/results/fwgt23-spec-spec-tmp/fwgt23.flow.ts:16616:9)
+        at /home/user/sitelooper/bench/results/fwgt23-spec-spec-tmp/fwgt23.flow.ts:19602:7
+        at runFlow (/home/user/sitelooper/bench/results/fwgt23-spec-spec-tmp/fwgt23.flow.ts:19601:5)
+        at /home/user/sitelooper/bench/results/fwgt23-spec-spec-tmp/fwgt23.spec.ts:14:21
+
+    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/fwgt23-fwgt23/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/fwgt23-fwgt23/error-context.md
+
+  1 failed
+    fwgt23.spec.ts:9:1 › fwgt23 ────────────────────────────────────────────────────────────────────

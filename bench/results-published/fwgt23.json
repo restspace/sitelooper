@@ -1,0 +1,441 @@
+{
+  "name": "fwgt23",
+  "origin": "http://127.0.0.1:8095",
+  "startUrl": "http://127.0.0.1:8095/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-open",
+      "instruction": "Open http://127.0.0.1:8095/ and sign in with username admin and password exactly the literal text {{env:APP_PASSWORD}} (type it as-is; it gets filled in when typed). Then go to the repository bench/bench-repo, open its Issues list showing OPEN issues, and report the exact titles of every open issue whose title starts with 'Seed:'. Read only - do not modify anything.",
+      "skill": "s_9a900a",
+      "params": {
+        "v1": "http://127.0.0.1:8095/",
+        "v2": "admin",
+        "v3": "{{env:APP_PASSWORD}}"
+      },
+      "outputs": [
+        "open_issue_count",
+        "closed_issue_count",
+        "seed_issue_1_title",
+        "seed_issue_2_title",
+        "seed_issue_3_title",
+        "seed_issue_titles_1",
+        "seed_issue_1_number",
+        "seed_issue_titles_3",
+        "seed_issue_2_number",
+        "seed_issue_titles_5",
+        "seed_issue_3_number",
+        "repo_owner",
+        "repo_name"
+      ],
+      "recorded": {
+        "open_issue_count": "3",
+        "closed_issue_count": "0",
+        "seed_issue_1_title": "Seed: ship repaired device",
+        "seed_issue_2_title": "Seed: order missing parts",
+        "seed_issue_3_title": "Seed: triage inbox",
+        "seed_issue_titles_1": "Seed: ship repaired device",
+        "seed_issue_1_number": "#3",
+        "seed_issue_titles_3": "Seed: order missing parts",
+        "seed_issue_2_number": "#2",
+        "seed_issue_titles_5": "Seed: triage inbox",
+        "seed_issue_3_number": "#1",
+        "repo_owner": "bench",
+        "repo_name": "bench-repo",
+        "url": "http://127.0.0.1:8095/bench/bench-repo/issues?type=all&state=open"
+      },
+      "route": "http://127.0.0.1:8095/bench/bench-repo/issues",
+      "outputEvidence": {
+        "open_issue_count": {
+          "same": 2,
+          "differed": 0
+        },
+        "closed_issue_count": {
+          "same": 2,
+          "differed": 0
+        },
+        "seed_issue_1_title": {
+          "same": 2,
+          "differed": 0
+        },
+        "seed_issue_2_title": {
+          "same": 2,
+          "differed": 0
+        },
+        "seed_issue_3_title": {
+          "same": 2,
+          "differed": 0
+        },
+        "seed_issue_titles_1": {
+          "same": 2,
+          "differed": 0
+        },
+        "seed_issue_1_number": {
+          "same": 2,
+          "differed": 0
+        },
+        "seed_issue_titles_3": {
+          "same": 2,
+          "differed": 0
+        },
+        "seed_issue_2_number": {
+          "same": 2,
+          "differed": 0
+        },
+        "seed_issue_titles_5": {
+          "same": 2,
+          "differed": 0
+        },
+        "seed_issue_3_number": {
+          "same": 2,
+          "differed": 0
+        },
+        "repo_owner": {
+          "same": 2,
+          "differed": 0
+        },
+        "repo_name": {
+          "same": 2,
+          "differed": 0
+        },
+        "url": {
+          "same": 2,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "02-create",
+      "instruction": "In the repository bench/bench-repo, create a new issue with title exactly '{{runid}} Bench Issue'. In the description markdown text area write a description that includes the text {{runid}}. Submit the issue. Then in the created issue's sidebar set: labels to exactly bug and priority-high (both labels), assignee to the user bench-assignee, and milestone to 'Bench Milestone'. Wait for each picker choice to be applied and shown on the issue page (labels shown in sidebar, assignee shown, milestone shown) - not just ticked in the open menu. Then add a comment on the issue whose markdown text includes {{runid}} and submit it so it appears. Finally report the issue's number as Gitea displays it (as #<number>), the labels shown, the assignee shown, the milestone shown, and the comment text. Do not modify any issue whose title starts with 'Seed:'.",
+      "outputs": [],
+      "recorded": {
+        "url": "http://127.0.0.1:8095/bench/bench-repo/issues/4",
+        "url.p3": "4"
+      },
+      "route": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "skill": "s_21687c",
+      "params": {
+        "v1": "{{01-open.repo_owner}}",
+        "v2": "{{01-open.repo_name}}",
+        "v3": "{{runid}}",
+        "v4": "{{runid}} Bench Issue",
+        "v5": "bug"
+      }
+    },
+    {
+      "id": "03-report",
+      "instruction": "Go to {{02-create.url}} (issue titled '{{runid}} Bench Issue'). First report the labels currently shown in the issue sidebar. Then ensure the issue has exactly the two labels 'bug' and 'priority-high': open the Labels picker in the sidebar, tick 'priority-high' if it is not already applied, and make sure the change is committed so that after a full page reload the sidebar shows both 'bug' and 'priority-high'. If 'bug' is missing, re-add it too. Do not remove or change anything else. Report the labels shown in the sidebar after reload.",
+      "skill": "s_89dbb6",
+      "params": {
+        "v6": "{{02-create.url}}",
+        "v3": "{{runid}} Bench Issue",
+        "v5": "bug",
+        "v1": "bench",
+        "v2": "bench-repo",
+        "v4": "{{runid}}"
+      },
+      "outputs": [
+        "issue_number",
+        "labels_before",
+        "labels_after_reload",
+        "labels_shown_in_sidebar",
+        "milestone",
+        "assignees",
+        "current_url",
+        "priority_high_label",
+        "bench_ref"
+      ],
+      "recorded": {
+        "issue_number": "#4",
+        "labels_before": "bug",
+        "labels_after_reload": "bug, priority-high",
+        "labels_shown_in_sidebar": "bug, priority-high",
+        "milestone": "No Milestone",
+        "assignees": "No Assignees",
+        "commit_mechanism": "The Gitea sidebar label combo (class 'issue-sidebar-combo', data-selection-mode=multiple, data-update-algo=diff) converts checked menu items into a diff and POSTs to /bench/bench-repo/issues/labels?issue_ids=4 only in its onHide handler; ticking the item alone left it pending, so clicking outside t…",
+        "current_url": "http://127.0.0.1:8095/bench/bench-repo/issues/4",
+        "priority_high_label": "priority-high",
+        "bench_ref": "fwgt23-n1"
+      },
+      "route": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "outputEvidence": {
+        "issue_number": {
+          "same": 0,
+          "differed": 1
+        },
+        "labels_before": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "labels_after_reload": {
+          "same": 0,
+          "differed": 1
+        },
+        "labels_shown_in_sidebar": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "milestone": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "assignees": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "commit_mechanism": {
+          "same": 0,
+          "differed": 1
+        },
+        "current_url": {
+          "same": 0,
+          "differed": 1
+        },
+        "priority_high_label": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "bench_ref": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        }
+      }
+    },
+    {
+      "id": "04-set",
+      "instruction": "On issue {{03-report.issue_number}} '{{runid}} Bench Issue' at {{02-create.url}}, set the assignee to the user 'bench-assignee' and the milestone to 'Bench Milestone', using the sidebar pickers. For each picker, make sure the change is actually committed and after a full page reload the sidebar shows Assignee 'bench-assignee' and Milestone 'Bench Milestone'. Do not change labels or anything else. Report the assignee and milestone shown in the sidebar after reload.",
+      "skill": "s_bfcaf7",
+      "params": {
+        "v1": "{{runid}} Bench Issue",
+        "v3": "{{02-create.url}}",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "issue_number",
+        "assignee_shown_after_reload",
+        "milestone_shown_after_reload",
+        "projects_shown",
+        "assignee_id",
+        "label_ids",
+        "bench_ref"
+      ],
+      "recorded": {
+        "issue_number": "#4",
+        "assignee_shown_after_reload": "bench-assignee",
+        "milestone_shown_after_reload": "Bench Milestone",
+        "labels_shown_after_reload": "bug, priority-high (unchanged)",
+        "projects_shown": "No projects",
+        "assignee_id": "1",
+        "milestone_id": "1",
+        "label_ids": "1,2",
+        "bench_ref": "fwgt23-n1"
+      },
+      "route": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "outputEvidence": {
+        "issue_number": {
+          "same": 0,
+          "differed": 1
+        },
+        "assignee_shown_after_reload": {
+          "same": 1,
+          "differed": 0
+        },
+        "milestone_shown_after_reload": {
+          "same": 1,
+          "differed": 0
+        },
+        "labels_shown_after_reload": {
+          "same": 0,
+          "differed": 1
+        },
+        "projects_shown": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "assignee_id": {
+          "same": 0,
+          "differed": 1
+        },
+        "milestone_id": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "label_ids": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "bench_ref": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        }
+      }
+    },
+    {
+      "id": "05-add",
+      "instruction": "On issue {{03-report.issue_number}} '{{runid}} Bench Issue' at {{02-create.url}}: add a comment in the markdown comment text area whose text includes {{runid}}, and submit it so the comment appears in the issue's timeline. Then reload the page and verify the whole issue: title, that the description includes {{runid}}, the labels shown (must be exactly bug and priority-high), the assignee shown (bench-assignee), the milestone shown (Bench Milestone), the new comment including {{runid}}, and the issue number as displayed ({{03-report.issue_number}}). Report all of these values.",
+      "skill": "s_f383cc",
+      "params": {
+        "v1": "{{runid}} Bench Issue",
+        "v3": "{{02-create.url}}",
+        "v2": "{{runid}}",
+        "v6": "bug",
+        "v7": "priority-high",
+        "v8": "bench-assignee",
+        "v9": "Bench Milestone",
+        "v4": "bench"
+      },
+      "outputs": [
+        "issue_number_as_displayed",
+        "title",
+        "description",
+        "labels_shown_in_sidebar",
+        "assignee_shown_in_sidebar",
+        "milestone_shown_in_sidebar",
+        "assignee_link_text",
+        "milestone_link_text",
+        "label_ids",
+        "assignee_id",
+        "milestone_id",
+        "new_comment_text",
+        "timeline_entries_observed",
+        "issue_state_after_reload",
+        "repo_open_issue_count",
+        "bench_ref"
+      ],
+      "recorded": {
+        "issue_number_as_displayed": "#4",
+        "title": "fwgt23-n1 Bench Issue",
+        "description": "fwgt23-n1 description for bench issue",
+        "labels_shown_in_sidebar": "bug, priority-high",
+        "assignee_shown_in_sidebar": "bench-assignee",
+        "milestone_shown_in_sidebar": "Bench Milestone",
+        "assignee_link_text": "bench-assignee",
+        "milestone_link_text": "Bench Milestone (href .../milestone/1)",
+        "label_ids": "1,2",
+        "assignee_id": "3",
+        "milestone_id": "1",
+        "new_comment_text": "fwgt23-n1 verification comment",
+        "timeline_entries_observed": "admin added the bug label, admin added the priority-high label, admin added this to the Bench Milestone milestone, bench-assignee was assigned by admin, admin commented ... fwgt23-n1 verification comment",
+        "issue_state_after_reload": "Open",
+        "repo_open_issue_count": "4",
+        "bench_ref": "fwgt23-n1",
+        "url.h0": "issuecomment-5"
+      },
+      "route": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "urlRoutes": {
+        "url.h0": "http://127.0.0.1:8095 p0=bench p1=bench-repo p2=issues p3=4"
+      },
+      "outputEvidence": {
+        "issue_number_as_displayed": {
+          "same": 0,
+          "differed": 1
+        },
+        "title": {
+          "same": 0,
+          "differed": 1
+        },
+        "description": {
+          "same": 0,
+          "differed": 1
+        },
+        "labels_shown_in_sidebar": {
+          "same": 1,
+          "differed": 0
+        },
+        "assignee_shown_in_sidebar": {
+          "same": 1,
+          "differed": 0
+        },
+        "milestone_shown_in_sidebar": {
+          "same": 1,
+          "differed": 0
+        },
+        "assignee_link_text": {
+          "same": 1,
+          "differed": 0
+        },
+        "milestone_link_text": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "label_ids": {
+          "same": 1,
+          "differed": 0
+        },
+        "assignee_id": {
+          "same": 1,
+          "differed": 0
+        },
+        "milestone_id": {
+          "same": 1,
+          "differed": 0
+        },
+        "new_comment_text": {
+          "same": 0,
+          "differed": 1
+        },
+        "timeline_entries_observed": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "issue_state_after_reload": {
+          "same": 1,
+          "differed": 0
+        },
+        "repo_open_issue_count": {
+          "same": 1,
+          "differed": 0
+        },
+        "bench_ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "url.h0": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "session": "fwgt23-n1",
+    "created": "2026-09-26T21:44:20.354Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "03-report",
+      "outputs": [
+        "commit_mechanism"
+      ]
+    },
+    {
+      "stepId": "04-set",
+      "outputs": [
+        "labels_shown_after_reload",
+        "milestone_id"
+      ]
+    }
+  ]
+}
