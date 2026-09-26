@@ -1360,6 +1360,27 @@ function recipesHelper(spec: SpecFlow): { token: string; source: string[] } {
 }
 
 /**
+ * The site facts this file carries (`SpecFlow.facts`, one snapshot per
+ * origin, compile-time state like the recipes) and the one reader the rest of
+ * the file goes through: `siteFactsAt(url)`, the snapshot of that url's
+ * origin, or an empty one. `SiteFacts` and `emptyFacts` are the embedded
+ * src/execution/facts.ts, `originOf` the embedded url.ts.
+ */
+function factsHelper(spec: SpecFlow): { token: string; source: string[] } {
+  return {
+    token: 'siteFactsAt',
+    source: [
+      '/**',
+      ' * What the daemon had observed about each origin this file runs on, at',
+      ' * compile time. Compile-time state: recompile to refresh it.',
+      ' */',
+      `const FACTS: SiteFacts[] = ${JSON.stringify(spec.facts ?? [])};`,
+      "const siteFactsAt = (url: string): SiteFacts => FACTS.find((f) => f.origin === originOf(url)) ?? emptyFacts(originOf(url) ?? '');",
+    ],
+  };
+}
+
+/**
  * The FLOW literal: `JSON.stringify(spec, null, 2)`, except that a segment's
  * page fingerprint — FINGERPRINT_DIMS numbers — is written on ONE line rather
  * than one line per number. Still JSON (lift parses it as such), and nothing
@@ -4106,7 +4127,7 @@ export function emitFlowFile(spec: SpecFlow, o: EmitOptions): { source: string; 
   // GOTO_TIMEOUT_MS is named unconditionally: runFlow's own start-url goto
   // passes it, and runFlow is written after this scan, so a flow whose steps
   // never navigate would otherwise reference a constant the file does not carry.
-  const helpers = neededHelpers([body, 'profileMismatch(', 'readLiveBrowser(', 'GOTO_TIMEOUT_MS', 'pageTraffic(', 'startPageSettled('].join('\n'), [recipesHelper(spec)]);
+  const helpers = neededHelpers([body, 'profileMismatch(', 'readLiveBrowser(', 'GOTO_TIMEOUT_MS', 'pageTraffic(', 'startPageSettled(', 'siteFactsAt'].join('\n'), [recipesHelper(spec), factsHelper(spec)]);
 
   const out: string[] = [
     '// @sitelooper-flow v1',
@@ -4263,6 +4284,8 @@ export function emitFlowFile(spec: SpecFlow, o: EmitOptions): { source: string; 
   out.push('  run.warnings = [];');
   if (followsPages) out.push('  run.page = undefined;');
   out.push('  const outputs = run.outputs;');
+  // Stage 0 of site facts: carried and reachable, read by nothing yet.
+  out.push('  void siteFactsAt;');
   out.push('  try {');
   // Judged, never applied: the browser belongs to the test runner (the
   // scaffold applies RECORDED_USE; a mobile project may deliberately differ).

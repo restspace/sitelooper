@@ -3,11 +3,15 @@ import { mutates, selectCandidates } from '../skills/learn.js';
 import { threadStepParams } from '../skills/rethread.js';
 import { diagnosticLine, rerecordFix, rerecordAction, type Diagnostic } from './diagnostics.js';
 import { LEAKED_STEP } from './rerecord.js';
-import { SKILL_CONTRACT, pageEffectDemoted, stepsCarryContext, type Skill, type SkillParam, type SkillStep, type SkillStore } from '../skills/store.js';
+import { SKILL_CONTRACT, pageEffectDemoted, stepsCarryContext, type Skill, type SkillParam, type SkillStep, type SkillStore, skillsDir } from '../skills/store.js';
 import { seedRecipes, snapshotRecipes, type ComponentStore } from '../skills/components.js';
 import type { RecipeSnapshot } from '../execution/recipes.js';
 import { FINGERPRINT_DIMS } from '../execution/fingerprint.js';
 import type { BrowserProfile } from '../execution/browser.js';
+import type { SiteFacts } from '../execution/facts.js';
+import { originOf } from '../execution/url.js';
+import path from 'node:path';
+import { SiteFactStore, siteFactStore } from '../skills/facts.js';
 
 /**
  * The intermediate representation a compiled spec carries.
@@ -52,6 +56,15 @@ export interface SpecFlow {
    * which is exactly what a fresh install's store holds.
    */
   recipes?: RecipeSnapshot;
+  /**
+   * The site facts (src/execution/facts.ts) of every origin a segment's
+   * `preconditions.urlPattern` names, one snapshot per origin in first-seen
+   * order, taken from the store at COMPILE time and frozen like `recipes`.
+   * An origin with no facts still gets its (empty) snapshot, so the artifact
+   * knows the origin was consulted. Absent on a spec compiled before facts
+   * travelled; the artifact then reads every origin as empty.
+   */
+  facts?: SiteFacts[];
   /**
    * The browser the flow was recorded in (Flow.browser), for the artifact to
    * apply and judge against. Absent on a flow saved before it was stored, which
@@ -372,6 +385,15 @@ export function flowToSpec(
      * carries no snapshot and the emitter falls back to the shipped seeds.
      */
     components?: ComponentStore;
+    /**
+     * The site-facts store the spec snapshots (`SpecFlow.facts`). Omitted: the
+     * live `siteFactStore()` when `store` is the live procedure store (its
+     * directory is `skillsDir()`) or has no directory (a bundle compiled on
+     * this machine); otherwise none. A staged or scratch store (repair,
+     * rerecord, a test's tmp dir) holds no facts of its own, and those
+     * callers refresh the snapshot from the live store (carryFactSnapshot).
+     */
+    facts?: SiteFactStore;
   } = {},
 ): { spec: SpecFlow; warnings: string[]; diagnostics: Diagnostic[] } {
   const diagnostics: Diagnostic[] = [...noopDiagnostics(flow, o.flowFile)];
@@ -528,8 +550,11 @@ export function flowToSpec(
     diagnostics.splice(recipeAt, 0, ...found);
   }
 
+  const factStore = o.facts ?? (!store.dir ? siteFactStore() : path.resolve(store.dir) === path.resolve(skillsDir()) ? new SiteFactStore(store.dir) : undefined);
+  const facts = factStore ? factSnapshots(steps, factStore) : [];
+
   return {
-    spec: { version: steps.some((st) => st.segments.some((seg) => stepsCarryContext(seg.steps))) ? 2 : 1, name: flow.name, origin: flow.origin, startUrl: flow.startUrl, vars: flow.vars ?? [], steps, ...(recipes ? { recipes } : {}), ...(flow.browser ? { browser: flow.browser } : {}) },
+    spec: { version: steps.some((st) => st.segments.some((seg) => stepsCarryContext(seg.steps))) ? 2 : 1, name: flow.name, origin: flow.origin, startUrl: flow.startUrl, vars: flow.vars ?? [], steps, ...(recipes ? { recipes } : {}), ...(facts.length ? { facts } : {}), ...(flow.browser ? { browser: flow.browser } : {}) },
     warnings: diagnostics.map(diagnosticLine),
     diagnostics,
   };
@@ -611,6 +636,66 @@ export function carryRecipeSnapshot(
     });
   }
   return { changes, diagnostics: found };
+}
+
+/** The origins the spec's segments start on (`preconditions.urlPattern`), first-seen order. */
+function factOrigins(steps: readonly SpecStep[]): string[] {
+  const origins = new Set<string>();
+  for (const st of steps) {
+    for (const seg of st.segments) {
+      const origin = originOf(seg.preconditions.urlPattern);
+      if (origin) origins.add(origin);
+    }
+  }
+  return [...origins];
+}
+
+/** One facts snapshot per origin the steps start on, empty ones included. */
+function factSnapshots(steps: readonly SpecStep[], store: SiteFactStore): SiteFacts[] {
+  return factOrigins(steps).map((origin) => store.snapshot(origin));
+}
+
+/**
+ * Re-attach the site facts to a spec rebuilt from a store that never held
+ * them — repair's staged store, rerecord's scratch store. Unlike recipes,
+ * facts are ALWAYS refreshed from the live store (the daemon's, which the
+ * verification runs observed into): the prior snapshot is kept verbatim only
+ * per origin where the live one is identical, so the FLOW bytes do not move
+ * for nothing. `changed` counts the origins whose facts were added, moved
+ * or dropped (an empty snapshot where the file had none is not a change),
+ * for the report.
+ */
+export function carryFactSnapshot(
+  prior: SiteFacts[] | undefined,
+  spec: SpecFlow,
+  store: SiteFactStore = siteFactStore(),
+): { changed: number } {
+  const current = factSnapshots(spec.steps, store);
+  const before = new Map((prior ?? []).map((sf) => [sf.origin, sf]));
+  let changed = 0;
+  const next = current.map((sf) => {
+    const was = before.get(sf.origin);
+    if (was && JSON.stringify(was) === JSON.stringify(sf)) return was;
+    // An empty snapshot where the file had none says nothing new.
+    if (JSON.stringify(was?.facts ?? []) !== JSON.stringify(sf.facts)) changed++;
+    return sf;
+  });
+  const kept = new Set(next.map((sf) => sf.origin));
+  // A file that predates facts, on origins with none: it stays as it was.
+  if (!prior && next.every((sf) => !sf.facts.length)) {
+    delete spec.facts;
+    return { changed };
+  }
+  for (const [origin, was] of before) if (!kept.has(origin) && was.facts.length) changed++;
+  // Re-set in flowToSpec's key order (…, recipes, facts, browser): the
+  // callers carry recipes first, and the FLOW literal is written in key
+  // order, so an unchanged file stays byte-equal.
+  const browser = spec.browser;
+  delete spec.facts;
+  delete spec.browser;
+  if (next.length) spec.facts = next;
+  if (browser) spec.browser = browser;
+  return { changed };
 }
 
 /**
