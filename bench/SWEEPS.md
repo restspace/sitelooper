@@ -554,7 +554,7 @@ after that point is invalid, verifies (no model) are not. fwop15-cv2 and fwod88-
 for the top-up.
 
 
-## Round 67 (main de6c0cb5: site facts stage 0 merged — observers and shadow rows, no decision changes) — in progress
+## Round 67 (main de6c0cb5: site facts stage 0 merged — observers and shadow rows, no decision changes) — 1/5 green, 3/5 compiled and passed; facts on every app, 299 shadow rows, 292 agree (97.7%)
 
 Fired 09:24-09:36 UTC 2026-09-26 on the round-66 prompts plus F1-F3 (the facts report, the secret check, observer
 errors). Two boxes finished clean and LOST their results: fwod92 and fwgt18 pushed AFTER the prompt's password grep
@@ -568,7 +568,22 @@ fwod93 and fwgr78 re-fired 11:18 UTC.
 | 67 | fwsi18 | si | 7/7 ×3 | NO: 06-open fell back n2 (3 turns) and n3 (5): `s_d5d63a/5 raised an alert the recording never saw: This asset has been deleted` — step 5 is a `goto` to the RECORDED literal `hardware/4` (run 1's asset, deleted by the reset) | FAIL at the same goto, drift 0 | no | 54 (27 hard, 45 relied): 27 format, 24 value.class, route.fragment = anchor HARD n3 (the `#history` fact), route.path identity, value.shape | 84 rows, 1 disagree (facts.ledger: fact identifier (mint hard + shape), heuristic not-identifier — the one-digit asset id the shape floor never admits) | n1 took 16 turns / 15 commands (instructions 3-5: 42/37/32 turns; no hold fired, no observer error); the literal goto is the characters class this round's gitea fix is about (a url the model typed, never threaded) |
 | 67 | fwod92 | od | 6/6 ×3 | yes (0 turns everywhere) | pass (6/6) | **yes** (lost) | file present; count not captured | 47 rows | results died with the box: push refused after the password grep. Verdicts from the run log |
 | 67 | fwgt18 | gt | 7/7 ×3 | n2 NO: 03-set fell back (34 turns, re-pinned s_cc020d); n3 yes | pass, drift 3 (5/7, 2 UNVERIFIABLE) | no (n2) | 18 (11 hard, 17 relied) | 48 rows, 0 disagree | results died with the box (same). First gitea compile PASS since round 63: this 6-step recording had no 08-report and no picker-state report; the label picker still took 34 recovery turns on n2 |
-| 67 | fwgr78 | gr | — | — | — | — | — | — | box idled during setup; re-fired 11:18 UTC |
+| 67 | fwod93 | od | 6/6 ×3 | yes (0 turns everywhere) | pass, drift 1 (6/6) | **yes** | 28 (21 hard, 26 relied): 10 format, 14 value.class, route.fragment = state HARD n3 (odoo's `#id=` fragments), route.query `?id` = identity HARD n6, 2 value.shape | 67 rows, 6 disagree: facts.ledger 3 (one value the facts call constant, the ledger identifier — the same hash each time), facts.readback 2 (a format affix `£ 2,{{=}}` minted from a thousands-grouped subtotal, and `{{=}} Bench Customer` on the ref: the affix observer over-generalises, stage 2 must not rely on it as is), facts.sourcing 1 (FURN_ shape says hold; it was offered, so not held — the offered arm is right) | the re-run (fwod92's results died with its box): the cleanest odoo round on record twice running |
+| 67 | fwgr78 | gr | 6/6 ×3 | n2 yes; n3 NO (57 turns: 02-create s_de34b1/9 alert `Dashboard not found / Invalid dashboard UID in annotation request`, 03-edit every candidate refused) | FAIL at 02-create s_de34b1/9, the same alert | no | 21 (10 hard, 15 relied): 12 value.class, 5 format, route.query `?refresh` = state HARD n2, route.path identity soft | 37 rows, 0 disagree | the re-run after the idle box. The artifact carried run 1's dashboard uid into an annotation request: the characters class (a letters-only uid looks like nothing). The SAME uid sits inside two fact KEYS (`/d/afzexqoxkzoqod/*?refresh`): routeTemplateOf wildcards digit-heavy segments only, so a letters-only record id freezes a route template — a stage-1 defect to fix before route facts decide anything |
+
+Reading, stage 0 exit (design-site-facts §5): (1) facts written on every app — op 39, si 54, gt 18, gr 21, od 28, no
+observer error in any log; (2) shadow agreement 292/299 = 97.7% overall; per consumer: facts.ledger 226 rows / 4
+disagree (98.2%), facts.landing 3/0, facts.routesAgree 12/0, facts.strip 4/0, facts.readback 9 rows / 2 disagree
+(the affix observer minting a template from a thousands-grouped amount, and from a name that contains the ref),
+facts.sourcing 1/1. Every disagreement is read above; the two readback ones are defects of the OBSERVER, not of the
+heuristic, and stage 2 must tighten the affix rule (never across a digit-group separator; never when the frame is
+another value's whole name) before read-back relies on it. Stage 0 EXITS. Two facts to act on first: snipeit's
+`#history` is a hard `route.fragment = anchor` (3 sessions), odoo's `#id=` a hard `state`, and grafana's `?refresh`
+a hard `state` — stage 1's consumers have their first cases; and the route-template defect above (letters-only ids
+not wildcarded) is stage 1's first fix. Against round 66 (the control): op/gr artifacts went from pass to fail on
+different, fresh recordings (a date-field timing miss; run 1's uid in a request), od stayed green, gt compiled for
+the first time since round 63 on a recording without the picker-state report, si failed on a literal goto. None of
+the five failures names a facts or shadow path; the observers cost nothing visible (n1 wall 526-911 s, in range).
 
 ## Round 66 (main 357b983e = 37a9390a + prompts): the CONTROL batch on the merged guard fix and fixed driver (hold on), five apps — 2/5 green, 4/5 compiled and passed
 
