@@ -34,5 +34,8 @@ Status (2026-09-25):
   identity-aware admissions in src/skills/ledger.ts) shipped, merged to main (287d586b); fwgt19 green, cv4 and
   round 68 confirmed it. Stage 2 (site-facts-stage2-contract.md, §3 display format consumers: report
   classification, identity checks, read-back capture and counter masking behind `reliable()` in the new
-  src/execution/facts-display.ts, plus a tightened affix observer in src/skills/facts-format.ts) is in build on
-  feat/site-facts-2, three pieces in parallel.
+  src/execution/facts-display.ts, plus a tightened affix observer in src/skills/facts-format.ts) shipped
+  (8400f179), round 69 confirmed it. Stage 3 (site-facts-stage3-contract.md, §4 value class consumers: the
+  ledger's kind prior, the export's strip, the credential scrub, the sourcing hold, the task constants and
+  the heal guard's must-carry-the-recorded-value rule) is in build on feat/site-facts-3, four pieces in
+  parallel.

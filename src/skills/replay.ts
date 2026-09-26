@@ -10,8 +10,8 @@ import { LOOP_SHRINK_WAIT_MS, pageReadable, runFoldedLoop, type LoopPass } from 
 import type { Locator, Page } from 'playwright-core';
 import { clip, identityRe, identitySource } from '../shared/text.js';
 import { cosine, fingerprintPage } from '../daemon/fingerprint.js';
-import type { ReplayFactsHook } from './facts-url.js';
-import { shadowIdentity } from './facts-format.js';
+import { RUN_TOKENS, type ReplayFactsHook } from './facts-url.js';
+import { formatVars, shadowIdentity } from './facts-format.js';
 import { candidateExpr, makeLocator, type LocatorCandidate, type StepDiff } from '../daemon/recorder.js';
 import { retired, type SnapshotRow } from './repair.js';
 import {
@@ -291,6 +291,73 @@ export function healRoleRefused(
   const before = steps.slice(0, at).reverse().find((s) => s.expect?.urlPattern)?.expect?.urlPattern ?? preconditionPattern;
   if (!step.expect?.urlPattern || !before || step.expect.urlPattern !== before) return null;
   return `an inline heal proposed a ${proposed} for a control recorded as a ${[...recorded].join('/')}, on a click the recording saw stay on its page — a different control, not dispatched`;
+}
+
+/**
+ * Rule O (odoo fwod94 n2, round 68): A HEALED CANDIDATE MUST CARRY WHAT THE
+ * RECORDED ONE CARRIED. s_2a1251 step 2 recorded `role=option[name="{{v1}}"]`
+ * (v1 = this run's "fwod94-n2 Bench Customer"); the chain missed, an inline
+ * heal proposed Odoo's `option "Create \"fwod94-n1 Bench\""` off the live
+ * page, the click filed the quotation under run 1's customer and every later
+ * check passed. So when the recorded chain's role/label/text candidates name a
+ * KNOWN slot's filled value (`recordedValues`, from the shared identityValues),
+ * a proposal whose accessible name does not contain each such value — folded
+ * and whole-token, the bounded identityRe rule — is another record and is not
+ * dispatched; and a proposal whose name carries a runid-shaped token
+ * (facts-url.ts's RUN_TOKEN shape) that is not this run's own (`ownVars`: the
+ * run's declared var values) names another run. Scoped `hasText` is not
+ * counted: a control inside a record's row does not carry the row's value.
+ * `name` is the proposal's own name, else the live element's (null: none could
+ * be read, which cannot show the value). No recorded value: null, always —
+ * the heal path is then exactly what it was. Replay-only: a compiled artifact
+ * has no inline heal.
+ */
+export function healNameRefused(
+  recordedValues: readonly string[],
+  ownVars: readonly string[],
+  proposal: LocatorCandidate,
+  name: string | null,
+): string | null {
+  if (!recordedValues.length) return null;
+  const what = proposal.kind === 'role' ? `${proposal.role}` : proposal.kind;
+  const shown = name === null ? `whose name could not be read` : `named '${name}'`;
+  const missing = recordedValues.find((v) => name === null || !identityRe(v).test(name));
+  if (missing !== undefined) {
+    return `an inline heal proposed a ${what} ${shown}, for a control recorded as naming this run's '${missing}' — another record, not dispatched`;
+  }
+  const own = ownVars.flatMap((v) => [...v.matchAll(RUN_TOKENS)].map((m) => m[0]));
+  if (!own.length || name === null) return null;
+  const mine = [...ownVars, ...recordedValues];
+  const foreign = [...name.matchAll(RUN_TOKENS)].map((m) => m[0]).find((t) => !mine.some((v) => identityRe(t).test(v)));
+  if (foreign === undefined) return null;
+  return `an inline heal proposed a ${what} ${shown}, which carries '${foreign}' — another run's value (this run is '${own[0]}'), not dispatched`;
+}
+
+
+/** The name a proposal itself states: a role's name, a label, a text, a placeholder; else null. */
+function proposalName(c: LocatorCandidate): string | null {
+  if (c.kind === 'role') return c.name;
+  if (c.kind === 'label') return c.label;
+  if (c.kind === 'text') return c.text;
+  if (c.kind === 'placeholder') return c.placeholder;
+  return null;
+}
+
+/** The live element's accessible name (its aria snapshot head), else its text; null when neither can be read. */
+async function liveNameOf(loc: Locator): Promise<string | null> {
+  try {
+    const head = ((await loc.first().ariaSnapshot({ timeout: 1000 })) ?? '').split('\n')[0] ?? '';
+    const m = /^-\s*[A-Za-z][\w-]*\s+"((?:[^"\\]|\\.)*)"/.exec(head.trim());
+    if (m) return m[1].replace(/\\(.)/g, '$1');
+  } catch {
+    // no snapshot: fall to the text
+  }
+  try {
+    const text = await loc.first().textContent({ timeout: 1000 });
+    return typeof text === 'string' ? text.replace(/\s+/g, ' ').trim() : null;
+  } catch {
+    return null;
+  }
 }
 
 /** Tools that write into one control: the wrong one is echoed back by the step's own expectation. */
@@ -780,6 +847,21 @@ export async function replaySkill(
    * catches in `patchSegment`'s resolves-to-one check. Healing acts before any
    * review, so it makes the same check itself, first.
    */
+  // Rule O's inputs (healNameRefused): the KNOWN slots' filled values the
+  // recorded role/label/text candidates name, and this run's declared var
+  // values — the var-bound params plus the session's declared vars.
+  const healRecordedValues = (recorded: readonly LocatorCandidate[]): string[] => {
+    const known: Record<string, string | undefined> = {};
+    for (const [slot, value] of Object.entries(params)) if (skill.params[slot]?.known) known[slot] = value;
+    const named = recorded.filter((c) => c.kind === 'role' || c.kind === 'label' || c.kind === 'text');
+    return identityValues(known, named.flatMap((c) => identityFields(c as { name?: string; text?: string; label?: string })));
+  };
+  const ownRunVars = (): string[] => {
+    const vars = Object.entries(params)
+      .filter(([slot, value]) => value && skill.params[slot]?.binding?.startsWith('var:'))
+      .map(([, value]) => value);
+    return [...new Set([...vars, ...formatVars()])];
+  };
   const tryHeal = async (step: SkillStep, tag: string, key: string, chain: LocatorCandidate[], missOf: string): Promise<Locator | null> => {
     if (!healer) return null;
     const why = unhealableWhy(step, key, tag);
@@ -818,6 +900,18 @@ export async function replaySkill(
     } catch {
       proposal.settled?.(false);
       return null;
+    }
+    // Rule O: the heal must carry the value the recorded control was named by
+    // (and no other run's); a chain naming no known slot's value skips this.
+    const recordedValues = healRecordedValues(step.locators[key as 'target' | 'source'] ?? []);
+    if (recordedValues.length) {
+      const name = proposalName(proposal.candidate) ?? (await liveNameOf(locator));
+      const refusedName = healNameRefused(recordedValues, ownRunVars(), proposal.candidate, name);
+      if (refusedName) {
+        proposal.settled?.(false);
+        res.warnings.push(`step ${tag}: ${refusedName} (${expr})`);
+        return null;
+      }
     }
     pendingHeals.push(proposal);
     (res.healed ??= []).push({ step: tag, key, locator: expr, note: proposal.note });

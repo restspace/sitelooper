@@ -7,6 +7,7 @@
  *  - a stubborn retry is accepted as it stands;
  *  - a value a read produced is not held; with the flag off nothing is held;
  *  - stage 3: "head (commentary)" whose head the page shows publishes the head.
+ *  - site facts stage 3: an unasked value of a reliable mint shape is held (byFact).
  *
  *   BP_BROWSER_TESTS=1 npx vitest run test/sourcing-hold.browser.test.ts
  */
@@ -77,11 +78,17 @@ d('the sourcing hold at the loop', () => {
     process.env.SITELOOPER_SOURCING_HOLD = 'on';
   });
 
-  const run = async (script: Array<Array<{ name: string; args: Record<string, unknown> }>>, instruction = INSTRUCTION) => {
+  const run = async (
+    script: Array<Array<{ name: string; args: Record<string, unknown> }>>,
+    instruction = INSTRUCTION,
+    siteFacts?: import('../src/daemon/state.js').SessionState['siteFacts'],
+  ) => {
     const { runInstruction } = await import('../src/agent/loop.js');
     const { SessionState } = await import('../src/daemon/state.js');
     const progress: string[] = [];
-    const result = await runInstruction(scripted(script), session, new SessionState(`sourcing-${Math.random()}`), instruction, { ...loopOpts, onProgress: (l: string) => progress.push(l) });
+    const state = new SessionState(`sourcing-${Math.random()}`);
+    if (siteFacts) state.siteFacts = siteFacts;
+    const result = await runInstruction(scripted(script), session, state, instruction, { ...loopOpts, onProgress: (l: string) => progress.push(l) });
     const entries = session.script!.entries;
     const lastReport = [...entries].reverse().find((e): e is RecordedReport => e.k === 'report')!;
     const reads = entries.filter((e): e is RecordedStep => e.k === 'step' && (e.tool === 'read' || e.tool === 'read_all'));
@@ -154,6 +161,24 @@ d('the sourcing hold at the loop', () => {
     const off = await run([[evalTitles], [{ name: 'report', args: { status: 'success', summary: 'ok', evidence: { values: { open_issue_titles: notOnPage } } } }]]);
     expect(off.result.turns).toBe(2);
     expect(off.progress.some((l) => /holding success report for sourcing/.test(l))).toBe(false);
+  }, 60_000);
+
+  it('site facts (stage 3): an unasked value of a reliable mint shape nothing read is held once, recorded byFact', async () => {
+    const { emptyFacts, observeFact, shapeOf } = await import('../src/execution/facts.js');
+    const { shapeKeyOf } = await import('../src/skills/facts-value.js');
+    const url = (await session.getPage()).url();
+    const sf = emptyFacts('file://');
+    observeFact(sf, { k: 'value.shape', key: shapeKeyOf(url, 'issue_ref'), v: { re: shapeOf('IS-00041'), n: 2 }, hard: true, session: 'n1' });
+    const asked: string[] = [];
+    const report = { name: 'report', args: { status: 'success', summary: 'Listed.', evidence: { values: { open_issue_titles: 'Seed: triage inbox', issue_ref: 'IS-00042' } } } };
+    const held = await run([[evalTitles], [report], [report]], INSTRUCTION, (u) => (asked.push(u), sf));
+    expect(asked).toContain(url);
+    expect(held.progress.filter((l) => /holding success report for sourcing: issue_ref$/.test(l)).length).toBe(1);
+    expect(held.lastReport.sourcingAsk).toMatchObject({ asked: ['issue_ref'], byFact: ['issue_ref'] });
+    // No facts: the unasked value is not held (today's rule).
+    const plain = await run([[evalTitles], [report]]);
+    expect(plain.result.turns).toBe(2);
+    expect(plain.progress.some((l) => /holding success report for sourcing/.test(l))).toBe(false);
   }, 60_000);
 
   it('stage 3: a "head (commentary)" whose head the page shows publishes the head as a read-back, commentary in the summary', async () => {

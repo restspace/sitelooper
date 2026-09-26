@@ -199,12 +199,67 @@ export function scrubSecrets(text: string): string {
   return out;
 }
 
-/** scrubSecrets over every string in a structure (non-mutating). */
-export function scrubSecretsDeep<T>(value: T): T {
-  if (typeof value === 'string') return scrubSecrets(value) as T;
-  if (Array.isArray(value)) return value.map((v) => scrubSecretsDeep(v)) as T;
+/**
+ * Site facts, stage 3 consumer 4 (design-site-facts.md §4): valueHash of every
+ * value the origin holds a RELIABLE `credential` fact about, as the daemon's
+ * value observer last handed them (setKnownCredentialHashes). An AMBIGUOUS
+ * credential (the password that is also the username, fwgr68/fwkb39) whose
+ * hash is here is one the app is known to show, so the recorder's line scrub
+ * rewrites it in ANY line of a step's diff, not only its password field's own
+ * (scrubSecretsDeep's `knownCredentials`). Empty: the scrub is today's.
+ */
+let knownCredentialHashes = new Set<string>();
+/** The environment's ambiguous credential values whose hash is known, value → marker (computed once per hand-over: it reads the environment). */
+let knownCredentialValues = new Map<string, string>();
+
+/**
+ * Hand the scrub the hashes of this origin's reliable credential facts
+ * (skills/facts-value.ts ValueFactObserver.credentialHashes). Replaces the
+ * previous set. Hashes only: the values are this session's (ambiguousLedger)
+ * or the environment's own credential variables, matched by hash.
+ */
+export function setKnownCredentialHashes(hashes: Iterable<string>, env: NodeJS.ProcessEnv = process.env): void {
+  knownCredentialHashes = new Set(hashes);
+  knownCredentialValues = new Map();
+  if (!knownCredentialHashes.size) return;
+  for (const v of credentialVars(env)) {
+    if (v.ambiguous && knownCredentialHashes.has(valueHash(v.value))) knownCredentialValues.set(v.value, `{{env:${v.name}}}`);
+  }
+}
+
+/**
+ * `text` with every ambiguous credential value whose hash has a reliable
+ * credential fact (setKnownCredentialHashes) rewritten to its marker wherever
+ * it stands as a token — the value itself, not the middle of a longer word
+ * ("admin" goes, "administrator" stays). Longest first, as scrubSecrets.
+ */
+function scrubKnownCredentials(text: string): string {
+  if (!knownCredentialHashes.size) return text;
+  const known = new Map<string, string>(knownCredentialValues);
+  for (const [value, marker] of ambiguousLedger) if (knownCredentialHashes.has(valueHash(value)) && !known.has(value)) known.set(value, marker);
+  let out = text;
+  for (const [value, marker] of [...known].sort((a, b) => b[0].length - a[0].length)) {
+    if (value.length < MIN_SCRUB_LEN || !out.includes(value)) continue;
+    out = out.replace(tokenRe(value), () => marker);
+  }
+  return out;
+}
+
+/**
+ * scrubSecrets over every string in a structure (non-mutating).
+ * `knownCredentials`: the recorder's line scrub of a step's diff (agent/tools.ts)
+ * also rewrites the ambiguous credentials a reliable site fact says the app
+ * shows (scrubKnownCredentials), in any line. Off everywhere else: what the
+ * model reads is scrubbed as it always was.
+ */
+export function scrubSecretsDeep<T>(value: T, opts: { knownCredentials?: boolean } = {}): T {
+  if (typeof value === 'string') {
+    const scrubbed = scrubSecrets(value);
+    return (opts.knownCredentials ? scrubKnownCredentials(scrubbed) : scrubbed) as T;
+  }
+  if (Array.isArray(value)) return value.map((v) => scrubSecretsDeep(v, opts)) as T;
   if (value && typeof value === 'object') {
-    return Object.fromEntries(Object.entries(value as Record<string, unknown>).map(([k, v]) => [k, scrubSecretsDeep(v)])) as T;
+    return Object.fromEntries(Object.entries(value as Record<string, unknown>).map(([k, v]) => [k, scrubSecretsDeep(v, opts)])) as T;
   }
   return value;
 }
@@ -215,6 +270,8 @@ export function clearSecretLedger(): void {
   ambiguousLedger.clear();
   ambiguousHashes.clear();
   passwordLines.clear();
+  knownCredentialHashes = new Set();
+  knownCredentialValues = new Map();
 }
 
 /*

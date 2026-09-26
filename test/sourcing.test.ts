@@ -4,7 +4,9 @@
  * page are in test/sourcing-hold.browser.test.ts.
  */
 import { describe, expect, it } from 'vitest';
-import { applyCommentaryPrePass, decideSourcingHold, isDataShaped, sourcingAskMessage, sourcingHoldOn, splitCommentary, type TierVerdict } from '../src/agent/sourcing.js';
+import { applyCommentaryPrePass, decideSourcingHold, isDataShaped, sourcingAskMessage, sourcingHoldOn, splitCommentary, type SourcingFacts, type TierVerdict } from '../src/agent/sourcing.js';
+import { emptyFacts, observeFact, shapeOf, valueHash, type SiteFacts } from '../src/execution/facts.js';
+import { shapeKeyOf, valueVerdict } from '../src/skills/facts-value.js';
 import type { Report } from '../src/agent/report.js';
 
 describe('sourcingHoldOn', () => {
@@ -104,6 +106,66 @@ describe('decideSourcingHold', () => {
     expect(msg).toMatch(/open_issue_titles = "Seed: triage inbox"  \(it matches what your eval returned/);
     expect(msg).toMatch(/do not click or fill anything that changes data/);
     expect(msg).toMatch(/keep it and say so in the summary/);
+  });
+});
+
+describe('decideSourcingHold: site facts (stage 3, consumer 3) — the unasked mint-shaped hold', () => {
+  // snipeit fwsi16: list columns nobody asked for were reported, never read,
+  // and threaded to later literals. A reliable mint shape under the key makes
+  // such a value a candidate even unasked; every other filter still applies.
+  const SI = 'http://si.test';
+  const url = `${SI}/hardware`;
+  const instruction = 'Open the asset list and report the name of the newest asset.';
+  const reliableShape = (): SiteFacts => {
+    const sf = emptyFacts(SI);
+    observeFact(sf, { k: 'value.shape', key: shapeKeyOf(url, 'asset_tag'), v: { re: shapeOf('BA-00006'), n: 2 }, hard: true, session: 'n1' });
+    return sf;
+  };
+  const factsOf = (sf: SiteFacts): SourcingFacts => ({ verdict: (value, key) => valueVerdict(sf, value, shapeKeyOf(url, key)) });
+  const values = { newest_asset_name: 'fwsi16-n2 Bench Asset', asset_tag: 'BA-00007', status: 'Ready to Deploy' };
+
+  it('holds an unasked value of a reliable mint shape that nothing read, marked byFact', async () => {
+    const seen: string[] = [];
+    const d = await decideSourcingHold({
+      instruction,
+      values,
+      alreadyRead: new Set(['fwsi16-n2 Bench Asset']),
+      alertTexts: [],
+      verdict: async (key) => (seen.push(key), 'absent'),
+      facts: factsOf(reliableShape()),
+    });
+    expect(d.held).toEqual([{ key: 'asset_tag', value: 'BA-00007', verdict: 'absent', byFact: true }]);
+    // the unasked `status` never reaches the tiers: no fact speaks for it
+    expect(seen).toEqual(['asset_tag']);
+  });
+
+  it('not when it was read, not when the tiers source it, not when the shape is advisory or absent', async () => {
+    // Only the unasked tag is in question: every call keeps the asked name's hold out of the way by what it read, or reports it.
+    const run = (sf: SiteFacts | undefined, alreadyRead: string[] = ['fwsi16-n2 Bench Asset'], tier: TierVerdict = 'absent') =>
+      decideSourcingHold({ instruction, values, alreadyRead: new Set(alreadyRead), alertTexts: [], verdict: async () => tier, ...(sf ? { facts: factsOf(sf) } : {}) });
+    expect((await run(reliableShape(), ['fwsi16-n2 Bench Asset', 'BA-00007'])).held).toEqual([]);
+    expect((await run(reliableShape(), [], 'sourced')).held).toEqual([]);
+    const soft = emptyFacts(SI);
+    observeFact(soft, { k: 'value.shape', key: shapeKeyOf(url, 'asset_tag'), v: { re: shapeOf('BA-00006'), n: 2 }, hard: false, session: 'n1' });
+    expect((await run(soft)).held).toEqual([]);
+    // no facts, or none that speaks: today's rule — only the asked name, when nothing read it
+    expect((await run(undefined, [])).held.map((h) => h.key)).toEqual(['newest_asset_name']);
+    expect((await run(emptyFacts(SI), [])).held.map((h) => h.key)).toEqual(['newest_asset_name']);
+    expect((await run(undefined)).held).toEqual([]);
+  });
+
+  it('a reliable constant never adds a hold; an asked key held anyway is not byFact', async () => {
+    const sf = reliableShape();
+    observeFact(sf, { k: 'value.class', key: valueHash('Ready to Deploy'), v: 'constant', hard: true, session: 'n1' });
+    const d = await decideSourcingHold({
+      instruction: 'Open the asset list and report the asset tag of the newest asset.',
+      values: { asset_tag: 'BA-00007', status: 'Ready to Deploy' },
+      alreadyRead: new Set(),
+      alertTexts: [],
+      verdict: async () => 'absent',
+      facts: factsOf(sf),
+    });
+    expect(d.held).toEqual([{ key: 'asset_tag', value: 'BA-00007', verdict: 'absent' }]);
   });
 });
 

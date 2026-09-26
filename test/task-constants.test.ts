@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import type { RecordedEntry, RecordedStep } from '../src/daemon/recorder.js';
 import { type TransformNote, compileSkills, cutAtPublishedValue, unfreezeExpectations } from '../src/skills/compile.js';
-import { taskConstants } from '../src/skills/flow.js';
+import { taskConstantArms, taskConstants } from '../src/skills/flow.js';
+import { emptyFacts, observeFact, shapeOf, valueHash, type SiteFacts } from '../src/execution/facts.js';
+import { shapeKeyOf } from '../src/skills/facts-value.js';
 import type { SkillStep } from '../src/skills/store.js';
 
 function step(tool: string, args: Record<string, unknown>, chain: RecordedStep['locators']['target']['chain'] = [], extra: Partial<RecordedStep> = {}): RecordedStep {
@@ -132,5 +134,82 @@ describe('an alert expectation does not freeze a published value (FIX P)', () =>
 
   it('matches whole tokens only and ignores a one-character value', () => {
     expect(cutAtPublishedValue('Created BA-000041 and 4 more', ['BA-00004', '4'])).toBe('Created BA-000041 and 4 more');
+  });
+});
+
+describe('taskConstants: site facts decide where one is reliable (stage 3, consumer 3)', () => {
+  const X = 'http://x.test';
+  const classFact = (value: string, v: 'constant' | 'mint', hard = true): SiteFacts => {
+    const sf = emptyFacts(X);
+    observeFact(sf, { k: 'value.class', key: valueHash(value), v, hard, session: 'n1' });
+    return sf;
+  };
+
+  // The create REPORTED the code before any instruction named it: neither arm catches it.
+  const reportedFirst: RecordedEntry[] = [
+    { k: 'instruction', text: 'Add the office chair to the quotation and report its product code.', url: `${X}/odoo/sales/7`, fingerprint: [1, 0, 0] },
+    step('click', { target: '@e1' }),
+    { k: 'report', status: 'success', summary: 'Added FURN_7777.', values: { code: 'FURN_7777' } },
+    { k: 'instruction', text: 'Open the product FURN_7777 and report its price.', url: `${X}/odoo/sales/7`, fingerprint: [1, 0, 0] },
+  ];
+
+  it('a reliable constant class makes a value a constant the arms miss, under the third arm', () => {
+    expect([...taskConstants(reportedFirst, ['FURN_7777'])]).toEqual([]);
+    expect([...taskConstants(reportedFirst, ['FURN_7777'], [], undefined, classFact('FURN_7777', 'constant'))]).toEqual(['FURN_7777']);
+    expect([...taskConstantArms(reportedFirst, ['FURN_7777'], [], undefined, classFact('FURN_7777', 'constant'))]).toEqual([['FURN_7777', 'fact']]);
+  });
+
+  it('a heuristic arm that also catches a fact-constant keeps its own name', () => {
+    const entries: RecordedEntry[] = [
+      { k: 'instruction', text: "Sign in with username 'admin' and confirm the admin user is shown.", url: `${X}/`, fingerprint: [1, 0, 0] },
+      { k: 'report', status: 'success', summary: 'Signed in.', values: { logged_in_user: 'Admin' } },
+    ];
+    expect([...taskConstantArms(entries, ['Admin'], [], undefined, classFact('Admin', 'constant'))]).toEqual([['Admin', 'stated']]);
+  });
+
+  it('a reliable mint is never a constant, even stated before shown', () => {
+    const entries: RecordedEntry[] = [
+      { k: 'instruction', text: "Sign in with username 'admin' and confirm the admin user is shown.", url: `${X}/`, fingerprint: [1, 0, 0] },
+      { k: 'report', status: 'success', summary: 'Signed in.', values: { logged_in_user: 'Admin' } },
+    ];
+    expect(taskConstants(entries, ['Admin']).has('Admin')).toBe(true);
+    expect(taskConstants(entries, ['Admin'], [], undefined, classFact('Admin', 'mint')).has('Admin')).toBe(false);
+    expect(taskConstantArms(entries, ['Admin'], [], undefined, classFact('Admin', 'mint')).size).toBe(0);
+  });
+
+  it('a value of a reliable mint shape under the key a report carried it is never a constant', () => {
+    // A stated tag (the task named BA-00007), reported under asset_tag on /hardware.
+    const entries: RecordedEntry[] = [
+      { k: 'instruction', text: "Create an asset with tag 'BA-00007' and report its tag.", url: `${X}/hardware/create`, fingerprint: [1, 0, 0] },
+      step('click', { target: '@e1' }, [], { diff: { url: `${X}/hardware`, alerts: [], added: [] } }),
+      { k: 'report', status: 'success', summary: 'Created.', values: { asset_tag: 'BA-00007' } },
+    ];
+    expect(taskConstants(entries, ['BA-00007']).has('BA-00007')).toBe(true);
+    const shaped = emptyFacts(X);
+    observeFact(shaped, { k: 'value.shape', key: shapeKeyOf(`${X}/hardware`, 'asset_tag'), v: { re: shapeOf('BA-00006'), n: 2 }, hard: true, session: 'n1' });
+    expect(taskConstants(entries, ['BA-00007'], [], undefined, shaped).has('BA-00007')).toBe(false);
+    // Mint wins over a constant for one value (the shape and a constant class disagree).
+    observeFact(shaped, { k: 'value.class', key: valueHash('BA-00007'), v: 'constant', hard: true, session: 'n1' });
+    expect(taskConstants(entries, ['BA-00007'], [], undefined, shaped).has('BA-00007')).toBe(false);
+    // The same shape under another key (or another route) does not speak.
+    const elsewhere = emptyFacts(X);
+    observeFact(elsewhere, { k: 'value.shape', key: shapeKeyOf(`${X}/hardware`, 'serial'), v: { re: shapeOf('BA-00006'), n: 2 }, hard: true, session: 'n1' });
+    expect(taskConstants(entries, ['BA-00007'], [], undefined, elsewhere).has('BA-00007')).toBe(true);
+  });
+
+  it('no reliable fact: byte-identical (advisory facts, empty facts, no facts)', () => {
+    const advisory = classFact('FURN_7777', 'constant', false);
+    const advisoryMint = classFact('Admin', 'mint', false);
+    const signIn: RecordedEntry[] = [
+      { k: 'instruction', text: "Sign in with username 'admin' and confirm the admin user is shown.", url: `${X}/`, fingerprint: [1, 0, 0] },
+      { k: 'report', status: 'success', summary: 'Signed in.', values: { logged_in_user: 'Admin' } },
+    ];
+    for (const [entries, values] of [[reportedFirst, ['FURN_7777']], [signIn, ['Admin']]] as const) {
+      const base = [...taskConstants(entries, values)];
+      for (const sf of [advisory, advisoryMint, emptyFacts(X), undefined]) {
+        expect([...taskConstants(entries, values, [], undefined, sf)]).toEqual(base);
+        expect([...taskConstantArms(entries, values, [], undefined, sf)]).toEqual([...taskConstantArms(entries, values)]);
+      }
+    }
   });
 });

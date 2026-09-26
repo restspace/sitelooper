@@ -333,6 +333,9 @@ Both snapshot and restore stop `mongod` and `rs2-server`, move the bytes, and re
   rather than only on disagreements. Stage 2 (notes/design/site-facts-stage2-contract.md) switches the same
   `applied` mechanism on for the display-format consumers (report classification, identity checks, read-back
   capture, counter masking), so `facts.readback`/`facts.classify`/`facts.identity` rows can carry it too.
+  Stage 3 (notes/design/site-facts-stage3-contract.md) switches it on for the value-class consumers — the
+  ledger's kind prior, the export's strip, the sourcing hold and the task constants — so
+  `facts.ledger`/`facts.strip`/`facts.sourcing` rows can carry `applied: true` as well.
 
 ## Known gaps
 

@@ -3,6 +3,7 @@ import path from 'node:path';
 import type { ChatMessage } from '../agent/llm.js';
 import type { SystemOneDecision } from '../agent/system-one.js';
 import { ensureSessionDir } from '../shared/paths.js';
+import type { SiteFacts } from '../execution/facts.js';
 
 export type { SystemOneDecision };
 
@@ -30,6 +31,14 @@ export class SessionState {
    * session turns every occurrence of them into a {{name}} reference.
    */
   vars: Record<string, string> = {};
+  /**
+   * The origin's site facts as the daemon's value-fact observer holds them
+   * (server.ts `valueFacts().snapshot(url)`), for the agent loop's sourcing
+   * hold (site facts stage 3, consumer 3). Injected by the daemon, like
+   * `vars`; unset (every test and a daemon without a learn store) means no
+   * facts, and the hold decides exactly as before.
+   */
+  siteFacts?: (url: string) => SiteFacts | undefined;
   usage = { promptTokens: 0, completionTokens: 0, cachedTokens: 0, instructions: 0 };
   /**
    * The same totals split by model id. A session can bill against more than one

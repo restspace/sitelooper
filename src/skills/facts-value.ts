@@ -20,6 +20,7 @@
  * the secrets ledger on every write.
  */
 import {
+  factFor,
   factsFor,
   matchesShape,
   reliable,
@@ -155,6 +156,54 @@ export function factKind(sf: SiteFacts, value: string, shapeKey: string | undefi
   return 'none';
 }
 
+/** What a reliable fact decides about a value's kind, and the fact that decided it (§4 consumers 1, 2, 4). */
+export interface ValueVerdict {
+  kind: 'identifier' | 'not-identifier';
+  by: Fact;
+}
+
+/** A value shadow row, stamped `applied` when the fact DECIDED what the consumer did (stage 3). */
+export type ValueShadowRow = ShadowRow & { applied?: true };
+
+/**
+ * factKind restricted to RELIABLE facts, with the deciding fact: the one
+ * question every stage 3 value consumer asks (the ledger's kind, the export's
+ * strip). Null when no reliable fact speaks — the consumer then runs today's
+ * rule, byte for byte.
+ *
+ *  - a reliable `credential` is never an identifier, whatever else speaks: a
+ *    secret is never banked as a run's record;
+ *  - a reliable `mint` is an identifier;
+ *  - a value matching its label's reliable `value.shape` is an identifier at
+ *    first sighting, whatever its length ("4" under kanboard's `task_id`);
+ *  - a reliable `constant` is not one (odoo's FURN_7777).
+ * Where a constant and a shape disagree about one value the identifier wins
+ * (the stage 3 contract's principle: a wrongly literal id costs a record, a
+ * wrongly slotted constant a recovery turn); `factKind`, the stage 0 shadow's
+ * reading, asks the class first and so differs from this only there. A class
+ * fact is reliable-only by construction (`factFor` refuses two reliable facts
+ * under one key: a value filed both `mint` and `constant` decides nothing).
+ */
+export function valueVerdict(sf: SiteFacts | undefined, value: string, shapeKey?: string): ValueVerdict | null {
+  if (!sf) return null;
+  const v = String(value ?? '').trim();
+  if (!v) return null;
+  const cls = factFor(sf, 'value.class', valueHash(v));
+  if (cls?.v === 'credential') return { kind: 'not-identifier', by: cls };
+  if (cls?.v === 'mint') return { kind: 'identifier', by: cls };
+  if (shapeKey && matchesShape(sf, shapeKey, v)) {
+    const shape = factFor(sf, 'value.shape', shapeKey);
+    if (shape) return { kind: 'identifier', by: shape };
+  }
+  if (cls?.v === 'constant') return { kind: 'not-identifier', by: cls };
+  return null;
+}
+
+/** valueVerdict's kind, or 'none': what the shadow rows record as the fact's verdict. */
+function verdictKind(sf: SiteFacts, value: string, shapeKey: string | undefined): IdVerdict {
+  return valueVerdict(sf, value, shapeKey)?.kind ?? 'none';
+}
+
 /** Every fact (reliable or not) that speaks about a value or its label's shape. */
 function factsAbout(sf: SiteFacts, value: string, shapeKey: string | undefined): Fact[] {
   return [...factsFor(sf, 'value.class', valueHash(value)), ...(shapeKey ? factsFor(sf, 'value.shape', shapeKey) : [])];
@@ -166,10 +215,17 @@ function factsAbout(sf: SiteFacts, value: string, shapeKey: string | undefined):
  * take part in). `kind` is today's: the ledger entry's, or undefined when
  * the ledger holds none (below the length floor, a skipped url part).
  */
-export function ledgerRow(sf: SiteFacts, value: string, shapeKey: string | undefined, kind: LedgerEntry['kind'] | undefined): ShadowRow | null {
+export function ledgerRow(
+  sf: SiteFacts,
+  value: string,
+  shapeKey: string | undefined,
+  kind: LedgerEntry['kind'] | undefined,
+  /** Stage 3: the ledger's add() was handed these facts and a reliable verdict decided the entry. */
+  applied = false,
+): ValueShadowRow | null {
   const about = factsAbout(sf, value, shapeKey);
   if (!about.length) return null;
-  const fact = factKind(sf, value, shapeKey);
+  const fact = verdictKind(sf, value, shapeKey);
   const heuristic = kind === 'identifier' ? 'identifier' : 'not-identifier';
   return {
     rule: 'facts.ledger',
@@ -178,6 +234,7 @@ export function ledgerRow(sf: SiteFacts, value: string, shapeKey: string | undef
     heuristic,
     agree: fact === 'none' || fact === heuristic,
     evidence: about.map(evidenceOf),
+    ...(applied && fact !== 'none' ? { applied: true as const } : {}),
   };
 }
 
@@ -186,10 +243,17 @@ export function ledgerRow(sf: SiteFacts, value: string, shapeKey: string | undef
  * identifier (§4 consumer 2)? `stripped` is today's decision (the value is
  * among stripLeakedCandidates' run values).
  */
-export function stripRow(sf: SiteFacts, value: string, shapeKey: string | undefined, stripped: boolean): ShadowRow | null {
+export function stripRow(
+  sf: SiteFacts,
+  value: string,
+  shapeKey: string | undefined,
+  stripped: boolean,
+  /** Stage 3: a reliable verdict put the value among (or kept it out of) stripLeakedCandidates' run values. */
+  applied = false,
+): ValueShadowRow | null {
   const about = factsAbout(sf, value, shapeKey);
   if (!about.length) return null;
-  const kind = factKind(sf, value, shapeKey);
+  const kind = verdictKind(sf, value, shapeKey);
   const fact = kind === 'none' ? 'none' : kind === 'identifier' ? 'strip' : 'keep';
   const heuristic = stripped ? 'strip' : 'keep';
   return {
@@ -199,6 +263,7 @@ export function stripRow(sf: SiteFacts, value: string, shapeKey: string | undefi
     heuristic,
     agree: fact === 'none' || fact === heuristic,
     evidence: about.map(evidenceOf),
+    ...(applied && fact !== 'none' ? { applied: true as const } : {}),
   };
 }
 
@@ -206,15 +271,29 @@ export function stripRow(sf: SiteFacts, value: string, shapeKey: string | undefi
  * Row `facts.sourcing` (§4 consumer 3): a reported value matching a reliable
  * mint shape, data-shaped and not read under its key, would be held for a
  * read even unasked. `held` is today's: the report's sourcingAsk named the
- * key. Null when no shape fact exists under the key; fact 'none' when no
- * reliable shape matches (the hold then decides alone).
+ * key. Null when no shape fact exists under the key nor any class fact for
+ * the value; fact 'none' when no reliable fact makes it an identifier (the
+ * hold then decides alone). Stage 3: `applied` when the hold held the key on
+ * the fact's word alone (agent/sourcing.ts `byFact`).
  */
-export function sourcingRow(sf: SiteFacts, key: string, value: string, shapeKey: string, held: boolean, readUnderKey: boolean): ShadowRow | null {
-  const about = factsFor(sf, 'value.shape', shapeKey);
+export function sourcingRow(
+  sf: SiteFacts,
+  key: string,
+  value: string,
+  shapeKey: string,
+  held: boolean,
+  readUnderKey: boolean,
+  /** Stage 3: the loop's hold held this key only because a reliable fact made its value an identifier (sourcingAsk.byFact). */
+  applied = false,
+): ValueShadowRow | null {
+  // Stage 3: the facts the hold consults are valueVerdict's (the key's mint
+  // shape, or the value's own mint class; mint wins over a constant), so the
+  // row speaks when either kind of fact exists.
+  const about = factsAbout(sf, value, shapeKey);
   if (!about.length) return null;
   // The fact only ever ADDS a hold (an unasked value of a known mint shape);
   // where it does not speak, the hold decides as today.
-  const fact = matchesShape(sf, shapeKey, value) && isDataShaped(value) && (held || !readUnderKey) ? 'held' : 'none';
+  const fact = valueVerdict(sf, value, shapeKey)?.kind === 'identifier' && isDataShaped(value) && (held || !readUnderKey) ? 'held' : 'none';
   const heuristic = held ? 'held' : 'not-held';
   return {
     rule: 'facts.sourcing',
@@ -223,6 +302,7 @@ export function sourcingRow(sf: SiteFacts, key: string, value: string, shapeKey:
     heuristic,
     agree: fact === 'none' || fact === heuristic,
     evidence: about.map(evidenceOf),
+    ...(applied && fact === 'held' ? { applied: true as const } : {}),
   };
 }
 
@@ -233,6 +313,8 @@ interface Candidate {
   origin: string;
   /** Minted (a provenance or variance admission, or a reported identifier): counts toward the label's shape. */
   minted: boolean;
+  /** Stage 3: the ledger banked it on a reliable valueVerdict (the report's add() was handed the facts). */
+  applied?: boolean;
 }
 
 /** What the daemon hands the observer at an instruction's end. */
@@ -366,7 +448,11 @@ export class ValueFactObserver {
         const ev = mintEv(shapeKey, v, vars);
         this.pendingObs.push({ origin, o: { k: 'value.class', key: valueHash(v), v: 'mint', hard: false, ...(ev ? { ev } : {}) } });
       }
-      this.candidates.push({ value: v, shapeKey, origin, minted: entry?.kind === 'identifier' });
+      // Stage 3: the daemon hands the report's add() this origin's snapshot
+      // (server.ts noteMintedIds), so a verdict that speaks now decided the
+      // entry add() just banked.
+      const applied = Boolean(entry) && valueVerdict(this.snapshot(url!), v, shapeKey) !== null;
+      this.candidates.push({ value: v, shapeKey, origin, minted: entry?.kind === 'identifier', ...(applied ? { applied } : {}) });
     } catch {
       /* shadow only */
     }
@@ -396,7 +482,8 @@ export class ValueFactObserver {
         const id = `${c.value}\u0000${c.shapeKey ?? ''}`;
         if (seen.has(id)) continue;
         seen.add(id);
-        const row = ledgerRow(before.get(c.origin)!, c.value, c.shapeKey, kindOf.get(c.value));
+        const applied = this.candidates.some((o) => o.applied && o.value === c.value && o.shapeKey === c.shapeKey);
+        const row = ledgerRow(before.get(c.origin)!, c.value, c.shapeKey, kindOf.get(c.value), applied);
         if (row) rows.push(row);
       }
       // Rows: the sourcing hold, when it is on.
@@ -404,12 +491,13 @@ export class ValueFactObserver {
       if (end.sourcingHold && report?.k === 'report' && instrOrigin) {
         const url = instructionUrl(end.entries);
         const held = new Set(report.sourcingAsk?.asked ?? []);
+        const byFact = new Set(report.sourcingAsk?.byFact ?? []);
         const readKeys = new Set(
           end.entries.flatMap((e) => (e.k === 'step' && (e.tool === 'read' || e.tool === 'read_all') && typeof e.args.label === 'string' ? [e.args.label] : [])),
         );
         for (const [key, raw] of Object.entries(report.values ?? {})) {
           if (typeof raw !== 'string' || !url) continue;
-          const row = sourcingRow(before.get(instrOrigin)!, key, raw.trim(), shapeKeyOf(url, key), held.has(key), readKeys.has(key));
+          const row = sourcingRow(before.get(instrOrigin)!, key, raw.trim(), shapeKeyOf(url, key), held.has(key), readKeys.has(key), byFact.has(key));
           if (row) rows.push(row);
         }
       }
@@ -471,7 +559,13 @@ export class ValueFactObserver {
    * `candidates` are the ledger's identifier entries it considered, `stripped`
    * the values it treats as run values. Written at once.
    */
-  stripRows(candidates: readonly LedgerEntry[], stripped: ReadonlySet<string>, context = 'export'): ShadowRow[] {
+  stripRows(
+    candidates: readonly LedgerEntry[],
+    stripped: ReadonlySet<string>,
+    context = 'export',
+    /** Stage 3: the values whose strip a reliable verdict decided (stripVerdicts), and the origin those were judged on when met under no key. */
+    applied: { values: ReadonlySet<string>; origin?: string } = { values: new Set() },
+  ): ShadowRow[] {
     const rows: ShadowRow[] = [];
     try {
       const cache = new Map<string, SiteFacts>();
@@ -480,10 +574,10 @@ export class ValueFactObserver {
         return cache.get(origin)!;
       };
       for (const e of candidates) {
-        const shapeKey = this.keyOfValue.get(e.value);
-        const origin = shapeKey ? originOf(shapeKey.split('|')[0]) : null;
+        const decided = applied.values.has(e.value);
+        const { origin, shapeKey } = this.whereOf(e.value, decided ? applied.origin : undefined);
         if (!origin) continue;
-        const row = stripRow(factsAt(origin), e.value, shapeKey, stripped.has(e.value));
+        const row = stripRow(factsAt(origin), e.value, shapeKey, stripped.has(e.value), decided);
         if (row) rows.push(row);
       }
       this.writeRows(rows, context);
@@ -491,6 +585,62 @@ export class ValueFactObserver {
       /* shadow only */
     }
     return rows;
+  }
+
+  /**
+   * Where a value was met: the shape key it was last met under this session
+   * (a url part's label, a report's key) and that key's origin; else only
+   * `fallbackOrigin` (the flow's), where a class fact can still speak.
+   */
+  private whereOf(value: string, fallbackOrigin?: string): { origin: string | null; shapeKey?: string } {
+    const shapeKey = this.keyOfValue.get(value);
+    const origin = shapeKey ? originOf(shapeKey.split('|')[0]) : null;
+    if (origin) return { origin, shapeKey };
+    return { origin: fallbackOrigin ? originOf(fallbackOrigin) : null };
+  }
+
+  /**
+   * Stage 3, consumer 2 (stripLeakedCandidates): the reliable valueVerdict of
+   * every ledger entry, judged on the origin it was met on (under the key it
+   * was met under), or on `fallbackOrigin` by its class alone. An entry no
+   * reliable fact speaks about is absent: the strip decides it as today.
+   */
+  stripVerdicts(entries: readonly LedgerEntry[], fallbackOrigin?: string): Map<string, ValueVerdict> {
+    const out = new Map<string, ValueVerdict>();
+    try {
+      const cache = new Map<string, SiteFacts | undefined>();
+      for (const e of entries) {
+        const { origin, shapeKey } = this.whereOf(e.value, fallbackOrigin);
+        if (!origin) continue;
+        if (!cache.has(origin)) cache.set(origin, this.snapshot(origin));
+        const verdict = valueVerdict(cache.get(origin), e.value, shapeKey);
+        if (verdict) out.set(e.value, verdict);
+      }
+    } catch {
+      /* no verdicts: today's strip */
+    }
+    return out;
+  }
+
+  /**
+   * Stage 3, consumer 4: the hashes of the values this url's origin holds a
+   * RELIABLE `credential` fact about (the one reliable class fact of the
+   * hash). The daemon hands them to the recorder's scrub (shared/secrets.ts
+   * setKnownCredentialHashes): hashes only, as the store holds them. Empty
+   * when the url has no origin or the store cannot be read.
+   */
+  credentialHashes(url: string): Set<string> {
+    const out = new Set<string>();
+    try {
+      const sf = this.snapshot(url);
+      if (!sf) return out;
+      for (const f of sf.facts) {
+        if (f.k === 'value.class' && f.v === 'credential' && factFor(sf, 'value.class', f.key) === f) out.add(f.key);
+      }
+    } catch {
+      /* none */
+    }
+    return out;
   }
 
   private writeRows(rows: ShadowRow[], instruction: string): void {

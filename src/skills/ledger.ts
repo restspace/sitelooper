@@ -25,6 +25,8 @@ import { isMutatingAction } from '../execution/lifecycle.js';
 import { originOf, urlParts as urlPartsOf, urlShapeOf, type UrlSegDiff } from '../execution/url.js';
 import { MIN_ID_LEN, looksLikeId, tokenPattern } from './shape.js';
 import type { Skill } from './store.js';
+// A cycle (facts-value.ts reads this module's url helpers); function bindings only, read at call time.
+import { valueVerdict } from './facts-value.js';
 
 export type Binding =
   /** The caller declared it (a flow var). */
@@ -497,9 +499,41 @@ export class RunLedger {
   add(
     value: string,
     binding: Binding,
-    opts: { kind?: LedgerEntry['kind']; basis?: LedgerEntry['basis']; vouched?: boolean; positional?: true } = {},
+    opts: {
+      kind?: LedgerEntry['kind'];
+      basis?: LedgerEntry['basis'];
+      vouched?: boolean;
+      positional?: true;
+      /** The `value.shape` key the value was met under (facts-value.ts shapeKeyOf(url, name)); read only with `facts`. */
+      shapeKey?: string;
+    } = {},
+    /**
+     * The origin's site facts (design-site-facts.md §4 consumer 1; stage 3).
+     * Asked only where the caller states no `kind`, through valueVerdict (a
+     * RELIABLE fact, or nothing):
+     *  - `not-identifier` (a catalogue constant the app offered, a
+     *    credential): banked as `text` whatever its characters or its
+     *    variance, and never vouched past the length floor (odoo's FURN_7777);
+     *  - `identifier` (a mint, or the label's reliable mint shape): banked as
+     *    an identifier at first sighting, vouched past the floor as addUrlIds'
+     *    fact-admitted parts are, and below the floor for its position only
+     *    (kanboard's "4" under `task_id`). Its basis stays `shape` (variance
+     *    where an earlier run watched it change): the fact entitles it to be
+     *    BANKED, not to refuse a recording (fatal).
+     * Absent, or no reliable fact about the value, and the rules below run
+     * exactly as they always have.
+     */
+    facts?: SiteFacts,
   ): LedgerEntry | null {
     const v = String(value ?? '').trim();
+    const verdict = facts && opts.kind === undefined && v ? valueVerdict(facts, v, opts.shapeKey) : null;
+    if (verdict?.kind === 'identifier') {
+      opts = { ...opts, kind: 'identifier', vouched: true, ...(v.length < MIN_ID_LEN ? { positional: true as const } : {}) };
+      if (opts.basis === undefined && binding.from !== 'var') opts.basis = this.variance.has(v) ? 'variance' : 'shape';
+    } else if (verdict?.kind === 'not-identifier') {
+      opts = { ...opts, kind: 'text', vouched: false };
+      if (opts.basis === undefined && binding.from !== 'var') opts.basis = 'shape';
+    }
     // The length floor guards against banking junk from shape-guessing
     // callers. A VOUCHED value has positional evidence instead (a `q.id` url
     // part — see idPositionPart), and odoo's two-digit record ids are exactly

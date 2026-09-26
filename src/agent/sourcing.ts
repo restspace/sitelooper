@@ -116,6 +116,24 @@ export interface SourcingCandidate {
   verdict: TierVerdict;
   /** The value equals (or is contained in) something an eval of this instruction returned. */
   fromEval?: boolean;
+  /**
+   * Held although the instruction did not ask for it: a reliable site fact
+   * (valueVerdict: the key's mint shape, or the value's mint class) makes it
+   * an identifier (site facts stage 3, consumer 3). The `facts.sourcing`
+   * shadow row for its key is then `applied`.
+   */
+  byFact?: boolean;
+}
+
+/**
+ * The origin's value-class facts as the hold consults them (site facts stage
+ * 3, consumer 3): `verdict(value, key)` is skills/facts-value.ts
+ * `valueVerdict` under the key's `shapeKeyOf(url, key)` on the instruction's
+ * url — RELIABLE facts only, null when none speaks. Injected by the loop, so
+ * this module stays pure and never reads the store.
+ */
+export interface SourcingFacts {
+  verdict(value: string, key: string): { kind: 'identifier' | 'not-identifier' } | null;
 }
 
 export interface SourcingDecision {
@@ -136,6 +154,13 @@ export interface SourcingDecision {
  *  - and only when the tiers proved it `absent`. Ambiguous values (several
  *    candidates on the page) are not held: they go on to the model-sourced
  *    locate in finish exactly as today.
+ *
+ * Site facts (stage 3, consumer 3): with `facts`, a key the instruction did
+ * NOT ask for is still a candidate when a reliable fact makes its value an
+ * identifier (the label's mint shape: fwsi16's unasked list columns, threaded
+ * to later literals) — every other filter above applies to it unchanged, and
+ * it is marked `byFact`. The facts only ever ADD a candidate; with no facts,
+ * or no reliable verdict, the decision is today's.
  */
 export async function decideSourcingHold(input: {
   instruction: string;
@@ -145,20 +170,34 @@ export async function decideSourcingHold(input: {
   /** The tiers' dry run for one value — consulted only for values the cheap filters let through. */
   verdict: (key: string, value: string) => Promise<TierVerdict>;
   evalResults?: readonly string[];
+  /** The origin's reliable value facts (the daemon's snapshot); absent → today's rule. */
+  facts?: SourcingFacts;
 }): Promise<SourcingDecision> {
   const asked = new Set(askedOutputs(input.instruction, Object.keys(input.values)));
   const alerts = input.alertTexts.map(foldValue);
   const evals = (input.evalResults ?? []).map(foldValue);
   const held: SourcingCandidate[] = [];
   for (const [key, raw] of Object.entries(input.values)) {
-    if (!asked.has(key)) continue;
     const value = String(raw ?? '').trim();
+    // Asked, or (site facts) an identifier by a reliable fact: nothing else is held.
+    let byFact = false;
+    if (!asked.has(key)) {
+      if (!input.facts || !isDataShaped(value) || input.alreadyRead.has(value)) continue;
+      let verdict: ReturnType<SourcingFacts['verdict']> = null;
+      try {
+        verdict = input.facts.verdict(value, key);
+      } catch {
+        verdict = null;
+      }
+      if (verdict?.kind !== 'identifier') continue;
+      byFact = true;
+    }
     if (!isDataShaped(value)) continue;
     if (input.alreadyRead.has(value)) continue;
     const folded = foldValue(value);
     if (alerts.some((a) => a.includes(folded))) continue;
     if ((await input.verdict(key, value)) !== 'absent') continue;
-    held.push({ key, value, verdict: 'absent', ...(evals.some((e) => e.includes(folded)) ? { fromEval: true } : {}) });
+    held.push({ key, value, verdict: 'absent', ...(evals.some((e) => e.includes(folded)) ? { fromEval: true } : {}), ...(byFact ? { byFact: true } : {}) });
     if (held.length >= MAX_HELD_VALUES) break;
   }
   return { held };

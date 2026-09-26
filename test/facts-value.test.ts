@@ -20,6 +20,7 @@ import {
 import { taskConstantArms, taskConstants } from '../src/skills/flow.js';
 import { RunLedger, type LedgerEntry } from '../src/skills/ledger.js';
 import { urlParts } from '../src/skills/compile.js';
+import { valueVerdict as verdictOf } from '../src/skills/facts-value.js';
 import { ambiguousCredentialHashes, clearSecretLedger, markLiteralCredentialValue, resolveSecrets, scrubSecrets } from '../src/shared/secrets.js';
 
 const KB = 'http://kb.test';
@@ -289,6 +290,19 @@ describe('ValueFactObserver', () => {
     expect(shadowRows(dir)).toHaveLength(1);
   });
 
+  it('facts.sourcing (stage 3): the row of a key the hold held on the fact alone is applied', () => {
+    const url = `${OD}/odoo/sales`;
+    store.observe(OD, [{ k: 'value.shape', key: shapeKeyOf(url, 'ref'), v: { re: shapeOf('S00023'), n: 2 }, hard: true, session: 'n1' }]);
+    const ledger = new RunLedger();
+    const obs = new ValueFactObserver(store, 'n2', dir);
+    const es: RecordedEntry[] = [
+      { k: 'instruction', text: 'Open the quotation list and report the customer of the newest quotation.', url, fingerprint: [1, 0, 0] },
+      { k: 'report', status: 'success', summary: 'ok', values: { customer: 'Bench Customer', ref: 'S00031' }, sourcingAsk: { asked: ['ref'], readsAdded: 0, labelled: [], gesturesAfter: [], byFact: ['ref'] } },
+    ];
+    const rows = obs.endInstruction({ ...end(es, ledger), sourcingHold: true });
+    expect(rows.filter((r) => r.rule === 'facts.sourcing')).toEqual([expect.objectContaining({ step: 'report ref', fact: 'held', heuristic: 'held', agree: true, applied: true })]);
+  });
+
   it('no fact about a value: no row', () => {
     const ledger = new RunLedger();
     const obs = new ValueFactObserver(store, 'n1', dir);
@@ -347,5 +361,147 @@ describe('pure rows', () => {
     expect(sourcingRow(sf(), 'ref', 'S00099', `${OD}/odoo/sales|ref`, true, true)).toMatchObject({ fact: 'held', agree: true });
     expect(sourcingRow(sf(), 'ref', 'no', `${OD}/odoo/sales|ref`, false, false)).toMatchObject({ fact: 'none', agree: true });
     expect(sourcingRow(sf(), 'other', 'S00099', `${OD}/odoo/sales|other`, false, false)).toBeNull();
+  });
+
+  it('sourcingRow (stage 3): applied when the hold held the key on the fact alone, and only then', () => {
+    expect(sourcingRow(sf(), 'ref', 'S00099', `${OD}/odoo/sales|ref`, true, false, true)).toMatchObject({ fact: 'held', heuristic: 'held', agree: true, applied: true });
+    expect(sourcingRow(sf(), 'ref', 'S00099', `${OD}/odoo/sales|ref`, true, false)).not.toHaveProperty('applied');
+    // a fact that does not speak never stamps applied
+    expect(sourcingRow(sf(), 'ref', 'no', `${OD}/odoo/sales|ref`, true, false, true)).not.toHaveProperty('applied');
+    // the value's own reliable mint class speaks too (valueVerdict), with no shape under the key
+    expect(sourcingRow(sf(), 'n', '4', `${OD}/odoo/sales|n`, false, false)).toMatchObject({ fact: 'held', heuristic: 'not-held' });
+  });
+
+  it('taskConstantArms (stage 3): a fact-only constant is the third arm, `fact`', () => {
+    const es: RecordedEntry[] = [
+      { k: 'instruction', text: 'Add the chair and report its code.', url: `${OD}/odoo/sales/7`, fingerprint: [1, 0, 0] },
+      { k: 'report', status: 'success', summary: 'ok', values: { code: 'FURN_7777' } },
+    ];
+    const s = emptyFacts(OD);
+    observeFact(s, { k: 'value.class', key: valueHash('FURN_7777'), v: 'constant', hard: true, session: 'n1' });
+    expect([...taskConstantArms(es, ['FURN_7777'], [], undefined, s)]).toEqual([['FURN_7777', 'fact']]);
+    expect([...taskConstantArms(es, ['FURN_7777'])]).toEqual([]);
+  });
+});
+
+describe('valueVerdict (stage 3): reliable facts only, with the deciding fact', () => {
+  const KEY = `${OD}/odoo/sales|ref`;
+  const facts = (...obs: Omit<Parameters<typeof observeFact>[1], 'session'>[]): SiteFacts => {
+    const s = emptyFacts(OD);
+    for (const o of obs) observeFact(s, { ...o, session: 'n1' });
+    return s;
+  };
+
+  it('no facts, or none about the value: null', () => {
+    expect(verdictOf(undefined, 'S00023', KEY)).toBeNull();
+    expect(verdictOf(emptyFacts(OD), 'S00023', KEY)).toBeNull();
+    expect(verdictOf(facts({ k: 'value.class', key: valueHash('x1'), v: 'mint', hard: true }), 'S00023', KEY)).toBeNull();
+  });
+
+  it('a mint is an identifier, a constant and a credential are not; the deciding fact rides along', () => {
+    const mint = verdictOf(facts({ k: 'value.class', key: valueHash('S00023'), v: 'mint', hard: true }), 'S00023');
+    expect(mint).toMatchObject({ kind: 'identifier', by: { k: 'value.class', v: 'mint' } });
+    expect(verdictOf(facts({ k: 'value.class', key: valueHash('FURN_7777'), v: 'constant', hard: true }), 'FURN_7777')).toMatchObject({
+      kind: 'not-identifier',
+      by: { k: 'value.class', v: 'constant' },
+    });
+    expect(verdictOf(facts({ k: 'value.class', key: valueHash('admin'), v: 'credential', hard: true }), ' Admin ')).toMatchObject({
+      kind: 'not-identifier',
+      by: { v: 'credential' },
+    });
+  });
+
+  it('the key’s reliable mint shape makes an identifier at first sighting, whatever its length', () => {
+    const s = facts({ k: 'value.shape', key: `${KB}/*|task_id`, v: { re: shapeOf('41'), n: 2 }, hard: true });
+    expect(verdictOf(s, '4', `${KB}/*|task_id`)).toMatchObject({ kind: 'identifier', by: { k: 'value.shape', key: `${KB}/*|task_id` } });
+    expect(verdictOf(s, '4', `${KB}/*|other`)).toBeNull();
+    expect(verdictOf(s, 'four', `${KB}/*|task_id`)).toBeNull();
+  });
+
+  it('a constant the key’s mint shape matches is an identifier (mint wins); a credential never is', () => {
+    const shape = { k: 'value.shape' as const, key: KEY, v: { re: shapeOf('S00023'), n: 2 }, hard: true };
+    expect(verdictOf(facts(shape, { k: 'value.class', key: valueHash('S00099'), v: 'constant', hard: true }), 'S00099', KEY)).toMatchObject({
+      kind: 'identifier',
+      by: { k: 'value.shape' },
+    });
+    expect(verdictOf(facts(shape, { k: 'value.class', key: valueHash('S00099'), v: 'credential', hard: true }), 'S00099', KEY)).toMatchObject({
+      kind: 'not-identifier',
+    });
+  });
+
+  it('an advisory fact decides nothing: soft in one session, or contradicted', () => {
+    expect(verdictOf(facts({ k: 'value.class', key: valueHash('S00023'), v: 'mint', hard: false }), 'S00023')).toBeNull();
+    const both = facts(
+      { k: 'value.class', key: valueHash('S00023'), v: 'mint', hard: true },
+      { k: 'value.class', key: valueHash('S00023'), v: 'constant', hard: true },
+    );
+    expect(verdictOf(both, 'S00023')).toBeNull();
+    expect(factKind(both, 'S00023', undefined)).toBe('none');
+  });
+
+  it('rows: applied only when asked and the fact speaks', () => {
+    const s = facts({ k: 'value.class', key: valueHash('FURN_7777'), v: 'constant', hard: true });
+    expect(ledgerRow(s, 'FURN_7777', undefined, 'text', true)).toMatchObject({ fact: 'not-identifier', heuristic: 'not-identifier', agree: true, applied: true });
+    expect(ledgerRow(s, 'FURN_7777', undefined, 'text')).not.toHaveProperty('applied');
+    expect(stripRow(s, 'FURN_7777', undefined, false, true)).toMatchObject({ fact: 'keep', heuristic: 'keep', applied: true });
+    const soft = facts({ k: 'value.class', key: valueHash('FURN_7777'), v: 'constant', hard: false });
+    expect(stripRow(soft, 'FURN_7777', undefined, false, true)).toMatchObject({ fact: 'none' });
+    expect(stripRow(soft, 'FURN_7777', undefined, false, true)).not.toHaveProperty('applied');
+  });
+});
+
+describe('ValueFactObserver (stage 3): the consumers’ side', () => {
+  let dir: string;
+  let store: SiteFactStore;
+  beforeEach(() => {
+    dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sitelooper-facts-value3-'));
+    store = new SiteFactStore(dir);
+  });
+  afterEach(() => fs.rmSync(dir, { recursive: true, force: true }));
+
+  it('a report banked on the snapshot writes an applied facts.ledger row (fwod84 FURN_7777)', () => {
+    store.observe(OD, [{ k: 'value.class', key: valueHash('FURN_7777'), v: 'constant', hard: true, session: 'n1' }]);
+    const obs = new ValueFactObserver(store, 'n2', dir);
+    const url = `${OD}/odoo/sales/7`;
+    const ledger = new RunLedger();
+    const e = ledger.add('FURN_7777', { from: 'output', step: 'i1', name: 'code' }, { shapeKey: shapeKeyOf(url, 'code') }, obs.snapshot(url));
+    expect(e).toMatchObject({ kind: 'text' });
+    obs.noteReport(url, 'code', 'FURN_7777', e);
+    const rows = obs.endInstruction(end([{ k: 'instruction', text: 'x', url }], ledger));
+    expect(rows).toEqual([expect.objectContaining({ rule: 'facts.ledger', fact: 'not-identifier', heuristic: 'not-identifier', agree: true, applied: true })]);
+  });
+
+  it('stripVerdicts: by the key a value was met under, or by class on the fallback origin; silent without a reliable fact', () => {
+    store.observe(OD, [
+      { k: 'value.class', key: valueHash('FURN_7777'), v: 'constant', hard: true, session: 'n1' },
+      { k: 'value.class', key: valueHash('seed-7'), v: 'mint', hard: true, session: 'n1' },
+    ]);
+    const obs = new ValueFactObserver(store, 'n2', dir);
+    const url = `${OD}/odoo/sales/7`;
+    const ledger = new RunLedger();
+    const a = ledger.add('FURN_7777', { from: 'output', step: 'i1', name: 'code' })!;
+    const b = ledger.add('seed-7', { from: 'output', step: 'i1', name: 'seed' })!;
+    const c = ledger.add('S00041', { from: 'output', step: 'i1', name: 'ref' })!;
+    obs.noteReport(url, 'code', 'FURN_7777', a);
+    const v = obs.stripVerdicts([a, b, c], OD);
+    expect(v.get('FURN_7777')).toMatchObject({ kind: 'not-identifier' });
+    expect(v.get('seed-7')).toMatchObject({ kind: 'identifier' }); // never met under a key: the flow's origin, by class
+    expect(v.has('S00041')).toBe(false);
+    expect(obs.stripVerdicts([b])).toEqual(new Map()); // no fallback origin: nowhere to ask
+    const rows = obs.stripRows([a, b], new Set(['seed-7']), 'strip f', { values: new Set(v.keys()), origin: OD });
+    expect(rows).toEqual([
+      expect.objectContaining({ rule: 'facts.strip', fact: 'keep', heuristic: 'keep', applied: true }),
+      expect.objectContaining({ rule: 'facts.strip', fact: 'strip', heuristic: 'strip', applied: true }),
+    ]);
+  });
+
+  it('credentialHashes: the reliable credential facts of the url’s origin, hashes only', () => {
+    store.observe(OD, [{ k: 'value.class', key: valueHash('admin'), v: 'credential', hard: true, session: 'n1' }]);
+    store.observe(OD, [{ k: 'value.class', key: valueHash('softcred'), v: 'credential', hard: false, session: 'n1' }]);
+    store.observe(OD, [{ k: 'value.class', key: valueHash('S00023'), v: 'mint', hard: true, session: 'n1' }]);
+    const obs = new ValueFactObserver(store, 'n2', dir);
+    expect(obs.credentialHashes(`${OD}/web/login`)).toEqual(new Set([valueHash('admin')]));
+    expect(obs.credentialHashes(`${KB}/login`)).toEqual(new Set());
+    expect(obs.credentialHashes('not a url')).toEqual(new Set());
   });
 });

@@ -900,19 +900,29 @@ note: this link points to ${verdict.link.href}, and its navigation had not commi
         // acts on (a dismissal whose dialog is not there is already in effect)
         // — and when nothing was added, where the removal is the step's only
         // evidence. Every other removal would be store weight nothing reads.
+        // The recorder's line scrub. Site facts (stage 3, consumer 4): an
+        // ambiguous credential a reliable fact says this origin shows (the
+        // password that is also the username, fwgr68/fwkb39) is scrubbed in
+        // any added or removed line, not only its password field's own
+        // (secrets.ts setKnownCredentialHashes). The url is left to the plain
+        // scrub. No reliable credential fact: exactly the plain scrub. Each
+        // string is scrubbed once (a second pass could meet a secret inside a
+        // marker it wrote).
         const removed = removedLines(before.lines, after.lines) ?? [];
         const added = addedLines(before.lines, after.lines) ?? [];
-        removedAll = scrubSecretsDeep(removed);
-        diff = scrubSecretsDeep({
-          url: after.url,
-          alerts: after.alerts.filter((a) => !before.alerts.includes(a)),
-          added,
+        const lineScrub = { knownCredentials: true };
+        removedAll = scrubSecretsDeep(removed, lineScrub);
+        const plain = scrubSecretsDeep({ url: after.url, alerts: after.alerts.filter((a) => !before.alerts.includes(a)), dialect: CURRENT_DIALECT });
+        diff = {
+          url: plain.url,
+          alerts: plain.alerts,
+          added: scrubSecretsDeep(added, lineScrub),
           // ...and whenever it added nothing: a disclosure that collapsed has
           // only a disappearance to show (fwsi1 05-change), which compile
           // needs to tell a toggle pair from two clicks (collapseTogglePairs).
-          ...(removed.some((l) => DIALOG_LINE.test(l)) ? { removed } : !added.length ? { removed: removed.slice(0, MAX_KEPT_REMOVALS) } : {}),
-          dialect: CURRENT_DIALECT,
-        });
+          ...(removed.some((l) => DIALOG_LINE.test(l)) ? { removed: removedAll } : !added.length ? { removed: removedAll.slice(0, MAX_KEPT_REMOVALS) } : {}),
+          dialect: plain.dialect,
+        };
         // The observations themselves, in memory only (never recorded): a replay
         // of a step recorded in an older dialect re-renders them in that dialect
         // rather than judging its stored lines against these. Scrubbed as the

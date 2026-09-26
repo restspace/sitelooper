@@ -434,7 +434,14 @@ export interface RecordedReport {
    * worse). Same reason as namingAsk: an intervention that leaves no trace
    * in the artifacts cannot be evaluated.
    */
-  sourcingAsk?: { asked: string[]; readsAdded: number; labelled: string[]; gesturesAfter: string[] };
+  sourcingAsk?: {
+    asked: string[];
+    readsAdded: number;
+    labelled: string[];
+    gesturesAfter: string[];
+    /** Of `asked`, the keys held only because a reliable site fact made the value an identifier (site facts stage 3, consumer 3). */
+    byFact?: string[];
+  };
   /** Running entry number and write time (stage 0 evidence). Absent on older stores. */
   seq?: number;
   t?: number;
@@ -632,8 +639,8 @@ export class ScriptRecorder {
   private pendingSourcing?: NonNullable<RecordedReport['sourcingAsk']>;
 
   /** Record that the loop held the report for sourcing these keys. */
-  noteSourcingAsk(asked: string[]): void {
-    this.pendingSourcing = { asked, readsAdded: 0, labelled: [], gesturesAfter: [] };
+  noteSourcingAsk(asked: string[], byFact: string[] = []): void {
+    this.pendingSourcing = { asked, readsAdded: 0, labelled: [], gesturesAfter: [], ...(byFact.length ? { byFact } : {}) };
   }
 
   /** A data-changing gesture the model made after the sourcing hold. */
