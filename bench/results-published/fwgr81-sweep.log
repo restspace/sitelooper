@@ -1,0 +1,104 @@
+
+[sweep] run 1/3: fwgr81-n1 (store: /home/user/sitelooper/bench/results/fwgr81-skills)
+[harness] grafana: defaulting APP_URL
+[harness] grafana: defaulting APP_EMAIL
+[harness] grafana: defaulting APP_PASSWORD
+[reset] grafana: deleted leftover dashboard "Service Health" (400)
+[harness] grafana responded 302 at http://127.0.0.1:3000/
+stopped: fwgr81-n1
+  flow "fwgr81" saved: 6 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwgr81.json
+  warning: warning: 04-open's instruction asks to report update_default_time_range_checkbox_ticked, and only a recorded literal backs it: no read in its procedure publishes it, so a replay reports it only if the page it ends on shows that exact text — re-record the step so the value is read where it is shown
+  warning: note: 01-open no longer publishes panel_count — no replay reads it from the page and the recording showed no line to read
+  warning: note: 02-create no longer publishes visualization_type, datasource_name, panel_rendered_value — no replay reads them from the page and the recording showed no line to read
+  warning: note: 03-open no longer publishes stat_panel_value — no replay reads it from the page and the recording showed no line to read
+  warning: note: 04-open no longer publishes save_confirmation, unsaved_changes_indicator, time_range_hours — no replay reads them from the page and the recording showed no line to read
+  warning: warning: 05-open's instruction asks to report dashboard_state, and no replay can publish it: nothing in its procedure reads it from the page, so export dropped it — re-record the step so the value is read, not only reported
+  warning: note: 05-open no longer publishes refresh_before_change — no replay reads it from the page and the recording showed no line to read
+  warning: warning: 06-open's instruction asks to report dashboard_tags, and no replay can publish it: nothing in its procedure reads it from the page, so export dropped it — re-record the step so the value is read, not only reported
+  warning: note: 06-open no longer publishes stat_panel_value — no replay reads it from the page and the recording showed no line to read
+  warning: note: 03-open: added a read for save_confirmation to s_0ded4f (page.getByRole('status', { name: 'Dashboard saved', exact: true }); seen on the instruction's own page)
+  warning: note: 05-open: added a read for save_confirmation to s_bd78a6 (page.getByRole('status', { name: 'Dashboard saved', exact: true }); seen on the instruction's own page)
+  warning: warning: 90 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[1].instruction: "TestData" (output) in "In Grafana, create a NEW dashboard (Dashboards menu > New dashboard > Add visualization, or the + Create > Dashboard button). First, if the new dashboard opens "
+  flow.steps[1].route: "efzg5dwxmaayof" (url) in "http://127.0.0.1:3000/d/efzg5dwxmaayof/:id"
+  flow.steps[2].route: "efzg5dwxmaayof" (url) in "http://127.0.0.1:3000/d/efzg5dwxmaayof/:id"
+  flow.steps[3].instruction: "Last 6 hours" (output) in "Open the dashboard titled {{runid}} Bench Dashboard (URL http://127.0.0.1:3000/d/{{02-create.url.p1}}/{{runid}}-bench-dashboard). Two things must be persisted i"
+  flow.steps[3].instruction: "6-hour" (output) in "Open the dashboard titled {{runid}} Bench Dashboard (URL http://127.0.0.1:3000/d/{{02-create.url.p1}}/{{runid}}-bench-dashboard). Two things must be persisted i"
+arm=sitelooper model=z-ai/glm-5.3 runid=fwgr81-n1 stop=completed
+turns=7 wall=526.7s
+commands=6 cmdTime=397.3s cmdBytes=11676 timeouts=0
+orchestrator in=15688 cw=0 cr=17088 out=16918
+inner prompt=2433008 cached=2248832 completion=29791
+spend=$0.1534 maxUsd=3
+learn: A_n=0 replayed=0/6 full=0 repaired=0 compiled=6 variants=0
+-> /home/user/sitelooper/bench/results/fwgr81-n1-sitelooper-result.json
+
+fwgr81-n1: objectives passed 6/6
+  obj 1: PASS — all 3 provisioned titles reported
+  obj 2: PASS — type=stat, datasource ok=true
+  obj 3: PASS — type=text, content includes runid=true
+  obj 4: PASS — tags=["bench"], time=now-6h..now
+  obj 5: PASS — refresh="1m"
+  obj 6: PASS — uid efzg5dwxmaayof reported
+
+[sweep] run 2/3: fwgr81-n2 (replay flow fwgr81, no orchestrator)
+[reset] grafana: deleted leftover dashboard "fwgr81-n1 Bench Dashboard" (200)
+[reset] grafana: deleted leftover dashboard "Service Health" (400)
+[sweep] fwgr81-n2: 2 drift ticket(s) → fwgr81-n2-drift.json
+
+fwgr81-n2: objectives passed 6/6
+  obj 1: PASS — all 3 provisioned titles reported
+  obj 2: PASS — type=stat, datasource ok=true
+  obj 3: PASS — type=text, content includes runid=true
+  obj 4: PASS — tags=["bench"], time=now-6h..now
+  obj 5: PASS — refresh="1m"
+  obj 6: PASS — uid dfzg5v3rsow00e reported
+
+[sweep] run 3/3: fwgr81-n3 (replay flow fwgr81, no orchestrator)
+[reset] grafana: deleted leftover dashboard "fwgr81-n2 Bench Dashboard" (200)
+[reset] grafana: deleted leftover dashboard "Service Health" (400)
+[sweep] fwgr81-n3: 2 drift ticket(s) → fwgr81-n3-drift.json
+
+fwgr81-n3: objectives passed 6/6
+  obj 1: PASS — all 3 provisioned titles reported
+  obj 2: PASS — type=stat, datasource ok=true
+  obj 3: PASS — type=text, content includes runid=true
+  obj 4: PASS — tags=["bench"], time=now-6h..now
+  obj 5: PASS — refresh="1m"
+  obj 6: PASS — uid dfzg62aeqpg5cf reported
+
+Learning sweep fwgr81 (K=3)
+┌─────────┬───┬─────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid       │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼─────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwgr81-n1' │ '6/6'    │ 'completed' │ 7     │ 6    │ 0.1534    │ 0   │ '0/6'        │ 527    │
+│ 1       │ 2 │ 'fwgr81-n2' │ '6/6'    │ 'success'   │ 0     │ 6    │ 0         │ 1   │ '6/6 (flow)' │ 130    │
+│ 2       │ 3 │ 'fwgr81-n3' │ '6/6'    │ 'success'   │ 0     │ 6    │ 0         │ 1   │ '6/6 (flow)' │ 130    │
+└─────────┴───┴─────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:3000
+  s_0ded4f  validated   22 steps  3/3 (100%)
+           Open the dashboard titled {{v1}} (URL http://127.0.0.1:3000/d/{{v3}}/{{v4}}). Enter edit mode (Edit button / p…
+  s_17f8db  validated    6 steps  3/3 (100%)
+           Open {{v1}} in the browser. Sign in with username admin and password {{v2}} (type the password text exactly as…
+  s_18660c  validated    3 steps  3/3 (100%)
+           In Grafana, create a NEW dashboard (Dashboards menu > New dashboard > Add visualization, or the + Create > Das…
+  s_21f90b  validated    1 steps  3/3 (100%)
+           Open {{v1}} in the browser. Sign in with username admin and password {{v2}} (type the password text exactly as…
+  s_54d608  validated   25 steps  3/3 (100%)
+           Open the dashboard titled {{v1}} by navigating to {{v5}} (a plain URL with no query parameters). After it load…
+  s_5c3aa3  validated   10 steps  3/3 (100%)
+           Open {{v1}} in the browser. Sign in with username admin and password {{v2}} (type the password text exactly as…
+  s_ae1f6e  validated   12 steps  3/3 (100%)
+           In Grafana, create a NEW dashboard (Dashboards menu > New dashboard > Add visualization, or the + Create > Das…
+  s_b64658  validated    2 steps  3/3 (100%)
+           In Grafana, create a NEW dashboard (Dashboards menu > New dashboard > Add visualization, or the + Create > Das…
+  s_bd78a6  validated   15 steps  3/3 (100%)
+           Open the dashboard titled {{v1}} (URL http://127.0.0.1:3000/d/{{v3}}/{{v4}}). Set the dashboard's auto-refresh…
+  s_c14e4d  validated   28 steps  3/3 (100%)
+           Open the dashboard titled {{v1}} (URL {{v5}}). Two things must be persisted in the saved dashboard: (1) the da…
+  s_ff7f93  validated    2 steps  3/3 (100%)
+           Open {{v1}} in the browser. Sign in with username admin and password {{v2}} (type the password text exactly as…
+store: /home/user/sitelooper/bench/results/fwgr81-skills
+
+summary: /home/user/sitelooper/bench/results/fwgr81-sweep.json
+SWEEP_EXIT_CODE=0
