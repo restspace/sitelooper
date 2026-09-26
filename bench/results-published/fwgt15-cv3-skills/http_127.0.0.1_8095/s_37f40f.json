@@ -1,0 +1,772 @@
+{
+ "id": "s_37f40f",
+ "origin": "http://127.0.0.1:8095",
+ "template": "On the issue page {{v1}}, assign the issue to the user 'bench-assignee' using the Assignees picker in the issue sidebar. Note from prior experience: in this Gitea UI, clicking a dropdown menu item's main row may only toggle the checkbox visually without saving — clicking the item's check-mark element (the element with class 'item-check-mark' inside the item's anchor) is what commits the change. Make sure the app applies it and the issue page displays 'bench-assignee' as the assignee (visible in the sidebar, not merely ticked inside the open menu). Verify after a page reload and report the assignee shown on the issue.",
+ "params": {
+  "v1": {
+   "example": "http://127.0.0.1:8095/bench/bench-repo/issues/5",
+   "usedIn": [
+    4,
+    8,
+    16
+   ],
+   "known": true,
+   "binding": "02-create.url"
+  },
+  "v3": {
+   "example": "fwgt15-n2",
+   "usedIn": [
+    14,
+    18
+   ],
+   "known": true,
+   "binding": "var:runid"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e302"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(9) > div:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 1098,
+      "y": 538,
+      "w": 270,
+      "h": 16,
+      "role": "combobox",
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+    "addedContains": [
+     "- combobox \"{{*}} Clear assignees admin {{*}}\"",
+     "- listbox \"Clear assignees admin {{*}}\"",
+     "- textbox \"Filter Assignee\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_f5cc73",
+    "step": 1
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "a[data-value=\"3\"] .item-check-mark >> nth=1"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#_aria_dropdown_menu_39 > div:nth-of-type(2) > a:nth-of-type(2)"
+     },
+     {
+      "kind": "css",
+      "selector": "#_aria_dropdown_menu_39 > div:nth-of-type(2) > a:nth-of-type(2) > span:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 1098,
+      "y": 718,
+      "w": 268,
+      "h": 39,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_f5cc73",
+    "step": 2
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "label": "url_after_assignee_click",
+    "what": "url"
+   },
+   "locators": {},
+   "label": "url_after_checkmark_clic",
+   "via": {
+    "skill": "s_f5cc73",
+    "step": 3
+   }
+  },
+  {
+   "tool": "goto",
+   "args": {
+    "url": "{{v1}}"
+   },
+   "locators": {},
+   "via": {
+    "skill": "s_f5cc73",
+    "step": 4
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e302"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(9) > div:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 1098,
+      "y": 538,
+      "w": 270,
+      "h": 16,
+      "role": "combobox",
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+    "addedContains": [
+     "- combobox \"{{*}} Clear assignees admin {{*}}\"",
+     "- listbox \"Clear assignees admin {{*}}\"",
+     "- textbox \"Filter Assignee\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_f5cc73",
+    "step": 5
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": ".menu a.item[href=\"/bench/bench-repo/issues?assignee=3\"] .item-check-mark"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#_aria_dropdown_menu_39 > div:nth-of-type(2) > a:nth-of-type(2)"
+     },
+     {
+      "kind": "css",
+      "selector": "#_aria_dropdown_menu_39 > div:nth-of-type(2) > a:nth-of-type(2) > span:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 1098,
+      "y": 718,
+      "w": 268,
+      "h": 39,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_f5cc73",
+    "step": 6
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "label": "url_after_second_click",
+    "what": "url"
+   },
+   "locators": {},
+   "label": "url_after_checkmark_clic",
+   "via": {
+    "skill": "s_f5cc73",
+    "step": 7
+   }
+  },
+  {
+   "tool": "goto",
+   "args": {
+    "url": "{{v1}}"
+   },
+   "locators": {},
+   "via": {
+    "skill": "s_f5cc73",
+    "step": 8
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e302"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(9) > div:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 1098,
+      "y": 538,
+      "w": 270,
+      "h": 16,
+      "role": "combobox",
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+    "addedContains": [
+     "- combobox \"{{*}} Clear assignees admin {{*}}\"",
+     "- listbox \"Clear assignees admin {{*}}\"",
+     "- textbox \"Filter Assignee\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_f5cc73",
+    "step": 9
+   }
+  },
+  {
+   "tool": "type",
+   "args": {
+    "target": "@e402",
+    "text": "bench-assignee"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Filter Assignee"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "Filter Assignee"
+     },
+     {
+      "kind": "css",
+      "selector": "#_aria_dropdown_menu_39 > div:nth-of-type(1) > input"
+     },
+     {
+      "kind": "point",
+      "x": 1098,
+      "y": 579,
+      "w": 246,
+      "h": 32,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+    "addedContains": [
+     "- combobox \"{{*}} bench-assignee {{*}}\"",
+     "- listbox \"bench-assignee {{*}}\"",
+     "- textbox \"Filter Assignee\": {{*}}"
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_f5cc73",
+    "step": 10
+   }
+  },
+  {
+   "tool": "press",
+   "args": {
+    "key": "ArrowDown",
+    "target": "@e402"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Filter Assignee"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "Filter Assignee"
+     },
+     {
+      "kind": "css",
+      "selector": "#_aria_dropdown_menu_39 > div:nth-of-type(1) > input"
+     },
+     {
+      "kind": "point",
+      "x": 1098,
+      "y": 579,
+      "w": 246,
+      "h": 32,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+    "addedContains": [
+     "- textbox \"Filter Assignee\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_f5cc73",
+    "step": 11
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "[aria-controls=\"_aria_dropdown_menu_37\"] a:has-text(\"bench-assignee\") .item-check-mark, .menu a:has-text(\"bench-assignee\") .item-check-mark"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "[aria-controls=\"_aria_dropdown_menu_37\"] a:has-text(\"bench-assignee\") .item-check-mark, .menu a:has-text(\"bench-assignee\") .item-check-mark"
+     },
+     {
+      "kind": "css",
+      "selector": "#_aria_dropdown_menu_39 > div:nth-of-type(2) > a:nth-of-type(2) > span:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 988,
+      "y": 631,
+      "w": 16,
+      "h": 16,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "what": "url",
+    "label": "url_after_checkmark_click"
+   },
+   "locators": {},
+   "label": "url_after_checkmark_clic"
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "h1"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "heading",
+      "name": "{{v3}} Bench Issue #5",
+      "seen": {
+       "hit": 0,
+       "miss": 2
+      }
+     },
+     {
+      "kind": "css",
+      "selector": "h1",
+      "seen": {
+       "hit": 2,
+       "miss": 0
+      }
+     },
+     {
+      "kind": "css",
+      "selector": "#issue-title-display > h1"
+     },
+     {
+      "kind": "point",
+      "x": 548,
+      "y": 172,
+      "w": 1032.4,
+      "h": 36,
+      "role": "heading",
+      "tag": "h1",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+    "addedContains": [
+     "- link \"bench-assignee\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "wait_for",
+   "args": {
+    "state": "text_contains",
+    "target": ".issue-content-right",
+    "text": "bench-assignee",
+    "timeout_ms": 10000
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".issue-content-right"
+     },
+     {
+      "kind": "css",
+      "selector": "div[data-global-init=\"initRepoIssueSidebar\"]"
+     },
+     {
+      "kind": "css",
+      "selector": "body > div > div > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 1098,
+      "y": 755,
+      "w": 300,
+      "h": 1010.6,
+      "role": null,
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   }
+  },
+  {
+   "tool": "goto",
+   "args": {
+    "url": "{{v1}}"
+   },
+   "locators": {}
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#issue-title-display > h1 > span"
+     },
+     {
+      "kind": "point",
+      "x": 431,
+      "y": 172,
+      "w": 47.2,
+      "h": 38,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "issue_number"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "value"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "input[data-old-title=\"{{v3}} Bench Issue\"]"
+     },
+     {
+      "kind": "css",
+      "selector": "#issue-title-editor > div:nth-of-type(1) > input"
+     }
+    ]
+   },
+   "label": "issue_title"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "value"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "input[name=\"assignee_ids\"]"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(9) > input"
+     }
+    ]
+   },
+   "label": "assignee_ids_hidden_input"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(9) > div:nth-of-type(1) > a > strong"
+     },
+     {
+      "kind": "point",
+      "x": 1003,
+      "y": 538,
+      "w": 79.6,
+      "h": 16,
+      "role": null,
+      "tag": "strong",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "sidebar_text_after_reload_1"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "scoped",
+      "container": "div.timeline-item",
+      "hasText": "bench-assignee was assigned by admin",
+      "selector": "span:nth-of-type(2) > a"
+     },
+     {
+      "kind": "css",
+      "selector": "#issuecomment-9 > span:nth-of-type(2) > a"
+     },
+     {
+      "kind": "point",
+      "x": 214,
+      "y": 460,
+      "w": 123.5,
+      "h": 16,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "sidebar_text_after_reload_2"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(9) > div:nth-of-type(2) > a > span > span"
+     },
+     {
+      "kind": "point",
+      "x": 1165,
+      "y": 570,
+      "w": 122.1,
+      "h": 20,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "sidebar_text_after_reload_3"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(9) > div:nth-of-type(2) > a > span"
+     },
+     {
+      "kind": "point",
+      "x": 1108,
+      "y": 570,
+      "w": 235.6,
+      "h": 20,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "assignee_displayed"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text",
+    "frame": "({{=}})"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "text",
+      "text": "(Bench Assignee)",
+      "nth": 1
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(9) > div:nth-of-type(2) > a > span > span"
+     },
+     {
+      "kind": "point",
+      "x": 1165,
+      "y": 570,
+      "w": 122.1,
+      "h": 20,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "assignee_full_name"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "Assigned issue #5 ({{v3}} Bench Issue) in bench/bench-repo to 'bench-assignee' via the sidebar Assignees picker: opened the dropdown, clicked the 'bench-assignee' item (it became 'item muted checked', hidden field assignee_ids=3), then closed the menu by clicking the page heading, which committed the change. Verified after a full page reload — the issue sidebar displays 'Assignees: bench-assignee (Bench Assignee)'; the label 'priority-high' remains displayed.",
+  "values": {
+   "issue_number": "#5",
+   "issue_title": "{{v3}} Bench Issue",
+   "assignee_displayed": "bench-assignee (Bench Assignee)",
+   "assignee_full_name": "Bench Assignee",
+   "assignee_ids_hidden_input": "3",
+   "sidebar_labels": "priority-high",
+   "url_after_checkmark_clic": "{{v1}}",
+   "ref": "{{v3}}",
+   "sidebar_text_after_reload_1": "Assignees",
+   "sidebar_text_after_reload_2": "bench-assignee",
+   "sidebar_text_after_reload_3": "(Bench Assignee)"
+  }
+ },
+ "contract": 4,
+ "stats": {
+  "uses": 6,
+  "successes": 6,
+  "partial": 0,
+  "created": "2026-09-25T08:42:47.044Z",
+  "failedAtStep": {},
+  "fallthroughs": 2,
+  "verifiedContract": 4,
+  "lastUsed": "2026-09-26T01:05:28.506Z"
+ },
+ "status": "validated",
+ "variantOf": "s_f5cc73",
+ "provenance": {
+  "session": "fwgt15-n2",
+  "instruction": "On the issue page http://127.0.0.1:8095/bench/bench-repo/issues/5, assign the issue to the user 'bench-assignee' using the Assignees picker in the issue sidebar. Note from prior experience: in this Gitea UI, clicking a dropdown menu item's main row may only toggle the checkbox visually without saving — clicking the item's check-mark element (the element with class 'item-check-mark' inside the item's anchor) is what commits the change. Make sure the app applies it and the issue page displays 'bench-assignee' as the assignee (visible in the sidebar, not merely ticked inside the open menu). Verify after a page reload and report the assignee shown on the issue.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-25T08:42:47.044Z",
+  "transforms": [
+   {
+    "name": "unfreezeExpectations",
+    "at": 1,
+    "reason": "recorded page change(s) only the recording run could produce: [\"- combobox \\\"Assignees Clear assignees admin bench-assignee (Bench Assignee)\\\"\",\"- listbox \\\"Clear assignees admin bench-assignee (Bench Assignee)\\\"\",\"- textbox \\\"Filter Assignee\\\"\",\"- link \\\"bench-assignee (Bench Assignee)\\\"\"] → [\"- combobox \\\"{{*}} Clear assignees admin {{*}}\\\"\",\"- listbox \\\"Clear assignees admin {{*}}\\\"\",\"- textbox \\\"Filter Assignee\\\"\"]"
+   },
+   {
+    "name": "unfreezeExpectations",
+    "at": 5,
+    "reason": "recorded page change(s) only the recording run could produce: [\"- combobox \\\"Assignees Clear assignees admin bench-assignee (Bench Assignee)\\\"\",\"- listbox \\\"Clear assignees admin bench-assignee (Bench Assignee)\\\"\",\"- textbox \\\"Filter Assignee\\\"\",\"- link \\\"bench-assignee (Bench Assignee)\\\"\"] → [\"- combobox \\\"{{*}} Clear assignees admin {{*}}\\\"\",\"- listbox \\\"Clear assignees admin {{*}}\\\"\",\"- textbox \\\"Filter Assignee\\\"\"]"
+   },
+   {
+    "name": "unfreezeExpectations",
+    "at": 9,
+    "reason": "recorded page change(s) only the recording run could produce: [\"- combobox \\\"Assignees Clear assignees admin bench-assignee (Bench Assignee)\\\"\",\"- listbox \\\"Clear assignees admin bench-assignee (Bench Assignee)\\\"\",\"- textbox \\\"Filter Assignee\\\"\",\"- link \\\"bench-assignee (Bench Assignee)\\\"\"] → [\"- combobox \\\"{{*}} Clear assignees admin {{*}}\\\"\",\"- listbox \\\"Clear assignees admin {{*}}\\\"\",\"- textbox \\\"Filter Assignee\\\"\"]"
+   },
+   {
+    "name": "unfreezeExpectations",
+    "at": 10,
+    "reason": "recorded page change(s) only the recording run could produce: [\"- combobox \\\"Assignees bench-assignee (Bench Assignee)\\\"\",\"- listbox \\\"bench-assignee (Bench Assignee)\\\"\",\"- textbox \\\"Filter Assignee\\\": {{*}}\"] → [\"- combobox \\\"{{*}} bench-assignee {{*}}\\\"\",\"- listbox \\\"bench-assignee {{*}}\\\"\",\"- textbox \\\"Filter Assignee\\\": {{*}}\"]"
+   },
+   {
+    "name": "unfreezeExpectations",
+    "at": 14,
+    "reason": "recorded page change(s) only the recording run could produce: [\"- link \\\"bench-assignee\\\"\",\"- combobox \\\"Assignees\\\"\"] → [\"- link \\\"bench-assignee\\\"\"]"
+   }
+  ]
+ },
+ "revision": 9
+}
