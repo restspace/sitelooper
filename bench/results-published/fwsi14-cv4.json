@@ -1,0 +1,209 @@
+{
+  "name": "fwsi14-cv4",
+  "origin": "http://127.0.0.1:8098",
+  "startUrl": "http://127.0.0.1:8098/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-signin",
+      "instruction": "Sign in to Snipe-IT at http://127.0.0.1:8098/ with username admin and password {{env:APP_PASSWORD}} (type that exact text). Then go to Assets list, search for assets whose name starts with 'Seed:', and report each asset's name and asset tag exactly as shown.",
+      "skill": "s_54e9ab",
+      "params": {
+        "v1": "http://127.0.0.1:8098/",
+        "v2": "admin",
+        "v3": "{{env:APP_PASSWORD}}",
+        "v4": "Seed:"
+      },
+      "outputs": [
+        "assets_count_after_search",
+        "asset1_tag",
+        "asset1_name",
+        "asset2_tag",
+        "asset2_name",
+        "asset3_tag",
+        "asset3_name",
+        "initial_page_url"
+      ],
+      "recorded": {
+        "assets_count_after_search": "Showing 1 to 3 of 3 rows",
+        "asset1_tag": "SEED-0001",
+        "asset1_name": "Seed: Reception Laptop",
+        "asset2_tag": "SEED-0002",
+        "asset2_name": "Seed: Training Laptop",
+        "asset3_tag": "SEED-0003",
+        "asset3_name": "Seed: Spare Laptop",
+        "initial_page_url": "about:blank",
+        "final_page_url": "http://127.0.0.1:8098/hardware",
+        "url": "http://127.0.0.1:8098/hardware?page=1&size=20&order=asc&sort=created_at&search=Seed%3A"
+      },
+      "route": "http://127.0.0.1:8098/hardware",
+      "outputEvidence": {
+        "assets_count_after_search": {
+          "same": 3,
+          "differed": 0
+        },
+        "asset1_tag": {
+          "same": 3,
+          "differed": 0
+        },
+        "asset1_name": {
+          "same": 3,
+          "differed": 0
+        },
+        "asset2_tag": {
+          "same": 3,
+          "differed": 0
+        },
+        "asset2_name": {
+          "same": 3,
+          "differed": 0
+        },
+        "asset3_tag": {
+          "same": 3,
+          "differed": 0
+        },
+        "asset3_name": {
+          "same": 3,
+          "differed": 0
+        },
+        "initial_page_url": {
+          "same": 0,
+          "differed": 3
+        },
+        "final_page_url": {
+          "same": 0,
+          "differed": 0,
+          "absent": 3
+        },
+        "url": {
+          "same": 3,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "02-create",
+      "instruction": "In Snipe-IT, create a new asset named '{{runid}} Bench Asset', model 'Bench Laptop Model' (choose from searchable dropdown), status label 'Ready to Deploy', default location 'Bench Office', purchase date 2026-03-15. Save it, then check it out to user 'Bench Assignee' with a note containing '{{runid}}'. Finally report the asset's asset tag exactly as displayed (e.g. BA-000XX).",
+      "skill": "s_564e5a",
+      "params": {
+        "v1": "{{runid}}",
+        "v2": "{{runid}} Bench Asset",
+        "v3": "2026-03-15"
+      },
+      "outputs": [
+        "user_selected",
+        "dropdown_option_asset",
+        "dropdown_option_user",
+        "checkout_note_reference",
+        "asset_tag"
+      ],
+      "recorded": {
+        "user_selected": "×\nBench Assignee (bench-assignee)",
+        "dropdown_option_asset": "Asset",
+        "dropdown_option_user": "User",
+        "label": "Model",
+        "checkout_note_reference": "fwsi14-n1",
+        "asset_tag": "BA-00004",
+        "url": "http://127.0.0.1:8098/hardware/4",
+        "url.p1": "4"
+      },
+      "route": "http://127.0.0.1:8098/hardware/:id",
+      "outputEvidence": {
+        "user_selected": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "dropdown_option_asset": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "dropdown_option_user": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "label": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "checkout_note_reference": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "asset_tag": {
+          "same": 0,
+          "differed": 1
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        },
+        "url.p1": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "03-open",
+      "instruction": "In Snipe-IT, open the asset page for asset tag {{02-create.asset_tag}} (name '{{runid}} Bench Asset'). Verify on the page: model is 'Bench Laptop Model', status 'Ready to Deploy' (deployed status may show as 'Checked out' — report the actual status label shown, but confirm status was set to Ready to Deploy), location 'Bench Office', purchase date 2026-03-15, and it is checked out to user 'Bench Assignee' with a checkout note containing '{{runid}}'. If the checkout did NOT go through (asset not assigned to Bench Assignee), perform the checkout now: check out to user 'Bench Assignee' with note '{{runid}} checkout note'. Report each of these values as actually shown.",
+      "outputs": [
+        "purchase_date_value",
+        "edit_status_id",
+        "edit_model_id",
+        "edit_asset_name",
+        "edit_status_label",
+        "edit_model_label",
+        "edit_location_label",
+        "view_heading",
+        "location_field_label",
+        "asset_tag",
+        "checkout_note_text"
+      ],
+      "recorded": {},
+      "skill": "s_b580eb",
+      "params": {
+        "v1": "{{02-create.asset_tag}}",
+        "v2": "{{runid}} Bench Asset",
+        "v3": "{{runid}}",
+        "v4": "Bench Laptop Model",
+        "v5": "Ready to Deploy",
+        "v6": "Bench Office",
+        "v7": "2026-03-15",
+        "v8": "Bench Assignee",
+        "v9": "note"
+      }
+    }
+  ],
+  "provenance": {
+    "session": "fwsi14-n1",
+    "created": "2026-09-25T05:05:33.534Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "01-signin",
+      "outputs": [
+        "final_page_url"
+      ]
+    },
+    {
+      "stepId": "02-create",
+      "outputs": [
+        "label"
+      ]
+    }
+  ]
+}

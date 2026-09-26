@@ -1,0 +1,42 @@
+
+Running 1 test using 1 worker
+
+[sitelooper step] 01-signin
+[sitelooper drift] 02-create s_b54fd2/9 target: used #4 locator('#select2-rtd_location_id_location_select-container') (#2 ambiguous)
+[sitelooper step] 02-create
+  ✘  1 fwsi14-cv4.spec.ts:9:1 › fwsi14-cv4 (1.4m)
+
+
+  1) fwsi14-cv4.spec.ts:9:1 › fwsi14-cv4 › 03-open: In Snipe-IT, open the asset page for asset tag {{02-create.asset_tag}} (name '{{runid}} Bench Asset'). Verify on the page: model is 'Bench Laptop Model', status 'Ready to Deploy' (deployed status may show as 'Checked out' — report the actual status label shown, but confirm status was set to Ready to Deploy), location 'Bench Office', purchase date 2026-03-15, and it is checked out to user 'Bench Assignee' with a checkout note containing '{{runid}}'. If the checkout did NOT go through (asset not assigned to Bench Assignee), perform the checkout now: check out to user 'Bench Assignee' with note '{{runid}} checkout note'. Report each of these values as actually shown. 
+
+    Error: after 03-open s_911eab/1 expected url http://127.0.0.1:8098/hardware/4/edit but browser is at http://127.0.0.1:8098/hardware/4#history
+
+       at fwsi14-cv4.flow.ts:13378
+
+      13376 |   // (navigationTarget), whether or not the step goes on to stop.
+      13377 |   if (verdict.diffs) volatile.push(...verdict.diffs);
+    > 13378 |   if (verdict.stop) throw new Error(verdict.stop);
+            |                           ^
+      13379 | }
+      13380 |
+      13381 | /**
+        at urlEffect (/home/user/sitelooper/bench/results/fwsi14-cv4-c1-spec-tmp/fwsi14-cv4.flow.ts:13378:27)
+        at Object.verify (/home/user/sitelooper/bench/results/fwsi14-cv4-c1-spec-tmp/fwsi14-cv4.flow.ts:16779:13)
+        at runStepLifecycle (/home/user/sitelooper/bench/results/fwsi14-cv4-c1-spec-tmp/fwsi14-cv4.flow.ts:9354:24)
+        at Object.03-open (/home/user/sitelooper/bench/results/fwsi14-cv4-c1-spec-tmp/fwsi14-cv4.flow.ts:16735:9)
+        at /home/user/sitelooper/bench/results/fwsi14-cv4-c1-spec-tmp/fwsi14-cv4.flow.ts:17401:7
+        at runFlow (/home/user/sitelooper/bench/results/fwsi14-cv4-c1-spec-tmp/fwsi14-cv4.flow.ts:17400:5)
+        at /home/user/sitelooper/bench/results/fwsi14-cv4-c1-spec-tmp/fwsi14-cv4.spec.ts:14:21
+
+    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    [sitelooper drift] 02-create s_b54fd2/9 target: used #4 locator('#select2-rtd_location_id_location_select-container') (#2 ambiguous)
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/fwsi14-cv4-fwsi14-cv4/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/fwsi14-cv4-fwsi14-cv4/error-context.md
+
+  1 failed
+    fwsi14-cv4.spec.ts:9:1 › fwsi14-cv4 ────────────────────────────────────────────────────────────

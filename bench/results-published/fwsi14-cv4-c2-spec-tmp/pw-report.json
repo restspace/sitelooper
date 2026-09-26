@@ -1,0 +1,163 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwsi14-cv4-c2-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwsi14-cv4-c2-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwsi14-cv4-c2-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/bench/results/fwsi14-cv4-c2-spec-tmp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwsi14-cv4-c2-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwsi14-cv4.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwsi14-cv4-c2-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwsi14-cv4.spec.ts",
+      "file": "fwsi14-cv4.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwsi14-cv4",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 82955,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper step] 01-signin\n"
+                    },
+                    {
+                      "text": "[sitelooper drift] 02-create s_b54fd2/9 target: used #4 locator('#select2-rtd_location_id_location_select-container') (#2 ambiguous)\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-create\n"
+                    },
+                    {
+                      "text": "[sitelooper skip] 03-open s_c4c189/1: toggled panel already showing — click skipped\n"
+                    },
+                    {
+                      "text": "[sitelooper drift] 03-open s_c4c189/23 target: primary getByText('2026-03-15', { exact: true }) missed; used #2 locator('div:nth-of-type(2) > div > div > div:nth-of-type(2) > ul > li:nth-of-type(5)').nth(3) (#1 absent)\n"
+                    },
+                    {
+                      "text": "[sitelooper drift] 03-open s_c4c189/24 target: primary getByText('Bench Assignee', { exact: true }) missed; used #2 locator('#details > div > div > div:nth-of-type(2) > div > a') (#1 ambiguous)\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-open\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-signin: Sign in to Snipe-IT at http://127.0.0.1:8098/ with username admin and password {{env:APP_PASSWORD}} (type that exact text). Then go to Assets list, search for assets whose name starts with 'Seed:', and report each asset's name and asset tag exactly as shown.",
+                      "duration": 18527
+                    },
+                    {
+                      "title": "02-create: In Snipe-IT, create a new asset named '{{runid}} Bench Asset', model 'Bench Laptop Model' (choose from searchable dropdown), status label 'Ready to Deploy', default location 'Bench Office', purchase date 2026-03-15. Save it, then check it out to user 'Bench Assignee' with a note containing '{{runid}}'. Finally report the asset's asset tag exactly as displayed (e.g. BA-000XX).",
+                      "duration": 49236
+                    },
+                    {
+                      "title": "03-open: In Snipe-IT, open the asset page for asset tag {{02-create.asset_tag}} (name '{{runid}} Bench Asset'). Verify on the page: model is 'Bench Laptop Model', status 'Ready to Deploy' (deployed status may show as 'Checked out' — report the actual status label shown, but confirm status was set to Ready to Deploy), location 'Bench Office', purchase date 2026-03-15, and it is checked out to user 'Bench Assignee' with a checkout note containing '{{runid}}'. If the checkout did NOT go through (asset not assigned to Bench Assignee), perform the checkout now: check out to user 'Bench Assignee' with note '{{runid}} checkout note'. Report each of these values as actually shown.",
+                      "duration": 14447
+                    }
+                  ],
+                  "startTime": "2026-09-26T15:25:46.050Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": "W3NpdGVsb29wZXIgZHJpZnRdIDAyLWNyZWF0ZSBzX2I1NGZkMi85IHRhcmdldDogdXNlZCAjNCBsb2NhdG9yKCcjc2VsZWN0Mi1ydGRfbG9jYXRpb25faWRfbG9jYXRpb25fc2VsZWN0LWNvbnRhaW5lcicpICgjMiBhbWJpZ3VvdXMpCltzaXRlbG9vcGVyIGRyaWZ0XSAwMy1vcGVuIHNfYzRjMTg5LzIzIHRhcmdldDogcHJpbWFyeSBnZXRCeVRleHQoJzIwMjYtMDMtMTUnLCB7IGV4YWN0OiB0cnVlIH0pIG1pc3NlZDsgdXNlZCAjMiBsb2NhdG9yKCdkaXY6bnRoLW9mLXR5cGUoMikgPiBkaXYgPiBkaXYgPiBkaXY6bnRoLW9mLXR5cGUoMikgPiB1bCA+IGxpOm50aC1vZi10eXBlKDUpJykubnRoKDMpICgjMSBhYnNlbnQpCltzaXRlbG9vcGVyIGRyaWZ0XSAwMy1vcGVuIHNfYzRjMTg5LzI0IHRhcmdldDogcHJpbWFyeSBnZXRCeVRleHQoJ0JlbmNoIEFzc2lnbmVlJywgeyBleGFjdDogdHJ1ZSB9KSBtaXNzZWQ7IHVzZWQgIzIgbG9jYXRvcignI2RldGFpbHMgPiBkaXYgPiBkaXYgPiBkaXY6bnRoLW9mLXR5cGUoMikgPiBkaXYgPiBhJykgKCMxIGFtYmlndW91cyk="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c8ba107023e812df1207-7fa4dec7ab8817c0e8a8",
+          "file": "fwsi14-cv4.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-26T15:25:43.769Z",
+    "duration": 85445.556,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}
