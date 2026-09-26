@@ -1,0 +1,123 @@
+{
+  "flow": "fwop25",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_4368d9; observed pagination_text=(1 - 3/3)\nYou are on the only page., seed_subject_1=Seed: triage inbox, seed_subject_2=Seed: order missing parts, seed_subject_3=Seed: ship repaired device, project_name=Bench Project.",
+      "values": {
+        "pagination_text": "(1 - 3/3)\nYou are on the only page.",
+        "seed_subject_1": "Seed: triage inbox",
+        "seed_subject_2": "Seed: order missing parts",
+        "seed_subject_3": "Seed: ship repaired device",
+        "project_name": "Bench Project"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "16/16",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_6ab20b: step 1: skipped — it closes the dialog \"Welcome to OpenProject, Bench Admin\" with \"Close\", and that dialog is not open this time: already in effect"
+      ]
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_35af67; observed ref=fwop25-n2, description=Description for fwop25-n2 work package., document_title=Task: fwop25-n2 Bench Work Package (#42) | Work Packages | Bench Project | OpenProject, subject=fwop25-n2 Bench Work Package, attributes_key_value_key=Work.",
+      "unanswered": [
+        "type"
+      ],
+      "values": {
+        "ref": "fwop25-n2",
+        "description": "Description for fwop25-n2 work package.",
+        "document_title": "Task: fwop25-n2 Bench Work Package (#42) | Work Packages | Bench Project | OpenProject",
+        "subject": "fwop25-n2 Bench Work Package",
+        "attributes_key_value_key": "Work"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "10/10",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_3444dc: step 2: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear",
+        "s_4f5ea1: step 1: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear",
+        "s_4f5ea1: step 2: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear",
+        "s_4f5ea1: step 3: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear"
+      ]
+    },
+    {
+      "id": "03-set",
+      "status": "success",
+      "summary": "Replayed stored procedure s_bddc58; observed ref=fwop25-n2, date_field_display=no start date - 12/31/2026.",
+      "values": {
+        "ref": "fwop25-n2",
+        "date_field_display": "no start date - 12/31/2026"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "11/11",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_bddc58: step 5: expected alert containing \"Successful update.\"",
+        "s_bddc58: step 8: expected alert containing \"Successful update.\"",
+        "s_bddc58: step 9: read 'status' returned a value the skill itself set/selected ('In progress') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_bddc58: step 11: read 'status' returned a value the skill itself set/selected ('In progress') — confirms the control, not persistence; dropped from the report's confident values"
+      ],
+      "unreported": [
+        "status"
+      ]
+    },
+    {
+      "id": "04-add",
+      "status": "success",
+      "summary": "Replayed stored procedure s_d95c36; observed ref=fwop25-n2, role_tab=ACTIVITY.",
+      "values": {
+        "ref": "fwop25-n2",
+        "role_tab": "ACTIVITY"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "6/6",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 4,
+  "total": 4,
+  "repinned": 0,
+  "drift": 1,
+  "driftTickets": [
+    {
+      "flow": "fwop25",
+      "step": "01-signin",
+      "skill": "s_6ab20b",
+      "atStep": "1",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.getByRole('button', { name: 'Close', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages?query_props={\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}",
+      "pageUrl": "http://127.0.0.1:8090/projects/bench-project/work_packages?query_props=%7B%22c%22%3A%5B%22id%22%2C%22subject%22%2C%22type%22%2C%22status%22%2C%22assignee%22%2C%22priority%22%5D%2C%22hi%22%3Atrue%2C%22g%22%3A%22%22%2C%22is%22%3Atrue%2C%22tv%22%3Afalse%2C%22hla%22%3A%5B%22status%22%2C%22priority%22%2C%22dueDate%22%5D%2C%22t%22%3A%22id%3Aasc%22%2C%22f%22%3A%5B%5D%2C%22ts%22%3A%22PT0S%22%2C%22pp%22%3A20%2C%22pa%22%3A1%7D"
+    }
+  ],
+  "wallMs": 57669,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "cachedTokens": 0
+  },
+  "usageByModel": {},
+  "servedByModel": {},
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}
