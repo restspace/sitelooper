@@ -1,0 +1,228 @@
+{
+ "id": "s_c708fe",
+ "origin": "http://127.0.0.1:8098",
+ "template": "In Snipe-IT, open the asset page for asset tag {{v1}} (name '{{v2}}'). Verify on the page: model is '{{v4}}', status '{{v5}}' (deployed status may show as 'Checked out' — report the actual status label shown, but confirm status was set to {{v5}}), location '{{v6}}', purchase date 2026-03-15, and it is checked out to user 'Bench Assignee' with a checkout note containing '{{v3}}'. If the checkout did NOT go through (asset not assigned to Bench Assignee), perform the checkout now: check out to user 'Bench Assignee' with note '{{v3}} checkout note'. Report each of these values as actually shown.",
+ "params": {
+  "v1": {
+   "example": "BA-00023",
+   "usedIn": [],
+   "known": true,
+   "binding": "02-create.asset_tag"
+  },
+  "v2": {
+   "example": "fwsi14-cv3-r4n1 Bench Asset",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i2:asset_name"
+  },
+  "v3": {
+   "example": "fwsi14-cv3-r4n1",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v4": {
+   "example": "Bench Laptop Model",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i2:table_tbody_tr_a"
+  },
+  "v5": {
+   "example": "Ready to Deploy",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i2:table_tbody_tr_a_2"
+  },
+  "v6": {
+   "example": "Bench Office",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i2:default_location"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8098/hardware/:id"
+ },
+ "steps": [
+  {
+   "tool": "read_all",
+   "args": {
+    "target": "dl.table-display",
+    "what": "count"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div > div:nth-of-type(6) > div > div > dl"
+     },
+     {
+      "kind": "point",
+      "x": 367,
+      "y": 442,
+      "w": 549,
+      "h": 301,
+      "role": null,
+      "tag": "dl",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "checkouts_count",
+   "via": {
+    "skill": "s_7502fb",
+    "step": 1
+   }
+  },
+  {
+   "tool": "wait_for",
+   "args": {
+    "target": "role=button[name=\"Show/Hide More Information\"]",
+    "state": "visible"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Show/Hide More Information"
+     },
+     {
+      "kind": "id",
+      "selector": "#expand-info-panel-button"
+     },
+     {
+      "kind": "css",
+      "selector": "#expand-info-panel-button"
+     },
+     {
+      "kind": "point",
+      "x": 1254,
+      "y": 78,
+      "w": 22.8,
+      "h": 26,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "via": {
+    "skill": "s_7502fb",
+    "step": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=button[name=\"Show/Hide More Information\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Show/Hide More Information"
+     },
+     {
+      "kind": "id",
+      "selector": "#expand-info-panel-button"
+     },
+     {
+      "kind": "css",
+      "selector": "#expand-info-panel-button"
+     },
+     {
+      "kind": "point",
+      "x": 1254,
+      "y": 78,
+      "w": 22.8,
+      "h": 26,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8098/hardware/:id",
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_7502fb",
+    "step": 3
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "a:has-text(\"History\")"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "link",
+      "name": "History 2"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(1) > div > ul > li:nth-of-type(11) > a"
+     },
+     {
+      "kind": "point",
+      "x": 675,
+      "y": 137,
+      "w": 73.8,
+      "h": 39.6,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8098/hardware/:id#history",
+    "addedContains": [
+     "- heading \"History\"",
+     "- button \"Columns\"",
+     "- button \"Refresh\"",
+     "- button \"Export data\"",
+     "- button \"Print\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_7502fb",
+    "step": 4
+   }
+  }
+ ],
+ "contract": 2,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-26T01:05:38.162Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_c2cb43",
+  "index": 0,
+  "of": 4
+ },
+ "provenance": {
+  "session": "rerecord-muhom8zh-1",
+  "instruction": "In Snipe-IT, open the asset page for asset tag BA-00023 (name 'fwsi14-cv3-r4n1 Bench Asset'). Verify on the page: model is 'Bench Laptop Model', status 'Ready to Deploy' (deployed status may show as 'Checked out' — report the actual status label shown, but confirm status was set to Ready to Deploy), location 'Bench Office', purchase date 2026-03-15, and it is checked out to user 'Bench Assignee' with a checkout note containing 'fwsi14-cv3-r4n1'. If the checkout did NOT go through (asset not assigned to Bench Assignee), perform the checkout now: check out to user 'Bench Assignee' with note 'fwsi14-cv3-r4n1 checkout note'. Report each of these values as actually shown.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-26T01:05:38.162Z"
+ },
+ "revision": 1
+}

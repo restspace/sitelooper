@@ -1,0 +1,101 @@
+{
+ "id": "s_7fd97a",
+ "origin": "http://127.0.0.1:8098",
+ "template": "In Snipe-IT, create a new asset named '{{v2}}', model 'Bench Laptop Model' (choose from searchable dropdown), status label 'Ready to Deploy', default location 'Bench Office', purchase date {{v3}}. Save it, then check it out to user 'Bench Assignee' with a note containing '{{v1}}'. Finally report the asset's asset tag exactly as displayed (e.g. BA-000XX).",
+ "params": {
+  "v1": {
+   "example": "fwsi14-cv3-r1n1",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v2": {
+   "example": "fwsi14-cv3-r1n1 Bench Asset",
+   "usedIn": [],
+   "known": true
+  },
+  "v3": {
+   "example": "2026-03-15",
+   "usedIn": []
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8098/hardware?order=asc&page=:id&search=Seed:&size=:id&sort=created_at"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e138"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "button[name=\"btnAdd\"]"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(2) > button:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 915,
+      "y": 206,
+      "w": 38.3,
+      "h": 34,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8098/hardware/create",
+    "addedContains": [
+     "- heading \"Assets Create New\"",
+     "- button \"Save\"",
+     "- combobox \"Company\"",
+     "- combobox \"Select Company\"",
+     "- textbox \"Select Company\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_7bb665",
+    "step": 1
+   }
+  }
+ ],
+ "contract": 2,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-26T00:26:43.335Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_d6ee29",
+  "index": 0,
+  "of": 4
+ },
+ "provenance": {
+  "session": "rerecord-muhna11m-1",
+  "instruction": "In Snipe-IT, create a new asset named 'fwsi14-cv3-r1n1 Bench Asset', model 'Bench Laptop Model' (choose from searchable dropdown), status label 'Ready to Deploy', default location 'Bench Office', purchase date 2026-03-15. Save it, then check it out to user 'Bench Assignee' with a note containing 'fwsi14-cv3-r1n1'. Finally report the asset's asset tag exactly as displayed (e.g. BA-000XX).",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-26T00:26:43.335Z",
+  "transforms": [
+   {
+    "name": "mintedFill",
+    "at": 22,
+    "reason": "fill typed \"BA-00008\", a value the app minted in the recording's run (an alert named it before any step typed it; no instruction states it and no published source supplies it): the procedure ends before it"
+   }
+  ]
+ },
+ "revision": 1
+}

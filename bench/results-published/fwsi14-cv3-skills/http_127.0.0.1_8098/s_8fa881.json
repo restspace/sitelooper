@@ -1,0 +1,971 @@
+{
+ "id": "s_8fa881",
+ "origin": "http://127.0.0.1:8098",
+ "template": "In Snipe-IT, open the asset page for asset tag {{v1}} (name '{{v2}}'). Verify on the page: model is '{{v4}}', status 'Ready to Deploy' (deployed status may show as 'Checked out' — report the actual status label shown, but confirm status was set to Ready to Deploy), location '{{v5}}', purchase date {{v6}}, and it is checked out to user 'Bench Assignee' with a checkout note containing '{{v3}}'. If the checkout did NOT go through (asset not assigned to Bench Assignee), perform the checkout now: check out to user 'Bench Assignee' with note '{{v3}} checkout note'. Report each of these values as actually shown.",
+ "params": {
+  "v1": {
+   "example": "BA-00018",
+   "usedIn": [
+    3,
+    7
+   ],
+   "known": true,
+   "binding": "02-create.asset_tag"
+  },
+  "v2": {
+   "example": "fwsi14-cv3-r3n1 Bench Asset",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i2:asset_name"
+  },
+  "v3": {
+   "example": "fwsi14-cv3-r3n1",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v4": {
+   "example": "Bench Laptop Model",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i2:model"
+  },
+  "v5": {
+   "example": "Bench Office",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i2:default_location"
+  },
+  "v6": {
+   "example": "2026-03-15",
+   "usedIn": [
+    2
+   ],
+   "known": true,
+   "binding": "output:i2:purchase_date"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8098/hardware/{{d1}}",
+  "fingerprint": [
+   0.297,
+   0.001,
+   0,
+   0.024,
+   0.023,
+   0.023,
+   0.004,
+   0.002,
+   0.069,
+   0,
+   0.013,
+   0.002,
+   0.023,
+   0,
+   0.078,
+   0.003,
+   0.021,
+   0.036,
+   0.005,
+   0.006,
+   0,
+   0,
+   0.095,
+   0.036,
+   0.151,
+   0.164,
+   0,
+   0.018,
+   0.002,
+   0.002,
+   0,
+   0.051,
+   0.006,
+   0.028,
+   0.008,
+   0.009,
+   0.006,
+   0,
+   0.01,
+   0,
+   0.002,
+   0.015,
+   0,
+   0.002,
+   0.002,
+   0.005,
+   0.023,
+   0.038,
+   0.013,
+   0.017,
+   0.008,
+   0,
+   0,
+   0.001,
+   0.002,
+   0.023,
+   0.003,
+   0.019,
+   0.001,
+   0.023,
+   0,
+   0,
+   0.027,
+   0.002,
+   0.002,
+   0,
+   0.021,
+   0.067,
+   0,
+   0.023,
+   0.005,
+   0.005,
+   0.007,
+   0.002,
+   0.011,
+   0.018,
+   0.01,
+   0,
+   0.023,
+   0.005,
+   0.002,
+   0.002,
+   0.003,
+   0.001,
+   0.016,
+   0.044,
+   0.002,
+   0,
+   0.005,
+   0.01,
+   0,
+   0.021,
+   0.003,
+   0,
+   0.028,
+   0.001,
+   0.013,
+   0.025,
+   0.003,
+   0.006,
+   0.002,
+   0.002,
+   0.017,
+   0.301,
+   0.019,
+   0.037,
+   0.01,
+   0.001,
+   0.002,
+   0.011,
+   0.02,
+   0.006,
+   0.026,
+   0.004,
+   0.024,
+   0.002,
+   0.004,
+   0.002,
+   0.02,
+   0.28,
+   0.002,
+   0.002,
+   0.126,
+   0.048,
+   0.014,
+   0.008,
+   0.023,
+   0.008,
+   0.002,
+   0,
+   0.023,
+   0.008,
+   0.002,
+   0.01,
+   0.004,
+   0.001,
+   0.232,
+   0.003,
+   0.003,
+   0.001,
+   0.001,
+   0.01,
+   0.003,
+   0,
+   0.021,
+   0.002,
+   0.023,
+   0,
+   0.042,
+   0,
+   0.001,
+   0.011,
+   0,
+   0.005,
+   0.003,
+   0.013,
+   0.041,
+   0.008,
+   0.002,
+   0.005,
+   0.002,
+   0.004,
+   0.017,
+   0.005,
+   0.002,
+   0.113,
+   0.003,
+   0,
+   0.104,
+   0.001,
+   0.007,
+   0,
+   0.001,
+   0,
+   0,
+   0.036,
+   0.017,
+   0.021,
+   0.029,
+   0.019,
+   0.001,
+   0.004,
+   0.002,
+   0.013,
+   0.003,
+   0.015,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.004,
+   0.022,
+   0,
+   0.011,
+   0.001,
+   0,
+   0.003,
+   0.017,
+   0.011,
+   0,
+   0.011,
+   0.006,
+   0.011,
+   0.002,
+   0,
+   0.01,
+   0.01,
+   0.015,
+   0,
+   0.008,
+   0.045,
+   0,
+   0,
+   0.003,
+   0,
+   0.021,
+   0.004,
+   0.008,
+   0.004,
+   0.016,
+   0,
+   0.021,
+   0.001,
+   0.003,
+   0.001,
+   0.002,
+   0.001,
+   0.01,
+   0.006,
+   0,
+   0.003,
+   0.006,
+   0.001,
+   0.021,
+   0.003,
+   0.005,
+   0.015,
+   0.003,
+   0.002,
+   0,
+   0.048,
+   0,
+   0.02,
+   0,
+   0.006,
+   0.006,
+   0.036,
+   0,
+   0,
+   0.021,
+   0.113,
+   0,
+   0.004,
+   0.004,
+   0.002,
+   0.003,
+   0.042,
+   0.015,
+   0.002,
+   0.044,
+   0,
+   0,
+   0,
+   0.002,
+   0.002,
+   0.009,
+   0.002,
+   0.005,
+   0,
+   0.029,
+   0.007,
+   0.007,
+   0.008,
+   0,
+   0.013,
+   0.002,
+   0.016,
+   0.007,
+   0.023,
+   0.001,
+   0.002,
+   0,
+   0,
+   0.027,
+   0.01,
+   0.031,
+   0,
+   0.002,
+   0,
+   0.023,
+   0.002,
+   0.028,
+   0.002,
+   0.025,
+   0,
+   0.006,
+   0.006,
+   0.002,
+   0.002,
+   0.148,
+   0.024,
+   0,
+   0.016,
+   0.006,
+   0.023,
+   0.017,
+   0.002,
+   0.004,
+   0.002,
+   0.018,
+   0.025,
+   0.004,
+   0.011,
+   0.001,
+   0.034,
+   0,
+   0.017,
+   0.005,
+   0,
+   0.159,
+   0.002,
+   0.008,
+   0.025,
+   0,
+   0,
+   0.045,
+   0.006,
+   0.005,
+   0.01,
+   0,
+   0.021,
+   0.004,
+   0.002,
+   0,
+   0.002,
+   0.19,
+   0.004,
+   0.004,
+   0.002,
+   0,
+   0.021,
+   0.007,
+   0.345,
+   0,
+   0,
+   0.004,
+   0.004,
+   0,
+   0.053,
+   0.006,
+   0.004,
+   0.003,
+   0.008,
+   0.023,
+   0,
+   0,
+   0.001,
+   0.002,
+   0,
+   0.002,
+   0.004,
+   0.039,
+   0.004,
+   0.022,
+   0.019,
+   0.002,
+   0.002,
+   0.006,
+   0,
+   0.008,
+   0.013,
+   0,
+   0,
+   0.01,
+   0.001,
+   0.015,
+   0.003,
+   0.008,
+   0.023,
+   0.001,
+   0,
+   0.044,
+   0.002,
+   0.014,
+   0.021,
+   0,
+   0.003,
+   0,
+   0.011,
+   0.021,
+   0.042,
+   0.021,
+   0.025,
+   0.176,
+   0.003,
+   0.026,
+   0.016,
+   0.002,
+   0.024,
+   0.048,
+   0.013,
+   0.013,
+   0.021,
+   0.021,
+   0.004,
+   0.007,
+   0.021,
+   0.022,
+   0.004,
+   0.002,
+   0.05,
+   0,
+   0.019,
+   0.001,
+   0.009,
+   0.042,
+   0.027,
+   0.004,
+   0.005,
+   0.01,
+   0.034,
+   0,
+   0.021,
+   0.01,
+   0.005,
+   0.002,
+   0.027,
+   0.001,
+   0.027,
+   0.002,
+   0.027,
+   0.022,
+   0.02,
+   0.008,
+   0.002,
+   0.031,
+   0.054,
+   0.011,
+   0.102,
+   0.001,
+   0.168,
+   0,
+   0.004,
+   0.001,
+   0.002,
+   0.013,
+   0.028,
+   0.013,
+   0.036,
+   0.029,
+   0.008,
+   0,
+   0.007,
+   0,
+   0.002,
+   0,
+   0.006,
+   0.053,
+   0.002,
+   0.011,
+   0.002,
+   0.002,
+   0.004,
+   0.005,
+   0.077,
+   0,
+   0.005,
+   0.058,
+   0.008,
+   0.002,
+   0.025,
+   0.018,
+   0,
+   0.004,
+   0,
+   0.021,
+   0.006,
+   0.033,
+   0.024,
+   0.006,
+   0.01,
+   0.009,
+   0.003,
+   0,
+   0,
+   0.015,
+   0.002,
+   0.004,
+   0,
+   0.01,
+   0.002,
+   0.007,
+   0.258,
+   0,
+   0.006,
+   0.001,
+   0.31,
+   0.021,
+   0.024,
+   0.023,
+   0.005,
+   0.042,
+   0.021,
+   0.046,
+   0.042,
+   0,
+   0,
+   0.028,
+   0
+  ],
+  "requireText": [
+   "{{v1}}",
+   "{{v2}}"
+  ]
+ },
+ "steps": [
+  {
+   "tool": "read_all",
+   "args": {
+    "target": "a[href*=\"/models/\"]",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "a[href*=\"/models/\"]"
+     },
+     {
+      "kind": "css",
+      "selector": "#model > span > a"
+     }
+    ]
+   },
+   "label": "model"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "text={{v6}}",
+    "what": "text",
+    "label": "purchase_date_shown",
+    "scopedBy": "v6"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "text={{v6}}"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div > div > div:nth-of-type(2) > ul > li:nth-of-type(5)",
+      "nth": 3
+     }
+    ]
+   },
+   "label": "purchase_date_shown_2"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "dd >> nth=0",
+    "what": "text",
+    "label": "asset_tag",
+    "scopedBy": "v1"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "dd >> nth=0"
+     },
+     {
+      "kind": "text",
+      "text": "Copy to Clipboard {{v1}}"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(6) > div > div > dl > dd:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 544,
+      "y": 312,
+      "w": 603.2,
+      "h": 40,
+      "role": null,
+      "tag": "dd",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "asset_tag_2"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "a[href*=\"/users/\"] >> nth=0",
+    "what": "text",
+    "label": "checked_out_to"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "a[href*=\"/users/\"] >> nth=0"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > ul > li:nth-of-type(9) > ul > li:nth-of-type(6) > a"
+     }
+    ]
+   },
+   "label": "checked_out_to_2"
+  },
+  {
+   "tool": "wait_for",
+   "args": {
+    "target": "#details",
+    "state": "visible"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#details"
+     },
+     {
+      "kind": "point",
+      "x": 665,
+      "y": 515,
+      "w": 1176,
+      "h": 691.3,
+      "role": null,
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "what": "url",
+    "label": "asset_page_url"
+   },
+   "locators": {},
+   "label": "asset_page_url"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text",
+    "scopedBy": "v1"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "text",
+      "text": "{{v1}}"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(6) > div > div > dl > dd:nth-of-type(1) > span"
+     },
+     {
+      "kind": "point",
+      "x": 302,
+      "y": 311,
+      "w": 57.8,
+      "h": 15,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "asset_tag"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(6) > div > div > dl > dd:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 357,
+      "y": 353,
+      "w": 167.6,
+      "h": 15,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "asset_name"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#model > span > a"
+     }
+    ]
+   },
+   "label": "model"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div > dl > dd:nth-of-type(6) > span > a"
+     },
+     {
+      "kind": "point",
+      "x": 310,
+      "y": 521,
+      "w": 74.2,
+      "h": 15,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "default_location"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text",
+    "scopedBy": "v6"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div > div > div:nth-of-type(2) > ul > li:nth-of-type(5)",
+      "nth": 3
+     }
+    ]
+   },
+   "label": "purchase_date_shown"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#historyListingTable > tbody > tr:nth-of-type(2) > td:nth-of-type(10)"
+     }
+    ]
+   },
+   "label": "checkout_note"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#details > div > div > div:nth-of-type(2) > div > a"
+     },
+     {
+      "kind": "point",
+      "x": 371,
+      "y": 210,
+      "w": 93.2,
+      "h": 15,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "checked_out_to"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(6) > div > div > dl > dt:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 167,
+      "y": 312,
+      "w": 150.8,
+      "h": 41,
+      "role": null,
+      "tag": "dt",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "dt"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(6) > div > div > dl > dt:nth-of-type(6)"
+     },
+     {
+      "kind": "point",
+      "x": 167,
+      "y": 522,
+      "w": 150.8,
+      "h": 42,
+      "role": null,
+      "tag": "dt",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "dt_2"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "Opened {{v1}}'s asset page (http://127.0.0.1:8098/hardware/{{d1}}, reached via the nav \"Lookup by Asset Tag\" box, since the replayed segment had left the browser on /hardware/4/edit for a different asset). All requested values were verified as actually shown, so no new checkout was needed: asset tag {{v1}}, name \"{{v2}}\", model \"{{v4}}\", status label shown as \"Ready to Deploy Deployed\" (label Ready to Deploy, state Deployed — i.e. status was set to Ready to Deploy), Default Location \"{{v5}}\", purchase date \"Purchased {{v6}}\", and the header shows it checked out to \"Bench Assignee\"; the History tab's checkout entry for #{{v1}} to Bench Assignee contains the note \"{{v3}}\".",
+  "values": {
+   "asset_tag": "{{v1}}",
+   "asset_name": "{{v2}}",
+   "asset_id": "{{d1}}",
+   "model": "{{v4}}",
+   "status_label_shown": "Ready to Deploy Deployed (label 'Ready to Deploy', state 'Deployed')",
+   "default_location": "{{v5}}",
+   "purchase_date_shown": "Purchased {{v6}} - 6 months 1 week ago",
+   "checked_out_to": "Bench Assignee",
+   "history_checkout_entry": "2026-09-26 12:51 AM Bench Admin checkout {{v2}} #{{v1}} - {{v4}} Bench Assignee 1 {{v3}} Current Location: [id: 1] {{v5}}",
+   "checkout_note": "{{v3}}",
+   "asset_header_details": "Asset Tag: {{v1}}; Asset Name: {{v2}}; Current Value: USD; Last Audit: No value; Next Audit Date: No value; Default Location: {{v5}}",
+   "purchase_date_shown_2": "Purchased\n                {{v6}} -\n                6 months 1 week ago",
+   "asset_tag_2": "Copy to Clipboard\n{{v1}}",
+   "checked_out_to_2": "User",
+   "asset_page_url": "http://127.0.0.1:8098/hardware/{{d1}}",
+   "dt": "Asset Tag",
+   "dt_2": "Default Location",
+   "ref": "BA-00004"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-26T00:53:02.901Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_81d01f",
+  "index": 1,
+  "of": 2
+ },
+ "variantOf": "s_63d79e",
+ "provenance": {
+  "session": "rerecord-muho4vxd-1",
+  "instruction": "In Snipe-IT, open the asset page for asset tag BA-00018 (name 'fwsi14-cv3-r3n1 Bench Asset'). Verify on the page: model is 'Bench Laptop Model', status 'Ready to Deploy' (deployed status may show as 'Checked out' — report the actual status label shown, but confirm status was set to Ready to Deploy), location 'Bench Office', purchase date 2026-03-15, and it is checked out to user 'Bench Assignee' with a checkout note containing 'fwsi14-cv3-r3n1'. If the checkout did NOT go through (asset not assigned to Bench Assignee), perform the checkout now: check out to user 'Bench Assignee' with note 'fwsi14-cv3-r3n1 checkout note'. Report each of these values as actually shown.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-26T00:53:02.901Z"
+ },
+ "revision": 1
+}
