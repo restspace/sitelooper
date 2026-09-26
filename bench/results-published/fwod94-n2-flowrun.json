@@ -1,0 +1,548 @@
+{
+  "flow": "fwod94",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_6d73b6; observed contact_id=45, ref=fwod94-n2, city=Benchville, search_result_count=1.",
+      "values": {
+        "contact_id": "45",
+        "ref": "fwod94-n2",
+        "city": "Benchville",
+        "search_result_count": "1"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "17/17",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_6d73b6: report value contact_name is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)"
+      ],
+      "unreported": [
+        "contact_name",
+        "saved_form_url"
+      ]
+    },
+    {
+      "id": "02-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_2cc07c; observed sale_order_id=22, tax_1=20%, order_line_subtotal=£ 885.00, quotation_reference=S00022, product=[FURN_6666] Acoustic Bloc Screens, quantity=3, total=£ 1,062.00, unit_price=295.00, tax_2=£ 177.00.",
+      "values": {
+        "sale_order_id": "22",
+        "tax_1": "20%",
+        "order_line_subtotal": "£ 885.00",
+        "quotation_reference": "S00022",
+        "product": "[FURN_6666] Acoustic Bloc Screens",
+        "quantity": "3",
+        "total": "£ 1,062.00",
+        "unit_price": "295.00",
+        "tax_2": "£ 177.00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "21/21",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_2a1251: step 2: no element matched any known locator for target (tried 5: page.locator('role=option[name=\"fwod94-n2 Bench Customer\"]'), page.getByRole('option', { name: 'fwod94-n2 Bench Customer', exact: true }), page.locator('#autocomplete_0_0'), …); healed inline: the step ran on page.getByRole('option', { name: 'Create \"fwod94-n1 Bench\"', exact: true }), proposed from the live page (nothing in the recorded chain resolved)",
+        "s_2cc07c: step 1: read 'customer' returned a value the skill itself set/selected ('fwod94-n1 Bench') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_2cc07c: step 2: skipped read — no element matched any known locator for target (tried 2: page.locator('div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div > div:nth-of-type(2) > span'), elementAt(210, 270) /* span */)",
+        "s_2cc07c: report value ref is given, not observed: it is built only from the step's own parameters, and neither this run's page nor any of its reads shows it — withheld"
+      ],
+      "unreported": [
+        "customer",
+        "customer_city",
+        "ref"
+      ]
+    },
+    {
+      "id": "03-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_69fd9a; observed ref=S00022, tax_label=TAX 20%, tax_amount=£ 233.00, total_after_second_line=Total\t£ 1,398.00.",
+      "values": {
+        "ref": "S00022",
+        "tax_label": "TAX 20%",
+        "tax_amount": "£ 233.00",
+        "total_after_second_line": "Total\t£ 1,398.00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "11/11",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_69fd9a: identity marker \"fwod94-n2 Bench Customer\" is not on the page, but the url names this run's record (#id=22) — the marker is stale; proceeding",
+        "s_69fd9a: report value ref_2 is given, not observed: it is built only from the step's own parameters, and neither this run's page nor any of its reads shows it — withheld"
+      ],
+      "unreported": [
+        "ref_2"
+      ]
+    },
+    {
+      "id": "04-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_b968fc; observed ref=S00022, tax_label=TAX 20%, tax_amount=£ 351.00, total_label=Total, total_amount_first_fragment=£ 2, total_amount_second_fragment=106.00.",
+      "values": {
+        "ref": "S00022",
+        "tax_label": "TAX 20%",
+        "tax_amount": "£ 351.00",
+        "total_label": "Total",
+        "total_amount_first_fragment": "£ 2",
+        "total_amount_second_fragment": "106.00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "11/11",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_b968fc: identity marker \"fwod94-n2 Bench Customer\" is not on the page, but the url names this run's record (#id=22) — the marker is stale; proceeding",
+        "s_b968fc: report value ref_2 is given, not observed: it is built only from the step's own parameters, and neither this run's page nor any of its reads shows it — withheld"
+      ],
+      "unreported": [
+        "ref_2"
+      ]
+    },
+    {
+      "id": "05-open",
+      "status": "success",
+      "summary": "Quotation S00022 (sale.order id=22) is a confirmed sales order: the statusbar shows \"Sales Order\" checked (the only selectable state, all states disabled) and no Confirm button is present — instead Create Invoice / Send by Email / Preview / Cancel are shown, i.e. it was already confirmed when the replay handed the page over, so no further click was needed or possible. Caveat worth flagging: the customer rendered on this order is \"fwod94-n1 Bench\", NOT the \"fwod94-n2 Bench Customer\" named in the instruction — that contact (id 45, Benchville) exists in the Customers list but has 0 sale orders, and S00022 is the only fwod94 order in the Orders list, so this record appears to belong to a different fwod94 test contact than the one the instruction cites. No data was changed by me (invoice status remains \"Nothing to Invoice\").",
+      "values": {
+        "order_reference": "S00022",
+        "order_id": "22",
+        "order_status": "Sales Order (statusbar radio \"Sales Order\" aria-checked=true, disabled; \"Quotation Sent\"/\"Quotation\" unchecked)",
+        "confirm_button_count": "0",
+        "customer_on_order": "fwod94-n1 Bench",
+        "order_total_in_list": "£ 2,106.00",
+        "invoice_status": "Nothing to Invoice",
+        "instructed_customer": "fwod94-n2 Bench Customer (contact id 45, Benchville) - exists but shows 0 sale orders",
+        "div_role_radiogroup_role": "Sales Order",
+        "div_role_radiogroup_role_2": "Quotation Sent",
+        "div_role_radiogroup_role_3": "Quotation",
+        "div_role_radiogroup_role_4": "true",
+        "div_role_radiogroup_role_5": "false",
+        "ref": "fwod94-n1",
+        "ref_2": "fwod94-n2",
+        "available_buttons_1": "Create Invoice",
+        "available_buttons_2": "Send by Email",
+        "available_buttons_3": "Preview",
+        "available_buttons_4": "Cancel"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_dbfc72 stopped at step 1 — after step 1 the page did not show \"- link \\\"fwod94-n2 Bench Customer Benchville\\\"\" as it did when recorded — the step ran but probably acted on the wrong element",
+      "replayed": "0/4",
+      "repaired": false,
+      "turns": 10,
+      "warnings": [
+        "s_dbfc72: identity marker \"fwod94-n2 Bench Customer\" is not on the page, but the url names this run's record (#id=22) — the marker is stale; proceeding"
+      ],
+      "unreported": [
+        "sales_order_reference"
+      ]
+    },
+    {
+      "id": "06-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_1d8c6a; observed order_status=Sales Order\nQuotation Sent\nQuotation, ref=S00022.",
+      "values": {
+        "order_status": "Sales Order\nQuotation Sent\nQuotation",
+        "ref": "S00022"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "11/11",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_1d8c6a: identity marker \"fwod94-n2\" is not on the page, but the url names this run's record (#id=22) — the marker is stale; proceeding",
+        "s_1d8c6a: step 6: the recorded effect (- menu \"{{*}} YourCompany\") is already showing — a click would toggle it away; skipped as already in effect",
+        "s_1d8c6a: step 8: skipped read — no element matched any known locator for target (tried 4: page.locator('.o_statusbar_status button[data-value=\\'cancel\\']'), page.getByRole('radio', { name: 'Cancelled', exact: true }), page.locator('div > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div > button:nth-of-type(2)'), …)",
+        "s_1d8c6a: step 11: read 'modal_modal_body_modal_m' returned a value the skill itself set/selected ('Send and cancel') — confirms the control, not persistence; dropped from the report's confident values"
+      ],
+      "unreported": [
+        "cancelled_button_label",
+        "modal_modal_body_modal_m"
+      ]
+    }
+  ],
+  "passed": 6,
+  "total": 6,
+  "repinned": 0,
+  "drift": 4,
+  "driftTickets": [
+    {
+      "flow": "fwod94",
+      "step": "02-open",
+      "skill": "s_2a1251",
+      "atStep": "2",
+      "key": "target",
+      "similarity": 1.002,
+      "missedLocator": "page.locator('role=option[name=\"fwod94-n2 Bench Customer\"]')",
+      "fallbackUsed": "page.getByRole('option', { name: 'Create \"fwod94-n1 Bench\"', exact: true })",
+      "recovered": false,
+      "healed": true,
+      "proposal": {
+        "kind": "role",
+        "role": "option",
+        "name": "Create \"fwod94-n1 Bench\""
+      },
+      "rows": [
+        {
+          "tag": "button",
+          "type": "button"
+        },
+        {
+          "tag": "a",
+          "role": "menuitem",
+          "text": "Sales"
+        },
+        {
+          "tag": "div",
+          "role": "menu",
+          "text": "OrdersTo InvoiceProductsReportingConfiguration"
+        },
+        {
+          "tag": "button",
+          "text": "Orders",
+          "type": "button"
+        },
+        {
+          "tag": "button",
+          "text": "To Invoice",
+          "type": "button"
+        },
+        {
+          "tag": "button",
+          "text": "Products",
+          "type": "button"
+        },
+        {
+          "tag": "button",
+          "text": "Reporting",
+          "type": "button"
+        },
+        {
+          "tag": "button",
+          "text": "Configuration",
+          "type": "button"
+        },
+        {
+          "tag": "div",
+          "role": "menu",
+          "text": "63YourCompanyMitchell Adminbench"
+        },
+        {
+          "tag": "button",
+          "text": "6",
+          "type": "button"
+        },
+        {
+          "tag": "i",
+          "role": "img",
+          "label": "Messages"
+        },
+        {
+          "tag": "button",
+          "text": "3",
+          "type": "button"
+        },
+        {
+          "tag": "i",
+          "role": "img",
+          "label": "Activities"
+        },
+        {
+          "tag": "button",
+          "text": "YourCompany",
+          "type": "button"
+        },
+        {
+          "tag": "button",
+          "text": "Mitchell Adminbench",
+          "type": "button"
+        },
+        {
+          "tag": "button",
+          "text": "New",
+          "type": "button"
+        },
+        {
+          "tag": "a",
+          "text": "Quotations"
+        },
+        {
+          "tag": "button",
+          "type": "button"
+        },
+        {
+          "tag": "button",
+          "label": "Save manually",
+          "type": "button"
+        },
+        {
+          "tag": "button",
+          "label": "Discard changes",
+          "type": "button"
+        },
+        {
+          "tag": "button",
+          "id": "send_by_email_primary",
+          "text": "Send by Email",
+          "type": "object"
+        },
+        {
+          "tag": "button",
+          "text": "Confirm",
+          "type": "object"
+        },
+        {
+          "tag": "button",
+          "text": "Preview",
+          "type": "object"
+        },
+        {
+          "tag": "div",
+          "role": "radiogroup",
+          "label": "Statusbar",
+          "text": "...Sales OrderQuotation SentQuotation...Quotation"
+        },
+        {
+          "tag": "button",
+          "role": "radio",
+          "text": "Sales Order",
+          "type": "button"
+        },
+        {
+          "tag": "button",
+          "role": "radio",
+          "text": "Quotation Sent",
+          "type": "button"
+        },
+        {
+          "tag": "button",
+          "role": "radio",
+          "text": "Quotation",
+          "type": "button"
+        },
+        {
+          "tag": "label",
+          "label": "Customer"
+        },
+        {
+          "tag": "input",
+          "role": "combobox",
+          "placeholder": "Type to find a customer...",
+          "type": "text"
+        },
+        {
+          "tag": "a",
+          "role": "option",
+          "id": "autocomplete_0_0",
+          "text": "Create \"fwod94-n1 Bench\""
+        },
+        {
+          "tag": "a",
+          "role": "option",
+          "id": "autocomplete_0_1",
+          "text": "Create and edit..."
+        },
+        {
+          "tag": "label",
+          "label": "Quotation Template"
+        },
+        {
+          "tag": "input",
+          "role": "combobox",
+          "id": "sale_order_template_id_0",
+          "type": "text"
+        },
+        {
+          "tag": "label",
+          "label": "Expiration"
+        },
+        {
+          "tag": "input",
+          "id": "validity_date_0",
+          "type": "text"
+        },
+        {
+          "tag": "label",
+          "label": "Payment Terms"
+        },
+        {
+          "tag": "input",
+          "role": "combobox",
+          "id": "payment_term_id_0",
+          "type": "text"
+        },
+        {
+          "tag": "a",
+          "role": "tab",
+          "text": "Order Lines"
+        },
+        {
+          "tag": "a",
+          "role": "tab",
+          "text": "Optional Products"
+        },
+        {
+          "tag": "a",
+          "role": "tab",
+          "text": "Other Info"
+        },
+        {
+          "tag": "div",
+          "text": "ProductDescriptionQuantityUnit PriceTaxesTax excl.Add a prod"
+        },
+        {
+          "tag": "th"
+        },
+        {
+          "tag": "th",
+          "text": "Product"
+        },
+        {
+          "tag": "th",
+          "text": "Description"
+        },
+        {
+          "tag": "th",
+          "text": "Quantity"
+        },
+        {
+          "tag": "th",
+          "text": "Unit Price"
+        },
+        {
+          "tag": "th",
+          "text": "Taxes"
+        },
+        {
+          "tag": "th",
+          "text": "Tax excl."
+        },
+        {
+          "tag": "button",
+          "type": "button"
+        },
+        {
+          "tag": "a",
+          "role": "button",
+          "text": "Add a product"
+        },
+        {
+          "tag": "a",
+          "role": "button",
+          "text": "Add a section"
+        },
+        {
+          "tag": "a",
+          "role": "button",
+          "text": "Add a note"
+        },
+        {
+          "tag": "button",
+          "text": "Catalog",
+          "type": "object"
+        },
+        {
+          "tag": "label",
+          "label": "Total"
+        },
+        {
+          "tag": "button",
+          "text": "Send message"
+        },
+        {
+          "tag": "button",
+          "text": "Log note"
+        },
+        {
+          "tag": "button",
+          "text": "Activities"
+        },
+        {
+          "tag": "button",
+          "label": "Search Messages"
+        },
+        {
+          "tag": "i",
+          "role": "img"
+        },
+        {
+          "tag": "button",
+          "label": "Attach files"
+        }
+      ],
+      "pageUrlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "pageUrl": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=22"
+    },
+    {
+      "flow": "fwod94",
+      "step": "02-open",
+      "skill": "s_2cc07c",
+      "atStep": "2",
+      "key": "target",
+      "similarity": 1.002,
+      "missedLocator": "page.locator('div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div > div:nth-of-type(2) > span')",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "pageUrl": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=22"
+    },
+    {
+      "flow": "fwod94",
+      "step": "05-open",
+      "skill": "s_dbfc72",
+      "similarity": 0.993,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_dbfc72 stopped at step 1 — after step 1 the page did not show \"- link \\\"fwod94-n2 Bench Customer Benchville\\\"\" as it did when recorded — the step ran but probably acted on the wrong element",
+      "reason": "after step 1 the page did not show \"- link \\\"fwod94-n2 Bench Customer Benchville\\\"\" as it did when recorded — the step ran but probably acted on the wrong element",
+      "pageUrlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "pageUrl": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=22"
+    },
+    {
+      "flow": "fwod94",
+      "step": "06-open",
+      "skill": "s_1d8c6a",
+      "atStep": "8",
+      "key": "target",
+      "similarity": 0.988,
+      "missedLocator": "page.locator('.o_statusbar_status button[data-value=\\'cancel\\']')",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "pageUrl": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=22"
+    }
+  ],
+  "wallMs": 176405,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 188595,
+    "completionTokens": 14612,
+    "cachedTokens": 155520
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 188595,
+      "completionTokens": 14612,
+      "cachedTokens": 155520
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}
