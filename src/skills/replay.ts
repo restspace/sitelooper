@@ -7,6 +7,8 @@ import { LOOP_SHRINK_WAIT_MS, pageReadable, runFoldedLoop, type LoopPass } from 
 import type { Locator, Page } from 'playwright-core';
 import { clip, identityRe, identitySource } from '../shared/text.js';
 import { cosine, fingerprintPage } from '../daemon/fingerprint.js';
+import type { ReplayFactsHook } from './facts-url.js';
+import { shadowIdentity } from './facts-format.js';
 import { candidateExpr, makeLocator, type LocatorCandidate, type StepDiff } from '../daemon/recorder.js';
 import { retired, type SnapshotRow } from './repair.js';
 import {
@@ -120,6 +122,11 @@ export interface ReplayOptions {
    * options (src/agent/tools.ts) is neutral about deciders and must stay so.
    */
   heal?: InlineHealer;
+  /**
+   * SITE FACTS (stage 0, skills/facts-url.ts): the daemon's url observer and
+   * landing shadows. Observes and logs only; absent, nothing is observed.
+   */
+  facts?: ReplayFactsHook;
 }
 
 /**
@@ -655,6 +662,8 @@ export async function replaySkill(
       // and it is a reason that expires. A url naming another record does not
       // expire, so this re-ask can only rescue the page that had not arrived.
       const verdict = identityMarkerVerdict(pattern, page.url(), params, want, seen.presence);
+      // SITE FACTS shadow (facts.identity, skills/facts-format.ts): would a known rendering of the marker have shown?
+      await shadowIdentity(page, want, verdict.pass);
       if (verdict.pass) {
         if (verdict.warning) res.warnings.push(verdict.warning);
         continue;
@@ -704,6 +713,7 @@ export async function replaySkill(
       // the record it would create is refused as past its start (fwod66).
       const mints = skill.steps.flatMap((s, i) => (s.mints ? [{ at: s.mints.at, step: i + 1, ...(s.mints.sole !== undefined ? { sole: s.mints.sole } : {}) }] : []));
       const verdict = preconditionVerdict(pattern, url, params, res.similarity, mints);
+      opts.facts?.precondition(pattern, url, params, res.similarity, mints, Boolean(verdict.refuse), `gate ${skill.id} step ${n}`);
       if (verdict.refuse) {
         res.refused = true;
         if (verdict.past) res.pastStart = true;
@@ -1537,7 +1547,7 @@ export async function replaySkill(
         let stop: StepVerdict | null = null;
         let effectConfirmed = false;
         for (const gate of STEP_GATES) {
-          const verdict = await gate({ page, step, tag, failIndex, args, params, outcome, isRead, positionalResolution, effectConfirmed, navAlerts, navigatedToStale });
+          const verdict = await gate({ page, step, tag, failIndex, args, params, outcome, isRead, positionalResolution, effectConfirmed, navAlerts, navigatedToStale, facts: opts.facts });
           if (!verdict) continue;
           if (verdict.confirmed) effectConfirmed = true;
           if (verdict.inDiff) inDiff = verdict.inDiff;
@@ -1832,6 +1842,8 @@ interface StepGateInput {
   navAlerts?: { before: string[]; after: ObservedAlerts | null };
   /** This goto's target still named a value at a position this replay has shown volatile (retargetNavigation). */
   navigatedToStale?: string;
+  /** The daemon's site-facts hook (ReplayOptions.facts). */
+  facts?: ReplayFactsHook;
 }
 
 /** Steps whose alerts replay observes itself, because the executor does not diff them. */
@@ -1871,7 +1883,14 @@ type StepGate = (g: StepGateInput) => Promise<StepVerdict | null> | StepVerdict 
  * same-shape url whose literal segment(s) disagree is treated as volatile
  * (mechanism 2): warn, stage the generalisation, continue.
  */
-const expectedUrl: StepGate = async ({ step, page, params, tag, failIndex, outcome }) => {
+const expectedUrl: StepGate = async (g) => {
+  const verdict = await judgeExpectedUrl(g);
+  // SITE FACTS: the url this expectation was judged at, for the route observer.
+  if (g.facts && g.step.expect?.urlPattern) g.facts.noteUrl(g.page.url(), Boolean(g.step.mints));
+  return verdict;
+};
+
+const judgeExpectedUrl: StepGate = async ({ step, page, params, tag, failIndex, outcome }) => {
   const pattern = step.expect?.urlPattern;
   if (!pattern || urlMatches(pattern, page.url(), params)) return null;
   // A link click that went where the link points, recorded as staying on the
@@ -2021,9 +2040,10 @@ const errorPage: StepGate = ({ page, tag }) => {
 // saw is reported, and only stops the step when its recorded changes could not
 // confirm it worked (gates.ts alertVerdict).
 /** A goto that landed on another view of what it asked for (shared gotoLandingVerdict). */
-const gotoLanding: StepGate = ({ page, step, args, tag }) => {
+const gotoLanding: StepGate = ({ page, step, args, tag, facts }) => {
   if (step.tool !== 'goto' || typeof args.url !== 'string') return null;
   const stop = gotoLandingVerdict(args.url, page.url(), `step ${tag}`);
+  facts?.landing(args.url, page.url(), stop !== null, `goto step ${tag}`);
   return stop ? { stop } : null;
 };
 

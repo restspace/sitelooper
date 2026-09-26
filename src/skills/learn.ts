@@ -3,6 +3,8 @@ import type { InstructionResult, SkillRecord } from '../agent/loop.js';
 import type { Report } from '../agent/report.js';
 import type { RecordedEntry, RecordedInstruction } from '../daemon/recorder.js';
 import { shadowVerdicts, writeShadow } from './shadow.js';
+import { flushRouteObservations, noteRoutesAgree, observeRouting, takeFactRows } from './facts-url.js';
+import { shadowClassify, takeFormatShadowRows } from './facts-format.js';
 import { compileSkills, escapeRe, fillParams, samePageContexts, sameProcedure, urlMatches, urlPattern, variantStart } from './compile.js';
 import { landedOnRecordedPage } from '../execution/gates.js';
 import { urlDiff } from '../execution/url.js';
@@ -116,6 +118,10 @@ export function learnFromInstruction(
     recovery?: boolean;
   },
 ): LearnedRecord | null {
+  // SITE FACTS (stage 0, skills/facts-url.ts): the route facts this session's
+  // recorded steps proved since the last instruction, written under its name.
+  // Changes nothing learned below.
+  flushRouteObservations(store, input.session);
   const out: LearnedRecord = {};
   const sk = input.result.skill;
   const succeeded = input.result.report.status === 'success';
@@ -188,9 +194,16 @@ export function learnFromInstruction(
       ...(input.before?.length ? { before: input.before } : {}),
     });
   const skills = compile(variantOf);
+  // SITE FACTS: two procedures one query literal apart on pages that do not
+  // fingerprint alike prove that key routes (a soft `route.query` fact).
+  observeRouting(store, skills, input.session);
   // SHADOW (skills/shadow.ts): what the journal's facts say beside what the
   // heuristics decided, to a report next to the store. Changes nothing learned.
-  if (skills.length) writeShadow(store.dir, { session: input.session, instruction: input.instruction }, shadowVerdicts(input.entries, skills, input.before ?? []));
+  // The site-facts rows this session buffered (replays of stored skills the
+  // model ran during the instruction) go out in the same call.
+  const factRows = takeFactRows(store);
+  factRows.push(...takeFormatShadowRows()); // display-format rows (skills/facts-format.ts)
+  if (skills.length || factRows.length) writeShadow(store.dir, { session: input.session, instruction: input.instruction }, [...(skills.length ? shadowVerdicts(input.entries, skills, input.before ?? []) : []), ...factRows]);
   // A variant that starts AFTER steps this recording replayed through other
   // skills (an earlier segment of the chain it repaired) covers the tail of
   // the instruction, not the instruction: replay composes a chain by its own
@@ -201,6 +214,7 @@ export function learnFromInstruction(
   // a tail that began in the signed-in projects list; the compiled artifact
   // ran it on a fresh browser's login form and missed its first click.
   const whole = variantOf && variantStart(input.entries, variantOf).dropped ? compile(undefined) : [];
+  if (whole.length) observeRouting(store, whole, input.session);
   if (!skills.length && !whole.length) return Object.keys(out).length ? out : null;
   if (skills.length) Object.assign(out, keep(store, skills, variantOf));
   if (whole.length) {
@@ -889,6 +903,8 @@ function synthesize(skill: Skill, params: Record<string, string>, liveValues: Re
     // A value carrying a slot the chain typed publishes only where this run
     // committed it (phase B): the same classifyReportValue the artifact asks.
     const verdict = classifyReportValue(v, params, shown, evidence);
+    // SITE FACTS shadow (facts.classify, skills/facts-format.ts): would a known rendering have made an echo committed?
+    if (verdict.class === 'echo') shadowClassify(skill, opts.chain, v, params, shown, evidence, verdict);
     if (verdict.class === 'given' || verdict.class === 'echo') {
       // The given or typed value is what the prose must not state either.
       stale.push(...verdict.slots.map((slot) => params[slot]));
@@ -1377,7 +1393,11 @@ export function pinEndsElsewhere(store: SkillStore, candidateId: string, nextPin
   const start = head.preconditions.urlPattern;
   const end = [...tail.steps].reverse().find((s) => s.expect?.urlPattern)?.expect?.urlPattern ?? tail.preconditions.urlPattern;
   const byFragment = routesByFragment(store, cand.origin);
-  if (!start || !end || routesAgree(start, end, byFragment)) return null;
+  const agree = Boolean(start && end) && routesAgree(start!, end, byFragment);
+  // SHADOW (site facts): the same question decided by the origin's route
+  // facts, beside this answer, for the session's shadow report.
+  if (start && end) noteRoutesAgree(store, cand.origin, start, end, byFragment, routesAgree, agree, `pinEndsElsewhere ${tail.id} -> ${head.id}`);
+  if (!start || !end || agree) return null;
   return `its procedure ends on ${end} (${tail.id}), and the next step's procedure (${head.id}) starts on ${start} without navigating there: it would leave the next step on the wrong page`;
 }
 

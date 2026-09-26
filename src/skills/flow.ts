@@ -895,6 +895,34 @@ export function taskConstants(
   return out;
 }
 
+/**
+ * taskConstants, saying which ARM made each value a constant (site facts
+ * stage 0, skills/facts-value.ts): `offered` — the app listed it as a choice
+ * the run then picked (offeredBeforeReported), a structural proof — or
+ * `stated` — an instruction named it before any report carried it, the task's
+ * word rather than the app's. A value both arms catch is `offered`, the
+ * stronger. Exactly taskConstants' values, in its order; taskConstants itself
+ * is left as it was (it short-circuits the offered arm, this cannot).
+ */
+export function taskConstantArms(
+  entries: readonly RecordedEntry[],
+  values: Iterable<string>,
+  vars: Iterable<string> = [],
+  runSpecific?: RunSpecific,
+): Map<string, 'offered' | 'stated'> {
+  const varValues = [...vars].map((v) => String(v ?? '').trim()).filter((v) => v.length >= 2);
+  const out = new Map<string, 'offered' | 'stated'>();
+  for (const raw of values) {
+    const value = String(raw ?? '').trim();
+    if (value.length < 2 || out.has(value) || runSpecific?.(value)) continue;
+    if (varValues.some((v) => replaceToken(value, v, ' ') !== value)) continue;
+    const at = firstStatedAt(entries, value, entries.length);
+    if (offeredBeforeReported(entries, value)) out.set(value, 'offered');
+    else if (at >= 0 && !reportedBefore(entries, at, value)) out.set(value, 'stated');
+  }
+  return out;
+}
+
 /** Roles whose line lists a CHOICE the app offers: an item in an open list. */
 const OFFERED_ROLE = /^-\s*(option|menuitem|menuitemradio|menuitemcheckbox)\s+"((?:[^"\\]|\\.)*)"/;
 
