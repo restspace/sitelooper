@@ -1,0 +1,286 @@
+{
+  "flow": "fwgr78",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_fe1f88; observed panel_title_request_rate=Request rate, panel_title_error_count=Error count, panel_title_latency_by_endpoint=Latency by endpoint, panel_count=3, dashboard_title=Service Health, dashboard_folder=Bench, panel_titles_1=Request rate, panel_titles_2=Error count, panel_titles_3=Latency by endpoint.",
+      "values": {
+        "panel_title_request_rate": "Request rate",
+        "panel_title_error_count": "Error count",
+        "panel_title_latency_by_endpoint": "Latency by endpoint",
+        "panel_count": "3",
+        "dashboard_title": "Service Health",
+        "dashboard_folder": "Bench",
+        "panel_titles_1": "Request rate",
+        "panel_titles_2": "Error count",
+        "panel_titles_3": "Latency by endpoint"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "30/30",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_6e01ea: step 3: read 'login_username' returned a value the skill itself set/selected ('admin') — confirms the control, not persistence; dropped from the report's confident values"
+      ],
+      "unreported": [
+        "login_username",
+        "login_password"
+      ]
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "The new dashboard was created and saved as 'fwgr78-n3 Bench Dashboard' (uid efzezap4a1p8gb, url http://127.0.0.1:3000/d/efzezap4a1p8gb/fwgr78-n3-bench-dashboard). The earlier segment's final goto used a wrong uid and landed on a \"Not found\" page; I resumed by loading the correct saved URL read off the live page. I then opened the panel editor to verify: panel title field reads exactly 'fwgr78-n3 Availability', visualization type is Stat, and the data source is TestData (data source picker header 'TestData default TestData', query row labelled '(TestData)', picker logo alt 'TestData logo') with the default scenario 'Random Walk'. Back on the dashboard the breadcrumb reads 'fwgr78-n3 Bench Dashboard' and the panel heading 'fwgr78-n3 Availability' renders with a value (38.5) — i.e. the TestData query works. No unsaved-changes state: 'Discard panel changes' was disabled in the editor and 'Exit edit' closed edit mode with no save prompt; the header now shows the normal 'Edit' button only.",
+      "values": {
+        "dashboard_title_breadcrumb": "fwgr78-n3 Bench Dashboard",
+        "panel_title": "fwgr78-n3 Availability",
+        "panel_data_source": "TestData",
+        "panel_data_source_picker_entry": "TestData default TestData",
+        "panel_data_source_logo_alt": "TestData logo",
+        "visualization_type": "Stat",
+        "query_default_scenario": "Random Walk",
+        "panel_rendered_value": "38.5",
+        "dashboard_uid": "efzezap4a1p8gb",
+        "dashboard_slug": "fwgr78-n3-bench-dashboard",
+        "dashboard_url": "http://127.0.0.1:3000/d/efzezap4a1p8gb/fwgr78-n3-bench-dashboard?from=now-6h&to=now&timezone=browser",
+        "unsaved_changes": "none (Discard panel changes disabled; Exit edit produced no prompt)",
+        "data_source_picker_text": "TestData logo",
+        "query_row_datasource_lab": "(TestData)",
+        "breadcrumb_dashboard_tit": "fwgr78-n3 Bench Dashboard",
+        "scenario_default": "Random Walk",
+        "breadcrumb_dashboard_tit_2": "fwgr78-n3 Bench Dashboard",
+        "panel_title_on_dashboard": "fwgr78-n3 Availability",
+        "ref": "fwgr78-n3"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_de34b1 stopped at step 9 — step 9 raised an alert the recording never saw: Dashboard not found | Invalid dashboard UID in annotation request",
+      "replayed": "8/22",
+      "repaired": false,
+      "turns": 25,
+      "warnings": [
+        "s_b57b59: step 6: read 'panel_title' returned a value the skill itself set/selected ('fwgr78-n3 Availability') — confirms the control, not persistence; dropped from the report's confident values"
+      ],
+      "unreported": [
+        "dashboard_title",
+        "dashboard_url_path",
+        "folder",
+        "panel_title_after_reload",
+        "panel_type",
+        "panel_value_after_reload",
+        "final_dashboard_url",
+        "panel_titles_on_saved_dashboard",
+        "data_source_logo_alt",
+        "query_row_title",
+        "runid"
+      ]
+    },
+    {
+      "id": "03-edit",
+      "status": "success",
+      "summary": "Resumed after the previous attempt hit the turn cap: its work had already taken effect. The Text panel was added to 'fwgr78-n3 Bench Dashboard' (visualization type switched to Text, title set to 'fwgr78-n3 Notes', content 'Notes for run fwgr78-n3'), the panel editor was exited, and the dashboard was saved — the prior attempt observed the \"Dashboard saved\" alert. On the freshly reloaded dashboard page (view mode, no unsaved-changes indicator), I verified the Text panel titled 'fwgr78-n3 Notes' is present with rendered content 'Notes for run fwgr78-n3' (contains the runid fwgr78-n3), and the existing 'fwgr78-n3 Availability' Stat panel is still intact. Breadcrumb confirms the dashboard title 'fwgr78-n3 Bench Dashboard'.",
+      "values": {
+        "text_panel_title": "fwgr78-n3 Notes",
+        "text_panel_content_after_reload": "Notes for run fwgr78-n3",
+        "breadcrumb_dashboard_title": "fwgr78-n3 Bench Dashboard",
+        "other_panel_still_present": "fwgr78-n3 Availability",
+        "save_confirmation": "Dashboard saved (alert observed by prior attempt; page now in view mode with no unsaved-changes indicator)",
+        "ref": "fwgr78-n3"
+      },
+      "tier": null,
+      "recovered": true,
+      "fellBack": "every candidate refused — s_e4792b: failed at step 1 before touching the page — every identifying locator missed, and the positional fallback #4 is not the recorded \"Add\" — the element there carries another name, so it was not clicked",
+      "replayed": null,
+      "repaired": false,
+      "turns": 32,
+      "unreported": [
+        "dashboard_uid",
+        "text_panel_title_after_reload",
+        "text_panel_content",
+        "text_panel_region_text",
+        "runid"
+      ]
+    },
+    {
+      "id": "04-add",
+      "status": "success",
+      "summary": "Replayed stored procedure s_9293f8; observed dashboard_uid=efzezap4a1p8gb, dashboard_slug=fwgr78-n3-bench-dashboard, dashboard_json_model_full=  },\n  \"timepicker\": {},\n  \"timezone\": \"browser\",\n  \"title\": \"fwgr78-n3 Bench Dashboard\",\n  \"uid\": \"efzezap4a1p8gb\",\n  \"version\": 4,\n  \"weekStart\": \"\"\n}, view_line_5=tags, view_line_4=\"to\": \"now\", view_line_3=\"from\": \"now-6h\",, view_line_2=\"time\": {, dashboard_tags_json_closing_line=],, dashboard_tags_json_value_line=\"bench\", dashboard_title_breadcrumb=fwgr78-n3 Bench Dashboard, time_picker_after_fresh_reload=Last 6 hours, dashboard_tags=Bench, runid=fwgr78-n3.",
+      "values": {
+        "dashboard_uid": "efzezap4a1p8gb",
+        "dashboard_slug": "fwgr78-n3-bench-dashboard",
+        "dashboard_json_model_full": "  },\n  \"timepicker\": {},\n  \"timezone\": \"browser\",\n  \"title\": \"fwgr78-n3 Bench Dashboard\",\n  \"uid\": \"efzezap4a1p8gb\",\n  \"version\": 4,\n  \"weekStart\": \"\"\n}",
+        "view_line_5": "tags",
+        "view_line_4": "\"to\": \"now\"",
+        "view_line_3": "\"from\": \"now-6h\",",
+        "view_line_2": "\"time\": {",
+        "dashboard_tags_json_closing_line": "],",
+        "dashboard_tags_json_value_line": "\"bench\"",
+        "dashboard_title_breadcrumb": "fwgr78-n3 Bench Dashboard",
+        "time_picker_after_fresh_reload": "Last 6 hours",
+        "dashboard_tags": "Bench",
+        "runid": "fwgr78-n3"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "52/52",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_9293f8: step 27: a better-ranked locator did not resolve; used fallback #4 page.locator('div[data-uri=\"inmemory://model/2\"]')",
+        "s_9293f8: step 45: read 'view_line' returned a value the skill itself set/selected ('\"tags\": [') — confirms the control, not persistence; dropped from the report's confident values"
+      ],
+      "unreported": [
+        "view_line"
+      ]
+    },
+    {
+      "id": "05-set",
+      "status": "success",
+      "summary": "Replayed stored procedure s_6f914d; observed json_model_uid=efzezap4a1p8gb, dashboard_uid=efzezap4a1p8gb, dashboard_slug=fwgr78-n3-bench-dashboard, runid=fwgr78-n3, refresh_control_aria_label_after_fresh_reload=Choose refresh time interval with current interval 1 minute selected, refresh_control_after_fresh_reload=1m, time_picker_after_fresh_reload=Last 6 hours, json_model_textarea_near=    \"to\": \"now\"\n  },\n  \"timepicker\": {},\n  \"timezone\": \"browser\",\n  \"title\": \"fwgr78-n3 Bench Dashboard\",\n  \"uid\": \"efzezap4a1p8gb\",\n  \"version\": 5,\n  \"weekStart\": \"\"\n}, json_model_tags_value_line=\"bench\", json_model_tags_closing_line=],, json_model_title=fwgr78-n3 Bench Dashboard, dashboard_tag=Bench.",
+      "values": {
+        "json_model_uid": "efzezap4a1p8gb",
+        "dashboard_uid": "efzezap4a1p8gb",
+        "dashboard_slug": "fwgr78-n3-bench-dashboard",
+        "runid": "fwgr78-n3",
+        "refresh_control_aria_label_after_fresh_reload": "Choose refresh time interval with current interval 1 minute selected",
+        "refresh_control_after_fresh_reload": "1m",
+        "time_picker_after_fresh_reload": "Last 6 hours",
+        "json_model_textarea_near": "    \"to\": \"now\"\n  },\n  \"timepicker\": {},\n  \"timezone\": \"browser\",\n  \"title\": \"fwgr78-n3 Bench Dashboard\",\n  \"uid\": \"efzezap4a1p8gb\",\n  \"version\": 5,\n  \"weekStart\": \"\"\n}",
+        "json_model_tags_value_line": "\"bench\"",
+        "json_model_tags_closing_line": "],",
+        "json_model_title": "fwgr78-n3 Bench Dashboard",
+        "dashboard_tag": "Bench"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "25/25",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "panels_still_present"
+      ]
+    },
+    {
+      "id": "06-report",
+      "status": "success",
+      "summary": "Replayed stored procedure s_8bb6dc; observed url_before_fresh_reload=http://127.0.0.1:3000/d/efzezap4a1p8gb/fwgr78-n3-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m, url_after_fresh_reload=http://127.0.0.1:3000/d/efzezap4a1p8gb/fwgr78-n3-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m, dashboard_title_json_model=fwgr78-n3 Bench Dashboard, dashboard_uid=efzezap4a1p8gb, url_verbatim_current=http://127.0.0.1:3000/d/efzezap4a1p8gb/fwgr78-n3-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m, runid=fwgr78-n3, url_reported_verbatim=http://127.0.0.1:3000/d/efzezap4a1p8gb/fwgr78-n3-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m, text_panel_title=fwgr78-n3 Notes, visualization_type_butto=Stat, data_source_logo_alt=TestData logo, dashboard_json_model_full=    \"to\": \"now\"\n  },\n  \"timepicker\": {},\n  \"timezone\": \"browser\",\n  \"title\": \"fwgr78-n3 Bench Dashboard\",\n  \"uid\": \"efzezap4a1p8gb\",\n  \"version\": 5,\n  \"weekStart\": \"\"\n}, json_model_editor_textarea=            ]\n          }\n        },\n        \"overrides\": []\n      },\n      \"gridPos\": {\n        \"h\": 8,\n        \"w\": 12,\n        \"x\": 0,\n        \"y\": 8\n, availability_panel_json={\n  \"id\": 1,\n  \"type\": \"stat\",\n  \"title\": \"fwgr78-n3 Availability\",\n  \"gridPos\": {\n    \"x\": 0,\n    \"y\": 8,\n    \"h\": 8,\n    \"w\": 12\n  },\n, dashboard_title_breadcrumb=fwgr78-n3 Bench Dashboard, text_panel_content_rendered=Notes for run fwgr78-n3, time_picker_after_fresh_reload=Last 6 hours, refresh_control_after_fresh_reload=1m, dashboard_folder=Dashboards.",
+      "values": {
+        "url_before_fresh_reload": "http://127.0.0.1:3000/d/efzezap4a1p8gb/fwgr78-n3-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m",
+        "url_after_fresh_reload": "http://127.0.0.1:3000/d/efzezap4a1p8gb/fwgr78-n3-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m",
+        "dashboard_title_json_model": "fwgr78-n3 Bench Dashboard",
+        "dashboard_uid": "efzezap4a1p8gb",
+        "url_verbatim_current": "http://127.0.0.1:3000/d/efzezap4a1p8gb/fwgr78-n3-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m",
+        "runid": "fwgr78-n3",
+        "url_reported_verbatim": "http://127.0.0.1:3000/d/efzezap4a1p8gb/fwgr78-n3-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m",
+        "text_panel_title": "fwgr78-n3 Notes",
+        "visualization_type_butto": "Stat",
+        "data_source_logo_alt": "TestData logo",
+        "dashboard_json_model_full": "    \"to\": \"now\"\n  },\n  \"timepicker\": {},\n  \"timezone\": \"browser\",\n  \"title\": \"fwgr78-n3 Bench Dashboard\",\n  \"uid\": \"efzezap4a1p8gb\",\n  \"version\": 5,\n  \"weekStart\": \"\"\n}",
+        "json_model_editor_textarea": "            ]\n          }\n        },\n        \"overrides\": []\n      },\n      \"gridPos\": {\n        \"h\": 8,\n        \"w\": 12,\n        \"x\": 0,\n        \"y\": 8\n",
+        "availability_panel_json": "{\n  \"id\": 1,\n  \"type\": \"stat\",\n  \"title\": \"fwgr78-n3 Availability\",\n  \"gridPos\": {\n    \"x\": 0,\n    \"y\": 8,\n    \"h\": 8,\n    \"w\": 12\n  },\n",
+        "dashboard_title_breadcrumb": "fwgr78-n3 Bench Dashboard",
+        "text_panel_content_rendered": "Notes for run fwgr78-n3",
+        "time_picker_after_fresh_reload": "Last 6 hours",
+        "refresh_control_after_fresh_reload": "1m",
+        "dashboard_folder": "Dashboards"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "41/41",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_8bb6dc: step 31: primary locator did not resolve; used fallback #3 page.locator('div[data-uri=\"inmemory://model/2\"]')",
+        "s_8bb6dc: step 36: read 'stat_panel_title' returned 'fwgr78-n3 Availability' from a control this step set, and nothing committed it since — it shows the control, however the app formats it, not what the app stored; dropped from the report's confident values"
+      ],
+      "unreported": [
+        "stat_panel_title"
+      ]
+    }
+  ],
+  "passed": 6,
+  "total": 6,
+  "repinned": 0,
+  "drift": 3,
+  "driftTickets": [
+    {
+      "flow": "fwgr78",
+      "step": "02-create",
+      "skill": "s_de34b1",
+      "similarity": 0.999,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_de34b1 stopped at step 9 — step 9 raised an alert the recording never saw: Dashboard not found | Invalid dashboard UID in annotation request",
+      "reason": "step 9 raised an alert the recording never saw: Dashboard not found | Invalid dashboard UID in annotation request",
+      "pageUrlPattern": "http://127.0.0.1:3000/d/afzexqoxkzoqod/:id?from=:id&timezone=browser&to=now",
+      "pageUrl": "http://127.0.0.1:3000/d/afzexqoxkzoqod/fwgr78-n3-bench-dashboard?from=now-6h&to=now&timezone=browser"
+    },
+    {
+      "flow": "fwgr78",
+      "step": "04-add",
+      "skill": "s_9293f8",
+      "atStep": "27",
+      "key": "target",
+      "similarity": 1.001,
+      "missedLocator": "page.locator('.monaco-editor >> nth=0')",
+      "fallbackUsed": "page.locator('div[data-uri=\"inmemory://model/2\"]')",
+      "fallbackIndex": 3,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:3000/d/efzezap4a1p8gb/:id?from=:id&timezone=browser&to=now",
+      "pageUrl": "http://127.0.0.1:3000/d/efzezap4a1p8gb/fwgr78-n3-bench-dashboard?from=now-6h&to=now&timezone=browser"
+    },
+    {
+      "flow": "fwgr78",
+      "step": "06-report",
+      "skill": "s_8bb6dc",
+      "atStep": "31",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.locator('[data-testid=\"data-testid ReactMonacoEditor editorLazy\"] div')",
+      "fallbackUsed": "page.locator('div[data-uri=\"inmemory://model/2\"]')",
+      "fallbackIndex": 2,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:3000/d/efzezap4a1p8gb/:id?from=:id&refresh=:id&timezone=browser&to=now",
+      "pageUrl": "http://127.0.0.1:3000/d/efzezap4a1p8gb/fwgr78-n3-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m"
+    }
+  ],
+  "wallMs": 361788,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 1047451,
+    "completionTokens": 14492,
+    "cachedTokens": 926976
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 987450,
+      "completionTokens": 12161,
+      "cachedTokens": 926976
+    },
+    "z-ai/glm-5.3": {
+      "promptTokens": 60001,
+      "completionTokens": 2331,
+      "cachedTokens": 0
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ],
+    "z-ai/glm-5.3": [
+      "Modal",
+      "Relace",
+      "Sail Research"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

@@ -1,0 +1,42 @@
+{
+  "arm": "spec",
+  "runid": "fwgr78-spec",
+  "target": "grafana",
+  "flow": "fwgr78.json",
+  "flowName": "fwgr78",
+  "skillsDir": "/home/user/sitelooper/bench/results/fwgr78-skills",
+  "compiled": true,
+  "flowFile": "bench/results/fwgr78-spec-spec-tmp/fwgr78.flow.ts",
+  "specFile": "bench/results/fwgr78-spec-spec-tmp/fwgr78.spec.ts",
+  "wallMs": 78655,
+  "exitCode": 1,
+  "timedOut": false,
+  "costUsd": 0,
+  "stats": {
+    "total": 1,
+    "passed": 0,
+    "failed": 1,
+    "skipped": 0
+  },
+  "tests": [
+    {
+      "title": "fwgr78",
+      "status": "unexpected",
+      "ok": false,
+      "durationMs": 72675,
+      "error": "Error: 02-create s_de34b1/9 raised an alert the recording never saw: Dashboard not found | Invalid dashboard UID in annotation request",
+      "drift": [
+        "[sitelooper drift] 01-open s_fe1f88/9 target: primary getByRole('cell', { name: /^[\\s\\p{Co}\\p{So}\\p{Cf}]*Down[\\s\\p{Co}\\p{So}\\p{Cf}]*$/u }).nth(4) missed; used #3 locator('div > div:nth-of-type(1) > div > div > div:nth-of-type(8) > div:nth-of-type(6)') (#2 ambiguous, #1 absent)"
+      ]
+    }
+  ],
+  "drift": [
+    "[sitelooper drift] 01-open s_fe1f88/9 target: primary getByRole('cell', { name: /^[\\s\\p{Co}\\p{So}\\p{Cf}]*Down[\\s\\p{Co}\\p{So}\\p{Cf}]*$/u }).nth(4) missed; used #3 locator('div > div:nth-of-type(1) > div > div > div:nth-of-type(8) > div:nth-of-type(6)') (#2 ambiguous, #1 absent)"
+  ],
+  "driftCount": 1,
+  "evidence": [
+    "fwgr78-spec-spec-failure.png",
+    "fwgr78-spec-spec-error-context.md"
+  ],
+  "logTail": "sing 1 worker\n\n[sitelooper warn] 01-open s_6e01ea/3: read 'login_username' returned a value the skill itself set/selected ('admin') — confirms the control, not persistence; dropped from the report's confident values\n[sitelooper drift] 01-open s_fe1f88/9 target: primary getByRole('cell', { name: /^[\\s\\p{Co}\\p{So}\\p{Cf}]*Down[\\s\\p{Co}\\p{So}\\p{Cf}]*$/u }).nth(4) missed; used #3 locator('div > div:nth-of-type(1) > div > div > div:nth-of-type(8) > div:nth-of-type(6)') (#2 ambiguous, #1 absent)\n[sitelooper warn] 01-open: report value login_password is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)\n[sitelooper step] 01-open\n[sitelooper warn] 02-create s_b57b59/6: read 'panel_title' returned a value the skill itself set/selected ('fwgr78-spec Availability') — confirms the control, not persistence; dropped from the report's confident values\n  ✘  1 fwgr78.spec.ts:9:1 › fwgr78 (1.2m)\n\n\n  1) fwgr78.spec.ts:9:1 › fwgr78 › 02-create: In Grafana, create a NEW dashboard (Dashboards > New dashboard, or the + Create > Dashboard menu). Add a visualization panel and change its type to Stat. Set the panel title to exactly '{{runid}} Availability'. Set the panel's query data source to the TestData data source (it may be named 'TestData DB' or similar — pick the test data source from the data source picker; if a query editor appears, leave its default scenario). Then click Back/Close the panel editor and SAVE the dashboard with the title exactly '{{runid}} {{01-open.dashboard_folder}} Dashboard' (choose a folder if asked, e.g. {{01-open.dashboard_folder}} or General). Verify the save succeeded (no unsaved-changes indicator) and report the panel title and data source you ended up with, plus the dashboard title as shown in the breadcrumb. \n\n    Error: 02-create s_de34b1/9 raised an alert the recording never saw: Dashboard not found | Invalid dashboard UID in annotation request\n\n       at fwgr78.flow.ts:18759\n\n      18757 |   const verdict = alertVerdict(before, after ? after.alerts : null, ctx, after ? after.complete : true);\n      18758 |   for (const line of verdict.warnings) logWarning(line);\n    > 18759 |   if (verdict.stop) throw new Error(verdict.stop);\n            |                           ^\n      18760 | }\n      18761 |\n      18762 | /**\n        at alertGate (/home/user/sitelooper/bench/results/fwgr78-spec-spec-tmp/fwgr78.flow.ts:18759:27)\n        at Object.verify (/home/user/sitelooper/bench/results/fwgr78-spec-spec-tmp/fwgr78.flow.ts:21798:9)\n        at runStepLifecycle (/home/user/sitelooper/bench/results/fwgr78-spec-spec-tmp/fwgr78.flow.ts:14689:37)\n        at Object.02-create (/home/user/sitelooper/bench/results/fwgr78-spec-spec-tmp/fwgr78.flow.ts:21777:5)\n        at /home/user/sitelooper/bench/results/fwgr78-spec-spec-tmp/fwgr78.flow.ts:29273:7\n        at runFlow (/home/user/sitelooper/bench/results/fwgr78-spec-spec-tmp/fwgr78.flow.ts:29272:5)\n        at /home/user/sitelooper/bench/results/fwgr78-spec-spec-tmp/fwgr78.spec.ts:14:21\n\n    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────\n    [sitelooper drift] 01-open s_fe1f88/9 target: primary getByRole('cell', { name: /^[\\s\\p{Co}\\p{So}\\p{Cf}]*Down[\\s\\p{Co}\\p{So}\\p{Cf}]*$/u }).nth(4) missed; used #3 locator('div > div:nth-of-type(1) > div > div > div:nth-of-type(8) > div:nth-of-type(6)') (#2 ambiguous, #1 absent)\n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────\n    test-results/fwgr78-fwgr78/test-failed-1.png\n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    Error Context: test-results/fwgr78-fwgr78/error-context.md\n\n  1 failed\n    fwgr78.spec.ts:9:1 › fwgr78 ────────────────────────────────────────────────────────────────────\n"
+}
