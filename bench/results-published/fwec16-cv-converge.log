@@ -1,0 +1,23 @@
+[converge] from fwec16: 3 step(s), store copied to /home/user/sitelooper/bench/results/fwec16-cv-skills, flow /home/user/sitelooper/bench/results/flows/fwec16-cv.json
+[converge] round 1 compile: /opt/node22/bin/node /home/user/sitelooper/bin/sitelooper.js compile /home/user/sitelooper/bench/results/flows/fwec16-cv.json --out /home/user/sitelooper/bench/results/fwec16-cv-c1-compile --overwrite-spec --json
+[converge] round 1 compile: exit 0
+[converge] round 1 artifact: /opt/node22/bin/node /home/user/sitelooper/bench/spec-replay.mjs --flow /home/user/sitelooper/bench/results/flows/fwec16-cv.json --skills /home/user/sitelooper/bench/results/fwec16-cv-skills --tag fwec16-cv-c1 --target espocrm --reset --out /home/user/sitelooper/bench/results
+[reset] espocrm: no leftover bench opportunities
+[spec-replay] resetting espocrm
+[spec-replay] compiling: /opt/node22/bin/node /home/user/sitelooper/bin/sitelooper.js compile /home/user/sitelooper/bench/results/flows/fwec16-cv.json --out /home/user/sitelooper/bench/results/fwec16-cv-c1-spec-tmp --overwrite-spec
+flow: /home/user/sitelooper/bench/results/fwec16-cv-c1-spec-tmp/fwec16-cv.flow.ts
+spec: /home/user/sitelooper/bench/results/fwec16-cv-c1-spec-tmp/fwec16-cv.spec.ts
+facts http://127.0.0.1:8097: 0 relied (0 hard), 0 advisory
+[spec-replay] running: npx playwright test --config /home/user/sitelooper/bench/results/fwec16-cv-c1-spec-tmp/playwright.config.mjs
+[spec-replay] fwec16-cv-c1: 1/1 passed, exit=0, 78s, 1 drift line(s) — result written
+[converge] round 1 artifact: exit 0
+
+fwec16-cv-c1: objectives passed 5/7
+  obj 1: UNVERIFIABLE — no result file with finalText found
+  obj 2: PASS — id=6ab85217180b48c10, account=Bench Account, description includes runid=true
+  obj 3: PASS — stage=Negotiation
+  obj 4: PASS — amount=12500 USD, closeDate=2026-12-31
+  obj 5: PASS — assignedUser=Bench Assignee
+  obj 6: PASS — 1 post(s), 1 carrying the runid
+  obj 7: UNVERIFIABLE — no result file with finalText found
+[converge] fwec16-cv: converged — round 1: compiled artifact passed (5/5); rounds 1, flow runs 0, model turns 0
