@@ -1,0 +1,86 @@
+
+[sweep] run 1/3: fwgt10-n1 (store: /home/user/sitelooper/bench/results/fwgt10-skills)
+[harness] gitea: defaulting APP_URL
+[harness] gitea: defaulting APP_EMAIL
+[harness] gitea: defaulting APP_PASSWORD
+[reset] gitea: no leftover bench issues
+[harness] gitea responded 200 at http://127.0.0.1:8095/
+stopped: fwgt10-n1
+  flow "fwgt10" saved: 2 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwgt10.json
+  warning: note: 02-create no longer publishes labels, milestone — no replay reads them from the page and the recording showed no line to read
+  warning: warning: 26 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[1].instruction: "Bench Milestone" (output) in "In repo bench/bench-repo, create a NEW issue with title '{{runid}} Bench Issue' and description 'Bench issue for run {{runid}}' (a markdown textarea). Submit it"
+  s_0a55c6.reportTemplate.summary: "Seed: ship repaired device" (output) in "Signed in to Gitea as {{v2}} and opened repository bench/bench-repo's open issues filtered by the search term \"Seed:\". The issue list header shows \"3 Open\" and "
+  s_0a55c6.reportTemplate.summary: "Seed: order missing parts" (output) in "Signed in to Gitea as {{v2}} and opened repository bench/bench-repo's open issues filtered by the search term \"Seed:\". The issue list header shows \"3 Open\" and "
+  s_0a55c6.reportTemplate.summary: "Seed: triage inbox" (output) in "Signed in to Gitea as {{v2}} and opened repository bench/bench-repo's open issues filtered by the search term \"Seed:\". The issue list header shows \"3 Open\" and "
+  s_0a55c6.reportTemplate.values.initial_page_url: "about:blank" (output) in "about:blank"
+arm=sitelooper model=z-ai/glm-5.3 runid=fwgt10-n1 stop=completed
+turns=3 wall=150.3s
+commands=2 cmdTime=140.2s cmdBytes=2327 timeouts=0
+orchestrator in=3238 cw=0 cr=5632 out=466
+inner prompt=717581 cached=662400 completion=7964
+spend=$0.0232 maxUsd=3
+learn: A_n=0 replayed=0/2 full=0 repaired=0 compiled=2 variants=0
+-> /home/user/sitelooper/bench/results/fwgt10-n1-sitelooper-result.json
+
+fwgt10-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — #4, state=open, description includes runid=true
+  obj 3: PASS — labels=[bug, priority-high], want [bug, priority-high]
+  obj 4: PASS — assignees=[bench-assignee]
+  obj 5: PASS — milestone=Bench Milestone
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — issue #4 reported
+
+[sweep] run 2/3: fwgt10-n2 (replay flow fwgt10, no orchestrator)
+[reset] gitea: deleted 1 leftover bench issue(s)
+
+fwgt10-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — #5, state=open, description includes runid=true
+  obj 3: PASS — labels=[bug, priority-high], want [bug, priority-high]
+  obj 4: PASS — assignees=[bench-assignee]
+  obj 5: PASS — milestone=Bench Milestone
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — issue #5 reported
+
+[sweep] run 3/3: fwgt10-n3 (replay flow fwgt10, no orchestrator)
+[reset] gitea: deleted 1 leftover bench issue(s)
+
+fwgt10-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — #6, state=open, description includes runid=true
+  obj 3: PASS — labels=[bug, priority-high], want [bug, priority-high]
+  obj 4: PASS — assignees=[bench-assignee]
+  obj 5: PASS — milestone=Bench Milestone
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — issue #6 reported
+
+Learning sweep fwgt10 (K=3)
+┌─────────┬───┬─────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid       │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼─────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwgt10-n1' │ '7/7'    │ 'completed' │ 3     │ 2    │ 0.0232    │ 0   │ '0/2'        │ 150    │
+│ 1       │ 2 │ 'fwgt10-n2' │ '7/7'    │ 'success'   │ 0     │ 2    │ 0         │ 1   │ '2/2 (flow)' │ 29     │
+│ 2       │ 3 │ 'fwgt10-n3' │ '7/7'    │ 'success'   │ 0     │ 2    │ 0         │ 1   │ '2/2 (flow)' │ 29     │
+└─────────┴───┴─────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:8095
+  s_0a55c6  validated    8 steps  3/3 (100%)
+           In Gitea at {{v1}}, sign in as {{v2}} with password exactly the text {{v3}} (type it literally). Then in repos…
+  s_0b66c0  validated    3 steps  3/3 (100%)
+           In Gitea at {{v1}}, sign in as {{v2}} with password exactly the text {{v3}} (type it literally). Then in repos…
+  s_1542c2  validated   14 steps  3/3 (100%)
+           In repo bench/bench-repo, create a NEW issue with title '{{v2}}' and description '{{v3}}' (a markdown textarea…
+  s_33c286  validated    3 steps  3/3 (100%)
+           In repo bench/bench-repo, create a NEW issue with title '{{v2}}' and description '{{v3}}' (a markdown textarea…
+  s_468fb2  validated    3 steps  3/3 (100%)
+           In Gitea at {{v1}}, sign in as {{v2}} with password exactly the text {{v3}} (type it literally). Then in repos…
+  s_5902ba  validated    1 steps  3/3 (100%)
+           In repo bench/bench-repo, create a NEW issue with title '{{v2}}' and description '{{v3}}' (a markdown textarea…
+  s_69dcb5  validated    1 steps  3/3 (100%)
+           In Gitea at {{v1}}, sign in as {{v2}} with password exactly the text {{v3}} (type it literally). Then in repos…
+  s_9297d2  validated    7 steps  3/3 (100%)
+           In repo bench/bench-repo, create a NEW issue with title '{{v2}}' and description '{{v3}}' (a markdown textarea…
+store: /home/user/sitelooper/bench/results/fwgt10-skills
+
+summary: /home/user/sitelooper/bench/results/fwgt10-sweep.json

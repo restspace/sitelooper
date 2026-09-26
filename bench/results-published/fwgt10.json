@@ -1,0 +1,211 @@
+{
+  "name": "fwgt10",
+  "origin": "http://127.0.0.1:8095",
+  "startUrl": "http://127.0.0.1:8095/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-signin",
+      "instruction": "In Gitea at http://127.0.0.1:8095/, sign in as admin with password exactly the text {{env:APP_PASSWORD}} (type it literally). Then in repository bench/bench-repo, find all OPEN issues whose title starts with 'Seed:' and report their titles exactly.",
+      "skill": "s_468fb2",
+      "params": {
+        "v1": "http://127.0.0.1:8095/",
+        "v2": "admin",
+        "v3": "{{env:APP_PASSWORD}}"
+      },
+      "outputs": [
+        "initial_page_url",
+        "open_issue_count",
+        "closed_issue_count",
+        "seed_issue_title_1",
+        "seed_issue_title_2",
+        "seed_issue_title_3",
+        "seed_issue_number_1",
+        "seed_issue_number_2",
+        "seed_issue_number_3"
+      ],
+      "recorded": {
+        "initial_page_url": "about:blank",
+        "open_issue_count": "3",
+        "closed_issue_count": "0",
+        "seed_issue_title_1": "Seed: ship repaired device",
+        "seed_issue_title_2": "Seed: order missing parts",
+        "seed_issue_title_3": "Seed: triage inbox",
+        "seed_issue_number_1": "#3",
+        "seed_issue_number_2": "#2",
+        "seed_issue_number_3": "#1",
+        "url": "http://127.0.0.1:8095/bench/bench-repo/issues?q=Seed%3A&state=open"
+      },
+      "route": "http://127.0.0.1:8095/bench/bench-repo/issues",
+      "outputEvidence": {
+        "initial_page_url": {
+          "same": 0,
+          "differed": 1
+        },
+        "open_issue_count": {
+          "same": 1,
+          "differed": 0
+        },
+        "closed_issue_count": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_issue_title_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_issue_title_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_issue_title_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_issue_number_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_issue_number_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_issue_number_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "02-create",
+      "instruction": "In repo bench/bench-repo, create a NEW issue with title '{{runid}} Bench Issue' and description 'Bench issue for run {{runid}}' (a markdown textarea). Submit it. Then set its sidebar: labels exactly 'bug' and 'priority-high', assignee user 'bench-assignee', milestone 'Bench Milestone' — make sure each is actually applied and shown on the issue page. Then add a comment whose text includes '{{runid}}'. Report the issue number as displayed (e.g. '#5'), the applied labels, assignee, milestone, and confirm the comment appears.",
+      "skill": "s_5902ba",
+      "params": {
+        "v2": "{{runid}} Bench Issue",
+        "v3": "Bench issue for run {{runid}}",
+        "v1": "{{runid}}"
+      },
+      "outputs": [
+        "issue_number",
+        "issue_title",
+        "issue_url",
+        "assignee",
+        "comment_text",
+        "comment_anchor",
+        "sidebar_state",
+        "issue_description",
+        "run_id",
+        "comment_anchor_id"
+      ],
+      "recorded": {
+        "issue_number": "#4",
+        "issue_title": "fwgt10-n1 Bench Issue",
+        "issue_url": "http://127.0.0.1:8095/bench/bench-repo/issues/4",
+        "labels": "bug, priority-high",
+        "assignee": "bench-assignee (Bench Assignee)",
+        "milestone": "Bench Milestone",
+        "comment_text": "Comment for run fwgt10-n1: labels and assignee verified.",
+        "comment_anchor": "#issuecomment-5",
+        "sidebar_state": "Labels bug priority-high Milestone Bench Milestone Assignees bench-assignee (Bench Assignee)",
+        "issue_description": "Bench issue for run fwgt10-n1",
+        "run_id": "fwgt10-n1",
+        "comment_anchor_id": "issuecomment-5",
+        "url": "http://127.0.0.1:8095/bench/bench-repo/issues/4#issuecomment-5",
+        "url.p3": "4",
+        "url.h0": "issuecomment-5"
+      },
+      "route": "http://127.0.0.1:8095/bench/bench-repo/issues/:id#:id",
+      "outputEvidence": {
+        "issue_number": {
+          "same": 0,
+          "differed": 1
+        },
+        "issue_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "issue_url": {
+          "same": 0,
+          "differed": 1
+        },
+        "labels": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "assignee": {
+          "same": 0,
+          "differed": 1
+        },
+        "milestone": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "comment_text": {
+          "same": 0,
+          "differed": 1
+        },
+        "comment_anchor": {
+          "same": 0,
+          "differed": 1
+        },
+        "sidebar_state": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "issue_description": {
+          "same": 0,
+          "differed": 1
+        },
+        "run_id": {
+          "same": 0,
+          "differed": 1
+        },
+        "comment_anchor_id": {
+          "same": 0,
+          "differed": 1
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        },
+        "url.p3": {
+          "same": 0,
+          "differed": 1
+        },
+        "url.h0": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "session": "fwgt10-n1",
+    "created": "2026-09-26T03:18:12.492Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "02-create",
+      "outputs": [
+        "labels",
+        "milestone"
+      ]
+    }
+  ]
+}
