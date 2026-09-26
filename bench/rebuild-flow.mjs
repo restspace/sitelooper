@@ -49,7 +49,7 @@ const root = path.resolve(here, '..');
 
 /** dist/ is imported by URL: a bare Windows path is not a legal ESM specifier. */
 const dist = (rel) => pathToFileURL(path.join(root, 'dist', rel)).href;
-const { buildFlow, lintFlowRefs, staleInstructionIds, taskConstants } = await import(dist('skills/flow.js'));
+const { buildFlow, commentaryReport, lintFlowRefs, staleInstructionIds, taskConstants } = await import(dist('skills/flow.js'));
 const { SkillStore } = await import(dist('skills/store.js'));
 const { bindSkill, publishedOutputs } = await import(dist('skills/learn.js'));
 const { carryOpener, compileSkills } = await import(dist('skills/compile.js'));
@@ -236,7 +236,11 @@ function storeFrom(entries, known, valuesByInstruction) {
       if (url) ledger.addUrlIds(url, stepId, urlParts(url), { landed: e.k === 'step' && e.tool !== 'goto' && e.tool !== 'back' });
       if (e.k === 'report') {
         const vals = e.status === 'success' && values ? values : (e.values ?? {});
-        for (const [name, value] of Object.entries(vals)) ledger.add(String(value), { from: 'output', step: stepId, name });
+        for (const [name, value] of Object.entries(vals)) {
+          // The daemon skips the model's commentary about the page (flow.ts commentaryReport).
+          if (commentaryReport(group, name, String(value), Object.values(known))) continue;
+          ledger.add(String(value), { from: 'output', step: stepId, name });
+        }
       }
     }
   };
