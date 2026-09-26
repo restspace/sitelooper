@@ -1,0 +1,109 @@
+
+[sweep] run 1/3: fwgr77-n1 (store: /home/user/sitelooper/bench/results/fwgr77-skills)
+[harness] grafana: defaulting APP_URL
+[harness] grafana: defaulting APP_EMAIL
+[harness] grafana: defaulting APP_PASSWORD
+[reset] grafana: deleted leftover dashboard "Service Health" (400)
+[harness] grafana responded 302 at http://127.0.0.1:3000/
+stopped: fwgr77-n1
+  flow "fwgr77" saved: 6 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwgr77.json
+  warning: note: 01-open no longer publishes dashboard_uid, panel_count — no replay reads them from the page and the recording showed no line to read
+  warning: note: 02-create no longer publishes data_source_in_query_editor — no replay reads it from the page and the recording showed no line to read
+  warning: warning: 04-open's instruction asks to report update_default_time_range_checkbox_ticked, and no replay can publish it: nothing in its procedure reads it from the page, so export dropped it — re-record the step so the value is read, not only reported
+  warning: note: 04-open no longer publishes update_default_time_range_checkbox_present, runid — no replay reads them from the page and the recording showed no line to read
+  warning: note: 05-open no longer publishes auto_refresh_field_default_before_change, top_bar_refresh_interval_after_reload, time_range_shown_in_top_bar, auto_refresh_value_after — no replay reads them from the page and the recording showed no line to read
+  warning: warning: 06-open's instruction asks to report f_settings_general_auto_refresh_value, time_range_top_bar, auto_refresh_top_bar, settings_general_tags, and no replay can publish them: nothing in its procedure reads them from the page, so export dropped them — re-record the step so the value is read, not only reported
+  warning: note: 06-open no longer publishes c_availability_panel_value, settings_general_auto_re, settings_general_tag_tex, settings_general_auto_re_2, time_range_from_param — no replay reads them from the page and the recording showed no line to read
+  warning: note: 03-open: added a read for save_confirmation_alert to s_f0a6ae (page.getByRole('status', { name: 'Dashboard saved', exact: true }); seen on the instruction's own page)
+  warning: warning: 4 value(s) KNOWN to be this run's survived unslotted — a replay will act on or wait for the recording's value (non-fatal outside locators):
+  s_1f1db8.steps[7].expect.urlPattern: "fwgr77-n1" (var) in "http://127.0.0.1:3000/d/bfzednd5vrjswd/fwgr77-n1-bench-dashboard?from=:id&refresh=:id&timezone=browser&to=now"
+  s_1f1db8.steps[8].expect.urlPattern: "fwgr77-n1" (var) in "http://127.0.0.1:3000/d/bfzednd5vrjswd/fwgr77-n1-bench-dashboard?editview=settings&from=:id&refresh=:id&timezone=browser&to=now"
+  s_1f1db8.steps[15].expect.urlPattern: "fwgr77-n1" (var) in "http://127.0.0.1:3000/d/bfzednd5vrjswd/fwgr77-n1-bench-dashboard?from=:id&refresh=:id&timezone=browser&to=now"
+  s_1f1db8.steps[16].expect.urlPattern: "fwgr77-n1" (var) in "http://127.0.0.1:3000/d/bfzednd5vrjswd/fwgr77-n1-bench-dashboard?editview=settings&from=:id&refresh=:id&timezone=browser&to=now"
+  warning: warning: 150 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[0].instruction: "admin" (output) in "Open http://127.0.0.1:3000/ in the browser. If a login page appears, sign in with username 'admin' and password '{{env:APP_PASSWORD}}' — type that exact text in"
+  flow.steps[0].route: "bench-service-health" (output) in "http://127.0.0.1:3000/d/bench-service-health/service-health"
+  flow.steps[1].instruction: "TestData" (output) in "In Grafana, create a NEW dashboard. Then add a Stat visualization panel and title it exactly '{{runid}} Availability' (replace the default 'Panel 1' title in th"
+  flow.steps[1].instruction: "Stat" (output) in "In Grafana, create a NEW dashboard. Then add a Stat visualization panel and title it exactly '{{runid}} Availability' (replace the default 'Panel 1' title in th"
+  flow.steps[1].params.v2: "Stat" (output) in "Stat"
+arm=sitelooper model=z-ai/glm-5.3 runid=fwgr77-n1 stop=completed
+turns=7 wall=667.7s
+commands=6 cmdTime=562.9s cmdBytes=11743 timeouts=0
+orchestrator in=12744 cw=0 cr=19584 out=15774
+inner prompt=3065492 cached=2864128 completion=55780
+spend=$0.1648 maxUsd=3
+learn: A_n=0 replayed=0/6 full=0 repaired=0 compiled=6 variants=0
+-> /home/user/sitelooper/bench/results/fwgr77-n1-sitelooper-result.json
+
+fwgr77-n1: objectives passed 6/6
+  obj 1: PASS — all 3 provisioned titles reported
+  obj 2: PASS — type=stat, datasource ok=true
+  obj 3: PASS — type=text, content includes runid=true
+  obj 4: PASS — tags=["bench"], time=now-6h..now
+  obj 5: PASS — refresh="1m"
+  obj 6: PASS — uid bfzednd5vrjswd reported
+
+[sweep] run 2/3: fwgr77-n2 (replay flow fwgr77, no orchestrator)
+[reset] grafana: deleted leftover dashboard "fwgr77-n1 Bench Dashboard" (200)
+[reset] grafana: deleted leftover dashboard "Service Health" (400)
+[sweep] fwgr77-n2: 6 drift ticket(s) → fwgr77-n2-drift.json
+
+fwgr77-n2: objectives passed 6/6
+  obj 1: PASS — all 3 provisioned titles reported
+  obj 2: PASS — type=stat, datasource ok=true
+  obj 3: PASS — type=text, content includes runid=true
+  obj 4: PASS — tags=["bench"], time=now-6h..now
+  obj 5: PASS — refresh="1m"
+  obj 6: PASS — uid ffzeedz3vfh8gc reported
+
+[sweep] run 3/3: fwgr77-n3 (replay flow fwgr77, no orchestrator)
+[reset] grafana: deleted leftover dashboard "fwgr77-n2 Bench Dashboard" (200)
+[reset] grafana: deleted leftover dashboard "Service Health" (400)
+[sweep] fwgr77-n3: 6 drift ticket(s) → fwgr77-n3-drift.json
+
+fwgr77-n3: objectives passed 6/6
+  obj 1: PASS — all 3 provisioned titles reported
+  obj 2: PASS — type=stat, datasource ok=true
+  obj 3: PASS — type=text, content includes runid=true
+  obj 4: PASS — tags=["bench"], time=now-6h..now
+  obj 5: PASS — refresh="1m"
+  obj 6: PASS — uid efzeerly9mzuof reported
+
+Learning sweep fwgr77 (K=3)
+┌─────────┬───┬─────────────┬──────────┬─────────────┬───────┬──────┬───────────┬──────┬──────────────┬────────┐
+│ (index) │ n │ runid       │ verified │ stop        │ turns │ cmds │ total_usd │ A_n  │ replayed     │ wall_s │
+├─────────┼───┼─────────────┼──────────┼─────────────┼───────┼──────┼───────────┼──────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwgr77-n1' │ '6/6'    │ 'completed' │ 7     │ 6    │ 0.1648    │ 0    │ '0/6'        │ 668    │
+│ 1       │ 2 │ 'fwgr77-n2' │ '6/6'    │ 'success'   │ 11    │ 6    │ 0.0108    │ 0.83 │ '6/6 (flow)' │ 251    │
+│ 2       │ 3 │ 'fwgr77-n3' │ '6/6'    │ 'success'   │ 40    │ 6    │ 0.1829    │ 0.83 │ '6/6 (flow)' │ 414    │
+└─────────┴───┴─────────────┴──────────┴─────────────┴───────┴──────┴───────────┴──────┴──────────────┴────────┘
+http://127.0.0.1:3000
+  s_03e3f0  validated   11 steps  3/3 (100%)
+           In Grafana, create a NEW dashboard. Then add a {{v2}} visualization panel and title it exactly '{{v3}}' (repla…
+  s_1b879e  validated    8 steps  3/3 (100%)
+           Open {{v1}} in the browser. If a login page appears, sign in with username 'admin' and password '{{v2}}' — typ…
+  s_1f1db8  validated   21 steps  3/3 (100%)
+           Final verification of the dashboard '{{v1}}'. Navigate the browser to the dashboard by its UID (open {{v5}} fr…
+  s_8e0ca3  validated    2 steps  3/3 (100%)
+           Open {{v1}} in the browser. If a login page appears, sign in with username 'admin' and password '{{v2}}' — typ…
+  s_b6f2ca  validated    5 steps  3/3 (100%)
+           In Grafana, create a NEW dashboard. Then add a {{v2}} visualization panel and title it exactly '{{v3}}' (repla…
+  s_c6db9d  demoted     33 steps  1/3 (33%)
+           On the open dashboard '{{v1}}' (URL /d/{{v3}}/...), do two things and save: (1) Add the tag 'bench' to the das…
+  s_c83845  validated    2 steps  3/3 (100%)
+           In Grafana, create a NEW dashboard. Then add a {{v2}} visualization panel and title it exactly '{{v3}}' (repla…
+  s_c98ce9  validated    1 steps  3/3 (100%)
+           Open {{v1}} in the browser. If a login page appears, sign in with username 'admin' and password '{{v2}}' — typ…
+  s_ed6be1  validated   26 steps  3/3 (100%)
+           On the open dashboard '{{v1}}' (URL /d/{{v3}}/...), set the dashboard's auto-refresh interval to '1m'. This is…
+  s_f0a6ae  validated   29 steps  3/3 (100%)
+           On the currently open dashboard '{{v1}}' (URL /d/{{v3}}/...), add a NEW panel of type Text. Title it exactly '…
+  s_f9543f  validated   11 steps  3/3 (100%)
+           Open {{v1}} in the browser. If a login page appears, sign in with username 'admin' and password '{{v2}}' — typ…
+  s_81c743  provisional 50 steps  1/1 (100%)  variant of s_c6db9d
+           On the open dashboard '{{v1}}' (URL /d/{{v3}}/...), do two things and save: (1) Add the tag 'bench' to the das…
+  s_874e2f  provisional 33 steps  1/1 (100%)  variant of s_c6db9d
+           On the open dashboard '{{v1}}' (URL /d/{{v3}}/...), do two things and save: (1) Add the tag 'bench' to the das…
+store: /home/user/sitelooper/bench/results/fwgr77-skills
+
+summary: /home/user/sitelooper/bench/results/fwgr77-sweep.json

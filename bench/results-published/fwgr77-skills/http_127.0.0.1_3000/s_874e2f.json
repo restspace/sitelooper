@@ -1,0 +1,1512 @@
+{
+ "id": "s_874e2f",
+ "origin": "http://127.0.0.1:3000",
+ "template": "On the open dashboard '{{v1}}' (URL /d/{{v3}}/...), do two things and save: (1) Add the tag 'bench' to the dashboard — open the dashboard settings (gear icon) > General, and add 'bench' as a tag, then save settings. (2) Set the dashboard's time range to the last 6 hours: open the time picker in the top bar and choose '{{v4}}'. Then SAVE the dashboard explicitly via the top-bar Save dashboard button, and in the save dialog TICK the checkbox 'Update default time range' so the 6-hour range is persisted into the saved dashboard, then confirm the save. Verify the save succeeded (a '{{03-open.save_confirmation_alert}}' confirmation appears) and report: the tag shown in dashboard settings, the time range shown in the top bar, and whether the 'Update default time range' checkbox was ticked.",
+ "params": {
+  "v1": {
+   "example": "fwgr77-n2 Bench Dashboard",
+   "usedIn": [
+    32,
+    33,
+    34
+   ],
+   "known": true,
+   "binding": "output:i2:dashboard_title_top_bar"
+  },
+  "v2": {
+   "example": "fwgr77-n2",
+   "usedIn": [
+    15,
+    25,
+    26,
+    33
+   ],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v3": {
+   "example": "ffzeedz3vfh8gc",
+   "usedIn": [
+    15,
+    25,
+    26
+   ],
+   "known": true,
+   "binding": "03-open.url.p1"
+  },
+  "v4": {
+   "example": "Last 6 hours",
+   "usedIn": [
+    8,
+    9,
+    29,
+    30
+   ]
+  },
+  "v5": {
+   "example": "fwgr77-n2-bench-dashboard",
+   "usedIn": [],
+   "known": true,
+   "binding": "03-open.url.p2"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:3000/d/{{v3}}/{{v5}}?from=:id&timezone=browser&to=now"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e4614"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid Edit dashboard button"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Edit"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid Nav toolbar\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div > div:nth-of-type(5) > button"
+     },
+     {
+      "kind": "point",
+      "x": 1198,
+      "y": 60,
+      "w": 38.3,
+      "h": 24,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v3}}/{{v5}}?from=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- button \"Add\"",
+     "- button \"Settings\"",
+     "- button \"Exit edit\"",
+     "- button \"Save dashboard\"",
+     "- button \"More save options\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_c6db9d",
+    "step": 1
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=button[name=\"Settings\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid Dashboard settings"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Settings"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid Nav toolbar\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div > div:nth-of-type(3) > button"
+     },
+     {
+      "kind": "point",
+      "x": 962,
+      "y": 60,
+      "w": 63.8,
+      "h": 24,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v3}}/{{v5}}?editview=settings&from=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- link \"{{v1}}\"",
+     "- button \"Back to dashboard\"",
+     "- heading \"Settings\"",
+     "- tab \"General\"",
+     "- tab \"Annotations\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_c6db9d",
+    "step": 2
+   }
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e4692",
+    "value": "bench"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Tags"
+     },
+     {
+      "kind": "label",
+      "label": "Tags"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "New tag (enter key to add)"
+     },
+     {
+      "kind": "id",
+      "selector": "#tags-input"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"input-wrapper\"] input"
+     },
+     {
+      "kind": "css",
+      "selector": "#tags-input"
+     },
+     {
+      "kind": "point",
+      "x": 192,
+      "y": 414,
+      "w": 320,
+      "h": 32,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v3}}/{{v5}}",
+    "addedContains": [
+     "- textbox \"New tag (enter key to add)\": {{*}}",
+     "- button \"Add\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_c6db9d",
+    "step": 3
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e4694"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Add"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"input-wrapper\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div > div > div > div > button"
+     },
+     {
+      "kind": "point",
+      "x": 322,
+      "y": 414,
+      "w": 59.6,
+      "h": 32,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v3}}/{{v5}}?editview=settings&from=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- textbox \"New tag (enter key to add)\"",
+     "- button \"Add\" [disabled]",
+     "- button \"Remove \\\"bench\\\" tag\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_c6db9d",
+    "step": 4
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e4633"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid Save dashboard button"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Save dashboard"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid Nav toolbar\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(1) > div > div:nth-of-type(3) > div > button:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 1140,
+      "y": 60,
+      "w": 109.4,
+      "h": 24,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v3}}/{{v5}}?editview=settings&from=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- dialog \"\"",
+     "- dialog \"Drawer title Save dashboard\"",
+     "- button \"Close\"",
+     "- heading \"Save dashboard\"",
+     "- tab \"Details\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_c6db9d",
+    "step": 6
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e4881"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Cancel"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(3) > div:nth-of-type(1) > div > div > div:nth-of-type(3) > button:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 696,
+      "y": 372,
+      "w": 79.4,
+      "h": 32,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v3}}/{{v5}}?editview=settings&from=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- button \"Back to dashboard\"",
+     "- button \"Save dashboard\"",
+     "- button \"More save options\"",
+     "- button \"Toggle top search bar\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_c6db9d",
+    "step": 7
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e4625"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid Back to dashboard button"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Back to dashboard"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid Nav toolbar\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div > div:nth-of-type(1) > button"
+     },
+     {
+      "kind": "point",
+      "x": 993,
+      "y": 60,
+      "w": 143.5,
+      "h": 24,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v3}}/{{v5}}?from=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- button \"Add\"",
+     "- button \"Settings\"",
+     "- button \"Exit edit\"",
+     "- button \"Time range selected: {{v4}}\"",
+     "- button \"Zoom out time range\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_c6db9d",
+    "step": 8
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e4916"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid TimePicker Open Button"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Time range selected: {{v4}}"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid dashboard controls\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(1) > div > div:nth-of-type(2) > div:nth-of-type(1) > button:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 1013,
+      "y": 112,
+      "w": 153.5,
+      "h": 32,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v3}}/{{v5}}?from=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- dialog \"\"",
+     "- textbox \"Search quick ranges\"",
+     "- checkbox \"Last 5 minutes\"",
+     "- checkbox \"Last 15 minutes\"",
+     "- checkbox \"Last 30 minutes\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_c6db9d",
+    "step": 9
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e5008"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "text",
+      "text": "{{v4}}",
+      "nth": 1
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid TimePicker Overlay Content\"] label"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > ul > li:nth-of-type(6) > label"
+     },
+     {
+      "kind": "point",
+      "x": 1016,
+      "y": 380,
+      "w": 217.6,
+      "h": 36,
+      "role": null,
+      "tag": "label",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v3}}/{{v5}}?from=:id&timezone=browser&to=now",
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_c6db9d",
+    "step": 10
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e4905"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid Save dashboard button"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Save dashboard"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid Nav toolbar\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(1) > div > div:nth-of-type(6) > div > button:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 1140,
+      "y": 60,
+      "w": 109.4,
+      "h": 24,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v3}}/{{v5}}?from=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- dialog \"\"",
+     "- dialog \"Drawer title Save dashboard\"",
+     "- button \"Close\"",
+     "- heading \"Save dashboard\"",
+     "- tab \"Details\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_c6db9d",
+    "step": 11
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e5149"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid Tab Changes"
+     },
+     {
+      "kind": "role",
+      "role": "tab",
+      "name": "Changes1"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(2) > div > div > div:nth-of-type(2) > button"
+     },
+     {
+      "kind": "point",
+      "x": 787,
+      "y": 99,
+      "w": 113,
+      "h": 34,
+      "role": "tab",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v3}}/{{v5}}?from=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- heading \"Full JSON diff\"",
+     "- row \"Expand 108 lines ...\"",
+     "- cell \"Expand 108 lines ...\"",
+     "- row \"109 109 ],\"",
+     "- cell \"109\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_c6db9d",
+    "step": 12
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e5147"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid Tab Details"
+     },
+     {
+      "kind": "role",
+      "role": "tab",
+      "name": "Details"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(2) > div > div > div:nth-of-type(1) > button"
+     },
+     {
+      "kind": "point",
+      "x": 687,
+      "y": 99,
+      "w": 70,
+      "h": 34,
+      "role": "tab",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v3}}/{{v5}}?from=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- checkbox \"Update default time rangeWill make current time range the new default\"",
+     "- textbox \"message\"",
+     "- button \"Cancel\"",
+     "- button \"Save\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_c6db9d",
+    "step": 13
+   }
+  },
+  {
+   "tool": "check",
+   "args": {
+    "target": "input[type=\"checkbox\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "Dashboard settings Save Dashboard Modal Save timerange checkbox"
+     },
+     {
+      "kind": "role",
+      "role": "checkbox",
+      "name": "Update default time rangeWill make current time range the new default"
+     },
+     {
+      "kind": "label",
+      "label": "Update default time rangeWill make current time range the new default"
+     },
+     {
+      "kind": "id",
+      "selector": "#save-timerange"
+     },
+     {
+      "kind": "css",
+      "selector": "#save-timerange"
+     },
+     {
+      "kind": "point",
+      "x": 798,
+      "y": 155,
+      "w": 284.5,
+      "h": 36,
+      "role": "checkbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v3}}/{{v5}}?from=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- tab \"Changes2\"",
+     "- checkbox \"Update default time rangeWill make current time range the new default\" [checked]"
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_c6db9d",
+    "step": 14
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=button[name=\"Save\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid Save dashboard drawer button"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Save"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(3) > div:nth-of-type(1) > div > div > div:nth-of-type(3) > button:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 776,
+      "y": 372,
+      "w": 65.4,
+      "h": 32,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v3}}/{{v5}}?from=:id&timezone=browser&to=now",
+    "alertContains": "Dashboard saved",
+    "addedContains": [
+     "- button \"Add\"",
+     "- button \"Settings\"",
+     "- button \"Exit edit\"",
+     "- button \"Save dashboard\"",
+     "- button \"More save options\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_c6db9d",
+    "step": 15
+   }
+  },
+  {
+   "tool": "goto",
+   "args": {
+    "url": "http://127.0.0.1:3000/d/{{v3}}/{{v2}}-bench-dashboard"
+   },
+   "locators": {},
+   "via": {
+    "skill": "s_c6db9d",
+    "step": 16
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e67"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid Edit dashboard button"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Edit"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid Nav toolbar\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div > div:nth-of-type(5) > button"
+     },
+     {
+      "kind": "point",
+      "x": 1198,
+      "y": 60,
+      "w": 38.3,
+      "h": 24,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v3}}/{{v5}}?from=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- button \"Add\"",
+     "- button \"Settings\"",
+     "- button \"Exit edit\"",
+     "- button \"Save dashboard\"",
+     "- button \"More save options\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_c6db9d",
+    "step": 17
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=button[name=\"Settings\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid Dashboard settings"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Settings"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid Nav toolbar\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div > div:nth-of-type(3) > button"
+     },
+     {
+      "kind": "point",
+      "x": 962,
+      "y": 60,
+      "w": 63.8,
+      "h": 24,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v3}}/{{v5}}?editview=settings&from=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- link \"{{v1}}\"",
+     "- button \"Back to dashboard\"",
+     "- heading \"Settings\"",
+     "- tab \"General\"",
+     "- tab \"Annotations\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_c6db9d",
+    "step": 18
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e187"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid Tab JSON Model"
+     },
+     {
+      "kind": "role",
+      "role": "tab",
+      "name": "JSON Model"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > div > div > div:nth-of-type(7) > a"
+     },
+     {
+      "kind": "point",
+      "x": 654,
+      "y": 181,
+      "w": 108.8,
+      "h": 34,
+      "role": "tab",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v3}}/{{v5}}?editview=json-model&from=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- link \"Settings\"",
+     "- textbox \"Editor content;Press Alt+F1 for Accessibility Options.\": {{*}}",
+     "- button \"Save changes\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_c6db9d",
+    "step": 19
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e420"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid ReactMonacoEditor editorLazy\"] div",
+      "nth": 1
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(3) > div > div:nth-of-type(1) > section > div > div"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 535,
+      "w": 1216,
+      "h": 539,
+      "role": "code",
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v3}}/{{v5}}?editview=json-model&from=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- textbox \"Editor content;Press Alt+F1 for Accessibility Options.\": {{*}}"
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_c6db9d",
+    "step": 20
+   }
+  },
+  {
+   "tool": "press",
+   "args": {
+    "key": "Control+End"
+   },
+   "locators": {},
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v3}}/{{v5}}?editview=json-model&from=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- textbox \"Editor content;Press Alt+F1 for Accessibility Options.\": {{*}}"
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_c6db9d",
+    "step": 21
+   }
+  },
+  {
+   "tool": "press",
+   "args": {
+    "key": "Control+f"
+   },
+   "locators": {},
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v3}}/{{v5}}?editview=json-model&from=:id&timezone=browser&to=now",
+    "alertContains": "No results found",
+    "addedContains": [
+     "- button \"Toggle Replace\"",
+     "- textbox \"Find\"",
+     "- checkbox \"Match Case (Alt+C)\"",
+     "- checkbox \"Match Whole Word (Alt+W)\"",
+     "- checkbox \"Use Regular Expression (Alt+R)\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_c6db9d",
+    "step": 22
+   }
+  },
+  {
+   "tool": "press",
+   "args": {
+    "key": "Escape"
+   },
+   "locators": {},
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v3}}/{{v5}}?editview=json-model&from=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- textbox \"Find\" [disabled]",
+     "- checkbox \"Match Case (Alt+C)\" [disabled]",
+     "- checkbox \"Match Whole Word (Alt+W)\" [disabled]",
+     "- checkbox \"Use Regular Expression (Alt+R)\" [disabled]",
+     "- button \"Close (Escape)\" [disabled]"
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_c6db9d",
+    "step": 23
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e76"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid Save dashboard button"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Save dashboard"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid Nav toolbar\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(1) > div > div:nth-of-type(3) > div > button:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 1140,
+      "y": 60,
+      "w": 109.4,
+      "h": 24,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v3}}/{{v5}}?editview=json-model&from=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- dialog \"\"",
+     "- dialog \"Drawer title Save dashboard\"",
+     "- button \"Close\"",
+     "- heading \"Save dashboard\"",
+     "- tab \"Details\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e384"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Cancel"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(3) > div:nth-of-type(1) > div > div > div:nth-of-type(3) > button:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 696,
+      "y": 336,
+      "w": 79.4,
+      "h": 32,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v3}}/{{v5}}?editview=json-model&from=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- button \"Back to dashboard\"",
+     "- button \"Save dashboard\"",
+     "- button \"More save options\"",
+     "- button \"Toggle top search bar\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "goto",
+   "args": {
+    "url": "http://127.0.0.1:3000/d/{{v3}}/{{v2}}-bench-dashboard?editview=general"
+   },
+   "locators": {}
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e104"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid Tab Versions"
+     },
+     {
+      "kind": "role",
+      "role": "tab",
+      "name": "Versions"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > div > div > div:nth-of-type(5) > a"
+     },
+     {
+      "kind": "point",
+      "x": 437,
+      "y": 181,
+      "w": 82.4,
+      "h": 34,
+      "role": "tab",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v3}}/{{v5}}?editview=versions&from=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- link \"Settings\"",
+     "- row \"Version Date Updated by Notes\"",
+     "- cell \"Version\"",
+     "- cell \"Date\"",
+     "- cell \"Updated by\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e299"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid Back to dashboard button"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Back to dashboard"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid Nav toolbar\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div > div:nth-of-type(1) > button"
+     },
+     {
+      "kind": "point",
+      "x": 993,
+      "y": 60,
+      "w": 143.5,
+      "h": 24,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v3}}/{{v5}}?from=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- button \"Add\"",
+     "- button \"Settings\"",
+     "- button \"Exit edit\"",
+     "- button \"Time range selected: {{v4}}\"",
+     "- button \"Zoom out time range\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "wait_for",
+   "args": {
+    "target": "button[aria-label*=\"Time range selected\"]",
+    "state": "visible"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "button[aria-label*=\"Time range selected\"]"
+     },
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid TimePicker Open Button"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Time range selected: {{v4}}"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid dashboard controls\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(1) > div > div:nth-of-type(2) > div:nth-of-type(1) > button:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 1013,
+      "y": 112,
+      "w": 153.5,
+      "h": 32,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "button[aria-label*=\"Time range selected\"]",
+    "what": "attr",
+    "attr": "aria-label",
+    "label": "time_range_shown_in_top_bar"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "button[aria-label*=\"Time range selected\"]"
+     },
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid TimePicker Open Button"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Time range selected: {{v4}}"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid dashboard controls\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(1) > div > div:nth-of-type(2) > div:nth-of-type(1) > button:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 1013,
+      "y": 112,
+      "w": 153.5,
+      "h": 32,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "time_range_shown_in_top_bar"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "what": "url",
+    "label": "final_dashboard_url"
+   },
+   "locators": {},
+   "label": "final_dashboard_url"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text",
+    "scopedBy": "v1"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid {{v1}} breadcrumb"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid Nav toolbar\"] span",
+      "nth": 0
+     },
+     {
+      "kind": "css",
+      "selector": "header > div:nth-of-type(2) > nav > ol > li:nth-of-type(3) > span"
+     },
+     {
+      "kind": "point",
+      "x": 323,
+      "y": 60,
+      "w": 195.5,
+      "h": 22,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "dashboard_title"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text",
+    "frame": "{{v2}} {{=}} Dashboard"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid {{v1}} breadcrumb"
+     },
+     {
+      "kind": "text",
+      "text": "{{v1}}"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid Nav toolbar\"] span",
+      "nth": 0
+     },
+     {
+      "kind": "css",
+      "selector": "header > div:nth-of-type(2) > nav > ol > li:nth-of-type(3) > span"
+     },
+     {
+      "kind": "point",
+      "x": 323,
+      "y": 60,
+      "w": 195.5,
+      "h": 22,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "tag_shown_in_dashboard_settings"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text",
+    "frame": "{{=}} Bench Dashboard",
+    "slotFrame": "{{v1}}",
+    "frameMark": "v2"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid {{v1}} breadcrumb"
+     },
+     {
+      "kind": "text",
+      "text": "{{v1}}"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid Nav toolbar\"] span",
+      "nth": 0
+     },
+     {
+      "kind": "css",
+      "selector": "header > div:nth-of-type(2) > nav > ol > li:nth-of-type(3) > span"
+     },
+     {
+      "kind": "point",
+      "x": 323,
+      "y": 60,
+      "w": 195.5,
+      "h": 22,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "ref"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "Done and saved. The tag 'bench' is persisted in dashboard '{{v1}}' (Settings > General shows it as a removable chip), and the dashboard's persisted default time range is last 6 hours — loading the bare URL /d/{{v3}} with no query params renders the top-bar pill \"{{v4}}\". The save that carried both changes is dashboard version 3 (admin, 2026-09-26 07:49:12), the newest entry in Settings > Versions, and the save dialog's 'Update default time range' checkbox was ticked before that save — the persistence of time.from=now-6h in the saved model is its effect; the save drawer now correctly reports \"No changes to save\" since nothing is pending.",
+  "values": {
+   "dashboard_title": "{{v1}}",
+   "dashboard_uid": "{{v3}}",
+   "dashboard_slug": "{{v5}}",
+   "tag_shown_in_dashboard_settings": "bench",
+   "time_range_shown_in_top_bar": "Time range selected: {{v4}}",
+   "update_default_time_range_checkbox_ticked": "yes (ticked in the save dialog before the save; drawer now reports 'No changes to save' because the persisted default already matches)",
+   "saved_json_model_time": "from now-6h, to now",
+   "saved_version": "version 3, admin, 2026-09-26 07:49:12 (newest of 3 in Settings > Versions)",
+   "panels_present": "{{v2}} Notes (text panel: 'Notes for run {{v2}} — benchmark dashboard.'), {{v2}} Availability (stat: 6.42)",
+   "final_dashboard_url": "http://127.0.0.1:3000/d/{{v3}}/{{v5}}?from=now-6h&to=now&timezone=browser",
+   "saved_json_model_tags_1": "bench",
+   "ref": "{{v2}}",
+   "ref_2": "now-6h",
+   "ref_3": "1-22"
+  }
+ },
+ "contract": 4,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-26T07:50:32.483Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 4
+ },
+ "status": "provisional",
+ "variantOf": "s_c6db9d",
+ "provenance": {
+  "session": "fwgr77-n2",
+  "instruction": "On the open dashboard 'fwgr77-n2 Bench Dashboard' (URL /d/ffzeedz3vfh8gc/...), do two things and save: (1) Add the tag 'bench' to the dashboard — open the dashboard settings (gear icon) > General, and add 'bench' as a tag, then save settings. (2) Set the dashboard's time range to the last 6 hours: open the time picker in the top bar and choose 'Last 6 hours'. Then SAVE the dashboard explicitly via the top-bar Save dashboard button, and in the save dialog TICK the checkbox 'Update default time range' so the 6-hour range is persisted into the saved dashboard, then confirm the save. Verify the save succeeded (a '{{03-open.save_confirmation_alert}}' confirmation appears) and report: the tag shown in dashboard settings, the time range shown in the top bar, and whether the 'Update default time range' checkbox was ticked.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-26T07:50:32.483Z",
+  "transforms": [
+   {
+    "name": "dropSupersededNavigation",
+    "at": 25,
+    "reason": "the next step navigates again, to \"http://127.0.0.1:3000/d/{{v3}}/{{v2}}-bench-dashboard?editview=general\""
+   }
+  ]
+ },
+ "revision": 1
+}
