@@ -1,0 +1,496 @@
+{
+  "name": "fwgt19",
+  "origin": "http://127.0.0.1:8095",
+  "startUrl": "http://127.0.0.1:8095/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-signin",
+      "instruction": "Navigate to http://127.0.0.1:8095/ and sign in with username 'admin'. For the password field, type the literal text {{env:APP_PASSWORD}} exactly as given (the environment fills in the real password when typed). After signing in, report the username displayed in the top-right account menu.",
+      "skill": "s_2df1f5",
+      "params": {
+        "v1": "http://127.0.0.1:8095/",
+        "v2": "admin",
+        "v3": "{{env:APP_PASSWORD}}"
+      },
+      "outputs": [
+        "page_title",
+        "account_menu_username",
+        "profile_menu_item",
+        "settings_menu_item",
+        "dropdown_username"
+      ],
+      "recorded": {
+        "page_title": "admin - Dashboard - Gitea: Git with a cup of tea",
+        "account_menu_username": "Signed in as admin",
+        "profile_menu_item": "Profile",
+        "settings_menu_item": "Settings",
+        "dropdown_username": "admin",
+        "url": "http://127.0.0.1:8095/"
+      },
+      "route": "http://127.0.0.1:8095/",
+      "outputEvidence": {
+        "page_title": {
+          "same": 1,
+          "differed": 0
+        },
+        "account_menu_username": {
+          "same": 1,
+          "differed": 0
+        },
+        "profile_menu_item": {
+          "same": 1,
+          "differed": 0
+        },
+        "settings_menu_item": {
+          "same": 1,
+          "differed": 0
+        },
+        "dropdown_username": {
+          "same": 1,
+          "differed": 0
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "02-open",
+      "instruction": "Go to the repository bench/bench-repo at http://127.0.0.1:8095/bench/bench-repo and open its Issues list (open issues only, not closed). Report the exact titles of all open issues whose title starts with 'Seed:', exactly as displayed on the page. Also report whether any issue titled '{{runid}} Bench Issue' already exists in the list, and if so its issue number.",
+      "skill": "s_d93d1e",
+      "params": {
+        "v2": "http://127.0.0.1:8095/bench/bench-repo",
+        "v1": "{{runid}}"
+      },
+      "outputs": [
+        "open_issue_count",
+        "closed_issue_count",
+        "Bench Issue",
+        "issues_list_url",
+        "seed_issue_title_1",
+        "seed_issue_title_2",
+        "seed_issue_title_3",
+        "run_id",
+        "open_issue_1_1",
+        "open_issue_1_2",
+        "open_issue_2_1",
+        "open_issue_2_2",
+        "open_issue_3_1",
+        "open_issue_3_2",
+        "seed_prefixed_open_issues_1",
+        "seed_prefixed_open_issues_2",
+        "seed_prefixed_open_issues_3"
+      ],
+      "recorded": {
+        "open_issue_count": "3",
+        "closed_issue_count": "0",
+        "Bench Issue": "not present (no such issue in the open or closed list)",
+        "issues_list_url": "http://127.0.0.1:8095/bench/bench-repo/issues",
+        "seed_issue_title_1": "Seed: ship repaired device",
+        "seed_issue_title_2": "Seed: order missing parts",
+        "seed_issue_title_3": "Seed: triage inbox",
+        "run_id": "fwgt19-n1",
+        "open_issue_1_1": "Seed: ship repaired device",
+        "open_issue_1_2": "#3",
+        "open_issue_2_1": "Seed: order missing parts",
+        "open_issue_2_2": "#2",
+        "open_issue_3_1": "Seed: triage inbox",
+        "open_issue_3_2": "#1",
+        "seed_prefixed_open_issues_1": "Seed: ship repaired device",
+        "seed_prefixed_open_issues_2": "Seed: order missing parts",
+        "seed_prefixed_open_issues_3": "Seed: triage inbox",
+        "url": "http://127.0.0.1:8095/bench/bench-repo/issues"
+      },
+      "route": "http://127.0.0.1:8095/bench/bench-repo/issues",
+      "outputEvidence": {
+        "open_issue_count": {
+          "same": 1,
+          "differed": 0
+        },
+        "closed_issue_count": {
+          "same": 1,
+          "differed": 0
+        },
+        "Bench Issue": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "issues_list_url": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_issue_title_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_issue_title_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_issue_title_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "run_id": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "open_issue_1_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "open_issue_1_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "open_issue_2_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "open_issue_2_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "open_issue_3_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "open_issue_3_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_prefixed_open_issues_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_prefixed_open_issues_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_prefixed_open_issues_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "03-create",
+      "instruction": "In the repository bench/bench-repo at http://127.0.0.1:8095/bench/bench-repo, create a new issue with the title exactly '{{runid}} Bench Issue' and a description (markdown text area) that includes the text '{{runid}}' somewhere in it, e.g. 'Bench issue created for run {{runid}}'. Submit the issue. Then report the new issue's title, its issue number as displayed (Gitea shows it as #<number>), and confirm the description text shown on the issue page includes {{runid}}.",
+      "skill": "s_cfd175",
+      "params": {
+        "v2": "{{runid}} Bench Issue",
+        "v1": "{{runid}}",
+        "v3": "Bench issue created for run {{runid}}"
+      },
+      "outputs": [
+        "issue_url",
+        "issue_number",
+        "issue_title",
+        "issue_title_heading",
+        "issue_description",
+        "description_contains",
+        "open_issue_count_after_creation",
+        "run_id"
+      ],
+      "recorded": {
+        "issue_url": "http://127.0.0.1:8095/bench/bench-repo/issues/4",
+        "issue_number": "#4",
+        "issue_title": "fwgt19-n1 Bench Issue",
+        "issue_title_heading": "fwgt19-n1 Bench Issue #4",
+        "issue_description": "Bench issue created for run fwgt19-n1",
+        "description_contains": "yes",
+        "open_issue_count_after_creation": "4",
+        "run_id": "fwgt19-n1",
+        "url": "http://127.0.0.1:8095/bench/bench-repo/issues/4",
+        "url.p3": "4"
+      },
+      "route": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "outputEvidence": {
+        "issue_url": {
+          "same": 0,
+          "differed": 1
+        },
+        "issue_number": {
+          "same": 0,
+          "differed": 1
+        },
+        "issue_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "issue_title_heading": {
+          "same": 0,
+          "differed": 1
+        },
+        "issue_description": {
+          "same": 0,
+          "differed": 1
+        },
+        "description_contains": {
+          "same": 0,
+          "differed": 1
+        },
+        "open_issue_count_after_creation": {
+          "same": 1,
+          "differed": 0
+        },
+        "run_id": {
+          "same": 0,
+          "differed": 1
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        },
+        "url.p3": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "04-set",
+      "instruction": "On the Gitea issue page {{03-create.url}} (issue titled '{{runid}} Bench Issue'), use the Labels picker in the issue's right-hand sidebar to set the issue's labels to exactly 'bug' and 'priority-high' (and no other labels). A picker's choice only counts once the app has applied it and the labels are shown on the issue page sidebar — not merely when an item in the open menu is ticked. When done, report the exact list of labels now displayed on the issue page.",
+      "skill": "s_8d7f36",
+      "params": {
+        "v1": "{{03-create.url}}",
+        "v3": "{{runid}} Bench Issue",
+        "v4": "{{runid}}"
+      },
+      "outputs": [
+        "issue_url",
+        "sidebar_labels_intermediate",
+        "sidebar_labels_final"
+      ],
+      "recorded": {
+        "issue_url": "http://127.0.0.1:8095/bench/bench-repo/issues/4",
+        "sidebar_labels_intermediate": "No labels",
+        "sidebar_labels_final": "bug\npriority-high"
+      },
+      "route": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "outputEvidence": {
+        "issue_url": {
+          "same": 0,
+          "differed": 1
+        },
+        "sidebar_labels_intermediate": {
+          "same": 1,
+          "differed": 0
+        },
+        "sidebar_labels_final": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "05-open",
+      "instruction": "On the Gitea issue page {{03-create.url}} (issue titled '{{runid}} Bench Issue'), use the Assignees picker in the issue's right-hand sidebar to assign the issue to the user 'bench-assignee'. The choice only counts once the app has applied it and the assignee is shown on the issue page sidebar — not merely when an item in the open menu is ticked. When done, report the exact assignee name(s) now displayed on the issue page.",
+      "skill": "s_3f18dd",
+      "params": {
+        "v1": "{{03-create.url}}",
+        "v3": "{{runid}} Bench Issue",
+        "v4": "{{runid}}"
+      },
+      "outputs": [
+        "issue_url",
+        "assignees_after_change"
+      ],
+      "recorded": {
+        "issue_url": "http://127.0.0.1:8095/bench/bench-repo/issues/4",
+        "assignees_after_change": "Assignees\nbench-assignee\n(Bench Assignee)",
+        "assignees_after_reload": "Assignees\nbench-assignee\n(Bench Assignee)"
+      },
+      "route": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "outputEvidence": {
+        "issue_url": {
+          "same": 0,
+          "differed": 1
+        },
+        "assignees_after_change": {
+          "same": 1,
+          "differed": 0
+        },
+        "assignees_after_reload": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        }
+      }
+    },
+    {
+      "id": "06-set",
+      "instruction": "On the Gitea issue page {{03-create.url}} (issue titled '{{runid}} Bench Issue'), use the Milestone picker in the issue's right-hand sidebar to set the issue's milestone to 'Bench Milestone'. The choice only counts once the app has applied it and the milestone is shown on the issue page sidebar — not merely when an item in the open menu is ticked. When done, report the exact milestone name now displayed on the issue page.",
+      "skill": "s_2313ac",
+      "params": {
+        "v1": "{{03-create.url}}",
+        "v3": "{{runid}} Bench Issue",
+        "v4": "{{runid}}"
+      },
+      "outputs": [
+        "milestone_sidebar_text"
+      ],
+      "recorded": {
+        "milestone_sidebar_text": "Milestone\nBench Milestone",
+        "milestone_after_reload": "Milestone\nBench Milestone"
+      },
+      "route": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "outputEvidence": {
+        "milestone_sidebar_text": {
+          "same": 1,
+          "differed": 0
+        },
+        "milestone_after_reload": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        }
+      }
+    },
+    {
+      "id": "07-add",
+      "instruction": "On the Gitea issue page {{03-create.url}} (issue titled '{{runid}} Bench Issue'), add a comment using the comment markdown text area at the bottom of the page. The comment text must include the text '{{runid}}' somewhere in it, e.g. 'Comment for run {{runid}}'. Submit the comment. Then report the exact text of the comment as it is displayed on the issue page, and confirm it includes {{runid}}.",
+      "skill": "s_6c9922",
+      "params": {
+        "v1": "{{03-create.url}}",
+        "v3": "{{runid}} Bench Issue",
+        "v4": "{{runid}}",
+        "v5": "Comment for run {{runid}}"
+      },
+      "outputs": [
+        "issue_description_comment",
+        "comment_text",
+        "run_id",
+        "comment_anchor"
+      ],
+      "recorded": {
+        "issue_description_comment": "Bench issue created for run fwgt19-n1",
+        "comment_text": "Comment for run fwgt19-n1",
+        "run_id": "fwgt19-n1",
+        "comment_anchor": "issuecomment-5",
+        "url": "http://127.0.0.1:8095/bench/bench-repo/issues/4#issuecomment-5",
+        "url.h0": "issuecomment-5"
+      },
+      "route": "http://127.0.0.1:8095/bench/bench-repo/issues/:id#:id",
+      "outputEvidence": {
+        "issue_description_comment": {
+          "same": 0,
+          "differed": 1
+        },
+        "comment_text": {
+          "same": 0,
+          "differed": 1
+        },
+        "run_id": {
+          "same": 0,
+          "differed": 1
+        },
+        "comment_anchor": {
+          "same": 0,
+          "differed": 1
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        },
+        "url.h0": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "08-open",
+      "instruction": "Open the Gitea issue page {{03-create.url}} fresh (full reload) and verify all of the following, reporting the exact on-screen values for each: (1) the issue title and its issue number as displayed in the page heading (Gitea shows it as #<number>); (2) the description text shown in the first comment body; (3) the complete list of labels shown in the right-hand sidebar (report every label, and state if there are none or extra ones); (4) the assignee(s) shown in the sidebar; (5) the milestone shown in the sidebar; (6) the text of every comment on the page. Do not change anything — read only.",
+      "skill": "s_5e6bd7",
+      "params": {
+        "v1": "{{03-create.url}}",
+        "v3": "{{runid}}"
+      },
+      "outputs": [
+        "page_heading",
+        "sidebar_labels",
+        "sidebar_assignees",
+        "sidebar_milestone",
+        "comment_body",
+        "comment_body_2",
+        "run_id"
+      ],
+      "recorded": {
+        "page_heading": "fwgt19-n1 Bench Issue #4",
+        "sidebar_labels": "Labels\nbug\npriority-high",
+        "sidebar_assignees": "Assignees\nbench-assignee\n(Bench Assignee)",
+        "sidebar_milestone": "Milestone\nBench Milestone",
+        "comment_body": "Bench issue created for run fwgt19-n1",
+        "comment_body_2": "Comment for run fwgt19-n1",
+        "run_id": "fwgt19-n1"
+      },
+      "route": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "outputEvidence": {
+        "page_heading": {
+          "same": 0,
+          "differed": 1
+        },
+        "sidebar_labels": {
+          "same": 1,
+          "differed": 0
+        },
+        "sidebar_assignees": {
+          "same": 1,
+          "differed": 0
+        },
+        "sidebar_milestone": {
+          "same": 1,
+          "differed": 0
+        },
+        "comment_body": {
+          "same": 0,
+          "differed": 1
+        },
+        "comment_body_2": {
+          "same": 0,
+          "differed": 1
+        },
+        "run_id": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "session": "fwgt19-n1",
+    "created": "2026-09-26T13:15:10.784Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "05-open",
+      "outputs": [
+        "assignees_after_reload"
+      ]
+    },
+    {
+      "stepId": "06-set",
+      "outputs": [
+        "milestone_after_reload"
+      ]
+    }
+  ]
+}
