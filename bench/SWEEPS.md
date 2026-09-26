@@ -554,7 +554,7 @@ after that point is invalid, verifies (no model) are not. fwop15-cv2 and fwod88-
 for the top-up.
 
 
-## Round 71 (main 65f435b0 → a6d791d0: the full fact system, second sweep; the quoted-literal guard merged mid-round) — in progress
+## Round 71 (main 65f435b0 → a6d791d0: the full fact system, second sweep; the quoted-literal guard merged mid-round) — 5/6 green (si, od, gr, op ×2; gr unpublished), gt a recording miss
 
 Convergence re-runs the design names for stages 2 and 3 (bench/converge.mjs on the full system), fired 20:19 UTC:
 
@@ -562,12 +562,27 @@ Convergence re-runs the design names for stages 2 and 3 (bench/converge.mjs on t
 |---|---|---|---|---|---|
 | fwod88-cv5 | od | **CONVERGED** round 2 | 2 | 19 | the odoo unsourced-ref recording that exhausted cv (round 61-63), cv3 and cv4 (stuck on the 300 s budget): round 1 compile refused six steps on `quotation_reference`, one re-record of 03-create (19 turns, tier-A replay 0 turns) read it, round 2 compiled and the artifact passed 6/6 |
 | fwsi16-cv | si | **CONVERGED** round 2 | 2 | 11 | the round-65 refusal (01-signin's unasked list columns `model`/`status` threaded to later literals): one re-record of 01-signin (11 turns), round 2 compiled and passed 5/5 — the stage-3 sourcing hold and constant facts were live |
-| fwec16-cv | ec | in flight | | | |
+| fwec16-cv | ec | **CONVERGED** round 1 (box) | 0 | 0 | the round-65 recording compiled and its artifact passed 5/5 first time (0 facts relied: the espocrm store had no reliable fact yet). The box then grepped the results for the password before pushing and the box classifier refused the push ("Credential Leakage"), so the branch is missing; re-fired 23:10 UTC on a prompt that forbids any look at the results before the push |
 
 | round | runid | app | verified | replay model-free | compiled | green | facts | applied | notes |
 |---|---|---|---|---|---|---|---|---|---|
 | 71 | fwop25 | op | 7/7 ×3 | yes (4/4 flow, 0 turns ×2) | pass, drift 0 (5/7, 2 UNVERIFIABLE) | **yes** | 10 relied (8 hard) | 4 (1 strip strip/keep of a candidate naming the work-package id) | a 4-step recording (n1 5 turns / $0.05 / 299 s) that reported no first name, so round 70's collision did not arise; the guard (a6d791d0) was merged after this box started and is exercised by fwop26 |
+| 71 | fwsi22 | si | 7/7 ×3 | yes (3/3 flow, 0 turns ×2) | pass (5/7, 2 UNVERIFIABLE) | **yes** | 44 relied (40 hard) | 25: ledger 16, strip 7, landing 2; 2 factRewrites; 1 disagreement | second green snipe-it on the full system |
+| 71 | fwgt23 | gt | 7/7 ×3 | NO: 02-create had no pinned skill — model-first on both replays (148 and 56 turns); 03-report and 04-set refused their positional reads after it | FAIL at 02-create: "none of 1 recorded locators resolved … getByRole('li" | no | 26 relied (15 hard), 3 advisory | 43: strip 25, ledger 8, routesAgree 6, landing 4; 6 factRewrites; 8 disagreements | a RECORDING miss, not a facts one: n1's 02-create instruction was reported blocked (the sidebar Labels combobox click failed, the "Remove label" wait timed out, the select failed) and its retry timed out at 600 s (28 turns), so the created issue's step was adopted from a non-success instruction and replays model-first; fwgt19 and fwgt22 recorded the same step cleanly; fwgt24 re-runs it |
+| 71 | fwod97 | od | 6/6 ×3 | yes (7/7 flow, 0 turns ×2) | pass, drift 0 (6/6) | **yes** | 23 relied (19 hard), 2 advisory | 32: routesAgree 20, ledger 8, strip 4; 10 disagreements (the strips of candidates naming the minted quotation id, as round 70) | second green odoo in succession on the full system |
+| 71 | fwgr82 | gr | 6/6 ×3 (box) | yes (6/6 flow, 0 turns ×2) | pass (4/6, 2 UNVERIFIABLE), drift 1 | **yes** (box) | 7 relied (5 hard) | 12: ledger, landing, strip; 1 factRewrite | the box's push was refused by its classifier ("Sensitive-Source Provenance") after it grepped the results for the password despite the publish-first rule; the recording shows the grafana password field's a11y value (the password equals the username "admin", which the scrub keeps as a login); re-fired 23:10 UTC |
+| 71 | fwop26 | op | 7/7 ×3 | yes (4/4 flow, 0 turns ×2) | pass (5/7, 2 UNVERIFIABLE) | **yes** | 14 relied (11 hard), 1 advisory | 9: ledger 6, strip 3; 4 disagreements | openproject on the quoted-literal guard (a6d791d0): 01-signin again reported the admin's first name; it stayed out of 'Bench Project' and '{{runid}} Bench Work Package' and the flow compiled — round 70's refusal is fixed |
 
+Reading: the second sweep on the full system matches the first: every app but gitea green with 0-turn replays and a
+passing artifact (grafana verified on its box; its branch is being re-published), openproject green twice (fwop25
+before the guard, fwop26 on it), and both odoo and snipe-it green two rounds running. Facts decided 121 rows across
+the five stores (strip 41, ledger 44, routesAgree 26, landing 10) plus 9 stored-pattern rewrites, with 23 shadow
+disagreements, all of the round-70 kind (strips of candidates naming a minted id; identifier-shaped seed words). All
+three convergence re-runs converged (od in 2 runs, si in 2, ec in 0). The gitea miss is the inner model losing the
+sidebar Labels picker during the recording (blocked instruction, timed-out retry, adopted step) — the same picker
+fwgt19 and fwgt22 recorded cleanly; the facts system had nothing to decide there. Two boxes lost their pushes to the
+box classifier after grepping the results for the password before pushing; the prompts now forbid any look at the
+results before the push.
 ## Round 70 (main 65f435b0: site facts stages 0-3 all merged — the FULL fact system, first sweep) — 4/5 green
 
 Fired 19:17-19:26 UTC 2026-09-26 on the round-68 prompts plus F5 (no digit-cut or var affix fact) and F6 (applied value
