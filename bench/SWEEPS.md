@@ -554,6 +554,20 @@ after that point is invalid, verifies (no model) are not. fwop15-cv2 and fwod88-
 for the top-up.
 
 
+## Round 71 (main 65f435b0 → a6d791d0: the full fact system, second sweep; the quoted-literal guard merged mid-round) — in progress
+
+Convergence re-runs the design names for stages 2 and 3 (bench/converge.mjs on the full system), fired 20:19 UTC:
+
+| run | app | verdict | flow runs | model turns | notes |
+|---|---|---|---|---|---|
+| fwod88-cv5 | od | **CONVERGED** round 2 | 2 | 19 | the odoo unsourced-ref recording that exhausted cv (round 61-63), cv3 and cv4 (stuck on the 300 s budget): round 1 compile refused six steps on `quotation_reference`, one re-record of 03-create (19 turns, tier-A replay 0 turns) read it, round 2 compiled and the artifact passed 6/6 |
+| fwsi16-cv | si | **CONVERGED** round 2 | 2 | 11 | the round-65 refusal (01-signin's unasked list columns `model`/`status` threaded to later literals): one re-record of 01-signin (11 turns), round 2 compiled and passed 5/5 — the stage-3 sourcing hold and constant facts were live |
+| fwec16-cv | ec | in flight | | | |
+
+| round | runid | app | verified | replay model-free | compiled | green | facts | applied | notes |
+|---|---|---|---|---|---|---|---|---|---|
+| 71 | fwop25 | op | 7/7 ×3 | yes (4/4 flow, 0 turns ×2) | pass, drift 0 (5/7, 2 UNVERIFIABLE) | **yes** | 10 relied (8 hard) | 4 (1 strip strip/keep of a candidate naming the work-package id) | a 4-step recording (n1 5 turns / $0.05 / 299 s) that reported no first name, so round 70's collision did not arise; the guard (a6d791d0) was merged after this box started and is exercised by fwop26 |
+
 ## Round 70 (main 65f435b0: site facts stages 0-3 all merged — the FULL fact system, first sweep) — 4/5 green
 
 Fired 19:17-19:26 UTC 2026-09-26 on the round-68 prompts plus F5 (no digit-cut or var affix fact) and F6 (applied value
