@@ -1,0 +1,110 @@
+{
+ "id": "s_f10798",
+ "origin": "http://127.0.0.1:8090",
+ "template": "Open work package {{v1}} in project 'Bench Project' (subject '{{v3}}') and read-only verify its current state. Report exactly what the page shows for: (1) the work package ID, (2) the subject, (3) the type, (4) the status, (5) the assignee name, (6) the finish date (open the date picker if needed to read the Finish date value, then cancel), (7) the description text, and (8) the most recent comment text on the Activity tab. Do not change anything.",
+ "params": {
+  "v1": {
+   "example": "#46",
+   "usedIn": [],
+   "known": true,
+   "binding": "02-create.work_package_id"
+  },
+  "v2": {
+   "example": "46",
+   "usedIn": [],
+   "known": true,
+   "binding": "03-open.url.p4"
+  },
+  "v3": {
+   "example": "fwop15-cv4-r2n1 Bench Work Package",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i2:subject"
+  },
+  "v4": {
+   "example": "fwop15-cv4-r2n1",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/{{v2}}/overview?query_props={\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[{\"n\":\"status\",\"o\":\"*\",\"v\":[]},{\"n\":\"search\",\"o\":\"**\",\"v\":[\"Seed:\"]}],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e1557"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "tab",
+      "name": "Activity"
+     },
+     {
+      "kind": "css",
+      "selector": "op-scrollable-tabs > div > div > ul > li:nth-of-type(2) > a"
+     },
+     {
+      "kind": "point",
+      "x": 1027,
+      "y": 179,
+      "w": 95.8,
+      "h": 38,
+      "role": "tab",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/{{v2}}/activity?query_props={\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[{\"n\":\"status\",\"o\":\"*\",\"v\":[]},{\"n\":\"search\",\"o\":\"**\",\"v\":[\"Seed:\"]}],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}",
+    "addedContains": [
+     "- button \"Show everything\"",
+     "- button \"Newest at the bottom\"",
+     "- link \"{{*}} {{*}} PM\"",
+     "- button \"Actions\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_64c04d",
+    "step": 2
+   }
+  }
+ ],
+ "contract": 2,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-26T15:37:34.443Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_53cfff",
+  "index": 0,
+  "of": 6
+ },
+ "provenance": {
+  "session": "rerecord-muijmsnz-1",
+  "instruction": "Open work package #46 in project 'Bench Project' (subject 'fwop15-cv4-r2n1 Bench Work Package') and read-only verify its current state. Report exactly what the page shows for: (1) the work package ID, (2) the subject, (3) the type, (4) the status, (5) the assignee name, (6) the finish date (open the date picker if needed to read the Finish date value, then cancel), (7) the description text, and (8) the most recent comment text on the Activity tab. Do not change anything.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-26T15:37:34.443Z",
+  "transforms": [
+   {
+    "name": "unfreezeExpectations",
+    "at": 1,
+    "reason": "recorded page change(s) only the recording run could produce: [\"- button \\\"Show everything\\\"\",\"- button \\\"Newest at the bottom\\\"\",\"- link \\\"Bench Admin\\\"\",\"- link \\\"{{*}} {{*}} PM\\\"\",\"- button \\\"Actions\\\"\"] → [\"- button \\\"Show everything\\\"\",\"- button \\\"Newest at the bottom\\\"\",\"- link \\\"{{*}} {{*}} PM\\\"\",\"- button \\\"Actions\\\"\"]"
+   }
+  ]
+ },
+ "revision": 1
+}

@@ -1,0 +1,38 @@
+{
+  "arm": "spec",
+  "runid": "fwop15-cv4-c2",
+  "target": "openproject",
+  "flow": "fwop15-cv4.json",
+  "flowName": "fwop15-cv4",
+  "skillsDir": "/home/user/sitelooper/bench/results/fwop15-cv4-skills",
+  "compiled": true,
+  "flowFile": "bench/results/fwop15-cv4-c2-spec-tmp/fwop15-cv4.flow.ts",
+  "specFile": "bench/results/fwop15-cv4-c2-spec-tmp/fwop15-cv4.spec.ts",
+  "wallMs": 19289,
+  "exitCode": 1,
+  "timedOut": false,
+  "costUsd": 0,
+  "stats": {
+    "total": 1,
+    "passed": 0,
+    "failed": 1,
+    "skipped": 0
+  },
+  "tests": [
+    {
+      "title": "fwop15-cv4",
+      "status": "unexpected",
+      "ok": false,
+      "durationMs": 15228,
+      "error": "Error: 01-open s_fbd2c0/4: the recorded page change did not appear\n\n01-open s_fbd2c0/4: the recorded page change did not appear\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeNull\u001b[2m()\u001b[22m\n\nReceived: \u001b[31m\"after step 01-open s_fbd2c0/4 the page did not show \\\"- dialog \\\\\\\"Welcome to OpenProject, Bench Admin\\\\\\\"\\\" as it did when recorded — the step ran but probably acted on the wrong element\"\u001b[39m\n\nCall Log:\n- Timeout 5000ms exceeded while waiting on the predicate",
+      "drift": []
+    }
+  ],
+  "drift": [],
+  "driftCount": 0,
+  "evidence": [
+    "fwop15-cv4-c2-spec-failure.png",
+    "fwop15-cv4-c2-spec-error-context.md"
+  ],
+  "logTail": "\nRunning 1 test using 1 worker\n\n  ✘  1 fwop15-cv4.spec.ts:9:1 › fwop15-cv4 (15.2s)\n\n\n  1) fwop15-cv4.spec.ts:9:1 › fwop15-cv4 › 01-open: Open http://127.0.0.1:8090/ and sign in with username admin and password {{env:APP_PASSWORD}} (type the password text exactly as given, it will be filled in automatically). Then navigate to the project named 'Bench Project' and list the subjects of all work packages whose subject starts with 'Seed:' exactly as shown on the page. Report those subjects verbatim. \n\n    Error: 01-open s_fbd2c0/4: the recorded page change did not appear\n\n    01-open s_fbd2c0/4: the recorded page change did not appear\n\n    expect(received).toBeNull()\n\n    Received: \"after step 01-open s_fbd2c0/4 the page did not show \\\"- dialog \\\\\\\"Welcome to OpenProject, Bench Admin\\\\\\\"\\\" as it did when recorded — the step ran but probably acted on the wrong element\"\n\n    Call Log:\n    - Timeout 5000ms exceeded while waiting on the predicate\n\n       at fwop15-cv4.flow.ts:15782\n\n      15780 |       { timeout: EXPECT_WAIT_MS, message: `${ctx.tag}: the recorded page change did not appear` },\n      15781 |     )\n    > 15782 |     .toBeNull();\n            |      ^\n      15783 |   for (const warning of last.warnings) console.log(`[sitelooper warn] ${warning}`);\n      15784 |   if (last.unobserved) console.log(`[sitelooper unobserved] ${ctx.tag}: the page could not be captured, or observed in full, after the action`);\n      15785 |   return last;\n        at expectChanges (/home/user/sitelooper/bench/results/fwop15-cv4-c2-spec-tmp/fwop15-cv4.flow.ts:15782:6)\n        at Object.verify (/home/user/sitelooper/bench/results/fwop15-cv4-c2-spec-tmp/fwop15-cv4.flow.ts:16086:36)\n        at runStepLifecycle (/home/user/sitelooper/bench/results/fwop15-cv4-c2-spec-tmp/fwop15-cv4.flow.ts:10871:24)\n        at Object.01-open (/home/user/sitelooper/bench/results/fwop15-cv4-c2-spec-tmp/fwop15-cv4.flow.ts:16047:9)\n        at /home/user/sitelooper/bench/results/fwop15-cv4-c2-spec-tmp/fwop15-cv4.flow.ts:20403:7\n        at runFlow (/home/user/sitelooper/bench/results/fwop15-cv4-c2-spec-tmp/fwop15-cv4.flow.ts:20402:5)\n        at /home/user/sitelooper/bench/results/fwop15-cv4-c2-spec-tmp/fwop15-cv4.spec.ts:14:21\n\n    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────\n    \n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────\n    test-results/fwop15-cv4-fwop15-cv4/test-failed-1.png\n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    Error Context: test-results/fwop15-cv4-fwop15-cv4/error-context.md\n\n  1 failed\n    fwop15-cv4.spec.ts:9:1 › fwop15-cv4 ────────────────────────────────────────────────────────────\n"
+}

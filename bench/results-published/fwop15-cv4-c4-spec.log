@@ -1,0 +1,48 @@
+
+Running 1 test using 1 worker
+
+[sitelooper warn] step 01-open s_5706c1/6: none of the 3 expected page change(s) appeared in the step diff (found on the page instead)
+[sitelooper step] 01-open
+[sitelooper warn] 02-create s_088a5d/2: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear
+[sitelooper warn] 02-create s_46e661/2: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear
+[sitelooper recipe] filled via recipe contenteditable/set-value (r_7b1e49); value verified on the component
+[sitelooper warn] 02-create s_46e661/3: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear
+[sitelooper warn] 02-create s_46e661/4: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear
+[sitelooper warn] 02-create s_46e661/5: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear
+  ✘  1 fwop15-cv4.spec.ts:9:1 › fwop15-cv4 (38.0s)
+
+
+  1) fwop15-cv4.spec.ts:9:1 › fwop15-cv4 › 02-create: In the project 'Bench Project' ({{01-open.project_url}}/bench-project), create a new work package of type Task with subject exactly '{{runid}} Bench Work Package'. Set its description to text that includes '{{runid}}' (e.g. 'Bench work package for run {{runid}}'). Set the Assignee to the user 'Bench Assignee' — this is an autocomplete field, so you must pick the 'Bench Assignee' option from the dropdown that appears, not just type the name. Set the Status to 'In progress'. Set the Finish date to 2026-12-31. Save/create the work package. Then open the created work package's page and report: its numeric ID as displayed (shown like #123), the subject, the assignee shown, the status shown, the finish date shown, and the description text. 
+
+    Error: none of 2 recorded locators resolved at 02-create s_46e661/6 target (page is at http://127.0.0.1:8090/projects/bench-project/work_packages/create_new?query_props=%7B%22c%22%3A%5B%22id%22%2C%22subject%22%2C%22type%22%2C%22status%22%2C%22assignee%22%2C%22priority%22%5D%2C%22hi%22%3Atrue%2C%22g%22%3A%22%22%2C%22is%22%3Atrue%2C%22tv%22%3Afalse%2C%22hla%22%3A%5B%22status%22%2C%22priority%22%2C%22dueDate%22%5D%2C%22t%22%3A%22id%3Aasc%22%2C%22f%22%3A%5B%7B%22n%22%3A%22status%22%2C%22o%22%3A%22*%22%2C%22v%22%3A%5B%5D%7D%2C%7B%22n%22%3A%22subject%22%2C%22o%22%3A%22~%22%2C%22v%22%3A%5B%22Seed%3A%22%5D%7D%5D%2C%22ts%22%3A%22PT0S%22%2C%22pp%22%3A20%2C%22pa%22%3A1%7D&type=1): locator('div > div:nth-of-type(1) > op-editable-attribute-field > div > div:nth-of-type(2) > span') | locator('[data-sitelooper-point="897,189"]')
+
+       at fwop15-cv4.flow.ts:15517
+
+      15515 | /** The stop for a chain that resolved nothing, shared by `pick` and `pickOrNavigate`. */
+      15516 | function pickMiss(page: Page, candidates: CandidateObservation[], where: string, note?: string): Error {
+    > 15517 |   return new Error(
+            |          ^
+      15518 |     // The url and the recorded step are half the answer whenever a chain
+      15519 |     // misses wholesale: a locator that named the control on the day it was
+      15520 |     // recorded usually misses because the page is not the page the step
+        at pickMiss (/home/user/sitelooper/bench/results/fwop15-cv4-c4-spec-tmp/fwop15-cv4.flow.ts:15517:10)
+        at pickOrNavigate (/home/user/sitelooper/bench/results/fwop15-cv4-c4-spec-tmp/fwop15-cv4.flow.ts:15567:9)
+        at Object.act (/home/user/sitelooper/bench/results/fwop15-cv4-c4-spec-tmp/fwop15-cv4.flow.ts:17320:26)
+        at runStepLifecycle (/home/user/sitelooper/bench/results/fwop15-cv4-c4-spec-tmp/fwop15-cv4.flow.ts:10850:18)
+        at Object.02-create (/home/user/sitelooper/bench/results/fwop15-cv4-c4-spec-tmp/fwop15-cv4.flow.ts:17311:9)
+        at /home/user/sitelooper/bench/results/fwop15-cv4-c4-spec-tmp/fwop15-cv4.flow.ts:19985:7
+        at runFlow (/home/user/sitelooper/bench/results/fwop15-cv4-c4-spec-tmp/fwop15-cv4.flow.ts:19984:5)
+        at /home/user/sitelooper/bench/results/fwop15-cv4-c4-spec-tmp/fwop15-cv4.spec.ts:14:21
+
+    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/fwop15-cv4-fwop15-cv4/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/fwop15-cv4-fwop15-cv4/error-context.md
+
+  1 failed
+    fwop15-cv4.spec.ts:9:1 › fwop15-cv4 ────────────────────────────────────────────────────────────

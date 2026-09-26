@@ -1,0 +1,402 @@
+{
+  "tag": "fwop15-cv4",
+  "from": "fwop15",
+  "target": "openproject",
+  "maxRounds": 4,
+  "rerecordRuns": 2,
+  "rounds": [
+    {
+      "k": 1,
+      "compile": {
+        "outcome": "blocked",
+        "refused": true,
+        "codes": [
+          "demoted-pin@01-open"
+        ],
+        "missingOutputs": {},
+        "blockers": [],
+        "steps": [
+          "01-open"
+        ],
+        "flowFile": "/home/user/sitelooper/bench/results/fwop15-cv4-c1-compile/fwop15-cv4.flow.ts",
+        "missing": {}
+      },
+      "rerecords": [
+        {
+          "step": "01-open",
+          "why": "compile refusal",
+          "ok": true,
+          "pinned": "s_fbd2c0",
+          "runs": [
+            {
+              "status": "success",
+              "tier": "B",
+              "turns": 28,
+              "repinned": "s_fbd2c0"
+            },
+            {
+              "status": "success",
+              "tier": "A",
+              "turns": 11,
+              "repinned": null
+            }
+          ],
+          "attempt": 0,
+          "diagnostics": [],
+          "exit": 0,
+          "dry": false
+        }
+      ],
+      "artifact": null,
+      "repair": null
+    },
+    {
+      "k": 2,
+      "compile": {
+        "outcome": "compiled",
+        "refused": false,
+        "codes": [],
+        "missingOutputs": {},
+        "blockers": [],
+        "steps": [],
+        "flowFile": "/home/user/sitelooper/bench/results/fwop15-cv4-c2-compile/fwop15-cv4.flow.ts",
+        "missing": {}
+      },
+      "rerecords": [
+        {
+          "step": "01-open",
+          "why": "repair: needs-rerecord",
+          "ok": true,
+          "pinned": "s_2658f7",
+          "runs": [
+            {
+              "status": "success",
+              "tier": "B",
+              "turns": 23,
+              "repinned": "s_2658f7"
+            },
+            {
+              "status": "success",
+              "tier": "A",
+              "turns": 13,
+              "repinned": null
+            }
+          ],
+          "attempt": 0,
+          "diagnostics": [],
+          "exit": 0,
+          "dry": false
+        }
+      ],
+      "artifact": {
+        "tag": "fwop15-cv4-c2",
+        "exitCode": 1,
+        "stats": {
+          "total": 1,
+          "passed": 0,
+          "failed": 1,
+          "skipped": 0
+        },
+        "driftCount": 0,
+        "verified": "0/5",
+        "failLines": [
+          "  obj 2: FAIL — work package not found",
+          "  obj 3: FAIL — no work package",
+          "  obj 4: FAIL — no work package",
+          "  obj 5: FAIL — no work package",
+          "  obj 6: FAIL — no work package"
+        ],
+        "errors": [
+          "Error: 01-open s_fbd2c0/4: the recorded page change did not appear\n\n01-open s_fbd2c0/4: the recorded page change did not appear\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeNull\u001b[2m()\u001b[22m\n\nReceived: \u001b[31m\"after step 01-open s_fbd2c0/4 the page did not show \\\"- dialog \\\\\\\"Welcome to OpenProject, Bench Admin\\\\\\\"\\\" as it did when recorded — the step ran but probably acted on the wrong element\"\u001b"
+        ],
+        "anchors": [
+          "01-open"
+        ],
+        "driftSites": [],
+        "missing": {},
+        "missingOutputs": {},
+        "passed": false,
+        "dry": false
+      },
+      "repair": {
+        "exit": 1,
+        "outcome": "blocked",
+        "refused": "needs re-record",
+        "converged": false,
+        "specCheck": null,
+        "runs": [
+          {
+            "label": "run 1",
+            "passed": 4,
+            "total": 4,
+            "status": "success",
+            "tickets": 2
+          },
+          {
+            "label": "converge 1/1",
+            "passed": 4,
+            "total": 4,
+            "status": "success",
+            "tickets": 2
+          }
+        ],
+        "needsRerecord": [
+          "01-open"
+        ],
+        "changes": [
+          "01-open: candidate promoted: page.locator('#username') now primary (was #1) — s_fbd2c0 step 2 target",
+          "01-open: candidate promoted: page.locator('#password') now primary (was #1) — s_fbd2c0 step 3 target",
+          "01-open: candidate promoted: page.locator('#project-table tr.basics', { hasText: '{{v4}} Project' }).locator('td:nth-of-type(3) > div > span > a') now primary (was #1) — s_8f596e step 2 target",
+          "01-open: candidate promoted: page.locator('#operators-status') now primary (was #1) — s_3320d2 step 2 target",
+          "01-open: candidate promoted: page.locator('#operators-status') now primary (was #1) — s_3320d2 step 3 target",
+          "02-create: candidate promoted: page.getByRole('button', { name: 'Assignee', exact: true }) now primary (was #1) — s_c0ce44 step 10 target",
+          "03-open: no change",
+          "04-open: candidate promoted: page.locator('tr.wp-table--row', { hasText: '{{v6}} package leaf at level 0. {{v4}}' }).locator('td:nth-of-type(5) > span > span') now primary (was #1) — s_64c04d step 1 target",
+          "04-open: candidate promoted: page.locator('tr.wp-table--row', { hasText: '{{v6}} package leaf at level 0. {{v4}}' }).locator('td:nth-of-type(5) > span > span') now primary (was #1) — s_0f9d6a step 2 target",
+          "04-open: candidate promoted: page.locator('tr.wp-table--row', { hasText: '{{v6}} package leaf at level 0. {{v4}}' }).locator('td:nth-of-type(8) > span > a:nth-of-type(1)') now primary (was #1) — s_36485b step 2 target",
+          "04-open: candidate promoted: page.getByRole('tab', { name: 'Overview', exact: true }) now primary (was #1) — s_36485b step 4 target",
+          "candidate retired: page.getByRole('link', { name: 'ASSIGNEE', exact: true }) — missed 2 run(s), never hit; now last — s_c0ce44 step 10 target",
+          "candidate reordered: page.getByRole('button', { name: 'Assignee', exact: true }) now primary (was #1) on 2 hit(s) — s_c0ce44 step 10 target"
+        ],
+        "repaired": "/home/user/sitelooper/bench/results/fwop15-cv4-c2-compile/fwop15-cv4.flow.ts",
+        "dry": false
+      }
+    },
+    {
+      "k": 3,
+      "compile": {
+        "outcome": "compiled",
+        "refused": false,
+        "codes": [],
+        "missingOutputs": {},
+        "blockers": [],
+        "steps": [],
+        "flowFile": "/home/user/sitelooper/bench/results/fwop15-cv4-c3-compile/fwop15-cv4.flow.ts",
+        "missing": {}
+      },
+      "rerecords": [
+        {
+          "step": "02-create",
+          "why": "repair: needs-rerecord; also named: 03-open, 04-open",
+          "ok": true,
+          "pinned": "s_088a5d",
+          "runs": [
+            {
+              "status": "success",
+              "tier": null,
+              "turns": 43,
+              "repinned": "s_088a5d"
+            },
+            {
+              "status": "success",
+              "tier": "A",
+              "turns": 24,
+              "repinned": null
+            }
+          ],
+          "attempt": 0,
+          "diagnostics": [],
+          "exit": 0,
+          "dry": false
+        }
+      ],
+      "artifact": {
+        "tag": "fwop15-cv4-c3",
+        "exitCode": 1,
+        "stats": {
+          "total": 1,
+          "passed": 0,
+          "failed": 1,
+          "skipped": 0
+        },
+        "driftCount": 0,
+        "verified": "4/5",
+        "failLines": [
+          "  obj 6: FAIL — 0 comment(s), 0 carrying the runid"
+        ],
+        "errors": [
+          "Error: 02-create s_99ac70/18: the recorded page change did not appear\n\n02-create s_99ac70/18: the recorded page change did not appear\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeNull\u001b[2m()\u001b[22m\n\nReceived: \u001b[31m\"after step 02-create s_99ac70/18 the page did not show \\\"- cell \\\\\\\"{{*}} package leaf at level 0. fwop15-cv4-c3 Bench Work Package\\\\\\\"\\\" as it did when recorded — the step ran but pr"
+        ],
+        "anchors": [
+          "02-create"
+        ],
+        "driftSites": [],
+        "missing": {},
+        "missingOutputs": {},
+        "passed": false,
+        "dry": false
+      },
+      "repair": {
+        "exit": 3,
+        "outcome": "not-converged",
+        "refused": null,
+        "converged": false,
+        "specCheck": null,
+        "runs": [
+          {
+            "label": "run 1",
+            "passed": 3,
+            "total": 4,
+            "status": "partial",
+            "tickets": 7
+          },
+          {
+            "label": "converge 1/1",
+            "passed": 3,
+            "total": 4,
+            "status": "partial",
+            "tickets": 7
+          }
+        ],
+        "needsRerecord": [
+          "03-open",
+          "02-create",
+          "04-open"
+        ],
+        "changes": [
+          "01-open: candidate promoted: page.locator('#username') now primary (was #1) — s_2658f7 step 2 target",
+          "01-open: candidate promoted: page.locator('#password') now primary (was #1) — s_2658f7 step 3 target",
+          "01-open: candidate promoted: page.getByRole('link', { name: 'Bench Project', exact: true }) now primary (was #1) — s_ed639e step 1 target",
+          "01-open: candidate promoted: page.locator('div.ng-option', { hasText: 'Subject' }) now primary (was #1) — s_5706c1 step 4 target",
+          "01-open: candidate promoted: page.locator('#operators-status') now primary (was #1) — s_5706c1 step 5 target",
+          "02-create: candidate promoted: page.getByRole('button', { name: 'Assignee', exact: true }) now primary (was #1) — s_c0ce44 step 10 target",
+          "03-open: no change",
+          "04-open: candidate promoted: page.locator('tr.wp-table--row', { hasText: '{{v6}} package leaf at level 0. {{v4}}' }).locator('td:nth-of-type(5) > span > span') now primary (was #1) — s_64c04d step 1 target",
+          "04-open: candidate promoted: page.locator('tr.wp-table--row', { hasText: '{{v6}} package leaf at level 0. {{v4}}' }).locator('td:nth-of-type(5) > span > span') now primary (was #1) — s_0f9d6a step 2 target",
+          "04-open: candidate promoted: page.locator('tr.wp-table--row', { hasText: '{{v6}} package leaf at level 0. {{v4}}' }).locator('td:nth-of-type(8) > span > a:nth-of-type(1)') now primary (was #1) — s_36485b step 2 target",
+          "04-open: candidate promoted: page.getByRole('tab', { name: 'Overview', exact: true }) now primary (was #1) — s_36485b step 4 target",
+          "candidate retired: page.getByRole('link', { name: 'ASSIGNEE', exact: true }) — missed 2 run(s), never hit; now last — s_c0ce44 step 10 target",
+          "candidate reordered: page.getByRole('button', { name: 'Assignee', exact: true }) now primary (was #1) on 2 hit(s) — s_c0ce44 step 10 target",
+          "candidate retired: page.locator('tr.wp-table--row', { hasText: '{{v6}} package leaf at level 0. {{v4}}' }).locator('td:nth-of-type(3) > span:nth-of-type(2) > span') — missed 2 run(s), never hit; now last — s_b2bccf step 4 target",
+          "candidate retired: page.locator('tr.wp-table--row', { hasText: '{{v6}} package leaf at level 0. {{v4}}' }).locator('td:nth-of-type(5) > span > span') — missed 2 run(s), never hit; now last — s_b2bccf step 5 target",
+          "candidate retired: page.locator('tr.wp-table--row', { hasText: '{{v6}} package leaf at level 0. {{v4}}' }).locator('td:nth-of-type(5) > span > span') — missed 2 run(s), never hit; now last — s_b2bccf step 7 target"
+        ],
+        "repaired": "/home/user/sitelooper/bench/results/fwop15-cv4-c3-compile/fwop15-cv4.flow.ts",
+        "dry": false
+      }
+    },
+    {
+      "k": 4,
+      "compile": {
+        "outcome": "compiled",
+        "refused": false,
+        "codes": [],
+        "missingOutputs": {},
+        "blockers": [],
+        "steps": [],
+        "flowFile": "/home/user/sitelooper/bench/results/fwop15-cv4-c4-compile/fwop15-cv4.flow.ts",
+        "missing": {}
+      },
+      "rerecords": [
+        {
+          "step": "02-create",
+          "why": "repair: needs-rerecord; also named: 03-open, 04-open",
+          "ok": false,
+          "pinned": "s_60f94e",
+          "runs": [
+            {
+              "status": "success",
+              "tier": null,
+              "turns": 47,
+              "repinned": "s_60f94e"
+            },
+            {
+              "status": "partial",
+              "tier": "A",
+              "turns": 0,
+              "repinned": null
+            }
+          ],
+          "attempt": 1,
+          "diagnostics": [
+            "needs-rerecord: 02-create did not pass on its last run after re-recording"
+          ],
+          "exit": 1,
+          "dry": false
+        }
+      ],
+      "artifact": {
+        "tag": "fwop15-cv4-c4",
+        "exitCode": 1,
+        "stats": {
+          "total": 1,
+          "passed": 0,
+          "failed": 1,
+          "skipped": 0
+        },
+        "driftCount": 0,
+        "verified": "0/5",
+        "failLines": [
+          "  obj 2: FAIL — work package not found",
+          "  obj 3: FAIL — no work package",
+          "  obj 4: FAIL — no work package",
+          "  obj 5: FAIL — no work package",
+          "  obj 6: FAIL — no work package"
+        ],
+        "errors": [
+          "Error: none of 2 recorded locators resolved at 02-create s_46e661/6 target (page is at http://127.0.0.1:8090/projects/bench-project/work_packages/create_new?query_props=%7B%22c%22%3A%5B%22id%22%2C%22subject%22%2C%22type%22%2C%22status%22%2C%22assignee%22%2C%22priority%22%5D%2C%22hi%22%3Atrue%2C%22g%22%3A%22%22%2C%22is%22%3Atrue%2C%22tv%22%3Afalse%2C%22hla%22%3A%5B%22status%22%2C%22priority%22%2C%2"
+        ],
+        "anchors": [
+          "02-create"
+        ],
+        "driftSites": [],
+        "missing": {},
+        "missingOutputs": {},
+        "passed": false,
+        "dry": false
+      },
+      "repair": {
+        "exit": 3,
+        "outcome": "not-converged",
+        "refused": null,
+        "converged": false,
+        "specCheck": null,
+        "runs": [
+          {
+            "label": "run 1",
+            "passed": 3,
+            "total": 4,
+            "status": "partial",
+            "tickets": 7
+          },
+          {
+            "label": "converge 1/1",
+            "passed": 3,
+            "total": 4,
+            "status": "partial",
+            "tickets": 7
+          }
+        ],
+        "needsRerecord": [
+          "03-open",
+          "04-open"
+        ],
+        "changes": [
+          "01-open: candidate promoted: page.locator('#username') now primary (was #1) — s_2658f7 step 2 target",
+          "01-open: candidate promoted: page.locator('#password') now primary (was #1) — s_2658f7 step 3 target",
+          "01-open: candidate promoted: page.getByRole('link', { name: 'Bench Project', exact: true }) now primary (was #1) — s_ed639e step 1 target",
+          "01-open: candidate promoted: page.locator('div.ng-option', { hasText: 'Subject' }) now primary (was #1) — s_5706c1 step 4 target",
+          "01-open: candidate promoted: page.locator('#operators-status') now primary (was #1) — s_5706c1 step 5 target",
+          "02-create: candidate promoted: page.locator('div.ng-option', { hasText: 'Bench Assignee' }) now primary (was #1) — s_46e661 step 5 target",
+          "03-open: no change",
+          "04-open: candidate promoted: page.locator('tr.wp-table--row', { hasText: '{{v6}} package leaf at level 0. {{v4}}' }).locator('td:nth-of-type(5) > span > span') now primary (was #1) — s_64c04d step 1 target",
+          "04-open: candidate promoted: page.locator('tr.wp-table--row', { hasText: '{{v6}} package leaf at level 0. {{v4}}' }).locator('td:nth-of-type(5) > span > span') now primary (was #1) — s_0f9d6a step 2 target",
+          "04-open: candidate promoted: page.locator('tr.wp-table--row', { hasText: '{{v6}} package leaf at level 0. {{v4}}' }).locator('td:nth-of-type(8) > span > a:nth-of-type(1)') now primary (was #1) — s_36485b step 2 target",
+          "04-open: candidate promoted: page.getByRole('tab', { name: 'Overview', exact: true }) now primary (was #1) — s_36485b step 4 target",
+          "candidate retired: page.locator('div > div:nth-of-type(1) > op-editable-attribute-field > div > div:nth-of-type(2) > span') — missed 2 run(s), never hit; now last — s_46e661 step 6 target",
+          "candidate retired: page.locator('tr.wp-table--row', { hasText: '{{v6}} package leaf at level 0. {{v4}}' }).locator('td:nth-of-type(3) > span:nth-of-type(2) > span') — missed 2 run(s), never hit; now last — s_b2bccf step 4 target",
+          "candidate retired: page.locator('tr.wp-table--row', { hasText: '{{v6}} package leaf at level 0. {{v4}}' }).locator('td:nth-of-type(5) > span > span') — missed 2 run(s), never hit; now last — s_b2bccf step 5 target",
+          "candidate retired: page.locator('tr.wp-table--row', { hasText: '{{v6}} package leaf at level 0. {{v4}}' }).locator('td:nth-of-type(5) > span > span') — missed 2 run(s), never hit; now last — s_b2bccf step 7 target"
+        ],
+        "repaired": "/home/user/sitelooper/bench/results/fwop15-cv4-c4-compile/fwop15-cv4.flow.ts",
+        "dry": false
+      }
+    }
+  ],
+  "verdict": {
+    "status": "exhausted",
+    "why": "4 round(s) without a passing artifact"
+  },
+  "flowRuns": 14,
+  "modelTurns": 189
+}

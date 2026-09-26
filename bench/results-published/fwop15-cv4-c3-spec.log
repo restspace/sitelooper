@@ -1,0 +1,69 @@
+
+Running 1 test using 1 worker
+
+[sitelooper warn] step 01-open s_5706c1/6: none of the 3 expected page change(s) appeared in the step diff (found on the page instead)
+[sitelooper step] 01-open
+[sitelooper warn] 02-create s_e6255e/2: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear
+[sitelooper warn] 02-create s_99ac70/1: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear
+[sitelooper warn] 02-create s_99ac70/2: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear
+[sitelooper warn] 02-create s_99ac70/3: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear
+[sitelooper warn] 02-create s_99ac70/4: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear
+[sitelooper warn] 02-create s_99ac70/5: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear
+[sitelooper warn] 02-create s_99ac70/6: read 'create_form_status' returned a value the skill itself set/selected ('Status New: Edit') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper warn] 02-create s_99ac70/7: read 'type_label' returned 'New' from a control this step set, and nothing committed it since — it shows the control, however the app formats it, not what the app stored; dropped from the report's confident values
+[sitelooper warn] 02-create s_99ac70/8: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear
+[sitelooper warn] 02-create s_99ac70/9: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear
+[sitelooper warn] 02-create s_99ac70/10: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear
+[sitelooper warn] 02-create s_99ac70/11: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear
+[sitelooper warn] 02-create s_99ac70/12: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear
+[sitelooper warn] 02-create s_99ac70/13: read 'create_form_assignee_dis' returned a value the skill itself set/selected ('Bench Assignee
+×') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper warn] 02-create s_99ac70/14: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear
+[sitelooper warn] 02-create s_99ac70/15: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear
+[sitelooper warn] 02-create s_99ac70/16: read 'datepicker_finish_value' returned a value the skill itself set/selected ('2026-12-31') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper warn] 02-create s_99ac70/17: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear
+  ✘  1 fwop15-cv4.spec.ts:9:1 › fwop15-cv4 (1.3m)
+
+
+  1) fwop15-cv4.spec.ts:9:1 › fwop15-cv4 › 02-create: In the project 'Bench Project' ({{01-open.project_url}}/bench-project), create a new work package of type Task with subject exactly '{{runid}} Bench Work Package'. Set its description to text that includes '{{runid}}' (e.g. 'Bench work package for run {{runid}}'). Set the Assignee to the user 'Bench Assignee' — this is an autocomplete field, so you must pick the 'Bench Assignee' option from the dropdown that appears, not just type the name. Set the Status to 'In progress'. Set the Finish date to 2026-12-31. Save/create the work package. Then open the created work package's page and report: its numeric ID as displayed (shown like #123), the subject, the assignee shown, the status shown, the finish date shown, and the description text. 
+
+    Error: 02-create s_99ac70/18: the recorded page change did not appear
+
+    02-create s_99ac70/18: the recorded page change did not appear
+
+    expect(received).toBeNull()
+
+    Received: "after step 02-create s_99ac70/18 the page did not show \"- cell \\\"{{*}} package leaf at level 0. fwop15-cv4-c3 Bench Work Package\\\"\" as it did when recorded — the step ran but probably acted on the wrong element"
+
+    Call Log:
+    - Timeout 5000ms exceeded while waiting on the predicate
+
+       at fwop15-cv4.flow.ts:15933
+
+      15931 |       { timeout: EXPECT_WAIT_MS, message: `${ctx.tag}: the recorded page change did not appear` },
+      15932 |     )
+    > 15933 |     .toBeNull();
+            |      ^
+      15934 |   for (const warning of last.warnings) console.log(`[sitelooper warn] ${warning}`);
+      15935 |   if (last.unobserved) console.log(`[sitelooper unobserved] ${ctx.tag}: the page could not be captured, or observed in full, after the action`);
+      15936 |   return last;
+        at expectChanges (/home/user/sitelooper/bench/results/fwop15-cv4-c3-spec-tmp/fwop15-cv4.flow.ts:15933:6)
+        at Object.verify (/home/user/sitelooper/bench/results/fwop15-cv4-c3-spec-tmp/fwop15-cv4.flow.ts:18244:37)
+        at runStepLifecycle (/home/user/sitelooper/bench/results/fwop15-cv4-c3-spec-tmp/fwop15-cv4.flow.ts:11022:24)
+        at Object.02-create (/home/user/sitelooper/bench/results/fwop15-cv4-c3-spec-tmp/fwop15-cv4.flow.ts:18194:9)
+        at /home/user/sitelooper/bench/results/fwop15-cv4-c3-spec-tmp/fwop15-cv4.flow.ts:20473:7
+        at runFlow (/home/user/sitelooper/bench/results/fwop15-cv4-c3-spec-tmp/fwop15-cv4.flow.ts:20472:5)
+        at /home/user/sitelooper/bench/results/fwop15-cv4-c3-spec-tmp/fwop15-cv4.spec.ts:14:21
+
+    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/fwop15-cv4-fwop15-cv4/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/fwop15-cv4-fwop15-cv4/error-context.md
+
+  1 failed
+    fwop15-cv4.spec.ts:9:1 › fwop15-cv4 ────────────────────────────────────────────────────────────

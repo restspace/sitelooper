@@ -1,0 +1,38 @@
+{
+  "arm": "spec",
+  "runid": "fwop15-cv4-c3",
+  "target": "openproject",
+  "flow": "fwop15-cv4.json",
+  "flowName": "fwop15-cv4",
+  "skillsDir": "/home/user/sitelooper/bench/results/fwop15-cv4-skills",
+  "compiled": true,
+  "flowFile": "bench/results/fwop15-cv4-c3-spec-tmp/fwop15-cv4.flow.ts",
+  "specFile": "bench/results/fwop15-cv4-c3-spec-tmp/fwop15-cv4.spec.ts",
+  "wallMs": 84814,
+  "exitCode": 1,
+  "timedOut": false,
+  "costUsd": 0,
+  "stats": {
+    "total": 1,
+    "passed": 0,
+    "failed": 1,
+    "skipped": 0
+  },
+  "tests": [
+    {
+      "title": "fwop15-cv4",
+      "status": "unexpected",
+      "ok": false,
+      "durationMs": 80385,
+      "error": "Error: 02-create s_99ac70/18: the recorded page change did not appear\n\n02-create s_99ac70/18: the recorded page change did not appear\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeNull\u001b[2m()\u001b[22m\n\nReceived: \u001b[31m\"after step 02-create s_99ac70/18 the page did not show \\\"- cell \\\\\\\"{{*}} package leaf at level 0. fwop15-cv4-c3 Bench Work Package\\\\\\\"\\\" as it did when recorded — the step ran but probably acted on the wrong element\"\u001b[39m\n\nCall Log:\n- Timeout 5000ms exceeded while waiting on the predicate",
+      "drift": []
+    }
+  ],
+  "drift": [],
+  "driftCount": 0,
+  "evidence": [
+    "fwop15-cv4-c3-spec-failure.png",
+    "fwop15-cv4-c3-spec-error-context.md"
+  ],
+  "logTail": "rsistence; dropped from the report's confident values\n[sitelooper warn] 02-create s_99ac70/14: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear\n[sitelooper warn] 02-create s_99ac70/15: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear\n[sitelooper warn] 02-create s_99ac70/16: read 'datepicker_finish_value' returned a value the skill itself set/selected ('2026-12-31') — confirms the control, not persistence; dropped from the report's confident values\n[sitelooper warn] 02-create s_99ac70/17: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear\n  ✘  1 fwop15-cv4.spec.ts:9:1 › fwop15-cv4 (1.3m)\n\n\n  1) fwop15-cv4.spec.ts:9:1 › fwop15-cv4 › 02-create: In the project 'Bench Project' ({{01-open.project_url}}/bench-project), create a new work package of type Task with subject exactly '{{runid}} Bench Work Package'. Set its description to text that includes '{{runid}}' (e.g. 'Bench work package for run {{runid}}'). Set the Assignee to the user 'Bench Assignee' — this is an autocomplete field, so you must pick the 'Bench Assignee' option from the dropdown that appears, not just type the name. Set the Status to 'In progress'. Set the Finish date to 2026-12-31. Save/create the work package. Then open the created work package's page and report: its numeric ID as displayed (shown like #123), the subject, the assignee shown, the status shown, the finish date shown, and the description text. \n\n    Error: 02-create s_99ac70/18: the recorded page change did not appear\n\n    02-create s_99ac70/18: the recorded page change did not appear\n\n    expect(received).toBeNull()\n\n    Received: \"after step 02-create s_99ac70/18 the page did not show \\\"- cell \\\\\\\"{{*}} package leaf at level 0. fwop15-cv4-c3 Bench Work Package\\\\\\\"\\\" as it did when recorded — the step ran but probably acted on the wrong element\"\n\n    Call Log:\n    - Timeout 5000ms exceeded while waiting on the predicate\n\n       at fwop15-cv4.flow.ts:15933\n\n      15931 |       { timeout: EXPECT_WAIT_MS, message: `${ctx.tag}: the recorded page change did not appear` },\n      15932 |     )\n    > 15933 |     .toBeNull();\n            |      ^\n      15934 |   for (const warning of last.warnings) console.log(`[sitelooper warn] ${warning}`);\n      15935 |   if (last.unobserved) console.log(`[sitelooper unobserved] ${ctx.tag}: the page could not be captured, or observed in full, after the action`);\n      15936 |   return last;\n        at expectChanges (/home/user/sitelooper/bench/results/fwop15-cv4-c3-spec-tmp/fwop15-cv4.flow.ts:15933:6)\n        at Object.verify (/home/user/sitelooper/bench/results/fwop15-cv4-c3-spec-tmp/fwop15-cv4.flow.ts:18244:37)\n        at runStepLifecycle (/home/user/sitelooper/bench/results/fwop15-cv4-c3-spec-tmp/fwop15-cv4.flow.ts:11022:24)\n        at Object.02-create (/home/user/sitelooper/bench/results/fwop15-cv4-c3-spec-tmp/fwop15-cv4.flow.ts:18194:9)\n        at /home/user/sitelooper/bench/results/fwop15-cv4-c3-spec-tmp/fwop15-cv4.flow.ts:20473:7\n        at runFlow (/home/user/sitelooper/bench/results/fwop15-cv4-c3-spec-tmp/fwop15-cv4.flow.ts:20472:5)\n        at /home/user/sitelooper/bench/results/fwop15-cv4-c3-spec-tmp/fwop15-cv4.spec.ts:14:21\n\n    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────\n    \n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────\n    test-results/fwop15-cv4-fwop15-cv4/test-failed-1.png\n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    Error Context: test-results/fwop15-cv4-fwop15-cv4/error-context.md\n\n  1 failed\n    fwop15-cv4.spec.ts:9:1 › fwop15-cv4 ────────────────────────────────────────────────────────────\n"
+}
