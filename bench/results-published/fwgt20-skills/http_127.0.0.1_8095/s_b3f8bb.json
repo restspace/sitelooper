@@ -1,0 +1,94 @@
+{
+ "id": "s_b3f8bb",
+ "origin": "http://127.0.0.1:8095",
+ "template": "Final verification, read-only, do not modify anything. Part A: In repository bench/bench-repo, open the Issues tab (open issues) and report the titles of all open issues whose title starts with 'Seed:', verbatim. Part B: Open issue {{v1}} and report verbatim: its title, the issue number as displayed (e.g. #5), the full description text, the exact list of labels in the sidebar, the assignee(s) in the sidebar, the milestone in the sidebar, and the text of every comment on the issue. Report each item as a separate labelled fact.",
+ "params": {
+  "v1": {
+   "example": "http://127.0.0.1:8095/bench/bench-repo/issues/7",
+   "usedIn": [],
+   "known": true,
+   "binding": "06-create.url"
+  },
+  "v2": {
+   "example": "fwgt20-n2",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "a[href=\"/bench/bench-repo/issues\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "a[href=\"/bench/bench-repo/issues\"]"
+     },
+     {
+      "kind": "role",
+      "role": "link",
+      "name": "Issues 5"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(1) > div:nth-of-type(2) > overflow-menu > div > a:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 184,
+      "y": 118,
+      "w": 127.6,
+      "h": 41.1,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues",
+    "addedContains": [
+     "- searchbox \"Search…\"",
+     "- button \"Search…\"",
+     "- link \"Labels\"",
+     "- link \"New Issue\"",
+     "- checkbox \"Check/Uncheck all items\""
+    ],
+    "lineDialect": 2
+   }
+  }
+ ],
+ "contract": 2,
+ "stats": {
+  "uses": 2,
+  "successes": 2,
+  "partial": 0,
+  "created": "2026-09-26T15:23:17.336Z",
+  "failedAtStep": {},
+  "fallthroughs": 2,
+  "verifiedContract": 2,
+  "lastUsed": "2026-09-26T15:25:03.654Z"
+ },
+ "status": "validated",
+ "seq": {
+  "chain": "s_5fc014",
+  "index": 0,
+  "of": 5
+ },
+ "variantOf": "s_adb368",
+ "provenance": {
+  "session": "fwgt20-n2",
+  "instruction": "Final verification, read-only, do not modify anything. Part A: In repository bench/bench-repo, open the Issues tab (open issues) and report the titles of all open issues whose title starts with 'Seed:', verbatim. Part B: Open issue http://127.0.0.1:8095/bench/bench-repo/issues/7 and report verbatim: its title, the issue number as displayed (e.g. #5), the full description text, the exact list of labels in the sidebar, the assignee(s) in the sidebar, the milestone in the sidebar, and the text of every comment on the issue. Report each item as a separate labelled fact.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-26T15:23:17.336Z"
+ },
+ "revision": 2
+}
