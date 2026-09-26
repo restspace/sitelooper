@@ -554,6 +554,22 @@ after that point is invalid, verifies (no model) are not. fwop15-cv2 and fwod88-
 for the top-up.
 
 
+## Round 67 (main de6c0cb5: site facts stage 0 merged — observers and shadow rows, no decision changes) — in progress
+
+Fired 09:24-09:36 UTC 2026-09-26 on the round-66 prompts plus F1-F3 (the facts report, the secret check, observer
+errors). Two boxes finished clean and LOST their results: fwod92 and fwgt18 pushed AFTER the prompt's password grep
+and the box's permission classifier refused the push ("Sensitive-Source Provenance"); fwgr78 ended its turn "to
+wait for the setup notification" and the session went idle. Prompts now publish first and say never to idle;
+fwod93 and fwgr78 re-fired 11:18 UTC.
+
+| round | runid | app | verified | replay model-free | compiled | green | facts | shadow facts.* | notes |
+|---|---|---|---|---|---|---|---|---|---|
+| 67 | fwop21 | op | 7/7 ×3 | n2 yes 8/8; n3 NO: 06-open fell back (10 turns) | FAIL at 06-open s_9c9088/3 (`type` into "Finish date": recorded page change did not appear), drift 2 | no | 39 (25 hard, 35 relied): 21 format (twice/upper/affix), 16 value.class, 1 route.path identity, 1 value.shape ^\d+$ | 63 rows, 0 disagree | a different recording from fwop20 (8 steps, not 4): the date field's in-place edit is the timing class, "the field already held the value this type enters … cleared first"; no observer error |
+| 67 | fwsi18 | si | 7/7 ×3 | NO: 06-open fell back n2 (3 turns) and n3 (5): `s_d5d63a/5 raised an alert the recording never saw: This asset has been deleted` — step 5 is a `goto` to the RECORDED literal `hardware/4` (run 1's asset, deleted by the reset) | FAIL at the same goto, drift 0 | no | 54 (27 hard, 45 relied): 27 format, 24 value.class, route.fragment = anchor HARD n3 (the `#history` fact), route.path identity, value.shape | 84 rows, 1 disagree (facts.ledger: fact identifier (mint hard + shape), heuristic not-identifier — the one-digit asset id the shape floor never admits) | n1 took 16 turns / 15 commands (instructions 3-5: 42/37/32 turns; no hold fired, no observer error); the literal goto is the characters class this round's gitea fix is about (a url the model typed, never threaded) |
+| 67 | fwod92 | od | 6/6 ×3 | yes (0 turns everywhere) | pass (6/6) | **yes** (lost) | file present; count not captured | 47 rows | results died with the box: push refused after the password grep. Verdicts from the run log |
+| 67 | fwgt18 | gt | 7/7 ×3 | n2 NO: 03-set fell back (34 turns, re-pinned s_cc020d); n3 yes | pass, drift 3 (5/7, 2 UNVERIFIABLE) | no (n2) | 18 (11 hard, 17 relied) | 48 rows, 0 disagree | results died with the box (same). First gitea compile PASS since round 63: this 6-step recording had no 08-report and no picker-state report; the label picker still took 34 recovery turns on n2 |
+| 67 | fwgr78 | gr | — | — | — | — | — | — | box idled during setup; re-fired 11:18 UTC |
+
 ## Round 66 (main 357b983e = 37a9390a + prompts): the CONTROL batch on the merged guard fix and fixed driver (hold on), five apps — 2/5 green, 4/5 compiled and passed
 
 Fired 07:33 UTC 2026-09-26, all five at once, as the comparison for the stage-0 site-facts batch that follows
