@@ -1,0 +1,526 @@
+{
+  "name": "fwop24",
+  "origin": "http://127.0.0.1:8090",
+  "startUrl": "http://127.0.0.1:8090/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-signin",
+      "instruction": "Sign in to OpenProject with username 'admin' and password '{{env:APP_PASSWORD}}' (type the password text exactly as given, it will be filled in automatically). Verify you are signed in as admin and report what page you land on.",
+      "skill": "s_9da57d",
+      "params": {
+        "v1": "{{env:APP_PASSWORD}}"
+      },
+      "outputs": [
+        "account_username",
+        "admin_first_name"
+      ],
+      "recorded": {
+        "landing_page": "OpenProject home page (Welcome to OpenProject! / Favorite projects) at http://127.0.0.1:8090/?first_time_user=true",
+        "signed_in_as": "Bench Admin (display name), login username = admin, email admin@example.net",
+        "admin_rights_visible": "User menu contains 'Administration' link",
+        "account_settings_username_value": "admin",
+        "account_username": "Username *",
+        "admin_first_name": "Bench",
+        "admin_last_name": "Admin",
+        "admin_email": "admin@example.net",
+        "url": "http://127.0.0.1:8090/?first_time_user=true"
+      },
+      "route": "http://127.0.0.1:8090/",
+      "outputEvidence": {
+        "landing_page": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "signed_in_as": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "admin_rights_visible": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "account_settings_username_value": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "account_username": {
+          "same": 2,
+          "differed": 0
+        },
+        "admin_first_name": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "admin_last_name": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "admin_email": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "url": {
+          "same": 0,
+          "differed": 2
+        }
+      }
+    },
+    {
+      "id": "02-open",
+      "instruction": "Navigate to the project named '{{01-signin.admin_first_name}} Project' in OpenProject and open its work packages list. Find all work packages whose subject starts with the text 'Seed:' and report each subject EXACTLY as displayed on screen, one per line, in the order shown. Do not modify anything. Also report the total number of work packages currently listed in the project.",
+      "skill": "s_6ccf9f",
+      "params": {},
+      "outputs": [
+        "current_url",
+        "pagination_text",
+        "projects_menu_link",
+        "project_link_bench_project"
+      ],
+      "recorded": {
+        "current_url": "http://127.0.0.1:8090/?first_time_user=true",
+        "pagination_text": "(1 - 3/3)\nYou are on the only page.",
+        "projects_menu_link": "Project",
+        "project_link_bench_project": "Bench Project",
+        "url": "http://127.0.0.1:8090/projects/bench-project/work_packages"
+      },
+      "route": "http://127.0.0.1:8090/projects/bench-project/work_packages",
+      "outputEvidence": {
+        "current_url": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "pagination_text": {
+          "same": 1,
+          "differed": 1
+        },
+        "projects_menu_link": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "project_link_bench_project": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "url": {
+          "same": 2,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "03-create",
+      "instruction": "In the OpenProject project '{{01-signin.admin_first_name}} Project', create a new work package of type 'Task' with subject exactly '{{runid}} {{01-signin.admin_first_name}} Work Package' and a description that includes the text '{{runid}}' (e.g. '{{01-signin.admin_first_name}} work package for run {{runid}}'). Use the Create Work Package button, make sure the Type is set to Task, fill the subject and description, and save/create it. Then report the work package's numeric ID as displayed (OpenProject shows it like #123), its subject, its type, and the description text as shown on the work package page.",
+      "skill": "s_1aee0b",
+      "params": {
+        "v2": "{{01-signin.admin_first_name}} Project",
+        "v5": "{{runid}} {{01-signin.admin_first_name}} Work Package",
+        "v4": "{{runid}}",
+        "v6": "{{01-signin.admin_first_name}} work package for run {{runid}}"
+      },
+      "outputs": [
+        "description_entered",
+        "wp41_type",
+        "wp41_subject",
+        "wp41_id",
+        "ref"
+      ],
+      "recorded": {
+        "description_entered": "Bench work package for run fwop24-n1",
+        "wp41_type": "TASK",
+        "wp41_subject": "fwop24-n1 Bench Work Package",
+        "wp41_priority": "New",
+        "wp41_status_initial": "Normal",
+        "wp41_id": "#41",
+        "ref": "fwop24-n1",
+        "url": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/41/overview",
+        "url.p4": "41"
+      },
+      "route": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:id/overview",
+      "outputEvidence": {
+        "description_entered": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "wp41_type": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "wp41_subject": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "wp41_priority": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "wp41_status_initial": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "wp41_id": {
+          "same": 0,
+          "differed": 2
+        },
+        "ref": {
+          "same": 0,
+          "differed": 2
+        },
+        "url": {
+          "same": 0,
+          "differed": 2
+        },
+        "url.p4": {
+          "same": 0,
+          "differed": 2
+        }
+      }
+    },
+    {
+      "id": "04-open",
+      "instruction": "Open work package {{03-create.wp41_id}} ('{{runid}} {{01-signin.admin_first_name}} Work Package') in the OpenProject project '{{01-signin.admin_first_name}} Project'. Set its Assignee to the user '{{01-signin.admin_first_name}} Assignee'. The assignee field is an autocomplete: click it, type '{{01-signin.admin_first_name}} Assignee', wait for the dropdown of matching users, and actually CLICK the '{{01-signin.admin_first_name}} Assignee' option in the dropdown so it is selected (typing alone does not count). The field saves automatically (inline edit, no Save button). Then verify and report the assignee name now displayed on the work package page.",
+      "skill": "s_f5c500",
+      "params": {
+        "v1": "{{03-create.wp41_id}}",
+        "v3": "{{runid}} {{01-signin.admin_first_name}} Work Package",
+        "v7": "{{01-signin.admin_first_name}} Project",
+        "v5": "{{01-signin.admin_first_name}}",
+        "v2": "{{03-create.url.p4}}",
+        "v4": "{{runid}}"
+      },
+      "outputs": [
+        "assignee_displayed",
+        "assignee_displayed_name"
+      ],
+      "recorded": {
+        "assignee_displayed": "BA\nBench Assignee",
+        "assignee_displayed_name": "Bench Assignee"
+      },
+      "route": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:id/overview",
+      "outputEvidence": {
+        "assignee_displayed": {
+          "same": 1,
+          "differed": 1
+        },
+        "assignee_displayed_name": {
+          "same": 2,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "05-open",
+      "instruction": "Open work package {{03-create.wp41_id}} ('{{runid}} {{01-signin.admin_first_name}} Work Package') in the OpenProject project '{{01-signin.admin_first_name}} Project'. Change its Status to 'In progress' using the inline status field (click the status value, choose 'In progress' from the dropdown, let it save automatically). Then verify and report the status now displayed on the work package page.",
+      "skill": "s_f34ac3",
+      "params": {
+        "v1": "{{03-create.wp41_id}}",
+        "v3": "{{runid}} {{01-signin.admin_first_name}} Work Package",
+        "v7": "{{01-signin.admin_first_name}} Project",
+        "v4": "{{runid}}"
+      },
+      "outputs": [
+        "work_package",
+        "status_displayed",
+        "ref"
+      ],
+      "recorded": {
+        "work_package": "fwop24-n1 Bench Work Package",
+        "status_displayed": "In progress",
+        "ref": "fwop24-n1"
+      },
+      "route": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:id/overview",
+      "outputEvidence": {
+        "work_package": {
+          "same": 0,
+          "differed": 2
+        },
+        "status_displayed": {
+          "same": 1,
+          "differed": 0,
+          "absent": 1
+        },
+        "ref": {
+          "same": 0,
+          "differed": 2
+        }
+      }
+    },
+    {
+      "id": "06-open",
+      "instruction": "Open work package {{03-create.wp41_id}} ('{{runid}} {{01-signin.admin_first_name}} Work Package') in the OpenProject project '{{01-signin.admin_first_name}} Project'. Set its Finish date to 2026-12-31 using the inline date field (click the Finish date field, enter/select the date 2026-12-31, let it save automatically). Then verify and report the finish date now displayed on the work package page.",
+      "skill": "s_ca3976",
+      "params": {
+        "v1": "{{03-create.wp41_id}}",
+        "v3": "{{runid}} {{01-signin.admin_first_name}} Work Package",
+        "v7": "{{01-signin.admin_first_name}} Project",
+        "v4": "{{runid}}"
+      },
+      "outputs": [
+        "finish_date_displayed",
+        "ref"
+      ],
+      "recorded": {
+        "finish_date_displayed": "no start date - 12/31/2026",
+        "ref": "fwop24-n1"
+      },
+      "route": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:id/overview",
+      "outputEvidence": {
+        "finish_date_displayed": {
+          "same": 2,
+          "differed": 0
+        },
+        "ref": {
+          "same": 0,
+          "differed": 2
+        }
+      }
+    },
+    {
+      "id": "07-open",
+      "instruction": "Open work package {{03-create.wp41_id}} ('{{runid}} {{01-signin.admin_first_name}} Work Package') in the OpenProject project '{{01-signin.admin_first_name}} Project'. Add a comment to it whose text includes '{{runid}}' (for example '{{01-signin.admin_first_name}} comment for run {{runid}}'). Use the work package's comments/activity area: click the comment box, type the text, and submit/save the comment. Then verify and report the comment text as it now appears in the work package's activity/comments list.",
+      "skill": "s_bb8830",
+      "params": {
+        "v1": "{{03-create.wp41_id}}",
+        "v3": "{{runid}} {{01-signin.admin_first_name}} Work Package",
+        "v7": "{{01-signin.admin_first_name}} Project",
+        "v4": "{{runid}}",
+        "v8": "{{01-signin.admin_first_name}} comment for run {{runid}}",
+        "v5": "{{01-signin.admin_first_name}}"
+      },
+      "outputs": [
+        "work_package",
+        "comment_text_displayed",
+        "comment_author",
+        "how_submitted",
+        "ref"
+      ],
+      "recorded": {
+        "work_package": "#41 fwop24-n1 Bench Work Package",
+        "comment_text_displayed": "Bench comment for run fwop24-n1",
+        "comment_author": "Bench Admin",
+        "activity_entry_shown": "BA | Bench Admin | created this on | 09/26/2026 07:28 PM | Bench comment for run fwop24-n1",
+        "how_submitted": "clicked the 'Add a comment. Type @ to notify people.' box, typed into the CKEditor textbox, clicked 'Submit comment'",
+        "ref": "fwop24-n1",
+        "url": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/41/activity"
+      },
+      "route": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:id/activity",
+      "outputEvidence": {
+        "work_package": {
+          "same": 0,
+          "differed": 1,
+          "absent": 1
+        },
+        "comment_text_displayed": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "comment_author": {
+          "same": 1,
+          "differed": 0,
+          "absent": 1
+        },
+        "activity_entry_shown": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "how_submitted": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "ref": {
+          "same": 0,
+          "differed": 2
+        },
+        "url": {
+          "same": 0,
+          "differed": 2
+        }
+      }
+    },
+    {
+      "id": "08-open",
+      "instruction": "Open work package {{03-create.wp41_id}} ('{{runid}} {{01-signin.admin_first_name}} Work Package') in the OpenProject project '{{01-signin.admin_first_name}} Project' and read back its details page without changing anything. Report exactly as displayed: (a) the work package ID number, (b) the subject, (c) the type, (d) the description text, (e) the assignee, (f) the status, (g) the finish date, and (h) the text of the comment in the activity list.",
+      "skill": "s_555597",
+      "params": {
+        "v1": "{{03-create.wp41_id}}",
+        "v3": "{{runid}} {{01-signin.admin_first_name}} Work Package",
+        "v7": "{{01-signin.admin_first_name}} Project",
+        "v2": "{{03-create.url.p4}}",
+        "v4": "{{runid}}"
+      },
+      "outputs": [
+        "a_id_number",
+        "b_subject",
+        "c_type",
+        "d_description",
+        "e_assignee",
+        "f_status",
+        "h_comment_text",
+        "other_shown_values",
+        "read_back_url_overview",
+        "additional_shown",
+        "ref",
+        "comment_author_and_time_1",
+        "comment_author_and_time_2",
+        "comment_author_and_time_3"
+      ],
+      "recorded": {
+        "a_id_number": "#41",
+        "b_subject": "fwop24-n1 Bench Work Package",
+        "c_type": "TASK",
+        "d_description": "Bench work package for run fwop24-n1",
+        "e_assignee": "Bench Assignee",
+        "f_status": "In progress",
+        "g_finish_date": "12/31/2026 (shown in the Date field as \"no start date - 12/31/2026\")",
+        "h_comment_text": "Bench comment for run fwop24-n1",
+        "other_shown_values": "Accountable - ; Priority Normal ; Position 4 ; Spent time 0h ; header line \"#41: Created by Bench Admin. Last updated on 09/26/2026 7:31 PM.\"",
+        "read_back_url_overview": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/41/overview",
+        "additional_shown": "Accountable - ; Priority Normal ; Position 4 ; Spent time 0h ; created/updated line \"#41: Created by Bench Admin. Last updated on 09/26/2026 7:31 PM.\"",
+        "ref": "fwop24-n1",
+        "comment_author_and_time_1": "Bench Admin",
+        "comment_author_and_time_2": "created this on",
+        "comment_author_and_time_3": "09/26/2026 07:28 PM"
+      },
+      "route": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:id/activity",
+      "outputEvidence": {
+        "a_id_number": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "b_subject": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "c_type": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "d_description": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "e_assignee": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "f_status": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "g_finish_date": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "h_comment_text": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "other_shown_values": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "read_back_url_overview": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "additional_shown": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "comment_author_and_time_1": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "comment_author_and_time_2": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "comment_author_and_time_3": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "session": "fwop24-n1",
+    "created": "2026-09-26T19:33:11.101Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "01-signin",
+      "outputs": [
+        "landing_page",
+        "signed_in_as",
+        "admin_rights_visible",
+        "account_settings_username_value",
+        "admin_last_name",
+        "admin_email"
+      ]
+    },
+    {
+      "stepId": "03-create",
+      "outputs": [
+        "wp41_priority",
+        "wp41_status_initial"
+      ]
+    },
+    {
+      "stepId": "07-open",
+      "outputs": [
+        "activity_entry_shown"
+      ]
+    },
+    {
+      "stepId": "08-open",
+      "outputs": [
+        "g_finish_date"
+      ]
+    }
+  ]
+}

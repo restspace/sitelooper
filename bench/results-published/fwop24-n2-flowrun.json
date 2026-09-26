@@ -1,0 +1,340 @@
+{
+  "flow": "fwop24",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_57e222; observed account_username=Username *.",
+      "values": {
+        "account_username": "Username *"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "8/8",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_54aff9: step 1: skipped — it closes the dialog \"Welcome to OpenProject, Bench Admin\" with \"Close\", and that dialog is not open this time: already in effect"
+      ],
+      "unreported": [
+        "admin_first_name"
+      ]
+    },
+    {
+      "id": "02-open",
+      "status": "success",
+      "summary": "Signed in as admin (per the replayed stored procedure s_57e222, which confirmed the account username field) and landed on the OpenProject Home page at http://127.0.0.1:8090/. I then opened the project 'Bench Project' (the only project on the Projects page matching the recorded 'Bench' value) and opened its Work packages list via the default \"All open\" view. The list shows 3 work packages in total — pagination reads \"(1 - 3/3) You are on the only page\" — and all 3 subjects start with \"Seed:\": Seed: triage inbox, Seed: order missing parts, Seed: ship repaired device (in that row order, IDs #38, #39, #40). Note: the stored procedure s_b9f244 itself errored/produced no usable output, and while inspecting the view I temporarily deleted the default Status=Open filter (toolbar read \"Filter 1\", then \"Filter 0\" after removal, with no additional rows appearing); I then restored the original default \"All open\" view, so nothing was modified permanently. Two screenshots were captured. (view_restored: default)",
+      "values": {
+        "landing_page": "http://127.0.0.1:8090/ (OpenProject Home)",
+        "signed_in_as": "admin",
+        "project": "Bench Project",
+        "work_packages_url": "http://127.0.0.1:8090/projects/bench-project/work_packages",
+        "total_work_packages_listed": "3",
+        "pagination": "(1 - 3/3) You are on the only page.",
+        "match_1": "Seed: triage inbox",
+        "match_2": "Seed: order missing parts",
+        "match_3": "Seed: ship repaired device",
+        "view_restored": "All open",
+        "work_package_1_row": "38\t\nWork package leaf at level 0.\nSeed: triage inbox\tTASK\tNew\t-\tNormal",
+        "work_package_2_row": "39\t\nWork package leaf at level 0.\nSeed: order missing parts\tTASK\tNew\t-\tNormal",
+        "work_package_3_row": "40\t\nWork package leaf at level 0.\nSeed: ship repaired device\tTASK\tNew\t-\tNormal",
+        "pagination_text": "(1 - 3/3)\nYou are on the only page.",
+        "nav": "Home",
+        "nav_2": "Work packages"
+      },
+      "tier": "B",
+      "recovered": true,
+      "fellBack": "unresolved reference(s): 01-signin.admin_first_name, 01-signin.admin_first_name",
+      "replayed": "2/9",
+      "repaired": true,
+      "turns": 30,
+      "warnings": [
+        "s_b9f244: step 2: recorded url http://127.0.0.1:8090/?first_time_user=true is the page the clicked link left (captured before its navigation committed); the click went where the link points, http://127.0.0.1:8090/projects — accepted"
+      ],
+      "unreported": [
+        "current_url",
+        "projects_menu_link",
+        "project_link_bench_project"
+      ]
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "In project \"Bench Project\" (the project the browser was already on — the instruction's recorded name \"'Bench' Project\" was stale; the live sidebar/breadcrumb read \"Bench Project\") I clicked \"Create new work package\" and, from its Type menu, chose Task, landing on /projects/bench-project/work_packages/create_new?type=1. The form's Type control showed Task; I filled Subject with \"fwop24-n2 'Bench' Work Package\" and the Description editor with \"Bench work package for run fwop24-n2\", then clicked Save. The page reported \"Successful creation.\" and opened the new work package: #42, type Task, subject fwop24-n2 'Bench' Work Package, description shown as \"Bench work package for run fwop24-n2\" (status New, status bar \"#42: Created by Bench Admin\"). Nothing else was modified. Note the created ID is 42, not 41 — the instruction's evidence key was named wp41_id but the number the app assigned is 42.",
+      "values": {
+        "wp41_id": "42",
+        "work_package_id": "42",
+        "work_package_id_displayed": "#42",
+        "subject_as_shown": "fwop24-n2 'Bench' Work Package",
+        "type_as_shown": "Task",
+        "description_as_shown": "Bench work package for run fwop24-n2",
+        "status": "New",
+        "project": "Bench Project",
+        "created_work_package_url": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/42/overview",
+        "save_confirmation": "Successful creation.",
+        "create_form_url": "http://127.0.0.1:8090/projects/bench-project/work_packages/create_new?type=1",
+        "subject_field_value": "fwop24-n2 'Bench' Work Package",
+        "description_editor_text": "Bench work package for run fwop24-n2",
+        "type_button_text": "TASK",
+        "label": "Subject",
+        "label_2": "Description",
+        "label_3": "Work",
+        "button": "Create",
+        "button_2": "Create new work package",
+        "button_3": "Save",
+        "ref": "fwop24-n2",
+        "ref_2": "wp41_id"
+      },
+      "tier": null,
+      "recovered": true,
+      "fellBack": "unresolved reference(s): 01-signin.admin_first_name, 01-signin.admin_first_name, 01-signin.admin_first_name, 01-signin.admin_first_name, 01-signin.admin_first_name, 01-signin.admin_first_name",
+      "replayed": null,
+      "repaired": false,
+      "turns": 19,
+      "unreported": [
+        "wp41_type",
+        "wp41_subject"
+      ]
+    },
+    {
+      "id": "04-open",
+      "status": "success",
+      "summary": "On work package #42 (\"fwop24-n2 'Bench' Work Package\", project Bench Project, at http://127.0.0.1:8090/projects/bench-project/work_packages/details/42/overview) I replayed the matching stored procedure s_f5c500, which clicked the Assignee inline field, typed \"Bench Assignee\", waited for the matching-users dropdown, and clicked the \"Bench Assignee\" option so it was actually selected (not just typed). The page showed the alert \"Successful update.\" and the Assignee cell/button changed from \"-\"/\"Assignee No value: Edit\" to \"Assignee Bench Assignee: Edit\". The assignee now displayed on the work package page is \"Bench Assignee\" (rendered with the avatar initials \"BA\"). Nothing else was modified.",
+      "values": {
+        "assignee_displayed": "BA\nBench Assignee",
+        "assignee_displayed_name": "Bench Assignee",
+        "ref": "fwop24-n2"
+      },
+      "tier": "B",
+      "recovered": true,
+      "fellBack": "unresolved reference(s): 01-signin.admin_first_name, 01-signin.admin_first_name, 01-signin.admin_first_name, 01-signin.admin_first_name, 01-signin.admin_first_name, 01-signin.admin_first_name, 01-signin.admin_first_name, 01-signin.admin_first_name",
+      "replayed": "5/5",
+      "repaired": false,
+      "turns": 3
+    },
+    {
+      "id": "05-open",
+      "status": "success",
+      "summary": "On work package #42 (\"fwop24-n2 'Bench' Work Package\" in project Bench Project, at http://127.0.0.1:8090/projects/bench-project/work_packages/details/42/overview) I replayed the matching stored procedure s_f34ac3: it clicked the inline Status value, selected \"In progress\" from the dropdown, and let the inline edit save automatically. The live DOM diff after the change confirms persistence — the Status cell and inline button changed from \"New\" to \"In progress\" (\"Status New: Edit\" → \"Status In progress: Edit\"). The status now displayed on the work package page is \"In progress\". Nothing else was modified.",
+      "values": {
+        "work_package": "fwop24-n2 'Bench' Work Package",
+        "work_packages_details_ar": "In progress",
+        "ref": "fwop24-n2"
+      },
+      "tier": "B",
+      "recovered": true,
+      "fellBack": "unresolved reference(s): 01-signin.admin_first_name, 01-signin.admin_first_name, 01-signin.admin_first_name, 01-signin.admin_first_name",
+      "replayed": "4/4",
+      "repaired": false,
+      "turns": 4,
+      "warnings": [
+        "s_f34ac3: step 1: url segment(s) differ from recorded (41→42) — treated as volatile",
+        "s_f34ac3: step 2: url segment(s) differ from recorded (41→42) — treated as volatile",
+        "s_f34ac3: step 3: read 'status_displayed' returned a value the skill itself set/selected ('In progress') — confirms the control, not persistence; dropped from the report's confident values"
+      ],
+      "unreported": [
+        "status_displayed"
+      ]
+    },
+    {
+      "id": "06-open",
+      "status": "success",
+      "summary": "On work package #42 (\"fwop24-n2 'Bench' Work Package\" in project Bench Project, at http://127.0.0.1:8090/projects/bench-project/work_packages/details/42/overview) I replayed the matching stored procedure s_ca3976 (4/4 steps ok): it clicked the inline date field, entered 2026-12-31, and let the inline edit save automatically. The date field in the work package's Details panel now displays \"no start date - 12/31/2026\", i.e. the Finish date is set to 12/31/2026 with no start date, confirmed by a fresh snapshot of the details panel. Nothing else was modified.",
+      "values": {
+        "finish_date_displayed": "no start date - 12/31/2026",
+        "ref": "fwop24-n2"
+      },
+      "tier": "B",
+      "recovered": true,
+      "fellBack": "unresolved reference(s): 01-signin.admin_first_name, 01-signin.admin_first_name, 01-signin.admin_first_name, 01-signin.admin_first_name",
+      "replayed": "4/4",
+      "repaired": false,
+      "turns": 8,
+      "warnings": [
+        "s_ca3976: step 1: url segment(s) differ from recorded (41→42) — treated as volatile",
+        "s_ca3976: step 2: url segment(s) differ from recorded (41→42) — treated as volatile",
+        "s_ca3976: step 3: url segment(s) differ from recorded (41→42) — treated as volatile"
+      ]
+    },
+    {
+      "id": "07-open",
+      "status": "success",
+      "summary": "On work package #42 (\"fwop24-n2 'Bench' Work Package\" in project Bench Project) I replayed the matching stored procedure s_bb8830, which opened the Activity tab. I then clicked the \"Add a comment. Type @ to notify people.\" box, entered the text \"Bench comment for run fwop24-n2\" into the rich-text comment editor (value verified on the component, Submit comment became enabled), and clicked \"Submit comment\". The editor collapsed and a fresh snapshot of the activity panel shows the posted entry under the current time: author \"Bench Admin\", attributed \"commented … created this on 09/26/2026 07:37 PM\", with the comment body paragraph reading exactly \"Bench comment for run fwop24-n2\" (anchored at #comment-64). Nothing else was modified.",
+      "values": {
+        "comment_box_text": "Bench comment for run fwop24-n2",
+        "ref": "fwop24-n2",
+        "ref_3": "comment-64"
+      },
+      "tier": "B",
+      "recovered": true,
+      "fellBack": "unresolved reference(s): 01-signin.admin_first_name, 01-signin.admin_first_name, 01-signin.admin_first_name, 01-signin.admin_first_name, 01-signin.admin_first_name, 01-signin.admin_first_name, 01-signin.admin_first_name",
+      "replayed": "1/1",
+      "repaired": false,
+      "turns": 13,
+      "warnings": [
+        "s_bb8830: step 1: url segment(s) differ from recorded (41→42) — treated as volatile"
+      ],
+      "unreported": [
+        "work_package",
+        "comment_text_displayed",
+        "comment_author"
+      ]
+    },
+    {
+      "id": "08-open",
+      "status": "success",
+      "summary": "Read-only readback of work package 42 in Bench Project (http://127.0.0.1:8090/projects/bench-project/work_packages/details/42/overview). Replayed skill s_555597 and then read each field off the live page: (a) ID: the work package link displays \"42\" (page/browser title shows \"(#42)\") — 42; (b) Subject: fwop24-n2 'Bench' Work Package; (c) Type: Task; (d) Description: Bench work package for run fwop24-n2; (e) Assignee: Bench Assignee; (f) Status: In progress; (g) Date: the date field displays \"no start date - 12/31/2026\" (i.e. Finish date 12/31/2026, no start date); (h) comment in the Activity list: \"Bench comment for run fwop24-n2\". Only tab switching (Overview/Activity) was done — no values were changed.",
+      "values": {
+        "work_package_id_displaye": "42",
+        "wp_id_with_prefix": "42",
+        "date_field_display": "no start date - 12/31/2026",
+        "work_packages_details_co": "Assignee",
+        "work_packages_details_co_2": "Work",
+        "work_packages_details_co_3": "Date",
+        "work_packages_details_co_4": "In progress",
+        "role_button_name_descrip": "Bench work package for run fwop24-n2",
+        "role_button_name_subject": "fwop24-n2 'Bench' Work Package",
+        "ref_2": "fwop24-n2"
+      },
+      "tier": "B",
+      "recovered": true,
+      "fellBack": "unresolved reference(s): 01-signin.admin_first_name, 01-signin.admin_first_name, 01-signin.admin_first_name, 01-signin.admin_first_name",
+      "replayed": "1/1",
+      "repaired": false,
+      "turns": 21,
+      "unreported": [
+        "a_id_number",
+        "b_subject",
+        "c_type",
+        "e_assignee",
+        "f_status",
+        "h_comment_text",
+        "other_shown_values",
+        "read_back_url_overview",
+        "additional_shown",
+        "ref",
+        "comment_author_and_time_1",
+        "comment_author_and_time_2",
+        "comment_author_and_time_3"
+      ]
+    }
+  ],
+  "passed": 8,
+  "total": 8,
+  "repinned": 0,
+  "drift": 7,
+  "driftTickets": [
+    {
+      "flow": "fwop24",
+      "step": "01-signin",
+      "skill": "s_54aff9",
+      "atStep": "1",
+      "key": "target",
+      "similarity": 0.987,
+      "missedLocator": "page.locator('role=button[name=\"Close\"]')",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8090/",
+      "pageUrl": "http://127.0.0.1:8090/"
+    },
+    {
+      "flow": "fwop24",
+      "step": "02-open",
+      "skill": "s_b9f244",
+      "similarity": 0.952,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "unresolved reference(s): 01-signin.admin_first_name, 01-signin.admin_first_name",
+      "reason": "after step 3 expected url http://127.0.0.1:8090/?first_time_user=true but browser is at http://127.0.0.1:8090/projects",
+      "pageUrlPattern": "http://127.0.0.1:8090/projects",
+      "pageUrl": "http://127.0.0.1:8090/projects"
+    },
+    {
+      "flow": "fwop24",
+      "step": "04-open",
+      "skill": "s_f5c500",
+      "similarity": 0.997,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "unresolved reference(s): 01-signin.admin_first_name, 01-signin.admin_first_name, 01-signin.admin_first_name, 01-signin.admin_first_name, 01-signin.admin_first_name, 01-signin.admin_first_name, 01-signin.admin_first_name, 01-signin.admin_first_name",
+      "pageUrlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:id/overview",
+      "pageUrl": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/42/overview"
+    },
+    {
+      "flow": "fwop24",
+      "step": "05-open",
+      "skill": "s_f34ac3",
+      "similarity": 0.996,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "unresolved reference(s): 01-signin.admin_first_name, 01-signin.admin_first_name, 01-signin.admin_first_name, 01-signin.admin_first_name",
+      "pageUrlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:id/overview",
+      "pageUrl": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/42/overview"
+    },
+    {
+      "flow": "fwop24",
+      "step": "06-open",
+      "skill": "s_ca3976",
+      "similarity": 0.996,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "unresolved reference(s): 01-signin.admin_first_name, 01-signin.admin_first_name, 01-signin.admin_first_name, 01-signin.admin_first_name",
+      "pageUrlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:id/overview",
+      "pageUrl": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/42/overview"
+    },
+    {
+      "flow": "fwop24",
+      "step": "07-open",
+      "skill": "s_bb8830",
+      "similarity": 0.996,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "unresolved reference(s): 01-signin.admin_first_name, 01-signin.admin_first_name, 01-signin.admin_first_name, 01-signin.admin_first_name, 01-signin.admin_first_name, 01-signin.admin_first_name, 01-signin.admin_first_name",
+      "pageUrlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:id/activity",
+      "pageUrl": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/42/activity"
+    },
+    {
+      "flow": "fwop24",
+      "step": "08-open",
+      "skill": "s_555597",
+      "similarity": 0.996,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "unresolved reference(s): 01-signin.admin_first_name, 01-signin.admin_first_name, 01-signin.admin_first_name, 01-signin.admin_first_name",
+      "pageUrlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:id/overview",
+      "pageUrl": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/42/overview"
+    }
+  ],
+  "wallMs": 486850,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 2711378,
+    "completionTokens": 49024,
+    "cachedTokens": 2526848
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 2711378,
+      "completionTokens": 49024,
+      "cachedTokens": 2526848
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}
