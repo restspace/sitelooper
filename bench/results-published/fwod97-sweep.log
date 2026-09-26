@@ -1,0 +1,111 @@
+
+[sweep] run 1/3: fwod97-n1 (store: /home/user/sitelooper/bench/results/fwod97-skills)
+[harness] odoo: defaulting APP_URL
+[harness] odoo: defaulting APP_EMAIL
+[harness] odoo: defaulting APP_PASSWORD
+[reset] odoo: no leftover bench customers
+[harness] odoo responded 303 at http://127.0.0.1:8069/
+stopped: fwod97-n1
+  flow "fwod97" saved: 6 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwod97.json
+  warning: note: dropped 1 locator candidate(s) carrying a value this run minted (known only by export time)
+  warning: note: 6 goal/report value(s) carrying a value this run made were slotted or dropped:
+  s_402b63.reportTemplate.values.sale_order_id dropped (recorded literal of a value this run made)
+  s_402b63.reportTemplate.summary dropped (narrates a value this run made)
+  s_44e419.reportTemplate.values.untaxed_amount dropped (recorded literal of a value this run made)
+  s_44e419.reportTemplate.summary dropped (narrates a value this run made)
+  s_456f51.reportTemplate.summary dropped (narrates a value this run made)
+  s_80235c.reportTemplate.values.sale_order_id dropped (recorded literal of a value this run made)
+  warning: note: 01-open no longer publishes record_model — no replay reads it from the page and the recording showed no line to read
+  warning: warning: 02-create's instruction asks to report untaxed_amount, and no replay can publish it: nothing in its procedure reads it from the page, so export dropped it — re-record the step so the value is read, not only reported
+  warning: note: 02-create no longer publishes untaxed_amount_value — no replay reads it from the page and the recording showed no line to read
+  warning: note: 03-add no longer publishes line_count, ref_2, ref_3 — no replay reads them from the page and the recording showed no line to read
+  warning: note: 05-report no longer publishes sale_order_id, o_statusbar_status_butto — no replay reads them from the page and the recording showed no line to read
+  warning: note: 06-report no longer publishes sale_order_id — no replay reads it from the page and the recording showed no line to read
+  warning: warning: 138 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[0].instruction: "Benchville" (output) in "Open http://127.0.0.1:8069/ and sign in with username admin and password {{env:APP_PASSWORD}}. Once signed in, create a new customer (contact) named '{{runid}} "
+  flow.steps[0].params.v6: "Benchville" (output) in "Benchville"
+  flow.steps[0].route: "res.partner" (output) in "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=res.partner&view_type=form"
+  flow.steps[4].instruction: "Sales Order" (output) in "On the Odoo quotation {{02-create.quotation_reference}} (customer {{runid}} Bench Customer, untaxed amount {{04-change.untaxed_amount}}), confirm the quotation "
+  flow.steps[5].instruction: "Sales Order" (output) in "On the confirmed Odoo sales order {{02-create.quotation_reference}} (customer {{runid}} Bench Customer, status 'Sales Order'), cancel the order (click the Cance"
+arm=sitelooper model=z-ai/glm-5.3 runid=fwod97-n1 stop=completed
+turns=7 wall=539.1s
+commands=6 cmdTime=498.8s cmdBytes=7629 timeouts=0
+orchestrator in=10642 cw=0 cr=19968 out=3960
+inner prompt=2462701 cached=2223680 completion=33905
+spend=$0.2443 maxUsd=3
+learn: A_n=0 replayed=0/6 full=0 repaired=0 compiled=6 variants=0
+-> /home/user/sitelooper/bench/results/fwod97-n1-sitelooper-result.json
+
+fwod97-n1: objectives passed 6/6
+  obj 1: PASS — city="Benchville"
+  obj 2: PASS — orders for customer: 1, lines: 2
+  obj 3: PASS — 2 lines, 2 distinct products
+  obj 4: PASS — quantities: 5, 2
+  obj 5: PASS — state tracking shows confirmation
+  obj 6: PASS — final state=cancel, ref=S00021
+
+[sweep] run 2/3: fwod97-n2 (replay flow fwod97, no orchestrator)
+[reset] odoo: deleted 1 leftover bench order(s)
+[reset] odoo: deleted 1 leftover bench customer(s)
+
+fwod97-n2: objectives passed 6/6
+  obj 1: PASS — city="Benchville"
+  obj 2: PASS — orders for customer: 1, lines: 2
+  obj 3: PASS — 2 lines, 2 distinct products
+  obj 4: PASS — quantities: 5, 2
+  obj 5: PASS — state tracking shows confirmation
+  obj 6: PASS — final state=cancel, ref=S00022
+
+[sweep] run 3/3: fwod97-n3 (replay flow fwod97, no orchestrator)
+[reset] odoo: deleted 1 leftover bench order(s)
+[reset] odoo: deleted 1 leftover bench customer(s)
+
+fwod97-n3: objectives passed 6/6
+  obj 1: PASS — city="Benchville"
+  obj 2: PASS — orders for customer: 1, lines: 2
+  obj 3: PASS — 2 lines, 2 distinct products
+  obj 4: PASS — quantities: 5, 2
+  obj 5: PASS — state tracking shows confirmation
+  obj 6: PASS — final state=cancel, ref=S00023
+
+Learning sweep fwod97 (K=3)
+┌─────────┬───┬─────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid       │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼─────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwod97-n1' │ '6/6'    │ 'completed' │ 7     │ 6    │ 0.2443    │ 0   │ '0/6'        │ 539    │
+│ 1       │ 2 │ 'fwod97-n2' │ '6/6'    │ 'success'   │ 0     │ 6    │ 0         │ 1   │ '6/6 (flow)' │ 208    │
+│ 2       │ 3 │ 'fwod97-n3' │ '6/6'    │ 'success'   │ 0     │ 6    │ 0         │ 1   │ '6/6 (flow)' │ 208    │
+└─────────┴───┴─────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:8069
+  s_10c484  validated    1 steps  3/3 (100%)
+           Open {{v2}} and sign in with username {{v3}} and password {{v4}}. Once signed in, create a new customer (conta…
+  s_2ac059  validated   21 steps  3/3 (100%)
+           In Odoo, go to the Sales app and create a new quotation (RFQ/sales order) for the customer '{{v1}}' (choose th…
+  s_3b2ac4  validated    3 steps  3/3 (100%)
+           Open {{v2}} and sign in with username {{v3}} and password {{v4}}. Once signed in, create a new customer (conta…
+  s_402b63  validated    6 steps  3/3 (100%)
+           On the Odoo quotation {{v1}} (customer {{v2}}, untaxed amount {{v4}}), confirm the quotation so it becomes a s…
+  s_44e419  validated   33 steps  3/3 (100%)
+           On the Odoo quotation {{v1}} (customer {{v2}}) which has two order lines, change the quantity of the FIRST lin…
+  s_456f51  validated    3 steps  3/3 (100%)
+           Open {{v2}} and sign in with username {{v3}} and password {{v4}}. Once signed in, create a new customer (conta…
+  s_793c28  validated    2 steps  3/3 (100%)
+           In Odoo, go to the Sales app and create a new quotation (RFQ/sales order) for the customer '{{v1}}' (choose th…
+  s_80235c  validated   13 steps  3/3 (100%)
+           On the confirmed Odoo sales order {{v1}} (customer {{v2}}, status '{{v4}}'), cancel the order (click the Cance…
+  s_8755d5  validated   37 steps  3/3 (100%)
+           On the existing Odoo quotation {{v1}} (customer {{v2}}), which currently has one order line for '{{v4}}' quant…
+  s_9280f7  validated    1 steps  3/3 (100%)
+           In Odoo, go to the Sales app and create a new quotation (RFQ/sales order) for the customer '{{v1}}' (choose th…
+  s_ad7d51  validated    3 steps  3/3 (100%)
+           Open {{v2}} and sign in with username {{v3}} and password {{v4}}. Once signed in, create a new customer (conta…
+  s_c1fb1c  validated    2 steps  3/3 (100%)
+           Open {{v2}} and sign in with username {{v3}} and password {{v4}}. Once signed in, create a new customer (conta…
+  s_f8725b  validated   11 steps  3/3 (100%)
+           In Odoo, go to the Sales app and create a new quotation (RFQ/sales order) for the customer '{{v1}}' (choose th…
+  s_feee6b  validated    1 steps  3/3 (100%)
+           Open {{v2}} and sign in with username {{v3}} and password {{v4}}. Once signed in, create a new customer (conta…
+store: /home/user/sitelooper/bench/results/fwod97-skills
+
+summary: /home/user/sitelooper/bench/results/fwod97-sweep.json
+SWEEP_EXIT=0
