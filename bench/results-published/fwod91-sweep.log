@@ -1,0 +1,111 @@
+
+[sweep] run 1/3: fwod91-n1 (store: /home/user/sitelooper/bench/results/fwod91-skills)
+[harness] odoo: defaulting APP_URL
+[harness] odoo: defaulting APP_EMAIL
+[harness] odoo: defaulting APP_PASSWORD
+[reset] odoo: no leftover bench customers
+[harness] odoo responded 303 at http://127.0.0.1:8069/
+stopped: fwod91-n1
+  flow "fwod91" saved: 7 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwod91.json
+  warning: note: 5 goal/report value(s) carrying a value this run made were slotted or dropped:
+  s_67dbd6.reportTemplate.summary slotted "21" → {{v7}}
+  s_b60b88.reportTemplate.summary slotted "21" → {{v8}}
+  s_b95107.reportTemplate.summary dropped (narrates a value this run made)
+  s_e7e5fc.reportTemplate.summary slotted "21" → {{v8}}
+  s_f55137.reportTemplate.summary dropped (narrates a value this run made)
+  warning: warning: 01-open's instruction asks to report screen, and no replay can publish it: nothing in its procedure reads it from the page, so export dropped it — re-record the step so the value is read, not only reported
+  warning: warning: 03-create's instruction asks to report untaxed_amount, and no replay can publish it: nothing in its procedure reads it from the page, so export dropped it — re-record the step so the value is read, not only reported
+  warning: note: 03-create no longer publishes line_tax_excl, order_line_count, ref_2 — no replay reads them from the page and the recording showed no line to read
+  warning: note: 04-open no longer publishes order_line_count, line1_taxes, ref_2 — no replay reads them from the page and the recording showed no line to read
+  warning: note: 05-open no longer publishes order_line_count, ref — no replay reads them from the page and the recording showed no line to read
+  warning: note: 06-open no longer publishes new_buttons_after_confirm — no replay reads it from the page and the recording showed no line to read
+  warning: note: 07-open no longer publishes statusbar_stage_quotation — no replay reads it from the page and the recording showed no line to read
+  warning: warning: 170 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[1].instruction: "Benchville" (output) in "In Odoo, go to the Contacts app (Sales > Contacts or the Contacts menu) and create a new contact/company record with Name exactly '{{runid}} Bench Customer' and"
+  flow.steps[1].params.v3: "Benchville" (output) in "Benchville"
+  flow.steps[2].instruction: "Untaxed Amount" (output) in "In Odoo, go to the Sales app and create a new quotation (Sales > Orders > Quotations > {{02-create.new_button_label}}). Set the Customer to '{{runid}} Bench Cus"
+  flow.steps[2].instruction: "Quotations" (output) in "In Odoo, go to the Sales app and create a new quotation (Sales > Orders > Quotations > {{02-create.new_button_label}}). Set the Customer to '{{runid}} Bench Cus"
+  flow.steps[3].instruction: "Untaxed Amount" (output) in "In Odoo, open the existing quotation {{03-create.quotation_reference}} (customer '{{runid}} Bench Customer', one line: {{03-create.product}} qty 3). Add a SECON"
+arm=sitelooper model=z-ai/glm-5.3 runid=fwod91-n1 stop=completed
+turns=8 wall=297.1s
+commands=7 cmdTime=262.1s cmdBytes=9322 timeouts=0
+orchestrator in=5714 cw=0 cr=30912 out=3764
+inner prompt=1837662 cached=1696768 completion=20542
+spend=$0.0716 maxUsd=3
+learn: A_n=0 replayed=0/7 full=0 repaired=0 compiled=7 variants=0
+-> /home/user/sitelooper/bench/results/fwod91-n1-sitelooper-result.json
+
+fwod91-n1: objectives passed 6/6
+  obj 1: PASS — city="Benchville"
+  obj 2: PASS — orders for customer: 1, lines: 2
+  obj 3: PASS — 2 lines, 2 distinct products
+  obj 4: PASS — quantities: 5, 2
+  obj 5: PASS — state tracking shows confirmation
+  obj 6: PASS — final state=cancel, ref=S00021
+
+[sweep] run 2/3: fwod91-n2 (replay flow fwod91, no orchestrator)
+[reset] odoo: deleted 1 leftover bench order(s)
+[reset] odoo: deleted 1 leftover bench customer(s)
+
+fwod91-n2: objectives passed 6/6
+  obj 1: PASS — city="Benchville"
+  obj 2: PASS — orders for customer: 1, lines: 2
+  obj 3: PASS — 2 lines, 2 distinct products
+  obj 4: PASS — quantities: 5, 2
+  obj 5: PASS — state tracking shows confirmation
+  obj 6: PASS — final state=cancel, ref=S00022
+
+[sweep] run 3/3: fwod91-n3 (replay flow fwod91, no orchestrator)
+[reset] odoo: deleted 1 leftover bench order(s)
+[reset] odoo: deleted 1 leftover bench customer(s)
+
+fwod91-n3: objectives passed 6/6
+  obj 1: PASS — city="Benchville"
+  obj 2: PASS — orders for customer: 1, lines: 2
+  obj 3: PASS — 2 lines, 2 distinct products
+  obj 4: PASS — quantities: 5, 2
+  obj 5: PASS — state tracking shows confirmation
+  obj 6: PASS — final state=cancel, ref=S00023
+
+Learning sweep fwod91 (K=3)
+┌─────────┬───┬─────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid       │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼─────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwod91-n1' │ '6/6'    │ 'completed' │ 8     │ 7    │ 0.0716    │ 0   │ '0/7'        │ 297    │
+│ 1       │ 2 │ 'fwod91-n2' │ '6/6'    │ 'success'   │ 0     │ 7    │ 0         │ 1   │ '7/7 (flow)' │ 105    │
+│ 2       │ 3 │ 'fwod91-n3' │ '6/6'    │ 'success'   │ 0     │ 7    │ 0         │ 1   │ '7/7 (flow)' │ 105    │
+└─────────┴───┴─────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:8069
+  s_1d5b09  validated    5 steps  3/3 (100%)
+           Open {{v1}} in the browser. If a login page appears, sign in with username {{v2}} and password {{v3}} (type th…
+  s_3736d0  validated   11 steps  3/3 (100%)
+           In Odoo, open the confirmed sales order {{v1}} (customer '{{v2}}', status '{{v4}}'). Cancel the order using th…
+  s_41620d  validated    3 steps  3/3 (100%)
+           Open {{v1}} in the browser. If a login page appears, sign in with username {{v2}} and password {{v3}} (type th…
+  s_46a279  validated    1 steps  3/3 (100%)
+           In Odoo, go to the Sales app and create a new quotation (Sales > Orders > Quotations > {{v1}}). Set the Custom…
+  s_60c34a  validated    2 steps  3/3 (100%)
+           In Odoo, go to the Contacts app (Sales > Contacts or the Contacts menu) and create a new contact/company recor…
+  s_67dbd6  validated   29 steps  3/3 (100%)
+           In Odoo, open the existing quotation {{v1}} (customer '{{v2}}', one line: {{v4}} qty 3). Add a SECOND order li…
+  s_69b312  validated    3 steps  3/3 (100%)
+           In Odoo, go to the Contacts app (Sales > Contacts or the Contacts menu) and create a new contact/company recor…
+  s_8282ad  validated    1 steps  3/3 (100%)
+           Open {{v1}} in the browser. If a login page appears, sign in with username {{v2}} and password {{v3}} (type th…
+  s_971404  validated   13 steps  3/3 (100%)
+           In Odoo, go to the Sales app and create a new quotation (Sales > Orders > Quotations > {{v1}}). Set the Custom…
+  s_a0dcbe  validated    1 steps  3/3 (100%)
+           In Odoo, go to the Contacts app (Sales > Contacts or the Contacts menu) and create a new contact/company recor…
+  s_b60b88  validated   30 steps  3/3 (100%)
+           In Odoo, open the existing quotation {{v1}} (customer '{{v2}}', two lines: {{v4}} qty 3, and {{v6}} qty 2). Ch…
+  s_b95107  validated   20 steps  3/3 (100%)
+           In Odoo, go to the Sales app and create a new quotation (Sales > Orders > Quotations > {{v1}}). Set the Custom…
+  s_e7e5fc  validated   13 steps  3/3 (100%)
+           In Odoo, open the existing quotation {{v1}} (customer '{{v2}}', two lines: {{v4}} qty 5, and {{v6}} qty 2, {{v…
+  s_eddd18  validated    2 steps  3/3 (100%)
+           In Odoo, go to the Sales app and create a new quotation (Sales > Orders > Quotations > {{v1}}). Set the Custom…
+  s_f55137  validated    7 steps  3/3 (100%)
+           In Odoo, go to the Contacts app (Sales > Contacts or the Contacts menu) and create a new contact/company recor…
+store: /home/user/sitelooper/bench/results/fwod91-skills
+
+summary: /home/user/sitelooper/bench/results/fwod91-sweep.json
