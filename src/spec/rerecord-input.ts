@@ -5,8 +5,9 @@ import { loadFlowFile, saveFlow, type Flow } from '../skills/flow.js';
 import { SkillStore, skillsDir as globalSkillsDir, type Skill } from '../skills/store.js';
 import { compilerProvenance, exportFlowBundle, isFlowBundle, loadFlowBundle } from './bundle.js';
 import { emitFlowFile } from './emit.js';
-import { carryFingerprints, carryRecipeSnapshot, flowToSpec, type SpecFlow } from './ir.js';
+import { carryFactSnapshot, carryFingerprints, carryRecipeSnapshot, flowToSpec, type SpecFlow } from './ir.js';
 import { ComponentStore } from '../skills/components.js';
+import { SiteFactStore, siteFactStore } from '../skills/facts.js';
 import type { Diagnostic } from './diagnostics.js';
 import { liftFlowFile } from './lift.js';
 import { specToFlow } from './lower.js';
@@ -136,13 +137,15 @@ function stagedFlow(staged: StagedRerecordInput): Flow {
  * `diagnostics` what the store holds that the snapshot cannot express
  * (carryRecipeSnapshot). Each segment's page fingerprint is carried from the
  * file unless the skill the run used recorded a different one, with a change
- * line when it moved (carryFingerprints).
+ * line when it moved (carryFingerprints). The site facts are refreshed from
+ * the live store (carryFactSnapshot), with one line when any origin moved.
  */
 export function persistRerecordInput(
   input: RerecordInput,
   staged: StagedRerecordInput,
   success: boolean,
   components: ComponentStore = new ComponentStore(),
+  facts: SiteFactStore = siteFactStore(),
 ): { file: string; wrote: boolean; recipeChanges?: string[]; diagnostics?: Diagnostic[] } {
   if (input.kind === 'flow') return { file: input.file, wrote: false };
   if (!success) return { file: input.file, wrote: false };
@@ -156,6 +159,9 @@ export function persistRerecordInput(
   const { spec, diagnostics } = flowToSpec(flow, staged.store, { flowFile: input.file });
   const carried = carryRecipeSnapshot(input.recipes, spec, components);
   const fingerprints = input.lifted ? carryFingerprints(input.lifted, spec) : { changes: [], diagnostics: [] };
+  // Site facts: always the live store's, which the rerecord run observed into.
+  const factsCarried = carryFactSnapshot(input.lifted?.facts, spec, facts);
+  const factLines = factsCarried.changed ? [`facts: ${factsCarried.changed} origin snapshot(s) refreshed from the site-facts store`] : [];
   const found = [...carried.diagnostics, ...fingerprints.diagnostics];
   const emitted = emitFlowFile(spec, { tier: 'plain', diagnostics: [...diagnostics, ...found] });
   const compiler = compilerProvenance();
@@ -163,5 +169,5 @@ export function persistRerecordInput(
   const tmp = `${input.file}.${process.pid}.tmp`;
   fs.writeFileSync(tmp, source);
   fs.renameSync(tmp, input.file);
-  return { file: input.file, wrote: true, recipeChanges: [...carried.changes, ...fingerprints.changes], diagnostics: found };
+  return { file: input.file, wrote: true, recipeChanges: [...carried.changes, ...fingerprints.changes, ...factLines], diagnostics: found };
 }

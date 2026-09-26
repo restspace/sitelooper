@@ -1,9 +1,10 @@
 import type { Frame, Page } from 'playwright-core';
 import type { RecordedStep } from '../daemon/recorder.js';
-import { captureReadBack, captureReadBackAt, onOwnLine } from '../daemon/recorder.js';
+import { captureReadBack, captureReadBackAt, noteReadBackFrame, onOwnLine } from '../daemon/recorder.js';
 import { foldValue } from '../skills/flow.js';
 import { lineShows } from '../execution/snapshot.js';
 import { MIN_ID_LEN } from '../skills/shape.js';
+import { formatSession, observeOnPage, sweptObservations, type SweptFormat } from '../skills/facts-format.js';
 
 /**
  * Site C of notes/PLAN-jev.md, the code half: source a reported value's read-back
@@ -195,6 +196,13 @@ interface FrameHits {
    * call be skipped — and "nothing this code can point at does".
    */
   extra: number;
+  /**
+   * Site facts (c), observation only: occurrences that say how the app
+   * RENDERS a value — a copy with no box beside a rendered one (`twice`), or
+   * an element whose rendered text is its stored text upper-cased (`upper`).
+   * Absent when there are none; nothing in the cascade reads it.
+   */
+  formats?: SweptFormat[];
 }
 
 /**
@@ -295,10 +303,28 @@ function sweepFrame(payload: { wants: string[]; max: number }): FrameHits[] {
     }
   }
 
+  // Site facts (c): the role and a name for an element whose rendering says
+  // something about format. The name never carries the value itself.
+  const IMPLICIT: Record<string, string> = { a: 'link', button: 'button', h1: 'heading', h2: 'heading', h3: 'heading', h4: 'heading', h5: 'heading', h6: 'heading', td: 'cell', th: 'columnheader', li: 'listitem', option: 'option' };
+  const formatOf = (el: Element, kind: 'twice' | 'upper', want: string) => {
+    const tag = el.tagName.toLowerCase();
+    const role = el.getAttribute('role') || IMPLICIT[tag] || tag;
+    const ctx = context(el);
+    const name = ctx.label ?? ctx.column ?? ctx.heading ?? '';
+    return { kind, role, name: fold(name).includes(fold(want)) ? '' : name };
+  };
+  const casedOnly = (el: Element): boolean => {
+    const rendered = ((el as HTMLElement).innerText ?? '').replace(/\s+/g, '');
+    const stored = (el.textContent ?? '').replace(/\s+/g, '');
+    return rendered !== stored && rendered.toLowerCase() === stored.toLowerCase() && rendered === rendered.toUpperCase();
+  };
+
   return payload.wants.map((want) => {
     const squeezedWant = squeeze(want);
     const items: DisplayCandidate[] = [];
     let extra = 0;
+    const hidden: Element[] = [];
+    const formats: Array<{ kind: 'twice' | 'upper'; role: string; name: string }> = [];
     for (let n = 0; n < nodes.length; n++) {
       const el = nodes[n];
       const tag = el.tagName.toLowerCase();
@@ -333,9 +359,11 @@ function sweepFrame(payload: { wants: string[]; max: number }): FrameHits[] {
       // it is still a place the value IS, so it counts as an occurrence.
       if (!el.getClientRects().length) {
         extra += 1;
+        hidden.push(el);
         continue;
       }
       const text = (el as HTMLElement).innerText ?? el.textContent ?? '';
+      if (casedOnly(el)) formats.push(formatOf(el, 'upper', want));
       if (!fold(text).includes(fold(want))) {
         // Rendered differently from how it is stored (an innerText tab, a
         // hidden sibling): the occurrence is real, the element is not a
@@ -346,7 +374,9 @@ function sweepFrame(payload: { wants: string[]; max: number }): FrameHits[] {
       items.push({ path: cssPath(el), text: text.slice(0, 400), tag, ...context(el) });
       if (items.length > payload.max) break;
     }
-    return { want, items, extra };
+    // A copy with no box beside one that renders: the app shows it twice.
+    if (items.length) for (const el of hidden) formats.push(formatOf(el, 'twice', want));
+    return formats.length ? { want, items, extra, formats } : { want, items, extra };
   });
 }
 
@@ -381,6 +411,7 @@ export async function sightValues(page: Page, values: readonly string[]): Promis
   for (const want of wants) out.set(want, { candidates: [], extra: 0, truncated: false, incomplete: false });
   const frames: Frame[] = page.frames();
   const main = page.mainFrame();
+  const swept: SweptFormat[] = [];
   for (const frame of frames) {
     let hits: FrameHits[];
     try {
@@ -394,6 +425,7 @@ export async function sightValues(page: Page, values: readonly string[]): Promis
     for (const hit of hits) {
       const sighting = out.get(hit.want);
       if (!sighting) continue;
+      if (frame === main && hit.formats?.length) swept.push(...hit.formats);
       if (frame === main) {
         sighting.candidates.push(...hit.items.slice(0, MAX_CANDIDATES));
         if (hit.items.length > MAX_CANDIDATES) sighting.truncated = true;
@@ -401,6 +433,14 @@ export async function sightValues(page: Page, values: readonly string[]): Promis
         sighting.extra += hit.items.length;
       }
       sighting.extra += hit.extra;
+    }
+  }
+  // Site facts (c): observed under the daemon's recording session, never read here.
+  if (swept.length && formatSession()) {
+    try {
+      observeOnPage(page.url(), sweptObservations(page.url(), swept));
+    } catch {
+      // an observer never breaks the sweep it watches
     }
   }
   return out;
@@ -492,6 +532,7 @@ export async function sourceReadBacks(targets: readonly ReadBackTarget[], page: 
     if (displayers.length === 1 && !sighting.truncated) {
       const step = await opts.pin(target.value, displayers[0].path).catch(() => null);
       if (step) {
+        await noteFramedPin(page, step, target.name);
         out.steps.push({ ...step, label: target.name });
         out.byCode.push(target.name);
         continue;
@@ -539,6 +580,7 @@ export async function sourceReadBacks(targets: readonly ReadBackTarget[], page: 
     }
     const step = await opts.pin(item.value, candidate.path).catch(() => null);
     if (step) {
+      await noteFramedPin(page, step, item.name);
       out.steps.push({ ...step, label: item.name });
       out.byDecider.push(item.name);
     } else {
@@ -576,8 +618,24 @@ export async function pinPart(page: Page, value: string, name: string): Promise<
   if (!sighting || sighting.incomplete || sighting.truncated) return null;
   const displayers = displayersOf(sighting.candidates, value);
   if (displayers.length !== 1) return null;
-  const step = await captureReadBackAt(page, value, displayers[0].path).catch(() => null);
+  const step = await captureReadBackAt(page, value, displayers[0].path, name).catch(() => null);
   return step ? { ...step, label: name } : null;
+}
+
+/**
+ * Site facts (b) for a pin the cascade made: the verifier it is handed takes
+ * no report key, so a framed pin is observed here, where the key is known.
+ * Only under the daemon's recording session; never throws.
+ */
+async function noteFramedPin(page: Page, step: RecordedStep, key: string): Promise<void> {
+  if (!formatSession() || typeof step.args.frame !== 'string' || typeof step.result !== 'string') return;
+  let value: unknown;
+  try {
+    value = JSON.parse(step.result);
+  } catch {
+    return;
+  }
+  if (typeof value === 'string') await noteReadBackFrame(page, value, step.args.frame, key);
 }
 
 /** The `[read-back]` progress line for a cascade outcome, or '' when it did nothing worth saying. */

@@ -12,6 +12,9 @@
  *   <base>-n{2,3}-flowrun.json             replay turns and tiers
  *   <base>-spec-spec-result.json           the compiled script
  *   <base>-sweep.json / <base>-sweep.log   total_usd per run, verifier summaries
+ *   <base>-skills/<origin>/site-facts.json observed site facts (notes/design/design-site-facts.md)
+ *   <base>-skills/shadow.jsonl             shadow rows, one per consumer decision, rule-prefixed
+ *                                           ("facts.<consumer>" rows are the site-facts ones)
  *
  * Usage:
  *   node bench/ab-metrics.mjs --dir bench/results-published --base vgt1v [--base vgt1n ...] [--json]
@@ -57,6 +60,32 @@ const readJsonl = (file) =>
     : null;
 const readJson = (file) => (fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : null);
 const GESTURES = new Set(['click', 'dblclick', 'modifier_click', 'right_click']);
+
+// site facts (notes/design/design-site-facts.md, design-site-facts-stage0-contract.md Piece E):
+// reliable = no live contradiction, and either a structural proof (hard) or
+// confirmed across 2+ sessions (soft) — execution/facts.ts `reliable()`, copied
+// rather than imported so this script stays a plain node script.
+const factReliable = (f) => f.contra === 0 && (f.hard || (f.sessions ?? []).length >= 2);
+
+/** Every `<origin>/site-facts.json` under a published skills store, or []. */
+function readSiteFacts(storeDir) {
+  const out = [];
+  if (!storeDir || !fs.existsSync(storeDir)) return out;
+  for (const name of fs.readdirSync(storeDir)) {
+    const originDir = path.join(storeDir, name);
+    if (!fs.statSync(originDir).isDirectory()) continue;
+    const sf = readJson(path.join(originDir, 'site-facts.json'));
+    if (sf && Array.isArray(sf.facts)) out.push(sf);
+  }
+  return out;
+}
+
+/** `<storeDir>/shadow.jsonl` rows whose rule starts with `facts.`, or []. */
+function readFactShadowRows(storeDir) {
+  if (!storeDir) return [];
+  const rows = readJsonl(path.join(storeDir, 'shadow.jsonl'));
+  return (rows ?? []).filter((r) => typeof r.rule === 'string' && r.rule.startsWith('facts.'));
+}
 
 function price(provider, model, u) {
   const r = rates[provider]?.[model];
@@ -170,6 +199,19 @@ function metrics(dir, base) {
   if (fs.existsSync(f('-spec-verify.log'))) {
     const log = fs.readFileSync(f('-spec-verify.log'), 'utf8');
     row.spec_objectives = /objectives passed (\S+)/.exec(log)?.[1] ?? log.split('\n').filter((l) => /obj \d+: (PASS|FAIL)/.test(l)).map((l) => (/PASS/.test(l) ? 'P' : 'F')).join('');
+  }
+
+  const storeDir = f('-skills');
+  if (fs.existsSync(storeDir)) {
+    const facts = readSiteFacts(storeDir).flatMap((sf) => sf.facts);
+    row.facts_written = facts.length;
+    row.facts_hard = facts.filter((fc) => fc.hard).length;
+    row.facts_soft = facts.filter((fc) => !fc.hard).length;
+    row.facts_relied = facts.filter(factReliable).length;
+    const shadow = readFactShadowRows(storeDir);
+    row.facts_shadow_rows = shadow.length;
+    row.facts_agree = shadow.filter((r) => r.agree).length;
+    row.facts_disagree = shadow.filter((r) => !r.agree).length;
   }
   return row;
 }

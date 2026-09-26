@@ -596,7 +596,9 @@ export function originSlug(origin: string): string {
  * Anything else that comes to live beside the procedures belongs here too.
  */
 export const SITEMAP_FILE = 'sitemap.json';
-const NOT_A_PROCEDURE = new Set([SITEMAP_FILE]);
+/** The site-facts store (skills/facts.ts); same reasoning as SITEMAP_FILE above. */
+export const SITE_FACTS_FILE = 'site-facts.json';
+const NOT_A_PROCEDURE = new Set([SITEMAP_FILE, SITE_FACTS_FILE]);
 
 /**
  * How long a lock may be held before it is treated as abandoned.
@@ -681,7 +683,7 @@ function holderIsGone(pid: number): boolean {
  * slow work would have its lock stolen. Gone-or-old is the pair that is
  * safe: a live holder within the window is respected, anything else is not.
  */
-function withFileLock<T>(file: string, fn: () => T): T {
+export function withFileLock<T>(file: string, fn: () => T): T {
   const lock = `${file}.lock`;
   const deadline = Date.now() + LOCK_WAIT_MS;
   fs.mkdirSync(path.dirname(file), { recursive: true });

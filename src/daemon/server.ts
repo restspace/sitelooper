@@ -26,6 +26,7 @@ import { jevMatchSkill, jevPickLiteral } from '../skills/paraphrase-jev.js';
 import { readBackDecider } from '../agent/readback-jev.js';
 import type { ReadBackDecider } from '../agent/readback.js';
 import { setInlineHealer } from '../skills/replay.js';
+import { flushSiteFacts } from '../skills/facts-url.js';
 import { RunLedger, linkMintedParts, unseenGotoParts, describeLeaks, evidenced, fatal, navigationLeaks, scanForLeaks, slotKnownRunValues, urlVarianceValues, withoutOwnOutputs, type Leak } from '../skills/ledger.js';
 import { quarantineLeakedSteps } from '../spec/rerecord.js';
 import { rerecordFix } from '../spec/diagnostics.js';
@@ -47,6 +48,9 @@ import { coverageComplete, recordedValueShown } from '../execution/snapshot.js';
 import { captureSignature } from './diff.js';
 import { recordedStandIn, referencableOutputs, selfNamingReadDrops } from '../skills/flow.js';
 import { SessionState } from './state.js';
+import { ValueFactObserver } from '../skills/facts-value.js';
+import { SiteFactStore } from '../skills/facts.js';
+import { sourcingHoldOn } from '../agent/sourcing.js';
 
 interface DaemonOptions {
   session: string;
@@ -121,6 +125,7 @@ export class Daemon {
 
   /** Bank what this instruction minted: url ids first, then reported values. */
   private noteMintedIds(entries: ReturnType<ScriptRecorder['entriesSince']>, stepId: string): void {
+    let factUrl: string | undefined;
     for (const e of entries) {
       const url = e.k === 'step' ? e.diff?.url : e.k === 'instruction' ? e.url : undefined;
       // `landed`: a step's own non-navigation action put the browser here, so
@@ -135,7 +140,14 @@ export class Daemon {
       // …and a part this instruction's own mutation minted and linked to, at
       // any position (ledger.ts linkMintedParts; kanboard fwkb41 `task_id=4`).
       const linkMinted = url && e.k === 'step' ? linkMintedParts(e, all.slice(0, Math.max(0, all.indexOf(e)))) : [];
-      if (url) this.ledger.addUrlIds(url, stepId, urlParts(url), { landed: e.k === 'step' && e.tool !== 'goto' && e.tool !== 'back', landedLabels, linkMinted });
+      if (url) {
+        const parts = urlParts(url);
+        const admitOpts = { landed: e.k === 'step' && e.tool !== 'goto' && e.tool !== 'back', landedLabels, linkMinted };
+        const admitted = this.ledger.addUrlIds(url, stepId, parts, admitOpts);
+        // Site facts (stage 0, shadow only): what the admission proves.
+        this.valueFacts()?.noteUrl(url, parts, admitOpts, admitted, this.factVars());
+        factUrl = url;
+      }
       if (e.k === 'report') {
         for (const [name, value] of Object.entries(e.values ?? {})) {
           // No `basis`: a reported value's KIND is settled by looksLikeId
@@ -144,10 +156,41 @@ export class Daemon {
           // 'output'` records — but "the run produced it" is not the same
           // claim as "it is a record id", and only the second can refuse an
           // export. This is the largest population reaching the ledger.
-          this.ledger.add(String(value), { from: 'output', step: stepId, name });
+          const banked = this.ledger.add(String(value), { from: 'output', step: stepId, name });
+          this.valueFacts()?.noteReport(factUrl, name, String(value), banked, this.factVars());
         }
       }
     }
+    // Site facts: the instruction's value-class facts and shadow rows.
+    this.valueFacts()?.endInstruction({
+      script: this.browser.script?.entries ?? [],
+      entries,
+      ledger: this.ledger.all(),
+      vars: this.factVars(),
+      runSpecific: this.runSpecific,
+      sourcingHold: sourcingHoldOn(),
+    });
+  }
+
+  /**
+   * The value-class fact observer (skills/facts-value.ts; site facts stage
+   * 0, shadow only). Only while learning: facts live beside the skill store's
+   * procedures, and a daemon without one writes nothing.
+   */
+  private valueFactObserver: ValueFactObserver | null = null;
+  private valueFacts(): ValueFactObserver | null {
+    const store = this.browser.learn;
+    if (!store) return null;
+    this.valueFactObserver ??= new ValueFactObserver(new SiteFactStore(store.dir), this.opts.session, store.dir);
+    return this.valueFactObserver;
+  }
+
+  /** The session's declared var values (the runid), which a fact's evidence must never carry. */
+  private factVars(): string[] {
+    const declared = Object.values(this.state.vars ?? {}).filter((v): v is string => typeof v === 'string' && v.length > 0);
+    // A flow run banks its vars on the ledger, not on the session state.
+    const banked = this.ledger.all().filter((e) => e.binding.from === 'var').map((e) => e.value);
+    return [...new Set([...declared, ...banked])];
   }
 
   /** Caller vars seeded once, so every producer sees the same run values. */
@@ -216,6 +259,8 @@ ${describeLeaks(leaks.slice(0, 6))}`);
     // "Tickets" is referenced by later steps too (the export references every
     // reported value) and names the same element on every run.
     const identifiers = new Set(runValues.map((r) => r.value));
+    // Site facts (stage 0, shadow only): would the value-class facts strip the same values?
+    this.valueFacts()?.stripRows(this.ledger.all().filter((e) => e.kind === 'identifier' && e.value.length >= 3), identifiers, `strip ${flow.name}`);
     let selfNamed = 0;
     for (const t of selfNamingReadDrops(flow, chainOf, (v) => !identifiers.has(v) || constants.has(v) || vars.some((x) => v.includes(x)))) {
       store.put(t.skill);
@@ -1533,6 +1578,8 @@ ${describeLeaks(certain.slice(0, 30))}${certain.length > 30 ? `\n  … and ${cer
     // recovery learned `goto …&id=22` (the order n2's 02-create had just made),
     // it was pinned, compiled, and every later run navigated to a deleted record.
     for (const [varName, value] of Object.entries(varsIn)) this.ledger.add(value, { from: 'var', name: varName }, { vouched: true });
+    // Site facts: a flow run is its own session (a soft fact needs two).
+    this.valueFacts()?.beginSession(`${this.opts.session}/${flow.name}@${new Date().toISOString()}`);
     // The browser the flow was recorded in (Flow.browser; a flow saved before
     // profiles were stored was recorded at the default). Resized to it when a
     // running session is in another window; anything fixed at launch is said.
@@ -2496,8 +2543,10 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
     // evidence the next run must start with, whether or not the step that saw
     // it completed (fwgr41-n2).
     if (updated || evidenceChanged || varianceNoted) saveFlow(flow, flowFile);
+    // SITE FACTS (stage 0, skills/facts-url.ts): this run's route observations and facts.* shadow rows.
+    flushSiteFacts(this.browser.learn, this.valueFacts()?.session ?? this.opts.session, `flow ${flow.name}`);
 
-    const passed = stepResults.filter((r) => r.status === 'success').length;
+    const passed =stepResults.filter((r) => r.status === 'success').length;
     return {
       flow: flow.name,
       // A partial step (step-verdict.ts) did not halt the run, and does not let it call itself a success either.

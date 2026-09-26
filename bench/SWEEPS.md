@@ -554,6 +554,27 @@ after that point is invalid, verifies (no model) are not. fwop15-cv2 and fwod88-
 for the top-up.
 
 
+## Round 66 (main 357b983e = 37a9390a + prompts): the CONTROL batch on the merged guard fix and fixed driver (hold on), five apps — 2/5 green, 4/5 compiled and passed
+
+Fired 07:33 UTC 2026-09-26, all five at once, as the comparison for the stage-0 site-facts batch that follows
+(feat/site-facts-0, shadow only). Same prompts and measures as round 65.
+
+| round | runid | app | verified | replay model-free | compiled | green | notes |
+|---|---|---|---|---|---|---|---|
+| 66 | fwop20 | op | 7/7 ×3 | yes (n2, n3 4/4 flow, 0 turns) | pass, drift 1 (5/7, 2 UNVERIFIABLE report-only) | **yes** | n1 5 turns / $0.064 / 361 s; 02-create step 8 (read save_alert) has no locator left, publishes nothing; 11 shadow rows |
+| 66 | fwsi17 | si | 7/7 ×3 | n2 NO: 03-create fell back (17 turns: `s_d84dc3 stopped at step 2 — none of the 1 recorded page change(s) appeared ("- listbox Bench Assignee")`), n3 yes 4/4 | pass, drift 0 (5/7, 2 UNVERIFIABLE) | no (n2) | the round-65 refusal (unsourced-ref on 01-signin.model/.status) is gone: compiled and passed; the assignee listbox effect is timing (n3 replayed it clean) |
+| 66 | fwod91 | od | 6/6 ×3 | yes (n2, n3 7/7 flow, 0 turns) | pass, drift 0 (6/6) | **yes** | n1 8 turns / $0.072 / 297 s; the cleanest odoo run on record: no modal, no hold |
+| 66 | fwgr77 | gr | 6/6 ×3 | NO: 04-open fell back on both replays (n2 11 turns, n3 40: `s_c6db9d stopped at step 23 — the page did not show "- button Time range selected: Last 6 hours"`; step 15 also `expected alert containing {{03-open.save_confirmation_alert}}`) | pass, drift 1 (4/6, 2 UNVERIFIABLE) | no (replays) | the compiled artifact passed what the daemon replay fell back on: the time-range button effect check reads the wrong element under the daemon; a runner PARITY gap the other way round from usual |
+| 66 | fwgt17 | gt | 7/7 ×3 | n2 NO: 03-open fell back (74 turns: `s_365e26 stopped at step 12 — none of the recorded page change(s) appeared (- combobox "Labels")`, step 9 `listbox "bug" already showing… skipped as already in effect`); n3 08-report 4 turns (unresolved ref) | REFUSED unsourced-ref: `08-report: slot v5 is bound to {{03-open.labels_picker_state}}, and nothing has ever published labels_picker_state` | no | the round-64/65 label-picker class again (fwgt15, fwgt16, fwgt15-cv2/cv3): the model REPORTS the picker state instead of reading it, the picker click is recorded as a toggle, and 08-report's procedure types by the reported value. Not a driver or guard matter; a record-time fix (label picker as a select-in-listbox step; the reported-but-never-read value held) is still open |
+
+Reading: on the merged guard fix and driver, and with no other change since round 65, the batch is 2/5 fully green
+(op, od; op is now green two rounds running after three convergence attempts fixed its re-pin), 4/5 compile and pass
+the artifact (si, gr too), 1/5 refused (gt, the label picker, open since round 64). The two replay fallbacks (si 03-create
+assignee listbox on n2 only; gr 04-open time-range button on both) are effect checks under the daemon that the compiled
+artifact passes: parity gaps worth a look after stage 0. Costs: n1 $0.06-0.57, 300-740 s. This is the comparison row
+set for round 67 (feat/site-facts-0, observers and shadow rows only): every round-67 result must match its round-66
+row here, and the new facts_* metrics and facts-report output are the measure.
+
 ## Convergence experiment, batch 2 (main 3df960b2: a driven-past full replay compiles whole, counters masked, stuck-repin stop; credit restored 16:30)
 
 | run | from | class | verdict | flow runs | model turns | what decided it |
@@ -563,6 +584,8 @@ for the top-up.
 | fwsi14-cv2 | si, artifact FAIL at 03-open (url expectation) | stuck-repin — INCONCLUSIVE | 9 | 207 | the spec failed at `after 03-open s_911eab/1 expected url …/hardware/N/edit but browser is at …/hardware/N#history` every round and repair named only 03-open; the driver re-recorded 02-create five times (a healed drift line named it, and it is earlier in flow order). Each new whole recording (the model drove 18-24 gestures past the old procedure: the checkout) was refused by the cross-step guard: "its procedure ends on /hardware, and the next step's procedure starts on /hardware/:id without navigating there". 03-open was never re-recorded |
 | fwop15-cv2 (re-fired 20:35; the 16:31 box hit the Docker Hub pull limit) | op, demoted-pin 01-open | stuck-repin | 5 | 123 | the driven-past fix did its part: every run replayed the sign-in s_713d1c in full, the model drove 6-8 gestures past it, and the WHOLE recording was the candidate each time. All five were refused by the cross-step guard: the new 01-open ends on `…/work_packages` or `…/work_packages?query_props={…filters…}` and 02's pin starts on `…/work_packages?query_props=:var` "without navigating there". learn.ts routeOf kept the query string in the route and did not read `:var` as a marker, so the same list page with and without its view state was two routes, while the replay gate (urlDiff) lets a key one side lacks pass. Fixed on fix/repin-route-query (routesAgree: textual route, else urlDiff either way round; kanboard's two literal `?controller=` values stay two pages) |
 | fwop15-cv3 | op, demoted-pin 01-open | **CONVERGED** round 2 | 2 | 32 | on the merged guard fix (3e7896c7): one re-record of 01-open (23 turns) re-pinned s_687e52 at once, round 2 compiled and the artifact passed 5/5 (2 n/a). The third attempt at this recording: cv needed the whole-recording re-pin, cv2 the route-agreement fix, and each was one line of the store's own rules |
+| fwgt15-cv3 | gt, artifact FAIL at 04-add (label pick recorded as a point) | **CONVERGED-BY-REPAIR** round 3 | 11 | 43 | on the fixed driver the failure text named 04-add from round 1. Round 1's artifact still failed the point locator; round 2 the artifact ran clean under Playwright but the verifier held; round 3 repair's own compiled-spec check passed (75 s, 0 drift). The round-64 defect (the label picker recorded as a point) is what cost the two extra rounds: repair heals it to a minted `_aria_dropdown_label_N` id each run, so the fix that lasts is at record time |
+| fwsi14-cv3 | si, artifact FAIL at 03-open (url expectation) | exhausted | 16 | 141 | the driver chose 03-open every round (the fix held); every re-record pinned a NEW 03-open whose start url carries `#history` (rounds 2 and 5 `/hardware/:id#history`, rounds 3-4 a literal `/hardware/14#history`, `/19#history`: the second session's pattern was not generalised), and the artifact arrives at `/hardware/N` without it, so the start gate refused the segment before it ran: "not on the page this procedure starts from". Verifier 5/5 every round: the flow is right, the gate is wrong. Snipeit appends `#history` on the asset page's tab restore, an ANCHOR fragment that the recorder froze into the pattern. This is the route.fragment fact (design-site-facts §2, consumer 1 + 5): one session that sees `/hardware/4` and `/hardware/4#history` as the same page proves the fragment is an anchor, and the stored pattern is rewritten without it |
 
 Reading: none of the three is a verdict on the retry commands themselves. All three were decided by the DRIVER:
 (1) a healed drift line named a step, and flow order put it ahead of the step the spec actually failed at — in both
@@ -575,7 +598,8 @@ batch surfaced, not driver faults: the gitea label-picker click recorded as a po
 and an odoo second-line product pick that lands on the first product in both runners — invisible to Playwright and to
 repair, only the verifier sees it (so a step the artifact "passes" can still be wrong).
 
-Tally, fair runs with a verdict (7): converged 2 (gr; op17 control) · compile fixed, artifact passes Playwright,
-verifier 5/6 1 (od) · inconclusive on a driver choice 2 (gt, si) · non-deterministic step 1 (op15-cv; re-run pending) ·
-driver parse miss over a step that would not re-pin 1 (vk). Cost of a converged run stays 2 flow runs / ≤46 turns; a
+Tally, fair runs with a verdict (10, after the cv3 re-runs on the fixed driver): converged 4 (gr; op17 control; op15-cv3;
+gt15-cv3 by repair) · compile fixed, artifact passes Playwright, verifier 5/6 1 (od) · stuck on a frozen anchor fragment
+in the start-url pattern 1 (si; a site fact, stage 1) · non-deterministic step then fixed 1 (op15-cv → op15-cv3) ·
+inconclusive on a driver choice, since re-run 2 (gt, si cv2) · driver parse miss over a step that would not re-pin 1 (vk). Cost of a converged run stays 2 flow runs / ≤46 turns; a
 wrong step choice costs 9-16 flow runs and 59-207 turns, which is why the choice rule matters more than the round cap.
