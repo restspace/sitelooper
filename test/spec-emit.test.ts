@@ -1206,7 +1206,7 @@ describe('preconditions, minting and loops', () => {
     expect(bound).toContain("if (!urlRecordParts('http://app.test/x', page.url(), p)) {");
     expect(bound).toContain('const deadline = Date.now() + IDENTITY_WAIT_MS;');
     expect(bound).toContain('await new Promise((r) => setTimeout(r, Math.max(1, Math.min(IDENTITY_POLL_MS, deadline - Date.now()))));');
-    expect(bound).toContain("const verdict = identityMarkerVerdict('http://app.test/x', page.url(), p, `${p.v1}`, seen.presence);");
+    expect(bound).toContain("const verdict = await identityMarkerVerdictWithFacts(siteFactsAt(page.url()), 'http://app.test/x', page.url(), p, `${p.v1}`, { presence: seen.presence, lines: async () => (await captureLines(page, 2).catch(() => null))?.lines ?? null, title: () => page.title() });");
     expect(bound).toContain("if (!verdict.pass) throw new Error('01-do s_test1: identity: {{v1}} is not confirmed on this page');");
     expect(bound).not.toContain('await expect.poll(async () => (await confirmPresence(');
     expect(bound).toContain('async function confirmPresence(page: Page, lines: string[], d: LineDialect, opts: LineShowsOptions = {}): Promise<{ presence: Presence; why?: string }> {');
@@ -3341,12 +3341,24 @@ describe('report-template values after the last segment', () => {
     // not observe it says the report was given it (round 60, fwgt11 07-add).
     expect(body).toContain('const reportShown = await shownForReport(page).catch(() => null);');
     expect(body).toContain(
-      "if (outputs['02-create.post_title_element_text'] === undefined) { const c = classifyReportValue('{{v2}}', p, reportShown, reportGiven); if (c.class === 'given') { logWarning('02-create: report value post_title_element_text is given, not observed: it is built only from the step\\'s own parameters, and neither this run\\'s page nor any of its reads shows it — withheld'); } if (c.class === 'echo') { logWarning('02-create: report value post_title_element_text is only what this run typed: no click\\'s own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)'); } if (c.value !== null) outputs['02-create.post_title_element_text'] = c.value; else { const ref = referenceValue('{{v2}}', p, reportShown); if (ref !== null) { outputs['02-create.post_title_element_text'] = ref; run.referenceOnly.push('02-create.post_title_element_text'); } } }",
+      "if (outputs['02-create.post_title_element_text'] === undefined) { const c = classifyReportValueWithFacts(siteFactsAt(page.url()), page.url(), {}, '{{v2}}', p, reportShown, reportGiven); if (c.class === 'given') { logWarning('02-create: report value post_title_element_text is given, not observed: it is built only from the step\\'s own parameters, and neither this run\\'s page nor any of its reads shows it — withheld'); } if (c.class === 'echo') { logWarning('02-create: report value post_title_element_text is only what this run typed: no click\\'s own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)'); } if (c.value !== null) outputs['02-create.post_title_element_text'] = c.value; else { const ref = referenceValue('{{v2}}', p, reportShown); if (ref !== null) { outputs['02-create.post_title_element_text'] = ref; run.referenceOnly.push('02-create.post_title_element_text'); } } }",
     );
     expect(syntaxErrors(body)).toEqual([]);
     // the slot the template names is passed to the step, though no action uses it
     expect(body).toMatch(/async '02-create'\(page: Page, p: \{[^}]*v2: string/);
     expect(body).toContain('// Shared execution source: report.ts.');
+  });
+
+  it('carries the controls each typed slot was typed into, for the display format facts (stage 2)', () => {
+    const flow = flowWith('{{v2}}');
+    flow.steps[0].segments[1].steps = [
+      { tool: 'fill', args: { target: '@e3', value: '{{v2}}' }, locators: { target: [{ kind: 'role', role: 'textbox', name: 'Title' }] } },
+      { tool: 'click', args: { target: '@e2' }, locators: { target: [{ kind: 'role', role: 'button', name: 'Publish' }] } },
+    ];
+    const body = emit(flow);
+    expect(body).toContain(`const c = classifyReportValueWithFacts(siteFactsAt(page.url()), page.url(), {"v2":[{"role":"textbox","name":"Title"}]}, '{{v2}}', p,`);
+    expect(body).toContain('// Shared execution source: facts-display.ts.');
+    expect(syntaxErrors(body)).toEqual([]);
   });
 
   // fwrd86 06-delete: "{{v1}} | … | Created: 2026-09-23". The text around the

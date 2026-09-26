@@ -908,9 +908,13 @@ function synthesize(skill: Skill, params: Record<string, string>, liveValues: Re
     // fwgt11 07-add's "{{v7}}" published "bug" beside a live "priority-high".
     // A value carrying a slot the chain typed publishes only where this run
     // committed it (phase B): the same classifyReportValue the artifact asks.
-    const verdict = classifyReportValue(v, params, shown, evidence);
-    // SITE FACTS shadow (facts.classify, skills/facts-format.ts): would a known rendering have made an echo committed?
-    if (verdict.class === 'echo') shadowClassify(skill, opts.chain, v, params, shown, evidence, verdict);
+    // Stage 2 (site facts): an echo becomes committed where a reliable
+    // format fact of a control the slot was typed into renders it to a
+    // spelling this run read back (execution/facts-display.ts
+    // classifyReportValueWithFacts, via skills/facts-format.ts shadowClassify,
+    // which also writes the facts.classify row) — the artifact asks the same.
+    const today = classifyReportValue(v, params, shown, evidence);
+    const verdict = shadowClassify(skill, opts.chain, v, params, shown, evidence, today, opts.visited?.[opts.visited.length - 1]);
     if (verdict.class === 'given' || verdict.class === 'echo') {
       // The given or typed value is what the prose must not state either.
       stale.push(...verdict.slots.map((slot) => params[slot]));

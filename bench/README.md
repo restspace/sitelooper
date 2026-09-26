@@ -330,7 +330,9 @@ Both snapshot and restore stop `mongod` and `rs2-server`, move the bytes, and re
   exit review reads this before any consumer switches off the shadow. Since stage 1
   (notes/design/site-facts-stage1-contract.md), a shadow row a consumer actually switched on carries
   `applied: true`, which the report prints on every row that has it (a `DISAGREE`/`APPLIED` suffix or line)
-  rather than only on disagreements.
+  rather than only on disagreements. Stage 2 (notes/design/site-facts-stage2-contract.md) switches the same
+  `applied` mechanism on for the display-format consumers (report classification, identity checks, read-back
+  capture, counter masking), so `facts.readback`/`facts.classify`/`facts.identity` rows can carry it too.
 
 ## Known gaps
 

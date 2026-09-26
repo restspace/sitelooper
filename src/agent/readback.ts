@@ -1,6 +1,6 @@
 import type { Frame, Page } from 'playwright-core';
 import type { RecordedStep } from '../daemon/recorder.js';
-import { captureReadBack, captureReadBackAt, noteReadBackFrame, onOwnLine } from '../daemon/recorder.js';
+import { captureReadBack, captureReadBackAt, noteReadBackFrame, onOwnLine, readBackRenderingsOn } from '../daemon/recorder.js';
 import { foldValue } from '../skills/flow.js';
 import { lineShows } from '../execution/snapshot.js';
 import { MIN_ID_LEN } from '../skills/shape.js';
@@ -119,7 +119,7 @@ export interface ReadBackPick {
 export type ReadBackDecider = (ask: ReadBackAsk, ctx?: { signal?: AbortSignal }) => Promise<ReadBackPick[] | null>;
 
 /** How an element's rendered text displays a value, or null when it does not. */
-export type Display = 'exact' | 'line' | null;
+export type Display = 'exact' | 'rendered' | 'line' | null;
 
 /**
  * Does this element's own rendered text display `value`?
@@ -145,11 +145,17 @@ export type Display = 'exact' | 'line' | null;
  *    but a lone digit sitting inside a longer line is not evidence of
  *    anything.
  */
-export function displays(text: string, value: string): Display {
+export function displays(text: string, value: string, renderings: readonly string[] = []): Display {
   const want = foldValue(value);
   if (!want || want.length > READ_BACK_MAX_VALUE_CHARS) return null;
   const got = foldValue(text);
   if (got === want) return 'exact';
+  // Site facts, consumer 3 (stage 2): the element's whole text IS one of the
+  // value's reliable renderings on this origin ("#4" for a task id kanboard
+  // frames with `#`), offered after the exact tier and before the line tier
+  // (and so before the model). `renderings` is [] without a reliable fact:
+  // then this is today's function.
+  if (renderings.some((r) => foldValue(r) === got)) return 'rendered';
   if (!got.includes(want)) return null;
   if (want.length < MIN_ID_LEN) return null;
   if (!onOwnLine(text, want)) return null;
@@ -175,10 +181,13 @@ function descends(path: string, of: string): boolean {
  *     smallest element that displays the value" is this line, and it is what
  *     keeps a table row off the ballot beside its own cell.
  */
-export function displayersOf(candidates: readonly DisplayCandidate[], value: string): DisplayCandidate[] {
-  const shown = candidates.map((c) => ({ c, d: displays(c.text, value) })).filter((x) => x.d !== null);
+export function displayersOf(candidates: readonly DisplayCandidate[], value: string, renderings: readonly string[] = []): DisplayCandidate[] {
+  const shown = candidates.map((c) => ({ c, d: displays(c.text, value, renderings) })).filter((x) => x.d !== null);
   const exact = shown.filter((x) => x.d === 'exact').map((x) => x.c);
-  const kept = exact.length ? exact : shown.map((x) => x.c);
+  // A known rendering is the value's own element too, but only after the
+  // exact spelling: exact, then rendered, then everything shown.
+  const rendered = shown.filter((x) => x.d === 'rendered').map((x) => x.c);
+  const kept = exact.length ? exact : rendered.length ? rendered : shown.map((x) => x.c);
   return kept.filter((c) => !kept.some((other) => other !== c && descends(other.path, c.path)));
 }
 
@@ -528,7 +537,7 @@ export async function sourceReadBacks(targets: readonly ReadBackTarget[], page: 
       out.remaining.push(target);
       continue;
     }
-    const displayers = displayersOf(sighting.candidates, target.value);
+    const displayers = displayersOf(sighting.candidates, target.value, readBackRenderingsOn(page, target.value, target.name));
     if (displayers.length === 1 && !sighting.truncated) {
       const step = await opts.pin(target.value, displayers[0].path).catch(() => null);
       if (step) {
@@ -616,7 +625,7 @@ export async function pinPart(page: Page, value: string, name: string): Promise<
     return null;
   }
   if (!sighting || sighting.incomplete || sighting.truncated) return null;
-  const displayers = displayersOf(sighting.candidates, value);
+  const displayers = displayersOf(sighting.candidates, value, readBackRenderingsOn(page, value, name));
   if (displayers.length !== 1) return null;
   const step = await captureReadBackAt(page, value, displayers[0].path, name).catch(() => null);
   return step ? { ...step, label: name } : null;

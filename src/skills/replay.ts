@@ -1,10 +1,11 @@
 import { changedCreation, dispatchesFirstMatch, isMutatingAction, isReadAction, runStepLifecycle, spansEveryMatch, type StepActionResult } from '../execution/lifecycle.js';
 import { outcomeLabel, outcomeOfError, urlHeldStill, type ActionOutcome } from '../execution/browser.js';
 import { inFlightRequests, type ActionExpectation } from '../execution/action.js';
-import { IDENTITY_POLL_MS, IDENTITY_WAIT_MS, SOFT_MATCH_MIN_SIMILARITY, alertVerdict, errorPageVerdict, gotoLandingVerdict, identityMarkerVerdict, isErrorPageUrl, landedOnRecordedPage, markersBound, preconditionVerdict, retargetNavigation, segmentGate, fillableChain, linkLandingWarning, unfilledStepVerdict, urlEffectVerdict, urlRecordParts } from '../execution/gates.js';
+import { IDENTITY_POLL_MS, IDENTITY_WAIT_MS, SOFT_MATCH_MIN_SIMILARITY, alertVerdict, errorPageVerdict, gotoLandingVerdict, isErrorPageUrl, landedOnRecordedPage, markersBound, preconditionVerdict, retargetNavigation, segmentGate, fillableChain, linkLandingWarning, unfilledStepVerdict, urlEffectVerdict, urlRecordParts } from '../execution/gates.js';
 import type { UrlSegDiff } from '../execution/url.js';
 import { emptyFacts } from '../execution/facts.js';
 import { landingVerdictWithFacts, preconditionVerdictWithFacts } from '../execution/facts-route.js';
+import { counterNames } from '../execution/facts-display.js';
 import { LOOP_SHRINK_WAIT_MS, pageReadable, runFoldedLoop, type LoopPass } from '../execution/loop.js';
 import type { Locator, Page } from 'playwright-core';
 import { clip, identityRe, identitySource } from '../shared/text.js';
@@ -665,9 +666,14 @@ export async function replaySkill(
       // still rewriting it, which is the one reason urlRecordParts failed —
       // and it is a reason that expires. A url naming another record does not
       // expire, so this re-ask can only rescue the page that had not arrived.
-      const verdict = identityMarkerVerdict(pattern, page.url(), params, want, seen.presence);
-      // SITE FACTS shadow (facts.identity, skills/facts-format.ts): would a known rendering of the marker have shown?
-      await shadowIdentity(page, want, verdict.pass);
+      //
+      // Stage 2 (site facts): the same verdict, unless a reliable format fact
+      // on this route renders the marker to a spelling the page shows
+      // (execution/facts-display.ts identityMarkerVerdictWithFacts) — the
+      // artifact asks the same function over the snapshot it carries. The
+      // facts.identity row (skills/facts-format.ts) keeps today's verdict as
+      // its heuristic.
+      const verdict = await shadowIdentity(page, opts.facts?.snapshot(page.url()), pattern, params, want, seen.presence);
       if (verdict.pass) {
         if (verdict.warning) res.warnings.push(verdict.warning);
         continue;
@@ -1659,7 +1665,7 @@ export async function replaySkill(
       // (phase B provenance, stage 1): a Save that did nothing still "showed"
       // a live preview's text that was on the page before it.
       if (['click', 'dblclick', 'press'].includes(step.tool) && inDiff.length) {
-        noteCommit(interacted, liveLines(inDiff, params), tag);
+        noteCommit(interacted, liveLines(inDiff, params, countersAt(opts.facts, page.url())), tag);
         for (const slot of committedSlots(step.tool, inDiff)) if (!res.committed!.includes(slot)) res.committed!.push(slot);
       }
       // The ledger refills with what the field was GIVEN: a `{{env:NAME}}`
@@ -1993,7 +1999,7 @@ const alerts: StepGate = ({ outcome, isRead, step, params, tag, effectConfirmed,
  * turns a rejected state change into a clean recovery instead of a false
  * success (the fwrd4l-n3 Ready click).
  */
-const expectedChanges: StepGate = async ({ outcome, step, params, tag, args, page, positionalResolution }) => {
+const expectedChanges: StepGate = async ({ outcome, step, params, tag, args, page, positionalResolution, facts }) => {
   if (!step.expect?.addedContains?.length) return null;
   // The verdict itself is the shared expectedChangesVerdict (src/execution/
   // expect.ts) — the one rule a compiled artifact embeds too. This adapter
@@ -2012,7 +2018,10 @@ const expectedChanges: StepGate = async ({ outcome, step, params, tag, args, pag
   const verdict = await expectedChangesVerdict(
     step.expect.addedContains,
     params,
-    { tag, tool: step.tool, value: typeof args.value === 'string' ? args.value : undefined, positionalResolution },
+    // Stage 2 (site facts): the controls a reliable `counter` fact on this
+    // route names have their leading counts masked whatever the role
+    // (execution/facts-display.ts counterNames), as the artifact masks them.
+    { tag, tool: step.tool, value: typeof args.value === 'string' ? args.value : undefined, positionalResolution, counters: countersAt(facts, page.url()) },
     { added: outcome.captureFailed ? null : added, live: (look) => captureLines(page, d, look) },
   );
   return verdict.stop || verdict.unobserved || verdict.absentDialog || verdict.confirmed || verdict.inDiff || verdict.warnings.length ? verdict : null;
@@ -2031,6 +2040,19 @@ const expectedRemovals: StepGate = async ({ step, params, tag, page }) => {
   if (verdict.stop) return { stop: verdict.stop };
   return verdict.warnings.length ? { warnings: verdict.warnings, ...(verdict.unobserved ? { unobserved: verdict.unobserved } : {}) } : null;
 };
+
+/**
+ * The controls a reliable `counter` fact names on this url's route
+ * (execution/facts-display.ts counterNames), from the daemon's live facts
+ * snapshot; none without the hook — today's fixed maskCounters.
+ */
+function countersAt(facts: ReplayFactsHook | undefined, url: string): string[] {
+  try {
+    return facts ? counterNames(facts.snapshot(url), url) : [];
+  } catch {
+    return [];
+  }
+}
 
 /** The effect gates a step passes through after its action, in order. */
 /**

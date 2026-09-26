@@ -3,7 +3,8 @@ import path from 'node:path';
 import type { ElementHandle, Frame, Locator, Page } from 'playwright-core';
 import { ensureSessionDir } from '../shared/paths.js';
 import { FRAME_MARK, escapeRe, fieldByName, frameValue, hasTextMatcher, implicitRoles, roleName, unfreezeFrame, volatileMatcher } from '../shared/text.js';
-import { urlParts } from '../execution/url.js';
+import { originOf, urlParts } from '../execution/url.js';
+import { factsFor, reliable, renderings, routeTemplateOf, type SiteFacts } from '../execution/facts.js';
 import { pointLocator } from '../execution/point.js';
 import { dispatchesFirstMatch } from '../execution/lifecycle.js';
 import { rootFor, type FramePath, type PageEffect, type Root } from '../execution/context.js';
@@ -16,7 +17,20 @@ import { flattenContainedComposite, type Report } from '../agent/report.js';
 import { evalResultForRecord } from './eval-result.js';
 import type { StepEvidence, StepFailure } from './step-evidence.js';
 import type { StepJournal } from './journal.js';
-import { counterObservations, formatSession, frameObservation, observeOnPage, observeTypedValue, setFormatSession, shadowReadBack, titleObservation } from '../skills/facts-format.js';
+import {
+  affixOfFrame,
+  counterObservations,
+  formatFactsOf,
+  formatSession,
+  frameObservation,
+  observeOnPage,
+  observeTypedValue,
+  reportFormatKey,
+  setFormatSession,
+  setFormatVars,
+  shadowReadBack,
+  titleObservation,
+} from '../skills/facts-format.js';
 
 /**
  * One way of finding an element, in a form that can be rebuilt into a Locator
@@ -934,7 +948,7 @@ export async function noteReadBackFrame(page: Page, value: string, frame: string
     const v = value.trim();
     const url = page.url();
     const proven = recordIdsOf(url).includes(v) || (await page.getByText(v).count().catch(() => 0)) === 1;
-    observeOnPage(url, [frameObservation(url, key, frame, proven)]);
+    observeOnPage(url, [frameObservation(url, key, frame, proven, v)]);
   } catch {
     // an observer never breaks the read-back it watches
   }
@@ -1266,11 +1280,138 @@ async function fieldReadBack(page: Page, loc: Locator, v: string, label: string)
 
 export async function captureReadBack(page: Page, value: string, label?: string): Promise<RecordedStep | null> {
   const step = await captureReadBackExact(page, value, label);
+  // Site facts, consumer 3 (stage 2): the exact capture failed, and a
+  // reliable display format of this report key, or of a control on this
+  // route, spells the value as exactly one element shows it ("#4", "Seed: …
+  // (#1)"). That element is the read-back, framed by the fact's template.
+  // Only ever AFTER the exact capture: a rendering is an additional spelling,
+  // never a replacement. No reliable fact: nothing is tried, as before.
+  const viaFact = step === null && formatSession() ? await factReadBack(page, value, label) : null;
   // Site facts, SHADOW (facts.readback): where the exact text match failed,
-  // would a reliable rendering of the value under this report key have
-  // pinned it? Logged beside what was decided; the answer is unchanged.
-  if (label && formatSession()) await shadowReadBack(page, value, label, step !== null, (text) => page.getByText(foldedTextRe(text)).count());
-  return step;
+  // would a reliable rendering of the value have pinned it? Logged beside
+  // what today's rule decided, stamped `applied` when the fact decided.
+  if ((label || viaFact) && formatSession()) {
+    await shadowReadBack(page, value, label, step !== null, (text) => page.getByText(foldedTextRe(text)).count(), viaFact ? { key: viaFact.key } : undefined);
+  }
+  return step ?? viaFact?.step ?? null;
+}
+
+/** One reliable spelling of a value as the page shows it: the text, the affix template framing it, and the fact's key. */
+export interface FactRendering {
+  text: string;
+  tpl: string;
+  key: string;
+}
+
+/**
+ * The reliable renderings (execution/facts.ts `renderings`) of `value` a
+ * read-back may pin: under the report key first (`reportFormatKey(url,
+ * label)`), then under every CONTROL key of this route (`route|role|name`),
+ * in store order. Only an AFFIX rendering whose core is the value itself is
+ * kept: the read carries the fact's template as its frame and publishes the
+ * span at the mark, which is the value. A rendering that re-spells the core
+ * (thousands, decimals, upper, trim) would publish another spelling than the
+ * reported one; it is left to the consumers that compare rather than read. A
+ * template the tightened observer (affixOfFrame) refuses never decides, and
+ * the exact value is never a rendering here (it is the exact capture's).
+ */
+export function readBackRenderings(sf: SiteFacts, url: string, label: string | undefined, value: string): FactRendering[] {
+  const v = value.trim();
+  if (!v) return [];
+  const route = routeTemplateOf(url);
+  const keys: string[] = label ? [reportFormatKey(url, label)] : [];
+  for (const f of sf.facts) {
+    if (f.k !== 'format' || !f.key.startsWith(`${route}|`) || keys.includes(f.key)) continue;
+    // Another label's report key, or the title's: not a control of the page.
+    if (!f.key.slice(route.length + 1).includes('|')) continue;
+    keys.push(f.key);
+  }
+  const out: FactRendering[] = [];
+  const seen = new Set<string>();
+  for (const key of keys) {
+    const shown = renderings(sf, key, v);
+    if (!shown.length) continue;
+    const tpls = factsFor(sf, 'format', key)
+      .filter(reliable)
+      .map((f) => (typeof f.v === 'object' && f.v !== null && 'kind' in f.v && f.v.kind === 'affix' && typeof f.v.tpl === 'string' ? f.v.tpl : null))
+      .filter((t): t is string => t !== null && affixOfFrame(t) === t);
+    for (const text of shown) {
+      if (text === v || seen.has(text)) continue;
+      const tpl = tpls.find((t) => t.split(FRAME_MARK).join(v) === text);
+      if (!tpl) continue;
+      seen.add(text);
+      out.push({ text, tpl, key });
+    }
+  }
+  return out;
+}
+
+/**
+ * The texts of readBackRenderings for `value` on the live page, under the
+ * daemon's recording session only (the read-back cascade's rendered tier,
+ * agent/readback.ts `displays`). [] with no session, no origin, no reliable
+ * fact or any failure: the cascade is then exactly today's.
+ */
+export function readBackRenderingsOn(page: Page, value: string, label?: string): string[] {
+  try {
+    if (!formatSession()) return [];
+    const url = page.url();
+    const origin = originOf(url);
+    const sf = origin ? formatFactsOf(origin) : null;
+    return sf ? readBackRenderings(sf, url, label, value).map((r) => r.text) : [];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Consumer 3's capture: the first reliable rendering (readBackRenderings)
+ * exactly one element shows as its whole text, pinned there with the fact's
+ * template as its frame and a locator that names neither the rendering nor
+ * the value (readBackFromHandle's circularity rule, applied to both). Null
+ * when no reliable fact renders the value or no rendering is unique on the
+ * page. Never throws.
+ */
+async function factReadBack(page: Page, value: string, label: string | undefined): Promise<{ step: RecordedStep; key: string } | null> {
+  try {
+    const v = value.trim();
+    const want = foldValue(v);
+    if (want.length < 1 || want.length > 80) return null; // captureReadBack's own window
+    const url = page.url();
+    const origin = originOf(url);
+    if (!origin) return null;
+    const sf = formatFactsOf(origin);
+    if (!sf) return null;
+    for (const r of readBackRenderings(sf, url, label, v)) {
+      const loc = page.getByText(foldedTextRe(r.text));
+      if ((await loc.count().catch(() => 0)) !== 1) continue;
+      const handle = await loc.first().elementHandle({ timeout: 1_000 }).catch(() => null);
+      if (!handle) continue;
+      try {
+        const got = await readBackFromHandle(page, handle, r.text, 'text', r.tpl);
+        const step = got ? notNaming(got, want) : null;
+        if (step) return { step: { ...step, result: JSON.stringify(v), ...(label ? { label } : {}) }, key: r.key };
+      } finally {
+        await handle.dispose().catch(() => {});
+      }
+    }
+  } catch {
+    // a consumer that cannot read the facts or the page decides nothing
+  }
+  return null;
+}
+
+/** `step` without the chain candidates whose identity IS `want` (folded); null when no resolvable candidate is left. */
+function notNaming(step: RecordedStep, want: string): RecordedStep | null {
+  const target = step.locators.target;
+  if (!target) return null;
+  const chain = (target.chain ?? []).filter((c) => {
+    const id = candidateIdentity(c);
+    return !(id && foldValue(id) === want);
+  });
+  const winner = chain.find((c) => c.kind !== 'point');
+  if (!winner) return null;
+  return { ...step, locators: { ...step.locators, target: { ...target, expr: candidateExpr(winner), chain } } };
 }
 
 async function captureReadBackExact(page: Page, value: string, label?: string): Promise<RecordedStep | null> {
@@ -2305,6 +2446,9 @@ function candidatesFor(info: ElementInfo, noPoint = false): Candidate[] {
 let identityHints: string[] = [];
 
 export function setIdentityHints(values: string[]): void {
+  // The same declared vars, whole, for the display format observers: a
+  // value equal to one is never observed as a field's format (facts-format.ts).
+  setFormatVars(values);
   identityHints = values.map((v) => String(v ?? '').trim()).filter((v) => v.length >= MIN_HINT_LEN && v.length <= 120);
 }
 

@@ -31,4 +31,8 @@ Status (2026-09-25):
   `bench/facts-report.mjs`) shipped, stage 0 exited round 67 (8608aafa). Stage 1 (site-facts-stage1-contract.md,
   §2 URL route consumers: `landingVerdictWithFacts`/`preconditionVerdictWithFacts`/`routesAgreeByFacts` in
   src/execution/facts-route.ts, the learn-time pattern rewrite in src/skills/facts-rewrite.ts, and the ledger's
-  identity-aware admissions in src/skills/ledger.ts) is in build on feat/site-facts-1, four pieces in parallel.
+  identity-aware admissions in src/skills/ledger.ts) shipped, merged to main (287d586b); fwgt19 green, cv4 and
+  round 68 confirmed it. Stage 2 (site-facts-stage2-contract.md, §3 display format consumers: report
+  classification, identity checks, read-back capture and counter masking behind `reliable()` in the new
+  src/execution/facts-display.ts, plus a tightened affix observer in src/skills/facts-format.ts) is in build on
+  feat/site-facts-2, three pieces in parallel.
