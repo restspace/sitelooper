@@ -554,7 +554,7 @@ after that point is invalid, verifies (no model) are not. fwop15-cv2 and fwod88-
 for the top-up.
 
 
-## Round 68 (main 287d586b: site facts stage 1 merged — URL route facts decide, patterns rewritten) — in progress
+## Round 68 (main 287d586b: site facts stage 1 merged — URL route facts decide, patterns rewritten) — 2/5 green (si, gr), 3/5 compiled; stage-1 exit: fwsi14-cv4 converged
 
 Stage-1 exit runs (bench/converge.mjs, the two the design names) and the five-app batch, fired 15:07 and 17:20 UTC.
 
@@ -568,6 +568,18 @@ Stage-1 exit runs (bench/converge.mjs, the two the design names) and the five-ap
 | 68 | fwsi19 | si | 7/7 ×3 | yes (n2, n3 4/4 flow, 0 turns) | pass, drift 1 (5/7, 2 UNVERIFIABLE) | **yes** | 26 relied (20 hard), 4 advisory | 50 rows, 0 applied, 0 disagree | the cleanest snipeit on record; no stage-1 decision was needed |
 | 68 | fwgt20 | gt | 7/7 ×3 | NO: n2 05-open and 11-open every candidate refused (16 + 22 turns), n3 06-create bound no params (7) | Playwright pass, drift 5; verifier *** DUPLICATE WORK *** (issues #10 and #11 titled fwgt20-spec Bench Issue) → 5/7 with the attribution caveat | no | 28 relied (21 hard), 5 advisory | 30 rows, **2 applied** (facts.landing pass/pass, gate s_1a3e82), 0 disagree; **2 factRewrites** (route.fragment anchor stripped from s_1a3e82 and s_e81d43: `…/issues/:id`) | the first stored-pattern rewrites and applied rows in the wild, both agreeing with the heuristic. The duplicate is the RECORDING's: an 11-step n1 that signed in twice and created the issue twice (03-create, 06-create, 07-create), which the compile's redo/undo rules did not fold; the artifact ran both creates. Not a facts matter |
 | 68 | fwop22 | op | 7/7 ×3 | NO: n2 74 turns (02-open type timeout on the Search combobox, 03-create/04-set/08-open refused or stopped), n3 14 turns | FAIL at 02-open (`locator.evaluate: Timeout 10000ms` typing into "Search in OpenProject"), 0/7 | no | 41 relied (39 hard), 9 advisory | 43 rows, 0 applied, 1 disagree (facts.ledger: constant vs identifier, the same hash as round 67's) | a recording that navigated by the global search box; the search combobox never accepted the typed text under Playwright. Timing/recording class, no stage-1 decision involved |
+| 68 | fwgr79 | gr | 6/6 ×3 | yes (n2, n3 5/5 flow, 0 turns) | pass, drift 0 (4/6, 2 UNVERIFIABLE) | **yes** | 8 relied (6 hard), 1 advisory | 10 rows, **1 applied** (facts.landing pass/pass, goto step 37), 0 disagree | the first fully green grafana since round 64; the `?refresh` state fact decided a goto landing the heuristic also passed |
+| 68 | fwod94 | od | n1 6/6; n2 1/6; n3 1/6 | NO: both replays reported success while the app shows no order for the run's customer | FAIL at 02-open s_2a1251/2 (none of 5 locators for the customer option) | no | 22 relied (17 hard), 6 advisory | 62 rows, **20 applied** (all facts.routesAgree agree/agree), 9 disagree (3 facts.identity refuse/pass on a `counter` fact of the menu name — stage 2's identity consumer must never refuse on a counter fact; 6 facts.ledger constant/identifier) | the customer pick: the recorded option locator `role=option[name="{{v1}}"]` missed on n2, an inline heal took Odoo's `Create "fwod94-n1 Bench"` option off the live page (run 1's customer name: odoo has no rollback, so n1's record and its literal were both there), and the quotation was filed under run 1's customer while every step said success. No facts decision changed (20 applied rows all agree/agree). The class is the unresolved typed-only value (`{{01-signin.contact_name}}`, withheld as an echo and given as the typing) plus a heal that admits a candidate naming a run value: stage 3's ledger/strip consumers are the fix site, and the verifier is the only thing that saw it |
+
+Reading, stage 1 exit: the snipeit case converged on the anchor fact (4 runs, 36 turns, where cv3 spent 16 runs and
+141 turns and never passed); the openproject case did not exercise the fact path (no reliable query_props fact
+arose in that recording, and the re-pin the guard fix already provides carried it) and then fell to the app's
+timing class. Corpus 0 changes. Across the batch 23 applied rows (gitea 2, odoo 20, grafana 1) and 2 pattern
+rewrites (gitea's `#history`-class anchor stripped), every applied row agreeing with the heuristic: stage 1
+changed no decision on these five recordings except snipeit's, which is the one it was built for. Stage 1 EXITS
+with that caveat. Green went 1/5 (r67, od only) → 2/5 (si, gr); op and od failed on the two classes that remain
+the product's largest: in-place editors' timing (op) and a heal admitting a candidate that names another run's
+record (od).
 
 ## Round 67 (main de6c0cb5: site facts stage 0 merged — observers and shadow rows, no decision changes) — 1/5 green, 3/5 compiled and passed; facts on every app, 299 shadow rows, 292 agree (97.7%)
 
