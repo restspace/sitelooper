@@ -16,7 +16,8 @@ import { executeTool, toolDefsFor, type ToolExecution } from './tools.js';
 import { visionSettings } from './vision.js';
 import { captureReadBack, captureReadBackAt, coreReadBack, savedSelectionReadBack, selectionReadBack, setIdentityHints, shownReadBack, titleReadBack, visibleTextsWithin } from '../daemon/recorder.js';
 import { describeOutcome, pinPart, sightValues, sourceReadBacks, type ReadBackDecider, type ReadBackTarget } from './readback.js';
-import { SOURCING_HOLD_MIN_MS, applyCommentaryPrePass, decideSourcingHold, sourcingAskMessage, sourcingHoldOn, splitCommentary, type TierVerdict } from './sourcing.js';
+import { SOURCING_HOLD_MIN_MS, applyCommentaryPrePass, decideSourcingHold, sourcingAskMessage, sourcingHoldOn, splitCommentary, type SourcingFacts, type TierVerdict } from './sourcing.js';
+import { shapeKeyOf, valueVerdict } from '../skills/facts-value.js';
 
 /** Tools that change the page URL, staleing every existing snapshot's refs. */
 const NAVIGATION_TOOLS = new Set(['goto', 'back', 'tabs']);
@@ -493,6 +494,18 @@ export async function runInstruction(
           if (!sighting || sighting.incomplete || sighting.truncated || sighting.candidates.length || sighting.extra) return 'unknown';
           return 'absent';
         };
+        // Site facts (stage 3, consumer 3): the daemon's snapshot of the
+        // origin, as it stood before this instruction's report is banked; a
+        // key's mint shape is keyed on the url the report is filed from (the
+        // daemon's noteMintedIds files it under the same url).
+        const factsUrl = page.url();
+        let sf: ReturnType<NonNullable<SessionState['siteFacts']>>;
+        try {
+          sf = state.siteFacts?.(factsUrl);
+        } catch {
+          sf = undefined;
+        }
+        const facts: SourcingFacts | undefined = sf ? { verdict: (value, key) => valueVerdict(sf!, value, shapeKeyOf(factsUrl, key)) } : undefined;
         const decision = await decideSourcingHold({
           instruction: text,
           values,
@@ -500,11 +513,12 @@ export async function runInstruction(
           alertTexts: [...steps.flatMap((s) => s.diff?.alerts ?? []), ...(report.evidence?.capturedDialogs ?? [])],
           verdict,
           evalResults: steps.flatMap((s) => (s.tool === 'eval' && typeof s.evalResult === 'string' ? [s.evalResult] : [])),
+          ...(facts ? { facts } : {}),
         });
         if (!decision.held.length) return null;
         const keys = decision.held.map((h) => h.key);
         sourcingHold.held = { keys, readsBefore: reads.length };
-        script.noteSourcingAsk?.(keys);
+        script.noteSourcingAsk?.(keys, decision.held.filter((h) => h.byFact).map((h) => h.key));
         // As the naming hold does: the retry is asked to change one thing and
         // models drop the rest — fwop19 04-open came back with values {} and
         // published nothing. Every value the held report named is kept.

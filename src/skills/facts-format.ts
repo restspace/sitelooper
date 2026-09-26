@@ -15,13 +15,17 @@
  *    rendering WOULD have decided beside what today's rule did. The rows are
  *    collected in memory and written by whoever drains them first: learn.ts's
  *    writeShadow call (a recording) or the run-outcome flush in
- *    daemon/server.ts (a replay). Nothing here changes a decision.
+ *    daemon/server.ts (a replay). Stage 2 switches two of them on:
+ *    shadowClassify and shadowIdentity return the verdict the shared
+ *    decision (execution/facts-display.ts) takes where a reliable fact
+ *    decides, today's otherwise, and stamp `applied` on the row when it did.
  *
  * Everything is best effort: an observer or a shadow that fails is a missing
  * row, never a failed step.
  */
 import type { Locator, Page } from 'playwright-core';
 import {
+  emptyFacts,
   factsFor,
   reliable,
   renderings,
@@ -36,7 +40,16 @@ import { originOf } from '../execution/url.js';
 import { FRAME_MARK, maskCounters } from '../execution/text.js';
 import { sameValue } from '../execution/refill.js';
 import { captureLines, lineShows } from '../execution/snapshot.js';
-import { classifyReportValue, templateMarkers, type GivenEvidence, type ReportVerdict } from '../execution/report.js';
+import { classifyReportValue, type GivenEvidence, type ReportVerdict } from '../execution/report.js';
+import { identityMarkerVerdict, type IdentityMarkerVerdict } from '../execution/gates.js';
+import {
+  classifyReportValueWithFacts,
+  controlKey,
+  identityMarkerVerdictWithFacts,
+  reportFormatKey,
+  titleKey,
+  typedControls,
+} from '../execution/facts-display.js';
 import { siteFactStore, type SiteFactStore } from './facts.js';
 import type { ShadowRow } from './shadow.js';
 import type { Skill, SkillStep } from './store.js';
@@ -54,10 +67,48 @@ let storeOverride: SiteFactStore | null = null;
  */
 export function setFormatSession(session: string | null): void {
   activeSession = session;
+  if (session === null) activeVars = [];
 }
 
 export function formatSession(): string | null {
   return activeSession;
+}
+
+let activeVars: string[] = [];
+
+/**
+ * The session's DECLARED variable values (the runid, …), set by the recorder
+ * around each instruction (recorder.ts setIdentityHints, from the agent
+ * loop's `state.vars`). Observers (a), (b) and (e) never observe a value equal
+ * to one of them: a var is the caller's input, not a field the app displays,
+ * and odoo fwod93 minted `{{=}} Bench Customer` for the `ref` key because the
+ * runid sat inside the customer's name.
+ */
+export function setFormatVars(values: readonly unknown[]): void {
+  activeVars = [...new Set(values.map((v) => (typeof v === 'string' ? v : String(v ?? ''))).map(foldVar).filter(Boolean))];
+}
+
+export function formatVars(): string[] {
+  return [...activeVars];
+}
+
+function foldVar(s: string): string {
+  return s.replace(/\s+/g, ' ').trim().toLowerCase();
+}
+
+/** Whether `value` IS one of the declared var values (whitespace collapsed, case folded). */
+export function isVarValue(value: string, vars: readonly string[] = activeVars): boolean {
+  const v = foldVar(value);
+  return v.length > 0 && vars.some((x) => foldVar(x) === v);
+}
+
+/**
+ * An origin's facts through the observers' store (the test override
+ * included), or null when it cannot be read: the daemon-only read-back
+ * consumer (recorder.ts captureReadBack, agent/readback.ts) reads here.
+ */
+export function formatFactsOf(origin: string): SiteFacts | null {
+  return factsOf(origin);
 }
 
 /** Tests: observe into this store instead of `siteFactStore()`. Null restores the default. */
@@ -106,20 +157,10 @@ export function writeFormats(store: SiteFactStore, origin: string, session: stri
 
 // --- keys -------------------------------------------------------------------
 
-/** `${route}|${role}|${name}`: a control's format key. */
-export function controlKey(url: string, role: string, name: string): string {
-  return `${routeTemplateOf(url)}|${role}|${name.replace(/\s+/g, ' ').trim()}`;
-}
-
-/** `${route}|${reportKey}`: a report value's format key. */
-export function reportFormatKey(url: string, reportKey: string): string {
-  return `${routeTemplateOf(url)}|${reportKey}`;
-}
-
-/** `${route}|title`: the document title's format key. */
-export function titleKey(url: string): string {
-  return `${routeTemplateOf(url)}|title`;
-}
+// controlKey (`${route}|${role}|${name}`), reportFormatKey (`${route}|${reportKey}`)
+// and titleKey (`${route}|title`) live in execution/facts-display.ts, where both
+// runners' stage 2 decisions read them; re-exported here for the observers' callers.
+export { controlKey, reportFormatKey, titleKey };
 
 // --- (a) a typed value, read back at its own control --------------------------
 
@@ -156,9 +197,20 @@ export function typedFormats(typed: string, shown: string): FormatKind[] {
   return [];
 }
 
-/** (a) observations for one committed fill/type: hard, keyed by the control. */
-export function typedObservations(url: string, role: string, name: string, typed: string, shown: string): Omit<Observation, 'session' | 'k'>[] {
-  if (!role || /\{\{/.test(typed)) return [];
+/**
+ * (a) observations for one committed fill/type: hard, keyed by the control.
+ * Never for a typed value that IS a declared var's value (`vars`, the
+ * session's by default): a var is the caller's input, not the field's format.
+ */
+export function typedObservations(
+  url: string,
+  role: string,
+  name: string,
+  typed: string,
+  shown: string,
+  vars: readonly string[] = activeVars,
+): Omit<Observation, 'session' | 'k'>[] {
+  if (!role || /\{\{/.test(typed) || isVarValue(typed, vars)) return [];
   const key = controlKey(url, role, name);
   return typedFormats(typed, shown).map((kind) => ({ key, v: { kind }, hard: true, ev: `typed into ${role} "${name}", shown as ${kind}` }));
 }
@@ -201,15 +253,56 @@ export async function observeTypedValue(
 
 // --- (b) a read-back pinned by containment ------------------------------------
 
+/** A digit-group separator: `12,500`, `12.500`, `1'000`, `12 500` (and the no-break spaces). */
+const GROUP_SEP = /^[,.' \u00a0\u202f]$/u;
+const ONE_SPACE = /^[ \u00a0\u202f]$/u;
+
+/**
+ * Whether the text beside the mark, read OUTWARD from it (`side[0]` touches
+ * the mark), continues a number: past at most one space, a digit, or a group
+ * separator with a digit beyond it. odoo fwod93's `£ 2,{{=}}` was a subtotal
+ * whose tail was cut out of "£ 2,450.00": the "affix" was the rest of the
+ * number, not how the value is framed.
+ */
+function continuesNumber(side: string): boolean {
+  const i = side.length && ONE_SPACE.test(side[0]) ? 1 : 0;
+  const c = side[i];
+  if (c === undefined) return false;
+  if (/\d/u.test(c)) return true;
+  if (GROUP_SEP.test(c) && /\d/u.test(side[i + 1] ?? '')) return true;
+  // the space skipped was itself a separator: `2 {{=}}` is caught above ('2'
+  // past one space); nothing more to ask
+  return false;
+}
+
+/**
+ * Whether the frame's remainder (the frame without the mark) says anything:
+ * at least one letter, or an identifier / unit sigil (`#`, `№`, `%`, a
+ * currency sign). gitea's `#{{=}}` stays; `({{=}})`, `{{=}},` and `"{{=}}"`
+ * are punctuation around the value and say nothing about its format.
+ */
+function remainderSpeaks(rest: string): boolean {
+  return /[\p{L}#№%\p{Sc}]/u.test(rest);
+}
+
 /**
  * An affix template from a read-back FRAME: one line, one mark, nothing else
  * still asking for a value. "Folder\n{{=}}" (a label line) and a frame with a
- * slot left in it describe a layout, not how the value is spelled.
+ * slot left in it describe a layout, not how the value is spelled. Refused as
+ * well (stage 2's tightening, round 67):
+ *  - a frame whose character on either side of the mark (past one space) is
+ *    a digit, or a group separator next to a digit: the value was cut out of
+ *    a number (`£ 2,{{=}}`, `{{=}}.00`);
+ *  - a frame whose remainder has no letter and no sigil (`remainderSpeaks`).
  */
 export function affixOfFrame(frame: string): string | null {
   if (!frame || frame === FRAME_MARK || /[\r\n]/.test(frame)) return null;
-  if (frame.split(FRAME_MARK).length !== 2) return null;
-  if (/\{\{(?!=\}\})/.test(frame.replace(FRAME_MARK, ''))) return null;
+  const parts = frame.split(FRAME_MARK);
+  if (parts.length !== 2) return null;
+  if (/\{\{(?!=\}\})/.test(parts.join(''))) return null;
+  const [before, after] = parts;
+  if (continuesNumber([...before].reverse().join('')) || continuesNumber(after)) return null;
+  if (!remainderSpeaks(before + after)) return null;
   return frame;
 }
 
@@ -217,11 +310,22 @@ export function affixOfFrame(frame: string): string | null {
  * (b) the observation for a read-back pinned by containment: the frame IS the
  * affix, keyed by the report key on the page's route. HARD when the value is
  * proven this page's record (the url names it: recorder.ts recordIdsOf) or the
- * page shows its text exactly once; SOFT otherwise.
+ * page shows its text exactly once; SOFT otherwise. None for a `value` that IS
+ * a declared var's value (`vars`, the session's by default): odoo fwod93's
+ * runid, framed inside the customer's name, minted `{{=}} Bench Customer` for
+ * the `ref` key. `value` omitted: that check is skipped.
  */
-export function frameObservation(url: string, reportKey: string, frame: string, proven: boolean): Omit<Observation, 'session' | 'k'> | null {
+export function frameObservation(
+  url: string,
+  reportKey: string,
+  frame: string,
+  proven: boolean,
+  value?: string,
+  vars: readonly string[] = activeVars,
+): Omit<Observation, 'session' | 'k'> | null {
   const tpl = affixOfFrame(frame);
   if (!tpl || !reportKey) return null;
+  if (value !== undefined && isVarValue(value, vars)) return null;
   return { key: reportFormatKey(url, reportKey), v: { kind: 'affix', tpl }, hard: proven, ev: `read-back framed as ${tpl}` };
 }
 
@@ -289,7 +393,9 @@ export function titleAffix(title: string, value: string): string | null {
   return null;
 }
 
-export function titleObservation(url: string, title: string, value: string): Omit<Observation, 'session' | 'k'> | null {
+/** (e) the title's affix as an observation; none for a value that IS a declared var's value (`vars`, the session's by default). */
+export function titleObservation(url: string, title: string, value: string, vars: readonly string[] = activeVars): Omit<Observation, 'session' | 'k'> | null {
+  if (isVarValue(value, vars)) return null;
   const tpl = titleAffix(title, value);
   return tpl ? { key: titleKey(url), v: { kind: 'affix', tpl }, hard: true, ev: `title framed as ${tpl}` } : null;
 }
@@ -318,7 +424,11 @@ export interface FactEvidence {
  * writes, whose `evidence` is one JSON string per fact consulted
  * (`{k, key, v, reliable}`, the convention Pieces D1, D3 and E share).
  */
-export type FactShadowRow = Omit<ShadowRow, 'evidence'> & { evidence: FactEvidence };
+export type FactShadowRow = Omit<ShadowRow, 'evidence'> & {
+  evidence: FactEvidence;
+  /** Stage 2: the fact DECIDED the verdict the runner acted on (absent when today's rule did). */
+  applied?: boolean;
+};
 
 export function asShadowRows(rows: readonly FactShadowRow[]): ShadowRow[] {
   return rows.map((r) => ({ ...r, evidence: [JSON.stringify(r.evidence)] }));
@@ -386,23 +496,9 @@ export async function readBackShadow(
   };
 }
 
-/** The role|name of the control each typed slot was typed into, from the skill's steps. */
+/** The role|name of the control each typed slot was typed into, from the skill's steps (execution/facts-display.ts typedControls). */
 function slotControls(steps: readonly SkillStep[], slot: string): { role: string; name: string }[] {
-  const out: { role: string; name: string }[] = [];
-  const walk = (list: readonly SkillStep[]) => {
-    for (const s of list) {
-      const typed = [s.args?.value, s.args?.text].filter((a): a is string => typeof a === 'string');
-      if (typed.some((a) => templateMarkers(a).includes(slot))) {
-        const chain = s.locators?.target ?? [];
-        const role = chain.find((c) => c.kind === 'role') as { role: string; name: string } | undefined;
-        if (role) out.push({ role: role.role, name: role.name });
-      }
-      const body = (s as { body?: readonly SkillStep[] }).body;
-      if (body) walk(body);
-    }
-  };
-  walk(steps);
-  return out;
+  return typedControls(steps)[slot] ?? [];
 }
 
 /** Format facts on this origin for a control named `role|name`, on any route. */
@@ -529,7 +625,10 @@ export function identityShadow(
  * captureReadBack's shadow (recorder.ts): only when the exact text match
  * failed (no element shows `value` as its whole text) and a format fact exists
  * under the report key. `showsOnce(text)` is the recorder's own
- * exactly-one-element test.
+ * exactly-one-element test. `applied` (stage 2, consumer 3): captureReadBack
+ * pinned the value through a reliable rendering under `applied.key` (the
+ * report key or a control key of the route); the row is computed under that
+ * key and stamped `applied: true` when its verdict is the pin.
  */
 export async function shadowReadBack(
   page: Page,
@@ -537,18 +636,21 @@ export async function shadowReadBack(
   label: string | undefined,
   pinned: boolean,
   exactCount: (text: string) => Promise<number>,
+  applied?: { key: string },
 ): Promise<void> {
   try {
-    if (!label || !activeSession) return;
+    if ((!label && !applied) || !activeSession) return;
     const url = page.url();
     const origin = originOf(url);
     if (!origin) return;
     const sf = factsOf(origin);
     if (!sf) return;
-    const key = reportFormatKey(url, label);
+    const key = applied?.key ?? reportFormatKey(url, label!);
     if (!factsFor(sf, 'format', key).length) return;
-    if ((await exactCount(value.trim()).catch(() => 1)) !== 0) return; // the exact match did not fail
-    noteFormatShadow(await readBackShadow(sf, key, value, pinned, async (r) => (await exactCount(r)) === 1));
+    if (!applied && (await exactCount(value.trim()).catch(() => 1)) !== 0) return; // the exact match did not fail
+    const row = await readBackShadow(sf, key, value, pinned, async (r) => (await exactCount(r)) === 1);
+    if (row && applied && row.fact === 'pin') Object.assign(row, { applied: true });
+    noteFormatShadow(row);
   } catch {
     // a shadow never breaks the read-back it shadows
   }
@@ -563,31 +665,72 @@ export function shadowClassify(
   shown: readonly string[] | null,
   evidence: GivenEvidence,
   verdict: ReportVerdict,
-): void {
+  url?: string,
+): ReportVerdict & { applied?: true } {
+  if (verdict.class !== 'echo' || !skill.origin) return verdict;
   try {
-    if (verdict.class !== 'echo' || !skill.origin) return;
     const sf = factsOf(skill.origin);
-    if (!sf || !sf.facts.some((f) => f.k === 'format')) return;
+    if (!sf || !sf.facts.some((f) => f.k === 'format')) return verdict;
     const steps = (chain?.length ? chain : [skill]).flatMap((s) => s.steps);
-    noteFormatShadow(classifyShadow(sf, steps, template, params, shown, evidence, verdict));
+    // Stage 2 (consumer 1): the shared decision both runners take — the
+    // artifact asks it over the snapshot it carries, with the same controls.
+    const decided = classifyReportValueWithFacts(sf, url ?? skill.origin, typedControls(steps), template, params, shown, evidence);
+    try {
+      const row = classifyShadow(sf, steps, template, params, shown, evidence, verdict);
+      noteFormatShadow(row && decided.applied ? { ...row, applied: true } : row);
+    } catch {
+      // a shadow row never breaks the report it describes
+    }
+    return decided;
   } catch {
-    // a shadow never breaks the report it shadows
+    return verdict;
   }
 }
 
-/** replay.ts's identity gate shadow: one call after identityMarkerVerdict. One read of the page, no sweep. */
-export async function shadowIdentity(page: Page, want: string, pass: boolean): Promise<void> {
+/**
+ * replay.ts's identity gate, once the marker was not seen as written (stage 2,
+ * consumer 2): today's identityMarkerVerdict, unless a reliable format fact on
+ * this route renders the marker to a spelling the page shows
+ * (execution/facts-display.ts identityMarkerVerdictWithFacts — the artifact
+ * asks the same over the snapshot it carries). `snapshot` is the replay's
+ * facts hook's (ReplayFactsHook.snapshot); none decides from no facts. The
+ * facts.identity row keeps today's verdict as its heuristic and is stamped
+ * `applied` when the fact decided. One read of the page, no sweep, shared by
+ * the decision and the row.
+ */
+export async function shadowIdentity(
+  page: Page,
+  snapshot: SiteFacts | undefined,
+  pattern: string | undefined,
+  params: Record<string, string>,
+  want: string,
+  presence: 'present' | 'absent' | 'unknown',
+): Promise<IdentityMarkerVerdict & { applied?: true; reason?: string }> {
+  const url = page.url();
+  const origin = originOf(url) ?? '';
+  let lines: Promise<readonly string[] | null> | null = null;
+  let title: Promise<string> | null = null;
+  const look = {
+    presence,
+    lines: () => (lines ??= captureLines(page, 2).then((c) => c?.lines ?? null, () => null)),
+    title: () => (title ??= page.title().then((t) => t ?? '', () => '')),
+  };
+  let verdict: IdentityMarkerVerdict & { applied?: true; reason?: string };
   try {
-    const url = page.url();
-    const origin = originOf(url);
-    if (!origin) return;
-    const sf = factsOf(origin);
-    const route = routeTemplateOf(url);
-    if (!sf || !sf.facts.some((f) => f.k === 'format' && f.key.startsWith(`${route}|`))) return;
-    const live = await captureLines(page, 2).catch(() => null);
-    const title = (await page.title().catch(() => '')) ?? '';
-    noteFormatShadow(identityShadow(sf, url, want, pass, live?.lines ?? null, title));
+    verdict = await identityMarkerVerdictWithFacts(snapshot ?? emptyFacts(origin), pattern, url, params, want, look);
   } catch {
-    // a shadow never breaks the gate it shadows
+    verdict = identityMarkerVerdict(pattern, url, params, want, presence);
   }
+  try {
+    if (!origin) return verdict;
+    const sf = snapshot ?? factsOf(origin);
+    const route = routeTemplateOf(url);
+    if (!sf || !sf.facts.some((f) => f.k === 'format' && f.key.startsWith(`${route}|`))) return verdict;
+    const todayPass = verdict.applied ? false : verdict.pass;
+    const row = identityShadow(sf, url, want, todayPass, await look.lines(), await look.title());
+    noteFormatShadow(row && verdict.applied ? { ...row, applied: true } : row);
+  } catch {
+    // a shadow row never breaks the gate it describes
+  }
+  return verdict;
 }

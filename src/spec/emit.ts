@@ -9,6 +9,7 @@ import { derivesFromParams, givenPartialReason, givenWarning, reportNeedsPage, t
 import { askedOutputs } from '../daemon/step-verdict.js';
 import { observedNothing, scopeSetBy } from '../execution/observe.js';
 import { segmentGate } from '../execution/gates.js';
+import { typedControls } from '../execution/facts-display.js';
 /**
  * The IR as `@playwright/test` source (Tier 2: no sitelooper runtime).
  *
@@ -1114,7 +1115,7 @@ const HELPERS: { token: string; source: string[] }[] = [
       '  await expect',
       '    .poll(',
       '      async () => {',
-      '        last = await expectedChangesVerdict(recorded, p, ctx, {',
+      '        last = await expectedChangesVerdict(recorded, p, { ...ctx, counters: counterNames(siteFactsAt(page.url()), page.url()) }, {',
       '          added: addedLines(linesBefore, linesAfter ?? (await capturePageLines(page, dialect))),',
       '          live: (look) => captureLines(page, dialect, look),',
       '        });',
@@ -1682,7 +1683,7 @@ function expectationLines(step: SkillStep, ctx: Ctx, out: string[], linesBefore:
   if (['click', 'dblclick', 'press'].includes(step.tool)) {
     if (ctx.echoes) {
       ctx.echoUsed = true;
-      out.push(`noteCommit(${ctx.echoes}, liveLines(${verdict}.inDiff ?? [], p), ${q(`${ctx.segmentId}/${ctx.stepIndex}`)});`);
+      out.push(`noteCommit(${ctx.echoes}, liveLines(${verdict}.inDiff ?? [], p, counterNames(siteFactsAt(page.url()), page.url())), ${q(`${ctx.segmentId}/${ctx.stepIndex}`)});`);
     }
     ctx.committedUsed = true;
     out.push(`for (const slot of committedSlots(${q(step.tool)}, ${verdict}.inDiff)) typedCommitted.add(slot);`);
@@ -3407,6 +3408,13 @@ function reportTemplateLines(step: SpecStep, ctx: Ctx, consumed: ReadonlySet<str
   // returned it, or the step's procedure typed it — every segment's fills, as
   // the daemon counts its chain's (typedSlots).
   const typed = typedSlots(step.segments.flatMap((segment) => segment.steps));
+  // Stage 2 (site facts): the controls each typed slot was typed into, as the
+  // daemon's synthesize computes them from its chain (execution/facts-display.ts
+  // typedControls) — carried per value as a literal, so the artifact renders a
+  // slot through the same reliable format facts (classifyReportValueWithFacts).
+  const controls = typedControls(step.segments.flatMap((segment) => segment.steps));
+  const slotControlsOf = (template: string): Record<string, { role: string; name: string }[]> =>
+    Object.fromEntries(templateMarkers(template).filter((m) => controls[m]?.length).map((m) => [m, controls[m]]));
   const needsPage = reportNeedsPage(
     entries.map(([, template]) => template),
     typed,
@@ -3442,7 +3450,7 @@ function reportTemplateLines(step: SpecStep, ctx: Ctx, consumed: ReadonlySet<str
       ? ` else { const ref = referenceValue(${q(template)}, p, ${shown}); if (ref !== null) { outputs[${key}] = ref; run.referenceOnly.push(${key}); } }`
       : '';
     out.push(
-      `if (outputs[${key}] === undefined) { const c = classifyReportValue(${q(template)}, p, ${shown}, reportGiven); if (c.class === 'given') { ${said.join(' ')} } if (c.class === 'echo') { ${typedSaid} } if (c.value !== null) outputs[${key}] = c.value;${reference} }`,
+      `if (outputs[${key}] === undefined) { const c = classifyReportValueWithFacts(siteFactsAt(page.url()), page.url(), ${JSON.stringify(slotControlsOf(template))}, ${q(template)}, p, ${shown}, reportGiven); if (c.class === 'given') { ${said.join(' ')} } if (c.class === 'echo') { ${typedSaid} } if (c.value !== null) outputs[${key}] = c.value;${reference} }`,
     );
   }
   return out;
@@ -3503,7 +3511,10 @@ function identityChecks(segment: SpecSegment, ctx: Ctx): string[] {
       '    }',
       '  }',
       "  if (seen.presence !== 'present') {",
-      `    const verdict = identityMarkerVerdict(${pattern}, page.url(), p, ${src(marker)}, seen.presence);`,
+      // Stage 2 (site facts): the same verdict, unless a reliable format fact on
+      // this route renders the marker to a spelling the page (or its title)
+      // shows — replay's shadowIdentity asks identityMarkerVerdictWithFacts too.
+      `    const verdict = await identityMarkerVerdictWithFacts(siteFactsAt(page.url()), ${pattern}, page.url(), p, ${src(marker)}, { presence: seen.presence, lines: async () => (await captureLines(page, 2).catch(() => null))?.lines ?? null, title: () => page.title() });`,
       `    if (verdict.warning) logWarning(${q(`${where}: `)} + verdict.warning);`,
       `    if (!verdict.pass) throw new Error(${q(`${where}: identity: ${commentSafe(marker)} is not confirmed on this page`)});`,
       '  }',

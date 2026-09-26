@@ -31,6 +31,7 @@ import {
   typedObservations,
   useFormatStore,
 } from '../src/skills/facts-format.js';
+import { formatVars, isVarValue, setFormatVars } from '../src/skills/facts-format.js';
 import type { SkillStep } from '../src/skills/store.js';
 
 const ORIGIN = 'http://app.test';
@@ -240,5 +241,95 @@ describe('format shadows: the pure decisions', () => {
     noteFormatShadow({ rule: 'facts.readback', fact: 'none', heuristic: 'refused', agree: true, evidence: { k: 'format', key: 'k', v: null, reliable: false } });
     expect(takeFormatShadowRows()).toHaveLength(1);
     expect(takeFormatShadowRows()).toHaveLength(0);
+  });
+});
+
+// --- stage 2, Piece K: the observer tightening ---------------------------------
+
+describe('stage 2: the affix observer refuses what round 67 over-generalised', () => {
+  afterEach(() => {
+    setFormatVars([]);
+    takeFormatShadowRows();
+  });
+
+  it('refuses a frame cut out of a number (odoo fwod93 `£ 2,{{=}}`)', () => {
+    expect(affixOfFrame('£ 2,{{=}}')).toBeNull();
+    expect(frameObservation(URL_, 'subtotal', '£ 2,{{=}}', true)).toBeNull();
+    expect(affixOfFrame('{{=}}.00 EUR')).toBeNull(); // separator then digit, right of the mark
+    expect(affixOfFrame('Qty 2 {{=}}')).toBeNull(); // a digit past one space
+    expect(affixOfFrame("CHF 1'{{=}}")).toBeNull();
+    expect(affixOfFrame('{{=}}7 items')).toBeNull();
+    // a separator NOT beside a digit is punctuation, not a number
+    expect(affixOfFrame('Total: {{=}}')).toBe('Total: {{=}}');
+    expect(affixOfFrame('{{=}}, Inc.')).toBe('{{=}}, Inc.');
+  });
+
+  it('refuses a frame whose remainder has no letter (punctuation says nothing)', () => {
+    expect(affixOfFrame('({{=}})')).toBeNull();
+    expect(affixOfFrame('"{{=}}"')).toBeNull();
+    expect(affixOfFrame('{{=}} -')).toBeNull();
+    expect(frameObservation(URL_, 'ref', '[{{=}}]', true)).toBeNull();
+    // an identifier or unit sigil does speak
+    expect(affixOfFrame('£{{=}}')).toBe('£{{=}}');
+    expect(affixOfFrame('{{=}}%')).toBe('{{=}}%');
+  });
+
+  it('keeps the snipeit and gitea affixes', () => {
+    expect(affixOfFrame('Asset {{=}}')).toBe('Asset {{=}}');
+    expect(affixOfFrame('#{{=}}')).toBe('#{{=}}');
+    expect(frameObservation(URL_, 'asset', 'Asset {{=}}', true)).toMatchObject({ v: { kind: 'affix', tpl: 'Asset {{=}}' } });
+    expect(frameObservation(URL_, 'issue', '#{{=}}', true, '4', ['fwgt21-n1'])).toMatchObject({ v: { kind: 'affix', tpl: '#{{=}}' } });
+  });
+
+  it('(b) refuses a report value that IS a declared var (odoo fwod93 `{{=}} Bench Customer` for `ref`)', () => {
+    expect(frameObservation(URL_, 'ref', '{{=}} Bench Customer', true, 'fwod93-n1', ['fwod93-n1'])).toBeNull();
+    // the session's vars by default
+    setFormatVars(['fwod93-n1', 3]);
+    expect(isVarValue(' FWOD93-N1 ')).toBe(true);
+    expect(formatVars()).toEqual(['fwod93-n1', '3']);
+    expect(frameObservation(URL_, 'ref', '{{=}} Bench Customer', true, 'fwod93-n1')).toBeNull();
+    // another value framed the same way is still observed
+    expect(frameObservation(URL_, 'customer', '{{=}} Bench Customer', true, 'fwod93-n1 x')).toMatchObject({ v: { kind: 'affix', tpl: '{{=}} Bench Customer' } });
+  });
+
+  it('(a) and (e) never observe a declared var', () => {
+    expect(typedObservations(URL_, 'textbox', 'Ref', ' fwod93-n1', 'fwod93-n1', ['fwod93-n1'])).toEqual([]);
+    expect(typedObservations(URL_, 'textbox', 'Ref', ' fwod93-n1', 'fwod93-n1', [])).toHaveLength(1);
+    expect(titleObservation(URL_, 'fwod93-n1 - Odoo', 'fwod93-n1', ['fwod93-n1'])).toBeNull();
+    setFormatVars(['S00023']);
+    expect(titleObservation(URL_, 'S00023 - Odoo', 'S00023')).toBeNull();
+    setFormatSession(null); // a closed session forgets its vars
+    expect(formatVars()).toEqual([]);
+    expect(titleObservation(URL_, 'S00023 - Odoo', 'S00023')).toMatchObject({ v: { kind: 'affix', tpl: '{{=}} - Odoo' } });
+  });
+});
+
+describe('stage 2: the read-back shadow row is stamped applied when the fact pinned', () => {
+  let dir: string;
+  let store: SiteFactStore;
+  beforeEach(() => {
+    dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sitelooper-facts-format-k-'));
+    store = new SiteFactStore(dir);
+    useFormatStore(store);
+    setFormatSession('rec-1');
+  });
+  afterEach(() => {
+    useFormatStore(null);
+    setFormatSession(null);
+    takeFormatShadowRows();
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('applied under the key that decided, heuristic still today\'s refusal', async () => {
+    const key = controlKey(URL_, 'cell', 'Ref');
+    store.observe(ORIGIN, [{ k: 'format', key, v: { kind: 'affix', tpl: '#{{=}}' }, hard: true, session: 'rec-1' }]);
+    const counts: Record<string, number> = { '4': 2, '#4': 1 };
+    await shadowReadBack(fakePage(URL_), '4', undefined, false, async (t) => counts[t] ?? 0, { key });
+    const rows = takeFormatShadowRows() as unknown as Array<Record<string, unknown>>;
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({ rule: 'facts.readback', fact: 'pin', heuristic: 'refused', agree: false, applied: true });
+    // not applied: no stamp
+    await shadowReadBack(fakePage(URL_), '4', 'task_ref', false, async (t) => ({ '4': 0, '#4': 1 })[t] ?? 0);
+    expect(takeFormatShadowRows()).toEqual([]); // no fact under the report key
   });
 });

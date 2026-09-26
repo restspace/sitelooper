@@ -38,7 +38,7 @@ import { snapshot, waitForContent } from './refs.js';
 import { ScriptRecorder, candidateExpr } from './recorder.js';
 import { encodeFrame, LineDecoder, type CommandName, type FlowStepResult, type Frame, type Request } from '../shared/protocol.js';
 import { aliasLegacyEnv, ensureSessionDir, socketPath, validateSessionName } from '../shared/paths.js';
-import { literalCredentialsIn, markLiteralCredentials } from '../shared/secrets.js';
+import { literalCredentialsIn, markLiteralCredentials, setKnownCredentialHashes } from '../shared/secrets.js';
 import { BrowserSession } from './browser.js';
 import { DEFAULT_BROWSER_PROFILE, urlTrail } from '../execution/browser.js';
 import { visitedUrlPart } from '../execution/url.js';
@@ -49,7 +49,7 @@ import { coverageComplete, recordedValueShown } from '../execution/snapshot.js';
 import { captureSignature } from './diff.js';
 import { recordedStandIn, referencableOutputs, selfNamingReadDrops } from '../skills/flow.js';
 import { SessionState } from './state.js';
-import { ValueFactObserver } from '../skills/facts-value.js';
+import { ValueFactObserver, shapeKeyOf, type ValueVerdict } from '../skills/facts-value.js';
 import { SiteFactStore } from '../skills/facts.js';
 import { sourcingHoldOn } from '../agent/sourcing.js';
 
@@ -122,6 +122,9 @@ export class Daemon {
       learn: opts.learn,
     });
     this.state = new SessionState(opts.session);
+    // Site facts (stage 3, consumer 3): the loop's sourcing hold reads the
+    // origin's facts through the session state, as it reads `vars`.
+    this.state.siteFacts = (url) => this.valueFacts()?.snapshot(url);
   }
 
   /** Bank what this instruction minted: url ids first, then reported values. */
@@ -165,7 +168,17 @@ export class Daemon {
           // re-observe. Banked, it became a known value every later compile
           // slotted and an identity marker no run could fill (gitea fwgt17).
           if (commentaryReport(entries, name, String(value), this.factVars())) continue;
-          const banked = this.ledger.add(String(value), { from: 'output', step: stepId, name });
+          // Site facts (stage 3, consumer 1): the origin's reliable value facts
+          // decide the kind — a catalogue constant or a credential is text, a
+          // mint or a value of the key's reliable mint shape is an identifier
+          // at first sighting. No learn store or no url: no facts, as before.
+          const reportFacts = factUrl ? this.valueFacts()?.snapshot(factUrl) : undefined;
+          const banked = this.ledger.add(
+            String(value),
+            { from: 'output', step: stepId, name },
+            reportFacts ? { shapeKey: shapeKeyOf(factUrl!, name) } : {},
+            reportFacts,
+          );
           this.valueFacts()?.noteReport(factUrl, name, String(value), banked, this.factVars());
         }
       }
@@ -179,6 +192,24 @@ export class Daemon {
       runSpecific: this.runSpecific,
       sourcingHold: sourcingHoldOn(),
     });
+    // …and the credential facts it may just have made reliable, to the scrub.
+    const instr = entries.find((e) => e.k === 'instruction' && e.url);
+    this.shareCredentialFacts(factUrl ?? (instr?.k === 'instruction' ? instr.url : undefined));
+  }
+
+  /**
+   * Site facts, stage 3 consumer 4: hand the recorder's scrub the hashes of
+   * the values this origin holds a reliable `credential` fact about
+   * (secrets.ts setKnownCredentialHashes), so an ambiguous credential the app
+   * shows outside its password field (fwgr68/fwkb39: the password is the
+   * username) is scrubbed in the step's diff too. Called when the observer's
+   * session begins (`open`, a flow run's start) and after every observation.
+   * No learn store or no url: nothing is handed, and the scrub is today's.
+   */
+  private shareCredentialFacts(url: string | undefined): void {
+    const facts = this.valueFacts();
+    if (!facts || !url) return;
+    setKnownCredentialHashes(facts.credentialHashes(url));
   }
 
   /**
@@ -259,9 +290,23 @@ ${describeLeaks(leaks.slice(0, 6))}`);
       if (!head || !session.has(head.id)) return null;
       return (head.seq ? store.list(head.origin).filter((s) => s.seq?.chain === head.seq!.chain) : [head]).filter((s) => session.has(s.id));
     };
+    // Site facts (stage 3, consumer 2): a reliable value fact decides where
+    // it speaks. An entry a reliable `identifier` verdict names (a mint, the
+    // key's mint shape) is a run value even banked as text or under three
+    // characters, and even stated as a task constant (the identifier wins);
+    // one a reliable `not-identifier` verdict names (a catalogue constant,
+    // a credential) never is. Where no reliable fact speaks: today's rule.
+    const verdicts = this.valueFacts()?.stripVerdicts(this.ledger.all(), flow.origin) ?? new Map<string, ValueVerdict>();
     const runValues = this.ledger
       .all()
-      .filter((e) => e.kind === 'identifier' && e.value.length >= 3 && !constants.has(e.value))
+      .filter((e) => {
+        const verdict = verdicts.get(e.value);
+        // The length floor stays whatever the verdict: stripping matches whole
+        // tokens, and a one-digit id admitted by its label's shape ("4" under
+        // task_id) would take `nth-of-type(4)` and `(4)` out of every chain.
+        if (verdict) return verdict.kind === 'identifier' && e.value.length >= 3;
+        return e.kind === 'identifier' && e.value.length >= 3 && !constants.has(e.value);
+      })
       .map((e) => ({ value: e.value, evidence: e.basis !== 'shape' }));
     // Only a RUN VALUE — an identifier the ledger banked, less the task's
     // constants — is dropped: a board column's "Backlog" or a nav link's
@@ -269,9 +314,16 @@ ${describeLeaks(leaks.slice(0, 6))}`);
     // reported value) and names the same element on every run.
     const identifiers = new Set(runValues.map((r) => r.value));
     // Site facts (stage 0, shadow only): would the value-class facts strip the same values?
-    this.valueFacts()?.stripRows(this.ledger.all().filter((e) => e.kind === 'identifier' && e.value.length >= 3), identifiers, `strip ${flow.name}`);
+    // Stage 3: every value a verdict decided is weighed too, and its row says `applied`.
+    this.valueFacts()?.stripRows(
+      this.ledger.all().filter((e) => (e.kind === 'identifier' && e.value.length >= 3) || verdicts.has(e.value)),
+      identifiers,
+      `strip ${flow.name}`,
+      { values: new Set(verdicts.keys()), origin: flow.origin },
+    );
     let selfNamed = 0;
-    for (const t of selfNamingReadDrops(flow, chainOf, (v) => !identifiers.has(v) || constants.has(v) || vars.some((x) => v.includes(x)))) {
+    const factConstant = (v: string) => constants.has(v) && verdicts.get(v)?.kind !== 'identifier';
+    for (const t of selfNamingReadDrops(flow, chainOf, (v) => !identifiers.has(v) || factConstant(v) || vars.some((x) => v.includes(x)))) {
       store.put(t.skill);
       selfNamed += t.removed;
     }
@@ -537,7 +589,16 @@ ${describeLeaks(leaks.slice(0, 6))}`);
     const entries = this.browser.script?.entries ?? [];
     const outputs = this.ledger.all().filter((e) => e.binding.from === 'output').map((e) => e.value);
     if (!entries.length || !outputs.length) return [];
-    return [...taskConstants(entries, outputs, Object.values(this.state.vars ?? {}), this.runSpecific)];
+    // Site facts (stage 3, consumer 3): the origin's value facts decide where
+    // one is reliable (a constant is one, a mint never is); the snapshot is
+    // the origin the recording last stood on. No learn store → no facts.
+    let url: string | undefined;
+    for (let i = entries.length - 1; i >= 0 && !url; i--) {
+      const e = entries[i];
+      url = e.k === 'step' ? e.diff?.url : e.k === 'instruction' ? e.url : undefined;
+    }
+    const facts = url ? this.valueFacts()?.snapshot(url) : undefined;
+    return [...taskConstants(entries, outputs, Object.values(this.state.vars ?? {}), this.runSpecific, facts)];
   }
 
   /** The exact matcher found nothing: is this instruction a stored procedure in other words? */
@@ -795,6 +856,8 @@ ${describeLeaks(leaks.slice(0, 6))}`);
         return { pid: process.pid, session: this.opts.session, learning: Boolean(this.browser.learn), skillsDir: this.browser.learn?.dir ?? null };
 
       case 'open': {
+        // A recording's session begins here: the scrub learns the origin's credential facts.
+        this.shareCredentialFacts(String(a.url));
         const page = await this.browser.getPage();
         await page.goto(String(a.url), { waitUntil: 'load', timeout: 30_000 });
         // `load` fires before a client-rendered app has painted, and the very
@@ -1591,6 +1654,7 @@ ${describeLeaks(certain.slice(0, 30))}${certain.length > 30 ? `\n  … and ${cer
     for (const [varName, value] of Object.entries(varsIn)) this.ledger.add(value, { from: 'var', name: varName }, { vouched: true });
     // Site facts: a flow run is its own session (a soft fact needs two).
     this.valueFacts()?.beginSession(`${this.opts.session}/${flow.name}@${new Date().toISOString()}`);
+    this.shareCredentialFacts(flow.startUrl);
     // The browser the flow was recorded in (Flow.browser; a flow saved before
     // profiles were stored was recorded at the default). Resized to it when a
     // running session is in another window; anything fixed at launch is said.

@@ -242,7 +242,10 @@ function storeFrom(entries, known, valuesByInstruction) {
         for (const [name, value] of Object.entries(vals)) {
           // The daemon skips the model's commentary about the page (flow.ts commentaryReport).
           if (commentaryReport(group, name, String(value), Object.values(known))) continue;
-          ledger.add(String(value), { from: 'output', step: stepId, name });
+          // Site facts (stage 3: the daemon passes the origin's snapshot and the
+          // report key's shapeKey): the rebuild's store carries no site facts,
+          // so `undefined` — add()'s rules run exactly as with no fact store.
+          ledger.add(String(value), { from: 'output', step: stepId, name }, {}, undefined);
         }
       }
     }
@@ -311,6 +314,11 @@ function storeFrom(entries, known, valuesByInstruction) {
                 entries.slice(0, at + 1),
                 ledger.all().filter((l) => l.binding.from === 'output').map((l) => l.value),
                 Object.values(known),
+                undefined,
+                // Site facts (stage 3): the daemon passes the origin's snapshot;
+                // a rebuild replays the recording alone, with no fact store, so
+                // the heuristic arms decide as they did before stage 3.
+                undefined,
               ),
             ],
           });

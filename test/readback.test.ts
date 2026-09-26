@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import type { Page } from 'playwright-core';
 import {
   MAX_CANDIDATES,
@@ -385,5 +385,150 @@ const browserEnabled = process.env.BP_BROWSER_TESTS === '1';
     expect(out.byCode).toEqual([]);
     expect(out.dropped).toEqual([]);
     expect(out.remaining.map((t) => t.name)).toEqual(['old_ref']);
+  });
+});
+
+// --- stage 2 (site facts, consumer 3): known renderings before the model --------
+
+describe('stage 2: a reliable display format is offered before the model', () => {
+  const ORIGIN = 'http://127.0.0.1:4180';
+  const URL_ = `${ORIGIN}/#/tickets/t15`;
+  let dir: string;
+  let store: import('../src/skills/facts.js').SiteFactStore;
+  let ff: typeof import('../src/skills/facts-format.js');
+  let rec: typeof import('../src/daemon/recorder.js');
+
+  const affix = (key: string, tpl: string, hard = true, session = 's1') =>
+    store.observe(ORIGIN, [{ k: 'format', key, v: { kind: 'affix', tpl }, hard, session }]);
+
+  beforeAll(async () => {
+    ff = await import('../src/skills/facts-format.js');
+    rec = await import('../src/daemon/recorder.js');
+  });
+  beforeEach(async () => {
+    const os = await import('node:os');
+    const { SiteFactStore } = await import('../src/skills/facts.js');
+    dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sitelooper-readback-k-'));
+    store = new SiteFactStore(dir);
+    ff.useFormatStore(store);
+    ff.setFormatSession('rec-1');
+  });
+  afterEach(() => {
+    ff.useFormatStore(null);
+    ff.setFormatSession(null);
+    ff.takeFormatShadowRows();
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('displays: a rendering is its own tier, after exact and before line', () => {
+    expect(displays('#4', '4')).toBe(null); // today: a lone digit inside a longer text
+    expect(displays('#4', '4', ['#4'])).toBe('rendered');
+    expect(displays('4', '4', ['#4'])).toBe('exact');
+    const exact = el('html > td:nth-child(1)', '4');
+    const shown = el('html > span:nth-child(2)', '#4');
+    expect(displayersOf([shown, exact], '4', ['#4']).map((c) => c.path)).toEqual([exact.path]);
+    expect(displayersOf([shown], '4', ['#4']).map((c) => c.path)).toEqual([shown.path]);
+    const line = el('html > p:nth-child(3)', 'Ticket RD-1015 is ready');
+    const framed = el('html > h1:nth-child(1)', 'Ticket RD-1015');
+    expect(displayersOf([line, framed], 'RD-1015', ['Ticket RD-1015']).map((c) => c.path)).toEqual([framed.path]);
+    // no renderings: today's function
+    expect(displayersOf([line, framed], 'RD-1015').map((c) => c.path).sort()).toEqual([framed.path, line.path].sort());
+  });
+
+  it("readBackRenderings: report key first, then the route's controls; affix with the value as its core only", () => {
+    const report = ff.reportFormatKey(URL_, 'task_ref');
+    const cell = ff.controlKey(URL_, 'cell', 'Ref');
+    affix(report, '#{{=}}');
+    affix(cell, 'Task {{=}}');
+    affix(ff.controlKey(URL_, 'cell', 'Advisory'), 'Seen {{=}}', false); // one soft session: advisory
+    affix(ff.reportFormatKey(URL_, 'other'), 'Other {{=}}'); // another label's report key: not a control
+    affix(ff.titleKey(URL_), '{{=}} - Desk'); // the title is not an element
+    store.observe(ORIGIN, [{ k: 'format', key: ff.controlKey(URL_, 'textbox', 'Amount'), v: { kind: 'thousands' }, hard: true, session: 's1' }]);
+    const sf = store.read(ORIGIN);
+    expect(rec.readBackRenderings(sf, URL_, 'task_ref', '4')).toEqual([
+      { text: '#4', tpl: '#{{=}}', key: report },
+      { text: 'Task 4', tpl: 'Task {{=}}', key: cell },
+    ]);
+    expect(rec.readBackRenderings(sf, URL_, undefined, '4').map((r) => r.text)).toEqual(['Task 4']);
+    // thousands re-spells the core: a read of "12,500" would publish another value
+    expect(rec.readBackRenderings(sf, URL_, undefined, '12500').map((r) => r.text)).toEqual(['Task 12500']);
+  });
+
+  it('readBackRenderings: a template the tightened observer refuses never decides', () => {
+    const key = ff.reportFormatKey(URL_, 'subtotal');
+    affix(key, '£ 2,{{=}}');
+    expect(rec.readBackRenderings(store.read(ORIGIN), URL_, 'subtotal', '450.00')).toEqual([]);
+  });
+
+  it("the cascade pins the one element showing a known rendering; without the fact it is the model's, as before", async () => {
+    const items = [el('html > span:nth-child(1)', '#4'), el('html > p:nth-child(2)', 'Moved 4 cards')];
+    const page = pageShowing({ '4': { items } });
+    const before = await sourceReadBacks(targets(['task_ref', '4']), page, { instruction: 'open the task', pin: pinning().pin });
+    expect(before.byCode).toEqual([]);
+    expect(before.remaining.map((t) => t.name)).toEqual(['task_ref']);
+    affix(ff.reportFormatKey(URL_, 'task_ref'), '#{{=}}');
+    const pin = pinning();
+    const after = await sourceReadBacks(targets(['task_ref', '4']), page, { instruction: 'open the task', pin: pin.pin });
+    expect(after.byCode).toEqual(['task_ref']);
+    expect(pin.calls).toEqual([{ value: '4', selector: 'html > span:nth-child(1)' }]);
+    // no session: no facts read, today's cascade
+    ff.setFormatSession(null);
+    const closed = await sourceReadBacks(targets(['task_ref', '4']), page, { instruction: 'open the task', pin: pinning().pin });
+    expect(closed.remaining.map((t) => t.name)).toEqual(['task_ref']);
+  });
+});
+
+(browserEnabled ? describe : describe.skip)('stage 2: captureReadBack through a fact, on a live page', () => {
+  const ORIGIN = 'http://facts.test';
+  const URL_ = `${ORIGIN}/tasks/4`;
+  const html = `<!doctype html><title>Task</title><body>
+    <nav><a href="#">Board</a> / <span>Tasks</span></nav>
+    <h1>Bench Task</h1>
+    <p class="meta"><span class="ref">#4</span></p>
+    <ul><li>moved to Backlog</li><li>4 comments</li></ul>
+  </body>`;
+  let session: { getPage: () => Promise<Page>; close: () => Promise<unknown> };
+  let page: Page;
+  let dir: string;
+  let store: import('../src/skills/facts.js').SiteFactStore;
+  let ff: typeof import('../src/skills/facts-format.js');
+
+  beforeAll(async () => {
+    const os = await import('node:os');
+    const { BrowserSession } = await import('../src/daemon/browser.js');
+    const { SiteFactStore } = await import('../src/skills/facts.js');
+    ff = await import('../src/skills/facts-format.js');
+    dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sitelooper-readback-kb-'));
+    store = new SiteFactStore(dir);
+    session = new BrowserSession({ session: 'readback-k', persist: false }) as never;
+    page = await session.getPage();
+    await page.route(`${ORIGIN}/**`, (r) => r.fulfill({ status: 200, contentType: 'text/html', body: html }));
+    await page.goto(URL_);
+  }, 60_000);
+  afterAll(async () => {
+    ff?.useFormatStore(null);
+    ff?.setFormatSession(null);
+    ff?.takeFormatShadowRows();
+    await session?.close();
+    if (dir) fs.rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('refuses "4" as today, then pins "#4" framed by the fact and stamps the shadow row applied', async () => {
+    const { captureReadBack } = await import('../src/daemon/recorder.js');
+    ff.useFormatStore(store);
+    ff.setFormatSession('rec-k');
+    expect(await captureReadBack(page, '4', 'task_ref')).toBeNull();
+    expect(ff.takeFormatShadowRows()).toEqual([]); // no fact of any standing: no row
+    store.observe(ORIGIN, [{ k: 'format', key: ff.reportFormatKey(URL_, 'task_ref'), v: { kind: 'affix', tpl: '#{{=}}' }, hard: true, session: 'rec-0' }]);
+    const step = await captureReadBack(page, '4', 'task_ref');
+    expect(step).not.toBeNull();
+    expect(step!.args).toMatchObject({ target: '(read-back)', what: 'text', frame: '#{{=}}' });
+    expect(step!.result).toBe(JSON.stringify('4'));
+    expect(step!.label).toBe('task_ref');
+    // a durable locator that names neither the value nor its rendering
+    expect(step!.locators.target.chain?.some((c) => c.kind === 'text' && ['4', '#4'].includes(c.text))).toBe(false);
+    const rows = ff.takeFormatShadowRows() as unknown as Array<Record<string, unknown>>;
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({ rule: 'facts.readback', fact: 'pin', heuristic: 'refused', applied: true });
   });
 });

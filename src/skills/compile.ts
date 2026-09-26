@@ -1150,9 +1150,30 @@ export function compileSkills(input: CompileInput): Skill[] {
   // in args, locators AND expectations. A dropped slot whose marker lingered
   // only in addedContains was an orphan {{vN}} that replay treated as a HARD,
   // unfillable line.
+  //
+  // …re-slotted with every SURVIVING slot whose value occurs in it as a whole
+  // token, longest first (Piece Q, odoo fwod94): a dropped slot's literal is
+  // the one place the step substitution above never let a surviving slot look,
+  // because the dropped slot swallowed that text first. fwod94's 02-create
+  // typed "fwod94-n1 Bench" (a prefix of the instruction's customer name, so a
+  // slot of its own); the customer-name slot swallowed it in the template, it
+  // was dropped, and its literal — run 1's runid — was typed on n2, where Odoo
+  // offered `Create "fwod94-n1 Bench"`. The runid's var slot binds on every
+  // run; re-slotted, the step types "{{v2}} Bench". The survivor is then USED
+  // wherever the dropped slot was.
+  const survivingText = new Map([...textSlots].filter(([n]) => keptSlots.has(n)));
   for (const [name, value] of slots) {
     if (keptSlots.has(name)) continue;
-    for (const b of built) b.folded = fillParamsDeep(b.folded, { [name]: value }) as SkillStep[];
+    const literal = substitute(value, survivingText);
+    for (const b of built) {
+      b.folded = fillParamsDeep(b.folded, { [name]: literal }) as SkillStep[];
+      const where = b.segParams[name]?.usedIn ?? [];
+      if (!where.length) continue;
+      for (const survivor of slotsUsed(literal)) {
+        const p = b.segParams[survivor];
+        if (p) p.usedIn = [...new Set([...p.usedIn, ...where])].sort((x, y) => x - y);
+      }
+    }
   }
 
   const now = input.now ?? new Date().toISOString();

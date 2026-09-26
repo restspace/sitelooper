@@ -83,6 +83,24 @@ export function maskCounters(line: string): string {
   return line.replace(LEADING_COUNTERS, `$1${WILDCARD} `);
 }
 
+/** A named control's line with a leading run of counts: its prefix, role, counts and the name after them. */
+const NAMED_COUNTERS = /^(- ([a-z][a-z-]*) ")(\d{1,3}(?: \d{1,3})*) ([\p{L}][^"]*)"/u;
+
+/**
+ * maskCounters, and — when the line's `role|name` (the name without its
+ * counts, whitespace collapsed) is one of `names` — its leading counter run
+ * masked the same way whatever the role: a site fact said this control's name
+ * leads with counts (execution/facts-display.ts counterNames). With no names
+ * this IS maskCounters.
+ */
+export function maskNamedCounters(line: string, names: readonly string[]): string {
+  const masked = maskCounters(line);
+  if (!names.length || masked !== line) return masked;
+  const m = NAMED_COUNTERS.exec(line);
+  if (!m || !names.includes(`${m[2]}|${m[4].replace(/\s+/g, ' ').trim()}`)) return line;
+  return `${m[1]}${WILDCARD} ${line.slice(m[1].length + m[3].length + 1)}`;
+}
+
 /** A value interpolated into a pattern is DATA: its own metacharacters must not become pattern. */
 export function escapeRe(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');

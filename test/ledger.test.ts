@@ -796,3 +796,86 @@ describe('addUrlIds with site facts (stage 1, consumer 3)', () => {
     expect(withEmpty.all()).toEqual(plain.all());
   });
 });
+
+describe('add with site facts (stage 3, consumer 1: the value class prior)', () => {
+  const OD = 'http://od.test';
+  const KB = 'http://kb.test';
+  const out = (name: string) => ({ from: 'output' as const, step: 'i1', name });
+  const factsOf = async (origin: string, obs: { k: 'value.class' | 'value.shape'; key: string; v: string | { re: string; n: number }; hard: boolean }[], sessions = ['n1']) => {
+    const { emptyFacts, observeFact } = await import('../src/execution/facts.js');
+    const sf = emptyFacts(origin);
+    for (const session of sessions) for (const o of obs) observeFact(sf, { ...o, session });
+    return sf;
+  };
+  const hash = async (v: string) => (await import('../src/execution/facts.js')).valueHash(v);
+
+  it('a reliable constant is never an identifier, whatever its shape or variance (odoo fwod84 FURN_7777)', async () => {
+    expect(new RunLedger().add('FURN_7777', out('code'))).toMatchObject({ kind: 'identifier' }); // today: the shape
+    const sf = await factsOf(OD, [{ k: 'value.class', key: await hash('FURN_7777'), v: 'constant', hard: true }]);
+    expect(new RunLedger().add('FURN_7777', out('code'), {}, sf)).toMatchObject({ value: 'FURN_7777', kind: 'text', basis: 'shape' });
+    const varied = new RunLedger();
+    varied.seedVariance(['FURN_7777']);
+    expect(varied.add('FURN_7777', out('code'), {}, sf)).toMatchObject({ kind: 'text', basis: 'shape' });
+    // ...and never vouched past the floor
+    const short = await factsOf(OD, [{ k: 'value.class', key: await hash('A1'), v: 'constant', hard: true }]);
+    expect(new RunLedger().add('A1', out('code'), { vouched: true }, short)).toBeNull();
+    // a caller that states the kind still decides
+    expect(new RunLedger().add('FURN_7777', out('code'), { kind: 'identifier' }, sf)).toMatchObject({ kind: 'identifier' });
+  });
+
+  it('a value of the key’s reliable mint shape is an identifier at first sighting, "4" under task_id included (kanboard fwkb41)', async () => {
+    const { shapeOf } = await import('../src/execution/facts.js');
+    const { shapeKeyOf } = await import('../src/skills/facts-value.js');
+    const url = `${KB}/?controller=TaskViewController&action=show&task_id=4`;
+    const shapeKey = shapeKeyOf(url, 'task_id');
+    const sf = await factsOf(KB, [{ k: 'value.shape', key: shapeKey, v: { re: shapeOf('41'), n: 2 }, hard: true }]);
+    expect(new RunLedger().add('4', out('task_id'))).toBeNull(); // today: under the floor
+    expect(new RunLedger().add('4', out('task_id'), { shapeKey }, sf)).toMatchObject({ value: '4', kind: 'identifier', basis: 'shape', positional: true });
+    // at or over the floor: an identifier, not positional
+    const e = new RunLedger().add('412', out('task_id'), { shapeKey }, sf);
+    expect(e).toMatchObject({ kind: 'identifier', basis: 'shape' });
+    expect(e).not.toHaveProperty('positional');
+    // another key's shape says nothing
+    expect(new RunLedger().add('4', out('task_id'), { shapeKey: shapeKeyOf(url, 'other') }, sf)).toBeNull();
+    // a positional entry is never looked for as a token in text
+    const l = new RunLedger();
+    l.add('4', out('task_id'), { shapeKey }, sf);
+    expect(l.runValuesIn('column (4) Status')).toEqual([]);
+  });
+
+  it('a reliable mint is an identifier however ordinary it looks; variance keeps its basis', async () => {
+    const sf = await factsOf(OD, [{ k: 'value.class', key: await hash('Order Alpha'), v: 'mint', hard: true }]);
+    expect(new RunLedger().add('Order Alpha', out('name'))).toMatchObject({ kind: 'text' });
+    expect(new RunLedger().add('Order Alpha', out('name'), {}, sf)).toMatchObject({ kind: 'identifier', basis: 'shape' });
+    const varied = new RunLedger();
+    varied.seedVariance(['Order Alpha']);
+    expect(varied.add('Order Alpha', out('name'), {}, sf)).toMatchObject({ kind: 'identifier', basis: 'variance' });
+  });
+
+  it('a reliable credential is never an identifier (fwgr68/fwkb39)', async () => {
+    const sf = await factsOf(OD, [{ k: 'value.class', key: await hash('admin4242'), v: 'credential', hard: true }]);
+    expect(new RunLedger().add('admin4242', out('user'))).toMatchObject({ kind: 'identifier' });
+    expect(new RunLedger().add('admin4242', out('user'), {}, sf)).toMatchObject({ kind: 'text' });
+  });
+
+  it('no reliable fact: byte-identical to no facts at all', async () => {
+    const { emptyFacts, shapeOf } = await import('../src/execution/facts.js');
+    const values = ['FURN_7777', 'Order Alpha', 'S00023', '4', 'abc', 'Ready', 'fwkb41-n1'];
+    const plain = new RunLedger();
+    plain.seedVariance(['abc']);
+    for (const v of values) plain.add(v, out('x'));
+    // advisory facts only: soft in one session, and a contradicted class
+    const advisory = await factsOf(OD, [
+      { k: 'value.class', key: await hash('FURN_7777'), v: 'constant', hard: false },
+      { k: 'value.class', key: await hash('S00023'), v: 'mint', hard: true },
+      { k: 'value.class', key: await hash('S00023'), v: 'constant', hard: true },
+      { k: 'value.shape', key: `${OD}/odoo|x`, v: { re: shapeOf('4'), n: 2 }, hard: false },
+    ]);
+    for (const sf of [undefined, emptyFacts(OD), advisory]) {
+      const l = new RunLedger();
+      l.seedVariance(['abc']);
+      for (const v of values) l.add(v, out('x'), sf ? { shapeKey: `${OD}/odoo|x` } : {}, sf);
+      expect(JSON.stringify(l.all())).toBe(JSON.stringify(plain.all()));
+    }
+  });
+});

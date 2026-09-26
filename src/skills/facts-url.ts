@@ -148,7 +148,9 @@ export function hasWriteRequest(j: { ev?: ReadonlyArray<{ k: string; m?: unknown
 }
 
 /** An evidence line that names a run (`fwop15-n1`, `fwkb41-n2l`) is dropped: the contract makes that the caller's job. */
-const RUN_TOKEN = /\b[a-z]{2,}\d+[a-z0-9]*-n\d+[a-z0-9]*\b/i;
+export const RUN_TOKEN = /\b[a-z]{2,}\d+[a-z0-9]*-n\d+[a-z0-9]*\b/i;
+/** The same shape, global, for matchAll (replay.ts's heal guard). */
+export const RUN_TOKENS = new RegExp(RUN_TOKEN.source, 'gi');
 
 function safeEv(ev: string): string | undefined {
   return RUN_TOKEN.test(ev) ? undefined : ev;

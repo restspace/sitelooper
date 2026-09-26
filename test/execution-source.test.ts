@@ -141,7 +141,7 @@ describe('standalone execution source', () => {
     expect(source).toContain('const hit = await resolveCandidates(page, candidates, policy);');
     expect(source).toContain('let absentDialog: { name: string; lines: string[] } | null = null;');
     expect(source).toContain("(await absentDialogSkip([page.getByRole('button', { name: roleName('Apply'), exact: true })], {\"target\":[{\"kind\":\"role\",\"name\":\"Apply\"}]}, absentDialog, p, '01-actions s_runtime/3'))");
-    expect(source).toContain('last = await expectedChangesVerdict(recorded, p, ctx, {');
+    expect(source).toContain('last = await expectedChangesVerdict(recorded, p, { ...ctx, counters: counterNames(siteFactsAt(page.url()), page.url()) }, {');
     // ...and the loop policy, called rather than restated.
     expect(source).toContain('await runFoldedLoop({');
     expect(source).toContain("shrinkWaitMs: LOOP_SHRINK_WAIT_MS");

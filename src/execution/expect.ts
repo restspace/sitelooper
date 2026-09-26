@@ -1,5 +1,5 @@
 import type { Page } from 'playwright-core';
-import { WILDCARD, escapeRe, maskCounters, maskVolatile } from './text.js';
+import { WILDCARD, escapeRe, maskCounters, maskNamedCounters, maskVolatile } from './text.js';
 import { fillParams } from './url.js';
 import { captureLines, describeCoverage, lineShows, NAME_CAP, type FullNameLook, type LineDialect, type ObservationCoverage } from './snapshot.js';
 
@@ -232,13 +232,16 @@ export function maskPopupItem(line: string): string {
  * checked against a marker the page never shows (fwgh9: "recorded page change
  * … {{env:APP_PASSWORD}} … not checked").
  */
-export function liveLines(lines: readonly string[], params: Record<string, string>): string[] {
+export function liveLines(lines: readonly string[], params: Record<string, string>, counters?: readonly string[]): string[] {
   // A value goes into a line as a snapshot would render it — whitespace runs
   // collapsed, edges trimmed (snapshot.ts `clean`) — never as it was read:
   // kanboard fwkb39's read published "Backlog ", and `- link "{{v5}}"` became
   // `- link "Backlog "`, which no snapshot name ever shows.
   const rendered = Object.fromEntries(Object.entries(params).map(([k, v]) => [k, typeof v === 'string' ? v.replace(/\s+/g, ' ').trim() : v]));
-  return lines.map((l) => fillParams(maskMinted(maskCounters(maskVolatile(l))), rendered).replace(/\{\{(?:env|totp):\w+\}\}/g, WILDCARD));
+  // `counters`: the controls a reliable site fact says lead their name with
+  // counts (execution/facts-display.ts counterNames), masked whatever the role.
+  const mask = counters?.length ? (l: string) => maskNamedCounters(l, counters) : maskCounters;
+  return lines.map((l) => fillParams(maskMinted(mask(maskVolatile(l))), rendered).replace(/\{\{(?:env|totp):\w+\}\}/g, WILDCARD));
 }
 
 /**
@@ -301,6 +304,11 @@ export interface ChangeContext {
   value?: string;
   /** Some target of this step resolved through a structural (positional) candidate. */
   positionalResolution: boolean;
+  /**
+   * Controls whose name leads with counts by a reliable site fact
+   * (execution/facts-display.ts counterNames): liveLines' third argument.
+   */
+  counters?: readonly string[];
 }
 
 export interface ChangeVerdict {
@@ -368,7 +376,7 @@ export async function expectedChangesVerdict(
 ): Promise<ChangeVerdict> {
   const verdict = await changesVerdict(recorded, params, ctx, obs);
   if (verdict.stop || obs.added === null || !recorded?.length) return verdict;
-  const inDiff = linesInDiff(recorded, params, obs.added);
+  const inDiff = linesInDiff(recorded, params, obs.added, ctx.counters);
   return inDiff.length ? { ...verdict, inDiff } : verdict;
 }
 
@@ -377,10 +385,10 @@ export async function expectedChangesVerdict(
  * own action added — transient lines, lines identifying nothing and lines this
  * run could not fill left out, as the verdict leaves them out.
  */
-export function linesInDiff(recorded: readonly string[], params: Record<string, string>, added: readonly string[]): string[] {
+export function linesInDiff(recorded: readonly string[], params: Record<string, string>, added: readonly string[], counters?: readonly string[]): string[] {
   return recorded.filter((line) => {
     if (TRANSIENT_LINE.test(line) || boundToNothing(line, params)) return false;
-    const [filled] = liveLines([line], params);
+    const [filled] = liveLines([line], params, counters);
     return !identifiesNothing(filled) && !unfilledSlot(filled) && lineShows(added as string[], [filled]);
   });
 }
@@ -496,11 +504,11 @@ async function changesVerdict(
   const fillable = (group: string[]): string[] =>
     group.filter((l) => {
       if (!boundToNothing(l, params)) return true;
-      if (!identifiesNothing(liveLines([l], params)[0])) unfilled.push(l);
+      if (!identifiesNothing(liveLines([l], params, ctx.counters)[0])) unfilled.push(l);
       return false;
     });
-  let parameterised = usable(liveLines(fillable(lines.filter(isParam)), params));
-  const plain = usable(liveLines(fillable(lines.filter((l) => !isParam(l))), params));
+  let parameterised = usable(liveLines(fillable(lines.filter(isParam)), params, ctx.counters));
+  const plain = usable(liveLines(fillable(lines.filter((l) => !isParam(l))), params, ctx.counters));
   if (unfilled.length) {
     warnings.push(
       `step ${tag}: ${unfilled.length} recorded page change(s) carry a value this run could not fill (e.g. ${JSON.stringify(unfilled[0])}) — not checked`,

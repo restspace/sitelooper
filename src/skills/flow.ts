@@ -13,6 +13,7 @@ import { idPositionPart, linkMintedParts, pathDigitPart, pathIdPart, unseenGotoP
 import { MIN_ID_LEN, looksLikeId, tokenPattern } from './shape.js';
 import { statedPlainly, threadStepParams } from './rethread.js';
 import { factFor, routeTemplateOf, type SiteFacts } from '../execution/facts.js';
+import { shapeKeyOf, valueVerdict } from './facts-value.js';
 
 /**
  * A flow is the resolved path a session took: the instructions the caller
@@ -1004,12 +1005,19 @@ function statedBeforeShown(entries: readonly RecordedEntry[], producer: Recorded
  * title): the var is the run value, and it goes on stranding by itself. And a
  * value an earlier run watched change (`runSpecific`) is the run's whatever
  * the recording says.
+ *
+ * SITE FACTS (stage 3, consumer 3). With `facts` (the origin's snapshot), a
+ * reliable verdict decides before either arm: a `constant` class is a
+ * constant, and a mint — by class, or by the mint shape of a key a report
+ * carried the value under — never is, even stated before shown (mint wins;
+ * see constantFact). Without facts, or with no reliable one, byte-identical.
  */
 export function taskConstants(
   entries: readonly RecordedEntry[],
   values: Iterable<string>,
   vars: Iterable<string> = [],
   runSpecific?: RunSpecific,
+  facts?: SiteFacts,
 ): Set<string> {
   const varValues = [...vars].map((v) => String(v ?? '').trim()).filter((v) => v.length >= 2);
   const out = new Set<string>();
@@ -1017,6 +1025,12 @@ export function taskConstants(
     const value = String(raw ?? '').trim();
     if (value.length < 2 || out.has(value) || runSpecific?.(value)) continue;
     if (varValues.some((v) => replaceToken(value, v, ' ') !== value)) continue;
+    const fact = facts ? constantFact(entries, value, facts) : null;
+    if (fact === 'mint') continue;
+    if (fact === 'constant') {
+      out.add(value);
+      continue;
+    }
     const at = firstStatedAt(entries, value, entries.length);
     if ((at >= 0 && !reportedBefore(entries, at, value)) || offeredBeforeReported(entries, value)) out.add(value);
   }
@@ -1031,24 +1045,72 @@ export function taskConstants(
  * word rather than the app's. A value both arms catch is `offered`, the
  * stronger. Exactly taskConstants' values, in its order; taskConstants itself
  * is left as it was (it short-circuits the offered arm, this cannot).
+ *
+ * With `facts` (site facts stage 3): a value a reliable fact makes a mint is
+ * never a constant, whatever the arms say; a value only a reliable `constant`
+ * fact makes one is reported under the third arm, `fact` (a heuristic arm
+ * that also catches it keeps its own name, the evidence the observer grades).
  */
 export function taskConstantArms(
   entries: readonly RecordedEntry[],
   values: Iterable<string>,
   vars: Iterable<string> = [],
   runSpecific?: RunSpecific,
-): Map<string, 'offered' | 'stated'> {
+  facts?: SiteFacts,
+): Map<string, 'offered' | 'stated' | 'fact'> {
   const varValues = [...vars].map((v) => String(v ?? '').trim()).filter((v) => v.length >= 2);
-  const out = new Map<string, 'offered' | 'stated'>();
+  const out = new Map<string, 'offered' | 'stated' | 'fact'>();
   for (const raw of values) {
     const value = String(raw ?? '').trim();
     if (value.length < 2 || out.has(value) || runSpecific?.(value)) continue;
     if (varValues.some((v) => replaceToken(value, v, ' ') !== value)) continue;
+    const fact = facts ? constantFact(entries, value, facts) : null;
+    if (fact === 'mint') continue;
     const at = firstStatedAt(entries, value, entries.length);
     if (offeredBeforeReported(entries, value)) out.set(value, 'offered');
     else if (at >= 0 && !reportedBefore(entries, at, value)) out.set(value, 'stated');
+    else if (fact === 'constant') out.set(value, 'fact');
   }
   return out;
+}
+
+/**
+ * What the origin's RELIABLE value facts say of a reported value, for
+ * taskConstants (site facts stage 3, consumer 3; facts-value.ts
+ * `valueVerdict`): 'mint' — an identifier by the value's own class or by the
+ * mint shape of a key a report carried it under (on the url the report was
+ * filed from, as the daemon's noteMintedIds keys it) — or 'constant' — its
+ * class is a reliable `constant`. Where the two disagree for one value, mint
+ * wins: a wrongly literal id acts on run 1's record, a wrongly slotted
+ * constant costs a recovery turn. Null when no reliable fact speaks, or it
+ * says something else (a credential is not a task constant): the heuristic
+ * arms then decide alone, exactly as without facts.
+ */
+function constantFact(entries: readonly RecordedEntry[], value: string, facts: SiteFacts): 'mint' | 'constant' | null {
+  const verdicts: ({ kind: 'identifier' | 'not-identifier'; by: { v: unknown } } | null)[] = [];
+  const ask = (shapeKey?: string) => {
+    try {
+      verdicts.push(valueVerdict(facts, value, shapeKey));
+    } catch {
+      /* a fact that cannot be read decides nothing */
+    }
+  };
+  ask();
+  let url: string | undefined;
+  const keys = new Set<string>();
+  for (const e of entries) {
+    if (e.k === 'instruction' && e.url) url = e.url;
+    else if (e.k === 'step' && e.diff?.url) url = e.diff.url;
+    else if (e.k === 'report' && url) {
+      for (const [name, v] of Object.entries(e.values ?? {})) {
+        if (typeof v === 'string' && v.trim() === value) keys.add(shapeKeyOf(url, name));
+      }
+    }
+  }
+  for (const k of keys) ask(k);
+  if (verdicts.some((v) => v?.kind === 'identifier')) return 'mint';
+  if (verdicts.some((v) => v?.kind === 'not-identifier' && v.by.v === 'constant')) return 'constant';
+  return null;
 }
 
 /** Roles whose line lists a CHOICE the app offers: an item in an open list. */
