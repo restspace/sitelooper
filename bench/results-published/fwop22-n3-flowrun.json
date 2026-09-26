@@ -1,0 +1,369 @@
+{
+  "flow": "fwop22",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_876c29; observed page_title=OpenProject, user_menu_initials=BA.",
+      "values": {
+        "page_title": "OpenProject",
+        "user_menu_initials": "BA"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "6/6",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_876c29: step 1: skipped — it closes the dialog \"Welcome to OpenProject, Bench Admin\" with \"Close\", and that dialog is not open this time: already in effect"
+      ]
+    },
+    {
+      "id": "02-open",
+      "status": "success",
+      "summary": "Opened the work packages list of the 'Bench Project' project in OpenProject (http://127.0.0.1:8090/projects/bench-project/work_packages — page title \"All open | Work Packages | Bench Project | OpenProject\"). The list shows 3 work packages total (pagination \"(1 - 3/3) You are on the only page\") and all three have subjects starting with 'Seed:': \"Seed: triage inbox\" (#38), \"Seed: order missing parts\" (#39) and \"Seed: ship repaired device\" (#40), all Task/New. Nothing was modified — the stored-procedure segment that failed was a type into the filter box, which errored out without changing any work package.",
+      "values": {
+        "page_title": "All open | Work Packages | Bench Project | OpenProject",
+        "pagination_info": "(1 - 3/3) You are on the only page.",
+        "seed_work_packages": "Seed: triage inbox (#38, TASK, New), Seed: order missing parts (#39, TASK, New), Seed: ship repaired device (#40, TASK, New)",
+        "subject_1": "Seed: triage inbox",
+        "subject_2": "Seed: order missing parts",
+        "subject_3": "Seed: ship repaired device"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_3cd143 stopped at step 3 — type failed: locator.evaluate: Timeout 10000ms exceeded. [outcome: unknown]",
+      "replayed": "2/4",
+      "repaired": false,
+      "turns": 5,
+      "unreported": [
+        "current_url",
+        "projects_menu_link",
+        "bench_project_link",
+        "seed_subjects_1",
+        "seed_subjects_2",
+        "seed_subjects_3",
+        "seed_work_package_id_1",
+        "seed_work_package_subject_1",
+        "seed_work_package_id_2",
+        "seed_work_package_subject_2",
+        "seed_work_package_id_3",
+        "seed_work_package_subject_3"
+      ]
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_30f182; observed list_row_displayed=43 | fwop22-n3 Bench Work Package | TASK | New | - | Normal, current_url=http://127.0.0.1:8090/projects/bench-project/work_packages/create_new?type=1, work_package_id_displaye=#43: Created by Bench Admin. Last updated on 09/26/2026 3:29 PM., wp_details_header_displa=TASK\nfwop22-n3 Bench Work Package, wp_type_displayed=TASK, wp_description_displayed=fwop22-n3, work_package_id_number=43, wp_subject_displayed=fwop22-n3 Bench Work Package, page_title=Task: fwop22-n3 Bench Work Package (#43) | Work Packages | Bench Project | OpenProject, pagination_info=(1 - 4/4)\nYou are on the only page., work_package_id_displayed=#43: Created by Bench Admin. Last updated on 09/26/2026 3:29 PM..",
+      "unanswered": [
+        "work_package_numeric_id"
+      ],
+      "values": {
+        "list_row_displayed": "43 | fwop22-n3 Bench Work Package | TASK | New | - | Normal",
+        "current_url": "http://127.0.0.1:8090/projects/bench-project/work_packages/create_new?type=1",
+        "work_package_id_displaye": "#43: Created by Bench Admin. Last updated on 09/26/2026 3:29 PM.",
+        "wp_details_header_displa": "TASK\nfwop22-n3 Bench Work Package",
+        "wp_type_displayed": "TASK",
+        "wp_description_displayed": "fwop22-n3",
+        "work_package_id_number": "43",
+        "wp_subject_displayed": "fwop22-n3 Bench Work Package",
+        "page_title": "Task: fwop22-n3 Bench Work Package (#43) | Work Packages | Bench Project | OpenProject",
+        "pagination_info": "(1 - 4/4)\nYou are on the only page.",
+        "work_package_id_displayed": "#43: Created by Bench Admin. Last updated on 09/26/2026 3:29 PM."
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "16/16",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_6c9a18: step 2: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear",
+        "s_75f68b: step 2: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear",
+        "s_75f68b: step 3: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear",
+        "s_75f68b: step 4: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear"
+      ],
+      "repinned": "s_6c9a18",
+      "repinParams": {
+        "v1": "{{01-signin.page_title}}",
+        "v2": "{{runid}}",
+        "v3": "{{runid}} Bench Work Package"
+      },
+      "unreported": [
+        "work_package_numeric_id",
+        "type_badge_rendered",
+        "subject",
+        "description",
+        "project",
+        "create_alert",
+        "description_save_alert",
+        "description_displayed",
+        "work_package_url",
+        "ref"
+      ]
+    },
+    {
+      "id": "04-set",
+      "status": "success",
+      "summary": "The Assignee field on work package #43 (subject 'fwop22-n3 Bench Work Package', Bench Project) is set to 'Bench Assignee' and saved. The replayed procedure's type+select steps had already committed the choice (its only complaint was a stale expectation about a dropdown change), so I did not repeat the edit; instead I verified the committed state: the details panel renders the assignee as the person chip \"BA / Bench Assignee\" (not a bare typed string), and after a full reload of http://127.0.0.1:8090/projects/bench-project/work_packages/details/43/overview the field still displays \"Bench Assignee\", confirming it persisted server-side. No new edits were made.",
+      "values": {
+        "assignee_displayed": "Bench Assignee",
+        "assignee_field_full": "BA\nBench Assignee",
+        "work_package_id": "#43",
+        "work_package_subject": "fwop22-n3 Bench Work Package",
+        "work_package_type": "Task",
+        "project": "Bench Project",
+        "verification": "value still displayed after full page reload",
+        "ref": "fwop22-n3"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_b95f4f stopped at step 5 — after step 5 none of the 1 recorded page change(s) appeared (e.g. \"- combobox \\\"Search\\\"\") — the step ran but did not have its recorded effect",
+      "replayed": "4/15",
+      "repaired": false,
+      "turns": 9,
+      "warnings": [
+        "s_b95f4f: step 3: primary locator did not resolve; used fallback #3 elementAt(1080, 514) /* button */"
+      ],
+      "unreported": [
+        "assignee_initials_and_name",
+        "work_package_url"
+      ]
+    },
+    {
+      "id": "05-change",
+      "status": "success",
+      "summary": "On the work package #43: Created by Bench Admin.",
+      "values": {
+        "work_package": "#43: Created by Bench Admin. Last updated on 09/26/2026 3:29 PM. Task: fwop22-n3 Bench Work Package",
+        "project": "Bench Project",
+        "status_options_offered_1": "New",
+        "status_options_offered_2": "Closed",
+        "status_options_offered_3": "On hold",
+        "status_options_offered_4": "Rejected",
+        "assignee_still": "Bench Assignee"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "9/9",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_e52b9e: step 7: read 'status_displayed' returned a value the skill itself set/selected ('In progress') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_e52b9e: step 9: the target chain is dead and was not healed inline — the step is a synthesized read no run has ever resolved, so nothing about it has drifted",
+        "s_e52b9e: step 9: skipped read — no element matched any known locator for target (tried 1: page.getByRole('alert', { name: 'Successful update.', exact: true }))"
+      ],
+      "unreported": [
+        "status_displayed",
+        "save_alert"
+      ]
+    },
+    {
+      "id": "06-set",
+      "status": "success",
+      "summary": "On the work package #43: Created by Bench Admin.",
+      "values": {
+        "work_package": "#43: Created by Bench Admin. Last updated on 09/26/2026 3:29 PM. Task: fwop22-n3 Bench Work Package",
+        "date_range_displayed": "no start date - 12/31/2026",
+        "work_package_url": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/43/overview",
+        "finish_date_displayed": "12/31/2026",
+        "status_still": "In progress",
+        "assignee_still": "Bench Assignee",
+        "start_date_empty_marker": "no start date",
+        "project": "Bench Project"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "11/11",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_f38497: step 11: the target chain is dead and was not healed inline — the step is a synthesized read no run has ever resolved, so nothing about it has drifted",
+        "s_f38497: step 11: skipped read — no element matched any known locator for target (tried 1: page.getByRole('alert', { name: 'Successful update.', exact: true }))"
+      ],
+      "unreported": [
+        "save_alert"
+      ]
+    },
+    {
+      "id": "07-add",
+      "status": "success",
+      "summary": "On the work package #43: Created by Bench Admin.",
+      "values": {
+        "work_package": "#43: Created by Bench Admin. Last updated on 09/26/2026 3:29 PM. Task: fwop22-n3 Bench Work Package (Bench Project)",
+        "ref": "fwop22-n3",
+        "comment_editor_css_classes": "ck-table-show-hidden-borders ck-blurred document-editor__editable op-uc-container op-uc-container_editing ck ck-content ck-editor__editable ck-rounded-corners ck-editor__editable_inline",
+        "work_package_url": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/43/activity"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "9/9",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_38fedd: step 5: read 'posted_comment_displayed' returned a value the skill itself set/selected ('fwop22-n3 bench comment') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_38fedd: step 7: read 'posted_comment_displayed' returned a value the skill itself set/selected ('fwop22-n3 bench comment') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_38fedd: report value comment_text_entered is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)"
+      ],
+      "unreported": [
+        "posted_comment_displayed",
+        "comment_text_entered",
+        "comment_form_submit_url"
+      ]
+    },
+    {
+      "id": "08-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_3c08fe; observed subject_displayed=fwop22-n3 Bench Work Package, work_packages_details_ar_2=Description fwop22-n3: Edit, wp_type=TASK, assignee_displayed=BA\nBench Assignee, wp_subject=fwop22-n3 Bench Work Package, work_package_id_displaye=#43: Created by Bench Admin. Last updated on 09/26/2026 3:30 PM., comment_displayed=fwop22-n3 bench comment, status_field_label=Edit the status of the work package, start_date_field_label=Start date : Edit, status_displayed=In progress, date_range_displayed=no start date - 12/31/2026, description_displayed=fwop22-n3, id_as_displayed=#43, start_date_displayed=no start date, finish_date_displayed=12/31/2026, page_title=Task: fwop22-n3 Bench Work Package (#43) | Work Packages | Bench Project | OpenProject, work_package_id_displayed=#43: Created by Bench Admin. Last updated on 09/26/2026 3:30 PM..",
+      "unanswered": [
+        "comment_text",
+        "type"
+      ],
+      "values": {
+        "subject_displayed": "fwop22-n3 Bench Work Package",
+        "work_packages_details_ar_2": "Description fwop22-n3: Edit",
+        "wp_type": "TASK",
+        "assignee_displayed": "BA\nBench Assignee",
+        "wp_subject": "fwop22-n3 Bench Work Package",
+        "work_package_id_displaye": "#43: Created by Bench Admin. Last updated on 09/26/2026 3:30 PM.",
+        "comment_displayed": "fwop22-n3 bench comment",
+        "status_field_label": "Edit the status of the work package",
+        "start_date_field_label": "Start date : Edit",
+        "status_displayed": "In progress",
+        "date_range_displayed": "no start date - 12/31/2026",
+        "description_displayed": "fwop22-n3",
+        "id_as_displayed": "#43",
+        "start_date_displayed": "no start date",
+        "finish_date_displayed": "12/31/2026",
+        "page_title": "Task: fwop22-n3 Bench Work Package (#43) | Work Packages | Bench Project | OpenProject",
+        "work_package_id_displayed": "#43: Created by Bench Admin. Last updated on 09/26/2026 3:30 PM."
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "20/20",
+      "repaired": false,
+      "turns": 0,
+      "repinned": "s_7db314",
+      "repinParams": {
+        "v1": "{{01-signin.page_title}}",
+        "v2": "{{03-create.work_package_id_displayed}}",
+        "v3": "{{07-add.url.p4}}",
+        "v4": "{{06-set.project}}",
+        "v5": "{{runid}} Bench Work Package",
+        "v6": "{{runid}}"
+      },
+      "unreported": [
+        "subject",
+        "description",
+        "assignee",
+        "status",
+        "date_field_displayed",
+        "comment_text",
+        "project",
+        "type_badge_rendered",
+        "start_date_aria_label",
+        "assignee_label_initials_and_name",
+        "work_package_url",
+        "attribute_group_label_assignee",
+        "ref"
+      ]
+    }
+  ],
+  "passed": 8,
+  "total": 8,
+  "repinned": 2,
+  "drift": 5,
+  "driftTickets": [
+    {
+      "flow": "fwop22",
+      "step": "01-signin",
+      "skill": "s_876c29",
+      "atStep": "1",
+      "key": "target",
+      "similarity": 0.846,
+      "missedLocator": "page.getByRole('button', { name: 'Close', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8090/",
+      "pageUrl": "http://127.0.0.1:8090/"
+    },
+    {
+      "flow": "fwop22",
+      "step": "02-open",
+      "skill": "s_3cd143",
+      "similarity": 1,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_3cd143 stopped at step 3 — type failed: locator.evaluate: Timeout 10000ms exceeded. [outcome: unknown]",
+      "reason": "type failed: locator.evaluate: Timeout 10000ms exceeded. [outcome: unknown]",
+      "pageUrlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages",
+      "pageUrl": "http://127.0.0.1:8090/projects/bench-project/work_packages"
+    },
+    {
+      "flow": "fwop22",
+      "step": "04-set",
+      "skill": "s_b95f4f",
+      "atStep": "3",
+      "key": "target",
+      "similarity": null,
+      "missedLocator": "page.getByRole('button', { name: 'Assignee Bench Assignee: Edit', exact: true }).nth(1)",
+      "fallbackUsed": "elementAt(1080, 514) /* button */",
+      "fallbackIndex": 2,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:id/overview",
+      "pageUrl": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/43/overview"
+    },
+    {
+      "flow": "fwop22",
+      "step": "05-change",
+      "skill": "s_e52b9e",
+      "atStep": "9",
+      "key": "target",
+      "similarity": 0.997,
+      "missedLocator": "page.getByRole('alert', { name: 'Successful update.', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:id/overview",
+      "pageUrl": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/43/overview"
+    },
+    {
+      "flow": "fwop22",
+      "step": "06-set",
+      "skill": "s_f38497",
+      "atStep": "11",
+      "key": "target",
+      "similarity": 0.997,
+      "missedLocator": "page.getByRole('alert', { name: 'Successful update.', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:id/overview",
+      "pageUrl": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/43/overview"
+    }
+  ],
+  "wallMs": 144064,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 214748,
+    "completionTokens": 3530,
+    "cachedTokens": 190464
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 214748,
+      "completionTokens": 3530,
+      "cachedTokens": 190464
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

@@ -1,0 +1,87 @@
+{
+ "id": "s_5c98d8",
+ "origin": "http://127.0.0.1:8090",
+ "template": "Navigate to the project named 'Bench Project' in {{v1}} and open its work packages list. Report the subjects of all work packages whose subject starts with 'Seed:', exactly as displayed. Do not modify anything.",
+ "params": {
+  "v1": {
+   "example": "OpenProject",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i1:page_title"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8090/"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e110"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "link",
+      "name": "Projects",
+      "nth": 0
+     },
+     {
+      "kind": "css",
+      "selector": "#projects-wrapper > a"
+     },
+     {
+      "kind": "point",
+      "x": 122,
+      "y": 302,
+      "w": 219,
+      "h": 36,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8090/projects",
+    "addedContains": [
+     "- link \"Go back one menu level\"",
+     "- textbox \"Search\"",
+     "- link \"Active projects\"",
+     "- link \"My projects\"",
+     "- link \"Favorite projects\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_c2098b",
+    "step": 1
+   }
+  }
+ ],
+ "contract": 2,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-26T15:29:14.998Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_bc6957",
+  "index": 0,
+  "of": 4
+ },
+ "provenance": {
+  "session": "fwop22-n3",
+  "instruction": "Navigate to the project named 'Bench Project' in OpenProject and open its work packages list. Report the subjects of all work packages whose subject starts with 'Seed:', exactly as displayed. Do not modify anything.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-26T15:29:14.998Z"
+ },
+ "revision": 1
+}

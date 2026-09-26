@@ -1,0 +1,612 @@
+{
+ "id": "s_b95f4f",
+ "origin": "http://127.0.0.1:8090",
+ "template": "On the {{v1}} work package page for work package {{v2}} (subject '{{v4}}' in project Bench Project), set the Assignee field to the user 'Bench Assignee'. The assignee field is an autocomplete: type the name and then actually select the 'Bench Assignee' option from the dropdown that appears — a typed value does not count. The field saves in place. Then report the assignee value exactly as displayed on the page after saving.",
+ "params": {
+  "v1": {
+   "example": "OpenProject",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i1:page_title"
+  },
+  "v2": {
+   "example": "#42: Created by Bench Admin. Last updated on 09/26/2026 3:24 PM.",
+   "usedIn": [],
+   "known": true,
+   "binding": "03-create.work_package_id_displayed"
+  },
+  "v3": {
+   "example": "42",
+   "usedIn": [
+    2,
+    3,
+    5,
+    8
+   ],
+   "known": true,
+   "binding": "03-create.url.p4"
+  },
+  "v4": {
+   "example": "fwop22-n2 Bench Work Package",
+   "usedIn": [
+    10,
+    15
+   ],
+   "known": true,
+   "binding": "output:i3:wp_subject_displayed"
+  },
+  "v5": {
+   "example": "fwop22-n2",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/{{v3}}/overview"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e1744"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Assignee No value: Edit",
+      "nth": 4
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div:nth-of-type(2) > op-editable-attribute-field > div > div:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 1062,
+      "y": 510,
+      "w": 100,
+      "h": 23,
+      "role": "button",
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/{{v3}}/overview",
+    "addedContains": [
+     "- combobox \"Search\"",
+     "- listbox \"Options List\"",
+     "- option \"BA {{*}} bench-assignee@example.com\"",
+     "- button \"Invite\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_fe1d26",
+    "step": 1
+   }
+  },
+  {
+   "tool": "goto",
+   "args": {
+    "url": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/{{v3}}/overview"
+   },
+   "locators": {}
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e504"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Assignee Bench Assignee: Edit",
+      "nth": 1
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div:nth-of-type(2) > op-editable-attribute-field > div > div:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 1080,
+      "y": 514,
+      "w": 136.4,
+      "h": 32,
+      "role": "button",
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/{{v3}}/overview",
+    "addedContains": [
+     "- combobox \"Search\"",
+     "- button \"Clear all\"",
+     "- listbox \"Options List\"",
+     "- option \"BA {{*}} bench-assignee@example.com\"",
+     "- button \"Invite\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "type",
+   "args": {
+    "target": "role=combobox[name=\"Search\"]",
+    "text": "Bench Assignee",
+    "delay_ms": 40
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "role=combobox[name=\"Search\"]"
+     },
+     {
+      "kind": "role",
+      "role": "combobox",
+      "name": "Search"
+     },
+     {
+      "kind": "css",
+      "selector": "#wp-{{v3}}-inline-edit--field-assignee > div:nth-of-type(1) > div > div:nth-of-type(3) > input"
+     },
+     {
+      "kind": "point",
+      "x": 1122,
+      "y": 512,
+      "w": 198,
+      "h": 16,
+      "role": "combobox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/{{v3}}/overview",
+    "addedContains": [
+     "- combobox \"Search\": {{*}}",
+     "- option \"BA Bench Assigneebench-assignee@example.com\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": ".ng-dropdown-panel .ng-option >> nth=0"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".ng-dropdown-panel .ng-option >> nth=0"
+     },
+     {
+      "kind": "scoped",
+      "container": "div.ng-option",
+      "hasText": "Bench Assignee"
+     },
+     {
+      "kind": "role",
+      "role": "option",
+      "name": "BA Bench Assigneebench-assignee@example.com"
+     },
+     {
+      "kind": "css",
+      "selector": "html > body > ng-dropdown-panel > div:nth-of-type(1) > div:nth-of-type(2) > div"
+     },
+     {
+      "kind": "point",
+      "x": 1162,
+      "y": 547,
+      "w": 298,
+      "h": 37.3,
+      "role": "option",
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/{{v3}}/overview",
+    "addedContains": [
+     "- combobox \"Search\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": ".work-packages--details .inline-edit--container.assignee",
+    "what": "text",
+    "label": "details_assignee_displayed"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".work-packages--details .inline-edit--container.assignee"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(3) > wp-attribute-group > div:nth-of-type(1) > div:nth-of-type(2) > op-editable-attribute-field > div"
+     },
+     {
+      "kind": "point",
+      "x": 1142,
+      "y": 514,
+      "w": 260,
+      "h": 32,
+      "role": null,
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "details_assignee_display"
+  },
+  {
+   "tool": "goto",
+   "args": {
+    "url": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/{{v3}}/overview"
+   },
+   "locators": {}
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": ".work-packages--details .inline-edit--display-field.assignee",
+    "what": "text",
+    "label": "assignee_displayed_after_reload"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".work-packages--details .inline-edit--display-field.assignee"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Assignee Bench Assignee: Edit",
+      "nth": 1
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div:nth-of-type(2) > op-editable-attribute-field > div > div:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 1080,
+      "y": 514,
+      "w": 136.4,
+      "h": 32,
+      "role": "button",
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "assignee_displayed"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "tr:has-text(\"{{v4}}\")",
+    "what": "text",
+    "label": "wp42_table_row_displayed",
+    "scopedBy": "v4"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "tr:has-text(\"{{v4}}\")"
+     },
+     {
+      "kind": "scoped",
+      "container": "tr.wp-table--row",
+      "hasText": "BABench Assignee"
+     },
+     {
+      "kind": "css",
+      "selector": "wp-table > div > div:nth-of-type(1) > table > tbody:nth-of-type(1) > tr:nth-of-type(4)"
+     },
+     {
+      "kind": "point",
+      "x": 721,
+      "y": 344,
+      "w": 849.5,
+      "h": 40,
+      "role": null,
+      "tag": "tr",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "wp42_table_row_displayed_2"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": ".work-packages--details .inline-edit--display-field.assignee",
+    "what": "text",
+    "label": "assignee_displayed"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".work-packages--details .inline-edit--display-field.assignee"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Assignee Bench Assignee: Edit",
+      "nth": 1
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div:nth-of-type(2) > op-editable-attribute-field > div > div:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 1080,
+      "y": 514,
+      "w": 136.4,
+      "h": 32,
+      "role": "button",
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "assignee_displayed"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "op-editable-attribute-field > div > div:nth-of-type(2) > span > div > p"
+     },
+     {
+      "kind": "point",
+      "x": 1075,
+      "y": 396,
+      "w": 393,
+      "h": 22.4,
+      "role": null,
+      "tag": "p",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "ref"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "scoped",
+      "container": "tr.wp-table--row",
+      "hasText": "BABench Assignee",
+      "selector": "td:nth-of-type(6) > span > span > span"
+     },
+     {
+      "kind": "css",
+      "selector": "tbody:nth-of-type(1) > tr:nth-of-type(4) > td:nth-of-type(6) > span > span > span"
+     },
+     {
+      "kind": "point",
+      "x": 890,
+      "y": 342,
+      "w": 100.4,
+      "h": 16,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "assignee_value_as_displayed"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "scoped",
+      "container": "tr.wp-table--row",
+      "hasText": "BABench Assignee",
+      "selector": "td:nth-of-type(2) > span > span > a"
+     },
+     {
+      "kind": "css",
+      "selector": "tbody:nth-of-type(1) > tr:nth-of-type(4) > td:nth-of-type(2) > span > span > a"
+     },
+     {
+      "kind": "point",
+      "x": 326,
+      "y": 344,
+      "w": 15.6,
+      "h": 16,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "work_package_id_displayed"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text",
+    "scopedBy": "v4"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "scoped",
+      "container": "tr.wp-table--row",
+      "hasText": "BABench Assignee",
+      "selector": "td:nth-of-type(3) > span:nth-of-type(2) > span"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Subject {{v4}}: Edit",
+      "nth": 0
+     },
+     {
+      "kind": "css",
+      "selector": "table > tbody:nth-of-type(1) > tr:nth-of-type(4) > td:nth-of-type(3) > span:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 541,
+      "y": 344,
+      "w": 209.6,
+      "h": 22,
+      "role": "button",
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "wp_subject"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Assignee Bench Assignee: Edit",
+      "nth": 0
+     },
+     {
+      "kind": "css",
+      "selector": "table > tbody:nth-of-type(1) > tr:nth-of-type(4) > td:nth-of-type(6) > span > span"
+     },
+     {
+      "kind": "point",
+      "x": 873,
+      "y": 342,
+      "w": 140.4,
+      "h": 22,
+      "role": "button",
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "wp42_assignee_table_cell"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "Opened work package #{{v3}} ('{{v4}}', TASK, Bench Project) and set its Assignee via the inline autocomplete on the Overview details panel: I typed 'Bench Assignee' into the field's search box and clicked the 'Bench Assignee (bench-assignee@example.com)' option in the dropdown that appeared, so the value was genuinely selected rather than merely typed. The page was then reloaded and the assignee still displays 'Bench Assignee' (avatar BA), confirming it saved in place; the work-package table row {{v3}} shows the same assignee. Nothing else was modified.",
+  "values": {
+   "assignee_displayed": "BA\nBench Assignee",
+   "assignee_value_as_displayed": "Bench Assignee",
+   "wp42_table_row_displayed": "{{v3}} | {{v4}} | TASK | New | BA Bench Assignee | Normal",
+   "work_package_id_displayed": "{{v3}}",
+   "wp_subject": "{{v4}}",
+   "wp_type": "TASK",
+   "page_title": "Work Packages | Bench Project | {{v1}}",
+   "wp42_assignee_table_cell": "BABench Assignee",
+   "details_assignee_display": "Assignee\nBench Assignee\n×",
+   "assignee_displayed_after": "BA\nBench Assignee",
+   "wp42_table_row_displayed_2": "{{v3}}\t\nWork package leaf at level 0.\n{{v4}}\tTASK\tNew\tBABench Assignee\tNormal",
+   "ref": "{{v5}}",
+   "ref_2": "wp-{{v3}}-inline-edit--field-assignee"
+  }
+ },
+ "contract": 4,
+ "stats": {
+  "uses": 2,
+  "successes": 1,
+  "partial": 1,
+  "created": "2026-09-26T15:26:36.370Z",
+  "failedAtStep": {
+   "5": 1
+  },
+  "fallthroughs": 1,
+  "verifiedContract": 4,
+  "lastUsed": "2026-09-26T15:30:12.614Z",
+  "recoveredStops": 1,
+  "harmlessStops": 1
+ },
+ "status": "provisional",
+ "variantOf": "s_fe1d26",
+ "provenance": {
+  "session": "fwop22-n2",
+  "instruction": "On the OpenProject work package page for work package #42: Created by Bench Admin. Last updated on 09/26/2026 3:24 PM. (subject 'fwop22-n2 Bench Work Package' in project Bench Project), set the Assignee field to the user 'Bench Assignee'. The assignee field is an autocomplete: type the name and then actually select the 'Bench Assignee' option from the dropdown that appears — a typed value does not count. The field saves in place. Then report the assignee value exactly as displayed on the page after saving.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-26T15:26:36.370Z",
+  "transforms": [
+   {
+    "name": "dropSupersededNavigation",
+    "at": 2,
+    "reason": "the next step navigates again, to \"http://127.0.0.1:8090/projects/bench-project/work_packages/details/{{v3}}/overview\""
+   },
+   {
+    "name": "unfreezeExpectations",
+    "at": 1,
+    "reason": "recorded page change(s) only the recording run could produce: [\"- combobox \\\"Search\\\"\",\"- listbox \\\"Options List\\\"\",\"- option \\\"BA Bench Assignee bench-assignee@example.com\\\"\",\"- button \\\"Invite\\\"\"] → [\"- combobox \\\"Search\\\"\",\"- listbox \\\"Options List\\\"\",\"- option \\\"BA {{*}} bench-assignee@example.com\\\"\",\"- button \\\"Invite\\\"\"]"
+   },
+   {
+    "name": "unfreezeExpectations",
+    "at": 3,
+    "reason": "recorded page change(s) only the recording run could produce: [\"- combobox \\\"Search\\\"\",\"- button \\\"Clear all\\\"\",\"- listbox \\\"Options List\\\"\",\"- option \\\"BA Bench Assignee bench-assignee@example.com\\\"\",\"- button \\\"Invite\\\"\"] → [\"- combobox \\\"Search\\\"\",\"- button \\\"Clear all\\\"\",\"- listbox \\\"Options List\\\"\",\"- option \\\"BA {{*}} bench-assignee@example.com\\\"\",\"- button \\\"Invite\\\"\"]"
+   }
+  ]
+ },
+ "revision": 2
+}

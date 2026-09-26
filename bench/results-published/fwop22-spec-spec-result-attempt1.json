@@ -1,0 +1,38 @@
+{
+  "arm": "spec",
+  "runid": "fwop22-spec",
+  "target": "openproject",
+  "flow": "fwop22.json",
+  "flowName": "fwop22",
+  "skillsDir": "/home/user/sitelooper/bench/results/fwop22-skills",
+  "compiled": true,
+  "flowFile": "bench/results/fwop22-spec-spec-tmp/fwop22.flow.ts",
+  "specFile": "bench/results/fwop22-spec-spec-tmp/fwop22.spec.ts",
+  "wallMs": 37756,
+  "exitCode": 1,
+  "timedOut": false,
+  "costUsd": 0,
+  "stats": {
+    "total": 1,
+    "passed": 0,
+    "failed": 1,
+    "skipped": 0
+  },
+  "tests": [
+    {
+      "title": "fwop22",
+      "status": "unexpected",
+      "ok": false,
+      "durationMs": 33205,
+      "error": "TimeoutError: locator.evaluate: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('combobox', { name: /^[\\s\\p{Co}\\p{So}\\p{Cf}]*Search\\s+in\\s+OpenProject[\\s\\p{Co}\\p{So}\\p{Cf}]*$/u })\u001b[22m\n [outcome: unknown]",
+      "drift": []
+    }
+  ],
+  "drift": [],
+  "driftCount": 0,
+  "evidence": [
+    "fwop22-spec-spec-failure.png",
+    "fwop22-spec-spec-error-context.md"
+  ],
+  "logTail": "\nRunning 1 test using 1 worker\n\n[sitelooper skip] 01-signin s_876c29/1: closes the dialog \"Welcome to OpenProject, Bench Admin\" with \"Close\", which is not open — already in effect\n[sitelooper step] 01-signin\n  ✘  1 fwop22.spec.ts:9:1 › fwop22 (33.2s)\n\n\n  1) fwop22.spec.ts:9:1 › fwop22 › 02-open: Navigate to the project named 'Bench Project' in OpenProject and open its work packages list. Report the subjects of all work packages whose subject starts with 'Seed:', exactly as displayed. Do not modify anything. \n\n    TimeoutError: locator.evaluate: Timeout 10000ms exceeded.\n    Call log:\n      - waiting for getByRole('combobox', { name: /^[\\s\\p{Co}\\p{So}\\p{Cf}]*Search\\s+in\\s+OpenProject[\\s\\p{Co}\\p{So}\\p{Cf}]*$/u })\n     [outcome: unknown]\n\n       at fwop22.flow.ts:12993\n\n      12991 | async function focusOrRefuse(target: Locator, timeout?: number): Promise<void> {\n      12992 |   await target.focus({ timeout: timeout ?? DEFAULT_ACTION_TIMEOUT_MS });\n    > 12993 |   const holds = await target.evaluate(\n            |                              ^\n      12994 |     (el) => {\n      12995 |       let active: Element | null = document.activeElement;\n      12996 |       const label = el.closest('label')?.control ?? null;\n        at focusOrRefuse (/home/user/sitelooper/bench/results/fwop22-spec-spec-tmp/fwop22.flow.ts:12993:30)\n        at typeWithRecipe (/home/user/sitelooper/bench/results/fwop22-spec-spec-tmp/fwop22.flow.ts:12974:3)\n        at type (/home/user/sitelooper/bench/results/fwop22-spec-spec-tmp/fwop22.flow.ts:15371:19)\n        at /home/user/sitelooper/bench/results/fwop22-spec-spec-tmp/fwop22.flow.ts:16538:127\n        at guardedTyping (/home/user/sitelooper/bench/results/fwop22-spec-spec-tmp/fwop22.flow.ts:14149:18)\n        at Object.act (/home/user/sitelooper/bench/results/fwop22-spec-spec-tmp/fwop22.flow.ts:16538:9)\n        at runStepLifecycle (/home/user/sitelooper/bench/results/fwop22-spec-spec-tmp/fwop22.flow.ts:11145:18)\n        at Object.02-open (/home/user/sitelooper/bench/results/fwop22-spec-spec-tmp/fwop22.flow.ts:16520:5)\n        at /home/user/sitelooper/bench/results/fwop22-spec-spec-tmp/fwop22.flow.ts:20001:7\n        at runFlow (/home/user/sitelooper/bench/results/fwop22-spec-spec-tmp/fwop22.flow.ts:20000:5)\n        at /home/user/sitelooper/bench/results/fwop22-spec-spec-tmp/fwop22.spec.ts:14:21\n\n    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────\n    \n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────\n    test-results/fwop22-fwop22/test-failed-1.png\n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    Error Context: test-results/fwop22-fwop22/error-context.md\n\n  1 failed\n    fwop22.spec.ts:9:1 › fwop22 ────────────────────────────────────────────────────────────────────\n"
+}

@@ -1,0 +1,370 @@
+{
+  "flow": "fwop22",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_876c29; observed page_title=OpenProject, user_menu_initials=BA.",
+      "values": {
+        "page_title": "OpenProject",
+        "user_menu_initials": "BA"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "6/6",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_876c29: step 1: skipped — it closes the dialog \"Welcome to OpenProject, Bench Admin\" with \"Close\", and that dialog is not open this time: already in effect"
+      ]
+    },
+    {
+      "id": "02-open",
+      "status": "success",
+      "summary": "Opened Bench Project's work packages list (all-open view) at http://127.0.0.1:8090/projects/bench-project/work_packages. The table contains exactly 3 work packages (pagination reads \"(1 - 3/3) You are on the only page.\") and all three subjects start with 'Seed:'. Nothing was modified.",
+      "values": {
+        "page_title": "All open | Work Packages | Bench Project | OpenProject",
+        "pagination_info": "(1 - 3/3) You are on the only page.",
+        "count_of_seed_subjects": "3",
+        "seed_work_packages_1": "38",
+        "seed_work_packages_2": "Seed: triage inbox",
+        "seed_work_packages_3": "39",
+        "seed_work_packages_4": "Seed: order missing parts",
+        "seed_work_packages_5": "40",
+        "seed_work_packages_6": "Seed: ship repaired device",
+        "seed_subjects_only_1": "Seed: triage inbox",
+        "seed_subjects_only_2": "Seed: order missing parts",
+        "seed_subjects_only_3": "Seed: ship repaired device"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_3cd143 stopped at step 3 — type failed: locator.evaluate: Timeout 10000ms exceeded. [outcome: unknown]",
+      "replayed": "2/4",
+      "repaired": false,
+      "turns": 2,
+      "unreported": [
+        "current_url",
+        "projects_menu_link",
+        "bench_project_link",
+        "seed_subjects_1",
+        "seed_subjects_2",
+        "seed_subjects_3",
+        "seed_work_package_id_1",
+        "seed_work_package_subject_1",
+        "seed_work_package_id_2",
+        "seed_work_package_subject_2",
+        "seed_work_package_id_3",
+        "seed_work_package_subject_3"
+      ]
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "Created a Task work package in Bench Project using the \"Create new work package\" → Task flow on the All-open work packages view, with subject 'fwop22-n2 Bench Work Package' and description 'fwop22-n2'. Saving showed the alert \"Successful creation.\" and navigated to the new work package's details page.",
+      "values": {
+        "work_package_id_displayed": "#42: Created by Bench Admin. Last updated on 09/26/2026 3:24 PM.",
+        "work_package_id_number": "42",
+        "wp_type_displayed": "TASK",
+        "wp_subject_displayed": "fwop22-n2 Bench Work Package",
+        "wp_description_displayed": "fwop22-n2",
+        "page_title": "Task: fwop22-n2 Bench Work Package (#42) | Work Packages | Bench Project | OpenProject",
+        "creation_alert": "Successful creation.",
+        "list_row_displayed": "42 | fwop22-n2 Bench Work Package | TASK | New | - | Normal",
+        "pagination_info": "(1 - 4/4) You are on the only page.",
+        "current_url": "http://127.0.0.1:8090/projects/bench-project/work_packages/create_new?type=1",
+        "work_package_id_displaye": "#42: Created by Bench Admin. Last updated on 09/26/2026 3:24 PM.",
+        "wp_details_header_displa": "TASK\nfwop22-n2 Bench Work Package"
+      },
+      "tier": null,
+      "recovered": true,
+      "fellBack": "every candidate refused — s_7bdacd: not on the page this procedure starts from (expects http://127.0.0.1:8090/projects/bench-project/search?filter=work_packages&q=Seed:&scope=, browser is at http://127.0.0.1:8090/projects/bench-project/work_packages) — nothing was run",
+      "replayed": null,
+      "repaired": false,
+      "turns": 23,
+      "unreported": [
+        "work_package_numeric_id",
+        "type_badge_rendered",
+        "subject",
+        "description",
+        "project",
+        "create_alert",
+        "description_save_alert",
+        "description_displayed",
+        "work_package_url",
+        "ref"
+      ]
+    },
+    {
+      "id": "04-set",
+      "status": "success",
+      "summary": "Opened work package #42 ('fwop22-n2 Bench Work Package', TASK, Bench Project) and set its Assignee via the inline autocomplete on the Overview details panel: I typed 'Bench Assignee' into the field's search box and clicked the 'Bench Assignee (bench-assignee@example.com)' option in the dropdown that appeared, so the value was genuinely selected rather than merely typed. The page was then reloaded and the assignee still displays 'Bench Assignee' (avatar BA), confirming it saved in place; the work-package table row 42 shows the same assignee. Nothing else was modified.",
+      "values": {
+        "assignee_displayed": "BA\nBench Assignee",
+        "assignee_value_as_displayed": "Bench Assignee",
+        "wp42_table_row_displayed": "42 | fwop22-n2 Bench Work Package | TASK | New | BA Bench Assignee | Normal",
+        "work_package_id_displayed": "42",
+        "wp_subject": "fwop22-n2 Bench Work Package",
+        "wp_type": "TASK",
+        "page_title": "Work Packages | Bench Project | OpenProject",
+        "wp42_assignee_table_cell": "BABench Assignee",
+        "details_assignee_display": "Assignee\nBench Assignee\n×",
+        "assignee_displayed_after": "BA\nBench Assignee",
+        "wp42_table_row_displayed_2": "42\t\nWork package leaf at level 0.\nfwop22-n2 Bench Work Package\tTASK\tNew\tBABench Assignee\tNormal",
+        "ref": "fwop22-n2",
+        "ref_2": "wp-42-inline-edit--field-assignee"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_fe1d26 stopped at step 2 — after step 2 expected url http://127.0.0.1:8090/projects/bench-project/work_packages/details/42/overview but browser is at http://127.0.0.1:8090/projects/bench-project/news",
+      "replayed": "1/5",
+      "repaired": false,
+      "turns": 27,
+      "unreported": [
+        "assignee_initials_and_name",
+        "work_package_url"
+      ]
+    },
+    {
+      "id": "05-change",
+      "status": "success",
+      "summary": "On the work package #42: Created by Bench Admin.",
+      "values": {
+        "work_package": "#42: Created by Bench Admin. Last updated on 09/26/2026 3:24 PM. Task: fwop22-n2 Bench Work Package",
+        "project": "Bench Project",
+        "status_options_offered_1": "New",
+        "status_options_offered_2": "Closed",
+        "status_options_offered_3": "On hold",
+        "status_options_offered_4": "Rejected",
+        "assignee_still": "Bench Assignee"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "9/9",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_e52b9e: step 1: url segment(s) differ from recorded (41→42) — treated as volatile",
+        "s_e52b9e: step 6: url segment(s) differ from recorded (41→42) — treated as volatile",
+        "s_e52b9e: step 7: read 'status_displayed' returned a value the skill itself set/selected ('In progress') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_e52b9e: step 9: the target chain is dead and was not healed inline — the step is a synthesized read no run has ever resolved, so nothing about it has drifted",
+        "s_e52b9e: step 9: skipped read — no element matched any known locator for target (tried 1: page.getByRole('alert', { name: 'Successful update.', exact: true }))"
+      ],
+      "unreported": [
+        "status_displayed",
+        "save_alert"
+      ]
+    },
+    {
+      "id": "06-set",
+      "status": "success",
+      "summary": "On the work package #42: Created by Bench Admin.",
+      "values": {
+        "work_package": "#42: Created by Bench Admin. Last updated on 09/26/2026 3:24 PM. Task: fwop22-n2 Bench Work Package",
+        "date_range_displayed": "no start date - 12/31/2026",
+        "work_package_url": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/42/overview",
+        "finish_date_displayed": "12/31/2026",
+        "status_still": "In progress",
+        "assignee_still": "Bench Assignee",
+        "start_date_empty_marker": "no start date",
+        "project": "Bench Project"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "11/11",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_f38497: step 11: the target chain is dead and was not healed inline — the step is a synthesized read no run has ever resolved, so nothing about it has drifted",
+        "s_f38497: step 11: skipped read — no element matched any known locator for target (tried 1: page.getByRole('alert', { name: 'Successful update.', exact: true }))"
+      ],
+      "unreported": [
+        "save_alert"
+      ]
+    },
+    {
+      "id": "07-add",
+      "status": "success",
+      "summary": "On the work package #42: Created by Bench Admin.",
+      "values": {
+        "work_package": "#42: Created by Bench Admin. Last updated on 09/26/2026 3:24 PM. Task: fwop22-n2 Bench Work Package (Bench Project)",
+        "ref": "fwop22-n2",
+        "comment_editor_css_classes": "ck-table-show-hidden-borders ck-blurred document-editor__editable op-uc-container op-uc-container_editing ck ck-content ck-editor__editable ck-rounded-corners ck-editor__editable_inline",
+        "work_package_url": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/42/activity"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "9/9",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_38fedd: step 5: read 'posted_comment_displayed' returned a value the skill itself set/selected ('fwop22-n2 bench comment') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_38fedd: step 7: read 'posted_comment_displayed' returned a value the skill itself set/selected ('fwop22-n2 bench comment') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_38fedd: report value comment_text_entered is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)"
+      ],
+      "unreported": [
+        "posted_comment_displayed",
+        "comment_text_entered",
+        "comment_form_submit_url"
+      ]
+    },
+    {
+      "id": "08-open",
+      "status": "success",
+      "summary": "Read-only inspection of work package #42 in Bench Project (Overview tab, plus the Activity tab for the comment). ID shown as #42, type TASK, subject 'fwop22-n2 Bench Work Package', description 'fwop22-n2', assignee Bench Assignee, status 'In progress' (field labelled 'Edit the status of the work package'), finish date 12/31/2026 (date range shows 'no start date - 12/31/2026', start date label 'Start date : Edit' with no value), and one comment on the Activity tab reading 'fwop22-n2 bench comment'. No field was changed.",
+      "values": {
+        "work_package_id_displayed": "#42: Created by Bench Admin. Last updated on 09/26/2026 3:26 PM.",
+        "id_as_displayed": "#42",
+        "wp_type": "TASK",
+        "wp_subject": "fwop22-n2 Bench Work Package",
+        "description_displayed": "fwop22-n2",
+        "description_contains_fwop22_n2": "yes",
+        "assignee_displayed": "BA\nBench Assignee",
+        "status_displayed": "In progress",
+        "status_field_label": "Edit the status of the work package",
+        "start_date_field_label": "Start date : Edit",
+        "start_date_displayed": "no start date",
+        "finish_date_displayed": "12/31/2026",
+        "date_range_displayed": "no start date - 12/31/2026",
+        "comment_displayed": "fwop22-n2 bench comment",
+        "page_title": "Task: fwop22-n2 Bench Work Package (#42) | Work Packages | Bench Project | OpenProject",
+        "subject_displayed": "fwop22-n2 Bench Work Package",
+        "work_package_id_displaye": "#42: Created by Bench Admin. Last updated on 09/26/2026 3:26 PM.",
+        "finish_date_displayed_2": "no start date - 12/31/2026",
+        "work_packages_details_ar": "Type Task: Edit",
+        "work_packages_details_ar_2": "Description fwop22-n2: Edit",
+        "work_packages_details_ar_3": "Assignee Bench Assignee: Edit"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_d33385 stopped at step 2 — after step 2 the page did not show \"- button \\\"Description fwop22-n2 description text: Edit\\\"\" as it did when recorded — the step ran but probably acted on the wrong element",
+      "replayed": "1/2",
+      "repaired": false,
+      "turns": 22,
+      "unreported": [
+        "subject",
+        "description",
+        "assignee",
+        "status",
+        "date_field_displayed",
+        "comment_text",
+        "project",
+        "type_badge_rendered",
+        "start_date_aria_label",
+        "assignee_label_initials_and_name",
+        "work_package_url",
+        "attribute_group_label_assignee",
+        "ref"
+      ]
+    }
+  ],
+  "passed": 8,
+  "total": 8,
+  "repinned": 0,
+  "drift": 6,
+  "driftTickets": [
+    {
+      "flow": "fwop22",
+      "step": "01-signin",
+      "skill": "s_876c29",
+      "atStep": "1",
+      "key": "target",
+      "similarity": 0.846,
+      "missedLocator": "page.getByRole('button', { name: 'Close', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8090/",
+      "pageUrl": "http://127.0.0.1:8090/"
+    },
+    {
+      "flow": "fwop22",
+      "step": "02-open",
+      "skill": "s_3cd143",
+      "similarity": 1,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_3cd143 stopped at step 3 — type failed: locator.evaluate: Timeout 10000ms exceeded. [outcome: unknown]",
+      "reason": "type failed: locator.evaluate: Timeout 10000ms exceeded. [outcome: unknown]",
+      "pageUrlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages",
+      "pageUrl": "http://127.0.0.1:8090/projects/bench-project/work_packages"
+    },
+    {
+      "flow": "fwop22",
+      "step": "04-set",
+      "skill": "s_fe1d26",
+      "similarity": 0.982,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_fe1d26 stopped at step 2 — after step 2 expected url http://127.0.0.1:8090/projects/bench-project/work_packages/details/42/overview but browser is at http://127.0.0.1:8090/projects/bench-project/news",
+      "reason": "after step 2 expected url http://127.0.0.1:8090/projects/bench-project/work_packages/details/42/overview but browser is at http://127.0.0.1:8090/projects/bench-project/news",
+      "pageUrlPattern": "http://127.0.0.1:8090/projects/bench-project/news",
+      "pageUrl": "http://127.0.0.1:8090/projects/bench-project/news"
+    },
+    {
+      "flow": "fwop22",
+      "step": "05-change",
+      "skill": "s_e52b9e",
+      "atStep": "9",
+      "key": "target",
+      "similarity": 0.997,
+      "missedLocator": "page.getByRole('alert', { name: 'Successful update.', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:id/overview",
+      "pageUrl": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/42/overview"
+    },
+    {
+      "flow": "fwop22",
+      "step": "06-set",
+      "skill": "s_f38497",
+      "atStep": "11",
+      "key": "target",
+      "similarity": 0.997,
+      "missedLocator": "page.getByRole('alert', { name: 'Successful update.', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:id/overview",
+      "pageUrl": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/42/overview"
+    },
+    {
+      "flow": "fwop22",
+      "step": "08-open",
+      "skill": "s_d33385",
+      "similarity": 1,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_d33385 stopped at step 2 — after step 2 the page did not show \"- button \\\"Description fwop22-n2 description text: Edit\\\"\" as it did when recorded — the step ran but probably acted on the wrong element",
+      "reason": "after step 2 the page did not show \"- button \\\"Description fwop22-n2 description text: Edit\\\"\" as it did when recorded — the step ran but probably acted on the wrong element",
+      "pageUrlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:id/overview",
+      "pageUrl": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/42/overview"
+    }
+  ],
+  "wallMs": 318919,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 1607847,
+    "completionTokens": 19234,
+    "cachedTokens": 1504256
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 1607847,
+      "completionTokens": 19234,
+      "cachedTokens": 1504256
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

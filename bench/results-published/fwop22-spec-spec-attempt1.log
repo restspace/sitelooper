@@ -1,0 +1,48 @@
+
+Running 1 test using 1 worker
+
+[sitelooper skip] 01-signin s_876c29/1: closes the dialog "Welcome to OpenProject, Bench Admin" with "Close", which is not open — already in effect
+[sitelooper step] 01-signin
+  ✘  1 fwop22.spec.ts:9:1 › fwop22 (33.2s)
+
+
+  1) fwop22.spec.ts:9:1 › fwop22 › 02-open: Navigate to the project named 'Bench Project' in OpenProject and open its work packages list. Report the subjects of all work packages whose subject starts with 'Seed:', exactly as displayed. Do not modify anything. 
+
+    TimeoutError: locator.evaluate: Timeout 10000ms exceeded.
+    Call log:
+      - waiting for getByRole('combobox', { name: /^[\s\p{Co}\p{So}\p{Cf}]*Search\s+in\s+OpenProject[\s\p{Co}\p{So}\p{Cf}]*$/u })
+     [outcome: unknown]
+
+       at fwop22.flow.ts:12993
+
+      12991 | async function focusOrRefuse(target: Locator, timeout?: number): Promise<void> {
+      12992 |   await target.focus({ timeout: timeout ?? DEFAULT_ACTION_TIMEOUT_MS });
+    > 12993 |   const holds = await target.evaluate(
+            |                              ^
+      12994 |     (el) => {
+      12995 |       let active: Element | null = document.activeElement;
+      12996 |       const label = el.closest('label')?.control ?? null;
+        at focusOrRefuse (/home/user/sitelooper/bench/results/fwop22-spec-spec-tmp/fwop22.flow.ts:12993:30)
+        at typeWithRecipe (/home/user/sitelooper/bench/results/fwop22-spec-spec-tmp/fwop22.flow.ts:12974:3)
+        at type (/home/user/sitelooper/bench/results/fwop22-spec-spec-tmp/fwop22.flow.ts:15371:19)
+        at /home/user/sitelooper/bench/results/fwop22-spec-spec-tmp/fwop22.flow.ts:16538:127
+        at guardedTyping (/home/user/sitelooper/bench/results/fwop22-spec-spec-tmp/fwop22.flow.ts:14149:18)
+        at Object.act (/home/user/sitelooper/bench/results/fwop22-spec-spec-tmp/fwop22.flow.ts:16538:9)
+        at runStepLifecycle (/home/user/sitelooper/bench/results/fwop22-spec-spec-tmp/fwop22.flow.ts:11145:18)
+        at Object.02-open (/home/user/sitelooper/bench/results/fwop22-spec-spec-tmp/fwop22.flow.ts:16520:5)
+        at /home/user/sitelooper/bench/results/fwop22-spec-spec-tmp/fwop22.flow.ts:20001:7
+        at runFlow (/home/user/sitelooper/bench/results/fwop22-spec-spec-tmp/fwop22.flow.ts:20000:5)
+        at /home/user/sitelooper/bench/results/fwop22-spec-spec-tmp/fwop22.spec.ts:14:21
+
+    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/fwop22-fwop22/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/fwop22-fwop22/error-context.md
+
+  1 failed
+    fwop22.spec.ts:9:1 › fwop22 ────────────────────────────────────────────────────────────────────
