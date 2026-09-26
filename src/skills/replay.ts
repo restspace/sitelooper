@@ -3,6 +3,8 @@ import { outcomeLabel, outcomeOfError, urlHeldStill, type ActionOutcome } from '
 import { inFlightRequests, type ActionExpectation } from '../execution/action.js';
 import { IDENTITY_POLL_MS, IDENTITY_WAIT_MS, SOFT_MATCH_MIN_SIMILARITY, alertVerdict, errorPageVerdict, gotoLandingVerdict, identityMarkerVerdict, isErrorPageUrl, landedOnRecordedPage, markersBound, preconditionVerdict, retargetNavigation, segmentGate, fillableChain, linkLandingWarning, unfilledStepVerdict, urlEffectVerdict, urlRecordParts } from '../execution/gates.js';
 import type { UrlSegDiff } from '../execution/url.js';
+import { emptyFacts } from '../execution/facts.js';
+import { landingVerdictWithFacts, preconditionVerdictWithFacts } from '../execution/facts-route.js';
 import { LOOP_SHRINK_WAIT_MS, pageReadable, runFoldedLoop, type LoopPass } from '../execution/loop.js';
 import type { Locator, Page } from 'playwright-core';
 import { clip, identityRe, identitySource } from '../shared/text.js';
@@ -123,8 +125,10 @@ export interface ReplayOptions {
    */
   heal?: InlineHealer;
   /**
-   * SITE FACTS (stage 0, skills/facts-url.ts): the daemon's url observer and
-   * landing shadows. Observes and logs only; absent, nothing is observed.
+   * SITE FACTS (skills/facts-url.ts): the daemon's url observer, the landing
+   * shadows, and (stage 1) the live facts snapshot the goto landing and the
+   * precondition gate decide from. Absent, nothing is observed and the gates
+   * decide from no facts — today's rule.
    */
   facts?: ReplayFactsHook;
 }
@@ -712,8 +716,13 @@ export async function replaySkill(
       // …and the positions this procedure mints, so a page already carrying
       // the record it would create is refused as past its start (fwod66).
       const mints = skill.steps.flatMap((s, i) => (s.mints ? [{ at: s.mints.at, step: i + 1, ...(s.mints.sole !== undefined ? { sole: s.mints.sole } : {}) }] : []));
-      const verdict = preconditionVerdict(pattern, url, params, res.similarity, mints);
-      opts.facts?.precondition(pattern, url, params, res.similarity, mints, Boolean(verdict.refuse), `gate ${skill.id} step ${n}`);
+      // Stage 1 (site facts): the same verdict, unless a reliable fact about
+      // this route decides (execution/facts-route.ts) — the artifact asks the
+      // same function over the snapshot it carries. The shadow row keeps
+      // today's verdict as its heuristic.
+      const today = preconditionVerdict(pattern, url, params, res.similarity, mints);
+      const verdict = preconditionVerdictWithFacts(opts.facts?.snapshot(url) ?? emptyFacts(originOf(url) ?? ''), pattern, url, params, res.similarity, mints);
+      opts.facts?.precondition(pattern, url, params, res.similarity, mints, Boolean(today.refuse), `gate ${skill.id} step ${n}`, true);
       if (verdict.refuse) {
         res.refused = true;
         if (verdict.past) res.pastStart = true;
@@ -2039,11 +2048,16 @@ const errorPage: StepGate = ({ page, tag }) => {
 // The alert gate runs AFTER the page-change gate: an alert the recording never
 // saw is reported, and only stops the step when its recorded changes could not
 // confirm it worked (gates.ts alertVerdict).
-/** A goto that landed on another view of what it asked for (shared gotoLandingVerdict). */
+/**
+ * A goto that landed on another view of what it asked for (shared
+ * gotoLandingVerdict, decided by a reliable site fact where one bears on a
+ * disputed key: landingVerdictWithFacts, as the artifact asks it).
+ */
 const gotoLanding: StepGate = ({ page, step, args, tag, facts }) => {
   if (step.tool !== 'goto' || typeof args.url !== 'string') return null;
-  const stop = gotoLandingVerdict(args.url, page.url(), `step ${tag}`);
-  facts?.landing(args.url, page.url(), stop !== null, `goto step ${tag}`);
+  const landed = page.url();
+  const stop = landingVerdictWithFacts(facts?.snapshot(landed) ?? emptyFacts(originOf(landed) ?? ''), args.url, landed, `step ${tag}`);
+  if (facts) facts.landing(args.url, landed, gotoLandingVerdict(args.url, landed, `step ${tag}`) !== null, `goto step ${tag}`, true);
   return stop ? { stop } : null;
 };
 

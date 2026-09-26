@@ -200,7 +200,7 @@ describe('the hooks write through the session\'s flush', () => {
     status: 'provisional', provenance: { session: 's', instruction: 't', created: 't' },
   });
 
-  it('pinEndsElsewhere: a facts.routesAgree row beside an unchanged verdict, flushed to shadow.jsonl', () => {
+  it('pinEndsElsewhere: a facts.routesAgree row beside the verdict a reliable fact decides, flushed to shadow.jsonl', () => {
     const store = new SkillStore(path.join(tmp, 'repin'));
     store.put(mk('s_next', `${WP}?query_props=a`, `${WP}?query_props=a`));
     store.put(mk('s_lit', WP, `${WP}?query_props=b`));
@@ -210,8 +210,8 @@ describe('the hooks write through the session\'s flush', () => {
     expect(said).toMatch(/ends on .*query_props=b/);
     expect(takeFactRows(store)).toEqual([]);
     new SiteFactStore(store.dir).observe(OP, [{ k: 'route.query', key: `${WP}?query_props`, v: 'state', hard: true, session: 'r1' }]);
-    // the verdict is unchanged (stage 0 is shadow only); the facts say the same page
-    expect(pinEndsElsewhere(store, 's_lit', 's_next')).toBe(said);
+    // stage 1: the reliable (hard) state fact DECIDES — the two literals are one page, the pin is not refused
+    expect(pinEndsElsewhere(store, 's_lit', 's_next')).toBeNull();
     // a one-sided key today already takes on trust: fact and heuristic agree
     expect(pinEndsElsewhere(store, 's_bare', 's_next')).toBeNull();
     flushSiteFacts(store, 'fwop-n2', 'flow fwop');
@@ -224,6 +224,7 @@ describe('the hooks write through the session\'s flush', () => {
       session: 'fwop-n2',
       instruction: 'flow fwop',
       step: 'pinEndsElsewhere s_lit -> s_next',
+      applied: true,
       evidence: [JSON.stringify({ k: 'route.query', key: `${WP}?query_props`, v: 'state', reliable: true })],
     });
     expect(takeFactRows(store)).toEqual([]);

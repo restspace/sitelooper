@@ -129,6 +129,16 @@ export interface Skill {
    * read at revision 3, thought about it, and wrote over someone else's 4.
    */
   revision?: number;
+  /**
+   * The site facts that WIDENED this procedure's url patterns
+   * (skills/facts-rewrite.ts, site facts stage 1 consumer 5): a reliable
+   * `route.query` `state` key written `key=:var`, a reliable `route.fragment`
+   * `anchor` stripped. One entry per fact per rewrite, oldest first; `at` is
+   * an ISO time. Patterns only — steps and locators are never rewritten — and
+   * a later contradiction does not undo one (a wildcard is never wrong, only
+   * weaker). Absent on a procedure no fact has touched.
+   */
+  factRewrites?: { k: 'route.query' | 'route.fragment'; key: string; at: string }[];
 }
 
 /**

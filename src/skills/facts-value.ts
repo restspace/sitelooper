@@ -33,12 +33,12 @@ import {
   type Observation,
   type SiteFacts,
 } from '../execution/facts.js';
-import { originOf } from '../execution/url.js';
+import { originOf, urlParts } from '../execution/url.js';
 import type { RecordedEntry } from '../daemon/recorder.js';
 import { isDataShaped } from '../agent/sourcing.js';
 import { ambiguousCredentialHashes } from '../shared/secrets.js';
 import { taskConstantArms, type RunSpecific } from './flow.js';
-import { pathDigitPart, type LedgerEntry } from './ledger.js';
+import { pathDigitPart, urlPartFactKey, type LedgerEntry } from './ledger.js';
 import type { SiteFactStore } from './facts.js';
 import { writeShadow, type ShadowRow } from './shadow.js';
 
@@ -77,18 +77,36 @@ export function admissionStrength(entry: LedgerEntry, opts: UrlAdmissionOpts = {
  * `route.query` for a `q.<key>` (hash state and query string share the
  * `?key` spelling, as urlPart reads them). Null when the url is not a url.
  */
-export function urlFactKey(url: string, label: string): { k: FactKind; key: string } | null {
-  if (!originOf(url)) return null;
-  const route = routeTemplateOf(url);
-  if (label.startsWith('q.')) return { k: 'route.query', key: `${route}?${label.slice(2)}` };
-  const m = /^([ph])(\d+)$/.exec(label);
-  if (!m) return null;
-  return { k: 'route.path', key: `${route}#${m[1] === 'p' ? '' : 'h'}${m[2]}` };
+export function urlFactKey(url: string, label: string, identityParts: readonly string[] = []): { k: FactKind; key: string } | null {
+  // One definition, shared with the ledger's reader (addUrlIds' facts).
+  return urlPartFactKey(url, label, identityParts);
 }
 
-/** The `value.shape` key of a label on a url's route: `${route}|${label}`. */
-export function shapeKeyOf(url: string, label: string): string {
-  return `${routeTemplateOf(url)}|${label}`;
+/**
+ * The `value.shape` key of a label on a url's route: `${route}|${label}`,
+ * the route keyed through `routeTemplateOf(url, identityParts)` as urlFactKey is.
+ */
+export function shapeKeyOf(url: string, label: string, identityParts: readonly string[] = []): string {
+  return `${routeTemplateOf(url, identityParts)}|${label}`;
+}
+
+/**
+ * The url's record parts the ledger admitted (`p<i>=<v>` / `h<i>=<v>`), from
+ * addUrlIds' result: a path or hash-path part whose value this url holds at
+ * that label. Query keys are not path parts; a route template never carries
+ * them.
+ */
+export function admittedIdentityParts(url: string, admitted: readonly LedgerEntry[]): string[] {
+  const at = new Map(urlParts(url).map((p) => [p.label, p.value]));
+  const out: string[] = [];
+  for (const e of admitted) {
+    if (e.binding.from !== 'url' || !/^[ph]\d+$/.test(e.binding.label)) continue;
+    const v = at.get(e.binding.label);
+    if (v === undefined || v.trim() !== e.value) continue;
+    const tag = `${e.binding.label}=${v}`;
+    if (!out.includes(tag)) out.push(tag);
+  }
+  return out;
 }
 
 /**
@@ -265,6 +283,21 @@ export class ValueFactObserver {
     return this.sessionId;
   }
 
+  /**
+   * The origin's facts as the store holds them now, for the ledger's
+   * admission (addUrlIds' `facts`; stage 1 consumer 3). Undefined when the
+   * url has no origin or the store cannot be read: the ledger then runs its
+   * rules unchanged.
+   */
+  snapshot(url: string): SiteFacts | undefined {
+    try {
+      const origin = originOf(url);
+      return origin ? this.store.read(origin) : undefined;
+    } catch {
+      return undefined;
+    }
+  }
+
   /** A new session (a flow run's replay): memory is per session. */
   beginSession(session: string): void {
     if (session === this.sessionId) return;
@@ -287,6 +320,9 @@ export class ValueFactObserver {
     try {
       const origin = originOf(url);
       if (!origin) return;
+      // The url's record parts this admission banked key the route, so a
+      // letters-only record segment (a grafana uid at p1) is `*` in every key.
+      const identityParts = admittedIdentityParts(url, admitted);
       const strengthOf = new Map<string, Strength>();
       for (const e of admitted) {
         if (e.binding.from !== 'url') continue;
@@ -294,17 +330,17 @@ export class ValueFactObserver {
         strengthOf.set(`${e.binding.label}\u0000${e.value}`, strength);
         if (!strength) continue;
         const hard = strength === 'hard';
-        const shapeKey = shapeKeyOf(url, e.binding.label);
+        const shapeKey = shapeKeyOf(url, e.binding.label, identityParts);
         const ev = mintEv(shapeKey, e.value, vars);
         this.pendingObs.push({ origin, o: { k: 'value.class', key: valueHash(e.value), v: 'mint', hard, ...(ev ? { ev } : {}) } });
-        const uf = urlFactKey(url, e.binding.label);
+        const uf = urlFactKey(url, e.binding.label, identityParts);
         if (uf) this.pendingObs.push({ origin, o: { k: uf.k, key: uf.key, v: 'identity', hard } });
       }
       const all = [...parts, ...(opts.linkMinted ?? [])];
       for (const p of all) {
         const value = p.value.trim();
         if (!value) continue;
-        const shapeKey = shapeKeyOf(url, p.label);
+        const shapeKey = shapeKeyOf(url, p.label, identityParts);
         this.keyOfValue.set(value, shapeKey);
         this.candidates.push({ value, shapeKey, origin, minted: Boolean(strengthOf.get(`${p.label}\u0000${value}`)) });
       }

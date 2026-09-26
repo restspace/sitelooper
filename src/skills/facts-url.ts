@@ -1,9 +1,11 @@
 /**
  * SITE FACTS, URL ROUTES (stage 0, Piece D1 of the site-facts contract;
  * design-site-facts.md §2): what the runner OBSERVES about an app's urls, and
- * the fact-based verdicts the route consumers will switch to in stage 1,
- * computed here beside today's heuristics and logged as SHADOW rows. Nothing
- * in this module decides anything a replay, a compile or a re-pin does.
+ * the SHADOW rows logged beside each route decision. Stage 1 moved the
+ * fact-based verdicts themselves to src/execution/facts-route.ts (both runners
+ * decide from them) and re-exports them here; this module reads the store and
+ * hands a snapshot over (`ReplayFactsHook.snapshot`), and stamps `applied` on
+ * a row whose fact decided what the runner did.
  *
  * Three observations:
  *  - `route.fragment` (hard): any url on the origin carries a fragment — a
@@ -24,19 +26,40 @@
  * Shadow rows are buffered the same way and written through `writeShadow`.
  */
 import {
-  factsFor,
-  fragmentFact,
+  emptyFacts,
   reliable,
-  routeQueryFact,
   routeTemplateOf,
   type Fact,
   type FactValue,
   type Observation,
   type SiteFacts,
 } from '../execution/facts.js';
-import { isWildcardSeg, originOf, urlShapeOf, type UrlShape } from '../execution/url.js';
+import { originOf, urlShapeOf, type UrlShape } from '../execution/url.js';
 import { cosine } from '../execution/fingerprint.js';
-import { SOFT_MATCH_MIN_SIMILARITY, gotoLandingVerdict, preconditionVerdict, type FingerprintSimilarity, type MintedPosition } from '../execution/gates.js';
+import { SOFT_MATCH_MIN_SIMILARITY, type FingerprintSimilarity, type MintedPosition } from '../execution/gates.js';
+import {
+  landingByFacts,
+  literal,
+  preconditionByFacts,
+  routesAgreeByFacts,
+  type RoutesAgree,
+} from '../execution/facts-route.js';
+
+// The pure decisions live in src/execution/facts-route.ts (both runners embed
+// them); re-exported for the daemon-side callers that imported them from here.
+export {
+  disputedKeys,
+  landingByFacts,
+  landingVerdictWithFacts,
+  literal,
+  preconditionByFacts,
+  preconditionVerdictWithFacts,
+  queryFacts,
+  queryKind,
+  rewriteQuery,
+  routesAgreeByFacts,
+  type RoutesAgree,
+} from '../execution/facts-route.js';
 import { SiteFactStore } from './facts.js';
 import { writeShadow, type ShadowRow } from './shadow.js';
 import { takeFormatShadowRows } from './facts-format.js';
@@ -182,7 +205,7 @@ export class RouteObserver {
     const shape = urlShapeOf(url);
     const origin = originOf(url);
     if (!shape || !origin) return;
-    const route = routeTemplateOf(url);
+    const route = routeTemplateOf(url, identityParts);
     this.noteFragment(origin, route, shape);
     const now: Noted = { url, route, parts: [...identityParts].sort().join('\u0001'), query: shape.query };
     const prev = this.prev;
@@ -321,7 +344,11 @@ export interface FactEvidence {
  * string per fact consulted, each `{k, key, v, reliable}` (the convention
  * Pieces D3 and E share; `parseFactEvidence` reads one back).
  */
-export type FactShadowRow = ShadowRow & { evidence: string[] };
+export type FactShadowRow = ShadowRow & {
+  evidence: string[];
+  /** Stage 1: the fact DECIDED the verdict the runner acted on (absent when today's rule did). */
+  applied?: boolean;
+};
 
 function evidenceOf(f: Fact): string {
   const e: FactEvidence = { k: f.k, key: f.key, v: typeof f.v === 'string' ? f.v : { ...f.v }, reliable: reliable(f) };
@@ -341,9 +368,10 @@ export function parseFactEvidence(item: string): FactEvidence | null {
 /**
  * One row. `fact` is the fact-based decision, or 'none' when no RELIABLE fact
  * bears on it (only advisory ones: the decision falls back to today's rule,
- * so there is nothing to disagree with).
+ * so there is nothing to disagree with). `applied`: the caller acted on the
+ * fact's verdict (stage 1), stamped `applied: true` only when it decided.
  */
-function factRow(rule: string, step: string, decided: boolean, fact: string, heuristic: string, relevant: readonly Fact[]): FactShadowRow {
+function factRow(rule: string, step: string, decided: boolean, fact: string, heuristic: string, relevant: readonly Fact[], applied = false): FactShadowRow {
   const verdict = decided ? fact : 'none';
   return {
     rule,
@@ -352,6 +380,7 @@ function factRow(rule: string, step: string, decided: boolean, fact: string, heu
     heuristic,
     agree: verdict === 'none' || verdict === heuristic,
     evidence: [...new Set(relevant)].map(evidenceOf),
+    ...(applied && decided ? { applied: true } : {}),
   };
 }
 
@@ -388,112 +417,16 @@ export function flushSiteFacts(store: SkillStore | null | undefined, session: st
 }
 
 // ---------------------------------------------------------------------------
-// query rewriting and key comparison
+// consumer 1: routesAgree (learn.ts pinEndsElsewhere) — routesAgreeByFacts is in
+// execution/facts-route.ts
 // ---------------------------------------------------------------------------
-
-function safeDecode(s: string): string {
-  try {
-    return decodeURIComponent(s);
-  } catch {
-    return s;
-  }
-}
-
-/**
- * Rewrite a url's (or url pattern's) query in place, textually, so slot
- * markers and the fragment are left exactly as written: `fn` returns the new
- * value for a key, or null to drop the pair.
- */
-export function rewriteQuery(url: string, fn: (key: string, value: string) => string | null): string {
-  const hashAt = url.indexOf('#');
-  const head = hashAt >= 0 ? url.slice(0, hashAt) : url;
-  const hash = hashAt >= 0 ? url.slice(hashAt) : '';
-  const q = head.indexOf('?');
-  if (q < 0) return url;
-  const kept: string[] = [];
-  for (const pair of head.slice(q + 1).split('&')) {
-    if (!pair) continue;
-    const eq = pair.indexOf('=');
-    const rawKey = eq < 0 ? pair : pair.slice(0, eq);
-    const value = eq < 0 ? '' : pair.slice(eq + 1);
-    const next = fn(safeDecode(rawKey), safeDecode(value));
-    if (next === null) continue;
-    kept.push(next === safeDecode(value) ? pair : `${rawKey}=${next}`);
-  }
-  return `${head.slice(0, q)}${kept.length ? `?${kept.join('&')}` : ''}${hash}`;
-}
-
-const literal = (v: string | undefined): v is string => v !== undefined && v !== '' && !isWildcardSeg(v) && !/\{\{/.test(v);
-
-/** Query keys the two urls do not agree on: one side only, or two literals. */
-function disputedKeys(a: UrlShape, b: UrlShape): { oneSided: string[]; differing: string[] } {
-  const oneSided: string[] = [];
-  const differing: string[] = [];
-  for (const k of new Set([...a.query.keys(), ...b.query.keys()])) {
-    const x = a.query.get(k);
-    const y = b.query.get(k);
-    if (x === undefined || y === undefined) oneSided.push(k);
-    else if (literal(x) && literal(y) && x !== y) differing.push(k);
-  }
-  return { oneSided, differing };
-}
-
-/** Every route.query fact about `key` on either url's route, each once. */
-function queryFacts(sf: SiteFacts, urls: readonly string[], key: string): Fact[] {
-  const routes = [...new Set(urls.map((u) => routeTemplateOf(u)))];
-  return routes.flatMap((r) => factsFor(sf, 'route.query', `${r}?${key}`));
-}
-
-/** The reliable route.query verdict for a key on either url's route (the first url's route first). */
-function queryKind(sf: SiteFacts, urls: readonly string[], key: string): 'state' | 'identity' | 'routing' | null {
-  for (const u of urls) {
-    const kind = routeQueryFact(sf, u, key);
-    if (kind) return kind;
-  }
-  return null;
-}
-
-// ---------------------------------------------------------------------------
-// consumer 1: routesAgree (learn.ts pinEndsElsewhere)
-// ---------------------------------------------------------------------------
-
-export type RoutesAgree = (start: string, end: string, byFragment: boolean) => boolean;
-
-/**
- * routesAgree decided by facts, with today's rule (`today`) for everything a
- * fact does not settle: a query key of reliable `state` is dropped from both
- * sides (it never separates routes), a key of reliable `routing` that only
- * one side carries as a literal separates them (both sides' literals are
- * already compared by today's rule), and a reliable `route.fragment` replaces
- * routesByFragment's guess (a `path` or `state` fragment is a route, an
- * `anchor` is not). Null when no fact, reliable or not, bears on the pair.
- */
-export function routesAgreeByFacts(sf: SiteFacts, start: string, end: string, byFragment: boolean, today: RoutesAgree): { agree: boolean; decided: boolean; relevant: Fact[] } | null {
-  const a = urlShapeOf(start);
-  const b = urlShapeOf(end);
-  const relevant: Fact[] = [];
-  const fragmented = start.includes('#') || end.includes('#');
-  if (fragmented) relevant.push(...factsFor(sf, 'route.fragment', ''));
-  const disputed = a && b ? disputedKeys(a, b) : { oneSided: [], differing: [] };
-  const keys = [...disputed.oneSided, ...disputed.differing];
-  for (const k of keys) relevant.push(...queryFacts(sf, [start, end], k));
-  if (!relevant.length) return null;
-  const frag = fragmented ? fragmentFact(sf) : null;
-  const byFragmentF = frag ? frag !== 'anchor' : byFragment;
-  const kinds = new Map(keys.map((k) => [k, queryKind(sf, [start, end], k)] as const));
-  const decided = relevant.some(reliable) && (frag !== null || [...kinds.values()].some((v) => v === 'state' || v === 'routing'));
-  const routingSplit = disputed.oneSided.some((k) => kinds.get(k) === 'routing' && (literal(a!.query.get(k)) || literal(b!.query.get(k))));
-  if (routingSplit) return { agree: false, decided, relevant };
-  const drop = (u: string) => rewriteQuery(u, (k, v) => (kinds.get(k) === 'state' ? null : v));
-  return { agree: today(drop(start), drop(end), byFragmentF), decided, relevant };
-}
 
 /** The `facts.routesAgree` row beside today's verdict, or null when no fact bears on it. */
-export function routesAgreeShadow(sf: SiteFacts, start: string, end: string, byFragment: boolean, today: RoutesAgree, heuristic: boolean, step: string): FactShadowRow | null {
+export function routesAgreeShadow(sf: SiteFacts, start: string, end: string, byFragment: boolean, today: RoutesAgree, heuristic: boolean, step: string, applied = false): FactShadowRow | null {
   const r = routesAgreeByFacts(sf, start, end, byFragment, today);
   if (!r) return null;
   const say = (x: boolean) => (x ? 'agree' : 'differ');
-  return factRow('facts.routesAgree', step, r.decided, say(r.agree), say(heuristic), r.relevant);
+  return factRow('facts.routesAgree', step, r.decided, say(r.agree), say(heuristic), r.relevant, applied);
 }
 
 /** learn.ts's hook: the row for one routesAgree decision, buffered for the session's flush. Never throws. */
@@ -509,62 +442,12 @@ export function noteRoutesAgree(store: SkillStore, origin: string, start: string
 // consumer 2: the goto landing and the precondition gate (replay.ts)
 // ---------------------------------------------------------------------------
 
-/**
- * gotoLandingVerdict decided by facts: a key of reliable `state` never makes
- * a landing "another view", whatever its two literals; a key of reliable
- * `routing` the target asked for (a literal) and the landing lacks, or the
- * landing carries and the target did not ask for, does. Null when no
- * route.query fact exists for a disputed key.
- */
-export function landingByFacts(sf: SiteFacts, target: string, landed: string): { stop: boolean; decided: boolean; relevant: Fact[] } | null {
-  const t = urlShapeOf(target);
-  const l = urlShapeOf(landed);
-  if (!t || !l || t.origin !== l.origin) return null;
-  const { oneSided, differing } = disputedKeys(t, l);
-  const keys = [...oneSided, ...differing];
-  const relevant = keys.flatMap((k) => queryFacts(sf, [landed, target], k));
-  if (!relevant.length) return null;
-  const kinds = new Map(keys.map((k) => [k, queryKind(sf, [landed, target], k)] as const));
-  const decided = [...kinds.values()].some((v) => v === 'state' || v === 'routing');
-  const routingSplit = oneSided.some((k) => kinds.get(k) === 'routing' && (literal(t.query.get(k)) || literal(l.query.get(k))));
-  const asked = rewriteQuery(target, (k, v) => (kinds.get(k) === 'state' ? null : v));
-  return { stop: routingSplit || gotoLandingVerdict(asked, landed, '') !== null, decided, relevant };
-}
-
-export function landingShadow(sf: SiteFacts, target: string, landed: string, heuristicStop: boolean, step: string): FactShadowRow | null {
+/** The `facts.landing` row for a goto landing; `applied`: the runner acted on landingVerdictWithFacts. */
+export function landingShadow(sf: SiteFacts, target: string, landed: string, heuristicStop: boolean, step: string, applied = false): FactShadowRow | null {
   const r = landingByFacts(sf, target, landed);
   if (!r) return null;
   const say = (x: boolean) => (x ? 'stop' : 'pass');
-  return factRow('facts.landing', step, r.decided, say(r.stop), say(heuristicStop), r.relevant);
-}
-
-/**
- * The precondition gate decided by facts: the pattern with every reliable
- * `state` key written `:var` (stage 1's pattern rewrite), judged by the same
- * preconditionVerdict; then a reliable `routing` key one side carries alone
- * refuses. Null when no route.query fact exists for a disputed key.
- */
-export function preconditionByFacts(
-  sf: SiteFacts,
-  pattern: string,
-  url: string,
-  params: Record<string, string>,
-  similarity: FingerprintSimilarity,
-  mints: MintedPosition[],
-): { refuse: boolean; decided: boolean; relevant: Fact[] } | null {
-  const p = urlShapeOf(pattern);
-  const l = urlShapeOf(url);
-  if (!p || !l || p.origin !== l.origin) return null;
-  const { oneSided, differing } = disputedKeys(p, l);
-  const keys = [...oneSided, ...differing];
-  const relevant = keys.flatMap((k) => queryFacts(sf, [url, pattern], k));
-  if (!relevant.length) return null;
-  const kinds = new Map(keys.map((k) => [k, queryKind(sf, [url, pattern], k)] as const));
-  const decided = [...kinds.values()].some((v) => v === 'state' || v === 'routing');
-  const routingSplit = oneSided.some((k) => kinds.get(k) === 'routing' && (literal(p.query.get(k)) || literal(l.query.get(k))));
-  const widened = rewriteQuery(pattern, (k, v) => (kinds.get(k) === 'state' ? ':var' : v));
-  const refuse = routingSplit || Boolean(preconditionVerdict(widened, url, params, similarity, mints).refuse);
-  return { refuse, decided, relevant };
+  return factRow('facts.landing', step, r.decided, say(r.stop), say(heuristicStop), r.relevant, applied);
 }
 
 export function preconditionShadow(
@@ -576,23 +459,31 @@ export function preconditionShadow(
   mints: MintedPosition[],
   heuristicRefuse: boolean,
   step: string,
+  applied = false,
 ): FactShadowRow | null {
   const r = preconditionByFacts(sf, pattern, url, params, similarity, mints);
   if (!r) return null;
   const say = (x: boolean) => (x ? 'refuse' : 'pass');
-  return factRow('facts.landing', step, r.decided, say(r.refuse), say(heuristicRefuse), r.relevant);
+  return factRow('facts.landing', step, r.decided, say(r.refuse), say(heuristicRefuse), r.relevant, applied);
 }
 
 /**
  * What replay.ts is handed (ReplayOptions.facts) by the daemon's run_skill:
- * the url expectation hook and the two landing shadows, all buffered for the
- * session. A replay with no hook (tests, the artifact's own runner, which
- * never writes facts) runs the code path that existed before.
+ * the url expectation hook, the two landing shadows, all buffered for the
+ * session, and (stage 1) `snapshot(url)`, the live store's facts for the
+ * url's origin, which the replay's goto landing and precondition gates decide
+ * from (execution/facts-route.ts). A replay with no hook (tests, a caller
+ * outside the daemon) decides from no facts, which is today's rule.
+ *
+ * `stop` / `refused` are TODAY's verdict (the heuristic column); `applied`
+ * says the runner acted on the facts' verdict, and stamps the row when a
+ * reliable fact decided it.
  */
 export interface ReplayFactsHook {
   noteUrl(url: string, minted: boolean): void;
-  landing(target: string, landed: string, stop: boolean, step: string): void;
-  precondition(pattern: string, url: string, params: Record<string, string>, similarity: FingerprintSimilarity, mints: MintedPosition[], refused: boolean, step: string): void;
+  landing(target: string, landed: string, stop: boolean, step: string, applied?: boolean): void;
+  precondition(pattern: string, url: string, params: Record<string, string>, similarity: FingerprintSimilarity, mints: MintedPosition[], refused: boolean, step: string, applied?: boolean): void;
+  snapshot(url: string): SiteFacts;
 }
 
 export function replayFactsFor(store: SkillStore): ReplayFactsHook {
@@ -604,20 +495,27 @@ export function replayFactsFor(store: SkillStore): ReplayFactsHook {
         /* never fails the replay */
       }
     },
-    landing(target, landed, stop, step) {
+    landing(target, landed, stop, step, applied) {
       try {
         const sf = factsAt(store, landed);
-        if (sf) bufferFactRow(store, landingShadow(sf, target, landed, stop, step));
+        if (sf) bufferFactRow(store, landingShadow(sf, target, landed, stop, step, applied));
       } catch {
         /* never fails the replay */
       }
     },
-    precondition(pattern, url, params, similarity, mints, refused, step) {
+    precondition(pattern, url, params, similarity, mints, refused, step, applied) {
       try {
         const sf = factsAt(store, url);
-        if (sf) bufferFactRow(store, preconditionShadow(sf, pattern, url, params, similarity, mints, refused, step));
+        if (sf) bufferFactRow(store, preconditionShadow(sf, pattern, url, params, similarity, mints, refused, step, applied));
       } catch {
         /* never fails the replay */
+      }
+    },
+    snapshot(url) {
+      try {
+        return factsAt(store, url) ?? emptyFacts(originOf(url) ?? '');
+      } catch {
+        return emptyFacts(originOf(url) ?? '');
       }
     },
   };

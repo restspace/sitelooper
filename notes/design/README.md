@@ -28,4 +28,7 @@ Status (2026-09-25):
   class), counted before relied on, snapshotted into the artifact; stage 0 shadow, then one consumer class per
   stage. Written after the round 54-65 survey. Stage 0 wave 1 (the store, the compile snapshot) shipped
   34dc36cc; wave 2 (observers, shadow rows, and the bench reporting: `bench/ab-metrics.mjs`'s `facts_*` rows,
-  `bench/facts-report.mjs`) is in build on feat/site-facts-0.
+  `bench/facts-report.mjs`) shipped, stage 0 exited round 67 (8608aafa). Stage 1 (site-facts-stage1-contract.md,
+  §2 URL route consumers: `landingVerdictWithFacts`/`preconditionVerdictWithFacts`/`routesAgreeByFacts` in
+  src/execution/facts-route.ts, the learn-time pattern rewrite in src/skills/facts-rewrite.ts, and the ledger's
+  identity-aware admissions in src/skills/ledger.ts) is in build on feat/site-facts-1, four pieces in parallel.

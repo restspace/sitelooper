@@ -64,6 +64,16 @@ describe('urlFactKey and shapeKeyOf', () => {
     expect(urlFactKey('not a url', 'p1')).toBeNull();
     expect(shapeKeyOf('http://si.test/hardware/4', 'p1')).toBe('http://si.test/hardware/*|p1');
   });
+
+  it('identity parts key the route: a letters-only uid is `*` once the ledger admitted it (fwgr78)', () => {
+    const gr = 'http://gr.test/d/afzexqoxkzoqod/bench';
+    expect(urlFactKey(gr, 'p1')).toEqual({ k: 'route.path', key: `${gr}#1` });
+    expect(urlFactKey(gr, 'p1', ['p1=afzexqoxkzoqod'])).toEqual({ k: 'route.path', key: 'http://gr.test/d/*/bench#1' });
+    expect(urlFactKey(`${gr}?refresh=5s`, 'q.refresh', ['p1=afzexqoxkzoqod'])).toEqual({ k: 'route.query', key: 'http://gr.test/d/*/bench?refresh' });
+    expect(shapeKeyOf(gr, 'p1', ['p1=afzexqoxkzoqod'])).toBe('http://gr.test/d/*/bench|p1');
+    // a part named for another value, or another position, stars nothing
+    expect(urlFactKey(gr, 'p1', ['p1=other', 'p2=afzexqoxkzoqod'])).toEqual({ k: 'route.path', key: `${gr}#1` });
+  });
 });
 
 describe('shapeable and mintEv: evidence never carries a value in clear', () => {
@@ -157,6 +167,27 @@ describe('ValueFactObserver', () => {
     expect(g.find((f) => f.k === 'value.class')).toMatchObject({ key: valueHash('afw6yy5xx9'), v: 'mint', hard: false });
     expect(g.find((f) => f.k === 'value.class')?.ev).toBeUndefined(); // a uid's shape would spell it out
     expect(g.find((f) => f.k === 'route.path')).toMatchObject({ key: 'http://gr.test/d/*/bench#1', v: 'identity', hard: false });
+  });
+
+  it('grafana letters-only uids: two sessions key one route.path fact once p1 is an identity part (fwgr78)', () => {
+    for (const [session, uid] of [['n1', 'afzexqoxkzoqod'], ['n2', 'bqwertyuiopzxc']] as const) {
+      const ledger = new RunLedger();
+      ledger.seedVariance([uid]);
+      const url = `http://gr.test/d/${uid}/bench`;
+      const parts = urlParts(url);
+      const obs = new ValueFactObserver(store, session, dir);
+      obs.noteUrl(url, parts, {}, ledger.addUrlIds(url, 'i1', parts, {}));
+      obs.endInstruction(end([{ k: 'instruction', text: 'open', url }], ledger));
+    }
+    const paths = store.read('http://gr.test').facts.filter((f) => f.k === 'route.path');
+    expect(paths).toHaveLength(1);
+    expect(paths[0]).toMatchObject({ key: 'http://gr.test/d/*/bench#1', v: 'identity', hard: false, sessions: ['n1', 'n2'], contra: 0 });
+  });
+
+  it('snapshot: the origin’s facts as the store holds them, undefined for a non-url', () => {
+    const obs = new ValueFactObserver(store, 'n1', dir);
+    expect(obs.snapshot('http://gr.test/d/x/bench')).toEqual(emptyFacts('http://gr.test'));
+    expect(obs.snapshot('not a url')).toBeUndefined();
   });
 
   it('a shape-only admission files nothing', () => {

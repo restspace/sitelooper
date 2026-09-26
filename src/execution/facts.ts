@@ -163,13 +163,21 @@ function recordSeg(seg: string): boolean {
  * names the page. This is compile.ts `urlPattern(url, {query: false})` with
  * the markers normalised, reimplemented over urlShapeOf because compile.ts is
  * not embeddable. Text that is not a url is its own route.
+ *
+ * `identityParts`: the url's parts a caller already knows to be a record, as
+ * urlParts labels them with their value (`p1=afzexqoxkzoqod`, `h2=…`; any
+ * other label is ignored). A path or fragment-path segment named there is
+ * written `*` as a record-shaped one is — grafana's letters-only dashboard uid
+ * (fwgr78) has no digits for `recordSeg` to see, and froze inside the key.
  */
-export function routeTemplateOf(url: string): string {
+export function routeTemplateOf(url: string, identityParts?: readonly string[]): string {
   const shape = urlShapeOf(url);
   if (!shape) return url;
-  const seg = (s: string) => (isWildcardSeg(s) || s === '*' || recordSeg(s) ? '*' : s);
-  let out = `${shape.origin}/${shape.path.map(seg).join('/')}`;
-  if (shape.hashKind === 'path' && !shape.hashAnchor) out += `#${shape.hashSlash ? '/' : ''}${shape.hashPath.map(seg).join('/')}`;
+  const known = new Set(identityParts ?? []);
+  const seg = (prefix: 'p' | 'h') => (s: string, i: number) =>
+    isWildcardSeg(s) || s === '*' || recordSeg(s) || known.has(`${prefix}${i}=${s}`) ? '*' : s;
+  let out = `${shape.origin}/${shape.path.map(seg('p')).join('/')}`;
+  if (shape.hashKind === 'path' && !shape.hashAnchor) out += `#${shape.hashSlash ? '/' : ''}${shape.hashPath.map(seg('h')).join('/')}`;
   return out;
 }
 
