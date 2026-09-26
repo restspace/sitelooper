@@ -1,0 +1,134 @@
+{
+  "arm": "sitelooper",
+  "target": "odoo",
+  "machine": {
+    "platform": "linux",
+    "arch": "x64",
+    "node": "v22.22.2",
+    "cpus": 4,
+    "memGB": 17,
+    "tool": "sitelooper ? author browser tests with an agent; run compiled tests with Playwri",
+    "commit": "9d8b6de7"
+  },
+  "mutationLogPath": null,
+  "provider": "openrouter",
+  "model": "z-ai/glm-5.3",
+  "runid": "fwod93-n1",
+  "task": "bench/tasks/odoo-sale-flow.md",
+  "briefed": false,
+  "reset": true,
+  "stopReason": "completed",
+  "turns": 8,
+  "wallMs": 580259,
+  "orchestrator": {
+    "input": 7192,
+    "cacheWrite": 0,
+    "cacheRead": 33920,
+    "output": 2908
+  },
+  "inner": {
+    "promptTokens": 2936015,
+    "cachedTokens": 2682560,
+    "completionTokens": 47945,
+    "instructions": 8,
+    "byModel": {
+      "deepseek/deepseek-v4.1-flash": {
+        "promptTokens": 2860629,
+        "completionTokens": 40979,
+        "cachedTokens": 2653952,
+        "instructions": 7
+      },
+      "z-ai/glm-5.3": {
+        "promptTokens": 75386,
+        "completionTokens": 6966,
+        "cachedTokens": 28608,
+        "instructions": 1
+      }
+    },
+    "servedByModel": {
+      "deepseek/deepseek-v4.1-flash": [
+        "DeepSeek"
+      ],
+      "z-ai/glm-5.3": [
+        "PrimeIntellect",
+        "Modal"
+      ]
+    },
+    "timing": {
+      "deepseek/deepseek-v4.1-flash": {
+        "totalMs": 505422,
+        "modelMs": 308867,
+        "toolMs": 192559,
+        "modelCalls": 120,
+        "instructions": 7
+      },
+      "z-ai/glm-5.3": {
+        "totalMs": 39862,
+        "modelMs": 35034,
+        "toolMs": 3630,
+        "modelCalls": 5,
+        "instructions": 1
+      }
+    },
+    "skills": {
+      "instructions": 7,
+      "offered": 4,
+      "invoked": 0,
+      "fullReplays": 0,
+      "repaired": 0,
+      "refused": 0,
+      "tierA": 0,
+      "stepsReplayed": 0,
+      "deterministicActions": 0,
+      "totalActions": 101,
+      "compiled": 7,
+      "merged": 0,
+      "variants": 0
+    },
+    "model": "deepseek/deepseek-v4.1-flash",
+    "fallbackModel": "z-ai/glm-5.3",
+    "provider": "openrouter",
+    "systemOne": {
+      "jev-1.13.0": {
+        "inputTokens": 7174,
+        "outputTokens": 468,
+        "requests": 3
+      }
+    }
+  },
+  "commandCount": 7,
+  "subcommands": {
+    "do": 7
+  },
+  "invocationCount": 7,
+  "commandMs": 551023,
+  "commandBytes": 11001,
+  "timeouts": 0,
+  "contextTruncations": 0,
+  "coarse": true,
+  "learn": {
+    "dir": "/home/user/sitelooper/bench/results/fwod93-skills",
+    "instructions": 7,
+    "offered": 4,
+    "invoked": 0,
+    "fullReplays": 0,
+    "repaired": 0,
+    "refused": 0,
+    "tierA": 0,
+    "stepsReplayed": 0,
+    "deterministicActions": 0,
+    "totalActions": 101,
+    "compiled": 7,
+    "merged": 0,
+    "variants": 0,
+    "deterministicFraction": 0
+  },
+  "orBackends": [
+    "InferenceNet"
+  ],
+  "orReportedCostUsd": 0.0154,
+  "maxUsd": 3,
+  "spendUsd": 0.1991,
+  "finalText": "All objectives are complete and verified.\n\n**Final report — quotation-to-order flow (Odoo 17), runid fwod93-n1**\n\n1. **DONE** — Customer `fwod93-n1 Bench Customer` created; City reads `Benchville` on the saved contact form (verified read-only at the end of the run).\n\n2. **DONE** — Quotation created for that customer with one order line: product `[FURN_7777] Office Chair`, quantity 3.00, unit price auto-filled at **70.00**, Untaxed Amount **£210.00** (TAX 20% £42.00, Total £252.00). Quotation reference: **S00021**.\n\n3. **DONE** — Second order line added with a different product: `[FURN_0096] Customizable Desk (Steel, White) 160x80cm, with large legs.`, quantity 2.00, unit price auto-filled at 750.00 (subtotal £1,500.00). New Untaxed Amount: **£1,710.00**.\n\n4. **DONE** — First line's quantity changed from 3 to 5 (Office Chair subtotal £350.00; desk line untouched at £1,500.00). Untaxed Amount afterwards: **£1,850.00** (TAX 20% £370.00, Total £2,220.00).\n\n5. **DONE** — Quotation confirmed via the Confirm button; it became a sales order with reference **S00021** and status **\"Sales Order\"** (Confirm button removed, Create Invoice button appeared).\n\n6. **DONE** — Order cancelled via the Cancel button (confirming the \"Cancel Sales Order\" dialog). Status shown after cancelling: **\"Cancelled\"** (status bar shows Cancelled as the current value; only \"Set to Quotation\" remains). Nothing created by this run stays active.\n\nNotes: customer and product fields were all committed via actual autocomplete dropdown selections, and every state was verified by reloading/reading the saved record rather than assuming the save succeeded.",
+  "transcriptPath": "/home/user/sitelooper/bench/results/fwod93-n1-sitelooper-transcript.jsonl"
+}

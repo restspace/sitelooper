@@ -1,0 +1,1568 @@
+{
+ "id": "s_e28f1a",
+ "origin": "http://127.0.0.1:8069",
+ "template": "In Odoo, open the existing quotation with reference {{v1}} (customer '{{v2}}'). It has two order lines: line 1 = {{v4}} qty {{v6}} unit price {{v7}}, line 2 = {{v8}} qty {{v12}} unit price {{v13}}. Change ONLY the first line's quantity from 3 to 5 (leave the second line untouched). Save the quotation and report the new Untaxed Amount total the app computes (and the first line's new subtotal). Do not wait for network idle; wait for concrete page state. Note: clicking into the description cell of a line before editing avoids an 'Add optional products' dialog.",
+ "params": {
+  "v1": {
+   "example": "S00021",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i2:quotation_reference"
+  },
+  "v2": {
+   "example": "fwod93-n1 Bench Customer",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i1:customer_name"
+  },
+  "v3": {
+   "example": "fwod93-n1",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v4": {
+   "example": "[FURN_7777] Office Chair",
+   "usedIn": [
+    4,
+    13
+   ],
+   "known": true,
+   "binding": "output:i2:product_name"
+  },
+  "v6": {
+   "example": "3.00",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i2:quantity_observed_earlier"
+  },
+  "v7": {
+   "example": "70.00",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i2:unit_price_observed"
+  },
+  "v8": {
+   "example": "[FURN_0096] Customizable Desk (Steel, White) 160x80cm, with large legs.",
+   "usedIn": [
+    17,
+    30,
+    31
+   ],
+   "known": true,
+   "binding": "output:i3:second_product_name"
+  },
+  "v10": {
+   "example": "Customizable Desk",
+   "usedIn": [
+    30
+   ],
+   "known": true,
+   "binding": "output:i3:second_product_label_in_picker"
+  },
+  "v12": {
+   "example": "2.00",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i3:second_line_quantity"
+  },
+  "v13": {
+   "example": "750.00",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i3:second_line_unit_price"
+  },
+  "v14": {
+   "example": "21",
+   "usedIn": [
+    9
+   ],
+   "known": true,
+   "binding": "url:i2:q.id"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id={{v14}}&menu_id=:id&model=sale.order&view_type=form",
+  "fingerprint": [
+   0.009,
+   0.012,
+   0.006,
+   0,
+   0.012,
+   0,
+   0.009,
+   0.006,
+   0.009,
+   0.017,
+   0.012,
+   0,
+   0.009,
+   0.044,
+   0.029,
+   0.006,
+   0.032,
+   0.003,
+   0.035,
+   0.003,
+   0,
+   0.023,
+   0.023,
+   0.017,
+   0.006,
+   0.099,
+   0,
+   0.038,
+   0.006,
+   0.046,
+   0.012,
+   0.052,
+   0.093,
+   0.029,
+   0.006,
+   0,
+   0.015,
+   0,
+   0.012,
+   0.006,
+   0.012,
+   0.017,
+   0.041,
+   0.038,
+   0.006,
+   0.032,
+   0.012,
+   0.064,
+   0.046,
+   0.041,
+   0.026,
+   0.003,
+   0.012,
+   0.087,
+   0.009,
+   0,
+   0.009,
+   0.029,
+   0.032,
+   0.003,
+   0,
+   0,
+   0.012,
+   0.192,
+   0.015,
+   0.012,
+   0,
+   0.029,
+   0.029,
+   0.006,
+   0.006,
+   0.012,
+   0.012,
+   0.012,
+   0.064,
+   0.017,
+   0.003,
+   0.012,
+   0.015,
+   0,
+   0.015,
+   0.038,
+   0.064,
+   0,
+   0.026,
+   0,
+   0.023,
+   0.099,
+   0.035,
+   0.012,
+   0.041,
+   0,
+   0.009,
+   0,
+   0.07,
+   0.015,
+   0.012,
+   0.046,
+   0.012,
+   0,
+   0.038,
+   0.026,
+   0.015,
+   0.026,
+   0.006,
+   0,
+   0.032,
+   0.012,
+   0,
+   0.017,
+   0.009,
+   0.017,
+   0.006,
+   0.012,
+   0.041,
+   0.009,
+   0.017,
+   0,
+   0,
+   0.107,
+   0,
+   0.006,
+   0.006,
+   0.009,
+   0.02,
+   0.009,
+   0.017,
+   0.006,
+   0,
+   0.006,
+   0.009,
+   0.012,
+   0.044,
+   0.009,
+   0.017,
+   0.006,
+   0.003,
+   0.009,
+   0,
+   0.015,
+   0.006,
+   0.046,
+   0.023,
+   0.02,
+   0.012,
+   0.003,
+   0.006,
+   0.006,
+   0.023,
+   0.058,
+   0.046,
+   0,
+   0.058,
+   0.012,
+   0.003,
+   0.012,
+   0.017,
+   0.02,
+   0.026,
+   0.003,
+   0.012,
+   0.029,
+   0.015,
+   0.02,
+   0.012,
+   0.012,
+   0,
+   0,
+   0.006,
+   0,
+   0.006,
+   0.015,
+   0.032,
+   0.006,
+   0.006,
+   0.064,
+   0,
+   0,
+   0.006,
+   0.113,
+   0,
+   0.029,
+   0.026,
+   0.009,
+   0.006,
+   0.009,
+   0.02,
+   0.006,
+   0.017,
+   0.041,
+   0.012,
+   0.006,
+   0.009,
+   0.012,
+   0,
+   0.006,
+   0.093,
+   0.003,
+   0.023,
+   0.017,
+   0,
+   0.029,
+   0,
+   0.041,
+   0.012,
+   0,
+   0.003,
+   0.003,
+   0.023,
+   0,
+   0.006,
+   0.009,
+   0.003,
+   0.006,
+   0,
+   0.006,
+   0.009,
+   0.003,
+   0.006,
+   0.041,
+   0,
+   0.003,
+   0.017,
+   0.012,
+   0,
+   0.015,
+   0.006,
+   0.006,
+   0,
+   0,
+   0.003,
+   0,
+   0.017,
+   0.006,
+   0.006,
+   0.012,
+   0.006,
+   0.017,
+   0.017,
+   0.015,
+   0.023,
+   0,
+   0.061,
+   0,
+   0.006,
+   0.015,
+   0,
+   0.006,
+   0.003,
+   0.012,
+   0.012,
+   0.012,
+   0.009,
+   0.177,
+   0.134,
+   0.055,
+   0.006,
+   0,
+   0.015,
+   0.032,
+   0.009,
+   0.009,
+   0.003,
+   0.003,
+   0.012,
+   0.151,
+   0.029,
+   0.078,
+   0.009,
+   0.017,
+   0.009,
+   0.009,
+   0.003,
+   0,
+   0.035,
+   0.012,
+   0.017,
+   0.006,
+   0.006,
+   0.009,
+   0.012,
+   0.023,
+   0.003,
+   0.058,
+   0.029,
+   0.006,
+   0.009,
+   0.015,
+   0.009,
+   0.012,
+   0,
+   0.006,
+   0.006,
+   0,
+   0.006,
+   0.009,
+   0,
+   0.012,
+   0.003,
+   0.058,
+   0.032,
+   0.003,
+   0,
+   0.02,
+   0.006,
+   0,
+   0.02,
+   0.006,
+   0.023,
+   0.015,
+   0.012,
+   0.012,
+   0.087,
+   0.006,
+   0.009,
+   0.003,
+   0,
+   0.032,
+   0.073,
+   0,
+   0.012,
+   0.009,
+   0.035,
+   0.009,
+   0,
+   0.015,
+   0,
+   0.017,
+   0.02,
+   0.006,
+   0.003,
+   0,
+   0.009,
+   0.012,
+   0,
+   0.026,
+   0.017,
+   0,
+   0.026,
+   0.058,
+   0,
+   0.012,
+   0,
+   0,
+   0.012,
+   0.012,
+   0.023,
+   0,
+   0.006,
+   0.012,
+   0.029,
+   0.038,
+   0.067,
+   0.026,
+   0,
+   0,
+   0.032,
+   0,
+   0.009,
+   0.029,
+   0.049,
+   0.044,
+   0.003,
+   0.012,
+   0.02,
+   0.049,
+   0.017,
+   0.012,
+   0.012,
+   0,
+   0.015,
+   0.003,
+   0.012,
+   0.006,
+   0.006,
+   0.006,
+   0,
+   0.003,
+   0.006,
+   0.046,
+   0.012,
+   0.006,
+   0.012,
+   0.041,
+   0.026,
+   0.017,
+   0.003,
+   0.009,
+   0.006,
+   0.006,
+   0.02,
+   0.041,
+   0.009,
+   0.026,
+   0.015,
+   0.009,
+   0.107,
+   0.003,
+   0.006,
+   0,
+   0.006,
+   0.003,
+   0.012,
+   0.012,
+   0.006,
+   0.009,
+   0.009,
+   0.015,
+   0,
+   0.017,
+   0.055,
+   0.015,
+   0.017,
+   0.006,
+   0,
+   0.064,
+   0.046,
+   0.035,
+   0.006,
+   0.006,
+   0.023,
+   0.012,
+   0,
+   0.006,
+   0.017,
+   0.044,
+   0.003,
+   0.015,
+   0.006,
+   0.003,
+   0.015,
+   0,
+   0.006,
+   0.003,
+   0.006,
+   0,
+   0.012,
+   0.003,
+   0.044,
+   0.003,
+   0.012,
+   0.044,
+   0,
+   0.015,
+   0.006,
+   0,
+   0.009,
+   0.038,
+   0.009,
+   0.009,
+   0,
+   0.026,
+   0.046,
+   0.096,
+   0.006,
+   0.003,
+   0.017,
+   0.012,
+   0.006,
+   0.003,
+   0.09,
+   0.023,
+   0,
+   0,
+   0.017,
+   0.009,
+   0.012,
+   0.119,
+   0.017,
+   0.654,
+   0.046,
+   0.044,
+   0.046,
+   0.015,
+   0.044,
+   0.003,
+   0,
+   0,
+   0.017,
+   0.006,
+   0.029,
+   0.003,
+   0,
+   0.012,
+   0.006,
+   0.032,
+   0.006,
+   0.012,
+   0.009,
+   0.032,
+   0.006,
+   0.017,
+   0.09,
+   0,
+   0,
+   0.009,
+   0,
+   0.067,
+   0.003,
+   0.015,
+   0.012,
+   0.015,
+   0.026,
+   0.006,
+   0.343,
+   0,
+   0.017,
+   0.017,
+   0.02,
+   0.006,
+   0.015,
+   0
+  ],
+  "requireText": [
+   "{{v1}}",
+   "{{v2}}"
+  ]
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e1943"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Close"
+     },
+     {
+      "kind": "css",
+      "selector": "#dialog_1 > div > div > div > header > button"
+     },
+     {
+      "kind": "point",
+      "x": 1106,
+      "y": 163,
+      "w": 30,
+      "h": 30,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id={{v14}}&menu_id=:id&model=sale.order&view_type=form",
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e1857"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(1) > td:nth-of-type(3)"
+     },
+     {
+      "kind": "point",
+      "x": 497,
+      "y": 442,
+      "w": 297.7,
+      "h": 40.6,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id={{v14}}&menu_id=:id&model=sale.order&view_type=form",
+    "addedContains": [
+     "- row \"{{*}} £ 210.00\"",
+     "- combobox \"Type to find a product...\": {{*}}",
+     "- link \"Delete\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e2142",
+    "value": "5"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "table > tbody > tr:nth-of-type(1) > td:nth-of-type(4) > div > input"
+     },
+     {
+      "kind": "point",
+      "x": 691,
+      "y": 440,
+      "w": 82.4,
+      "h": 21,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id={{v14}}&menu_id=:id&model=sale.order&view_type=form",
+    "addedContains": [
+     "- row \"Untaxed Amount {{*}}\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e1857"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "td[name=\"name\"][data-tooltip=\"{{v4}}\"]"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(1) > td:nth-of-type(3)"
+     },
+     {
+      "kind": "point",
+      "x": 497,
+      "y": 442,
+      "w": 297.7,
+      "h": 40.6,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id={{v14}}&menu_id=:id&model=sale.order&view_type=form",
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": ".o_list_table tbody tr:nth-child(1) td",
+    "what": "text",
+    "label": "o_list_table_tbody_tr_nt"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".o_list_table tbody tr:nth-child(1) td",
+      "nth": 5
+     }
+    ]
+   },
+   "label": "line1_tax_rate"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": ".o_list_table tbody tr:nth-child(1) td",
+    "what": "text",
+    "label": "o_list_table_tbody_tr_nt_2"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".o_list_table tbody tr:nth-child(1) td",
+      "nth": 6
+     }
+    ]
+   },
+   "label": "line1_subtotal_cell"
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": ".o_form_button_save"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".o_form_button_save"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Save manually"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div > div:nth-of-type(1) > div:nth-of-type(3) > div > button:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 163,
+      "y": 79,
+      "w": 26,
+      "h": 17.5,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id={{v14}}&menu_id=:id&model=sale.order&view_type=form",
+    "addedContains": [
+     "- row \"{{v4}} {{v4}} 5{{*}} {{v7}} {{*}} {{*}}\"",
+     "- cell \"{{v4}}\"",
+     "- cell \"5{{*}}\"",
+     "- cell \"{{v7}}\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": ".o_form_view",
+    "what": "attr",
+    "attr": "class",
+    "label": "form_class"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".o_form_view"
+     },
+     {
+      "kind": "css",
+      "selector": "html > body > div:nth-of-type(1) > div"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 473,
+      "w": 1280,
+      "h": 854,
+      "role": null,
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "form_class"
+  },
+  {
+   "tool": "goto",
+   "args": {
+    "url": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id={{v14}}"
+   },
+   "locators": {}
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": ".o_list_table tbody tr.o_data_row >> nth=1",
+    "what": "text",
+    "label": "line2_after_reload",
+    "scopedBy": "v8"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".o_list_table tbody tr.o_data_row >> nth=1"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 502,
+      "w": 1246,
+      "h": 80,
+      "role": null,
+      "tag": "tr",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "line2_after_reload"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > h1 > div > span"
+     },
+     {
+      "kind": "point",
+      "x": 89,
+      "y": 195,
+      "w": 96.5,
+      "h": 31,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "quotation_reference"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "value"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "combobox",
+      "name": "Type to find a customer..."
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "Type to find a customer..."
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div > div:nth-of-type(1) > div > div > input",
+      "nth": 0
+     },
+     {
+      "kind": "point",
+      "x": 383,
+      "y": 247,
+      "w": 409.8,
+      "h": 26,
+      "role": "combobox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "customer"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text",
+    "scopedBy": "v4"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "text",
+      "text": "{{v4}}"
+     },
+     {
+      "kind": "css",
+      "selector": "tbody > tr:nth-of-type(1) > td:nth-of-type(2) > div > span > span"
+     },
+     {
+      "kind": "point",
+      "x": 136,
+      "y": 440,
+      "w": 163.1,
+      "h": 16,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "line1_product"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(1) > td:nth-of-type(4)"
+     },
+     {
+      "kind": "point",
+      "x": 691,
+      "y": 442,
+      "w": 92,
+      "h": 40.6,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "line1_new_quantity"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(1) > td:nth-of-type(5)"
+     },
+     {
+      "kind": "point",
+      "x": 783,
+      "y": 442,
+      "w": 92,
+      "h": 40.6,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "line1_unit_price"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(1) > td:nth-of-type(7)"
+     },
+     {
+      "kind": "point",
+      "x": 1179,
+      "y": 442,
+      "w": 104,
+      "h": 40.6,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "line1_new_subtotal"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text",
+    "scopedBy": "v8"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "text",
+      "text": "{{v8}}"
+     },
+     {
+      "kind": "css",
+      "selector": "table > tbody > tr:nth-of-type(2) > td:nth-of-type(3) > div > span"
+     },
+     {
+      "kind": "point",
+      "x": 482,
+      "y": 501,
+      "w": 258.3,
+      "h": 58,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "line2_product"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(2) > td:nth-of-type(4)"
+     },
+     {
+      "kind": "point",
+      "x": 691,
+      "y": 502,
+      "w": 92,
+      "h": 80,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "line2_quantity_unchanged"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(2) > td:nth-of-type(5)"
+     },
+     {
+      "kind": "point",
+      "x": 783,
+      "y": 502,
+      "w": 92,
+      "h": 80,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "line2_unit_price"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(2) > td:nth-of-type(7)"
+     },
+     {
+      "kind": "point",
+      "x": 1179,
+      "y": 502,
+      "w": 104,
+      "h": 80,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "line2_subtotal"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr:nth-of-type(1) > td:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 1205,
+      "y": 660,
+      "w": 66.2,
+      "h": 16,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "new_untaxed_amount"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr:nth-of-type(2) > td:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 1195,
+      "y": 684,
+      "w": 86,
+      "h": 21,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "tax_20_percent"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr:nth-of-type(3) > td:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 1195,
+      "y": 709,
+      "w": 86,
+      "h": 21,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "total"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > table > tbody > tr:nth-of-type(1) > td:nth-of-type(7)"
+     },
+     {
+      "kind": "point",
+      "x": 1179,
+      "y": 442,
+      "w": 104,
+      "h": 40.6,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "line1_subtotal_cell"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr:nth-of-type(2) > td:nth-of-type(1) > label"
+     },
+     {
+      "kind": "point",
+      "x": 1109,
+      "y": 684,
+      "w": 82,
+      "h": 21,
+      "role": null,
+      "tag": "label",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "tax_label"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr:nth-of-type(2) > td:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 1195,
+      "y": 684,
+      "w": 86,
+      "h": 21,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "tax_amount"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr:nth-of-type(3) > td:nth-of-type(1) > label"
+     },
+     {
+      "kind": "point",
+      "x": 1123,
+      "y": 710,
+      "w": 53.5,
+      "h": 21,
+      "role": null,
+      "tag": "label",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "total_label"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text",
+    "frame": "{{=}},220.00"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "text",
+      "text": "£ 2,220.00"
+     },
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr:nth-of-type(3) > td:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 1195,
+      "y": 709,
+      "w": 86,
+      "h": 21,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "total_amount_part_1"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text",
+    "frame": "£ 2,{{=}}"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "text",
+      "text": "£ 2,220.00"
+     },
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr:nth-of-type(3) > td:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 1195,
+      "y": 709,
+      "w": 86,
+      "h": 21,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "total_amount_part_2"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text",
+    "frame": "[{{=}}] {{v10}} (Steel, White)"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "text",
+      "text": "{{v8}}"
+     },
+     {
+      "kind": "css",
+      "selector": "table > tbody > tr:nth-of-type(2) > td:nth-of-type(3) > div > span"
+     },
+     {
+      "kind": "point",
+      "x": 482,
+      "y": 501,
+      "w": 258.3,
+      "h": 58,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "line2_product_code"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text",
+    "frame": "{{=}}, with large legs."
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "text",
+      "text": "{{v8}}"
+     },
+     {
+      "kind": "css",
+      "selector": "table > tbody > tr:nth-of-type(2) > td:nth-of-type(3) > div > span"
+     },
+     {
+      "kind": "point",
+      "x": 482,
+      "y": 501,
+      "w": 258.3,
+      "h": 58,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "line2_product_variant"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "Changed ONLY line 1's quantity on quotation {{v1}} from 3 to 5. I first closed a leftover \"Configure your product\" modal that was overlaying the form (it had blocked clicks), clicked into line 1's description cell to enter edit mode, set quantity to 5, and committed by clicking the description cell (avoiding the optional-products dialog). Saved the quotation (form no longer dirty) and verified by RELOADING record id={{v14}}: line 1 = {{v4}}, qty 5.00, unit price {{v7}}, subtotal £350.00; line 2 unchanged at {{v8}}, qty {{v12}}, unit price {{v13}}, £1,500.00. New Untaxed Amount = £1,850.00 (was £1,710.00), TAX 20% £370.00, Total £2,220.00. Screenshots: saved_qty5.png, reloaded_qty5.png.",
+  "values": {
+   "quotation_reference": "{{v1}}",
+   "sale_order_id": "{{v14}}",
+   "customer": "{{v2}}",
+   "line1_product": "{{v4}}",
+   "line1_new_quantity": "5.00",
+   "line1_unit_price": "{{v7}}",
+   "line1_new_subtotal": "£ 350.00",
+   "line2_product": "{{v8}}",
+   "line2_quantity_unchanged": "{{v12}}",
+   "line2_unit_price": "{{v13}}",
+   "line2_subtotal": "£ 1,500.00",
+   "new_untaxed_amount": "£ 1,850.00",
+   "tax_20_percent": "£ 370.00",
+   "total": "£ 2,220.00",
+   "form_class": "o_form_view o_sale_order o_view_controller o_action",
+   "line2_after_reload": "{{v10}}\t\n[FURN_0096] {{v10}} (Steel, White)\n160x80cm, with large legs.\n\t{{v12}}\t{{v13}}\t\n20%\n\t£ 1,500.00",
+   "line1_tax_rate": "20%",
+   "line1_subtotal_cell": "£ 350.00",
+   "line1_product_code": "FURN_7777",
+   "line2_product_code": "FURN_0096",
+   "line2_product_variant": "160x80cm",
+   "tax_label": "TAX 20%",
+   "tax_amount": "£ 370.00",
+   "total_label": "Total",
+   "total_amount_part_1": "£ 2",
+   "total_amount_part_2": "220.00"
+  }
+ },
+ "contract": 4,
+ "stats": {
+  "uses": 3,
+  "successes": 3,
+  "partial": 0,
+  "created": "2026-09-26T11:31:58.872Z",
+  "failedAtStep": {},
+  "fallthroughs": 2,
+  "verifiedContract": 4,
+  "lastUsed": "2026-09-26T11:42:00.730Z"
+ },
+ "status": "validated",
+ "provenance": {
+  "session": "fwod93-n1",
+  "instruction": "In Odoo, open the existing quotation with reference S00021 (customer 'fwod93-n1 Bench Customer'). It has two order lines: line 1 = [FURN_7777] Office Chair qty 3.00 unit price 70.00, line 2 = [FURN_0096] Customizable Desk (Steel, White) 160x80cm, with large legs. qty 2.00 unit price 750.00. Change ONLY the first line's quantity from 3 to 5 (leave the second line untouched). Save the quotation and report the new Untaxed Amount total the app computes (and the first line's new subtotal). Do not wait for network idle; wait for concrete page state. Note: clicking into the description cell of a line before editing avoids an 'Add optional products' dialog.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-26T11:31:58.872Z",
+  "transforms": [
+   {
+    "name": "unfreezeExpectations",
+    "at": 2,
+    "reason": "recorded page change(s) only the recording run could produce: [\"- row \\\"20% £ 210.00\\\"\",\"- combobox \\\"Type to find a product...\\\": {{*}}\",\"- link \\\"Delete\\\"\"] → [\"- row \\\"{{*}} £ 210.00\\\"\",\"- combobox \\\"Type to find a product...\\\": {{*}}\",\"- link \\\"Delete\\\"\"]"
+   },
+   {
+    "name": "unfreezeExpectations",
+    "at": 3,
+    "reason": "recorded page change(s) only the recording run could produce: [\"- row \\\"20% £ 350.00\\\"\",\"- cell \\\"£ 350.00\\\"\",\"- row \\\"Untaxed Amount £ 1,850.00\\\"\",\"- cell \\\"£ 1,850.00\\\"\",\"- row \\\"TAX 20% £ 370.00\\\"\"] → [\"- row \\\"Untaxed Amount {{*}}\\\"\"]"
+   },
+   {
+    "name": "unfreezeExpectations",
+    "at": 7,
+    "reason": "recorded page change(s) only the recording run could produce: [\"- row \\\"{{v4}} {{v4}} 5.00 {{v7}} 20% £ 350.00\\\"\",\"- cell \\\"{{v4}}\\\"\",\"- cell \\\"{{v4}}\\\"\",\"- cell \\\"5.00\\\"\",\"- cell \\\"{{v7}}\\\"\"] → [\"- row \\\"{{v4}} {{v4}} 5{{*}} {{v7}} {{*}} {{*}}\\\"\",\"- cell \\\"{{v4}}\\\"\",\"- cell \\\"5{{*}}\\\"\",\"- cell \\\"{{v7}}\\\"\"]"
+   }
+  ]
+ },
+ "revision": 5
+}

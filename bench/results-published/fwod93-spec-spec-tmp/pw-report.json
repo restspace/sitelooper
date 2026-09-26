@@ -1,0 +1,197 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwod93-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwod93-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwod93-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/bench/results/fwod93-spec-spec-tmp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwod93-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwod93.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwod93-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwod93.spec.ts",
+      "file": "fwod93.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwod93",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 201543,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper warn] 01-open s_261090/1: read 'customer_name' returned a value the skill itself set/selected ('fwod93-spec Bench Customer') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 01-open s_261090/2: read 'city' returned a value the skill itself set/selected ('Benchville') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 01-open\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 02-open s_8fb6dc/10: read 'product_name' returned a value the skill itself set/selected ('[FURN_7777] Office Chair') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 02-open s_8fb6dc/11: read 'quantity' returned '3.00' from a control this step set, and nothing committed it since — it shows the control, however the app formats it, not what the app stored; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 02-open s_57437f/8: read 'customer' returned a value the skill itself set/selected ('fwod93-spec Bench Customer') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-open\n"
+                    },
+                    {
+                      "text": "[sitelooper drift] 04-open s_e28f1a/13 target: primary getByText('[FURN_7777] Office Chair', { exact: true }) missed; used #2 locator('tbody > tr:nth-of-type(1) > td:nth-of-type(2) > div > span > span') (#1 ambiguous)\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 05-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 06-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 07-verify\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-open: Open http://127.0.0.1:8069/ and sign in with username admin and password {{env:APP_PASSWORD}}. Then create a new contact (customer) named exactly '{{runid}} Bench Customer' with the City field set to 'Benchville' (use the address/city field on the contact form). Save the record and report back the customer name and city exactly as shown on the saved form. Note: do not wait for network idle, the app long-polls; wait for concrete page state instead.",
+                      "duration": 12086
+                    },
+                    {
+                      "title": "02-open: In Odoo, open the Sales app and create a new quotation (RFQ/sales order) with the customer set to '{{runid}} Bench Customer' — the customer field is an autocomplete dropdown, so you must pick the option from the dropdown, not just type the name. Add exactly ONE order line: pick any product from the product catalogue (again via the autocomplete dropdown, choosing an actual option), and set the quantity to 3. Let the app fill in the unit price automatically. Save the quotation and report: (a) the product name you chose, (b) the unit price the app filled in on the line, (c) the Untaxed Amount total the app computes, and (d) the quotation reference/name shown on the form. Do not wait for network idle; wait for concrete page state.",
+                      "duration": 73026
+                    },
+                    {
+                      "title": "03-open: In Odoo, open the existing quotation with reference {{02-open.quotation_reference}} (customer '{{runid}} Bench Customer', currently one line: {{02-open.product_name}}, qty 3, unit price {{02-open.unit_price}}, Untaxed Amount £210.00). Add a SECOND order line with a DIFFERENT product (any other product from the catalogue, chosen via the autocomplete dropdown — an actual option must be clicked, not just typed) and set its quantity to 2. Let the app fill the unit price automatically. Save the quotation and report: (a) the name of the second product you added, (b) its unit price, and (c) the new Untaxed Amount total the app computes. Do not wait for network idle; wait for concrete page state. Note: clicking into the description cell of a line avoids an 'Add optional products' dialog.",
+                      "duration": 86629
+                    },
+                    {
+                      "title": "04-open: In Odoo, open the existing quotation with reference {{02-open.quotation_reference}} (customer '{{runid}} Bench Customer'). It has two order lines: line 1 = {{02-open.product_name}} qty {{02-open.quantity}} unit price {{02-open.unit_price}}, line 2 = {{03-open.second_product_name}} qty {{03-open.second_line_quantity}} unit price {{03-open.second_line_unit_price}}. Change ONLY the first line's quantity from 3 to 5 (leave the second line untouched). Save the quotation and report the new Untaxed Amount total the app computes (and the first line's new subtotal). Do not wait for network idle; wait for concrete page state. Note: clicking into the description cell of a line before editing avoids an 'Add optional products' dialog.",
+                      "duration": 15452
+                    },
+                    {
+                      "title": "05-open: In Odoo, open the existing quotation with reference {{02-open.quotation_reference}} (customer '{{runid}} Bench Customer', two lines: Office Chair qty 5 and {{03-open.second_product_label_in_picker}} qty 2, Untaxed Amount £1,850.00). Confirm the quotation so it becomes a sales order — use the Confirm button (or Confirm Order) on the form; if a confirmation dialog appears, accept it. Then report: (a) the order reference/name shown on the form (e.g. {{02-open.quotation_reference}}), and (b) the status the app now shows for the order (the status bar value, e.g. 'Sales Order'). Do not wait for network idle; wait for concrete page state.",
+                      "duration": 1585
+                    },
+                    {
+                      "title": "06-open: In Odoo, open the existing sales order with reference {{02-open.quotation_reference}} (customer '{{runid}} Bench Customer', status 'Sales Order'). Cancel the order so nothing stays active — use the Cancel button on the form (it may be under a dropdown/other-actions menu); if a confirmation dialog appears, accept it. Then report the status the app shows for the order after cancelling (the status bar value, e.g. 'Cancelled'). Do not wait for network idle; wait for concrete page state.",
+                      "duration": 10103
+                    },
+                    {
+                      "title": "07-verify: In Odoo, verify two things and report them: (1) Open the contact named '{{runid}} Bench Customer' in the Contacts app and report the City value shown on the saved form. (2) Open the sales order with reference {{02-open.quotation_reference}} and report the status shown in its status bar. Do not change anything — read only. Do not wait for network idle; wait for concrete page state.",
+                      "duration": 1789
+                    }
+                  ],
+                  "startTime": "2026-09-26T11:42:37.442Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": "W3NpdGVsb29wZXIgZHJpZnRdIDA0LW9wZW4gc19lMjhmMWEvMTMgdGFyZ2V0OiBwcmltYXJ5IGdldEJ5VGV4dCgnW0ZVUk5fNzc3N10gT2ZmaWNlIENoYWlyJywgeyBleGFjdDogdHJ1ZSB9KSBtaXNzZWQ7IHVzZWQgIzIgbG9jYXRvcigndGJvZHkgPiB0cjpudGgtb2YtdHlwZSgxKSA+IHRkOm50aC1vZi10eXBlKDIpID4gZGl2ID4gc3BhbiA+IHNwYW4nKSAoIzEgYW1iaWd1b3VzKQ=="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "9878f8e83aaeab8fee54-23c3706db3f3a11bd0e0",
+          "file": "fwod93.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-26T11:42:35.253Z",
+    "duration": 203924.024,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}
