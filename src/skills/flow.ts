@@ -637,6 +637,22 @@ export function buildFlow(
       // The same fact one instruction further back: a value the TASK stated
       // before this step ran, and before the run had shown it anywhere, is the
       // task's own vocabulary, so this step cannot be where it came from. See
+      // UNASKED AND UNSOURCED: a value reported under a key the instruction
+      // never asked for, that no read of this instruction returned, is the
+      // model's commentary about the page — a picker's open/closed state, a
+      // list column it volunteered — not a record the run made. Threaded, it
+      // makes a later step depend on what no replay re-observes, and a task
+      // word that later step merely states becomes a reference the compile
+      // refuses. gitea fwgt17: 03-open reported `labels_picker_state =
+      // "closed"` (asked for the labels shown, not the picker), 08-report's
+      // "confirm the issue is open (not closed)" was exported as "(not
+      // {{03-open.labels_picker_state}})", the word became an identity marker
+      // of 08-report's procedure (the issues list shows "0 Closed"), and
+      // `spec` refused the flow (unsourced-ref) — as fwsi16's volunteered
+      // list columns did in round 65. A value an earlier run watched change
+      // is the run's whatever its key (`RunSpecific`); a value a read of this
+      // instruction returned is re-observed by a tier-A replay and stays.
+      if (!opts.runSpecific?.(value) && commentaryReport([g.instruction, ...g.steps, ...(groups[i + 1] ? [groups[i + 1].instruction] : [])], output, value)) continue;
       // statedBeforeShown for the evidence and the cases.
       if (statedBeforeShown(entries, g.instruction, value)) continue;
       // And the same question asked of the PAGE rather than the task: a value
@@ -825,6 +841,69 @@ export function selfNamingReadDrops(
  * grafana's "now" and "now-6h", "Dashboard saved", "Cancel", and fwgr53's
  * "text". The other 3 had no transcript to check.
  */
+/**
+ * A reported value the page NEVER SHOWED while its instruction ran: the
+ * model's conclusion about the page, not an observation of it. No replay of
+ * any kind can re-observe such a value (there is no element to read it from),
+ * so a reference to it is unresolved on every run: a recovery turn in the
+ * daemon, and in the artifact a slot nothing fills — or, where the word also
+ * stands on a later page, an identity marker no run can satisfy. The value
+ * stays a literal of the task wording instead.
+ *
+ * "Shown" is the recording's own evidence, whole-token and case aside: the
+ * instruction's start page, every step's added lines, every step's result
+ * (a read, an eval), the urls it landed on, and the page it ended on (the
+ * next instruction's start page, when the caller appends that entry). A
+ * recording that carries NO page
+ * evidence for the instruction (a synthetic one) proves nothing, and the
+ * value is threaded as before — run 1 references what it cannot judge. Two
+ * more things it never touches: a value earlier runs watched change
+ * (`RunSpecific`, the caller's guard) and one shaped like a record id
+ * (shape.ts looksLikeId, the ledger's first-run prior): an id the page did
+ * not show in a captured line is still an id, and a literal id makes every
+ * replay act on run 1's record — the direction this file may never err in.
+ *
+ * One predicate for the two places that bank or thread a report value: the
+ * daemon's ledger (server.ts noteMintedIds; bench/rebuild-flow.mjs mirrors
+ * it) and buildFlow. `group` is one instruction's entries: its instruction
+ * entry and the steps and reports that followed it.
+ *
+ * gitea fwgt17 (round 66): 03-open, asked for the labels shown on the issue,
+ * also reported `labels_picker_state = "closed"` — a word no line of the
+ * page carried (the picker's aria-expanded, read through an eval). The
+ * ledger banked it, every later compile slotted the word where it appeared,
+ * 08-report's "confirm the issue is open (not closed)" was exported as "(not
+ * {{03-open.labels_picker_state}})", the slot became an identity marker of
+ * 08-report's procedure (the issues list shows "0 Closed"), and `spec`
+ * refused the flow (unsourced-ref); both daemon replays of 08-report went to
+ * recovery over the unresolved reference. This is the sourcing hold's own
+ * definition of an unsourced value (notes/design/design-recording-hygiene.md
+ * §4), applied after the fact to every reported value, asked or not.
+ */
+export function commentaryReport(group: readonly RecordedEntry[], _output: string, value: string): boolean {
+  const instruction = group.find((e): e is RecordedInstruction => e.k === 'instruction');
+  if (!instruction) return false;
+  const v = String(value ?? '').trim();
+  if (!v || looksLikeId(v, 'first-run')) return false;
+  const shown = new RegExp(`(^|[^\\p{L}\\p{N}_])${escapeRe(v.replace(/\s+/g, ' '))}(?=$|[^\\p{L}\\p{N}_])`, 'iu');
+  const carries = (text: unknown): boolean => typeof text === 'string' && shown.test(text.replace(/\s+/g, ' '));
+  let evidence = false;
+  for (const e of group) {
+    // The instruction's own start page, and the NEXT instruction's when the
+    // caller appends it: the page this instruction ENDED on, whole.
+    if (e.k === 'instruction') {
+      if (e.startText) evidence = true;
+      if (carries(e.startText)) return false;
+      continue;
+    }
+    if (e.k !== 'step') continue;
+    if (e.diff) evidence = true;
+    if (carries(e.result) || carries(e.diff?.url)) return false;
+    for (const line of e.diff?.added ?? []) if (carries(line)) return false;
+  }
+  return evidence;
+}
+
 function statedBeforeShown(entries: readonly RecordedEntry[], producer: RecordedInstruction, value: string): boolean {
   const end = entries.indexOf(producer);
   if (end <= 0 || value.length < 2) return false;

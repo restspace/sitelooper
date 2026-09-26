@@ -11,7 +11,7 @@ import type { DriftTicket } from '../skills/repair.js';
 import type { Page } from 'playwright-core';
 import { MAX_STRAY_GESTURES_FOR_PIN, agentGesturesOutsideReplay, bindSkill, canAdoptPin, decideRepin, instructionEntry, learnFromInstruction, matchTemplate, pinCarriesFailedStep, pinEndsElsewhere, pinStartsElsewhere, pinStatus, publishedOutputs, replayReport, selectCandidates } from '../skills/learn.js';
 import { threadStepParams } from '../skills/rethread.js';
-import { buildFlow, consumedReportedOutputs, consumedUrlOutputs, ignorableRefs, jsonLeaves, lintFlowRefs, lintUnboundParams, lintUnpublishedOutputs, listFlows, liveReadsFor, liveReadsForRecovery, loadFlow, loadFlowFile, lookupOutput, mutatingIntent, noteOutputEvidence, pruneUnsourcedOutputs, recoveryRoute, remapParams, resolveInstruction, resolveStepParams, softResolveInstruction, saveFlow, staleInstructionIds, taskConstants, textMints, unbankedMutations, unreportedOutputs, urlOutputs, varyingValues, type RunSpecific } from '../skills/flow.js';
+import { buildFlow, consumedReportedOutputs, consumedUrlOutputs, ignorableRefs, jsonLeaves, lintFlowRefs, lintUnboundParams, lintUnpublishedOutputs, listFlows, liveReadsFor, liveReadsForRecovery, loadFlow, loadFlowFile, lookupOutput, mutatingIntent, noteOutputEvidence, pruneUnsourcedOutputs, recoveryRoute, remapParams, resolveInstruction, resolveStepParams, softResolveInstruction, saveFlow, staleInstructionIds, taskConstants, textMints, unbankedMutations, unreportedOutputs, urlOutputs, varyingValues, type RunSpecific, commentaryReport } from '../skills/flow.js';
 import { applyRelabelToEntries, applyRelabelToSkills, relabelCases, requestRelabelPlan, runValueKeyRenames } from '../skills/relabel.js';
 import { goalSatisfied, renderChainStop } from '../skills/replay.js';
 import { drainDrift, llmProposer, recordCandidateEvidence } from '../skills/repair.js';
@@ -156,6 +156,11 @@ export class Daemon {
           // 'output'` records — but "the run produced it" is not the same
           // claim as "it is a record id", and only the second can refuse an
           // export. This is the largest population reaching the ledger.
+          // ...except a value no line of the page showed (flow.ts
+          // commentaryReport): the model's conclusion, which no replay can
+          // re-observe. Banked, it became a known value every later compile
+          // slotted and an identity marker no run could fill (gitea fwgt17).
+          if (commentaryReport(entries, name, String(value))) continue;
           const banked = this.ledger.add(String(value), { from: 'output', step: stepId, name });
           this.valueFacts()?.noteReport(factUrl, name, String(value), banked, this.factVars());
         }
