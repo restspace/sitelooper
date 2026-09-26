@@ -162,7 +162,7 @@ const INVENTORY: { file: string; fn: Fn; calls: number; question: string; fails:
     calls: 1,
     question: 'where does this known value stand as a whole token?',
     fails: 'cost',
-    note: 'replaceToken (coincidental() is gone: the boundary itself now refuses a word inside a compound).',
+    note: 'replaceToken (coincidental() is gone: the boundary itself now refuses a word inside a compound). threadOutsideQuotes asks it only through replaceToken.',
   },
   {
     file: 'src/agent/report.ts',

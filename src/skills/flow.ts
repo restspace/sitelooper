@@ -458,9 +458,16 @@ export function buildFlow(
     // except one this instruction names only as an alternative its procedure
     // never acts on (namedAsAlternative, fwrd86 "a Draft or Closed status").
     const alternative = (value: string): boolean => namedAsAlternative(g.instruction.text, value) && !usedByProcedure(g, value);
+    // A value the run MADE threads wherever it stands (see threadOutsideQuotes):
+    // one earlier runs watched change, one carrying a digit (a record id, an
+    // amount, a count: never a bare word), or one carrying a declared var.
+    // Anything else is a WORD, and a word inside the author's quoted name is
+    // the task's, not the run's.
+    const threadsAnywhere = (value: string): boolean =>
+      Boolean(opts.runSpecific?.(value)) || /\d/.test(value) || varEntries.some(([, vv]) => vv.length >= 2 && replaceToken(value, vv, ' ') !== value);
     for (const p of [...produced].sort((a, b) => b.value.length - a.value.length)) {
       if (alternative(p.value)) continue;
-      if (p.value.length >= 2) text = replaceToken(text, p.value, `{{${p.stepId}.${p.output}}}`);
+      if (p.value.length >= 2) text = threadOutsideQuotes(text, p.value, `{{${p.stepId}.${p.output}}}`, threadsAnywhere(p.value));
       else if (p.path) text = replaceAtPath(text, p.path, `{{${p.stepId}.${p.output}}}`);
     }
     const outputs = Object.keys(g.report?.values ?? {});
@@ -485,7 +492,7 @@ export function buildFlow(
           for (const pr of [...produced].sort((a, b) => b.value.length - a.value.length)) {
             const marker = `{{${pr.stepId}.${pr.output}}}`;
             if (alternative(pr.value)) continue;
-            if (pr.value.length >= 2) rv = replaceToken(rv, pr.value, marker);
+            if (pr.value.length >= 2) rv = threadIntoLiteral(rv, pr.value, marker, threadsAnywhere(pr.value));
             else if (pr.path) {
               // Below the floor only at its url position: inside a url or
               // path the param carries, or the WHOLE param when this step's
@@ -931,7 +938,14 @@ export function commentaryReport(group: readonly RecordedEntry[], _output: strin
   const left = /^[\p{L}\p{N}]/u.test(cv) ? '(?<![\\p{L}\\p{N}])' : '';
   const right = /[\p{L}\p{N}]$/u.test(cv) ? '(?![\\p{L}\\p{N}])' : '';
   const shown = new RegExp(`${left}${escapeRe(cv)}${right}`, 'iu');
-  const carries = (text: unknown): boolean => typeof text === 'string' && shown.test(compact(text));
+  // ...but compaction must not COST a boundary: "Bench" stands whole inside
+  // `- button "Bench Admin"`, and compacted to "BenchAdmin" it would read as
+  // never shown (openproject fwop24). Either look suffices: the whole-token
+  // one on whitespace-normalised text, or the compacted one.
+  const normal = (t: string): string => t.replace(/[\s ]+/g, ' ');
+  const nv = normal(v).trim();
+  const shownNormal = new RegExp(`${/^[\p{L}\p{N}]/u.test(nv) ? '(?<![\\p{L}\\p{N}])' : ''}${escapeRe(nv)}${/[\p{L}\p{N}]$/u.test(nv) ? '(?![\\p{L}\\p{N}])' : ''}`, 'iu');
+  const carries = (text: unknown): boolean => typeof text === 'string' && (shownNormal.test(normal(text)) || shown.test(compact(text)));
   let evidence = false;
   for (const e of group) {
     // The instruction's own start page, and the NEXT instruction's when the
@@ -2264,6 +2278,48 @@ export function replaceToken(text: string, value: string, marker: string): strin
     .split(/(\{\{[^{}]*\}\})/g)
     .map((piece) => (piece.startsWith('{{') && piece.endsWith('}}') ? piece : piece.replace(re, marker)))
     .join('');
+}
+
+/** A quoted span of an instruction: straight or curly quotes, no newline inside. */
+const QUOTED_SPAN = /(['"‘“])([^'"‘’“”\n]{1,200})(['"’”])/g;
+
+/**
+ * Thread a produced value into an instruction, except INSIDE a quoted literal
+ * the author wrote unless the value IS that literal. openproject fwop24
+ * (round 70): 01-signin reported `admin_first_name = "Bench"` (the seed admin
+ * is "Bench Admin"), and every later instruction's own names — 'Bench
+ * Project', '{{runid}} Bench Work Package' — were exported with the word
+ * threaded to a reference no replay could publish, so the compile refused
+ * the flow and both replays went to recovery at every step. The author's
+ * quoted names are the task's words; a reported word that happens to sit
+ * inside one is a coincidence of spelling, exactly the collision the
+ * token rule already refuses inside longer tokens. `anywhere` (a run-made
+ * value: run-specific, id-shaped, var-bearing) threads as before — odoo's
+ * "quotation 'S00023'" and a title carrying the runid keep their references.
+ */
+export function threadOutsideQuotes(text: string, value: string, marker: string, anywhere: boolean): string {
+  if (anywhere) return replaceToken(text, value, marker);
+  const isWhole = (inner: string): boolean => replaceToken(inner.trim(), value, ' ') === ' ';
+  let out = '';
+  let last = 0;
+  for (const m of text.matchAll(QUOTED_SPAN)) {
+    const at = m.index ?? 0;
+    out += replaceToken(text.slice(last, at), value, marker);
+    const inner = m[2];
+    out += isWhole(inner) ? `${m[1]}${marker}${m[3]}` : m[0];
+    last = at + m[0].length;
+  }
+  return out + replaceToken(text.slice(last), value, marker);
+}
+
+/**
+ * The same rule for a slot's bound literal (a param is one quoted name, whole):
+ * the marker replaces the whole literal, or threads anywhere for a run-made
+ * value, or leaves the literal alone.
+ */
+export function threadIntoLiteral(literal: string, value: string, marker: string, anywhere: boolean): string {
+  if (anywhere) return replaceToken(literal, value, marker);
+  return literal.trim().replace(/\s+/g, ' ') === value.trim().replace(/\s+/g, ' ') ? literal.replace(literal.trim(), marker) : literal;
 }
 
 /**
