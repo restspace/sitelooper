@@ -552,7 +552,7 @@ describe('emitted step lifecycle', () => {
     expect(act.body.indexOf("return { status: 'skipped' };")).toBeLessThan(act.body.indexOf('await click(hit1.locator, { obs: obs1 }).catch(actionFailed);'));
     // The already-in-effect question is asked AFTER the target resolved, as
     // replay orders it, so the pick still runs on a click that is skipped.
-    expect(act.body.indexOf('await pick(page, [')).toBeLessThan(act.body.indexOf('presentOnPage('));
+    expect(act.body.indexOf('await pick(page, [')).toBeLessThan(act.body.indexOf('openerAlreadyShowing('));
   });
 
   it('an unsupported action throws explicitly, surfaces a compile warning, and keeps the TODO blocker', () => {
