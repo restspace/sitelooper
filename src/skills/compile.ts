@@ -931,7 +931,11 @@ export function compileSkills(input: CompileInput): Skill[] {
       for (const [key, loc] of Object.entries(step.locators)) {
         const filled = (loc.chain ?? []).map((c) => {
           const out = substituteDeep(substituteDeep(c, textSlots), mintedBefore) as LocatorCandidate;
-          return out.kind === 'css' && positionalUrlSlots.length ? { ...out, selector: substituteHrefIds(out.selector, positionalUrlSlots) } : out;
+          if (!positionalUrlSlots.length) return out;
+          if (out.kind === 'css') return { ...out, selector: substituteHrefIds(out.selector, positionalUrlSlots) };
+          // ...and, written as the app's own record number (`#4`), into the
+          // NAME a control is found by (substituteHashIds, gitea fwgt27 05-open).
+          return substituteHashIdsIn(out, positionalUrlSlots);
         });
         // An identity anchor still carrying THIS RUN's known value after
         // slotting (the recorded runid, because the value was typed in an
@@ -2261,6 +2265,37 @@ export function substituteHrefIds(selector: string, slots: UrlPositionSlot[]): s
     const back = absolute ? written : written.slice(BASE.length);
     return `${op}${quote}${back}${quote}`;
   });
+}
+
+/**
+ * Position-only url slots written where a control's NAME carries the record
+ * number the app prints for it: `#4` for the issue at `/issues/4`. Below the
+ * text floor a lone digit stands everywhere (`nth-of-type(4)`, a count of
+ * 4), so it is never written as a token in text — but prefixed with the
+ * app's own `#` and bounded, it is that record and nothing else. gitea
+ * fwgt27 05-open: the assignee picker's procedure clicked the heading
+ * `"fwgt27-n1 Bench Issue #4"`; the title became `{{v6}}` and `#4` stayed
+ * literal, so n2 (`#5`), n3 (`#6`) and the artifact missed every identifying
+ * locator there and fell to the model (33 and 18 turns) or stopped. Path and
+ * hash-route positions only: a query-state id (odoo's `id=21`) is not what an
+ * app prints after `#`.
+ */
+export function substituteHashIds(text: string, slots: UrlPositionSlot[]): string {
+  let out = text;
+  for (const s of slots) {
+    if (!/^(p|h)\d+$/.test(s.at) || !s.value) continue;
+    out = out.replace(new RegExp(`(^|[^\\w#{}])#${escapeRe(s.value)}(?![\\w}])`, 'g'), `$1#{{${s.name}}}`);
+  }
+  return out;
+}
+
+/** substituteHashIds over the name fields of one candidate: a role's name, a text, a label, a scoped hasText. */
+export function substituteHashIdsIn(c: LocatorCandidate, slots: UrlPositionSlot[]): LocatorCandidate {
+  if (c.kind === 'role' && typeof c.name === 'string') return { ...c, name: substituteHashIds(c.name, slots) };
+  if (c.kind === 'text') return { ...c, text: substituteHashIds(c.text, slots) };
+  if (c.kind === 'label') return { ...c, label: substituteHashIds(c.label, slots) };
+  if (c.kind === 'scoped') return { ...c, hasText: substituteHashIds(c.hasText, slots) };
+  return c;
 }
 
 /**
