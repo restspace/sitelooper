@@ -22,6 +22,7 @@
 import { spawnSync } from 'node:child_process';
 import { APP_DEFAULTS } from './app-defaults.mjs';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadRates, priceRun } from './pricing.mjs';
@@ -169,6 +170,18 @@ for (let n = own.from ? 2 : 1; n <= own.k; n++) {
     if (own.flow) args.push('--save-flow', own.flow, '--flowsDir', flowsDir);
     const r = spawnSync(process.execPath, args, { stdio: 'inherit', env: process.env });
     if (r.status !== 0) console.error(`[sweep] harness exited ${r.status} for ${runid} — scoring whatever it wrote`);
+  }
+
+  // The run's own records (script, timing, trace) live in the daemon's session
+  // directory. Placed beside the harness output here, nothing downstream has
+  // to reach outside the repo to publish them (bench/publish-results.mjs).
+  for (const f of ['script', 'timing', 'trace']) {
+    const from = path.join(process.env.SITELOOPER_HOME ?? path.join(os.homedir(), '.sitelooper'), 'sessions', runid, `${f}.jsonl`);
+    try {
+      if (fs.existsSync(from)) fs.copyFileSync(from, path.join(outDir, `${runid}-${f}.jsonl`));
+    } catch (err) {
+      console.error(`[sweep] ${runid}: could not copy ${f}.jsonl: ${err.message}`);
+    }
   }
 
   const arm = pass[pass.indexOf('--arm') + 1] ?? 'sitelooper';
