@@ -1,0 +1,119 @@
+
+[sweep] run 1/3: fwgt29-n1 (store: /home/user/sitelooper/bench/results/fwgt29-skills)
+[harness] gitea: defaulting APP_URL
+[harness] gitea: defaulting APP_EMAIL
+[harness] gitea: defaulting APP_PASSWORD
+[reset] gitea: no leftover bench issues
+[harness] gitea responded 200 at http://127.0.0.1:8095/
+stopped: fwgt29-n1
+  flow "fwgt29" saved: 8 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwgt29.json
+  warning: note: 01-signin no longer publishes dashboard_main, nav_links — no replay reads them from the page and the recording showed no line to read
+  warning: note: 02-open no longer publishes repo_issues_tab_count, filter_state — no replay reads them from the page and the recording showed no line to read
+  warning: note: 03-create no longer publishes created_timestamp — no replay reads it from the page and the recording showed no line to read
+  warning: warning: 04-set's instruction asks to report labels_displayed_on_issue, and no replay can publish it: nothing in its procedure reads it from the page, so export dropped it — re-record the step so the value is read, not only reported
+  warning: note: 04-set no longer publishes sidebar_labels_area, label_count, bug_label_color, priority_high_label_color, update_endpoint_used_by_widget, server_response_check, url_after_bug_click, issue_page_url — no replay reads them from the page and the recording showed no line to read
+  warning: note: 05-open no longer publishes assignee_profile_url, update_endpoint, server_response_check, final_url — no replay reads them from the page and the recording showed no line to read
+  warning: note: 06-set no longer publishes sidebar_milestone_area, milestone_link, milestone_options_seen_in_picker, other_sidebar_state, server_response_check, final_url_after_mileston — no replay reads them from the page and the recording showed no line to read
+  warning: note: 07-add no longer publishes comment_author, comment_timestamp, sidebar_state — no replay reads them from the page and the recording showed no line to read
+  warning: note: 08-open no longer publishes label_count, sidebar_milestone, comment_count, sidebar_combos_raw, labels_list_a, labels_list_a_2, issue_author — no replay reads them from the page and the recording showed no line to read
+  warning: note: 01-signin: added a read for signed_in_user to s_fa272a (page.getByRole('menu', { name: 'admin', exact: true }); seen on the next instruction's start page)
+  warning: note: 01-signin: added a read for avatar_alt_label to s_fa272a (page.getByRole('menu', { name: 'admin', exact: true }); seen on the next instruction's start page)
+  warning: note: 06-set: added a read for milestone_displayed to s_feeeda (page.getByRole('link', { name: 'Bench Milestone', exact: true }); seen on the next instruction's start page)
+  warning: warning: 191 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[0].instruction: "admin" (output) in "Sign in to Gitea: click the Sign In link/button, enter username admin and password {{env:APP_PASSWORD}} exactly as that text, submit the form, and verify you ar"
+  flow.steps[1].route: "http://127.0.0.1:8095/bench/bench-repo/issues" (output) in "http://127.0.0.1:8095/bench/bench-repo/issues"
+  flow.steps[2].route: "http://127.0.0.1:8095/bench/bench-repo/issues" (output) in "http://127.0.0.1:8095/bench/bench-repo/issues/:id"
+  flow.steps[3].instruction: "priority-high" (output) in "On the issue page for issue {{03-create.issue_number}} ('{{runid}} Bench Issue') in bench/bench-repo, use the sidebar Labels picker to set the issue's labels to"
+  flow.steps[3].instruction: "bug" (output) in "On the issue page for issue {{03-create.issue_number}} ('{{runid}} Bench Issue') in bench/bench-repo, use the sidebar Labels picker to set the issue's labels to"
+arm=sitelooper model=z-ai/glm-5.3 runid=fwgt29-n1 stop=completed
+turns=11 wall=339.9s
+commands=10 cmdTime=305.3s cmdBytes=12052 timeouts=0
+orchestrator in=9749 cw=0 cr=39808 out=3152
+inner prompt=2012279 cached=1870336 completion=24288
+spend=$0.0798 maxUsd=3
+learn: A_n=0 replayed=0/8 full=0 repaired=0 compiled=8 variants=0
+-> /home/user/sitelooper/bench/results/fwgt29-n1-sitelooper-result.json
+
+fwgt29-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — #4, state=open, description includes runid=true
+  obj 3: PASS — labels=[bug, priority-high], want [bug, priority-high]
+  obj 4: PASS — assignees=[bench-assignee]
+  obj 5: PASS — milestone=Bench Milestone
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — issue #4 reported
+
+[sweep] run 2/3: fwgt29-n2 (replay flow fwgt29, no orchestrator)
+[reset] gitea: deleted 1 leftover bench issue(s)
+[sweep] fwgt29-n2: 9 drift ticket(s) → fwgt29-n2-drift.json
+
+fwgt29-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — #5, state=open, description includes runid=true
+  obj 3: PASS — labels=[bug, priority-high], want [bug, priority-high]
+  obj 4: PASS — assignees=[bench-assignee]
+  obj 5: PASS — milestone=Bench Milestone
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — issue #5 reported
+
+[sweep] run 3/3: fwgt29-n3 (replay flow fwgt29, no orchestrator)
+[reset] gitea: deleted 1 leftover bench issue(s)
+[sweep] fwgt29-n3: 9 drift ticket(s) → fwgt29-n3-drift.json
+
+fwgt29-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — #6, state=open, description includes runid=true
+  obj 3: PASS — labels=[bug, priority-high], want [bug, priority-high]
+  obj 4: PASS — assignees=[bench-assignee]
+  obj 5: PASS — milestone=Bench Milestone
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — issue #6 reported
+
+Learning sweep fwgt29 (K=3)
+┌─────────┬───┬─────────────┬──────────┬─────────────┬───────┬──────┬───────────┬──────┬──────────────┬────────┐
+│ (index) │ n │ runid       │ verified │ stop        │ turns │ cmds │ total_usd │ A_n  │ replayed     │ wall_s │
+├─────────┼───┼─────────────┼──────────┼─────────────┼───────┼──────┼───────────┼──────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwgt29-n1' │ '7/7'    │ 'completed' │ 11    │ 10   │ 0.0798    │ 0    │ '0/8'        │ 340    │
+│ 1       │ 2 │ 'fwgt29-n2' │ '7/7'    │ 'success'   │ 30    │ 8    │ 0.0178    │ 0.88 │ '8/8 (flow)' │ 194    │
+│ 2       │ 3 │ 'fwgt29-n3' │ '7/7'    │ 'success'   │ 0     │ 8    │ 0         │ 1    │ '8/8 (flow)' │ 87     │
+└─────────┴───┴─────────────┴──────────┴─────────────┴───────┴──────┴───────────┴──────┴──────────────┴────────┘
+http://127.0.0.1:8095
+  s_118839  validated   15 steps  3/3 (100%)
+           On the issue page for issue #4 ('{{v1}}') in bench/bench-repo, use the sidebar Labels picker to set the issue'…
+  s_411f24  validated    1 steps  3/3 (100%)
+           Navigate to the repository bench/bench-repo, then open its Issues list filtered to OPEN issues only. Report th…
+  s_63efee  validated    8 steps  3/3 (100%)
+           In the repository bench/bench-repo, create a new issue with title exactly '{{v2}}' and a description in the ma…
+  s_718780  validated    3 steps  3/3 (100%)
+           In the repository bench/bench-repo, create a new issue with title exactly '{{v2}}' and a description in the ma…
+  s_8698e5  validated    1 steps  3/3 (100%)
+           Navigate to the repository bench/bench-repo, then open its Issues list filtered to OPEN issues only. Report th…
+  s_95aaad  validated    9 steps  3/3 (100%)
+           Navigate to the repository bench/bench-repo, then open its Issues list filtered to OPEN issues only. Report th…
+  s_9784bc  validated    1 steps  3/3 (100%)
+           Open the issue page for issue #4 in bench/bench-repo ({{v1}}) fresh and verify, reading only: (a) the issue ti…
+  s_9a1355  validated   16 steps  3/3 (100%)
+           Open the issue page for issue #4 in bench/bench-repo ({{v1}}) fresh and verify, reading only: (a) the issue ti…
+  s_b82dc2  validated    1 steps  3/3 (100%)
+           Navigate to the repository bench/bench-repo, then open its Issues list filtered to OPEN issues only. Report th…
+  s_d9be9c  validated    1 steps  3/3 (100%)
+           Sign in to Gitea: click the Sign In link/button, enter username admin and password {{v1}} exactly as that text…
+  s_e6ee73  validated    5 steps  3/3 (100%)
+           On the issue page for issue #4 ('{{v1}}') in bench/bench-repo, add a comment using the comment markdown text a…
+  s_e719e5  validated    3 steps  3/3 (100%)
+           Sign in to Gitea: click the Sign In link/button, enter username admin and password {{v1}} exactly as that text…
+  s_f907f3  validated    2 steps  3/3 (100%)
+           On the issue page for issue #4 ('{{v1}}') in bench/bench-repo, add a comment using the comment markdown text a…
+  s_fa272a  validated    5 steps  3/3 (100%)
+           Sign in to Gitea: click the Sign In link/button, enter username admin and password {{v1}} exactly as that text…
+  s_fdd1a8  validated    1 steps  3/3 (100%)
+           In the repository bench/bench-repo, create a new issue with title exactly '{{v2}}' and a description in the ma…
+  s_feeeda  validated    6 steps  3/3 (100%)
+           On the issue page for issue #4 ('{{v1}}') in bench/bench-repo, use the sidebar Milestone picker to set the iss…
+  s_5cbad4  provisional 12 steps  1/2 (50%)
+           On the issue page for issue #4 ('{{v1}}') in bench/bench-repo, use the sidebar Assignees picker to assign the …
+  s_7d7cc7  validated   17 steps  2/2 (100%)  variant of s_5cbad4
+           On the issue page for issue {{v1}} ('{{v2}}') in bench/bench-repo, use the sidebar Assignees picker to assign …
+store: /home/user/sitelooper/bench/results/fwgt29-skills
+
+summary: /home/user/sitelooper/bench/results/fwgt29-sweep.json

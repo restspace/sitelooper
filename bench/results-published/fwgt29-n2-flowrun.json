@@ -1,0 +1,353 @@
+{
+  "flow": "fwgt29",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_fa272a; observed repositories_heading_2=New Repository, page_title=admin - Dashboard - Gitea: Git with a cup of tea.",
+      "values": {
+        "repositories_heading_2": "New Repository",
+        "page_title": "admin - Dashboard - Gitea: Git with a cup of tea"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "9/9",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_fa272a: step 1: skipped read — no element matched any known locator for target (tried 1: page.getByRole('heading', { name: 'Repositories 1', exact: true }))",
+        "s_fa272a: step 4: the target chain is dead and was not healed inline — the step is a synthesized read no run has ever resolved, so nothing about it has drifted",
+        "s_fa272a: step 4: skipped read — no element matched any known locator for target (tried 1: page.getByRole('menu', { name: 'admin', exact: true }))",
+        "s_fa272a: step 5: the target chain is dead and was not healed inline — the step is a synthesized read no run has ever resolved, so nothing about it has drifted",
+        "s_fa272a: step 5: skipped read — no element matched any known locator for target (tried 1: page.getByRole('menu', { name: 'admin', exact: true }))"
+      ],
+      "unreported": [
+        "signed_in_user",
+        "avatar_alt_label",
+        "repositories_heading_1"
+      ]
+    },
+    {
+      "id": "02-open",
+      "status": "success",
+      "summary": "Total open issues shown: 3.",
+      "values": {
+        "issues_url": "http://127.0.0.1:8095/bench/bench-repo/issues",
+        "open_issue_count_shown": "3",
+        "closed_issue_count": "0",
+        "issue_numbers_Seed_ship_repaired_device": "#3",
+        "issue_numbers_Seed_order_missing_parts": "#2",
+        "issue_numbers_Seed_triage_inbox": "#1",
+        "open_issue_titles_1": "Seed: ship repaired device",
+        "open_issue_titles_2": "Seed: order missing parts",
+        "open_issue_titles_3": "Seed: triage inbox"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "12/12",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_63efee; observed issue_number=#5, issue_title=fwgt29-n2 Bench Issue, issue_heading=fwgt29-n2 Bench Issue #5, issues_tab_count=4, page_title=#5 - fwgt29-n2 Bench Issue - bench-repo - Gitea: Git with a cup of tea, description_displayed=Bench issue created for run fwgt29-n2, author=admin, ref=fwgt29-n2.",
+      "values": {
+        "issue_number": "#5",
+        "issue_title": "fwgt29-n2 Bench Issue",
+        "issue_heading": "fwgt29-n2 Bench Issue #5",
+        "issues_tab_count": "4",
+        "page_title": "#5 - fwgt29-n2 Bench Issue - bench-repo - Gitea: Git with a cup of tea",
+        "description_displayed": "Bench issue created for run fwgt29-n2",
+        "author": "admin",
+        "ref": "fwgt29-n2"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "12/12",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_63efee: step 6: primary locator did not resolve; used fallback #2 page.locator('#issue-5 > div > div:nth-of-type(2) > div:nth-of-type(1) > p')"
+      ]
+    },
+    {
+      "id": "04-set",
+      "status": "success",
+      "summary": "Replayed stored procedure s_118839; observed current_url=http://127.0.0.1:8095/bench/bench-repo/issues/5, sidebar_labels_area_2=Labels\nbug\npriority-high, hidden_combo_value_label_ids=1,2, labels_list_a=bug, labels_list_a_2=priority-high.",
+      "values": {
+        "current_url": "http://127.0.0.1:8095/bench/bench-repo/issues/5",
+        "sidebar_labels_area_2": "Labels\nbug\npriority-high",
+        "hidden_combo_value_label_ids": "1,2",
+        "labels_list_a": "bug",
+        "labels_list_a_2": "priority-high"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "15/15",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "05-open",
+      "status": "success",
+      "summary": "On bench/bench-repo issue #5 (\"fwgt29-n2 Bench Issue\"), the sidebar Assignees picker is now applied and the issue page visibly displays the assignee 'bench-assignee (Bench Assignee)'. After the replayed procedure's partial run left the assignment unapplied (its step 5 failed), I reopened the Assignees picker, clicked the 'bench-assignee (Bench Assignee)' option, closed the menu, and verified on the live DOM that the sidebar assignee list's placeholder is hidden (offsetParent === null) while a visible link reading \"bench-assignee (Bench Assignee)\" is rendered; the combo's hidden input carries assignee_ids=3 and aria-expanded is false (menu closed). (assignee_displayed: Bench Assignee)",
+      "values": {
+        "issue_number": "#5",
+        "issue_title": "fwgt29-n2 Bench Issue",
+        "assignee_displayed": "bench-assignee",
+        "assignee_link_visible": "true",
+        "no_assignees_placeholder_hidden": "true",
+        "hidden_input_assignee_ids": "3",
+        "assignees_dropdown_expanded": "false",
+        "update_url": "/bench/bench-repo/issues/assignee?issue_ids=5",
+        "labels_still_shown": "bug, priority-high (server response for #5 shows both, applied in the previous instruction)",
+        "url_after_assignee_optio": "http://127.0.0.1:8095/bench/bench-repo/issues/5",
+        "url_after_second_click": "http://127.0.0.1:8095/bench/bench-repo/issues/5",
+        "ref": "fwgt29-n2"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_5cbad4 stopped at step 5 — every identifying locator missed, and the positional fallback #2 is not the recorded \"fwgt29-n2 Bench Issue #4\" — the element there carries another name, so it was not clicked",
+      "replayed": "4/12",
+      "repaired": false,
+      "turns": 30,
+      "warnings": [
+        "s_5cbad4: step 5: primary locator did not resolve; used fallback #2 page.locator('h1 >> nth=0')"
+      ],
+      "unreported": [
+        "hidden_combo_value_assignee_ids",
+        "url_after_assignee_click",
+        "sidebar_assignee_area_2",
+        "sidebar_assignee_area_1",
+        "sidebar_assignee_area_2_2",
+        "sidebar_assignee_area_3"
+      ]
+    },
+    {
+      "id": "06-set",
+      "status": "success",
+      "summary": "Replayed stored procedure s_feeeda; observed url_after_milestone_clic=http://127.0.0.1:8095/bench/bench-repo/issues/5, hidden_combo_value_milestone=1, milestone_displayed=Bench Milestone.",
+      "values": {
+        "url_after_milestone_clic": "http://127.0.0.1:8095/bench/bench-repo/issues/5",
+        "hidden_combo_value_milestone": "1",
+        "milestone_displayed": "Bench Milestone"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "6/6",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "07-add",
+      "status": "success",
+      "summary": "Replayed stored procedure s_e6ee73; observed comment_id_fragment=issuecomment-10, ref=fwgt29-n2, all_comment_bodies_on_page_1=Bench issue created for run fwgt29-n2, comment_text_displayed=Comment for run fwgt29-n2, all_comment_bodies_on_page_2=Comment for run fwgt29-n2.",
+      "values": {
+        "comment_id_fragment": "issuecomment-10",
+        "ref": "fwgt29-n2",
+        "all_comment_bodies_on_page_1": "Bench issue created for run fwgt29-n2",
+        "comment_text_displayed": "Comment for run fwgt29-n2",
+        "all_comment_bodies_on_page_2": "Comment for run fwgt29-n2"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "7/7",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_e6ee73: step 3: primary locator did not resolve; used fallback #2 elementAt(510, 316) /* p */"
+      ],
+      "unreported": [
+        "ref_2"
+      ]
+    },
+    {
+      "id": "08-open",
+      "status": "success",
+      "summary": "(a) Title/number: page title \"#5 - fwgt29-n2 Bench Issue - bench-repo - Gitea: Git with a cup of tea\", issue heading \"fwgt29-n2 Bench Issue #5\"; (b) description: \"Bench issue created for run fwgt29-n2\"; (d) sidebar assignee: \"bench-assignee (Bench Assignee)\". (sidebar_assignee: Bench Assignee)",
+      "values": {
+        "ref": "fwgt29-n2",
+        "issue_heading": "fwgt29-n2 Bench Issue #5",
+        "description_text": "Bench issue created for run fwgt29-n2",
+        "comment_body": "Comment for run fwgt29-n2",
+        "sidebar_labels": "bug | priority-high",
+        "page_title": "#5 - fwgt29-n2 Bench Issue - bench-repo - Gitea: Git with a cup of tea",
+        "url_fresh": "http://127.0.0.1:8095/bench/bench-repo/issues/5",
+        "issue_number": "#5",
+        "issue_title": "fwgt29-n2 Bench Issue",
+        "sidebar_projects": "No projects",
+        "sidebar_assignee": "bench-assignee",
+        "timeline_comment_bodies_1": "Bench issue created for run fwgt29-n2",
+        "timeline_comment_bodies_2": "Comment for run fwgt29-n2",
+        "sidebar_assignee_name": "bench-assignee",
+        "sidebar_assignee_full_name": "(Bench Assignee)"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "17/17",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_9a1355: step 11: primary locator did not resolve; used fallback #2 elementAt(214, 424) /* link */",
+        "s_9a1355: step 12: primary locator did not resolve; used fallback #2 elementAt(510, 316) /* p */",
+        "s_9a1355: step 14: primary locator did not resolve; used fallback #2 elementAt(214, 424) /* link */"
+      ]
+    }
+  ],
+  "passed": 8,
+  "total": 8,
+  "repinned": 0,
+  "drift": 9,
+  "driftTickets": [
+    {
+      "flow": "fwgt29",
+      "step": "01-signin",
+      "skill": "s_fa272a",
+      "atStep": "1",
+      "key": "target",
+      "similarity": 1.002,
+      "missedLocator": "page.getByRole('heading', { name: 'Repositories 1', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8095/",
+      "pageUrl": "http://127.0.0.1:8095/"
+    },
+    {
+      "flow": "fwgt29",
+      "step": "01-signin",
+      "skill": "s_fa272a",
+      "atStep": "4",
+      "key": "target",
+      "similarity": 1.002,
+      "missedLocator": "page.getByRole('menu', { name: 'admin', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8095/",
+      "pageUrl": "http://127.0.0.1:8095/"
+    },
+    {
+      "flow": "fwgt29",
+      "step": "01-signin",
+      "skill": "s_fa272a",
+      "atStep": "5",
+      "key": "target",
+      "similarity": 1.002,
+      "missedLocator": "page.getByRole('menu', { name: 'admin', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8095/",
+      "pageUrl": "http://127.0.0.1:8095/"
+    },
+    {
+      "flow": "fwgt29",
+      "step": "03-create",
+      "skill": "s_63efee",
+      "atStep": "6",
+      "key": "target",
+      "similarity": 1.002,
+      "missedLocator": "page.getByText('Bench issue created for run fwgt29-n2', { exact: true })",
+      "fallbackUsed": "page.locator('#issue-5 > div > div:nth-of-type(2) > div:nth-of-type(1) > p')",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "pageUrl": "http://127.0.0.1:8095/bench/bench-repo/issues/5"
+    },
+    {
+      "flow": "fwgt29",
+      "step": "05-open",
+      "skill": "s_5cbad4",
+      "atStep": "5",
+      "key": "target",
+      "similarity": 1.001,
+      "missedLocator": "page.getByRole('heading', { name: 'fwgt29-n2 Bench Issue #4', exact: true })",
+      "fallbackUsed": "page.locator('h1 >> nth=0')",
+      "fallbackIndex": 1,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "pageUrl": "http://127.0.0.1:8095/bench/bench-repo/issues/5"
+    },
+    {
+      "flow": "fwgt29",
+      "step": "07-add",
+      "skill": "s_e6ee73",
+      "atStep": "3",
+      "key": "target",
+      "similarity": 1.001,
+      "missedLocator": "page.locator('#issue-4 > div > div:nth-of-type(2) > div:nth-of-type(1) > p')",
+      "fallbackUsed": "elementAt(510, 316) /* p */",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id#:id",
+      "pageUrl": "http://127.0.0.1:8095/bench/bench-repo/issues/5#issuecomment-10"
+    },
+    {
+      "flow": "fwgt29",
+      "step": "08-open",
+      "skill": "s_9a1355",
+      "atStep": "11",
+      "key": "target",
+      "similarity": 1.001,
+      "missedLocator": "page.locator('#issuecomment-3 > span:nth-of-type(2) > a')",
+      "fallbackUsed": "elementAt(214, 424) /* link */",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "pageUrl": "http://127.0.0.1:8095/bench/bench-repo/issues/5"
+    },
+    {
+      "flow": "fwgt29",
+      "step": "08-open",
+      "skill": "s_9a1355",
+      "atStep": "12",
+      "key": "target",
+      "similarity": 1.001,
+      "missedLocator": "page.locator('#issue-4 > div > div:nth-of-type(2) > div:nth-of-type(1) > p')",
+      "fallbackUsed": "elementAt(510, 316) /* p */",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "pageUrl": "http://127.0.0.1:8095/bench/bench-repo/issues/5"
+    },
+    {
+      "flow": "fwgt29",
+      "step": "08-open",
+      "skill": "s_9a1355",
+      "atStep": "14",
+      "key": "target",
+      "similarity": 1.001,
+      "missedLocator": "page.locator('#issuecomment-3 > span:nth-of-type(2) > a')",
+      "fallbackUsed": "elementAt(214, 424) /* link */",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "pageUrl": "http://127.0.0.1:8095/bench/bench-repo/issues/5"
+    }
+  ],
+  "wallMs": 194202,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 578975,
+    "completionTokens": 14139,
+    "cachedTokens": 527232
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 578975,
+      "completionTokens": 14139,
+      "cachedTokens": 527232
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}
