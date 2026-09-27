@@ -1,0 +1,184 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwod100-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwod100-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwod100-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/bench/results/fwod100-spec-spec-tmp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwod100-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwod100.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwod100-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwod100.spec.ts",
+      "file": "fwod100.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwod100",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 167120,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper step] 01-login\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 02-create s_f70d64/9: read 'customer' returned a value the skill itself set/selected ('fwod100-spec Bench Customer') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 02-create: report value ref is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-create\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-open\n"
+                    },
+                    {
+                      "text": "[sitelooper drift] 05-open s_b57480/5 target: primary getByText('S00024', { exact: true }) missed; used #2 locator('div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > h1 > div > span') (#1 ambiguous)\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 05-open\n"
+                    },
+                    {
+                      "text": "[sitelooper skip] 06-report s_dde0de/23 target: no locator recorded — value left empty\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 06-report\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-login: Log in to Odoo 17 at http://127.0.0.1:8069/ with login admin and password {{env:APP_PASSWORD}}. Then go to Sales app, create a new customer contact named '{{runid}} Bench Customer' with City set to 'Benchville', save, and verify it exists. Do not wait for network idle.",
+                      "duration": 17955
+                    },
+                    {
+                      "title": "02-create: In Odoo Sales, create a new quotation for customer '{{runid}} Bench Customer' (choose the customer from the autocomplete dropdown, do not just type). Add exactly ONE order line: pick any product from the product catalogue via its autocomplete dropdown, quantity 3. Save the quotation. Report the product name you chose, the unit price Odoo filled in, and the untaxed amount computed. Do not wait for network idle.",
+                      "duration": 34230
+                    },
+                    {
+                      "title": "03-open: In Odoo Sales, open quotation {{02-create.quotation_reference}} and add a SECOND order line below the existing 'Acoustic Bloc Screens' line: pick a DIFFERENT product from the autocomplete dropdown, quantity 2, then save. Report the product name and the new total Untaxed Amount shown in the totals. Do not wait for network idle.",
+                      "duration": 78133
+                    },
+                    {
+                      "title": "04-open: In Odoo Sales, open quotation {{02-create.quotation_reference}} and change the FIRST order line's quantity from 3 to 5 (the Acoustic Bloc Screens line), save, and report the new total Untaxed Amount shown in the totals. Do not wait for network idle.",
+                      "duration": 7907
+                    },
+                    {
+                      "title": "05-open: In Odoo Sales, open quotation {{02-create.quotation_reference}}, click Confirm to confirm it as a sales order, and report the order reference (name) and the status shown in the status bar afterwards. Do not wait for network idle.",
+                      "duration": 5830
+                    },
+                    {
+                      "title": "06-report: In Odoo Sales, on sales order {{02-create.quotation_reference}}, cancel the order (confirm any dialog that appears), and report the status shown in the status bar afterwards. Do not wait for network idle.",
+                      "duration": 22347
+                    }
+                  ],
+                  "startTime": "2026-09-27T16:58:14.001Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": "W3NpdGVsb29wZXIgZHJpZnRdIDA1LW9wZW4gc19iNTc0ODAvNSB0YXJnZXQ6IHByaW1hcnkgZ2V0QnlUZXh0KCdTMDAwMjQnLCB7IGV4YWN0OiB0cnVlIH0pIG1pc3NlZDsgdXNlZCAjMiBsb2NhdG9yKCdkaXY6bnRoLW9mLXR5cGUoMSkgPiBkaXY6bnRoLW9mLXR5cGUoMikgPiBkaXY6bnRoLW9mLXR5cGUoMSkgPiBoMSA+IGRpdiA+IHNwYW4nKSAoIzEgYW1iaWd1b3VzKQ=="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "a6c0c0cc4c02c72d3936-ffd7197630f347ca0f99",
+          "file": "fwod100.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-27T16:58:11.399Z",
+    "duration": 170038.91499999998,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}
