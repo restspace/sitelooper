@@ -1,0 +1,98 @@
+{
+  "flow": "fwgt24",
+  "status": "partial",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_a0c6d4; observed open_count=3, closed_count=0, issue_1_title=Seed: triage inbox, issue_1_number=#1, issue_2_title=Seed: order missing parts, issue_2_number=#2, issue_3_title=Seed: ship repaired device, issue_3_number=#3, matching_titles_1=Seed: ship repaired device, matching_titles_2=Seed: order missing parts, matching_titles_3=Seed: triage inbox.",
+      "values": {
+        "open_count": "3",
+        "closed_count": "0",
+        "issue_1_title": "Seed: triage inbox",
+        "issue_1_number": "#1",
+        "issue_2_title": "Seed: order missing parts",
+        "issue_2_number": "#2",
+        "issue_3_title": "Seed: ship repaired device",
+        "issue_3_number": "#3",
+        "matching_titles_1": "Seed: ship repaired device",
+        "matching_titles_2": "Seed: order missing parts",
+        "matching_titles_3": "Seed: triage inbox"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "17/17",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-create",
+      "status": "partial",
+      "summary": "Replayed stored procedure s_88b6aa; observed issue_url=http://127.0.0.1:8095/bench/bench-repo/issues/6, issue_number=#6, issue_title=fwgt24-n3 Bench Issue, runid=fwgt24-n3.",
+      "partial": [
+        "the procedure's read of assignee_shown, an output this step reports, was skipped (nothing matched on the page), so assignee_shown went unreported",
+        "labels_shown, an output this step was asked to report, is only the step's own parameter and this run never observed it, so labels_shown went unreported"
+      ],
+      "unanswered": [
+        "labels_shown",
+        "assignee_shown",
+        "milestone_shown",
+        "description_contains_runid",
+        "comment_contains_runid"
+      ],
+      "values": {
+        "issue_url": "http://127.0.0.1:8095/bench/bench-repo/issues/6",
+        "issue_number": "#6",
+        "issue_title": "fwgt24-n3 Bench Issue",
+        "runid": "fwgt24-n3"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "37/37",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_88b6aa: step 3: skipped read — no element matched any known locator for target (tried 2: page.locator('#issuecomment-6 > span:nth-of-type(2) > a'), elementAt(214, 524) /* link */)",
+        "s_88b6aa: report value labels_shown is given, not observed: it is built only from the step's own parameters, and neither this run's page nor any of its reads shows it — withheld"
+      ],
+      "unreported": [
+        "labels_shown",
+        "assignee_shown"
+      ]
+    }
+  ],
+  "passed": 1,
+  "total": 2,
+  "repinned": 0,
+  "drift": 1,
+  "driftTickets": [
+    {
+      "flow": "fwgt24",
+      "step": "02-create",
+      "skill": "s_88b6aa",
+      "atStep": "3",
+      "key": "target",
+      "similarity": 0.986,
+      "missedLocator": "page.locator('#issuecomment-6 > span:nth-of-type(2) > a')",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id#:id",
+      "pageUrl": "http://127.0.0.1:8095/bench/bench-repo/issues/6#issuecomment-9"
+    }
+  ],
+  "wallMs": 95036,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "cachedTokens": 0
+  },
+  "usageByModel": {},
+  "servedByModel": {},
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "partial",
+  "nextActions": []
+}

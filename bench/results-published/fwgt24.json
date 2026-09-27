@@ -1,0 +1,153 @@
+{
+  "name": "fwgt24",
+  "origin": "http://127.0.0.1:8095",
+  "startUrl": "http://127.0.0.1:8095/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-signin",
+      "instruction": "Sign in to Gitea at http://127.0.0.1:8095/ with username admin and password {{env:APP_PASSWORD}} (type that text literally). Then open repo bench/bench-repo issues list and report the titles of all open issues whose title starts with 'Seed:' exactly.",
+      "skill": "s_d864d0",
+      "params": {
+        "v1": "http://127.0.0.1:8095/",
+        "v2": "admin",
+        "v3": "{{env:APP_PASSWORD}}"
+      },
+      "outputs": [
+        "open_count",
+        "closed_count",
+        "issue_1_title",
+        "issue_1_number",
+        "issue_2_title",
+        "issue_2_number",
+        "issue_3_title",
+        "issue_3_number",
+        "matching_titles_1",
+        "matching_titles_2",
+        "matching_titles_3"
+      ],
+      "recorded": {
+        "open_count": "3",
+        "closed_count": "0",
+        "issue_1_title": "Seed: triage inbox",
+        "issue_1_number": "#1",
+        "issue_2_title": "Seed: order missing parts",
+        "issue_2_number": "#2",
+        "issue_3_title": "Seed: ship repaired device",
+        "issue_3_number": "#3",
+        "matching_titles_1": "Seed: ship repaired device",
+        "matching_titles_2": "Seed: order missing parts",
+        "matching_titles_3": "Seed: triage inbox",
+        "url": "http://127.0.0.1:8095/bench/bench-repo/issues"
+      },
+      "route": "http://127.0.0.1:8095/bench/bench-repo/issues",
+      "outputEvidence": {
+        "open_count": {
+          "same": 1,
+          "differed": 0
+        },
+        "closed_count": {
+          "same": 1,
+          "differed": 0
+        },
+        "issue_1_title": {
+          "same": 1,
+          "differed": 0
+        },
+        "issue_1_number": {
+          "same": 1,
+          "differed": 0
+        },
+        "issue_2_title": {
+          "same": 1,
+          "differed": 0
+        },
+        "issue_2_number": {
+          "same": 1,
+          "differed": 0
+        },
+        "issue_3_title": {
+          "same": 1,
+          "differed": 0
+        },
+        "issue_3_number": {
+          "same": 1,
+          "differed": 0
+        },
+        "matching_titles_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "matching_titles_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "matching_titles_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "02-create",
+      "instruction": "In bench/bench-repo, create a new issue titled '{{runid}} Bench Issue' with a description that includes the text '{{runid}}'. Submit it, then from the issue's sidebar pickers set exactly the labels 'bug' and 'priority-high' (add them; ensure no other labels are set), assign it to user 'bench-assignee', and set its milestone to 'Bench Milestone'. Wait for each picker choice to be applied and shown on the issue page. Then add a comment whose text includes '{{runid}}'. Finally report: the issue number as displayed (#N), the labels shown, assignee shown, milestone shown, and confirm the description and comment contain the runid.",
+      "skill": "s_024a70",
+      "params": {
+        "v2": "{{runid}} Bench Issue",
+        "v1": "{{runid}}",
+        "v3": "bug",
+        "v4": "priority-high"
+      },
+      "outputs": [
+        "issue_url",
+        "issue_number",
+        "issue_title",
+        "labels_shown",
+        "assignee_shown",
+        "runid"
+      ],
+      "recorded": {
+        "issue_url": "http://127.0.0.1:8095/bench/bench-repo/issues/4",
+        "issue_number": "#4",
+        "issue_title": "fwgt24-n1 Bench Issue",
+        "labels_shown": "bug, priority-high",
+        "assignee_shown": "bench-assignee",
+        "milestone_shown": "Bench Milestone",
+        "description_contains_runid": "true",
+        "comment_contains_runid": "true",
+        "runid": "fwgt24-n1",
+        "url": "http://127.0.0.1:8095/bench/bench-repo/issues/4#issuecomment-5",
+        "url.p3": "4",
+        "url.h0": "issuecomment-5"
+      },
+      "route": "http://127.0.0.1:8095/bench/bench-repo/issues/:id#:id"
+    }
+  ],
+  "provenance": {
+    "session": "fwgt24-n1",
+    "created": "2026-09-27T10:52:21.587Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "02-create",
+      "outputs": [
+        "milestone_shown",
+        "description_contains_runid",
+        "comment_contains_runid"
+      ]
+    }
+  ]
+}
