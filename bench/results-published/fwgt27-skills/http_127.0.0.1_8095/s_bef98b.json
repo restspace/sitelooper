@@ -1,0 +1,601 @@
+{
+ "id": "s_bef98b",
+ "origin": "http://127.0.0.1:8095",
+ "template": "On the issue page {{v1}} (issue titled '{{v5}}'), use the Assignees picker in the issue's sidebar to assign the issue to the user 'bench-assignee'. Make sure the app applies it and the issue page shows 'bench-assignee' as the assignee in the sidebar (not merely ticked in the open menu). Note: the same commit-on-close behaviour may apply — after clicking the assignee item in the open menu, click elsewhere (e.g. the h1 issue title) to close/commit the picker. Verify with a full page reload and report exactly what assignee is shown on the issue.",
+ "params": {
+  "v1": {
+   "example": "http://127.0.0.1:8095/bench/bench-repo/issues/5",
+   "usedIn": [
+    5,
+    9,
+    13
+   ],
+   "known": true,
+   "binding": "03-create.url"
+  },
+  "v5": {
+   "example": "fwgt27-n2 Bench Issue",
+   "usedIn": [
+    4,
+    12,
+    15,
+    18
+   ],
+   "known": true,
+   "binding": "output:i3:issue_title"
+  },
+  "v6": {
+   "example": "fwgt27-n2",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e292"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(9) > div:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 1098,
+      "y": 538,
+      "w": 270,
+      "h": 16,
+      "role": "combobox",
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+    "addedContains": [
+     "- combobox \"Assignees Clear assignees admin {{*}} (Bench Assignee)\"",
+     "- listbox \"Clear assignees admin {{*}} (Bench Assignee)\"",
+     "- textbox \"Filter Assignee\"",
+     "- link \"{{*}} (Bench Assignee)\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_a9e899",
+    "step": 1
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": ".issue-content-right a.item[data-value=\"3\"] >> nth=1"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#_aria_dropdown_menu_39 > div:nth-of-type(2) > a:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 1098,
+      "y": 718,
+      "w": 268,
+      "h": 39,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_a9e899",
+    "step": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e306"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#_aria_dropdown_menu_39 > div:nth-of-type(2) > a:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 1098,
+      "y": 718,
+      "w": 268,
+      "h": 39,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e114"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "heading",
+      "name": "{{v5}} #5"
+     },
+     {
+      "kind": "css",
+      "selector": "#issue-title-display > h1"
+     },
+     {
+      "kind": "point",
+      "x": 548,
+      "y": 172,
+      "w": 1032.4,
+      "h": 36,
+      "role": "heading",
+      "tag": "h1",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+    "addedContains": [
+     "- combobox \"Assignees\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "goto",
+   "args": {
+    "url": "{{v1}}"
+   },
+   "locators": {}
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": ".issue-content-right .issue-sidebar-combo:has(strong:text-is(\"Assignees\"))"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".issue-content-right .issue-sidebar-combo:has(strong:text-is(\"Assignees\"))"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(9)"
+     },
+     {
+      "kind": "point",
+      "x": 1098,
+      "y": 551,
+      "w": 270,
+      "h": 47,
+      "role": null,
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e292"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(9) > div:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 1098,
+      "y": 538,
+      "w": 270,
+      "h": 16,
+      "role": "combobox",
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+    "addedContains": [
+     "- combobox \"Assignees Clear assignees admin {{*}} (Bench Assignee)\"",
+     "- listbox \"Clear assignees admin {{*}} (Bench Assignee)\"",
+     "- textbox \"Filter Assignee\"",
+     "- link \"{{*}} (Bench Assignee)\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": ".issue-content-right .ui.dropdown:has(strong:text-is(\"Assignees\")) a.item[data-value=\"3\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".issue-content-right .ui.dropdown:has(strong:text-is(\"Assignees\")) a.item[data-value=\"3\"]"
+     },
+     {
+      "kind": "css",
+      "selector": "#_aria_dropdown_menu_39 > div:nth-of-type(2) > a:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 1098,
+      "y": 718,
+      "w": 268,
+      "h": 39,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "goto",
+   "args": {
+    "url": "{{v1}}"
+   },
+   "locators": {}
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": ".issue-content-right div.issue-sidebar-combo:has(strong:text-is(\"Assignees\")) div.ui.dropdown"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".issue-content-right div.issue-sidebar-combo:has(strong:text-is(\"Assignees\")) div.ui.dropdown"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(9) > div:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 1098,
+      "y": 538,
+      "w": 270,
+      "h": 16,
+      "role": "combobox",
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+    "addedContains": [
+     "- combobox \"Assignees Clear assignees admin {{*}} (Bench Assignee)\"",
+     "- listbox \"Clear assignees admin {{*}} (Bench Assignee)\"",
+     "- textbox \"Filter Assignee\"",
+     "- link \"{{*}} (Bench Assignee)\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": ".issue-content-right div.issue-sidebar-combo:has(strong:text-is(\"Assignees\")) a.item[data-value=\"3\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".issue-content-right div.issue-sidebar-combo:has(strong:text-is(\"Assignees\")) a.item[data-value=\"3\"]"
+     },
+     {
+      "kind": "css",
+      "selector": "#_aria_dropdown_menu_39 > div:nth-of-type(2) > a:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 1098,
+      "y": 718,
+      "w": 268,
+      "h": 39,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e114"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "heading",
+      "name": "{{v5}} #5"
+     },
+     {
+      "kind": "css",
+      "selector": "#issue-title-display > h1"
+     },
+     {
+      "kind": "point",
+      "x": 548,
+      "y": 172,
+      "w": 1032.4,
+      "h": 36,
+      "role": "heading",
+      "tag": "h1",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+    "addedContains": [
+     "- combobox \"Assignees\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "goto",
+   "args": {
+    "url": "{{v1}}"
+   },
+   "locators": {}
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#issue-title-display > h1 > span"
+     },
+     {
+      "kind": "point",
+      "x": 431,
+      "y": 172,
+      "w": 47.2,
+      "h": 38,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "issue_number"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "value"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "input[data-old-title=\"{{v5}}\"]"
+     },
+     {
+      "kind": "css",
+      "selector": "#issue-title-editor > div:nth-of-type(1) > input"
+     }
+    ]
+   },
+   "label": "issue_title"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(5) > div:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 1098,
+      "y": 428,
+      "w": 270,
+      "h": 20,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "milestone_sidebar"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#issuecomment-10 > span:nth-of-type(2) > a"
+     },
+     {
+      "kind": "point",
+      "x": 214,
+      "y": 424,
+      "w": 123.5,
+      "h": 16,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "assignee_sidebar_after_reload"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text",
+    "frame": "{{=}} Bench Issue #{{*}}",
+    "slotFrame": "{{v5}} #{{*}}",
+    "frameMark": "v6"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "heading",
+      "name": "{{v5}} #5"
+     },
+     {
+      "kind": "css",
+      "selector": "#issue-title-display > h1"
+     },
+     {
+      "kind": "point",
+      "x": 548,
+      "y": 172,
+      "w": 1032.4,
+      "h": 36,
+      "role": "heading",
+      "tag": "h1",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "ref"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "Assigned issue #5 ('{{v5}}') to 'bench-assignee' via the sidebar Assignees picker. Clicked the 'bench-assignee (Bench Assignee)' item in the open dropdown, then clicked the h1 issue title to close/commit the picker (the sidebar immediately rendered link \"bench-assignee\"). Verified with a full page reload of {{v1}}: the sidebar Assignees section now shows exactly 'bench-assignee (Bench Assignee)'. Labels remain 'bug' and 'priority-high'; no other changes made. (assignee_sidebar_after_reload: Bench Assignee)",
+  "values": {
+   "issue_number": "#5",
+   "issue_title": "{{v5}}",
+   "assignee_sidebar_after_reload": "bench-assignee",
+   "labels_sidebar": "bug, priority-high",
+   "milestone_sidebar": "No Milestone",
+   "ref": "{{v6}}"
+  }
+ },
+ "contract": 4,
+ "stats": {
+  "uses": 2,
+  "successes": 1,
+  "partial": 1,
+  "created": "2026-09-27T13:38:32.708Z",
+  "failedAtStep": {
+   "4": 1
+  },
+  "fallthroughs": 1,
+  "verifiedContract": 4,
+  "lastUsed": "2026-09-27T13:41:04.257Z",
+  "recoveredStops": 1,
+  "lastFailedAt": 4
+ },
+ "status": "provisional",
+ "variantOf": "s_a9e899",
+ "provenance": {
+  "session": "fwgt27-n2",
+  "instruction": "On the issue page http://127.0.0.1:8095/bench/bench-repo/issues/5 (issue titled 'fwgt27-n2 Bench Issue'), use the Assignees picker in the issue's sidebar to assign the issue to the user 'bench-assignee'. Make sure the app applies it and the issue page shows 'bench-assignee' as the assignee in the sidebar (not merely ticked in the open menu). Note: the same commit-on-close behaviour may apply — after clicking the assignee item in the open menu, click elsewhere (e.g. the h1 issue title) to close/commit the picker. Verify with a full page reload and report exactly what assignee is shown on the issue.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-27T13:38:32.708Z",
+  "transforms": [
+   {
+    "name": "unfreezeExpectations",
+    "at": 1,
+    "reason": "recorded page change(s) only the recording run could produce: [\"- combobox \\\"Assignees Clear assignees admin bench-assignee (Bench Assignee)\\\"\",\"- listbox \\\"Clear assignees admin bench-assignee (Bench Assignee)\\\"\",\"- textbox \\\"Filter Assignee\\\"\",\"- link \\\"bench-assignee (Bench Assignee)\\\"\"] → [\"- combobox \\\"Assignees Clear assignees admin {{*}} (Bench Assignee)\\\"\",\"- listbox \\\"Clear assignees admin {{*}} (Bench Assignee)\\\"\",\"- textbox \\\"Filter Assignee\\\"\",\"- link \\\"{{*}} (Bench Assignee)\\\"\"]"
+   },
+   {
+    "name": "unfreezeExpectations",
+    "at": 7,
+    "reason": "recorded page change(s) only the recording run could produce: [\"- combobox \\\"Assignees Clear assignees admin bench-assignee (Bench Assignee)\\\"\",\"- listbox \\\"Clear assignees admin bench-assignee (Bench Assignee)\\\"\",\"- textbox \\\"Filter Assignee\\\"\",\"- link \\\"bench-assignee (Bench Assignee)\\\"\"] → [\"- combobox \\\"Assignees Clear assignees admin {{*}} (Bench Assignee)\\\"\",\"- listbox \\\"Clear assignees admin {{*}} (Bench Assignee)\\\"\",\"- textbox \\\"Filter Assignee\\\"\",\"- link \\\"{{*}} (Bench Assignee)\\\"\"]"
+   },
+   {
+    "name": "unfreezeExpectations",
+    "at": 10,
+    "reason": "recorded page change(s) only the recording run could produce: [\"- combobox \\\"Assignees Clear assignees admin bench-assignee (Bench Assignee)\\\"\",\"- listbox \\\"Clear assignees admin bench-assignee (Bench Assignee)\\\"\",\"- textbox \\\"Filter Assignee\\\"\",\"- link \\\"bench-assignee (Bench Assignee)\\\"\"] → [\"- combobox \\\"Assignees Clear assignees admin {{*}} (Bench Assignee)\\\"\",\"- listbox \\\"Clear assignees admin {{*}} (Bench Assignee)\\\"\",\"- textbox \\\"Filter Assignee\\\"\",\"- link \\\"{{*}} (Bench Assignee)\\\"\"]"
+   },
+   {
+    "name": "unfreezeExpectations",
+    "at": 12,
+    "reason": "recorded page change(s) only the recording run could produce: [\"- link \\\"bench-assignee\\\"\",\"- combobox \\\"Assignees\\\"\"] → [\"- combobox \\\"Assignees\\\"\"]"
+   }
+  ]
+ },
+ "revision": 2
+}

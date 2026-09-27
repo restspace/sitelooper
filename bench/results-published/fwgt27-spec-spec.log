@@ -1,0 +1,51 @@
+
+Running 1 test using 1 worker
+
+[sitelooper skip] 01-signin s_d1bba1/1 target: read target not found — value left empty
+[sitelooper skip] 01-signin s_d1bba1/6 target: no locator recorded — value left empty
+[sitelooper step] 01-signin
+[sitelooper step] 02-open
+[sitelooper step] 03-create
+[sitelooper drift] 04-add s_7d4e48/26 target: primary getByRole('heading', { name: /^[\s\p{Co}\p{So}\p{Cf}]*fwgt27-spec\s+Bench\s+Issue\s+#4[\s\p{Co}\p{So}\p{Cf}]*$/u }) missed; used #2 locator('#issue-4-title, h1') (#1 absent)
+[sitelooper drift] 04-add s_7d4e48/29 target: primary getByRole('heading', { name: /^[\s\p{Co}\p{So}\p{Cf}]*fwgt27-spec\s+Bench\s+Issue\s+#4[\s\p{Co}\p{So}\p{Cf}]*$/u }) missed; used #2 locator('#issue-4-title, h1') (#1 absent)
+[sitelooper drift] 04-add s_7d4e48/34 target: primary locator('#issuecomment-1 > span:nth-of-type(2) > span > a:nth-of-type(1)') missed; used #2 locator('[data-sitelooper-point="298,373"]') (#1 absent)
+[sitelooper drift] 04-add s_7d4e48/35 target: primary locator('#issuecomment-1 > span:nth-of-type(2) > span > a:nth-of-type(2)') missed; used #2 locator('[data-sitelooper-point="363,373"]') (#1 absent)
+[sitelooper step] 04-add
+[sitelooper drift] 05-open s_a9e899/3 target: primary getByRole('heading', { name: /^[\s\p{Co}\p{So}\p{Cf}]*fwgt27-spec\s+Bench\s+Issue\s+#4[\s\p{Co}\p{So}\p{Cf}]*$/u }) missed; used #2 locator('#issue-title-display > h1') (#1 absent)
+  ✘  1 fwgt27.spec.ts:9:1 › fwgt27 (44.6s)
+
+
+  1) fwgt27.spec.ts:9:1 › fwgt27 › 05-open: On the issue page {{03-create.url}} (issue titled '{{runid}} Bench Issue'), use the Assignees picker in the issue's sidebar to assign the issue to the user 'bench-assignee'. Make sure the app applies it and the issue page shows 'bench-assignee' as the assignee in the sidebar (not merely ticked in the open menu). Note: the same commit-on-close behaviour may apply — after clicking the assignee item in the open menu, click elsewhere (e.g. the h1 issue title) to close/commit the picker. Verify with a full page reload and report exactly what assignee is shown on the issue. 
+
+    Error: 05-open s_a9e899/3: every identifying locator missed, and the positional fallback #2 is not the recorded "fwgt27-spec Bench Issue #4" — the element there carries another name, so it was not clicked
+
+       at fwgt27.flow.ts:17638
+
+      17636 |     return true;
+      17637 |   }
+    > 17638 |   if (verdict && 'stop' in verdict) throw new Error(`${where}: ${verdict.stop}`);
+            |                                           ^
+      17639 |   return false;
+      17640 | }
+      17641 |
+        at positionalClick (/home/user/sitelooper/bench/results/fwgt27-spec-spec-tmp/fwgt27.flow.ts:17638:43)
+        at Object.act (/home/user/sitelooper/bench/results/fwgt27-spec-spec-tmp/fwgt27.flow.ts:20412:13)
+        at runStepLifecycle (/home/user/sitelooper/bench/results/fwgt27-spec-spec-tmp/fwgt27.flow.ts:13565:18)
+        at Object.05-open (/home/user/sitelooper/bench/results/fwgt27-spec-spec-tmp/fwgt27.flow.ts:20398:5)
+        at /home/user/sitelooper/bench/results/fwgt27-spec-spec-tmp/fwgt27.flow.ts:22306:7
+        at runFlow (/home/user/sitelooper/bench/results/fwgt27-spec-spec-tmp/fwgt27.flow.ts:22305:5)
+        at /home/user/sitelooper/bench/results/fwgt27-spec-spec-tmp/fwgt27.spec.ts:14:21
+
+    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    [sitelooper drift] 04-add s_7d4e48/26 target: primary getByRole('heading', { name: /^[\s\p{Co}\p{So}\p{Cf}]*fwgt27-spec\s+Bench\s+Issue\s+#4[\s\p{Co}\p{So}\p{Cf}]*$/u }) missed; used #2 locator('#issue-4-title, h1') (#1 absent)
+    [sitelooper drift] 04-add s_7d4e48/29 target: primary getByRole('heading...
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/fwgt27-fwgt27/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/fwgt27-fwgt27/error-context.md
+
+  1 failed
+    fwgt27.spec.ts:9:1 › fwgt27 ────────────────────────────────────────────────────────────────────

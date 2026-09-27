@@ -1,0 +1,119 @@
+
+[sweep] run 1/3: fwgt27-n1 (store: /home/user/sitelooper/bench/results/fwgt27-skills)
+[harness] gitea: defaulting APP_URL
+[harness] gitea: defaulting APP_EMAIL
+[harness] gitea: defaulting APP_PASSWORD
+[reset] gitea: no leftover bench issues
+[harness] gitea responded 200 at http://127.0.0.1:8095/
+stopped: fwgt27-n1
+  flow "fwgt27" saved: 8 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwgt27.json
+  warning: warning: 04-add's instruction asks to report labels_shown_after_applying, and no replay can publish it: nothing in its procedure reads it from the page, so export dropped it — re-record the step so the value is read, not only reported
+  warning: note: 04-add no longer publishes label_bug_applied, label_priority_high_applied, label_count, verified_after_full_reload — no replay reads them from the page and the recording showed no line to read
+  warning: note: 05-open no longer publishes assignee_sidebar_text, labels_still_shown, verified_after_full_reload — no replay reads them from the page and the recording showed no line to read
+  warning: note: 06-set no longer publishes labels_shown, milestone_url, verified_after_full_reload — no replay reads them from the page and the recording showed no line to read
+  warning: note: 07-add no longer publishes comment_timestamp, verified_after_full_reload — no replay reads them from the page and the recording showed no line to read
+  warning: note: 08-report no longer publishes labels_sidebar_raw, projects_sidebar, comment_2_author, comments_total, comment_dom_id — no replay reads them from the page and the recording showed no line to read
+  warning: note: 01-signin: added a read for signed_in_user to s_d1bba1 (page.getByRole('menu', { name: 'admin', exact: true }); seen on the next instruction's start page)
+  warning: note: 06-set: added a read for milestone_sidebar_text to s_6756a7 (page.getByRole('link', { name: 'Bench Milestone', exact: true }); seen on the next instruction's start page)
+  warning: warning: 399 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.startUrl: "http://127.0.0.1:8095/" (output) in "http://127.0.0.1:8095/"
+  flow.steps[0].instruction: "admin" (output) in "Sign in to Gitea as username 'admin' with password exactly the text '{{env:APP_PASSWORD}}' (type it literally as that placeholder text; it is filled in when typ"
+  flow.steps[0].route: "http://127.0.0.1:8095/" (output) in "http://127.0.0.1:8095/"
+  flow.steps[1].instruction: "bench/bench-repo" (output) in "Go to the repository bench/bench-repo at http://127.0.0.1:8095/bench/bench-repo and open its Issues tab (filter to open issues). List the titles of all OPEN iss"
+  flow.steps[1].instruction: "bench-repo" (output) in "Go to the repository bench/bench-repo at http://127.0.0.1:8095/bench/bench-repo and open its Issues tab (filter to open issues). List the titles of all OPEN iss"
+arm=sitelooper model=z-ai/glm-5.3 runid=fwgt27-n1 stop=completed
+turns=10 wall=484.6s
+commands=9 cmdTime=454.6s cmdBytes=17834 timeouts=0
+orchestrator in=12850 cw=0 cr=37056 out=3200
+inner prompt=3270706 cached=3010688 completion=41033
+spend=$0.385 maxUsd=3
+learn: A_n=0 replayed=0/8 full=0 repaired=0 compiled=8 variants=0
+-> /home/user/sitelooper/bench/results/fwgt27-n1-sitelooper-result.json
+
+fwgt27-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — #4, state=open, description includes runid=true
+  obj 3: PASS — labels=[bug, priority-high], want [bug, priority-high]
+  obj 4: PASS — assignees=[bench-assignee]
+  obj 5: PASS — milestone=Bench Milestone
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — issue #4 reported
+
+[sweep] run 2/3: fwgt27-n2 (replay flow fwgt27, no orchestrator)
+[reset] gitea: deleted 1 leftover bench issue(s)
+[sweep] fwgt27-n2: 13 drift ticket(s) → fwgt27-n2-drift.json
+
+fwgt27-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — #5, state=open, description includes runid=true
+  obj 3: PASS — labels=[bug, priority-high], want [bug, priority-high]
+  obj 4: PASS — assignees=[bench-assignee]
+  obj 5: PASS — milestone=Bench Milestone
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — issue #5 reported
+
+[sweep] run 3/3: fwgt27-n3 (replay flow fwgt27, no orchestrator)
+[reset] gitea: deleted 1 leftover bench issue(s)
+[sweep] fwgt27-n3: 13 drift ticket(s) → fwgt27-n3-drift.json
+
+fwgt27-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — #6, state=open, description includes runid=true
+  obj 3: PASS — labels=[bug, priority-high], want [bug, priority-high]
+  obj 4: PASS — assignees=[bench-assignee]
+  obj 5: PASS — milestone=Bench Milestone
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — issue #6 reported
+
+Learning sweep fwgt27 (K=3)
+┌─────────┬───┬─────────────┬──────────┬─────────────┬───────┬──────┬───────────┬──────┬──────────────┬────────┐
+│ (index) │ n │ runid       │ verified │ stop        │ turns │ cmds │ total_usd │ A_n  │ replayed     │ wall_s │
+├─────────┼───┼─────────────┼──────────┼─────────────┼───────┼──────┼───────────┼──────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwgt27-n1' │ '7/7'    │ 'completed' │ 10    │ 9    │ 0.385     │ 0    │ '0/8'        │ 485    │
+│ 1       │ 2 │ 'fwgt27-n2' │ '7/7'    │ 'success'   │ 37    │ 8    │ 0.0813    │ 0.75 │ '8/8 (flow)' │ 188    │
+│ 2       │ 3 │ 'fwgt27-n3' │ '7/7'    │ 'success'   │ 18    │ 8    │ 0.0076    │ 0.88 │ '8/8 (flow)' │ 135    │
+└─────────┴───┴─────────────┴──────────┴─────────────┴───────┴──────┴───────────┴──────┴──────────────┴────────┘
+http://127.0.0.1:8095
+  s_06b992  validated   13 steps  3/3 (100%)
+           On the issue page {{v1}} (issue titled '{{v6}}'), add a comment in the comment markdown text area whose text i…
+  s_099875  validated    2 steps  3/3 (100%)
+           On the issue page {{v1}} (issue titled '{{v6}}'), add a comment in the comment markdown text area whose text i…
+  s_124f4a  validated    3 steps  3/3 (100%)
+           On the issue page {{v1}} (issue titled '{{v6}}'), add a comment in the comment markdown text area whose text i…
+  s_19d83e  validated    4 steps  3/3 (100%)
+           Final verification, read-only, do not modify anything. Load {{v1}} fresh and report: (a) the issue's number ex…
+  s_21e4e7  validated    3 steps  3/3 (100%)
+           In the repository {{v1}}, create a new issue with title exactly '{{v3}}' and a description (markdown text area…
+  s_403849  validated   19 steps  3/3 (100%)
+           Final verification, read-only, do not modify anything. Load {{v1}} fresh and report: (a) the issue's number ex…
+  s_4590d2  validated    1 steps  3/3 (100%)
+           Go to the repository bench/bench-repo at {{v1}} and open its Issues tab (filter to open issues). List the titl…
+  s_5ee885  validated    1 steps  3/3 (100%)
+           Go to the repository bench/bench-repo at {{v1}} and open its Issues tab (filter to open issues). List the titl…
+  s_6b9535  validated    1 steps  3/3 (100%)
+           Sign in to Gitea as username 'admin' with password exactly the text '{{v1}}' (type it literally as that placeh…
+  s_7d4e48  validated   35 steps  3/3 (100%)
+           On the issue page {{v1}} (issue titled '{{v6}}'), use the Labels picker in the issue's sidebar to add exactly …
+  s_d1bba1  validated    6 steps  3/3 (100%)
+           Sign in to Gitea as username 'admin' with password exactly the text '{{v1}}' (type it literally as that placeh…
+  s_d6de9f  validated    9 steps  3/3 (100%)
+           In the repository {{v1}}, create a new issue with title exactly '{{v3}}' and a description (markdown text area…
+  s_dc8790  validated    2 steps  3/3 (100%)
+           Go to the repository bench/bench-repo at {{v1}} and open its Issues tab (filter to open issues). List the titl…
+  s_e1b1a6  validated    1 steps  3/3 (100%)
+           In the repository {{v1}}, create a new issue with title exactly '{{v3}}' and a description (markdown text area…
+  s_e33800  validated    3 steps  3/3 (100%)
+           Sign in to Gitea as username 'admin' with password exactly the text '{{v1}}' (type it literally as that placeh…
+  s_0cba3c  validated    8 steps  2/2 (100%)  variant of s_6756a7
+           On the issue page {{v1}} (issue titled '{{v5}}'), use the Milestone picker in the issue's sidebar to set the i…
+  s_6756a7  provisional 10 steps  1/2 (50%)
+           On the issue page {{v1}} (issue titled '{{v6}}'), use the Milestone picker in the issue's sidebar to set the i…
+  s_a9e899  provisional 10 steps  1/2 (50%)
+           On the issue page {{v1}} (issue titled '{{v6}}'), use the Assignees picker in the issue's sidebar to assign th…
+  s_bef98b  provisional 18 steps  1/2 (50%)  variant of s_a9e899
+           On the issue page {{v1}} (issue titled '{{v5}}'), use the Assignees picker in the issue's sidebar to assign th…
+  s_2ff860  provisional 14 steps  1/1 (100%)  variant of s_bef98b
+           On the issue page {{v1}} (issue titled '{{v5}}'), use the Assignees picker in the issue's sidebar to assign th…
+store: /home/user/sitelooper/bench/results/fwgt27-skills
+
+summary: /home/user/sitelooper/bench/results/fwgt27-sweep.json
