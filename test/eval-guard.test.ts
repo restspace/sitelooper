@@ -114,3 +114,37 @@ describe('empty read_all: the model is told what to do, the recording is not tou
     expect(withEmptyReadHint('read', { target: 'a', what: 'text' }, '""')).toBe('""');
   });
 });
+
+/**
+ * Round 72, gitea fwgt24-n1 02-create: the sidebar pickers defeated the
+ * model, which then set the labels, milestone and assignee by POSTing to the
+ * issue's endpoints with fetch() from an eval — and patched window.fetch and
+ * XMLHttpRequest.prototype.open to watch what the page sent. The recording
+ * verified 7/7; its skill replayed 37/37 and set none of them (labels=[bug],
+ * no assignee, no milestone). A request the page never sent on its own is a
+ * mutation no replay can reproduce, so it is refused at the source like a
+ * click inside an eval. Reads through fetch (a GET of a script or a page)
+ * stay allowed: pointless, but not a hole.
+ */
+describe('eval guard: requests an eval sends (round 72)', () => {
+  it('refuses a fetch with a writing method or a body', () => {
+    expect(evalMutation(`(async () => { const r=await fetch('/bench/bench-repo/issues/labels?issue_ids=4', {method:'POST', body:new URLSearchParams({label_ids:'1,2'})}); const t=await r.text(); return r.status+' :: '+t.slice(0,300); })()`)).toBe('sends a POST request with fetch()');
+    expect(evalMutation(`(async () => { const r=await fetch('/x', {method: "delete"}); return r.status; })()`)).toBe('sends a DELETE request with fetch()');
+    expect(evalMutation(`(async () => { const r1=await fetch('/bench/bench-repo/issues/milestone?issue_ids=4', {method:'POST', body:new URLSearchParams({id:'1'})}); return r1.status; })()`)).toBe('sends a POST request with fetch()');
+    expect(evalMutation(`fetch('/api/x', { body: JSON.stringify({ a: 1 }) })`)).toBe('sends a request with fetch()');
+  });
+
+  it('refuses XMLHttpRequest, sendBeacon and patching the page\'s own functions', () => {
+    expect(evalMutation(`(() => { const x = new XMLHttpRequest(); x.open('POST', '/x'); x.send('a=1'); return 1; })()`)).toBe('sends a request with XMLHttpRequest');
+    expect(evalMutation(`navigator.sendBeacon('/log', 'x')`)).toBe('sends a request with navigator.sendBeacon()');
+    expect(evalMutation(`(() => { window.__req=[]; const of=window.fetch; window.fetch=function(...a){ window.__req.push(String(a[0])); return of.apply(this,a); }; return 1; })()`)).toBe('replaces window.fetch');
+    expect(evalMutation(`(() => { const oo=XMLHttpRequest.prototype.open; XMLHttpRequest.prototype.open=function(m,u){ return oo.call(this,m,u); }; return 1; })()`)).toBe('patches a prototype');
+  });
+
+  it('lets a fetch that only reads through', () => {
+    expect(evalMutation(`(async () => { const r = await fetch('/assets/js/index.C6rrIx7F.js'); const t = await r.text(); return t.slice(0, 500); })()`)).toBeNull();
+    expect(evalMutation(`(async () => { const t=await (await fetch('/bench/bench-repo/issues/new')).text(); const i=t.indexOf('label_ids'); return t.slice(i-500,i+200); })()`)).toBeNull();
+    expect(evalMutation(`document.body.innerText.includes('method: POST')`)).toBeNull();
+    expect(evalMutation(`[...document.querySelectorAll('form')].map(f => f.method)`)).toBeNull();
+  });
+});

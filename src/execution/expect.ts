@@ -707,3 +707,56 @@ export function effectExpectation(
     },
   };
 }
+
+/**
+ * The POPUP OPENER rule's other half (round 72, odoo fwod98 06-open). A
+ * snapshot line that names a popup — a dialog, menu, listbox, tooltip — is
+ * what a toggle opens and closes; replay's openerLines and the artifact's
+ * openerExpectations keep only those lines of a click's recorded additions,
+ * and the click is skipped as done already when one of them shows
+ * (fwgr26's third click on "New" shut the menu its next step needed).
+ *
+ * But a popup line among a click's additions does not make the click a
+ * toggle. fwod98-n1's cancel wizard: the "Send and cancel" click closed the
+ * wizard, and what came back into view was the form underneath — Odoo's
+ * company `menu "7 3 YourCompany"` in the top bar, beside `button "Set to
+ * Quotation"`, the button only a cancelled order shows. The menu is on every
+ * page, so both replays skipped the click as done already, the order
+ * stayed a sales order, and the verifier failed obj 6 on n2, n3 and the
+ * artifact alike. A click that also added lines that are NOT a popup did
+ * work beyond opening one, and it is in effect only when that work shows
+ * too: the popup lines any-of (as before), the rest all-of (as
+ * toggleAlreadyShown asks of a disclosure). Wrong this way costs one click
+ * that toggles a popup shut; wrong the other way loses the step everything
+ * after depends on, which is the way every guard here leans.
+ */
+export const OPENER_LINE = /^-?\s*(dialog|alertdialog|menu|menubar|listbox|tooltip)\b/;
+
+/** A click's plain recorded additions: neither transient nor carrying a run's own value. */
+function plainAdditions(addedContains: readonly string[] | undefined): string[] {
+  return (addedContains ?? []).filter((l) => !TRANSIENT_LINE.test(l) && !SLOT_LINE.test(l));
+}
+
+/** The popup lines among a click's recorded additions: what makes it an opener, or empty. */
+export function openerPopupLines(addedContains: readonly string[] | undefined): string[] {
+  return plainAdditions(addedContains).filter((l) => OPENER_LINE.test(l));
+}
+
+/** The rest of an opener's recorded additions — the work it did beyond opening a popup. A line that identifies nothing decides nothing. */
+export function openerWorkLines(addedContains: readonly string[] | undefined): string[] {
+  return plainAdditions(addedContains).filter((l) => !OPENER_LINE.test(l) && !identifiesNothing(l));
+}
+
+/**
+ * Whether an opener has nothing left to do: one of its popup lines shows AND
+ * every line of its other work shows, on one look at the page in the step's
+ * dialect (both already filled for this run). No popup lines, or a page that
+ * cannot be read, is no — the click runs and its own gates judge it.
+ */
+export async function openerAlreadyShowing(page: Page, popup: readonly string[], work: readonly string[], d: LineDialect = 1): Promise<boolean> {
+  if (!popup.length) return false;
+  const live = await captureLines(page, d);
+  if (!live) return false;
+  if (!lineShows(live.lines, [...popup])) return false;
+  return work.every((line) => lineShows(live.lines, [line]));
+}

@@ -1764,7 +1764,20 @@ export function evalMutation(expression: string): string | null {
     [/\.(style\.[\w$]+)\s*=(?!=)/, 'assigns .$1'],
     [/\.style\.(setProperty|removeProperty)\s*\(/, 'edits the DOM with .style.$1()'],
     [/\.(hidden|disabled)\s*=(?!=)/, 'assigns .$1'],
+    // A request the page never sent on its own, and its own functions
+    // patched to watch them (round 72, gitea fwgt24-n1 02-create: the sidebar
+    // pickers defeated the model, which then POSTed the labels, assignee and
+    // milestone with fetch() — verified 7/7 on the recording, and its skill
+    // replayed 37/37 setting none of them). `method` is read below off the
+    // expression itself: its value is a string literal, blanked here.
+    [/\bnew\s+XMLHttpRequest\b/, 'sends a request with XMLHttpRequest'],
+    [/\bnavigator\.sendBeacon\s*\(/, 'sends a request with navigator.sendBeacon()'],
+    [/\bfetch\s*\((?:[^()]|\([^()]*\))*\bbody\s*:/, 'sends a request with fetch()'],
+    [/(?<![.\w$])(?:window\.)?fetch\s*=(?!=)/, 'replaces window.fetch'],
+    [/\.prototype\.[\w$]+\s*=(?!=)/, 'patches a prototype'],
   ];
+  const sent = /\bfetch\s*\([^;]*?\bmethod\s*:\s*['"`]\s*(POST|PUT|PATCH|DELETE)\b/i.exec(expression);
+  if (sent) return `sends a ${sent[1].toUpperCase()} request with fetch()`;
   for (const [re, why] of patterns) {
     const m = re.exec(code);
     if (m) return why.replace('$1', m[1] ?? '');

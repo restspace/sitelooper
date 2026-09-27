@@ -2478,14 +2478,17 @@ describe('a click that opens a popup is a toggle', () => {
     // called "17.6". Only the popup line guards: the `button "Save"` the same
     // click recorded is not what a second click would toggle away (it may be
     // on the page for another reason entirely), so it must not decide the skip.
-    expect(source).toContain("if (await presentOnPage(page, liveLines(['- dialog \"Edit the task\"'], p))) {");
+    // ...and the click's other recorded work (`button "Save"`) must show
+    // too, all of it, before the click is skipped: a popup line alone is not
+    // a toggle (odoo fwod98's "Send and cancel", round 72).
+    expect(source).toContain("if (await openerAlreadyShowing(page, liveLines(['- dialog \"Edit the task\"'], p), liveLines(['- button \"Save\"'], p))) {");
     expect(source).not.toContain("liveLines(['- dialog \"Edit the task\"', '- button \"Save\"']");
     expect(source).not.toContain('isVisible()');
     expect(source).toContain('} else {');
     // the action itself moved inside the else branch, indented with it
     expect(source).toContain('        } else {\n          obs1 = beginAction(page, { deadlineMs: ACTION_DEADLINE_MS, navigating: true });\n          await click(hit1.locator, { obs: obs1 }).catch(actionFailed);');
     // the guard reads the page through the shared capture, embedded once
-    expect(source).toContain('async function presentOnPage(page: Page, lines: string[]');
+    expect(source).toContain('async function openerAlreadyShowing(page: Page, popup: readonly string[], work: readonly string[]');
     expect(source).toContain('function liveLines(');
     expect(syntaxErrors(source)).toEqual([]);
   });
@@ -2508,7 +2511,7 @@ describe('a click that opens a popup is a toggle', () => {
       },
     };
     const lines = emit(specOf([many])).split('\n');
-    const guard = lines.findIndex((l) => l.trim().startsWith('if (await presentOnPage('));
+    const guard = lines.findIndex((l) => l.trim().startsWith('if (await openerAlreadyShowing('));
     const picked = lines.findIndex((l) => l.includes('= await pick(page, ['));
     const clicked = lines.findIndex((l) => l.trim() === 'await click(hit1.locator, { obs: obs1 }).catch(actionFailed);');
     expect(guard).toBeGreaterThan(-1);
@@ -2923,7 +2926,7 @@ describe('every step settles first', () => {
     const opener: SkillStep = { ...click, expect: { addedContains: ['- menu "Apps"'] } };
     const lines = emit(specOf([opener])).split('\n').map((l) => l.trim());
     const settled = lines.indexOf('await settle(page);');
-    const guard = lines.findIndex((l) => l.startsWith('if (await presentOnPage('));
+    const guard = lines.findIndex((l) => l.startsWith('if (await openerAlreadyShowing('));
     expect(settled).toBeGreaterThan(-1);
     expect(guard).toBeGreaterThan(-1);
     expect(settled).toBeLessThan(guard);

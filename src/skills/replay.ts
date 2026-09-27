@@ -45,7 +45,7 @@ import {
   type LineDialect,
   type PageObservation,
 } from '../execution/snapshot.js';
-import { committedSlots, dismissalAlreadyInEffect, effectExpectation, expectedChangesVerdict, liveLines, namesDialogControl, slotActs } from '../execution/expect.js';
+import { OPENER_LINE, committedSlots, dismissalAlreadyInEffect, effectExpectation, expectedChangesVerdict, liveLines, namesDialogControl, openerAlreadyShowing, openerWorkLines, slotActs } from '../execution/expect.js';
 // The observation dialect and the content-expectation rules live in the
 // shared execution modules, where a compiled artifact embeds them too.
 // Re-exported so this module's callers need not know which owns the source.
@@ -1393,7 +1393,12 @@ export async function replaySkill(
     // Asked in the step's own line dialect; only a match skips — a look that
     // could not cover the page clicks, which is the direction this guard
     // already leans (a wrong skip loses the step everything after needs).
-    else if (opener.length && (await presentOnPage(page, opener, {}, dialectOf(step)))) {
+    // The popup any-of, and the click's OTHER recorded work all-of (the
+    // shared openerAlreadyShowing, round 72): odoo fwod98's "Send and
+    // cancel" brought the top-bar company menu back into view beside the
+    // "Set to Quotation" button only a cancelled order shows, and the menu
+    // alone skipped the click on every replay.
+    else if (opener.length && (await openerAlreadyShowing(page, opener, liveLines(openerWorkLines(step.expect?.addedContains), params), dialectOf(step)))) {
       res.warnings.push(`step ${tag}: the recorded effect (${clip(opener[0], 60)}) is already showing — a click would toggle it away; skipped as already in effect`);
       res.lines.push(`${head} → skipped (already in effect)`);
       return 'skipped';
@@ -2382,8 +2387,8 @@ function identityWaitMs(): number {
 /** Backstop cadence for a url an SPA rewrites without raising a navigation. */
 const URL_SETTLE_POLL_MS = 500;
 
-/** A snapshot line that names a popup: the thing a toggle opens and closes. */
-export const OPENER_LINE = /^-?\s*(dialog|alertdialog|menu|menubar|listbox|tooltip)\b/;
+/** A snapshot line that names a popup: the thing a toggle opens and closes (the shared execution/expect.ts, re-exported for the artifact). */
+export { OPENER_LINE } from '../execution/expect.js';
 
 /**
  * The popup lines a click was recorded to open, with params filled — empty

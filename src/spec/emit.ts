@@ -32,7 +32,7 @@ import { typedControls } from '../execution/facts-display.js';
  */
 import { EXECUTION_MODULES, executionClosure } from './runtime-source.js';
 import { candidateExpr, type LocatorCandidate } from '../daemon/recorder.js';
-import { DIALOG_LINE, SLOT_LINE, TRANSIENT_LINE, slotActs } from '../execution/expect.js';
+import { DIALOG_LINE, SLOT_LINE, TRANSIENT_LINE, slotActs, openerWorkLines } from '../execution/expect.js';
 import { identityFields, snapshotRefCandidate, structuralCandidate } from '../execution/resolve.js';
 import { originOf } from '../execution/url.js';
 import { describeFramePath, stepEffect } from '../execution/context.js';
@@ -1777,6 +1777,12 @@ function wrapAlreadyInEffect(step: SkillStep, ctx: Ctx, out: string[], actionAt:
     return;
   }
   const where = `${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex}`;
+  // The click's other recorded work (the shared openerWorkLines, round 72):
+  // in effect only when that shows too, as replay asks — odoo fwod98's "Send
+  // and cancel" brought a top-bar menu back into view beside the button only
+  // a cancelled order shows, and the menu alone skipped it on every replay.
+  const work = openerWorkLines(step.expect?.addedContains);
+  noteSlots(work, ctx);
   const acted = out
     .splice(actionAt)
     .flatMap((l) => l.split('\n'))
@@ -1786,11 +1792,13 @@ function wrapAlreadyInEffect(step: SkillStep, ctx: Ctx, out: string[], actionAt:
     '// recorded effect is already showing (runOneStep, "skipped (already in effect)"),',
     '// because clicking again would close what the next step needs. Same rule here,',
     '// asked AFTER the target resolved (as replay orders it) of the same recorded',
-    '// lines in the same snapshot dialect (presentOnPage, the shared',
-    '// src/execution/snapshot.ts — whole lines, so a `button "6"` never matches a',
-    '// button called "17.6"):',
+    '// lines in the same snapshot dialect (openerAlreadyShowing, the shared',
+    '// src/execution/expect.ts — whole lines, so a `button "6"` never matches a',
+    '// button called "17.6"): one of the popup lines, and every line of the',
+    '// other work the click was recorded doing:',
     ...opener.map((l) => `//   ${commentSafe(l)}`),
-    `if (await presentOnPage(page, liveLines([${opener.map(q).join(', ')}], p)${step.expect?.lineDialect === 2 ? ', {}, 2' : ''})) {`,
+    ...work.map((l) => `//   (work) ${commentSafe(l)}`),
+    `if (await openerAlreadyShowing(page, liveLines([${opener.map(q).join(', ')}], p), liveLines([${work.map(q).join(', ')}], p)${step.expect?.lineDialect === 2 ? ', 2' : ''})) {`,
     '  // already in effect: the popup is on the page, so the recorded click has nothing left to do.',
     // A skipped click is invisible in a passing-until-it-isn't spec, and a
     // guard that fires for the WRONG reason (one of these lines is on the page
