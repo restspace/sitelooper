@@ -1,0 +1,135 @@
+
+[sweep] run 1/3: fwod98-n1 (store: /home/user/sitelooper/bench/results/fwod98-skills)
+[harness] odoo: defaulting APP_URL
+[harness] odoo: defaulting APP_EMAIL
+[harness] odoo: defaulting APP_PASSWORD
+[reset] odoo: no leftover bench customers
+[harness] odoo responded 303 at http://127.0.0.1:8069/
+stopped: fwod98-n1
+  flow "fwod98" saved: 7 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwod98.json
+  warning: note: 10 goal/report value(s) carrying a value this run made were slotted or dropped:
+  s_2bf193.reportTemplate.values.so_id dropped (recorded literal of a value this run made)
+  s_2bf193.reportTemplate.values.url dropped (recorded literal of a value this run made)
+  s_b90c3c.reportTemplate.values.so_id dropped (recorded literal of a value this run made)
+  s_b90c3c.reportTemplate.values.url dropped (recorded literal of a value this run made)
+  s_b96659.reportTemplate.values.so_id dropped (recorded literal of a value this run made)
+  s_b96659.reportTemplate.values.url dropped (recorded literal of a value this run made)
+  s_be616d.reportTemplate.values.so_id dropped (recorded literal of a value this run made)
+  s_be616d.reportTemplate.values.url dropped (recorded literal of a value this run made)
+  s_db8cc9.reportTemplate.summary dropped (narrates a value this run made)
+  s_e5026d.reportTemplate.values.sales_order_url dropped (recorded literal of a value this run made)
+  warning: note: 01-open no longer publishes form_url — no replay reads it from the page and the recording showed no line to read
+  warning: warning: 02-create's instruction asks to report untaxed_amount, and no replay can publish it: nothing in its procedure reads it from the page, so export dropped it — re-record the step so the value is read, not only reported
+  warning: note: 02-create no longer publishes line_subtotal, product_code — no replay reads them from the page and the recording showed no line to read
+  warning: note: 03-open no longer publishes so_id, first_line_tax_rate, product_code — no replay reads them from the page and the recording showed no line to read
+  warning: note: 04-open no longer publishes so_id, tax_rate, product_code — no replay reads them from the page and the recording showed no line to read
+  warning: note: 05-open no longer publishes so_id, statusbar_text — no replay reads them from the page and the recording showed no line to read
+  warning: note: 06-open no longer publishes statusbar_checked — no replay reads it from the page and the recording showed no line to read
+  warning: note: 07-open no longer publishes order_statusbar, sales_order_url — no replay reads them from the page and the recording showed no line to read
+  warning: warning: 150 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[0].instruction: "Benchville" (output) in "Open http://127.0.0.1:8069/ and sign in with username 'admin' and password typed as the literal text {{env:APP_PASSWORD}} (it fills in automatically). Then navi"
+  flow.steps[0].params.v6: "Benchville" (output) in "Benchville"
+  flow.steps[1].instruction: "Untaxed Amount" (output) in "In Odoo Sales, create a new quotation (Sales > Orders > Quotations > New). Set the customer to '{{runid}} Bench Customer' - it is an autocomplete field, so type"
+  flow.steps[2].instruction: "Untaxed Amount" (output) in "Open the existing quotation {{02-create.quotation_reference}} (customer '{{runid}} Bench Customer') in Odoo Sales - it currently has one order line for product "
+  flow.steps[2].params.v4: "Untaxed Amount" (output) in "Untaxed Amount"
+arm=sitelooper model=z-ai/glm-5.3 runid=fwod98-n1 stop=completed
+turns=9 wall=321.3s
+commands=8 cmdTime=273.6s cmdBytes=7399 timeouts=0
+orchestrator in=8200 cw=0 cr=31168 out=5210
+inner prompt=1650725 cached=1507584 completion=18168
+spend=$0.0799 maxUsd=3
+learn: A_n=0 replayed=0/7 full=0 repaired=0 compiled=7 variants=0
+-> /home/user/sitelooper/bench/results/fwod98-n1-sitelooper-result.json
+
+fwod98-n1: objectives passed 6/6
+  obj 1: PASS — city="Benchville"
+  obj 2: PASS — orders for customer: 1, lines: 2
+  obj 3: PASS — 2 lines, 2 distinct products
+  obj 4: PASS — quantities: 5, 2
+  obj 5: PASS — state tracking shows confirmation
+  obj 6: PASS — final state=cancel, ref=S00021
+
+[sweep] run 2/3: fwod98-n2 (replay flow fwod98, no orchestrator)
+[reset] odoo: deleted 1 leftover bench order(s)
+[reset] odoo: deleted 1 leftover bench customer(s)
+[sweep] fwod98-n2: 1 drift ticket(s) → fwod98-n2-drift.json
+
+fwod98-n2: objectives passed 5/6
+  obj 1: PASS — city="Benchville"
+  obj 2: PASS — orders for customer: 1, lines: 2
+  obj 3: PASS — 2 lines, 2 distinct products
+  obj 4: PASS — quantities: 5, 2
+  obj 5: PASS — state tracking shows confirmation
+  obj 6: FAIL — final state=sale, ref=S00022
+
+[sweep] run 3/3: fwod98-n3 (replay flow fwod98, no orchestrator)
+[reset] odoo: force-cancelled 1 order(s) the Cancel action left uncancelled
+[reset] odoo: deleted 1 leftover bench order(s)
+[reset] odoo: deleted 1 leftover bench customer(s)
+
+fwod98-n3: objectives passed 5/6
+  obj 1: PASS — city="Benchville"
+  obj 2: PASS — orders for customer: 1, lines: 2
+  obj 3: PASS — 2 lines, 2 distinct products
+  obj 4: PASS — quantities: 5, 2
+  obj 5: PASS — state tracking shows confirmation
+  obj 6: FAIL — final state=sale, ref=S00023
+
+Learning sweep fwod98 (K=3)
+┌─────────┬───┬─────────────┬──────────┬─────────────┬───────┬──────┬───────────┬──────┬──────────────┬────────┐
+│ (index) │ n │ runid       │ verified │ stop        │ turns │ cmds │ total_usd │ A_n  │ replayed     │ wall_s │
+├─────────┼───┼─────────────┼──────────┼─────────────┼───────┼──────┼───────────┼──────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwod98-n1' │ '6/6'    │ 'completed' │ 9     │ 8    │ 0.0799    │ 0    │ '0/7'        │ 321    │
+│ 1       │ 2 │ 'fwod98-n2' │ '5/6'    │ 'success'   │ 10    │ 7    │ 0.0067    │ 0.86 │ '7/7 (flow)' │ 164    │
+│ 2       │ 3 │ 'fwod98-n3' │ '5/6'    │ 'success'   │ 0     │ 7    │ 0         │ 1    │ '7/7 (flow)' │ 112    │
+└─────────┴───┴─────────────┴──────────┴─────────────┴───────┴──────┴───────────┴──────┴──────────────┴────────┘
+http://127.0.0.1:8069
+  s_2414b5  validated    1 steps  3/3 (100%)
+           In Odoo Sales, create a new quotation (Sales > Orders > Quotations > New). Set the customer to '{{v1}}' - it i…
+  s_2bf193  validated    7 steps  3/3 (100%)
+           Open the existing quotation {{v1}} (customer '{{v2}}') in Odoo Sales and confirm it so it becomes a sales orde…
+  s_438dac  validated    2 steps  3/3 (100%)
+           Open {{v2}} and sign in with username '{{v3}}' and password typed as the literal text {{v4}} (it fills in auto…
+  s_57f2b7  validated   10 steps  3/3 (100%)
+           In Odoo Sales, create a new quotation (Sales > Orders > Quotations > New). Set the customer to '{{v1}}' - it i…
+  s_854aaa  validated    2 steps  3/3 (100%)
+           Open {{v2}} and sign in with username '{{v3}}' and password typed as the literal text {{v4}} (it fills in auto…
+  s_9e7825  validated    3 steps  3/3 (100%)
+           Open {{v2}} and sign in with username '{{v3}}' and password typed as the literal text {{v4}} (it fills in auto…
+  s_a8fed3  validated    3 steps  3/3 (100%)
+           Open {{v2}} and sign in with username '{{v3}}' and password typed as the literal text {{v4}} (it fills in auto…
+  s_acd381  validated    2 steps  3/3 (100%)
+           In Odoo Sales, create a new quotation (Sales > Orders > Quotations > New). Set the customer to '{{v1}}' - it i…
+  s_b90c3c  validated   14 steps  3/3 (100%)
+           Open the confirmed sales order {{v1}} (customer '{{v2}}') in Odoo Sales - its status is currently '{{v4}}'. Ca…
+  s_b96659  validated   23 steps  3/3 (100%)
+           Open the existing quotation {{v1}} (customer '{{v2}}') in Odoo Sales. It has two order lines: line 1 is produc…
+  s_bdb30f  validated    8 steps  3/3 (100%)
+           In Odoo Sales, create a new quotation (Sales > Orders > Quotations > New). Set the customer to '{{v1}}' - it i…
+  s_be616d  validated   21 steps  3/3 (100%)
+           Open the existing quotation {{v1}} (customer '{{v2}}') in Odoo Sales - it currently has one order line for pro…
+  s_db8cc9  validated    3 steps  3/3 (100%)
+           Open {{v2}} and sign in with username '{{v3}}' and password typed as the literal text {{v4}} (it fills in auto…
+  s_e16173  validated    1 steps  3/3 (100%)
+           Open {{v2}} and sign in with username '{{v3}}' and password typed as the literal text {{v4}} (it fills in auto…
+  s_f09417  validated    1 steps  3/3 (100%)
+           Open {{v2}} and sign in with username '{{v3}}' and password typed as the literal text {{v4}} (it fills in auto…
+  s_0c3138  validated    3 steps  2/2 (100%)  variant of s_1ef09c
+           Verification only, no changes: In Odoo, open the customer contact '{{v1}}' and report its name and City exactl…
+  s_1cca41  validated    1 steps  2/2 (100%)  variant of s_1ef09c
+           Verification only, no changes: In Odoo, open the customer contact '{{v1}}' and report its name and City exactl…
+  s_1ef09c  demoted      1 steps  1/2 (50%)
+           Verification only, no changes: In Odoo, open the customer contact '{{v1}}' and report its name and City exactl…
+  s_26c5b6  validated    3 steps  2/2 (100%)  variant of s_1ef09c
+           Verification only, no changes: In Odoo, open the customer contact '{{v1}}' and report its name and City exactl…
+  s_82f0ea  validated    2 steps  2/2 (100%)  variant of s_1ef09c
+           Verification only, no changes: In Odoo, open the customer contact '{{v1}}' and report its name and City exactl…
+  s_c6cba7  validated    3 steps  2/2 (100%)  variant of s_1ef09c
+           Verification only, no changes: In Odoo, open the customer contact '{{v1}}' and report its name and City exactl…
+  s_11f18e  provisional  3 steps  1/1 (100%)
+           Verification only, no changes: In Odoo, open the customer contact '{{v1}}' and report its name and City exactl…
+  s_e5026d  provisional  3 steps  1/1 (100%)
+           Verification only, no changes: In Odoo, open the customer contact '{{v1}}' and report its name and City exactl…
+store: /home/user/sitelooper/bench/results/fwod98-skills
+
+summary: /home/user/sitelooper/bench/results/fwod98-sweep.json

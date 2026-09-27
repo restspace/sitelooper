@@ -1,0 +1,188 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwod98-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwod98-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwod98-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/bench/results/fwod98-spec-spec-tmp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwod98-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwod98.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwod98-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwod98.spec.ts",
+      "file": "fwod98.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwod98",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 94379,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper warn] 01-open s_db8cc9/2: read 'city' returned a value the skill itself set/selected ('Benchville') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 01-open\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 02-create s_57f2b7/4: read 'customer' returned a value the skill itself set/selected ('fwod98-spec Bench Customer') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-create\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 05-open\n"
+                    },
+                    {
+                      "text": "[sitelooper skip] 06-open s_b90c3c/9: recorded popup already showing — click skipped\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 06-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 07-open\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-open: Open http://127.0.0.1:8069/ and sign in with username 'admin' and password typed as the literal text {{env:APP_PASSWORD}} (it fills in automatically). Then navigate to the Sales app's Customers (Contacts) section and create a new customer named exactly '{{runid}} Bench Customer' with City set to 'Benchville'. Save it. Report back the customer's name and city as shown on its form after saving.",
+                      "duration": 15549
+                    },
+                    {
+                      "title": "02-create: In Odoo Sales, create a new quotation (Sales > Orders > Quotations > New). Set the customer to '{{runid}} Bench Customer' - it is an autocomplete field, so type the name and actually select the matching option from the dropdown. Then add exactly ONE order line: pick any product from the product catalogue (type in the product field and select an option from the dropdown), and set its quantity to 3. Let the app fill in the unit price automatically from the product's list price - do not type a price yourself. Save the quotation. Report back: the product name you chose, the unit price the app filled in on the line, and the Untaxed Amount the app computes (as shown in the order's totals).",
+                      "duration": 25264
+                    },
+                    {
+                      "title": "03-open: Open the existing quotation {{02-create.quotation_reference}} (customer '{{runid}} Bench Customer') in Odoo Sales - it currently has one order line for product 'Acoustic Bloc Screens' with quantity 3. Add a SECOND order line below it: pick a DIFFERENT product from the catalogue (type in the product field of the new empty line and select an option from the dropdown - it must not be Acoustic Bloc Screens), and set its quantity to 2. Let the app auto-fill the unit price. Save the quotation. Report back: the second product's name, its unit price, and the new Untaxed Amount the app computes for the whole order (as shown in the totals section).",
+                      "duration": 18078
+                    },
+                    {
+                      "title": "04-open: Open the existing quotation {{02-create.quotation_reference}} (customer '{{runid}} Bench Customer') in Odoo Sales. It has two order lines: line 1 is product 'Acoustic Bloc Screens' with quantity {{02-create.quantity}}, line 2 is 'Cabinet with Doors' with quantity {{03-open.second_product_qty}}. Edit the quotation and change ONLY the first line's quantity from 3 to 5 (leave the second line at 2). Save. Report back the new Untaxed Amount the app computes for the whole order as shown in the totals section, plus the first line's new subtotal.",
+                      "duration": 9755
+                    },
+                    {
+                      "title": "05-open: Open the existing quotation {{02-create.quotation_reference}} (customer '{{runid}} Bench Customer') in Odoo Sales and confirm it so it becomes a sales order - use the Confirm button (or Confirm Sale) on the quotation form. After confirming, report back: the order reference/name shown on the form (e.g. {{02-create.quotation_reference}}), and the status the app now shows for the order (the status bar / status field value, e.g. 'Sales Order'). Do not do anything else to the order afterwards.",
+                      "duration": 1463
+                    },
+                    {
+                      "title": "06-open: Open the confirmed sales order {{02-create.quotation_reference}} (customer '{{runid}} Bench Customer') in Odoo Sales - its status is currently 'Sales Order'. Cancel this order: use the Cancel button on the order form (if a confirmation dialog appears, confirm the cancellation). After cancelling, report back the status the app shows for the order (the status bar / status field value on the form). Do not delete the order - only cancel it.",
+                      "duration": 15822
+                    },
+                    {
+                      "title": "07-open: Verification only, no changes: In Odoo, open the customer contact '{{runid}} Bench Customer' and report its name and City exactly as shown on the form. Then open the sales order {{02-create.quotation_reference}} and report its reference and the status shown on its status bar. Do not edit or save anything.",
+                      "duration": 7260
+                    }
+                  ],
+                  "startTime": "2026-09-27T11:32:08.494Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": ""
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "febecc5c6b1d5e53e07f-0589b22f13f1d2e8f643",
+          "file": "fwod98.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-27T11:32:05.198Z",
+    "duration": 97919.647,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}
