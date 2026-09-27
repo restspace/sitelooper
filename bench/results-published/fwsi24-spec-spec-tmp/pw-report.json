@@ -1,0 +1,176 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwsi24-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwsi24-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwsi24-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/bench/results/fwsi24-spec-spec-tmp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwsi24-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwsi24.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwsi24-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwsi24.spec.ts",
+      "file": "fwsi24.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwsi24",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 73826,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper step] 01-open\n"
+                    },
+                    {
+                      "text": "[sitelooper recipe] selected via recipe aria-combobox/select-option (r_1e0f2f); value verified on the component\n"
+                    },
+                    {
+                      "text": "[sitelooper recipe] selected via recipe aria-combobox/select-option (r_1e0f2f); value verified on the component\n"
+                    },
+                    {
+                      "text": "[sitelooper recipe] selected via recipe aria-combobox/select-option (r_1e0f2f); value verified on the component\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 02-create s_9713ce/9: read 'purchase_date_field_value' returned a value the skill itself set/selected ('2026-03-15') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper drift] 02-create s_712640/7 target: primary locator('#details div.col-md-7').filter({ hasText: 'Ready to Deploy deployable' }).locator('div > a') missed; used #2 locator('#details > div > div > div:nth-of-type(2) > div > a') (#1 absent)\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-create\n"
+                    },
+                    {
+                      "text": "[sitelooper recipe] selected via recipe aria-combobox/select-option (r_1e0f2f); value verified on the component\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-create\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-open\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-open: Open http://127.0.0.1:8098/ and sign in with username admin and password {{env:APP_PASSWORD}} (type the password exactly as that placeholder text; it is filled in when typed). After signing in, go to the Assets list and report every asset whose name starts with 'Seed:' — for each one give its asset tag and its name exactly as displayed.",
+                      "duration": 11116
+                    },
+                    {
+                      "title": "02-create: Create a new asset in Snipe-IT with these values: Asset Name '{{runid}} Bench Asset', Model 'Bench Laptop Model' (choose it from the searchable model dropdown — do not create a new model), Status 'Ready to Deploy' (choose from the status dropdown), Default Location 'Bench Office' (choose from the location dropdown — do not create a new location), Purchase Date 2026-03-15. Fill any other required fields as needed but do not invent new models, locations, or users. Save the asset, then report the asset tag the app assigned to it (Snipe-IT assigns tags like BA-00012) and confirm the name, model, status, location and purchase date shown on the saved asset page.",
+                      "duration": 43663
+                    },
+                    {
+                      "title": "03-create: On the asset page for the asset named '{{runid}} Bench Asset' (asset tag {{02-create.asset_tag_assigned}}, at /hardware/{{02-create.url.p1}}), perform a Check Out action: check the asset out to the user 'Bench Assignee' (choose that user from the searchable user dropdown — do not create a new user), and include a note whose text contains '{{runid}}' (for example 'Checkout for runid {{runid}}'). Complete the checkout only once. Then report what the asset page shows afterwards: the assigned/checked-out-to user, the status, and the note text as displayed.",
+                      "duration": 14444
+                    },
+                    {
+                      "title": "04-open: Verification only, no changes: open the asset page for asset tag {{02-create.asset_tag_assigned}} (at /hardware/{{02-create.url.p1}}) and read off exactly what the page displays for: asset tag, asset name, model, status label, default location, purchase date, and the user it is currently checked out to. Also open the asset's History tab and report the note text on the checkout row. Then go to the Assets list and confirm the three assets with names starting 'Seed:' are still present and unmodified, reporting their tags and names.",
+                      "duration": 3906
+                    }
+                  ],
+                  "startTime": "2026-09-27T13:37:25.528Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": "W3NpdGVsb29wZXIgZHJpZnRdIDAyLWNyZWF0ZSBzXzcxMjY0MC83IHRhcmdldDogcHJpbWFyeSBsb2NhdG9yKCcjZGV0YWlscyBkaXYuY29sLW1kLTcnKS5maWx0ZXIoeyBoYXNUZXh0OiAnUmVhZHkgdG8gRGVwbG95IGRlcGxveWFibGUnIH0pLmxvY2F0b3IoJ2RpdiA+IGEnKSBtaXNzZWQ7IHVzZWQgIzIgbG9jYXRvcignI2RldGFpbHMgPiBkaXYgPiBkaXYgPiBkaXY6bnRoLW9mLXR5cGUoMikgPiBkaXYgPiBhJykgKCMxIGFic2VudCk="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "46984190a4b4687108c4-606b73d9cac1c07e5773",
+          "file": "fwsi24.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-27T13:37:23.455Z",
+    "duration": 76060.737,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

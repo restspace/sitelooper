@@ -1,0 +1,110 @@
+
+[sweep] run 1/3: fwsi24-n1 (store: /home/user/sitelooper/bench/results/fwsi24-skills)
+[harness] snipeit: defaulting APP_URL
+[harness] snipeit: defaulting APP_EMAIL
+[harness] snipeit: defaulting APP_PASSWORD
+[reset] snipeit: no leftover bench assets
+[harness] snipeit responded 302 at http://127.0.0.1:8098/
+stopped: fwsi24-n1
+  flow "fwsi24" saved: 4 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwsi24.json
+  warning: note: 02-create no longer publishes location_record_url, model_record_url, status_record_url — no replay reads them from the page and the recording showed no line to read
+  warning: note: 03-create no longer publishes checkouts_count, last_checkout, status_label, user_url — no replay reads them from the page and the recording showed no line to read
+  warning: note: 04-open no longer publishes checked_out_to_user_url, seed_asset_1, seed_asset_2, seed_asset_3, status_label, seed_asset_1_tag, seed_asset_2_tag — no replay reads them from the page and the recording showed no line to read
+  warning: warning: 107 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[1].instruction: "Bench Laptop Model" (output) in "Create a new asset in Snipe-IT with these values: Asset Name '{{runid}} Bench Asset', Model 'Bench Laptop Model' (choose it from the searchable model dropdown —"
+  flow.steps[1].instruction: "Ready to Deploy" (output) in "Create a new asset in Snipe-IT with these values: Asset Name '{{runid}} Bench Asset', Model 'Bench Laptop Model' (choose it from the searchable model dropdown —"
+  flow.steps[1].instruction: "Bench Office" (output) in "Create a new asset in Snipe-IT with these values: Asset Name '{{runid}} Bench Asset', Model 'Bench Laptop Model' (choose it from the searchable model dropdown —"
+  flow.steps[1].instruction: "2026-03-15" (output) in "Create a new asset in Snipe-IT with these values: Asset Name '{{runid}} Bench Asset', Model 'Bench Laptop Model' (choose it from the searchable model dropdown —"
+  flow.steps[1].instruction: "Asset" (output) in "Create a new asset in Snipe-IT with these values: Asset Name '{{runid}} Bench Asset', Model 'Bench Laptop Model' (choose it from the searchable model dropdown —"
+arm=sitelooper model=z-ai/glm-5.3 runid=fwsi24-n1 stop=completed
+turns=5 wall=327.5s
+commands=4 cmdTime=300.4s cmdBytes=5746 timeouts=0
+orchestrator in=4845 cw=0 cr=13376 out=1607
+inner prompt=1723024 cached=1597056 completion=24350
+spend=$0.0559 maxUsd=3
+learn: A_n=0 replayed=0/4 full=0 repaired=0 compiled=4 variants=0
+-> /home/user/sitelooper/bench/results/fwsi24-n1-sitelooper-result.json
+
+fwsi24-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed tags and names reported
+  obj 2: PASS — BA-00004, model=Bench Laptop Model, status=Ready to Deploy
+  obj 3: PASS — default location=Bench Office
+  obj 4: PASS — purchase date=2026-03-15
+  obj 5: PASS — assigned to=Bench Assignee (user bench-assignee)
+  obj 6: PASS — 1 checkout(s), 1 with a note carrying the runid
+  obj 7: PASS — asset tag BA-00004 reported
+
+[sweep] run 2/3: fwsi24-n2 (replay flow fwsi24, no orchestrator)
+[reset] snipeit: deleted 1 leftover bench asset(s)
+[sweep] fwsi24-n2: 1 drift ticket(s) → fwsi24-n2-drift.json
+
+fwsi24-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed tags and names reported
+  obj 2: PASS — BA-00005, model=Bench Laptop Model, status=Ready to Deploy
+  obj 3: PASS — default location=Bench Office
+  obj 4: PASS — purchase date=2026-03-15
+  obj 5: PASS — assigned to=Bench Assignee (user bench-assignee)
+  obj 6: PASS — 1 checkout(s), 1 with a note carrying the runid
+  obj 7: PASS — asset tag BA-00005 reported
+
+[sweep] run 3/3: fwsi24-n3 (replay flow fwsi24, no orchestrator)
+[reset] snipeit: deleted 1 leftover bench asset(s)
+[sweep] fwsi24-n3: 1 drift ticket(s) → fwsi24-n3-drift.json
+
+fwsi24-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed tags and names reported
+  obj 2: PASS — BA-00006, model=Bench Laptop Model, status=Ready to Deploy
+  obj 3: PASS — default location=Bench Office
+  obj 4: PASS — purchase date=2026-03-15
+  obj 5: PASS — assigned to=Bench Assignee (user bench-assignee)
+  obj 6: PASS — 1 checkout(s), 1 with a note carrying the runid
+  obj 7: PASS — asset tag BA-00006 reported
+
+Learning sweep fwsi24 (K=3)
+┌─────────┬───┬─────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid       │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼─────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwsi24-n1' │ '7/7'    │ 'completed' │ 5     │ 4    │ 0.0559    │ 0   │ '0/4'        │ 327    │
+│ 1       │ 2 │ 'fwsi24-n2' │ '7/7'    │ 'success'   │ 0     │ 4    │ 0         │ 1   │ '4/4 (flow)' │ 89     │
+│ 2       │ 3 │ 'fwsi24-n3' │ '7/7'    │ 'success'   │ 0     │ 4    │ 0         │ 1   │ '4/4 (flow)' │ 90     │
+└─────────┴───┴─────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:8098
+  s_00af58  validated    1 steps  3/3 (100%)
+           Create a new asset in Snipe-IT with these values: Asset Name '{{v2}}', Model '{{v3}}' (choose it from the sear…
+  s_3902b9  validated    3 steps  3/3 (100%)
+           Verification only, no changes: open the asset page for asset tag {{v1}} (at /hardware/4) and read off exactly …
+  s_54e16c  validated    1 steps  3/3 (100%)
+           On the asset page for the asset named '{{v1}}' (asset tag {{v4}}, at /hardware/4), perform a Check Out action:…
+  s_632c2c  validated    2 steps  3/3 (100%)
+           On the asset page for the asset named '{{v1}}' (asset tag {{v4}}, at /hardware/4), perform a Check Out action:…
+  s_6524a8  validated    1 steps  3/3 (100%)
+           Open {{v1}} and sign in with username {{v2}} and password {{v3}} (type the password exactly as that placeholde…
+  s_712640  validated    7 steps  3/3 (100%)
+           Create a new asset in Snipe-IT with these values: Asset Name '{{v2}}', Model '{{v3}}' (choose it from the sear…
+  s_7eac74  validated    2 steps  3/3 (100%)
+           On the asset page for the asset named '{{v1}}' (asset tag {{v4}}, at /hardware/4), perform a Check Out action:…
+  s_8f256e  validated    6 steps  3/3 (100%)
+           Open {{v1}} and sign in with username {{v2}} and password {{v3}} (type the password exactly as that placeholde…
+  s_9713ce  validated   10 steps  3/3 (100%)
+           Create a new asset in Snipe-IT with these values: Asset Name '{{v2}}', Model '{{v3}}' (choose it from the sear…
+  s_988423  validated    1 steps  3/3 (100%)
+           Open {{v1}} and sign in with username {{v2}} and password {{v3}} (type the password exactly as that placeholde…
+  s_9fffec  validated    2 steps  3/3 (100%)
+           Verification only, no changes: open the asset page for asset tag {{v1}} (at /hardware/4) and read off exactly …
+  s_a8b502  validated    2 steps  3/3 (100%)
+           Create a new asset in Snipe-IT with these values: Asset Name '{{v2}}', Model '{{v3}}' (choose it from the sear…
+  s_ab9d0a  validated    1 steps  3/3 (100%)
+           On the asset page for the asset named '{{v1}}' (asset tag {{v4}}, at /hardware/4), perform a Check Out action:…
+  s_ba06fb  validated    8 steps  3/3 (100%)
+           Verification only, no changes: open the asset page for asset tag {{v1}} (at /hardware/4) and read off exactly …
+  s_c24154  validated    3 steps  3/3 (100%)
+           Open {{v1}} and sign in with username {{v2}} and password {{v3}} (type the password exactly as that placeholde…
+  s_c8ae5a  validated    6 steps  3/3 (100%)
+           On the asset page for the asset named '{{v1}}' (asset tag {{v4}}, at /hardware/4), perform a Check Out action:…
+  s_d42917  validated    1 steps  3/3 (100%)
+           Verification only, no changes: open the asset page for asset tag {{v1}} (at /hardware/4) and read off exactly …
+  s_d83913  validated    3 steps  3/3 (100%)
+           On the asset page for the asset named '{{v1}}' (asset tag {{v4}}, at /hardware/4), perform a Check Out action:…
+store: /home/user/sitelooper/bench/results/fwsi24-skills
+
+summary: /home/user/sitelooper/bench/results/fwsi24-sweep.json

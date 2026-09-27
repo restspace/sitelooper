@@ -1,0 +1,133 @@
+{
+  "flow": "fwsi24",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_8f256e; observed seed_asset_1_tag=SEED-0001, seed_asset_1_name=Seed: Reception Laptop, seed_asset_2_tag=SEED-0002, seed_asset_2_name=Seed: Training Laptop, seed_asset_3_tag=SEED-0003, seed_asset_3_name=Seed: Spare Laptop.",
+      "values": {
+        "seed_asset_1_tag": "SEED-0001",
+        "seed_asset_1_name": "Seed: Reception Laptop",
+        "seed_asset_2_tag": "SEED-0002",
+        "seed_asset_2_name": "Seed: Training Laptop",
+        "seed_asset_3_tag": "SEED-0003",
+        "seed_asset_3_name": "Seed: Spare Laptop"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "11/11",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Created a new asset in Snipe-IT from /hardware/create: Name \"fwsi24-n3 Bench Asset\", Model \"Bench Laptop Model\", Status \"Ready to Deploy\", Default Location \"Bench Office\", Purchase Date 2026-03-15.",
+      "values": {
+        "asset_record_id": "6",
+        "asset_page_url": "http://127.0.0.1:8098/hardware/6",
+        "default_location": "Bench Office",
+        "run_reference": "fwsi24-n3",
+        "create_new_asset_link_text": "Asset",
+        "purchase_date_displayed": "Purchased 2026-03-15 - 6 months 1 week ago",
+        "asset_tag_assigned": "BA-00006",
+        "asset_name": "fwsi24-n3 Bench Asset",
+        "model": "Bench Laptop Model",
+        "status": "Ready to Deploy"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "20/20",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_9713ce: step 9: read 'purchase_date_field_value' returned a value the skill itself set/selected ('2026-03-15') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_712640: step 7: primary locator did not resolve; used fallback #2 page.locator('#details > div > div > div:nth-of-type(2) > div > a')"
+      ],
+      "unreported": [
+        "purchase_date_field_value"
+      ]
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "Afterwards the asset page shows: checked out to \"Bench Assignee\".",
+      "values": {
+        "run_reference": "fwsi24-n3",
+        "checkout_url": "http://127.0.0.1:8098/hardware/6/checkout",
+        "notes_tab_text": "No matching records found",
+        "asset_tag": "BA-00006",
+        "asset_name": "fwsi24-n3 Bench Asset",
+        "checkout_note_displayed": "Checkout for runid fwsi24-n3",
+        "status_type_badge": "Deployed",
+        "user_shown_on_asset": "Bench Assignee",
+        "user_selected": "Bench Assignee"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "15/15",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "04-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_ba06fb; observed run_reference=fwsi24-n3, page_heading=Assets  fwsi24-n3 Bench Asset #BA-00006 - Bench Laptop Model, status_display_sidebar=Ready to Deploy Deployed   Bench Assignee, checkout_history_row=2026-09-27 01:36 PM Bench Admincheckout fwsi24-n3 Bench Asset #BA-00006 - Bench Laptop Model Bench Assignee1Checkout for runid fwsi24-n3Current Location: [id: 1] Bench Office, checkout_note=Checkout for runid fwsi24-n3, asset_name=fwsi24-n3 Bench Asset, asset_tag=BA-00006, default_location=Bench Office, model=Bench Laptop Model, purchase_date_displayed=Purchased 2026-03-15 - 6 months 1 week ago, status_badge_type=Deployed, checked_out_to_user=Bench Assignee.",
+      "values": {
+        "run_reference": "fwsi24-n3",
+        "page_heading": "Assets  fwsi24-n3 Bench Asset #BA-00006 - Bench Laptop Model",
+        "status_display_sidebar": "Ready to Deploy Deployed   Bench Assignee",
+        "checkout_history_row": "2026-09-27 01:36 PM Bench Admincheckout fwsi24-n3 Bench Asset #BA-00006 - Bench Laptop Model Bench Assignee1Checkout for runid fwsi24-n3Current Location: [id: 1] Bench Office",
+        "checkout_note": "Checkout for runid fwsi24-n3",
+        "asset_name": "fwsi24-n3 Bench Asset",
+        "asset_tag": "BA-00006",
+        "default_location": "Bench Office",
+        "model": "Bench Laptop Model",
+        "purchase_date_displayed": "Purchased 2026-03-15 - 6 months 1 week ago",
+        "status_badge_type": "Deployed",
+        "checked_out_to_user": "Bench Assignee"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "14/14",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 4,
+  "total": 4,
+  "repinned": 0,
+  "drift": 1,
+  "driftTickets": [
+    {
+      "flow": "fwsi24",
+      "step": "02-create",
+      "skill": "s_712640",
+      "atStep": "7",
+      "key": "target",
+      "similarity": 1.001,
+      "missedLocator": "page.locator('#details div.col-md-6', { hasText: 'Ready to Deploy deployable' }).locator('div > a')",
+      "fallbackUsed": "page.locator('#details > div > div > div:nth-of-type(2) > div > a')",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8098/hardware/:id",
+      "pageUrl": "http://127.0.0.1:8098/hardware/6"
+    }
+  ],
+  "wallMs": 89807,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "cachedTokens": 0
+  },
+  "usageByModel": {},
+  "servedByModel": {},
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}
