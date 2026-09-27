@@ -1,0 +1,543 @@
+{
+  "name": "fwsi23",
+  "origin": "http://127.0.0.1:8098",
+  "startUrl": "http://127.0.0.1:8098/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-open",
+      "instruction": "Open http://127.0.0.1:8098/ and sign in with username admin and password exactly the text {{env:APP_PASSWORD}} (type it literally as {{env:APP_PASSWORD}}). After signing in, go to the Assets list and find all assets whose name starts with 'Seed:'. Report each one's name and its asset tag exactly as displayed on the page.",
+      "skill": "s_be7433",
+      "params": {
+        "v1": "http://127.0.0.1:8098/",
+        "v2": "admin",
+        "v3": "Seed:"
+      },
+      "outputs": [
+        "seeded_asset_count",
+        "table_row_count_text",
+        "asset_1_name",
+        "asset_1_tag",
+        "asset_2_name",
+        "asset_2_tag",
+        "asset_3_name",
+        "asset_3_tag",
+        "seed_asset_row_1_raw",
+        "seed_asset_1_name",
+        "seed_asset_1_tag",
+        "seed_asset_2_name",
+        "seed_asset_2_tag",
+        "seed_asset_3_name",
+        "seed_asset_3_tag"
+      ],
+      "recorded": {
+        "seeded_asset_count": "3",
+        "table_row_count_text": "Showing 1 to 3 of 3 rows",
+        "asset_1_name": "Seed: Reception Laptop",
+        "asset_1_tag": "SEED-0001",
+        "asset_2_name": "Seed: Training Laptop",
+        "asset_2_tag": "SEED-0002",
+        "asset_3_name": "Seed: Spare Laptop",
+        "asset_3_tag": "SEED-0003",
+        "seed_asset_row_1_raw": "SEED-0001\tSeed: Reception Laptop\t\t\tBench Laptop Model\tBench Laptops\t Ready to Deploy\t\tBench Warehouse\t\t\tCheckout\t\nClone Item\n \nAudit\n \nUpdate\n \nDelete",
+        "seed_asset_1_name": "Seed: Reception Laptop",
+        "seed_asset_1_tag": "SEED-0001",
+        "seed_asset_2_name": "Seed: Training Laptop",
+        "seed_asset_2_tag": "SEED-0002",
+        "seed_asset_3_name": "Seed: Spare Laptop",
+        "seed_asset_3_tag": "SEED-0003",
+        "url": "http://127.0.0.1:8098/hardware"
+      },
+      "route": "http://127.0.0.1:8098/hardware",
+      "outputEvidence": {
+        "seeded_asset_count": {
+          "same": 1,
+          "differed": 0
+        },
+        "table_row_count_text": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "asset_1_name": {
+          "same": 1,
+          "differed": 0
+        },
+        "asset_1_tag": {
+          "same": 1,
+          "differed": 0
+        },
+        "asset_2_name": {
+          "same": 1,
+          "differed": 0
+        },
+        "asset_2_tag": {
+          "same": 1,
+          "differed": 0
+        },
+        "asset_3_name": {
+          "same": 1,
+          "differed": 0
+        },
+        "asset_3_tag": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_asset_row_1_raw": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_asset_1_name": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_asset_1_tag": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_asset_2_name": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_asset_2_tag": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_asset_3_name": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_asset_3_tag": {
+          "same": 1,
+          "differed": 0
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "02-create",
+      "instruction": "In Snipe-IT, create a new asset named '{{runid}} Bench Asset'. Use the model 'Bench Laptop Model' (choose it from the searchable model dropdown, do not create a new model), set the status to 'Ready to Deploy' (choose from the status dropdown), set the default location to 'Bench Office' (choose from the location dropdown), and set the purchase date to 2026-03-15. Fill any other required fields as needed. Save the asset, then open the asset's view page and report its name, model, status, default location, purchase date, and asset tag exactly as displayed.",
+      "skill": "s_41b59e",
+      "params": {
+        "v2": "{{runid}} Bench Asset",
+        "v3": "2026-03-15",
+        "v1": "{{runid}}"
+      },
+      "outputs": [
+        "asset_tag",
+        "asset_name",
+        "model",
+        "status",
+        "purchase_date",
+        "asset_color_category",
+        "created",
+        "created_asset_record_url",
+        "asset_name_field",
+        "purchase_date_field",
+        "asset_view_url",
+        "ref"
+      ],
+      "recorded": {
+        "asset_tag": "BA-00004",
+        "asset_name": "fwsi23-n1 Bench Asset",
+        "model": "Bench Laptop Model",
+        "status": "Ready to Deploy",
+        "default_location": "Bench Office",
+        "purchase_date": "Purchased 2026-03-15 (view page line: \"Purchased 2026-03-15 - 6 months 1 week ago\")",
+        "asset_color_category": "Bench Laptops",
+        "created": "2026-09-27 11:19 AM by Bench Admin",
+        "created_asset_record_url": "http://127.0.0.1:8098/hardware/4",
+        "asset_tag_field": "BA-00004",
+        "asset_name_field": "fwsi23-n1 Bench Asset",
+        "purchase_date_field": "2026-03-15",
+        "asset_view_url": "http://127.0.0.1:8098/hardware/4",
+        "details_section_label": "Assets",
+        "ref": "fwsi23-n1",
+        "url": "http://127.0.0.1:8098/hardware/4",
+        "url.p1": "4"
+      },
+      "route": "http://127.0.0.1:8098/hardware/:id",
+      "outputEvidence": {
+        "asset_tag": {
+          "same": 0,
+          "differed": 1
+        },
+        "asset_name": {
+          "same": 0,
+          "differed": 1
+        },
+        "model": {
+          "same": 1,
+          "differed": 0
+        },
+        "status": {
+          "same": 1,
+          "differed": 0
+        },
+        "default_location": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "purchase_date": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "asset_color_category": {
+          "same": 1,
+          "differed": 0
+        },
+        "created": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "created_asset_record_url": {
+          "same": 0,
+          "differed": 1
+        },
+        "asset_tag_field": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "asset_name_field": {
+          "same": 0,
+          "differed": 1
+        },
+        "purchase_date_field": {
+          "same": 1,
+          "differed": 0
+        },
+        "asset_view_url": {
+          "same": 0,
+          "differed": 1
+        },
+        "details_section_label": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        },
+        "url.p1": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "03-open",
+      "instruction": "In Snipe-IT, open the asset with asset tag {{02-create.asset_tag}} (named '{{runid}} Bench Asset', at {{02-create.url}}) and check it out to the user 'Bench Assignee' (choose that user from the searchable user dropdown, do not create a new user). In the checkout notes field, enter a note that includes the text '{{runid}}' (for example: 'Checkout for run {{runid}}'). Complete the checkout. Then open the asset's view page and report the checked-out-to user, the status, and the checkout note text exactly as displayed.",
+      "skill": "s_394faf",
+      "params": {
+        "v1": "{{02-create.asset_tag}}",
+        "v2": "{{runid}} Bench Asset",
+        "v4": "{{02-create.url}}",
+        "v5": "Bench Assignee",
+        "v3": "{{runid}}",
+        "v6": "Checkout for run {{runid}}",
+        "v7": "{{02-create.url.p1}}"
+      },
+      "outputs": [
+        "asset_name",
+        "asset_tag",
+        "checked_out_to_user",
+        "checked_out_to_user_dropdown_label",
+        "checkout_note",
+        "default_location",
+        "history_row",
+        "last_checkout",
+        "model",
+        "purchase_date",
+        "status_displayed",
+        "expected_checkin_value",
+        "checkout_note_typed",
+        "history_heading",
+        "asset_tab_label",
+        "notes_tab_label",
+        "ref"
+      ],
+      "recorded": {
+        "asset_name": "fwsi23-n1 Bench Asset",
+        "asset_tag": "BA-00004",
+        "checked_out_to_user": "Bench Assignee",
+        "checked_out_to_user_dropdown_label": "Bench Assignee",
+        "checked_out_to_user_link": "http://127.0.0.1:8098/users/2",
+        "checkout_note": "Checkout for run fwsi23-n1",
+        "default_location": "Bench Office",
+        "history_row": "2026-09-27 11:21 AM | Bench Admin | checkout | fwsi23-n1 Bench Asset #BA-00004 - Bench Laptop Model | Bench Assignee | ... | Checkout for run fwsi23-n1 | Current Location: [id: 1] Bench Office",
+        "last_checkout": "2026-09-27 (\"Last Checkout 2026-09-27 40 seconds ago\")",
+        "model": "Bench Laptop Model",
+        "purchase_date": "Purchased 2026-03-15 - 6 months 1 week ago",
+        "status_displayed": "Ready to Deploy (info panel: \"Ready to Deploy\" with badge \"Deployed\")",
+        "expected_checkin_label": "expected_checkin",
+        "expected_checkin_value": "N/A",
+        "checkout_note_typed": "Checkout for run fwsi23-n1",
+        "history_heading": "History",
+        "asset_tab_label": "Asset",
+        "notes_tab_label": "Notes",
+        "status_label": "Ready to Deploy",
+        "checkout_note_field": "note",
+        "ref": "fwsi23-n1",
+        "url": "http://127.0.0.1:8098/hardware/4#details"
+      },
+      "route": "http://127.0.0.1:8098/hardware/:id#details",
+      "outputEvidence": {
+        "asset_name": {
+          "same": 0,
+          "differed": 1
+        },
+        "asset_tag": {
+          "same": 0,
+          "differed": 1
+        },
+        "checked_out_to_user": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "checked_out_to_user_dropdown_label": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "checked_out_to_user_link": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "checkout_note": {
+          "same": 0,
+          "differed": 1
+        },
+        "default_location": {
+          "same": 1,
+          "differed": 0
+        },
+        "history_row": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "last_checkout": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "model": {
+          "same": 1,
+          "differed": 0
+        },
+        "purchase_date": {
+          "same": 1,
+          "differed": 0
+        },
+        "status_displayed": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "expected_checkin_label": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "expected_checkin_value": {
+          "same": 1,
+          "differed": 0
+        },
+        "checkout_note_typed": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "history_heading": {
+          "same": 1,
+          "differed": 0
+        },
+        "asset_tab_label": {
+          "same": 1,
+          "differed": 0
+        },
+        "notes_tab_label": {
+          "same": 1,
+          "differed": 0
+        },
+        "status_label": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "checkout_note_field": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "04-open",
+      "instruction": "Open the Snipe-IT asset view page for asset tag {{02-create.asset_tag}} ({{02-create.url}}) and verify, reading from the live page: (1) the asset name is '{{runid}} Bench Asset', (2) the model is 'Bench Laptop Model', (3) the status label is 'Ready to Deploy', (4) the default location is 'Bench Office', (5) the purchase date is 2026-03-15, (6) it is checked out to user 'Bench Assignee', and (7) the checkout history note contains the text '{{runid}}'. Report each of these seven values exactly as displayed on the page, stating clearly whether each matches.",
+      "skill": "s_d94246",
+      "params": {
+        "v1": "{{02-create.asset_tag}}",
+        "v2": "{{02-create.url}}",
+        "v3": "{{runid}} Bench Asset",
+        "v6": "Bench Laptop Model",
+        "v7": "Ready to Deploy",
+        "v8": "Bench Office",
+        "v9": "2026-03-15",
+        "v10": "Bench Assignee",
+        "v11": "note",
+        "v4": "{{runid}}"
+      },
+      "outputs": [
+        "page_heading",
+        "1_asset_name_displayed",
+        "2_model_displayed",
+        "3_status_displayed",
+        "4_default_location_displayed",
+        "5_purchase_date_displayed",
+        "6_checked_out_to_displayed",
+        "7_history_note_displayed",
+        "asset_tag_displayed",
+        "history_checkout_row",
+        "info_panel_text",
+        "model_link_text",
+        "history_checkout_row_raw",
+        "ref"
+      ],
+      "recorded": {
+        "page_heading": "Assets  fwsi23-n1 Bench Asset #BA-00004 - Bench Laptop Model",
+        "1_asset_name_displayed": "fwsi23-n1 Bench Asset",
+        "2_model_displayed": "Bench Laptop Model",
+        "3_status_displayed": "Ready to Deploy (with badge \"Deployed\") — MATCH",
+        "4_default_location_displayed": "Bench Office",
+        "5_purchase_date_displayed": "Purchased 2026-03-15 - 6 months 1 week ago — MATCH",
+        "6_checked_out_to_displayed": "Bench Assignee (href http://127.0.0.1:8098/users/2) — MATCH",
+        "7_history_note_displayed": "Checkout for run fwsi23-n1 — MATCH (contains fwsi23-n1)",
+        "asset_tag_displayed": "BA-00004",
+        "history_checkout_row": "2026-09-27 11:21 AM | Bench Admin | checkout | fwsi23-n1 Bench Asset #BA-00004 - Bench Laptop Model | Bench Assignee | 1 | Checkout for run fwsi23-n1 | Current Location: [id: 1] Bench Office",
+        "info_panel_text": "Copy to Clipboard\nBench Laptop Model\n Model No.\nCopy to Clipboard\n \nCopy to Clipboard\nBench Laptops\n Bench Manufacturer\n Purchased 2026-03-15 - 6 months 1 week ago\n BYOD\n Requestable\n Created By Bench Admin\n Created 2026-09-27 11:19 AM\n Updated 2026-09-27 11:21 AM",
+        "model_link_text": "Bench Laptop Model",
+        "history_checkout_row_raw": "2026-09-27 11:21 AM\tBench Admin\tcheckout\t fwsi23-n1 Bench Asset #BA-00004 - Bench Laptop Model\t Bench Assignee\t\t\t1\tCheckout for run fwsi23-n1\t\nCurrent Location: [id: 1] Bench Office",
+        "ref": "fwsi23-n1"
+      },
+      "route": "http://127.0.0.1:8098/hardware/:id#details",
+      "outputEvidence": {
+        "page_heading": {
+          "same": 0,
+          "differed": 1
+        },
+        "1_asset_name_displayed": {
+          "same": 0,
+          "differed": 1
+        },
+        "2_model_displayed": {
+          "same": 1,
+          "differed": 0
+        },
+        "3_status_displayed": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "4_default_location_displayed": {
+          "same": 1,
+          "differed": 0
+        },
+        "5_purchase_date_displayed": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "6_checked_out_to_displayed": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "7_history_note_displayed": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "asset_tag_displayed": {
+          "same": 0,
+          "differed": 1
+        },
+        "history_checkout_row": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "info_panel_text": {
+          "same": 0,
+          "differed": 1
+        },
+        "model_link_text": {
+          "same": 1,
+          "differed": 0
+        },
+        "history_checkout_row_raw": {
+          "same": 0,
+          "differed": 1
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "session": "fwsi23-n1",
+    "created": "2026-09-27T11:22:43.682Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "02-create",
+      "outputs": [
+        "default_location",
+        "asset_tag_field",
+        "details_section_label"
+      ]
+    },
+    {
+      "stepId": "03-open",
+      "outputs": [
+        "checked_out_to_user_link",
+        "expected_checkin_label",
+        "status_label",
+        "checkout_note_field"
+      ]
+    }
+  ]
+}
