@@ -1,0 +1,127 @@
+{
+ "id": "s_07c3ba",
+ "origin": "http://127.0.0.1:8098",
+ "template": "In Snipe-IT, create a new Asset (via Assets -> Create New, or the 'New Asset' button) with these exact values: Name = '{{v2}}'; Model = 'Bench Laptop Model' (a searchable dropdown — type it and actually select the matching option from the dropdown list); Status = 'Ready to Deploy' (select the actual option from the status dropdown); Default Location = 'Bench Office' (searchable dropdown — select the actual option); Purchase Date = {{v3}} (use the date field, ensure it is set to March 15, 2026). Fill any other required fields as needed (e.g. category comes from the model). Save the asset. Then verify by reopening the asset's page and report: the asset's name, model, status, location, purchase date, and the asset tag Snipe-IT assigned to it (it looks like BA-00012).",
+ "params": {
+  "v1": {
+   "example": "fwsi26-n3",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v2": {
+   "example": "fwsi26-n3 Bench Asset",
+   "usedIn": [],
+   "known": true
+  },
+  "v3": {
+   "example": "2026-03-15",
+   "usedIn": []
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8098/hardware?order=asc&page=:id&search=Seed:&size=:id&sort=created_at"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e14"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "header > nav > div:nth-of-type(2) > ul > li:nth-of-type(2) > a"
+     },
+     {
+      "kind": "point",
+      "x": 368,
+      "y": 25,
+      "w": 46.3,
+      "h": 50,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8098/hardware",
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_3ac098",
+    "step": 1
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e138"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "button[name=\"btnAdd\"]"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(2) > button:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 915,
+      "y": 206,
+      "w": 38.3,
+      "h": 34,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8098/hardware/create",
+    "addedContains": [
+     "- heading \"Assets Create New\"",
+     "- button \"Save\"",
+     "- combobox \"Company\"",
+     "- combobox \"Select Company\"",
+     "- textbox \"Select Company\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_3ac098",
+    "step": 2
+   }
+  }
+ ],
+ "contract": 2,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-27T18:23:20.575Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_9c1234",
+  "index": 0,
+  "of": 5
+ },
+ "provenance": {
+  "session": "fwsi26-n3",
+  "instruction": "In Snipe-IT, create a new Asset (via Assets -> Create New, or the 'New Asset' button) with these exact values: Name = 'fwsi26-n3 Bench Asset'; Model = 'Bench Laptop Model' (a searchable dropdown — type it and actually select the matching option from the dropdown list); Status = 'Ready to Deploy' (select the actual option from the status dropdown); Default Location = 'Bench Office' (searchable dropdown — select the actual option); Purchase Date = 2026-03-15 (use the date field, ensure it is set to March 15, 2026). Fill any other required fields as needed (e.g. category comes from the model). Save the asset. Then verify by reopening the asset's page and report: the asset's name, model, status, location, purchase date, and the asset tag Snipe-IT assigned to it (it looks like BA-00012).",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-27T18:23:20.575Z"
+ },
+ "revision": 1
+}

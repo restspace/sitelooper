@@ -1,0 +1,254 @@
+{
+  "flow": "fwsi26",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_6a7100; observed landing_page_heading=Dashboard, signed_in_user_link=Bench Admin, page_title=Dashboard :: Bench Assets, login_confirmation_alert=Success: \n×\nYou have successfully logged in., page_title_2=Dashboard.",
+      "values": {
+        "landing_page_heading": "Dashboard",
+        "signed_in_user_link": "Bench Admin",
+        "page_title": "Dashboard :: Bench Assets",
+        "login_confirmation_alert": "Success: \n×\nYou have successfully logged in.",
+        "page_title_2": "Dashboard"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "10/10",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_6a7100: step 6: the target chain is dead and was not healed inline — the step is a synthesized read no run has ever resolved, so nothing about it has drifted",
+        "s_6a7100: step 6: skipped read — no element matched any known locator for target (tried 1: page.getByRole('link', { name: 'Bench Admin', exact: true }))"
+      ],
+      "unreported": [
+        "signed_in_user"
+      ]
+    },
+    {
+      "id": "02-report",
+      "status": "success",
+      "summary": "Replayed stored procedure s_beb73f; observed table_headers=Asset Tag\n\t\nName\n\t\nImage\n\t\nSerial\n\t\nModel\n\t\nCategory\n\t\nStatus\n\t\nChecked Out To\n\t\nLocation\n\t\nPurchase Cost\n\t\nCurrent Value\n\t\nCheckin/Checkout\n\t\nActions, asset_tag_1=SEED-0001, seed_asset_name_1=Seed: Reception Laptop, asset_tag_2=SEED-0002, seed_asset_name_2=Seed: Training Laptop, asset_tag_3=SEED-0003, seed_asset_name_3=Seed: Spare Laptop, match_count=3, seed_asset_tag_1=SEED-0001, matching_assets_2=Seed: Reception Laptop, seed_asset_tag_2=SEED-0002, matching_assets_4=Seed: Training Laptop, seed_asset_tag_3=SEED-0003, matching_assets_6=Seed: Spare Laptop.",
+      "values": {
+        "table_headers": "Asset Tag\n\t\nName\n\t\nImage\n\t\nSerial\n\t\nModel\n\t\nCategory\n\t\nStatus\n\t\nChecked Out To\n\t\nLocation\n\t\nPurchase Cost\n\t\nCurrent Value\n\t\nCheckin/Checkout\n\t\nActions",
+        "asset_tag_1": "SEED-0001",
+        "seed_asset_name_1": "Seed: Reception Laptop",
+        "asset_tag_2": "SEED-0002",
+        "seed_asset_name_2": "Seed: Training Laptop",
+        "asset_tag_3": "SEED-0003",
+        "seed_asset_name_3": "Seed: Spare Laptop",
+        "match_count": "3",
+        "seed_asset_tag_1": "SEED-0001",
+        "matching_assets_2": "Seed: Reception Laptop",
+        "seed_asset_tag_2": "SEED-0002",
+        "matching_assets_4": "Seed: Training Laptop",
+        "seed_asset_tag_3": "SEED-0003",
+        "matching_assets_6": "Seed: Spare Laptop"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "17/17",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "The asset form on /hardware/create was already filled by the replayed procedure (Name, Model, Status, Purchase Date) but was missing the Default Location (the earlier run's Enter press had not submitted — the browser stayed on /hardware/create). I selected 'Bench Office' in the searchable Default Location dropdown, saved, and Snipe-IT reported \"Asset with tag BA-00005 was created successfully\". Reopening its page (/hardware/5, \"View Asset BA-00005\") confirms Name 'fwsi26-n2 Bench Asset', Model 'Bench Laptop Model', Status 'Ready to Deploy', Location/Default Location 'Bench Office', Purchase Date 2026-03-15, Category 'Bench Laptops', Manufacturer 'Bench Manufacturer'. Note the auto-assigned tag is BA-00005, not BA-00012.",
+      "values": {
+        "asset_tag": "BA-00005",
+        "asset_name": "fwsi26-n2 Bench Asset",
+        "model": "Bench Laptop Model",
+        "status": "Ready to Deploy",
+        "default_location": "Bench Office",
+        "location": "Bench Office",
+        "purchase_date": "2026-03-15",
+        "category": "Bench Laptops",
+        "manufacturer": "Bench Manufacturer",
+        "asset_page_title": "View Asset BA-00005 :: Bench Assets",
+        "create_confirmation": "Success: Asset with tag BA-00005 was created successfully. Click here to view.",
+        "asset_tag_field": "BA-00005",
+        "ref": "fwsi26-n2",
+        "ref_2": "BA-00012"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_097296 stopped at step 16 — after step 16 expected url http://127.0.0.1:8098/hardware but browser is at http://127.0.0.1:8098/hardware/create",
+      "replayed": "15/18",
+      "repaired": false,
+      "turns": 13,
+      "unreported": [
+        "name",
+        "run_id"
+      ]
+    },
+    {
+      "id": "04-set",
+      "status": "success",
+      "summary": "The asset BA-00005 (\"fwsi26-n2 Bench Asset\", /hardware/5) is checked out. The replayed checkout form submission had already taken effect (segments of s_f12b2c/s_8204db ran the Assigned To selection, notes, and submit), so I did not resubmit; I verified on the live page. The Details tab shows Asset Tag BA-00005, Asset Name \"fwsi26-n2 Bench Asset\", Default Location \"Bench Office\", and the status well shows \"Ready to Deploy\" with the \"Deployed\" label and a link to user \"Bench Assignee\"; Current Location reads [id: 1] Bench Office and Last Checkout 2026-09-27. The History tab has exactly two rows (create new at 2026-09-27 06:17 PM, then checkout at 2026-09-27 06:18 PM by Bench Admin to Bench Assignee) with note \"Checked out for bench run fwsi26-n2\" — no duplicate checkout. The Notes tab itself is empty (\"No matching records found\"); the note text appears in the History entry. (status: label 'Deployed'; underlying status 'Ready to Deploy')",
+      "values": {
+        "asset_name": "fwsi26-n2 Bench Asset",
+        "asset_tag": "BA-00005",
+        "checked_out_to": "Bench Assignee",
+        "checkout_datetime": "2026-09-27 06:18 PM",
+        "checkout_note": "Checked out for bench run fwsi26-n2",
+        "current_location": "[id: 1] Bench Office",
+        "default_location": "Bench Office",
+        "history_rows": "create new (2026-09-27 06:17 PM), checkout (2026-09-27 06:18 PM) — no duplicate checkout",
+        "last_checkout": "2026-09-27",
+        "notes_tab": "No matching records found",
+        "status": "Deployed",
+        "history_table_tbody_tr_t": "2026-09-27 06:17 PM",
+        "history_table_tbody_tr_t_2": "Bench Admin",
+        "history_table_tbody_tr_t_3": "create new",
+        "history_table_tbody_tr_t_4": "checkout",
+        "ref": "fwsi26-n2"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_d24e00 stopped at step 1 — every identifying locator missed, and the positional fallback #2 is not the recorded \"History 3\" — the element there carries another name, so it was not clicked",
+      "replayed": "0/1",
+      "repaired": false,
+      "turns": 27,
+      "warnings": [
+        "s_d24e00: step 1: primary locator did not resolve; used fallback #2 page.locator('div > div:nth-of-type(1) > div > ul > li:nth-of-type(11) > a')"
+      ],
+      "unreported": [
+        "run_id"
+      ]
+    },
+    {
+      "id": "05-open",
+      "status": "success",
+      "summary": "Read-only inspection of /hardware/5 \"View Asset BA-00005 :: Bench Assets\" (only expanded the read-only \"More Information\" panel and switched tabs; nothing was changed). What the page shows: Asset Tag \"BA-00005\"; Asset Name \"fwsi26-n2 Bench Asset\"; Model \"Bench Laptop Model\" (More Information panel, linking to /models/…); Status \"Ready to Deploy\" with the \"Deployed\" badge; Default Location \"Bench Office\"; Purchase Date row reading \"Purchased 2026-03-15 - 6 months 1 week ago\"; Checked Out To \"Bench Assignee\"; Last Checkout 2026-09-27. The History tab has one checkout row: 2026-09-27 06:18 PM, Bench Admin → Bench Assignee, note \"Checked out for bench run fwsi26-n2 | Current Location: [id: 1] Bench Office\". All seven requested values were read off the live page; the only caveat is that Model and Purchase Date are displayed in the asset's More Information panel rather than as dt/dd rows in the Details block, which I read earlier this session.",
+      "values": {
+        "asset_name": "fwsi26-n2 Bench Asset",
+        "asset_tag": "BA-00005",
+        "checked_out_to": "Bench Assignee",
+        "default_location": "Bench Office",
+        "history_checkout_datetime": "2026-09-27 06:18 PM",
+        "last_checkout": "2026-09-27",
+        "model": "Bench Laptop Model",
+        "purchase_date": "Purchased 2026-03-15 - 6 months 1 week ago",
+        "status": "Ready to Deploy Deployed",
+        "category": "Bench Laptops",
+        "manufacturer": "Bench Manufacturer",
+        "asset_tag_value": "Copy to Clipboard\nBA-00005",
+        "asset_name_value": "Copy to Clipboard\nfwsi26-n2 Bench Asset",
+        "status_2": "Deployed",
+        "details_dt": "Asset Tag",
+        "details_dt_2": "Asset Name",
+        "details_dt_3": "Default Location",
+        "details_dt_4": "Assets",
+        "ref": "fwsi26-n2",
+        "history_checkout_note_1": "Checked out for bench run fwsi26-n2",
+        "history_checkout_note_2": "Current Location: [id: 1] Bench Office"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_16e0e1 stopped at step 2 — every identifying locator missed, and the positional fallback #2 is not the recorded \"History 3\" — the element there carries another name, so it was not clicked",
+      "replayed": "1/2",
+      "repaired": false,
+      "turns": 30,
+      "warnings": [
+        "s_16e0e1: step 2: primary locator did not resolve; used fallback #2 page.locator('div > div:nth-of-type(1) > div > ul > li:nth-of-type(11) > a')"
+      ],
+      "unreported": [
+        "deploy_state",
+        "checkouts",
+        "history_checkout_row",
+        "asset_tag_label",
+        "default_location_label",
+        "history_action_create",
+        "history_action_update",
+        "history_action_checkout"
+      ]
+    }
+  ],
+  "passed": 5,
+  "total": 5,
+  "repinned": 0,
+  "drift": 4,
+  "driftTickets": [
+    {
+      "flow": "fwsi26",
+      "step": "01-signin",
+      "skill": "s_6a7100",
+      "atStep": "6",
+      "key": "target",
+      "similarity": 0.99,
+      "missedLocator": "page.getByRole('link', { name: 'Bench Admin', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8098/",
+      "pageUrl": "http://127.0.0.1:8098/"
+    },
+    {
+      "flow": "fwsi26",
+      "step": "03-create",
+      "skill": "s_097296",
+      "similarity": 1.001,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_097296 stopped at step 16 — after step 16 expected url http://127.0.0.1:8098/hardware but browser is at http://127.0.0.1:8098/hardware/create",
+      "reason": "after step 16 expected url http://127.0.0.1:8098/hardware but browser is at http://127.0.0.1:8098/hardware/create",
+      "pageUrlPattern": "http://127.0.0.1:8098/hardware/create",
+      "pageUrl": "http://127.0.0.1:8098/hardware/create"
+    },
+    {
+      "flow": "fwsi26",
+      "step": "04-set",
+      "skill": "s_d24e00",
+      "atStep": "1",
+      "key": "target",
+      "similarity": 0.998,
+      "missedLocator": "page.getByRole('link', { name: 'History 3', exact: true })",
+      "fallbackUsed": "page.locator('div > div:nth-of-type(1) > div > ul > li:nth-of-type(11) > a')",
+      "fallbackIndex": 1,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:8098/hardware/:id#notes",
+      "pageUrl": "http://127.0.0.1:8098/hardware/5#notes"
+    },
+    {
+      "flow": "fwsi26",
+      "step": "05-open",
+      "skill": "s_16e0e1",
+      "atStep": "2",
+      "key": "target",
+      "similarity": 0.999,
+      "missedLocator": "page.getByRole('link', { name: 'History 3', exact: true })",
+      "fallbackUsed": "page.locator('div > div:nth-of-type(1) > div > ul > li:nth-of-type(11) > a')",
+      "fallbackIndex": 1,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:8098/hardware/:id#details",
+      "pageUrl": "http://127.0.0.1:8098/hardware/5#details"
+    }
+  ],
+  "wallMs": 267083,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 1550552,
+    "completionTokens": 22939,
+    "cachedTokens": 1430144
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 1550552,
+      "completionTokens": 22939,
+      "cachedTokens": 1430144
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

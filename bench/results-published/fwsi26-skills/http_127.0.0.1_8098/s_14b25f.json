@@ -1,0 +1,81 @@
+{
+ "id": "s_14b25f",
+ "origin": "http://127.0.0.1:8098",
+ "template": "In Snipe-IT, check out the asset with asset tag {{v1}} (named '{{v2}}', at /hardware/5). Use the asset's Check Out action (the Checkin/Checkout button on the asset page or in the assets list). In the checkout form: select the user '{{v4}}' from the searchable 'Assigned To' / user dropdown (type it and actually select the matching option from the dropdown list — do not just type it), and set the Notes field to text that includes '{{v3}}' (for example: '{{v5}}'). Fill any other required fields (e.g. checkout date if required). Submit the checkout. Then verify by reopening the asset page and report: the asset tag, the name, who it is checked out to, and the note text shown on the asset page.",
+ "params": {
+  "v1": {
+   "example": "BA-00005",
+   "usedIn": [
+    1
+   ],
+   "known": true,
+   "binding": "03-create.asset_tag"
+  },
+  "v2": {
+   "example": "fwsi26-n2 Bench Asset",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i3:asset_name"
+  },
+  "v3": {
+   "example": "fwsi26-n2",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v4": {
+   "example": "Bench Assignee",
+   "usedIn": []
+  },
+  "v5": {
+   "example": "Checked out for bench run fwsi26-n2",
+   "usedIn": [],
+   "known": true
+  },
+  "v6": {
+   "example": "5",
+   "usedIn": [],
+   "known": true,
+   "binding": "03-create.url.p1"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8098/hardware/{{v6}}"
+ },
+ "steps": [
+  {
+   "tool": "goto",
+   "args": {
+    "url": "http://127.0.0.1:8098/hardware?search={{v1}}"
+   },
+   "locators": {},
+   "via": {
+    "skill": "s_f12b2c",
+    "step": 1
+   }
+  }
+ ],
+ "contract": 4,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-27T18:19:27.010Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 4
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_3fe1c3",
+  "index": 0,
+  "of": 10
+ },
+ "provenance": {
+  "session": "fwsi26-n2",
+  "instruction": "In Snipe-IT, check out the asset with asset tag BA-00005 (named 'fwsi26-n2 Bench Asset', at /hardware/5). Use the asset's Check Out action (the Checkin/Checkout button on the asset page or in the assets list). In the checkout form: select the user 'Bench Assignee' from the searchable 'Assigned To' / user dropdown (type it and actually select the matching option from the dropdown list — do not just type it), and set the Notes field to text that includes 'fwsi26-n2' (for example: 'Checked out for bench run fwsi26-n2'). Fill any other required fields (e.g. checkout date if required). Submit the checkout. Then verify by reopening the asset page and report: the asset tag, the name, who it is checked out to, and the note text shown on the asset page.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-27T18:19:27.010Z"
+ },
+ "revision": 1
+}

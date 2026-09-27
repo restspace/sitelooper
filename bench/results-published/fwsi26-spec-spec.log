@@ -1,0 +1,43 @@
+
+Running 1 test using 1 worker
+
+[sitelooper skip] 01-signin s_6a7100/6 target: no locator recorded — value left empty
+[sitelooper step] 01-signin
+[sitelooper step] 02-report
+[sitelooper warn] 03-create s_9d2229/16: read 'purchase_date' returned a value the skill itself set/selected ('2026-03-15') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper warn] 03-create s_9d2229/17: read 'asset_name' returned a value the skill itself set/selected ('fwsi26-spec Bench Asset') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper warn] 03-create s_82867e/4: read 'ref' returned a value the skill itself set/selected ('fwsi26-spec') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper step] 03-create
+  ✘  1 fwsi26.spec.ts:9:1 › fwsi26 (1.2m)
+
+
+  1) fwsi26.spec.ts:9:1 › fwsi26 › 04-set: In Snipe-IT, check out the asset with asset tag {{03-create.asset_tag}} (named '{{runid}} Bench Asset', at /hardware/{{03-create.url.p1}}). Use the asset's Check Out action (the Checkin/Checkout button on the asset page or in the assets list). In the checkout form: select the user 'Bench Assignee' from the searchable 'Assigned To' / user dropdown (type it and actually select the matching option from the dropdown list — do not just type it), and set the Notes field to text that includes '{{runid}}' (for example: 'Checked out for bench run {{runid}}'). Fill any other required fields (e.g. checkout date if required). Submit the checkout. Then verify by reopening the asset page and report: the asset tag, the name, who it is checked out to, and the note text shown on the asset page. 
+
+    Error: 04-set needs {{03-create.url.p1}}, and this run never published it (it was published empty). No `[sitelooper skip]` line was logged for 03-create on this run, so no read of 03-create.url.p1 was even attempted: check that 03-create is a step of this flow and that it is the step that publishes this value, rather than re-recording a read that may be working. Stopping here instead of passing an empty value into 04-set: blank, a record-scoped locator matches every record and a known slot loses its identity, so the step would do its work to the wrong one. Everything earlier steps did stands; nothing of 04-set has run.
+
+       at fwsi26.flow.ts:17821
+
+      17819 |         ` attempted: check that ${sid} is a step of this flow and that it is the step that publishes` +
+      17820 |         ` this value, rather than re-recording a read that may be working.`;
+    > 17821 |     throw new Error(
+            |           ^
+      17822 |       `${by} needs {{${ref}}}, and this run never published it` +
+      17823 |         (value === '' ? ' (it was published empty)' : '') +
+      17824 |         `. ${trail}` +
+        at need (/home/user/sitelooper/bench/results/fwsi26-spec-spec-tmp/fwsi26.flow.ts:17821:11)
+        at /home/user/sitelooper/bench/results/fwsi26-spec-spec-tmp/fwsi26.flow.ts:22434:211
+        at runFlow (/home/user/sitelooper/bench/results/fwsi26-spec-spec-tmp/fwsi26.flow.ts:22433:5)
+        at /home/user/sitelooper/bench/results/fwsi26-spec-spec-tmp/fwsi26.spec.ts:14:21
+
+    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/fwsi26-fwsi26/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/fwsi26-fwsi26/error-context.md
+
+  1 failed
+    fwsi26.spec.ts:9:1 › fwsi26 ────────────────────────────────────────────────────────────────────
