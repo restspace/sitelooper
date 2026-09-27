@@ -1,0 +1,521 @@
+{
+  "name": "fwop29",
+  "origin": "http://127.0.0.1:8090",
+  "startUrl": "http://127.0.0.1:8090/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-signin",
+      "instruction": "Sign in to OpenProject at http://127.0.0.1:8090/ as admin with password typed exactly as the literal text {{env:APP_PASSWORD}}, then open the project 'Bench Project' work packages table and report the subjects of all work packages whose subject starts with 'Seed:', exactly as displayed. Read only, do not modify them.",
+      "skill": "s_4bbc7f",
+      "params": {
+        "v1": "http://127.0.0.1:8090/",
+        "v2": "admin",
+        "v3": "{{env:APP_PASSWORD}}"
+      },
+      "outputs": [
+        "projects_page_url",
+        "project",
+        "view",
+        "pagination_summary",
+        "seed_subject_1",
+        "seed_subject_2",
+        "seed_subject_3",
+        "main_menu_link_text"
+      ],
+      "recorded": {
+        "final_url": "http://127.0.0.1:8090/projects/bench-project/work_packages",
+        "projects_page_url": "http://127.0.0.1:8090/projects",
+        "project": "Bench Project",
+        "view": "Default: All open",
+        "pagination_summary": "(1 - 3/3)\nYou are on the only page.",
+        "seed_subject_1": "Seed: triage inbox",
+        "seed_subject_2": "Seed: order missing parts",
+        "seed_subject_3": "Seed: ship repaired device",
+        "all_rows_in_table_start_with_seed_prefix": "true (3 of 3)",
+        "work_package_count_shown": "3 of 3 (1 - 3/3, only page)",
+        "main_menu_link_text": "Project",
+        "url": "http://127.0.0.1:8090/projects/bench-project/work_packages"
+      },
+      "route": "http://127.0.0.1:8090/projects/bench-project/work_packages",
+      "outputEvidence": {
+        "final_url": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "projects_page_url": {
+          "same": 2,
+          "differed": 0
+        },
+        "project": {
+          "same": 2,
+          "differed": 0
+        },
+        "view": {
+          "same": 2,
+          "differed": 0
+        },
+        "pagination_summary": {
+          "same": 2,
+          "differed": 0
+        },
+        "seed_subject_1": {
+          "same": 2,
+          "differed": 0
+        },
+        "seed_subject_2": {
+          "same": 2,
+          "differed": 0
+        },
+        "seed_subject_3": {
+          "same": 2,
+          "differed": 0
+        },
+        "all_rows_in_table_start_with_seed_prefix": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "work_package_count_shown": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "main_menu_link_text": {
+          "same": 2,
+          "differed": 0
+        },
+        "url": {
+          "same": 2,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "02-create",
+      "instruction": "In the Bench Project, create a new work package of type Task with subject '{{runid}} Bench Work Package' and a description that includes the text '{{runid}}'. Save it, then report the work package's numeric ID as displayed (e.g. #123) and confirm the subject, type and description shown on its page.",
+      "skill": "s_61aafc",
+      "params": {
+        "v1": "Bench Project",
+        "v4": "{{runid}} Bench Work Package",
+        "v3": "{{runid}}"
+      },
+      "outputs": [
+        "work_package_id_displayed",
+        "work_package_id_numeric",
+        "work_package_subject",
+        "work_package_type",
+        "work_package_description",
+        "description_editor_class",
+        "page_title",
+        "creation_alert",
+        "project",
+        "description_editor_text",
+        "description_editor_text2",
+        "work_package_url",
+        "op_uc_container_text",
+        "ref"
+      ],
+      "recorded": {
+        "work_package_id_displayed": "#41",
+        "work_package_id_numeric": "41",
+        "work_package_subject": "fwop29-n1 Bench Work Package",
+        "work_package_type": "Task (displayed as TASK badge in the details panel)",
+        "work_package_description": "fwop29-n1 description text",
+        "description_editor_class": "ck-table-show-hidden-borders ck-blurred document-editor__editable op-uc-container op-uc-container_editing ck ck-content ck-editor__editable ck-rounded-corners ck-editor__editable_inline",
+        "page_title": "Task: fwop29-n1 Bench Work Package (#41) | Work Packages | Bench Project | OpenProject",
+        "creation_alert": "Successful creation.",
+        "project": "Bench Project",
+        "description_editor_text": "fwop29-n1 description text",
+        "description_editor_text2": "fwop29-n1 description text",
+        "work_package_url": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/41/overview",
+        "op_uc_container_text": "fwop29-n1 description text",
+        "main_input": "wp-new-inline-edit--field-subject",
+        "work_package_type_label": "Task",
+        "work_package_type_badge": "TASK",
+        "ref": "fwop29-n1",
+        "url": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/41/overview",
+        "url.p4": "41"
+      },
+      "route": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:id/overview",
+      "outputEvidence": {
+        "work_package_id_displayed": {
+          "same": 0,
+          "differed": 2
+        },
+        "work_package_id_numeric": {
+          "same": 0,
+          "differed": 2
+        },
+        "work_package_subject": {
+          "same": 0,
+          "differed": 2
+        },
+        "work_package_type": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "work_package_description": {
+          "same": 0,
+          "differed": 2
+        },
+        "description_editor_class": {
+          "same": 2,
+          "differed": 0
+        },
+        "page_title": {
+          "same": 0,
+          "differed": 2
+        },
+        "creation_alert": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "project": {
+          "same": 2,
+          "differed": 0
+        },
+        "description_editor_text": {
+          "same": 0,
+          "differed": 2
+        },
+        "description_editor_text2": {
+          "same": 0,
+          "differed": 2
+        },
+        "work_package_url": {
+          "same": 0,
+          "differed": 2
+        },
+        "op_uc_container_text": {
+          "same": 0,
+          "differed": 2
+        },
+        "main_input": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "work_package_type_label": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "work_package_type_badge": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "ref": {
+          "same": 0,
+          "differed": 2
+        },
+        "url": {
+          "same": 0,
+          "differed": 2
+        },
+        "url.p4": {
+          "same": 0,
+          "differed": 2
+        }
+      }
+    },
+    {
+      "id": "03-set",
+      "instruction": "On work package {{02-create.work_package_id_displayed}} ({{runid}} Bench Work Package) in Bench Project: assign it to the user 'Bench Assignee' via the assignee autocomplete (must pick the option from the dropdown), set its status to 'In progress', and set its finish date to 2026-12-31. These fields edit in place (click to edit, save automatically). Then report the assignee, status and finish date shown on the page.",
+      "skill": "s_4a964a",
+      "params": {
+        "v1": "{{02-create.work_package_id_displayed}}",
+        "v3": "{{02-create.work_package_subject}}",
+        "v4": "{{runid}}",
+        "v5": "{{01-signin.project}}",
+        "v7": "2026-12-31"
+      },
+      "outputs": [
+        "work_package_id",
+        "subject",
+        "assignee",
+        "status",
+        "finish_date_display",
+        "finish_date_field_value",
+        "start_date",
+        "description",
+        "status_display_before_edit",
+        "assignee_initials_and_name",
+        "ref"
+      ],
+      "recorded": {
+        "work_package_id": "#41",
+        "subject": "fwop29-n1 Bench Work Package",
+        "type": "TASK (Task)",
+        "assignee": "Bench Assignee",
+        "assignee_email_option": "bench-assignee@example.com",
+        "status": "In progress",
+        "finish_date_display": "no start date - 12/31/2026",
+        "finish_date_field_value": "2026-12-31",
+        "start_date": "no start date",
+        "description": "fwop29-n1 description text",
+        "update_alerts": "Successful update. (x3)",
+        "status_display_before_edit": "New",
+        "assignee_initials_and_name": "BA\nBench Assignee",
+        "ref": "fwop29-n1"
+      },
+      "route": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:id/overview",
+      "urlVariance": [
+        "41",
+        "42",
+        "43"
+      ],
+      "outputEvidence": {
+        "work_package_id": {
+          "same": 0,
+          "differed": 2
+        },
+        "subject": {
+          "same": 0,
+          "differed": 2
+        },
+        "type": {
+          "same": 0,
+          "differed": 1,
+          "absent": 1
+        },
+        "assignee": {
+          "same": 1,
+          "differed": 0,
+          "absent": 1
+        },
+        "assignee_email_option": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "status": {
+          "same": 2,
+          "differed": 0
+        },
+        "finish_date_display": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "finish_date_field_value": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "start_date": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "description": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "update_alerts": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "status_display_before_edit": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "assignee_initials_and_name": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "ref": {
+          "same": 0,
+          "differed": 2
+        }
+      }
+    },
+    {
+      "id": "04-add",
+      "instruction": "Add a comment to work package {{02-create.work_package_id_displayed}} ({{runid}} Bench Work Package) whose text includes '{{runid}}' (e.g. '{{runid}} bench comment'). Post it via the comments/activity area, then verify the comment appears on the page and report its text as displayed, plus confirm the work package still shows assignee Bench Assignee, status In progress, and finish date 2026-12-31, and its ID {{02-create.work_package_id_displayed}}.",
+      "skill": "s_76b4c5",
+      "params": {
+        "v1": "{{02-create.work_package_id_displayed}}",
+        "v3": "{{runid}} Bench Work Package",
+        "v4": "{{runid}}",
+        "v8": "{{runid}} bench comment",
+        "v5": "Bench Assignee",
+        "v6": "In progress",
+        "v7": "2026-12-31",
+        "v2": "{{02-create.url.p4}}"
+      },
+      "outputs": [
+        "activity_url",
+        "overview_url",
+        "comment_text_displayed",
+        "comment_draft_verified_in_field",
+        "work_package_id",
+        "subject",
+        "status",
+        "assignee",
+        "description",
+        "comment_draft_text",
+        "activity_tab_link_url",
+        "priority_display",
+        "assignee_initials_and_name",
+        "ref"
+      ],
+      "recorded": {
+        "activity_url": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/41/activity",
+        "overview_url": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/41/overview",
+        "comment_text_displayed": "fwop29-n1 bench comment",
+        "comment_draft_verified_in_field": "fwop29-n1 bench comment",
+        "submit_control_used": "button \"Submit comment\"",
+        "work_package_id": "#41",
+        "subject": "fwop29-n1 Bench Work Package",
+        "type": "TASK",
+        "status": "In progress",
+        "assignee": "Bench Assignee",
+        "finish_date_display": "no start date - 12/31/2026",
+        "description": "fwop29-n1 description text",
+        "comment_draft_text": "fwop29-n1 bench comment",
+        "activity_tab_link_url": "/projects/bench-project/work_packages/details/41/activity",
+        "priority_display": "Normal",
+        "assignee_initials_and_name": "BA\nBench Assignee",
+        "ref": "fwop29-n1",
+        "url": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/41/activity"
+      },
+      "route": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:id/activity",
+      "outputEvidence": {
+        "activity_url": {
+          "same": 0,
+          "differed": 2
+        },
+        "overview_url": {
+          "same": 0,
+          "differed": 2
+        },
+        "comment_text_displayed": {
+          "same": 0,
+          "differed": 2
+        },
+        "comment_draft_verified_in_field": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "submit_control_used": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "work_package_id": {
+          "same": 0,
+          "differed": 2
+        },
+        "subject": {
+          "same": 0,
+          "differed": 2
+        },
+        "type": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "status": {
+          "same": 2,
+          "differed": 0
+        },
+        "assignee": {
+          "same": 2,
+          "differed": 0
+        },
+        "finish_date_display": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "description": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "comment_draft_text": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "activity_tab_link_url": {
+          "same": 0,
+          "differed": 2
+        },
+        "priority_display": {
+          "same": 2,
+          "differed": 0
+        },
+        "assignee_initials_and_name": {
+          "same": 2,
+          "differed": 0
+        },
+        "ref": {
+          "same": 0,
+          "differed": 2
+        },
+        "url": {
+          "same": 0,
+          "differed": 2
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "session": "fwop29-n1",
+    "created": "2026-09-27T15:19:29.025Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "01-signin",
+      "outputs": [
+        "final_url",
+        "all_rows_in_table_start_with_seed_prefix",
+        "work_package_count_shown"
+      ]
+    },
+    {
+      "stepId": "02-create",
+      "outputs": [
+        "main_input",
+        "work_package_type_label",
+        "work_package_type_badge"
+      ]
+    },
+    {
+      "stepId": "03-set",
+      "outputs": [
+        "type",
+        "assignee_email_option",
+        "update_alerts"
+      ]
+    },
+    {
+      "stepId": "04-add",
+      "outputs": [
+        "submit_control_used",
+        "type",
+        "finish_date_display"
+      ]
+    }
+  ]
+}

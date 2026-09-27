@@ -1,0 +1,560 @@
+{
+ "id": "s_4a964a",
+ "origin": "http://127.0.0.1:8090",
+ "template": "On work package {{v1}} ({{v3}}) in {{v5}}: assign it to the user 'Bench Assignee' via the assignee autocomplete (must pick the option from the dropdown), set its status to 'In progress', and set its finish date to {{v7}}. These fields edit in place (click to edit, save automatically). Then report the assignee, status and finish date shown on the page.",
+ "params": {
+  "v1": {
+   "example": "#42",
+   "usedIn": [],
+   "known": true,
+   "binding": "02-create.work_package_id_displayed"
+  },
+  "v3": {
+   "example": "fwop29-n2 Bench Work Package",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i2:work_package_subject"
+  },
+  "v4": {
+   "example": "fwop29-n2",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v5": {
+   "example": "Bench Project",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i1:project"
+  },
+  "v7": {
+   "example": "2026-12-31",
+   "usedIn": [
+    6
+   ]
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:id/overview"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e1294"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Assignee No value: Edit",
+      "nth": 4
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div:nth-of-type(2) > op-editable-attribute-field > div > div:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 1062,
+      "y": 510,
+      "w": 100,
+      "h": 23,
+      "role": "button",
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:var/overview",
+    "addedContains": [
+     "- combobox \"Search\"",
+     "- listbox \"Options List\"",
+     "- option \"BA Bench Assignee bench-assignee@example.com\"",
+     "- button \"Invite\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_4b2d5f",
+    "step": 1
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": ".ng-option >> nth=0"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "html > body > ng-dropdown-panel > div:nth-of-type(1) > div:nth-of-type(2) > div"
+     },
+     {
+      "kind": "point",
+      "x": 1162,
+      "y": 547,
+      "w": 298,
+      "h": 37.3,
+      "role": "option",
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:var/overview",
+    "alertContains": "Successful update.",
+    "addedContains": [
+     "- cell \"BABench Assignee\"",
+     "- button \"Assignee Bench Assignee: Edit\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_4b2d5f",
+    "step": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e1264"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Edit the status of the work package"
+     },
+     {
+      "kind": "css",
+      "selector": "wp-single-view > div > div:nth-of-type(1) > wp-status-button > div > button"
+     },
+     {
+      "kind": "point",
+      "x": 902,
+      "y": 325,
+      "w": 59.1,
+      "h": 32,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:var/overview",
+    "addedContains": [
+     "- menu \"New {{*}} Closed On hold Rejected\"",
+     "- menuitem \"New\"",
+     "- menuitem \"Closed\"",
+     "- menuitem \"On hold\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_4b2d5f",
+    "step": 3
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=menuitem[name=\"In progress\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "menuitem",
+      "name": "In progress"
+     },
+     {
+      "kind": "css",
+      "selector": "#wp-status-context-menu > ul > li:nth-of-type(2) > button"
+     },
+     {
+      "kind": "point",
+      "x": 929,
+      "y": 390,
+      "w": 111,
+      "h": 30,
+      "role": "menuitem",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:var/overview",
+    "alertContains": "Successful update.",
+    "addedContains": [
+     "- button \"Close popup\"",
+     "- button \"Status {{*}}: Edit\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_4b2d5f",
+    "step": 4
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e1773"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Start date : Edit"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(6) > div:nth-of-type(2) > op-editable-attribute-field > div > div:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 1100,
+      "y": 1112,
+      "w": 175.6,
+      "h": 23,
+      "role": "button",
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:var/overview",
+    "addedContains": [
+     "- dialog \"\"",
+     "- tab \"Dates\"",
+     "- tab \"Predecessors 0\"",
+     "- tab \"Successors 0\"",
+     "- tab \"Children 0\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_4b2d5f",
+    "step": 5
+   }
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e1834",
+    "value": "{{v7}}"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Finish date"
+     },
+     {
+      "kind": "label",
+      "label": "Finish date"
+     },
+     {
+      "kind": "id",
+      "selector": "#work_package_due_date"
+     },
+     {
+      "kind": "css",
+      "selector": "#work_package_due_date"
+     },
+     {
+      "kind": "point",
+      "x": 647,
+      "y": 373,
+      "w": 183,
+      "h": 32,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:var/overview",
+    "addedContains": [
+     "- textbox \"Finish date\": {{v7}}",
+     "- spinbutton \"Year\": {{*}}"
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_4b2d5f",
+    "step": 6
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e1643"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Save"
+     },
+     {
+      "kind": "css",
+      "selector": "#work-packages-date-picker-dialog-content-component > div:nth-of-type(2) > button:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 895,
+      "y": 688,
+      "w": 57.9,
+      "h": 32,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:var/overview",
+    "alertContains": "Successful update.",
+    "addedContains": [
+     "- button \"Close popup\"",
+     "- button \"Start date : Edit\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "@e1946",
+    "what": "text",
+    "label": "date_field_display"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Start date : Edit"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(6) > div:nth-of-type(2) > op-editable-attribute-field > div > div:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 1093,
+      "y": 603,
+      "w": 162.4,
+      "h": 23,
+      "role": "button",
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "date_field_display"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "@e1930",
+    "what": "text",
+    "label": "assignee_field"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Assignee Bench Assignee: Edit",
+      "nth": 1
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div:nth-of-type(2) > op-editable-attribute-field > div > div:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 1080,
+      "y": 5,
+      "w": 136.4,
+      "h": 32,
+      "role": "button",
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "assignee_field_2"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "@e1264",
+    "what": "text",
+    "label": "status_field"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Edit the status of the work package"
+     },
+     {
+      "kind": "css",
+      "selector": "wp-single-view > div > div:nth-of-type(1) > wp-status-button > div > button"
+     },
+     {
+      "kind": "point",
+      "x": 923,
+      "y": -184,
+      "w": 101.1,
+      "h": 32,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "status"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > op-editable-attribute-field > div > div:nth-of-type(2) > span > span:nth-of-type(3)"
+     },
+     {
+      "kind": "point",
+      "x": 1138,
+      "y": 602,
+      "w": 70.1,
+      "h": 16,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "finish_date_displayed"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "wp-overview-tab > wp-single-view > div > div:nth-of-type(1) > div > span:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 999,
+      "y": -192,
+      "w": 20,
+      "h": 14,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "work_package_id"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "On work package {{v1}} (Task \"{{v3}}\") in {{v5}} the in-place edits are all in place. The replayed procedure had already chosen the assignee and status and typed the finish-date field, but its Enter keypress did not commit the date picker; I clicked \"Save\" in the open date-picker dialog (page then showed \"Successful update.\") to commit the finish date. Read back from the live page: Assignee \"BA / Bench Assignee\", Status \"In progress\", and the Date field displays \"no start date - 12/31/2026\" — i.e. the finish date is shown as 12/31/2026 (US format), which is my own reading of the requested {{v7}}. Only the date picker's Save was clicked; no data otherwise modified.",
+  "values": {
+   "assignee": "Bench Assignee",
+   "assignee_field": "BA\\nBench Assignee",
+   "date_field_display": "no start date - 12/31/2026",
+   "finish_date_displayed": "12/31/2026",
+   "status": "In progress",
+   "subject": "{{v3}}",
+   "type": "Task",
+   "work_package_id": "{{v1}}",
+   "finish_date": "{{v7}}",
+   "assignee_field_2": "BA\nBench Assignee",
+   "status_field": "In progress",
+   "ref": "{{v4}}"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 2,
+  "successes": 2,
+  "partial": 0,
+  "created": "2026-09-27T15:21:30.932Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2,
+  "lastUsed": "2026-09-27T15:23:30.535Z"
+ },
+ "status": "validated",
+ "variantOf": "s_4b2d5f",
+ "provenance": {
+  "session": "fwop29-n2",
+  "instruction": "On work package #42 (fwop29-n2 Bench Work Package) in Bench Project: assign it to the user 'Bench Assignee' via the assignee autocomplete (must pick the option from the dropdown), set its status to 'In progress', and set its finish date to 2026-12-31. These fields edit in place (click to edit, save automatically). Then report the assignee, status and finish date shown on the page.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-27T15:21:30.932Z",
+  "transforms": [
+   {
+    "name": "unfreezeExpectations",
+    "at": 2,
+    "reason": "recorded page change(s) only the recording run could produce: [\"- button \\\"Close popup\\\"\",\"- cell \\\"BABench Assignee\\\"\",\"- button \\\"Assignee Bench Assignee: Edit\\\"\",\"- button \\\"Assignee Bench Assignee: Edit\\\"\"] → [\"- button \\\"Close popup\\\"\",\"- cell \\\"BABench Assignee\\\"\",\"- button \\\"Assignee Bench Assignee: Edit\\\"\"]"
+   },
+   {
+    "name": "unfreezeExpectations",
+    "at": 3,
+    "reason": "recorded page change(s) only the recording run could produce: [\"- menu \\\"New In progress Closed On hold Rejected\\\"\",\"- menuitem \\\"New\\\"\",\"- menuitem \\\"In progress\\\"\",\"- menuitem \\\"Closed\\\"\",\"- menuitem \\\"On hold\\\"\"] → [\"- menu \\\"New {{*}} Closed On hold Rejected\\\"\",\"- menuitem \\\"New\\\"\",\"- menuitem \\\"Closed\\\"\",\"- menuitem \\\"On hold\\\"\"]"
+   },
+   {
+    "name": "unfreezeExpectations",
+    "at": 4,
+    "reason": "recorded page change(s) only the recording run could produce: [\"- button \\\"Close popup\\\"\",\"- cell \\\"In progress\\\"\",\"- button \\\"Status In progress: Edit\\\"\"] → [\"- button \\\"Close popup\\\"\",\"- button \\\"Status {{*}}: Edit\\\"\"]"
+   },
+   {
+    "name": "dropFlashedLines",
+    "at": 2,
+    "reason": "line(s) a later step recorded appearing again, never recorded going: a flash, not this step's effect: [\"- button \\\"Close popup\\\"\"]"
+   }
+  ]
+ },
+ "revision": 3
+}

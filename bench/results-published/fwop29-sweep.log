@@ -1,0 +1,108 @@
+
+[sweep] run 1/3: fwop29-n1 (store: /home/user/sitelooper/bench/results/fwop29-skills)
+[harness] openproject: defaulting APP_URL
+[harness] openproject: defaulting APP_EMAIL
+[harness] openproject: defaulting APP_PASSWORD
+[reset] openproject: no leftover bench work packages
+[harness] openproject responded 302 at http://127.0.0.1:8090/
+stopped: fwop29-n1
+  flow "fwop29" saved: 4 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwop29.json
+  warning: note: 01-signin no longer publishes final_url, all_rows_in_table_start_with_seed_prefix, work_package_count_shown — no replay reads them from the page and the recording showed no line to read
+  warning: note: 02-create no longer publishes main_input, work_package_type_label, work_package_type_badge — no replay reads them from the page and the recording showed no line to read
+  warning: note: 03-set no longer publishes type, assignee_email_option, update_alerts — no replay reads them from the page and the recording showed no line to read
+  warning: note: 04-add no longer publishes submit_control_used, type, finish_date_display — no replay reads them from the page and the recording showed no line to read
+  warning: note: 01-signin: added a read for project to s_37c5fa (page.getByRole('button', { name: 'Bench Project', exact: true }), page.getByRole('link', { name: 'Bench Project', exact: true }); seen on the next instruction's start page)
+  warning: note: 02-create: added a read for creation_alert to s_8fac9d (page.getByRole('alert', { name: 'Successful creation.', exact: true }); seen on the instruction's own page)
+  warning: note: 03-set: added a read for status_display_before_edit to s_4b2d5f (page.getByRole('menuitem', { name: 'New', exact: true }); seen on the instruction's own page)
+  warning: warning: 244 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[0].instruction: "Bench Project" (output) in "Sign in to OpenProject at http://127.0.0.1:8090/ as admin with password typed exactly as the literal text {{env:APP_PASSWORD}}, then open the project 'Bench Pro"
+  flow.steps[0].instruction: "Project" (output) in "Sign in to OpenProject at http://127.0.0.1:8090/ as admin with password typed exactly as the literal text {{env:APP_PASSWORD}}, then open the project 'Bench Pro"
+  flow.steps[0].route: "http://127.0.0.1:8090/projects/bench-project/work_packages" (output) in "http://127.0.0.1:8090/projects/bench-project/work_packages"
+  flow.steps[0].route: "http://127.0.0.1:8090/projects" (output) in "http://127.0.0.1:8090/projects/bench-project/work_packages"
+  flow.steps[1].instruction: "Bench Project" (output) in "In the Bench Project, create a new work package of type Task with subject '{{runid}} Bench Work Package' and a description that includes the text '{{runid}}'. S"
+arm=sitelooper model=z-ai/glm-5.3 runid=fwop29-n1 stop=completed
+turns=5 wall=438.4s
+commands=4 cmdTime=422.8s cmdBytes=8852 timeouts=0
+orchestrator in=8224 cw=0 cr=11136 out=712
+inner prompt=2295295 cached=2149120 completion=22962
+spend=$0.0602 maxUsd=3
+learn: A_n=0 replayed=0/4 full=0 repaired=0 compiled=4 variants=0
+-> /home/user/sitelooper/bench/results/fwop29-n1-sitelooper-result.json
+
+fwop29-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed subjects reported
+  obj 2: PASS — type=Task, description includes runid=true
+  obj 3: PASS — assignee=Bench Assignee
+  obj 4: PASS — status=In progress
+  obj 5: PASS — finish date=2026-12-31, want 2026-12-31
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — work package id 41 reported
+
+[sweep] run 2/3: fwop29-n2 (replay flow fwop29, no orchestrator)
+[reset] openproject: deleted 1 leftover bench work package(s)
+[sweep] fwop29-n2: 6 drift ticket(s) → fwop29-n2-drift.json
+
+fwop29-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed subjects reported
+  obj 2: PASS — type=Task, description includes runid=true
+  obj 3: PASS — assignee=Bench Assignee
+  obj 4: PASS — status=In progress
+  obj 5: PASS — finish date=2026-12-31, want 2026-12-31
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — work package id 42 reported
+
+[sweep] run 3/3: fwop29-n3 (replay flow fwop29, no orchestrator)
+[reset] openproject: deleted 1 leftover bench work package(s)
+[sweep] fwop29-n3: 5 drift ticket(s) → fwop29-n3-drift.json
+
+fwop29-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed subjects reported
+  obj 2: PASS — type=Task, description includes runid=true
+  obj 3: PASS — assignee=Bench Assignee
+  obj 4: PASS — status=In progress
+  obj 5: PASS — finish date=2026-12-31, want 2026-12-31
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — work package id 43 reported
+
+Learning sweep fwop29 (K=3)
+┌─────────┬───┬─────────────┬──────────┬─────────────┬───────┬──────┬───────────┬──────┬──────────────┬────────┐
+│ (index) │ n │ runid       │ verified │ stop        │ turns │ cmds │ total_usd │ A_n  │ replayed     │ wall_s │
+├─────────┼───┼─────────────┼──────────┼─────────────┼───────┼──────┼───────────┼──────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwop29-n1' │ '7/7'    │ 'completed' │ 5     │ 4    │ 0.0602    │ 0    │ '0/4'        │ 438    │
+│ 1       │ 2 │ 'fwop29-n2' │ '7/7'    │ 'success'   │ 5     │ 4    │ 0.0039    │ 0.75 │ '4/4 (flow)' │ 130    │
+│ 2       │ 3 │ 'fwop29-n3' │ '7/7'    │ 'success'   │ 0     │ 4    │ 0         │ 1    │ '4/4 (flow)' │ 113    │
+└─────────┴───┴─────────────┴──────────┴─────────────┴───────┴──────┴───────────┴──────┴──────────────┴────────┘
+http://127.0.0.1:8090
+  s_079cf3  validated    2 steps  3/3 (100%)
+           Sign in to OpenProject at {{v1}} as {{v2}} with password typed exactly as the literal text {{v3}}, then open t…
+  s_37c5fa  validated    8 steps  3/3 (100%)
+           Sign in to OpenProject at {{v1}} as {{v2}} with password typed exactly as the literal text {{v3}}, then open t…
+  s_38ee3d  validated    3 steps  3/3 (100%)
+           Sign in to OpenProject at {{v1}} as {{v2}} with password typed exactly as the literal text {{v3}}, then open t…
+  s_43324f  validated    1 steps  3/3 (100%)
+           Add a comment to work package {{v1}} ({{v3}}) whose text includes '{{v4}}' (e.g. '{{v8}}'). Post it via the co…
+  s_4bbc7f  validated    1 steps  3/3 (100%)
+           Sign in to OpenProject at {{v1}} as {{v2}} with password typed exactly as the literal text {{v3}}, then open t…
+  s_53b7df  validated    7 steps  3/3 (100%)
+           Sign in to OpenProject at {{v1}} as {{v2}} with password typed exactly as the literal text {{v3}}, then open t…
+  s_61aafc  validated    2 steps  3/3 (100%)
+           In the {{v1}}, create a new work package of type Task with subject '{{v4}}' and a description that includes th…
+  s_729448  validated    7 steps  3/3 (100%)
+           Add a comment to work package {{v1}} ({{v3}}) whose text includes '{{v4}}' (e.g. '{{v8}}'). Post it via the co…
+  s_76b4c5  validated    1 steps  3/3 (100%)
+           Add a comment to work package {{v1}} ({{v3}}) whose text includes '{{v4}}' (e.g. '{{v8}}'). Post it via the co…
+  s_814ebe  validated    7 steps  3/3 (100%)
+           In the {{v1}}, create a new work package of type Task with subject '{{v4}}' and a description that includes th…
+  s_8fac9d  validated    7 steps  3/3 (100%)
+           In the {{v1}}, create a new work package of type Task with subject '{{v4}}' and a description that includes th…
+  s_ab8ea3  validated    1 steps  3/3 (100%)
+           Sign in to OpenProject at {{v1}} as {{v2}} with password typed exactly as the literal text {{v3}}, then open t…
+  s_e9346f  validated    5 steps  3/3 (100%)
+           Add a comment to work package {{v1}} ({{v3}}) whose text includes '{{v4}}' (e.g. '{{v8}}'). Post it via the co…
+  s_4a964a  validated   12 steps  2/2 (100%)  variant of s_4b2d5f
+           On work package {{v1}} ({{v3}}) in {{v5}}: assign it to the user 'Bench Assignee' via the assignee autocomplet…
+  s_4b2d5f  demoted     19 steps  1/2 (50%)
+           On work package {{v1}} ({{v3}}) in {{v5}}: assign it to the user 'Bench Assignee' via the assignee autocomplet…
+store: /home/user/sitelooper/bench/results/fwop29-skills
+
+summary: /home/user/sitelooper/bench/results/fwop29-sweep.json

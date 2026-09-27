@@ -1,0 +1,257 @@
+{
+  "flow": "fwop29",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_37c5fa; observed projects_page_url=http://127.0.0.1:8090/projects, pagination_summary=(1 - 3/3)\nYou are on the only page., view=Default: All open, main_menu_link_text=Project, seed_subject_1=Seed: triage inbox, seed_subject_2=Seed: order missing parts, seed_subject_3=Seed: ship repaired device, project=Bench Project.",
+      "values": {
+        "projects_page_url": "http://127.0.0.1:8090/projects",
+        "pagination_summary": "(1 - 3/3)\nYou are on the only page.",
+        "view": "Default: All open",
+        "main_menu_link_text": "Project",
+        "seed_subject_1": "Seed: triage inbox",
+        "seed_subject_2": "Seed: order missing parts",
+        "seed_subject_3": "Seed: ship repaired device",
+        "project": "Bench Project"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "22/22",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_079cf3: step 1: skipped — it closes the dialog \"Welcome to OpenProject, Bench Admin\" with \"Close\", and that dialog is not open this time: already in effect",
+        "s_53b7df: step 1: recorded url http://127.0.0.1:8090/projects is the page the clicked link left (captured before its navigation committed); the click went where the link points, http://127.0.0.1:8090/projects/bench-project — accepted",
+        "s_53b7df: step 3: an inline heal proposed a button for a control recorded as a link, on a click the recording saw stay on its page — a different control, not dispatched (page.getByRole('button', { name: 'Bench Project', exact: true }))",
+        "s_53b7df: step 3: no element matched any known locator for target (tried 3: page.getByRole('link', { name: 'Bench Project', exact: true }), page.locator('#project-3 > td:nth-of-type(3) > div > span > a'), elementAt(446, 308) /* link */); navigated to the step's recorded destination instead (http://127.0.0.1:8090/projects)",
+        "s_53b7df: step 5: a better-ranked locator did not resolve; used fallback #3 page.locator('#project-3-action-menu-button')",
+        "s_53b7df: step 6: primary locator did not resolve; used fallback #3 elementAt(777, 303) /* div */"
+      ]
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_8fac9d; observed project=Bench Project, description_editor_text=fwop29-n2 description text, description_editor_text2=fwop29-n2 description text, op_uc_container_text=fwop29-n2 description text, ref=fwop29-n2, description_editor_class=ck-table-show-hidden-borders ck-blurred document-editor__editable op-uc-container op-uc-container_editing ck ck-content ck-editor__editable ck-rounded-corners ck-editor__editable_inline, work_package_url=http://127.0.0.1:8090/projects/bench-project/work_packages/details/42/overview, page_title=Task: fwop29-n2 Bench Work Package (#42) | Work Packages | Bench Project | OpenProject, work_package_id_displayed=#42, work_package_id_numeric=42, work_package_subject=fwop29-n2 Bench Work Package.",
+      "values": {
+        "project": "Bench Project",
+        "description_editor_text": "fwop29-n2 description text",
+        "description_editor_text2": "fwop29-n2 description text",
+        "op_uc_container_text": "fwop29-n2 description text",
+        "ref": "fwop29-n2",
+        "description_editor_class": "ck-table-show-hidden-borders ck-blurred document-editor__editable op-uc-container op-uc-container_editing ck ck-content ck-editor__editable ck-rounded-corners ck-editor__editable_inline",
+        "work_package_url": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/42/overview",
+        "page_title": "Task: fwop29-n2 Bench Work Package (#42) | Work Packages | Bench Project | OpenProject",
+        "work_package_id_displayed": "#42",
+        "work_package_id_numeric": "42",
+        "work_package_subject": "fwop29-n2 Bench Work Package"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "16/16",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_61aafc: step 2: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear",
+        "s_814ebe: step 2: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear",
+        "s_814ebe: step 3: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear",
+        "s_814ebe: step 4: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear",
+        "s_814ebe: step 5: read 'work_package_description' returned a value the skill itself set/selected ('fwop29-n2 description text') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_814ebe: step 6: read 'work_package_description' returned a value the skill itself set/selected ('fwop29-n2 description text') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_8fac9d: step 7: the target chain is dead and was not healed inline — the step is a synthesized read no run has ever resolved, so nothing about it has drifted",
+        "s_8fac9d: step 7: skipped read — no element matched any known locator for target (tried 1: page.getByRole('alert', { name: 'Successful creation.', exact: true }))"
+      ],
+      "unreported": [
+        "work_package_description",
+        "creation_alert"
+      ]
+    },
+    {
+      "id": "03-set",
+      "status": "success",
+      "summary": "On work package #42 (Task \"fwop29-n2 Bench Work Package\") in Bench Project the in-place edits are all in place. The replayed procedure had already chosen the assignee and status and typed the finish-date field, but its Enter keypress did not commit the date picker; I clicked \"Save\" in the open date-picker dialog (page then showed \"Successful update.\") to commit the finish date. Read back from the live page: Assignee \"BA / Bench Assignee\", Status \"In progress\", and the Date field displays \"no start date - 12/31/2026\" — i.e. the finish date is shown as 12/31/2026 (US format), which is my own reading of the requested 2026-12-31. Only the date picker's Save was clicked; no data otherwise modified.",
+      "values": {
+        "assignee": "Bench Assignee",
+        "assignee_field": "BA\\nBench Assignee",
+        "date_field_display": "no start date - 12/31/2026",
+        "finish_date_displayed": "12/31/2026",
+        "status": "In progress",
+        "subject": "fwop29-n2 Bench Work Package",
+        "type": "Task",
+        "work_package_id": "#42",
+        "finish_date": "2026-12-31",
+        "assignee_field_2": "BA\nBench Assignee",
+        "status_field": "In progress",
+        "ref": "fwop29-n2"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_4b2d5f stopped at step 7 — after step 7 none of the 2 recorded page change(s) appeared (e.g. \"- button \\\"Close popup\\\"\") — the step ran but did not have its recorded effect",
+      "replayed": "6/19",
+      "repaired": false,
+      "turns": 5,
+      "warnings": [
+        "s_4b2d5f: step 1: url segment(s) differ from recorded (41→42) — treated as volatile",
+        "s_4b2d5f: step 2: url segment(s) differ from recorded (41→42) — treated as volatile",
+        "s_4b2d5f: step 3: url segment(s) differ from recorded (41→42) — treated as volatile",
+        "s_4b2d5f: step 4: url segment(s) differ from recorded (41→42) — treated as volatile",
+        "s_4b2d5f: step 5: url segment(s) differ from recorded (41→42) — treated as volatile",
+        "s_4b2d5f: step 6: url segment(s) differ from recorded (41→42) — treated as volatile",
+        "s_4b2d5f: step 7: url segment(s) differ from recorded (41→42) — treated as volatile"
+      ],
+      "unreported": [
+        "finish_date_display",
+        "finish_date_field_value",
+        "start_date",
+        "description",
+        "status_display_before_edit",
+        "assignee_initials_and_name"
+      ]
+    },
+    {
+      "id": "04-add",
+      "status": "success",
+      "summary": "Replayed stored procedure s_e9346f; observed overview_url=http://127.0.0.1:8090/projects/bench-project/work_packages/details/42/overview, work_package_id=#42, activity_tab_link_url=/projects/bench-project/work_packages/details/42/activity, assignee_initials_and_name=BA\nBench Assignee, ref=fwop29-n2, activity_url=http://127.0.0.1:8090/projects/bench-project/work_packages/details/42/activity, subject=fwop29-n2 Bench Work Package, status=In progress, assignee=Bench Assignee, priority_display=Normal.",
+      "values": {
+        "overview_url": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/42/overview",
+        "work_package_id": "#42",
+        "activity_tab_link_url": "/projects/bench-project/work_packages/details/42/activity",
+        "assignee_initials_and_name": "BA\nBench Assignee",
+        "ref": "fwop29-n2",
+        "activity_url": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/42/activity",
+        "subject": "fwop29-n2 Bench Work Package",
+        "status": "In progress",
+        "assignee": "Bench Assignee",
+        "priority_display": "Normal"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "14/14",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_729448: step 5: read 'comment_text_displayed' returned a value the skill itself set/selected ('fwop29-n2 bench comment') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_e9346f: report value comment_draft_verified_in_field is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)",
+        "s_e9346f: report value comment_draft_text is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)"
+      ],
+      "unreported": [
+        "comment_text_displayed",
+        "comment_draft_verified_in_field",
+        "description",
+        "comment_draft_text"
+      ]
+    }
+  ],
+  "passed": 4,
+  "total": 4,
+  "repinned": 0,
+  "drift": 6,
+  "driftTickets": [
+    {
+      "flow": "fwop29",
+      "step": "01-signin",
+      "skill": "s_079cf3",
+      "atStep": "1",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.getByRole('button', { name: 'Close', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages",
+      "pageUrl": "http://127.0.0.1:8090/projects/bench-project/work_packages"
+    },
+    {
+      "flow": "fwop29",
+      "step": "01-signin",
+      "skill": "s_53b7df",
+      "atStep": "3",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.getByRole('link', { name: 'Bench Project', exact: true })",
+      "fallbackUsed": "goto http://127.0.0.1:8090/projects",
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages",
+      "pageUrl": "http://127.0.0.1:8090/projects/bench-project/work_packages"
+    },
+    {
+      "flow": "fwop29",
+      "step": "01-signin",
+      "skill": "s_53b7df",
+      "atStep": "5",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.getByRole('button', { name: 'Open menu', exact: true }).nth(0)",
+      "fallbackUsed": "page.locator('#project-3-action-menu-button')",
+      "fallbackIndex": 2,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages",
+      "pageUrl": "http://127.0.0.1:8090/projects/bench-project/work_packages"
+    },
+    {
+      "flow": "fwop29",
+      "step": "01-signin",
+      "skill": "s_53b7df",
+      "atStep": "6",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.getByText('Skip', { exact: true })",
+      "fallbackUsed": "elementAt(777, 303) /* div */",
+      "fallbackIndex": 2,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages",
+      "pageUrl": "http://127.0.0.1:8090/projects/bench-project/work_packages"
+    },
+    {
+      "flow": "fwop29",
+      "step": "02-create",
+      "skill": "s_8fac9d",
+      "atStep": "7",
+      "key": "target",
+      "similarity": 0.999,
+      "missedLocator": "page.getByRole('alert', { name: 'Successful creation.', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:id/overview",
+      "pageUrl": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/42/overview"
+    },
+    {
+      "flow": "fwop29",
+      "step": "03-set",
+      "skill": "s_4b2d5f",
+      "similarity": 0.998,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_4b2d5f stopped at step 7 — after step 7 none of the 2 recorded page change(s) appeared (e.g. \"- button \\\"Close popup\\\"\") — the step ran but did not have its recorded effect",
+      "reason": "after step 7 none of the 2 recorded page change(s) appeared (e.g. \"- button \\\"Close popup\\\"\") — the step ran but did not have its recorded effect",
+      "pageUrlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:id/overview",
+      "pageUrl": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/42/overview"
+    }
+  ],
+  "wallMs": 130011,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 66817,
+    "completionTokens": 2761,
+    "cachedTokens": 53248
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 66817,
+      "completionTokens": 2761,
+      "cachedTokens": 53248
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "z-ai/glm-5.3",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}
