@@ -318,3 +318,49 @@ describe('embedding', () => {
     expect(m.tokens).toEqual(expect.arrayContaining(['observeFact(', 'routeTemplateOf(', 'SITE_FACTS_VERSION', 'MAX_FACTS', 'MAX_SESSIONS', 'MAX_EV']));
   });
 });
+
+describe('value meaning facts (stage 4)', () => {
+  it('value.role round-trips through observeFact and reliable; state vs count in two sessions retires', async () => {
+    const { valueRoleFact } = await import('../src/execution/facts.js');
+    const sf = emptyFacts(O);
+    const key = `${O}/issues|labels_picker_state`;
+    expect(observeFact(sf, obs({ k: 'value.role', key, v: 'state', session: 's1' })).outcome).toBe('new');
+    expect(valueRoleFact(sf, key)).toBeNull(); // soft, one session
+    expect(observeFact(sf, obs({ k: 'value.role', key, v: 'state', session: 's2' })).outcome).toBe('confirmed');
+    expect(valueRoleFact(sf, key)).toBe('state');
+    expect(sameFactValue('state', 'state')).toBe(true);
+    // a contradiction drops it to advisory by itself
+    expect(observeFact(sf, obs({ k: 'value.role', key, v: 'count', session: 's3' })).outcome).toBe('contradicted');
+    expect(valueRoleFact(sf, key)).toBeNull();
+    expect(summarise(sf)).toMatchObject({ relied: 0, advisory: 2 });
+  });
+
+  it('seedNameFact: false in one session, true at two, false when a reliable mint of the same hash exists', async () => {
+    const { seedNameFact } = await import('../src/execution/facts.js');
+    const sf = emptyFacts(O);
+    const key = valueHash('Bench Admin');
+    observeFact(sf, obs({ k: 'value.class', key, v: 'seed', session: 's1' }));
+    expect(seedNameFact(sf, 'Bench Admin')).toBe(false);
+    observeFact(sf, obs({ k: 'value.class', key, v: 'seed', session: 's2' }));
+    expect(seedNameFact(sf, 'bench  admin')).toBe(true); // folded
+    expect(valueClassFact(sf, 'Bench Admin')).toBe('seed');
+    observeFact(sf, obs({ k: 'value.class', key, v: 'mint', hard: true, session: 's3' }));
+    expect(seedNameFact(sf, 'Bench Admin')).toBe(false); // mint wins
+    expect(valueClassFact(sf, 'Bench Admin')).toBe('mint');
+  });
+
+  it('a seed never contradicts a constant, mint or credential of the same value (a second dimension)', () => {
+    const sf = emptyFacts(O);
+    const key = valueHash('admin');
+    observeFact(sf, obs({ k: 'value.class', key, v: 'credential', hard: true, session: 's1' }));
+    for (const session of ['s1', 's2']) observeFact(sf, obs({ k: 'value.class', key, v: 'seed', session }));
+    expect(factsFor(sf, 'value.class', key).every(reliable)).toBe(true);
+    expect(valueClassFact(sf, 'admin')).toBe('credential');
+  });
+
+  it('with no seed fact, valueClassFact is unchanged', () => {
+    const sf = withFacts(fact({ k: 'value.class', key: valueHash('FURN_7777'), v: 'constant' }));
+    expect(valueClassFact(sf, 'FURN_7777')).toBe('constant');
+    expect(valueClassFact(sf, 'other')).toBeNull();
+  });
+});

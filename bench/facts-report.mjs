@@ -100,19 +100,48 @@ function appliedSuffix(r) {
   return r.applied === undefined ? '' : `  applied=${r.applied}`;
 }
 
+/**
+ * A `value.class` = 'seed' fact's key is `valueHash(name)` — never the
+ * name itself (design-site-facts.md §1: "the store never holds a name in
+ * the clear"). Even so, stage 4's contract asks the report never to print
+ * more than a handful of these hashes in one line, and never to print a
+ * seed VALUE (the store holds none): seed facts are summarised as a count
+ * per origin, with at most 5 sample hashes, instead of one line each like
+ * every other fact kind.
+ */
+const isSeedFact = (fc) => fc.k === 'value.class' && fc.v === 'seed';
+
 function printReport({ storeDir, origins, shadow, disagreements, applied }) {
   console.log(`== ${storeDir} ==`);
   const totalFacts = origins.reduce((n, o) => n + o.facts.length, 0);
   console.log(`facts: ${totalFacts} across ${origins.length} origin(s)`);
   for (const { origin, facts } of origins) {
-    for (const fc of [...facts].sort((a, b) => (a.k === b.k ? (a.key < b.key ? -1 : a.key > b.key ? 1 : 0) : a.k < b.k ? -1 : 1))) {
+    const seedFacts = facts.filter(isSeedFact);
+    const rest = facts.filter((fc) => !isSeedFact(fc));
+    for (const fc of [...rest].sort((a, b) => (a.k === b.k ? (a.key < b.key ? -1 : a.key > b.key ? 1 : 0) : a.k < b.k ? -1 : 1))) {
+      // value.role facts print like every other kind: <key> v=<role>, plus
+      // the usual n/sessions/contra/hard columns.
       const v = typeof fc.v === 'object' ? JSON.stringify(fc.v) : fc.v;
       console.log(
         `  ${origin}  ${fc.k}  ${fc.key}  v=${v}  n=${fc.n}  sessions=${(fc.sessions ?? []).length}  contra=${fc.contra}  hard=${fc.hard}`,
       );
     }
+    if (seedFacts.length) {
+      const sample = seedFacts.slice(0, 5).map((fc) => fc.key);
+      console.log(`  ${origin}  value.class  seed  count=${seedFacts.length}  sample=[${sample.join(', ')}]`);
+    }
   }
   console.log(`shadow (facts.*): ${shadow.length} rows, ${disagreements.length} disagreement(s), ${applied.length} applied`);
+  // Per-rule tallies alongside the totals above (facts.role / facts.seed are
+  // stage 4's new rules; every other facts.* rule from earlier stages prints
+  // the same way).
+  const ruleNames = [...new Set(shadow.map((r) => r.rule))].sort();
+  for (const rule of ruleNames) {
+    const rows = shadow.filter((r) => r.rule === rule);
+    const dis = rows.filter((r) => !r.agree);
+    const app = rows.filter((r) => r.applied === true);
+    console.log(`  ${rule}: ${rows.length} rows, ${dis.length} disagreement(s), ${app.length} applied`);
+  }
   for (const r of disagreements) {
     const evidence = Array.isArray(r.evidence) ? r.evidence.map(formatEvidenceItem).join(' | ') : String(r.evidence ?? '');
     console.log(`  DISAGREE ${r.rule}  fact=${r.fact}  heuristic=${r.heuristic}  evidence=[${evidence}]${appliedSuffix(r)}`);

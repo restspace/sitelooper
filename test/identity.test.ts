@@ -18,6 +18,9 @@ import { buildFlow, jsonLeaves, lookupOutput, noteOutputEvidence, varyingValues 
 import { addEvidenceValue, proseIdentifiers } from '../src/agent/report.js';
 import { identityOfPrimary } from '../src/skills/replay.js';
 import type { Skill } from '../src/skills/store.js';
+import { emptyFacts, observeFact, type SiteFacts } from '../src/execution/facts.js';
+import { shapeKeyOf } from '../src/skills/facts-value.js';
+import type { ShadowRow } from '../src/skills/shadow.js';
 import { documentOf, isObserveArg } from './fixture/observation.js';
 
 // checkIdentity waits IDENTITY_WAIT_MS for a bound marker on a page that may
@@ -200,6 +203,55 @@ describe('identity precondition (compile)', () => {
     expect(skills.map((s) => s.steps.map((st) => st.tool))).toEqual([['goto'], ['click']]);
     expect(skills[0].steps[0].args.url).toBe(`${ORIGIN}/#/tickets`);
     expect(skills[1].preconditions.urlPattern).toBe(`${ORIGIN}/#/tickets`);
+  });
+});
+
+/**
+ * Site facts stage 4 (consumer 3): a slot bound to a report OUTPUT whose label
+ * carries a reliable `state` or `count` role on the segment's start route is
+ * never an identity marker (gitea fwgt17: a picker's "closed" became a marker
+ * the issues list's "0 Closed" satisfied). Mechanics only: the value here is
+ * the ticket ref, bound to an output the facts call a state.
+ */
+describe('identity precondition: a state/count role slot is not a marker (site facts stage 4)', () => {
+  const START = `${ORIGIN}/#/tickets/t15`;
+  const known = { 'var:runid': 'r9-n2', 'output:i2:ref_state': 'RD-1015' };
+  const withRole = (role: 'state' | 'count' | 'name', sessions = ['n1', 'n2']): SiteFacts => {
+    const sf = emptyFacts(ORIGIN);
+    for (const session of sessions) observeFact(sf, { k: 'value.role', key: shapeKeyOf(START, 'ref_state'), v: role, hard: false, session });
+    return sf;
+  };
+  const markers = (facts?: SiteFacts, rows: ShadowRow[] = []) => {
+    const [skill] = compileSkills({
+      entries: addPartRecording('- heading "r9-n2 RD Bench Ticket"\n- text "Ref RD-1015"'),
+      instruction: ADD_PART,
+      report: REPORT,
+      session: 's',
+      now: '2026-08-27T00:00:00.000Z',
+      knownValues: known,
+      ...(facts ? { facts, onFactRow: (r: ShadowRow) => rows.push(r) } : {}),
+    });
+    return (skill.preconditions.requireText ?? []).map((m) => skill.params[m.replace(/[{}]/g, '')]?.example);
+  };
+
+  it('today (no facts) the output-bound value is a marker', () => {
+    expect(markers()).toContain('RD-1015');
+  });
+
+  it('a reliable state or count role withholds it, with an applied facts.identity row; the runid marker stays', () => {
+    for (const role of ['state', 'count'] as const) {
+      const rows: ShadowRow[] = [];
+      const got = markers(withRole(role), rows);
+      expect(got).not.toContain('RD-1015');
+      expect(got).toContain('r9-n2');
+      expect(rows).toEqual([expect.objectContaining({ rule: 'facts.identity', fact: role, heuristic: 'marker', agree: false, applied: true })]);
+    }
+  });
+
+  it('one session, or a name role: a marker as today', () => {
+    expect(markers(withRole('state', ['n1']))).toContain('RD-1015');
+    expect(markers(withRole('name'))).toContain('RD-1015');
+    expect(markers(emptyFacts(ORIGIN))).toEqual(markers());
   });
 });
 

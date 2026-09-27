@@ -6,7 +6,7 @@
 import { describe, expect, it } from 'vitest';
 import { applyCommentaryPrePass, decideSourcingHold, isDataShaped, sourcingAskMessage, sourcingHoldOn, splitCommentary, type SourcingFacts, type TierVerdict } from '../src/agent/sourcing.js';
 import { emptyFacts, observeFact, shapeOf, valueHash, type SiteFacts } from '../src/execution/facts.js';
-import { shapeKeyOf, valueVerdict } from '../src/skills/facts-value.js';
+import { roleVerdict, shapeKeyOf, valueVerdict } from '../src/skills/facts-value.js';
 import type { Report } from '../src/agent/report.js';
 
 describe('sourcingHoldOn', () => {
@@ -166,6 +166,55 @@ describe('decideSourcingHold: site facts (stage 3, consumer 3) — the unasked m
       facts: factsOf(sf),
     });
     expect(d.held).toEqual([{ key: 'asset_tag', value: 'BA-00007', verdict: 'absent' }]);
+  });
+});
+
+describe('decideSourcingHold: site facts (stage 4, consumer 4) — a state-role label is not held', () => {
+  // gitea fwgt17: `labels_picker_state = "closed"` — no element shows a
+  // picker's state as its text, so a hold only burns the turn. A reliable
+  // `state` role under the key releases the asked value; a `count` role
+  // changes nothing (a count is readable).
+  const GT = 'http://gt.test';
+  const url = `${GT}/bench/repo/issues/1`;
+  const instruction = 'Open the issue and report the labels picker state and the open issue count.';
+  const values = { labels_picker_state: 'closed', open_issue_count: '3' };
+  const withRoles = (roles: Record<string, 'state' | 'count' | 'name'>, sessions = ['n1', 'n2']): SiteFacts => {
+    const sf = emptyFacts(GT);
+    for (const [key, role] of Object.entries(roles)) for (const session of sessions) observeFact(sf, { k: 'value.role', key: shapeKeyOf(url, key), v: role, hard: false, session });
+    return sf;
+  };
+  const factsOf = (sf: SiteFacts): SourcingFacts => ({
+    verdict: (value, key) => valueVerdict(sf, value, shapeKeyOf(url, key)),
+    role: (key) => roleVerdict(sf, shapeKeyOf(url, key))?.role ?? null,
+  });
+  const run = (sf?: SiteFacts, seen: string[] = []) =>
+    decideSourcingHold({ instruction, values, alreadyRead: new Set(), alertTexts: [], verdict: async (key) => (seen.push(key), 'absent'), ...(sf ? { facts: factsOf(sf) } : {}) });
+
+  it('today (no facts): both asked values are held', async () => {
+    const d = await run();
+    expect(d.held.map((h) => h.key)).toEqual(['labels_picker_state', 'open_issue_count']);
+    expect(d.released).toBeUndefined();
+  });
+
+  it('a reliable state role releases the key without consulting the tiers; a count role holds as before', async () => {
+    const seen: string[] = [];
+    const d = await run(withRoles({ labels_picker_state: 'state', open_issue_count: 'count' }), seen);
+    expect(d.held.map((h) => h.key)).toEqual(['open_issue_count']);
+    expect(d.released).toEqual([{ key: 'labels_picker_state', value: 'closed', role: 'state' }]);
+    expect(seen).toEqual(['open_issue_count']);
+  });
+
+  it('one session only, or a name role: held as today', async () => {
+    expect((await run(withRoles({ labels_picker_state: 'state' }, ['n1']))).held.map((h) => h.key)).toEqual(['labels_picker_state', 'open_issue_count']);
+    expect((await run(withRoles({ labels_picker_state: 'name' }))).held.map((h) => h.key)).toEqual(['labels_picker_state', 'open_issue_count']);
+  });
+
+  it('mint wins: a value a reliable mint fact makes an identifier is weighed as before', async () => {
+    const sf = withRoles({ labels_picker_state: 'state' });
+    for (const session of ['n1', 'n2']) observeFact(sf, { k: 'value.class', key: valueHash('closed'), v: 'mint', hard: false, session });
+    const d = await run(sf);
+    expect(d.held.map((h) => h.key)).toContain('labels_picker_state');
+    expect(d.released).toBeUndefined();
   });
 });
 

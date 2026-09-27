@@ -134,11 +134,25 @@ export interface SourcingCandidate {
  */
 export interface SourcingFacts {
   verdict(value: string, key: string): { kind: 'identifier' | 'not-identifier' } | null;
+  /**
+   * Site facts stage 4 (consumer 4): the key's RELIABLE decisive role
+   * (facts-value.ts `roleVerdict` under the same `shapeKeyOf(url, key)`), or
+   * null. Optional: a caller without it holds as stage 3 did.
+   */
+  role?(key: string): 'state' | 'count' | null;
 }
 
 export interface SourcingDecision {
   /** The values to hold for, in report order. */
   held: SourcingCandidate[];
+  /**
+   * Site facts stage 4: ASKED keys the hold would have weighed but let go
+   * because a reliable fact says their label carries a picker STATE — the
+   * page never shows a state as text, so the model owns the word. The
+   * `facts.sourcing` row for each says `fact: 'state'`, `applied: true`.
+   * Absent when none.
+   */
+  released?: { key: string; value: string; role: 'state' }[];
 }
 
 /**
@@ -177,6 +191,7 @@ export async function decideSourcingHold(input: {
   const alerts = input.alertTexts.map(foldValue);
   const evals = (input.evalResults ?? []).map(foldValue);
   const held: SourcingCandidate[] = [];
+  const released: NonNullable<SourcingDecision['released']> = [];
   for (const [key, raw] of Object.entries(input.values)) {
     const value = String(raw ?? '').trim();
     // Asked, or (site facts) an identifier by a reliable fact: nothing else is held.
@@ -196,11 +211,31 @@ export async function decideSourcingHold(input: {
     if (input.alreadyRead.has(value)) continue;
     const folded = foldValue(value);
     if (alerts.some((a) => a.includes(folded))) continue;
+    // Site facts stage 4: an asked value whose label a reliable fact knows
+    // carries a picker STATE ("closed": gitea fwgt17's labels_picker_state)
+    // is not held — no element shows a state as its text, so asking for a
+    // read only burns the turn. Mint wins: a value a reliable fact makes an
+    // identifier is weighed as before. A `count` role changes nothing (a
+    // count is readable).
+    if (!byFact && input.facts?.role && stateRole(input.facts, key, value)) {
+      released.push({ key, value, role: 'state' });
+      continue;
+    }
     if ((await input.verdict(key, value)) !== 'absent') continue;
     held.push({ key, value, verdict: 'absent', ...(evals.some((e) => e.includes(folded)) ? { fromEval: true } : {}), ...(byFact ? { byFact: true } : {}) });
     if (held.length >= MAX_HELD_VALUES) break;
   }
-  return { held };
+  return { held, ...(released.length ? { released } : {}) };
+}
+
+/** A reliable `state` role under the key, and no reliable fact making the value an identifier (mint wins). Never throws. */
+function stateRole(facts: SourcingFacts, key: string, value: string): boolean {
+  try {
+    if (facts.role?.(key) !== 'state') return false;
+    return facts.verdict(value, key)?.kind !== 'identifier';
+  } catch {
+    return false;
+  }
 }
 
 /** The text handed back with the held report. */

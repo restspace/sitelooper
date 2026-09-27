@@ -185,6 +185,45 @@ by `<route>|<label>` (the url part or report key that carries them).
 Survey rows decided: fwod84, fwkb41 (core), fwec8, fwgh14, fwsi14 (wrong of two banked, the minted tag),
 fwod88 (a read locator naming its own mint), fwgr68/fwkb39, fwvk15, fwsi16.
 
+## 4b. Value meaning facts (stage 4)
+
+**The gap.** Round 70's fwop24 (openproject): `01-signin` reported `admin_first_name = "Bench"` (the seed
+admin's display name "Bench Admin" is shown in the user menu, unchanged by anything the run did); buildFlow
+threaded the word into the task's own quoted names ('Bench Project', '{{runid}} Bench Work Package'), nothing
+reads a first name, and the compile refused the flow. The quoted-literal guard (a6d791d0) closed it by
+PUNCTUATION: a word inside the author's own quotes is left alone. Stage 4 closes it by MEANING instead: the
+store learns which displayed names are the app's SEED data, and a reported value whose label is known to
+carry a picker STATE or a COUNT is never threaded, banked as an identifier, or made an identity marker — the
+gitea fwgt17 class, today caught only when no page line shows the word.
+
+**Key.** A seed fact is keyed by `valueHash(foldValue(name))`, same as a §4 value class fact, and carries NO
+`ev`: the store never holds a name in the clear. A role fact's key is `<route>|<label>` (a label, never a
+value) and its `v` is the role word.
+
+| fact | key | value | observed when | strength |
+|---|---|---|---|---|
+| `value.class` (seed) | `valueHash(foldValue(name))` | `'seed'` | a distinct folded element name seen in the baseline window (the start pages up to and including the first instruction whose `mutatingIntent` is non-null, or session end if none is) of two sessions, excluding short names, names with no letter, names containing a declared var, and names the ledger already holds | SOFT (sessions ≥ 2) |
+| `value.role` | `<route>\|<label>` (`shapeKeyOf`) | `'state' \| 'count' \| 'name'` | `state`: the reported value, folded, is one of `STATE_WORDS` (open, closed, expanded, checked, enabled, …). `count`: the value is `^\d{1,6}$` and a captured line of the instruction shows it inside a quoted name next to a letter word ("3 Open"). `name`: the value equals the element name of a captured line whose role is link/button/heading/cell/option/menuitem/tab/treeitem/row/listitem, and the value contains a letter. Only one role per report value (state, then count, then name); a `name` role never decides, it is observed for the survey only | SOFT (sessions ≥ 2) |
+
+**Consumers (stage 4), mint always wins: a reliable `mint` or `value.shape` fact for the same value decides
+identifier over a seed or role fact — these facts only ever make a value LESS of a run value.**
+1. `buildFlow`'s produced-values loop (flow.ts, `seedFragmentOf` / `seedNameFact`): a produced value that is a
+   reliable seed name, or a proper fragment of one shown in the same evidence window a recorded quote would
+   use, is not threaded anywhere — instruction text, params, or url parts — inside quotes OR outside them
+   (fwop24's "created by Bench in" case, which the punctuation guard alone does not stop). A value whose role
+   is a reliable `state`/`count` under its shapeKey is excluded the same way.
+2. Ledger `add` prior (ledger.ts, via `valueVerdict`'s new arms, AFTER the existing mint/shape arms): a
+   reliable seed class, or a reliable `state`/`count` role under the value's shapeKey, banks the value as
+   text, never an identifier — fwkb35's seed task title, fwgt17's picker state.
+3. Identity markers (compile.ts `identityOf`): a slot whose origin is a report output with a reliable
+   `state`/`count` role under its label is never a `requireText` marker.
+4. The sourcing hold (agent/sourcing.ts `decideSourcingHold`): an ASKED value whose label has a reliable
+   `state` role is not held for a read — the page never shows a state as text, the model owns it. A `count`
+   role changes nothing (a count is readable).
+
+Survey rows decided: fwop24 (the seed admin's first name, threaded outside quotes), fwgt17 (a labels-picker
+state label banked and marked as data when no page line names it).
+
 ## 5. Stages, verification and what each stage must show
 
 Every stage: a fix branch, the cloud verify (suite, browser, parity, corpus 0 status changes), merge, then
@@ -203,9 +242,12 @@ formats; fwod84-class and fwsi16 for classes) and a five-app batch (bench/sweep-
   the fixture corpus (test/fixture) decide from facts; corpus 0 changes.
 - **Stage 3, value class consumers** (§4). Exit: fwod84's FURN_7777 and fwsi16's unasked columns decide
   from facts on a fresh recording; corpus 0 changes.
+- **Stage 4, value meaning consumers** (§4b: seed names, value roles). Exit: fwop24's seed-fragment first
+  name is not threaded once two sessions have seen the seed name (from n2's export onward on a fresh store);
+  fwgt17's state-role label is not banked or marked; corpus 0 changes.
 
 Sizes, from the maps: stage 0 is the largest (store, snapshot, lift, carry, shadow, observers: about 600
-lines plus tests); stages 1-3 are each a handful of call sites behind `reliable()` with the old rule as the
+lines plus tests); stages 1-4 are each a handful of call sites behind `reliable()` with the old rule as the
 fallback (100-200 lines each plus fixture tests).
 
 ## 6. Out of scope, and one cheap add

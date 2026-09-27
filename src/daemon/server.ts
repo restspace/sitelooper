@@ -49,8 +49,10 @@ import { coverageComplete, recordedValueShown } from '../execution/snapshot.js';
 import { captureSignature } from './diff.js';
 import { recordedStandIn, referencableOutputs, selfNamingReadDrops } from '../skills/flow.js';
 import { SessionState } from './state.js';
-import { ValueFactObserver, shapeKeyOf, type ValueVerdict } from '../skills/facts-value.js';
+import { ValueFactObserver, linesOf, seedFragmentOf, shapeKeyOf, type ValueVerdict } from '../skills/facts-value.js';
 import { SiteFactStore } from '../skills/facts.js';
+import { writeShadow } from '../skills/shadow.js';
+import type { ValueShadowRow } from '../skills/facts-value.js';
 import { sourcingHoldOn } from '../agent/sourcing.js';
 
 interface DaemonOptions {
@@ -130,6 +132,8 @@ export class Daemon {
   /** Bank what this instruction minted: url ids first, then reported values. */
   private noteMintedIds(entries: ReturnType<ScriptRecorder['entriesSince']>, stepId: string): void {
     let factUrl: string | undefined;
+    // The instruction's captured lines (facts-value.ts linesOf), read once and only when a report needs them.
+    let lines: string[] | undefined;
     for (const e of entries) {
       const url = e.k === 'step' ? e.diff?.url : e.k === 'instruction' ? e.url : undefined;
       // `landed`: a step's own non-navigation action put the browser here, so
@@ -173,13 +177,24 @@ export class Daemon {
           // mint or a value of the key's reliable mint shape is an identifier
           // at first sighting. No learn store or no url: no facts, as before.
           const reportFacts = factUrl ? this.valueFacts()?.snapshot(factUrl) : undefined;
+          // Site facts (stage 4): a proper fragment of a name the app showed
+          // before any run changed anything (a reliable seed fact) is the app's
+          // data, not the run's — openproject fwop24's `admin_first_name =
+          // "Bench"` of the seed admin "Bench Admin". Not banked, as the
+          // commentary above; no facts, no skip.
+          lines ??= linesOf(entries);
+          const seedName = seedFragmentOf(reportFacts, String(value), lines);
+          if (seedName !== null) {
+            this.valueFacts()?.noteSeedFragment(factUrl, name, String(value), seedName);
+            continue;
+          }
           const banked = this.ledger.add(
             String(value),
             { from: 'output', step: stepId, name },
             reportFacts ? { shapeKey: shapeKeyOf(factUrl!, name) } : {},
             reportFacts,
           );
-          this.valueFacts()?.noteReport(factUrl, name, String(value), banked, this.factVars());
+          this.valueFacts()?.noteReport(factUrl, name, String(value), banked, this.factVars(), lines);
         }
       }
     }
@@ -1333,6 +1348,7 @@ ${describeLeaks(leaks.slice(0, 6))}`);
       const renamed = this.applyRenamePlan(runValueKeys, entries, store);
       console.error(`[relabel] renamed ${renamed} report key(s) carrying a value this run made`);
     }
+    const exportFactRows: ValueShadowRow[] = [];
     let flow = buildFlow(entries, {
       name,
       origin,
@@ -1359,7 +1375,21 @@ ${describeLeaks(leaks.slice(0, 6))}`);
       runSpecific: this.runSpecific,
       // SITE FACTS stage 1: a reliable `route.path` identity position mints a url reference on the first run.
       facts: factStoreFor(store.dir).snapshot(origin),
+      // SITE FACTS stage 4: the export's `facts.seed` / `facts.role` rows, batched below.
+      onFactRow: (row) => exportFactRows.push(row),
     });
+    // Written once, deduped as the value observer's writeRows dedupes. Rows
+    // only: they never change the flow.
+    {
+      const seen = new Set<string>();
+      const rows = exportFactRows.filter((r) => {
+        const id = JSON.stringify([r.rule, r.step, r.fact, r.heuristic, r.evidence]);
+        if (seen.has(id)) return false;
+        seen.add(id);
+        return true;
+      });
+      writeShadow(store.dir, { session: this.valueFacts()?.session ?? this.opts.session, instruction: '' }, rows);
+    }
     if (!flow || !flow.steps.length) throw new Error('nothing to export — no successful instruction was recorded');
     // The browser this session recorded in: replay and the compiled artifact
     // run the flow in it (execution/browser.ts BrowserProfile).
