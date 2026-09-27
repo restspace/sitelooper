@@ -554,6 +554,24 @@ after that point is invalid, verifies (no model) are not. fwop15-cv2 and fwod88-
 for the top-up.
 
 
+## Round 75 (main 7066c28d: the same code as round 74, publishing through `node bench/publish-results.mjs`) — FIVE OF FIVE PUBLISHED by the boxes themselves; od, op, gr green; gt green with one recovered replay; si verified everywhere but its replays recovered and its artifact failed
+
+Fired 18:05 UTC. The publish change (bench/sweep.mjs places each run's script/timing/trace beside its output; the prompt's step 6 is the one command `node bench/publish-results.mjs --base <runid>`; no credential wording before the push) got every box through the classifier that had refused six grafana boxes and, in round 74, snipe-it and odoo too. Grafana's store is on a branch for the first time since fwgr81.
+
+| round | runid | app | verified | replay model-free | compiled | green | facts | applied | notes |
+|---|---|---|---|---|---|---|---|---|---|
+| 75 | fwod101 | od | 6/6 ×3 | yes (8/8 flow, 0 turns ×2) | pass (6/6), drift 1 | **yes** | 79 (24 seed) | 60 | fourth green odoo in succession, on an 8-step recording this time |
+| 75 | fwop30 | op | 7/7 ×3 | yes (8/8 flow, 0 turns ×2) | pass (5/7, 2 UNVERIFIABLE), drift 0 | **yes** | 217 (182 seed) | 11; facts.role 9 rows | third green openproject in succession |
+| 75 | fwgr87 | gr | 6/6 ×3 | yes (7/7 flow, 0 turns ×2) | pass (4/6, 2 UNVERIFIABLE), drift 0 | **yes** | 114 (80 seed) | 25 | the first grafana store published since fwgr81; seven green grafana runs in a row across rounds 71-75 |
+| 75 | fwgt29 | gt | 7/7 ×3 | n2: 05-open fell back (30 turns) and re-pinned; n3 0 turns ×8 | pass (5/7, 2 UNVERIFIABLE), drift 6 | yes (n2 recovered) | 69 (20 seed) | 18 | the round-73 rule half-worked: the skill n1 COMPILED for 05-open (s_5cbad4) still names the heading `"{{v1}} #4"` — at that live compile the ledger offered no url-position known value for the one-digit id, so there was no slot to write; the skill n2's recovery re-pinned (s_7d7cc7) has `"{{v3}} Bench Issue #{{v4}}"` with v4 bound to `04-set.url.p3`, and n3 and the artifact replayed it clean. The gap is in what the daemon's live compile knows, not in the rule (open) |
+| 75 | fwsi26 | si | 7/7 ×3 | NO: 03-create fell back on both replays (13, 26 turns), 04-set (27; n3 unresolved `03-create.url.p1`) and 05-open (30, 10) | FAIL: `04-set needs {{03-create.url.p1}}, and this run never published it`; verifier 3/7 | no | 177 (96 seed) | 67; facts.role 1 applied | a recording shape not seen before (five steps: signin, report, create, set, open). n1 submitted the create form with Enter in the Purchase Date field (step 16, expected url /hardware and the "created successfully" alert); on both replays Enter left the browser on /hardware/create (the datepicker took the key), so the asset id the next steps reference was never minted and the model recovered every later step. A submit recorded as a keypress with a url expectation has no fallback to the form's own button (open) |
+
+Reading: publishing is solved on the box side. On the code side three apps are green a third or fourth round running,
+grafana is green on every box and now readable, and the two misses are new shapes rather than regressions: gitea's
+live compile does not yet see the one-digit id as a url position (the export and the re-pin do), and snipe-it's
+recording used Enter as its submit. Neither touches the stage-4 facts, which decided 181 rows this round with
+no disagreement on a role.
+
 ## Round 74 (main e133aada: the round-73 fix — a record number under the text floor written as `#{{vN}}` into a control's name) — EVERY app green; gt and op published, si, od and gr green on their boxes and refused at publish
 
 Fired 15:05 UTC, all five at once, after the round-73 fix verified (results/verify-r73-fix: 0 failures, parity 204/204, corpus 401 rows with no status change against the r72 snapshot).
