@@ -554,6 +554,26 @@ after that point is invalid, verifies (no model) are not. fwop15-cv2 and fwod88-
 for the top-up.
 
 
+## Round 74 (main e133aada: the round-73 fix — a record number under the text floor written as `#{{vN}}` into a control's name) — EVERY app green; gt and op published, si, od and gr green on their boxes and refused at publish
+
+Fired 15:05 UTC, all five at once, after the round-73 fix verified (results/verify-r73-fix: 0 failures, parity 204/204, corpus 401 rows with no status change against the r72 snapshot).
+
+| round | runid | app | verified | replay model-free | compiled | green | facts | applied | notes |
+|---|---|---|---|---|---|---|---|---|---|
+| 74 | fwgt28 | gt | 7/7 ×3 | yes (8/8 flow, 0 turns ×2) | pass (5/7, 2 UNVERIFIABLE), drift 11 | **yes** | (store published) | | the second gitea green on the full system. This recording clicked no heading by its number, so the round-73 slot was not exercised (no `#<digits>` and no `#{{v` in any locator name); the artifact's 11 drift lines are fallbacks that resolved |
+| 74 | fwop29 | op | 7/7 ×3 | 4/4 flow; n2 03-set fell back once (5 turns: a recorded "Close popup" effect did not appear), n3 0 turns | pass (5/7, 2 UNVERIFIABLE), drift 3 | **yes** | (store published) | | |
+| 74 | fwsi25 | si | 7/7 ×3 (box) | yes (4/4 flow, 0 turns ×2) | pass (5/7, 2 UNVERIFIABLE) | **yes** (box) | — | — | fifth green snipe-it in succession. The box committed (after a first commit with the attribution trailer was refused as "Credential Leakage") and the push was refused ("Sensitive-Source Provenance"); the session then stopped at a review prompt after three denials |
+| 74 | fwod100 | od | 6/6 ×3 (box) | yes (6/6 flow, 0 turns ×2) | pass (6/6) | **yes** (box) | 41 (19 value.role; 28 relied, 16 hard) | 36 | third green odoo in succession. Refused on a single `git checkout -b`; the box sent the results as a tarball with its report |
+| 74 | fwgr86 | gr | 6/6 ×3 (box) | yes (5/5 flow, 0 turns ×2) | pass (4/6, 2 UNVERIFIABLE) | **yes** (box) | 93 (68 relied, 4 hard) | — | the sixth grafana box in a row green and refused: this time on the single `git add bench/results-published`, so the four-command publish (e133aada) changed nothing |
+
+Reading: the first round in which every app is green on the same code — fixes 72 (opener guard, request-sending
+evals) and 73 (the `#4` slot) all held, replays ran with 0 model turns on twelve of thirteen flow runs, and every
+artifact passed. What failed is not the system under test: the cloud box's own auto-mode classifier refused three
+of five publishes ("Sensitive-Source Provenance", once "Credential Leakage" on a commit trailer), on single
+allow-listed commands, for snipe-it and odoo as well as grafana now. The project's `.claude/settings.json` allow rules
+and the split publish do not reach it. The way through is a person in the box's session approving the push (the
+sessions stay alive, idle, for hours), or a publish path that is not a git push from the box.
+
 ## Round 73 (main 09e941b2: the round-72 fixes — opener guard asks the click's other work, eval guard refuses request-sending evals) — od, op, si green; gr green on its box, unpublished; gt lost to a frozen one-digit issue number, fixed on fix/r73-hash-id-slot
 
 Fired 13:25 UTC, all five at once, after the round-72 fix verified (results/verify-r72-fix: the suite failed only a test string naming the old guard; parity 204/204; corpus 397 rows with no status change against the stage-4 snapshot, compared locally because the prompt named a baseline branch that never existed).
