@@ -504,4 +504,170 @@ describe('ValueFactObserver (stage 3): the consumers’ side', () => {
     expect(obs.credentialHashes(`${KB}/login`)).toEqual(new Set());
     expect(obs.credentialHashes('not a url')).toEqual(new Set());
   });
+
+  it('credentialHashes: a credential that is also a reliable seed name stays scrubbed (stage 4, fwgr68)', () => {
+    store.observe(OD, [{ k: 'value.class', key: valueHash('admin'), v: 'credential', hard: true, session: 'n1' }]);
+    for (const session of ['n1', 'n2']) store.observe(OD, [{ k: 'value.class', key: valueHash('admin'), v: 'seed', hard: false, session }]);
+    const sf = store.read(OD);
+    expect(sf.facts.filter((f) => f.key === valueHash('admin')).map((f) => f.v).sort()).toEqual(['credential', 'seed']);
+    const obs = new ValueFactObserver(store, 'n3', dir);
+    expect(obs.credentialHashes(`${OD}/web/login`)).toEqual(new Set([valueHash('admin')]));
+  });
+});
+
+describe('stage 4: value meaning facts', () => {
+  const OP = 'http://op.test';
+  const twice = (sf: SiteFacts, o: { k: 'value.class' | 'value.role'; key: string; v: string }) => {
+    for (const session of ['n1', 'n2']) observeFact(sf, { ...o, hard: false, session });
+    return sf;
+  };
+  const seeded = (...names: string[]) => {
+    const sf = emptyFacts(OP);
+    for (const n of names) twice(sf, { k: 'value.class', key: valueHash(n), v: 'seed' });
+    return sf;
+  };
+
+  it('elementNameOf: the folded quoted name of an a11y line', async () => {
+    const { elementNameOf } = await import('../src/skills/facts-value.js');
+    expect(elementNameOf('  - link "Bench  Admin" [ref=e4]')).toBe('bench admin');
+    expect(elementNameOf('- heading "Say \\"hi\\"" [level=1]')).toBe('say "hi"');
+    expect(elementNameOf('- text: Bench Admin')).toBeNull();
+    expect(elementNameOf('- button ""')).toBeNull();
+  });
+
+  it('seedFragmentOf: a whole-token proper fragment of a reliable seed name (fwop24)', async () => {
+    const { seedFragmentOf } = await import('../src/skills/facts-value.js');
+    const lines = ['- button "Bench Admin" [ref=e9]', '- link "Projects"'];
+    const sf = seeded('Bench Admin');
+    expect(seedFragmentOf(sf, 'Bench', lines)).toBe('bench admin');
+    expect(seedFragmentOf(sf, 'Bench Admin', lines)).toBeNull(); // the whole name is seedNameFact's case
+    expect(seedFragmentOf(sf, 'enc', lines)).toBeNull(); // not a whole token
+    expect(seedFragmentOf(sf, 'B', lines)).toBeNull(); // too short
+    expect(seedFragmentOf(undefined, 'Bench', lines)).toBeNull();
+    // one session only: advisory, nothing
+    const one = emptyFacts(OP);
+    observeFact(one, { k: 'value.class', key: valueHash('Bench Admin'), v: 'seed', hard: false, session: 'n1' });
+    expect(seedFragmentOf(one, 'Bench', lines)).toBeNull();
+    // the seed name is not among the lines: nothing
+    expect(seedFragmentOf(sf, 'Bench', ['- link "Projects"'])).toBeNull();
+    // a name holding a run var is never filed seed by the observer (see below), so never matches here either
+  });
+
+  it('roleVerdict: state and count decide, name does not', async () => {
+    const { roleVerdict } = await import('../src/skills/facts-value.js');
+    const key = `${OP}/issues|x`;
+    for (const role of ['state', 'count'] as const) {
+      const sf = twice(emptyFacts(OP), { k: 'value.role', key, v: role });
+      expect(roleVerdict(sf, key)).toMatchObject({ role, by: { k: 'value.role', v: role } });
+      expect(roleVerdict(sf, `${OP}/issues|other`)).toBeNull();
+      expect(roleVerdict(sf, undefined)).toBeNull();
+    }
+    expect(roleVerdict(twice(emptyFacts(OP), { k: 'value.role', key, v: 'name' }), key)).toBeNull();
+    expect(roleVerdict(undefined, key)).toBeNull();
+  });
+
+  it('valueVerdict: seed and role are not identifiers; a reliable mint beats a seed', () => {
+    const sf = seeded('Bench Admin');
+    expect(verdictOf(sf, 'Bench Admin')).toMatchObject({ kind: 'not-identifier', by: { v: 'seed' } });
+    const key = `${OP}/issues|state`;
+    twice(sf, { k: 'value.role', key, v: 'state' });
+    expect(verdictOf(sf, 'closed', key)).toMatchObject({ kind: 'not-identifier', by: { k: 'value.role' } });
+    observeFact(sf, { k: 'value.class', key: valueHash('Bench Admin'), v: 'mint', hard: true, session: 'n3' });
+    expect(verdictOf(sf, 'Bench Admin')).toMatchObject({ kind: 'identifier', by: { v: 'mint' } });
+    // a mint shape under the key beats the role too
+    const shaped = twice(emptyFacts(OP), { k: 'value.role', key, v: 'count' });
+    observeFact(shaped, { k: 'value.shape', key, v: { re: shapeOf('41'), n: 2 }, hard: true, session: 'n1' });
+    expect(verdictOf(shaped, '3', key)).toMatchObject({ kind: 'identifier' });
+  });
+
+  it('observedRole: state, then count, then name', async () => {
+    const { observedRole, STATE_WORDS } = await import('../src/skills/facts-value.js');
+    expect(STATE_WORDS.has('not shown')).toBe(true);
+    expect(observedRole(' Closed ', [])).toBe('state');
+    expect(observedRole('3', ['- tab "3 Open" [ref=e2]'])).toBe('count');
+    expect(observedRole('3', ['- tab "Open 3" [ref=e2]'])).toBeNull();
+    expect(observedRole('12', ['- text: 12 items'])).toBeNull();
+    expect(observedRole('Bench Project', ['- link "Bench Project"'])).toBe('name');
+    expect(observedRole('Bench Project', ['- text: "Bench Project"'])).toBeNull();
+    expect(observedRole('fwop27-n1 Task', ['- link "fwop27-n1 Task"'], ['fwop27-n1'])).toBeNull();
+  });
+});
+
+describe('ValueFactObserver (stage 4): seed names and roles', () => {
+  const OP = 'http://op.test';
+  let dir: string;
+  let store: SiteFactStore;
+  beforeEach(() => {
+    dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sitelooper-facts-value4-'));
+    store = new SiteFactStore(dir);
+  });
+  afterEach(() => fs.rmSync(dir, { recursive: true, force: true }));
+
+  const signin: RecordedEntry = {
+    k: 'instruction',
+    text: 'Sign in and report the admin first name',
+    url: `${OP}/login`,
+    startText: '- button "Bench Admin" [ref=e1]\n- link "fwop9-n1 Old Project"\n- link "Go"\n- text: 12345',
+  };
+  const create: RecordedEntry = { k: 'instruction', text: "Create a project named 'Bench Project'", url: `${OP}/projects`, startText: '- heading "Projects"' };
+  const later: RecordedEntry = { k: 'instruction', text: 'Open the project', url: `${OP}/projects/1`, startText: '- heading "Later Page"' };
+
+  it('files seed names from the baseline window only, once per session per hash, with no ev', () => {
+    for (const session of ['n1', 'n2']) {
+      const obs = new ValueFactObserver(store, session, dir);
+      const ledger = new RunLedger();
+      const script: RecordedEntry[] = [signin];
+      obs.endInstruction(end([signin], ledger, script, ['fwop9-n1']));
+      script.push(create);
+      obs.endInstruction(end([create], ledger, script, ['fwop9-n1']));
+      script.push(later);
+      obs.endInstruction(end([later], ledger, script, ['fwop9-n1']));
+    }
+    const sf = store.read(OP);
+    const seeds = sf.facts.filter((f) => f.k === 'value.class' && f.v === 'seed');
+    const has = (n: string) => seeds.some((f) => f.key === valueHash(n));
+    expect(has('Bench Admin')).toBe(true);
+    expect(has('Projects')).toBe(true); // the first mutating instruction's start page
+    expect(has('Later Page')).toBe(false); // past the boundary
+    expect(has('fwop9-n1 Old Project')).toBe(false); // names a declared var
+    expect(has('Go')).toBe(false); // under 3 characters
+    expect(seeds.every((f) => f.ev === undefined && f.hard === false && f.sessions.length === 2)).toBe(true);
+  });
+
+  it('never files a name the ledger holds', () => {
+    const obs = new ValueFactObserver(store, 'n1', dir);
+    const ledger = new RunLedger();
+    ledger.add('Bench Admin', { from: 'output', step: 'i1', name: 'admin' });
+    obs.endInstruction(end([signin], ledger, [signin]));
+    expect(store.read(OP).facts.some((f) => f.key === valueHash('Bench Admin'))).toBe(false);
+  });
+
+  it('files a role per (key, role) once per session, and writes the facts.role row against the facts before', () => {
+    const url = `${OP}/issues/new`;
+    const lines = ['- tab "3 Open" [ref=e1]'];
+    for (const session of ['n1', 'n2', 'n3']) {
+      const obs = new ValueFactObserver(store, session, dir);
+      const ledger = new RunLedger();
+      const a = ledger.add('closed', { from: 'output', step: 'i1', name: 'picker_state' }, { shapeKey: shapeKeyOf(url, 'picker_state') }, obs.snapshot(url));
+      obs.noteReport(url, 'picker_state', 'closed', a, [], lines);
+      const b = ledger.add('3', { from: 'output', step: 'i1', name: 'open_count' });
+      obs.noteReport(url, 'open_count', '3', b, [], lines);
+      const rows = obs.endInstruction(end([{ k: 'instruction', text: 'Check the issues', url }], ledger));
+      if (session === 'n3') {
+        expect(rows).toContainEqual(expect.objectContaining({ rule: 'facts.role', fact: 'state', heuristic: 'text', agree: true, applied: true }));
+      }
+    }
+    const sf = store.read(OP);
+    expect(sf.facts.find((f) => f.k === 'value.role' && f.key === shapeKeyOf(url, 'picker_state'))).toMatchObject({ v: 'state', sessions: ['n1', 'n2', 'n3'] });
+    expect(sf.facts.find((f) => f.k === 'value.role' && f.key === shapeKeyOf(url, 'open_count'))).toMatchObject({ v: 'count' });
+  });
+
+  it('a seed fragment the daemon did not bank writes an applied facts.ledger row', () => {
+    for (const session of ['n1', 'n2']) store.observe(OP, [{ k: 'value.class', key: valueHash('Bench Admin'), v: 'seed', hard: false, session }]);
+    const obs = new ValueFactObserver(store, 'n3', dir);
+    obs.noteSeedFragment(`${OP}/login`, 'admin_first_name', 'Bench', 'bench admin');
+    const rows = obs.endInstruction(end([{ k: 'instruction', text: 'x', url: `${OP}/login` }], new RunLedger()));
+    expect(rows).toContainEqual(expect.objectContaining({ rule: 'facts.ledger', fact: 'seed-fragment', applied: true }));
+    expect(JSON.stringify(rows)).not.toContain('Bench'); // hashes only
+  });
 });

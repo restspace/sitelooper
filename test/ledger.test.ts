@@ -879,3 +879,43 @@ describe('add with site facts (stage 3, consumer 1: the value class prior)', () 
     }
   });
 });
+
+describe('add with site facts (stage 4: value meaning facts)', () => {
+  const OP = 'http://op.test';
+  const out = (name: string) => ({ from: 'output' as const, step: 'i1', name });
+
+  it('a reliable state role under the shapeKey banks the value as text (gitea fwgt17)', async () => {
+    const { emptyFacts, observeFact } = await import('../src/execution/facts.js');
+    const { shapeKeyOf } = await import('../src/skills/facts-value.js');
+    const url = `${OP}/repo/issues/new`;
+    const shapeKey = shapeKeyOf(url, 'labels_picker_state');
+    // A word that reads as an id on shape alone, so the role is what decides.
+    const value = 'closed7';
+    expect(new RunLedger().add(value, out('labels_picker_state'))).toMatchObject({ kind: 'identifier' });
+    const sf = emptyFacts(OP);
+    for (const session of ['n1', 'n2']) observeFact(sf, { k: 'value.role', key: shapeKey, v: 'state', hard: false, session });
+    expect(new RunLedger().add(value, out('labels_picker_state'), { shapeKey }, sf)).toMatchObject({ kind: 'text', basis: 'shape' });
+    // one session only: advisory, today's rule
+    const one = emptyFacts(OP);
+    observeFact(one, { k: 'value.role', key: shapeKey, v: 'state', hard: false, session: 'n1' });
+    expect(new RunLedger().add(value, out('labels_picker_state'), { shapeKey }, one)).toMatchObject({ kind: 'identifier' });
+    // a name role never decides
+    const named = emptyFacts(OP);
+    for (const session of ['n1', 'n2']) observeFact(named, { k: 'value.role', key: shapeKey, v: 'name', hard: false, session });
+    expect(new RunLedger().add(value, out('labels_picker_state'), { shapeKey }, named)).toMatchObject({ kind: 'identifier' });
+  });
+
+  it('a seed value is banked as text; a reliable mint of the same value still wins', async () => {
+    const { emptyFacts, observeFact, valueHash } = await import('../src/execution/facts.js');
+    const value = 'Seed1 task';
+    const sf = emptyFacts(OP);
+    for (const session of ['n1', 'n2']) observeFact(sf, { k: 'value.class', key: valueHash(value), v: 'seed', hard: false, session });
+    expect(new RunLedger().add('seed42x', out('title'))).toMatchObject({ kind: 'identifier' });
+    const seedId = emptyFacts(OP);
+    for (const session of ['n1', 'n2']) observeFact(seedId, { k: 'value.class', key: valueHash('seed42x'), v: 'seed', hard: false, session });
+    expect(new RunLedger().add('seed42x', out('title'), {}, seedId)).toMatchObject({ kind: 'text' });
+    expect(new RunLedger().add(value, out('title'), {}, sf)).toMatchObject({ kind: 'text' });
+    observeFact(seedId, { k: 'value.class', key: valueHash('seed42x'), v: 'mint', hard: true, session: 'n3' });
+    expect(new RunLedger().add('seed42x', out('title'), {}, seedId)).toMatchObject({ kind: 'identifier' });
+  });
+});

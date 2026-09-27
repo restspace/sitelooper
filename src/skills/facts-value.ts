@@ -22,23 +22,26 @@
 import {
   factFor,
   factsFor,
+  foldValue,
   matchesShape,
   reliable,
   routeTemplateOf,
+  seedNameFact,
   shapeOf,
-  valueClassFact,
+  valueClassFactOf,
   valueHash,
   MAX_EV,
   type Fact,
   type FactKind,
   type Observation,
   type SiteFacts,
+  type ValueRole,
 } from '../execution/facts.js';
 import { originOf, urlParts } from '../execution/url.js';
 import type { RecordedEntry } from '../daemon/recorder.js';
 import { isDataShaped } from '../agent/sourcing.js';
 import { ambiguousCredentialHashes } from '../shared/secrets.js';
-import { taskConstantArms, type RunSpecific } from './flow.js';
+import { mutatingIntent, replaceToken, taskConstantArms, type RunSpecific } from './flow.js';
 import { pathDigitPart, urlPartFactKey, type LedgerEntry } from './ledger.js';
 import type { SiteFactStore } from './facts.js';
 import { writeShadow, type ShadowRow } from './shadow.js';
@@ -140,6 +143,119 @@ function evidenceOf(f: Fact): string {
   return JSON.stringify({ k: f.k, key: f.key, v: f.v, reliable: reliable(f) });
 }
 
+/**
+ * Stage 4: the words a reported value carries when it is a picker or toggle
+ * STATE rather than a record's text (gitea fwgt17's `labels_picker_state =
+ * "closed"`). Folded; compare with `foldValue`.
+ */
+export const STATE_WORDS: ReadonlySet<string> = new Set([
+  'open', 'opened', 'closed', 'close', 'expanded', 'collapsed', 'checked', 'unchecked', 'selected', 'unselected',
+  'enabled', 'disabled', 'visible', 'hidden', 'shown', 'not shown', 'present', 'absent', 'empty', 'none',
+  'true', 'false', 'yes', 'no', 'on', 'off', 'active', 'inactive', 'pending', 'done',
+]);
+
+/** An a11y snapshot line's role and quoted accessible name (baselineOf's parse), the name folded. */
+function elementOf(line: string): { role: string; name: string } | null {
+  const m = /^- ([\w-]+) ("(?:[^"\\]|\\.)*")/.exec(line.trim());
+  if (!m) return null;
+  try {
+    const name = foldValue(String(JSON.parse(m[2])));
+    return name ? { role: m[1], name } : null;
+  } catch {
+    // an unparseable name is no evidence
+    return null;
+  }
+}
+
+/**
+ * The quoted accessible NAME of an a11y snapshot line (`- link "Bench Admin"`
+ * → "bench admin"), folded with `foldValue`; null when the line has none.
+ * flow.ts baselineOf reads element names through this.
+ */
+export function elementNameOf(line: string): string | null {
+  return elementOf(line)?.name ?? null;
+}
+
+/**
+ * Stage 4 (openproject fwop24): the SEED name, among the element names of
+ * `lines`, that `value` is a proper fragment of — "bench" inside the seed
+ * admin's "bench admin". The name must carry a reliable seed fact
+ * (`seedNameFact`: two sessions saw it before any run changed anything, and
+ * no reliable mint of it) and hold the folded value as a WHOLE TOKEN (the
+ * product's one boundary, flow.ts replaceToken) while being longer than it: a
+ * value that IS a seed name is `seedNameFact` on the value, not this. The
+ * first such name, else null; no facts or a value under 2 characters: null.
+ */
+export function seedFragmentOf(sf: SiteFacts | undefined, value: string, lines: Iterable<string>): string | null {
+  if (!sf) return null;
+  const v = foldValue(String(value ?? ''));
+  if (v.length < 2) return null;
+  const tried = new Set<string>();
+  for (const line of lines) {
+    const name = elementNameOf(line);
+    if (!name || name.length <= v.length || tried.has(name)) continue;
+    tried.add(name);
+    if (replaceToken(name, v, '\u0000') === name) continue;
+    if (seedNameFact(sf, name)) return name;
+  }
+  return null;
+}
+
+/**
+ * Stage 4: the reliable role of the values reported under `key` when it
+ * DECIDES — a `state` or a `count` is never a record's identifier. A `name`
+ * role never decides (it is observed for the survey only). Null otherwise.
+ */
+export function roleVerdict(sf: SiteFacts | undefined, key: string | undefined): { role: 'state' | 'count'; by: Fact } | null {
+  if (!sf || !key) return null;
+  const f = factFor(sf, 'value.role', key);
+  if (f && (f.v === 'state' || f.v === 'count')) return { role: f.v, by: f };
+  return null;
+}
+
+/**
+ * Every captured line of an instruction's entries: each instruction's start
+ * page (`startText`) and each step's `diff.added` — the evidence the
+ * seed-fragment skip and the role observer read (server.ts noteMintedIds).
+ */
+export function linesOf(entries: readonly RecordedEntry[]): string[] {
+  const out: string[] = [];
+  for (const e of entries) {
+    if (e.k === 'instruction' && e.startText) out.push(...e.startText.split('\n'));
+    else if (e.k === 'step' && e.diff?.added) out.push(...e.diff.added);
+  }
+  return out;
+}
+
+/** The roles whose element name a reported value may equal for a `name` role. */
+const NAME_ROLES = new Set(['link', 'button', 'heading', 'cell', 'option', 'menuitem', 'tab', 'treeitem', 'row', 'listitem']);
+
+/**
+ * The role a reported value shows under its label, from its own characters
+ * and this instruction's captured lines: `state` (a STATE_WORDS word), then
+ * `count` (1-6 digits the page shows leading a quoted name, `"3 Open"`), then
+ * `name` (the whole accessible name of a link, button, heading… the page
+ * shows, with a letter and no run var). Null when none.
+ */
+export function observedRole(value: string, lines: readonly string[], vars: readonly string[] = []): ValueRole | null {
+  const v = String(value ?? '').trim();
+  if (!v) return null;
+  const folded = foldValue(v);
+  if (STATE_WORDS.has(folded)) return 'state';
+  if (/^\d{1,6}$/.test(v)) {
+    const re = new RegExp(`"${v} \\p{L}`, 'u');
+    if (lines.some((l) => re.test(l))) return 'count';
+    return null;
+  }
+  if (!/\p{L}/u.test(v)) return null;
+  if (vars.some((x) => x.length >= 2 && folded.includes(foldValue(x)))) return null;
+  for (const line of lines) {
+    const el = elementOf(line);
+    if (el && NAME_ROLES.has(el.role) && el.name === folded) return 'name';
+  }
+  return null;
+}
+
 type IdVerdict = 'identifier' | 'not-identifier' | 'none';
 
 /**
@@ -149,7 +265,7 @@ type IdVerdict = 'identifier' | 'not-identifier' | 'none';
  * first sighting, whatever its length. 'none': no reliable fact speaks.
  */
 export function factKind(sf: SiteFacts, value: string, shapeKey: string | undefined): IdVerdict {
-  const cls = valueClassFact(sf, value);
+  const cls = valueClassFactOf(sf, value)?.v;
   if (cls === 'constant' || cls === 'credential') return 'not-identifier';
   if (cls === 'mint') return 'identifier';
   if (shapeKey && matchesShape(sf, shapeKey, value)) return 'identifier';
@@ -188,7 +304,9 @@ export function valueVerdict(sf: SiteFacts | undefined, value: string, shapeKey?
   if (!sf) return null;
   const v = String(value ?? '').trim();
   if (!v) return null;
-  const cls = factFor(sf, 'value.class', valueHash(v));
+  // A seed fact is a second dimension of the value (facts.ts competes), so the
+  // class that decides here is the one reliable constant, mint or credential.
+  const cls = valueClassFactOf(sf, v);
   if (cls?.v === 'credential') return { kind: 'not-identifier', by: cls };
   if (cls?.v === 'mint') return { kind: 'identifier', by: cls };
   if (shapeKey && matchesShape(sf, shapeKey, v)) {
@@ -196,6 +314,14 @@ export function valueVerdict(sf: SiteFacts | undefined, value: string, shapeKey?
     if (shape) return { kind: 'identifier', by: shape };
   }
   if (cls?.v === 'constant') return { kind: 'not-identifier', by: cls };
+  // Stage 4, after every mint arm (mint wins): the app's seed name, and a
+  // label whose values are a picker state or a count, are never a record id.
+  if (seedNameFact(sf, v)) {
+    const seed = factsFor(sf, 'value.class', valueHash(v)).find((f) => f.v === 'seed' && reliable(f));
+    if (seed) return { kind: 'not-identifier', by: seed };
+  }
+  const role = roleVerdict(sf, shapeKey);
+  if (role) return { kind: 'not-identifier', by: role.by };
   return null;
 }
 
@@ -206,7 +332,11 @@ function verdictKind(sf: SiteFacts, value: string, shapeKey: string | undefined)
 
 /** Every fact (reliable or not) that speaks about a value or its label's shape. */
 function factsAbout(sf: SiteFacts, value: string, shapeKey: string | undefined): Fact[] {
-  return [...factsFor(sf, 'value.class', valueHash(value)), ...(shapeKey ? factsFor(sf, 'value.shape', shapeKey) : [])];
+  return [
+    ...factsFor(sf, 'value.class', valueHash(value)),
+    ...(shapeKey ? factsFor(sf, 'value.shape', shapeKey) : []),
+    ...(shapeKey ? factsFor(sf, 'value.role', shapeKey) : []),
+  ];
 }
 
 /**
@@ -306,6 +436,41 @@ export function sourcingRow(
   };
 }
 
+/**
+ * Row `facts.role` (stage 4): what the reliable role under a reported value's
+ * label says against the ledger kind it got. `fact` is the role word or
+ * 'none', `heuristic` the ledger's kind ('none' when nothing was banked).
+ * A `state` or `count` role agrees when the value is not an identifier; a
+ * `name` role or none never decides, so it always agrees. Null when no role
+ * fact (reliable or not) exists under the key.
+ */
+export function roleRow(
+  sf: SiteFacts,
+  shapeKey: string,
+  kind: LedgerEntry['kind'] | undefined,
+  /** The ledger's add() was handed the facts and a role or seed fact decided the entry. */
+  applied = false,
+): ValueShadowRow | null {
+  const about = factsFor(sf, 'value.role', shapeKey);
+  if (!about.length) return null;
+  const role = factFor(sf, 'value.role', shapeKey)?.v;
+  const fact = typeof role === 'string' ? role : 'none';
+  const heuristic = kind ?? 'none';
+  const decides = fact === 'state' || fact === 'count';
+  return {
+    rule: 'facts.role',
+    step: shapeKey.slice(0, 100),
+    fact,
+    heuristic,
+    agree: !decides || heuristic !== 'identifier',
+    evidence: about.map(evidenceOf),
+    ...(applied ? { applied: true as const } : {}),
+  };
+}
+
+/** Seed observations one session files at most (the largest start pages are ~300 lines). */
+export const MAX_SEED_OBSERVATIONS = 400;
+
 /** One value the instruction met, for the ledger rows and the shape memory. */
 interface Candidate {
   value: string;
@@ -315,6 +480,10 @@ interface Candidate {
   minted: boolean;
   /** Stage 3: the ledger banked it on a reliable valueVerdict (the report's add() was handed the facts). */
   applied?: boolean;
+  /** Stage 4: a reported value (the `facts.role` row is written for it). */
+  report?: boolean;
+  /** Stage 4: the verdict that decided it was a role or seed fact. */
+  appliedByMeaning?: boolean;
 }
 
 /** What the daemon hands the observer at an instruction's end. */
@@ -353,6 +522,10 @@ export class ValueFactObserver {
   private rowsWritten = new Set<string>();
   /** value → the shape key it was last met under, for the strip rows. */
   private keyOfValue = new Map<string, string>();
+  /** Seed observations filed this session (capped at MAX_SEED_OBSERVATIONS). */
+  private seedCount = 0;
+  /** Stage 4: report values the daemon did not bank as a seed name's fragment, for their `facts.ledger` rows. */
+  private seedSkips: { origin: string; value: string; shapeKey: string; name: string }[] = [];
 
   constructor(
     private readonly store: SiteFactStore,
@@ -388,8 +561,10 @@ export class ValueFactObserver {
     this.filed.clear();
     this.rowsWritten.clear();
     this.keyOfValue.clear();
+    this.seedCount = 0;
     this.pendingObs = [];
     this.candidates = [];
+    this.seedSkips = [];
   }
 
   /**
@@ -437,7 +612,15 @@ export class ValueFactObserver {
    * report has no position); a reported identifier counts toward its key's
    * shape.
    */
-  noteReport(url: string | undefined, name: string, value: string, entry: LedgerEntry | null, vars: readonly string[] = []): void {
+  noteReport(
+    url: string | undefined,
+    name: string,
+    value: string,
+    entry: LedgerEntry | null,
+    vars: readonly string[] = [],
+    /** Stage 4: this instruction's captured lines (startText and diff.added), for the role observation. */
+    lines: readonly string[] = [],
+  ): void {
     try {
       const origin = url ? originOf(url) : null;
       const v = String(value ?? '').trim();
@@ -451,8 +634,35 @@ export class ValueFactObserver {
       // Stage 3: the daemon hands the report's add() this origin's snapshot
       // (server.ts noteMintedIds), so a verdict that speaks now decided the
       // entry add() just banked.
-      const applied = Boolean(entry) && valueVerdict(this.snapshot(url!), v, shapeKey) !== null;
-      this.candidates.push({ value: v, shapeKey, origin, minted: entry?.kind === 'identifier', ...(applied ? { applied } : {}) });
+      const verdict = entry ? valueVerdict(this.snapshot(url!), v, shapeKey) : null;
+      const applied = verdict !== null;
+      const byMeaning = verdict !== null && (verdict.by.k === 'value.role' || verdict.by.v === 'seed');
+      this.candidates.push({
+        value: v, shapeKey, origin, minted: entry?.kind === 'identifier', report: true,
+        ...(applied ? { applied } : {}), ...(byMeaning ? { appliedByMeaning: true } : {}),
+      });
+      // Stage 4: the role the value shows under its label, once per session per (key, role).
+      const role = observedRole(v, lines, vars);
+      if (role && !this.filed.has(`role ${shapeKey} ${role}`)) {
+        this.filed.add(`role ${shapeKey} ${role}`);
+        this.pendingObs.push({ origin, o: { k: 'value.role', key: shapeKey, v: role, hard: false } });
+      }
+    } catch {
+      /* shadow only */
+    }
+  }
+
+  /**
+   * Stage 4: the daemon did not bank a reported value because it is a proper
+   * fragment of a reliable seed name (server.ts noteMintedIds, fwop24). Its
+   * `facts.ledger` row is written at the instruction's end.
+   */
+  noteSeedFragment(url: string | undefined, name: string, value: string, seedName: string): void {
+    try {
+      const origin = url ? originOf(url) : null;
+      const v = String(value ?? '').trim();
+      if (!origin || !v) return;
+      this.seedSkips.push({ origin, value: v, shapeKey: shapeKeyOf(url!, name), name: seedName });
     } catch {
       /* shadow only */
     }
@@ -486,6 +696,31 @@ export class ValueFactObserver {
         const row = ledgerRow(before.get(c.origin)!, c.value, c.shapeKey, kindOf.get(c.value), applied);
         if (row) rows.push(row);
       }
+      // Stage 4 rows: the seed fragments the daemon did not bank, and the role
+      // under every reported value's label.
+      for (const skip of this.seedSkips) {
+        if (!before.has(skip.origin)) before.set(skip.origin, this.store.read(skip.origin));
+        const seedRow: ValueShadowRow = {
+          rule: 'facts.ledger',
+          step: skip.shapeKey.slice(0, 100),
+          fact: 'seed-fragment',
+          heuristic: 'banked',
+          agree: false,
+          evidence: factsFor(before.get(skip.origin)!, 'value.class', valueHash(skip.name)).map(evidenceOf),
+          applied: true,
+        };
+        rows.push(seedRow);
+      }
+      const roleSeen = new Set<string>();
+      for (const c of this.candidates) {
+        if (!c.report || !c.shapeKey) continue;
+        const id = `${c.value}\u0000${c.shapeKey}`;
+        if (roleSeen.has(id)) continue;
+        roleSeen.add(id);
+        const byMeaning = this.candidates.some((o) => o.appliedByMeaning && o.value === c.value && o.shapeKey === c.shapeKey);
+        const row = roleRow(before.get(c.origin)!, c.shapeKey, kindOf.get(c.value), byMeaning);
+        if (row) rows.push(row);
+      }
       // Rows: the sourcing hold, when it is on.
       const report = [...end.entries].reverse().find((e) => e.k === 'report');
       if (end.sourcingHold && report?.k === 'report' && instrOrigin) {
@@ -499,6 +734,12 @@ export class ValueFactObserver {
           if (typeof raw !== 'string' || !url) continue;
           const row = sourcingRow(before.get(instrOrigin)!, key, raw.trim(), shapeKeyOf(url, key), held.has(key), readKeys.has(key), byFact.has(key));
           if (row) rows.push(row);
+        }
+        // Stage 4: an asked key the hold let go because its label carries a
+        // reliable `state` role (agent/sourcing.ts; RecordedReport
+        // .sourcingReleased) — the fact decided, against today's hold.
+        for (const key of report.sourcingReleased ?? []) {
+          rows.push({ rule: 'facts.sourcing', step: `report ${key}`.slice(0, 100), fact: 'state', heuristic: 'not-held', agree: true, evidence: [`role state under ${url ? shapeKeyOf(url, key) : key}`], applied: true } as ValueShadowRow);
         }
       }
 
@@ -520,6 +761,9 @@ export class ValueFactObserver {
           this.pendingObs.push({ origin: instrOrigin, o: { k: 'value.class', key, v: 'credential', hard: true } });
         }
       }
+
+      // Stage 4: seed names, from the baseline window.
+      if (instrOrigin) this.fileSeedNames(end, instruction, instrOrigin);
 
       // Label shapes: two distinct minted values under one key sharing a shape.
       for (const c of this.candidates) {
@@ -550,8 +794,62 @@ export class ValueFactObserver {
     } finally {
       this.candidates = [];
       this.pendingObs = [];
+      this.seedSkips = [];
     }
     return rows;
+  }
+
+  /**
+   * Stage 4, seed names (`value.class` 'seed', soft, no ev): every distinct
+   * folded element name the app showed before any run changed anything —
+   * flow.ts baselineOf's window: the start pages of every instruction up to
+   * and including the FIRST one that asks for a change (`mutatingIntent`),
+   * and the `diff.added` lines of every step before it. Filed while the
+   * instruction just ended is at or before that boundary; a session that never
+   * asks for a change files as it goes (each instruction's end files the
+   * window so far, deduped per hash), which is its whole session at the end.
+   *
+   * Never a name that could be the run's: shorter than 3 characters, without
+   * a letter, containing a declared var (the runid), equal to any value the
+   * ledger holds, or holding a ledger identifier as a whole token. Nor a name
+   * this batch files another class for (a constant, a mint, a credential).
+   */
+  private fileSeedNames(end: InstructionEnd, instruction: RecordedEntry | undefined, origin: string): void {
+    const script = end.script;
+    const at = script.findIndex((e) => e.k === 'instruction' && mutatingIntent(e.text) !== null);
+    const endedAt = instruction ? script.indexOf(instruction) : -1;
+    if (at >= 0 && endedAt > at) return;
+    const names = new Set<string>();
+    const addLines = (lines: readonly string[] | undefined): void => {
+      for (const line of lines ?? []) {
+        const name = elementNameOf(line);
+        if (name) names.add(name);
+      }
+    };
+    const bound = at >= 0 ? at : script.length - 1;
+    for (let k = 0; k <= bound; k++) {
+      const e = script[k];
+      if (e.k === 'instruction') addLines(e.startText?.split('\n'));
+      if (k === at) break;
+      if (e.k === 'step') addLines(e.diff?.added);
+    }
+    if (!names.size) return;
+    const vars = end.vars.filter((x) => x.length >= 2).map(foldValue);
+    const held = new Set(end.ledger.map((e) => foldValue(e.value)));
+    const ids = end.ledger.filter((e) => e.kind === 'identifier').map((e) => foldValue(e.value)).filter(Boolean);
+    const otherClass = new Set(this.pendingObs.filter((p) => p.o.k === 'value.class' && p.o.v !== 'seed').map((p) => p.o.key));
+    for (const name of names) {
+      if (this.seedCount >= MAX_SEED_OBSERVATIONS) return;
+      if (name.length < 3 || !/\p{L}/u.test(name)) continue;
+      if (vars.some((x) => name.includes(x))) continue;
+      if (held.has(name)) continue;
+      if (ids.some((id) => replaceToken(name, id, '\u0000') !== name)) continue;
+      const key = valueHash(name);
+      if (otherClass.has(key) || this.filed.has(`seed ${key}`)) continue;
+      this.filed.add(`seed ${key}`);
+      this.seedCount += 1;
+      this.pendingObs.push({ origin, o: { k: 'value.class', key, v: 'seed', hard: false } });
+    }
   }
 
   /**
@@ -635,7 +933,12 @@ export class ValueFactObserver {
       const sf = this.snapshot(url);
       if (!sf) return out;
       for (const f of sf.facts) {
-        if (f.k === 'value.class' && f.v === 'credential' && factFor(sf, 'value.class', f.key) === f) out.add(f.key);
+        if (f.k !== 'value.class' || f.v !== 'credential' || !reliable(f)) continue;
+        // valueClassFactOf's rule, by hash: the one reliable NON-seed class
+        // fact. A seed fact of the same hash is a second dimension (the seed
+        // admin's user name IS the credential, fwgr68) and never unscrubs it.
+        const classes = factsFor(sf, 'value.class', f.key).filter((c) => reliable(c) && c.v !== 'seed');
+        if (classes.length === 1 && classes[0] === f) out.add(f.key);
       }
     } catch {
       /* none */

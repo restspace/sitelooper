@@ -28,7 +28,13 @@
  */
 import { isWildcardSeg, urlShapeOf } from './url.js';
 
-export type FactKind = 'route.fragment' | 'route.query' | 'route.path' | 'format' | 'value.class' | 'value.shape';
+export type FactKind = 'route.fragment' | 'route.query' | 'route.path' | 'format' | 'value.class' | 'value.shape' | 'value.role';
+/**
+ * What a reported value under a label MEANS (stage 4): a picker `state`
+ * ("closed"), a `count` ("3" of a "3 Open" tab), or a displayed `name`. Keyed
+ * `<route>|<label>` — a label, never a value — with the role word as `v`.
+ */
+export type ValueRole = 'state' | 'count' | 'name';
 export type FormatKind = 'thousands' | 'decimals' | 'affix' | 'upper' | 'date' | 'trim' | 'twice' | 'counter';
 export type FactValue = string | { kind: FormatKind; tpl?: string } | { re: string; n: number };
 
@@ -201,6 +207,13 @@ export function sameFactValue(a: FactValue, b: FactValue): boolean {
  */
 function competes(a: Fact | Observation, b: Fact | Observation): boolean {
   if (a.k !== b.k || a.key !== b.key || sameFactValue(a.v, b.v)) return false;
+  // Stage 4: a `seed` class says only "shown before any run changed anything";
+  // it is a second dimension of the value, not a rival of its constant, mint
+  // or credential class (a seed admin's user name IS the credential of
+  // fwgr68, a seed column IS an offered constant). Competing, it would drop
+  // those stage 3 facts to advisory; the readers below keep them apart
+  // instead (valueClassFactOf never returns a seed; seedNameFact: mint wins).
+  if (a.k === 'value.class' && (a.v === 'seed') !== (b.v === 'seed')) return false;
   if (a.k !== 'format') return true;
   const kind = (v: FactValue) => (typeof v === 'object' && 'kind' in v ? v.kind : '');
   return kind(a.v) === kind(b.v);
@@ -395,9 +408,44 @@ export function renderings(sf: SiteFacts, key: string, value: string): string[] 
   return [...new Set([...framed, ...(changed ? [core] : [])])];
 }
 
-/** What this value is on this origin: a catalogue constant, a run's mint, or a credential. */
-export function valueClassFact(sf: SiteFacts, value: string): 'constant' | 'mint' | 'credential' | null {
-  return stringFact(sf, 'value.class', valueHash(value), ['constant', 'mint', 'credential'] as const);
+/**
+ * The one reliable NON-seed class fact of a value (constant, mint or
+ * credential), or null — what every stage 3 consumer asks. Two reliable
+ * non-seed facts is a contradiction the observer missed: null, as factFor.
+ */
+export function valueClassFactOf(sf: SiteFacts, value: string): Fact | null {
+  const relied = factsFor(sf, 'value.class', valueHash(value)).filter((f) => reliable(f) && f.v !== 'seed');
+  return relied.length === 1 ? relied[0] : null;
+}
+
+/**
+ * What this value is on this origin: a catalogue constant, a run's mint, a
+ * credential, or a SEED name (stage 4: shown before any run changed
+ * anything). A constant, mint or credential class speaks first; `seed` only
+ * where none does (and never over a reliable mint, `seedNameFact`).
+ */
+export function valueClassFact(sf: SiteFacts, value: string): 'constant' | 'mint' | 'credential' | 'seed' | null {
+  const v = valueClassFactOf(sf, value)?.v;
+  if (v === 'constant' || v === 'mint' || v === 'credential') return v;
+  if (factsFor(sf, 'value.class', valueHash(value)).filter((f) => reliable(f) && f.v !== 'seed').length > 1) return null;
+  return seedNameFact(sf, value) ? 'seed' : null;
+}
+
+/**
+ * The name is the app's SEED data on this origin (stage 4, fwop24's "Bench
+ * Admin"): a reliable `seed` class fact of its hash, and no reliable `mint`
+ * fact of the same hash — a mint always wins over a seed.
+ */
+export function seedNameFact(sf: SiteFacts, name: string): boolean {
+  const hash = valueHash(name);
+  const relied = factsFor(sf, 'value.class', hash).filter(reliable);
+  if (relied.some((f) => f.v === 'mint')) return false;
+  return relied.some((f) => f.v === 'seed');
+}
+
+/** The reliable role of the values reported under `key` (`${route}|${label}`), or null. */
+export function valueRoleFact(sf: SiteFacts, key: string): ValueRole | null {
+  return stringFact(sf, 'value.role', key, ['state', 'count', 'name'] as const);
 }
 
 /** The reliable shape of the values minted under a label (`${route}|${label}`). */

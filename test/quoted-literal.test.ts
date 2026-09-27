@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import type { RecordedEntry } from '../src/daemon/recorder.js';
 import { buildFlow, threadIntoLiteral, threadOutsideQuotes } from '../src/skills/flow.js';
+import { emptyFacts, observeFact, valueHash, type SiteFacts } from '../src/execution/facts.js';
+import type { ValueShadowRow } from '../src/skills/facts-value.js';
 
 const OP = 'http://127.0.0.1:8090';
 
@@ -56,5 +58,58 @@ describe('threadOutsideQuotes and threadIntoLiteral', () => {
     expect(threadIntoLiteral('Bench Project', 'Bench', M, false)).toBe('Bench Project');
     expect(threadIntoLiteral('Bench', 'Bench', M, false)).toBe(M);
     expect(threadIntoLiteral('Quotation S00023', 'S00023', M, true)).toBe(`Quotation ${M}`);
+  });
+});
+
+/**
+ * Site facts stage 4: the same recording, decided by MEANING. With a
+ * reliable seed fact for the admin's display name "Bench Admin" (two
+ * sessions saw it before any run changed anything), the reported fragment
+ * "Bench" is the app's data and is threaded nowhere — not even where it
+ * stands outside the author's quotes, where the punctuation rule lets it
+ * through. One session's word is advisory and decides nothing.
+ */
+describe('a seed-name fragment is not threaded anywhere once the seed fact is reliable (stage 4)', () => {
+  const seedFacts = (sessions: string[]): SiteFacts => {
+    const sf = emptyFacts(OP);
+    for (const session of sessions) observeFact(sf, { k: 'value.class', key: valueHash('Bench Admin'), v: 'seed', hard: false, session });
+    return sf;
+  };
+  const build = (facts: SiteFacts) => {
+    const rows: ValueShadowRow[] = [];
+    const flow = buildFlow(recording(), { name: 'op', origin: OP, startUrl: `${OP}/`, vars: { runid: 'fx1' }, session: 's', now: '2026-09-26T00:00:00Z', facts, onFactRow: (r) => rows.push(r) })!;
+    return { flow, rows, first: rows.find((r) => r.rule === 'facts.seed' && r.step === 'export admin_first_name') };
+  };
+
+  it('two sessions: the word outside quotes stays literal, and the facts.seed row is applied', () => {
+    const { flow, first } = build(seedFacts(['a', 'b']));
+    expect(flow.steps[2].instruction).toContain('created by Bench in');
+    expect(JSON.stringify(flow)).not.toContain('admin_first_name}}');
+    expect(first).toMatchObject({ fact: 'seed-fragment', heuristic: 'threaded', agree: false, applied: true });
+  });
+
+  it('the whole seed name is a seed too (not threaded, row applied)', () => {
+    const { rows } = build(seedFacts(['a', 'b']));
+    expect(rows.find((r) => r.step === 'export signed_in_as')).toMatchObject({ fact: 'seed', applied: true });
+  });
+
+  it('one session: advisory, the word still threads and the row is not applied', () => {
+    const { flow, first } = build(seedFacts(['a']));
+    expect(flow.steps[2].instruction).toContain('created by {{01-signin.admin_first_name}} in');
+    expect(first).toMatchObject({ fact: 'none', heuristic: 'threaded', agree: true });
+    expect(first?.applied).toBeUndefined();
+  });
+
+  it('a reliable mint of the value wins over the seed name', () => {
+    const sf = seedFacts(['a', 'b']);
+    for (const session of ['a', 'b']) observeFact(sf, { k: 'value.class', key: valueHash('Bench'), v: 'mint', hard: false, session });
+    const { flow } = build(sf);
+    expect(flow.steps[2].instruction).toContain('created by {{01-signin.admin_first_name}} in');
+  });
+
+  it('no facts: byte-identical to the flow built without the option', () => {
+    const plain = buildFlow(recording(), { name: 'op', origin: OP, startUrl: `${OP}/`, vars: { runid: 'fx1' }, session: 's', now: '2026-09-26T00:00:00Z' });
+    const empty = build(emptyFacts(OP)).flow;
+    expect(JSON.stringify(empty)).toBe(JSON.stringify(plain));
   });
 });

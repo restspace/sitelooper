@@ -9,7 +9,7 @@ import { rewriteOrigins } from './facts-rewrite.js';
 import { shadowClassify, takeFormatShadowRows } from './facts-format.js';
 import { compileSkills, escapeRe, fillParams, samePageContexts, sameProcedure, urlMatches, urlPattern, variantStart } from './compile.js';
 import { landedOnRecordedPage } from '../execution/gates.js';
-import { urlDiff } from '../execution/url.js';
+import { originOf as urlOriginOf, urlDiff } from '../execution/url.js';
 import type { Page } from 'playwright-core';
 import { classifyReportValue, derivesFromParams, observedSummary, referenceValue, reportNeedsPage, shownForReport, templateSource, templateValue, typedSlots, unshownLiterals, type GivenEvidence } from '../execution/report.js';
 import { ComponentStore, learnRecipes } from './components.js';
@@ -179,6 +179,16 @@ export function learnFromInstruction(
   // segment `invoked` names on a stop, and its 1-based step (compile.ts
   // CompileInput.stoppedAt; fwsi7-n3 02-create).
   const stoppedAt = input.recovery && sk?.invoked && !sk.refused && sk.stepsReplayed < sk.stepsTotal && sk.failedAt !== undefined ? { skill: sk.invoked, step: sk.failedAt } : undefined;
+  // SITE FACTS stage 4 (consumer 3): the origin's facts, so a slot whose report
+  // label carries a reliable state/count role is never an identity marker.
+  let compileFacts: ReturnType<ReturnType<typeof factStoreFor>['read']> | undefined;
+  try {
+    const at = instructionEntry(input.entries)?.url;
+    const o = at ? urlOriginOf(at) : null;
+    compileFacts = o ? factStoreFor(store.dir).read(o) : undefined;
+  } catch {
+    compileFacts = undefined;
+  }
   const compile = (variant: string | undefined) =>
     compileSkills({
       entries: input.entries,
@@ -194,6 +204,7 @@ export function learnFromInstruction(
       ...(input.mintedValues?.length ? { mintedValues: input.mintedValues } : {}),
       ...(stoppedAt ? { stoppedAt } : {}),
       ...(input.before?.length ? { before: input.before } : {}),
+      ...(compileFacts ? { facts: compileFacts, onFactRow: (row) => bufferFactRow(store, row) } : {}),
     });
   const skills = compile(variantOf);
   // SITE FACTS: two procedures one query literal apart on pages that do not

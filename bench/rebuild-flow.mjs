@@ -50,6 +50,7 @@ const root = path.resolve(here, '..');
 /** dist/ is imported by URL: a bare Windows path is not a legal ESM specifier. */
 const dist = (rel) => pathToFileURL(path.join(root, 'dist', rel)).href;
 const { buildFlow, commentaryReport, lintFlowRefs, staleInstructionIds, taskConstants } = await import(dist('skills/flow.js'));
+const { linesOf, seedFragmentOf } = await import(dist('skills/facts-value.js'));
 const { SkillStore } = await import(dist('skills/store.js'));
 const { bindSkill, publishedOutputs } = await import(dist('skills/learn.js'));
 const { carryOpener, compileSkills } = await import(dist('skills/compile.js'));
@@ -242,6 +243,10 @@ function storeFrom(entries, known, valuesByInstruction) {
         for (const [name, value] of Object.entries(vals)) {
           // The daemon skips the model's commentary about the page (flow.ts commentaryReport).
           if (commentaryReport(group, name, String(value), Object.values(known))) continue;
+          // …and a proper fragment of a reliable seed name (stage 4, fwop24; server.ts
+          // noteMintedIds). The rebuild's store carries no site facts, so `undefined`:
+          // seedFragmentOf is null and nothing is skipped, as with no fact store.
+          if (seedFragmentOf(undefined, String(value), linesOf(group)) !== null) continue;
           // Site facts (stage 3: the daemon passes the origin's snapshot and the
           // report key's shapeKey): the rebuild's store carries no site facts,
           // so `undefined` — add()'s rules run exactly as with no fact store.

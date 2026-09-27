@@ -442,6 +442,13 @@ export interface RecordedReport {
     /** Of `asked`, the keys held only because a reliable site fact made the value an identifier (site facts stage 3, consumer 3). */
     byFact?: string[];
   };
+  /**
+   * Asked keys the sourcing hold let go because a reliable site fact says
+   * their label carries a picker STATE (site facts stage 4, consumer 4;
+   * agent/sourcing.ts `released`). Absent when none: the evidence for the
+   * `facts.sourcing` row's `fact: 'state'`, `applied: true`.
+   */
+  sourcingReleased?: string[];
   /** Running entry number and write time (stage 0 evidence). Absent on older stores. */
   seq?: number;
   t?: number;
@@ -630,9 +637,16 @@ export class ScriptRecorder {
 
   /** Close the current instruction with its outcome (learning mode; flows are built from these). */
   endInstruction(report: Omit<RecordedReport, 'k'>): void {
-    this.append({ k: 'report', ...report, ...(this.pendingAsk ? { namingAsk: this.pendingAsk } : {}), ...(this.pendingSourcing ? { sourcingAsk: this.pendingSourcing } : {}) });
+    this.append({
+      k: 'report',
+      ...report,
+      ...(this.pendingAsk ? { namingAsk: this.pendingAsk } : {}),
+      ...(this.pendingSourcing ? { sourcingAsk: this.pendingSourcing } : {}),
+      ...(this.pendingRelease.size ? { sourcingReleased: [...this.pendingRelease] } : {}),
+    });
     this.pendingAsk = undefined;
     this.pendingSourcing = undefined;
+    this.pendingRelease.clear();
   }
 
   /** The sourcing hold the loop asked this instruction — see RecordedReport.sourcingAsk. */
@@ -641,6 +655,14 @@ export class ScriptRecorder {
   /** Record that the loop held the report for sourcing these keys. */
   noteSourcingAsk(asked: string[], byFact: string[] = []): void {
     this.pendingSourcing = { asked, readsAdded: 0, labelled: [], gesturesAfter: [], ...(byFact.length ? { byFact } : {}) };
+  }
+
+  /** Asked keys the sourcing hold let go on a reliable state role — see RecordedReport.sourcingReleased. */
+  private readonly pendingRelease = new Set<string>();
+
+  /** Record that the sourcing hold released these asked keys on a reliable state role (site facts stage 4). */
+  noteSourcingRelease(keys: readonly string[]): void {
+    for (const k of keys) this.pendingRelease.add(k);
   }
 
   /** A data-changing gesture the model made after the sourcing hold. */

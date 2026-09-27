@@ -17,7 +17,7 @@ import { visionSettings } from './vision.js';
 import { captureReadBack, captureReadBackAt, coreReadBack, savedSelectionReadBack, selectionReadBack, setIdentityHints, shownReadBack, titleReadBack, visibleTextsWithin } from '../daemon/recorder.js';
 import { describeOutcome, pinPart, sightValues, sourceReadBacks, type ReadBackDecider, type ReadBackTarget } from './readback.js';
 import { SOURCING_HOLD_MIN_MS, applyCommentaryPrePass, decideSourcingHold, sourcingAskMessage, sourcingHoldOn, splitCommentary, type SourcingFacts, type TierVerdict } from './sourcing.js';
-import { shapeKeyOf, valueVerdict } from '../skills/facts-value.js';
+import { roleVerdict, shapeKeyOf, valueVerdict } from '../skills/facts-value.js';
 
 /** Tools that change the page URL, staleing every existing snapshot's refs. */
 const NAVIGATION_TOOLS = new Set(['goto', 'back', 'tabs']);
@@ -505,7 +505,9 @@ export async function runInstruction(
         } catch {
           sf = undefined;
         }
-        const facts: SourcingFacts | undefined = sf ? { verdict: (value, key) => valueVerdict(sf!, value, shapeKeyOf(factsUrl, key)) } : undefined;
+        const facts: SourcingFacts | undefined = sf
+          ? { verdict: (value, key) => valueVerdict(sf!, value, shapeKeyOf(factsUrl, key)), role: (key) => roleVerdict(sf, shapeKeyOf(factsUrl, key))?.role ?? null }
+          : undefined;
         const decision = await decideSourcingHold({
           instruction: text,
           values,
@@ -515,6 +517,9 @@ export async function runInstruction(
           evalResults: steps.flatMap((s) => (s.tool === 'eval' && typeof s.evalResult === 'string' ? [s.evalResult] : [])),
           ...(facts ? { facts } : {}),
         });
+        // Stage 4: the asked keys a reliable state role let go, for the
+        // report's `facts.sourcing` rows (recorder.ts sourcingReleased).
+        if (decision.released?.length) script.noteSourcingRelease?.(decision.released.map((r) => r.key));
         if (!decision.held.length) return null;
         const keys = decision.held.map((h) => h.key);
         sourcingHold.held = { keys, readsBefore: reads.length };

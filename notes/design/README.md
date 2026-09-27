@@ -37,5 +37,9 @@ Status (2026-09-25):
   src/execution/facts-display.ts, plus a tightened affix observer in src/skills/facts-format.ts) shipped
   (8400f179), round 69 confirmed it. Stage 3 (site-facts-stage3-contract.md, §4 value class consumers: the
   ledger's kind prior, the export's strip, the credential scrub, the sourcing hold, the task constants and
-  the heal guard's must-carry-the-recorded-value rule) is in build on feat/site-facts-3, four pieces in
-  parallel.
+  the heal guard's must-carry-the-recorded-value rule) shipped, round 71 (the five-app batch) exercised it.
+  Stage 4
+  (site-facts-stage4-contract.md, §4b value MEANING facts: seed names and value roles — state, count, name —
+  decide the export's threading, the ledger's kind, the identity markers and the sourcing hold when reliable,
+  closing fwop24's seed-fragment threading and fwgt17's picker-state banking) is in build on
+  feat/site-facts-4, three pieces in parallel.

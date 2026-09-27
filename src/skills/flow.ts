@@ -12,8 +12,8 @@ import { mintedShape, originOf as urlOriginOf, routeAt, urlPart, urlShapeOf } fr
 import { idPositionPart, linkMintedParts, pathDigitPart, pathIdPart, unseenGotoParts } from './ledger.js';
 import { MIN_ID_LEN, looksLikeId, tokenPattern } from './shape.js';
 import { statedPlainly, threadStepParams } from './rethread.js';
-import { factFor, routeTemplateOf, type SiteFacts } from '../execution/facts.js';
-import { shapeKeyOf, valueVerdict } from './facts-value.js';
+import { factFor, routeTemplateOf, seedNameFact, type SiteFacts } from '../execution/facts.js';
+import { elementNameOf, roleVerdict, seedFragmentOf, shapeKeyOf, valueVerdict, type ValueShadowRow } from './facts-value.js';
 
 /**
  * A flow is the resolved path a session took: the instructions the caller
@@ -422,6 +422,14 @@ export function buildFlow(
      * position and shape alone, as before.
      */
     facts?: SiteFacts;
+    /**
+     * Site facts stage 4: receives one `facts.seed` shadow row per reported
+     * value the produced-values loop weighs (and a `facts.role` row where a
+     * reliable state/count role stopped one). The daemon's flow flush batches
+     * them into writeShadow; bench/rebuild-flow.mjs passes nothing. Rows only:
+     * never changes the flow.
+     */
+    onFactRow?: (row: ValueShadowRow) => void;
   },
 ): Flow | null {
   const groups = resolveGroups(groupByInstruction(entries));
@@ -434,6 +442,45 @@ export function buildFlow(
   const startParts = new Set(urlParts(opts.startUrl).map((p) => p.value));
   const varEntries = Object.entries(opts.vars).filter(([, v]) => v.length >= 2).sort((a, b) => b[1].length - a[1].length);
   const baseline = baselineOf(entries);
+  // A value the run MADE threads wherever it stands (see threadOutsideQuotes):
+  // one earlier runs watched change, one carrying a digit (a record id, an
+  // amount, a count: never a bare word), or one carrying a declared var.
+  // Anything else is a WORD, and a word inside the author's quoted name is
+  // the task's, not the run's.
+  const threadsAnywhere = (value: string): boolean =>
+    Boolean(opts.runSpecific?.(value)) || /\d/.test(value) || varEntries.some(([, vv]) => vv.length >= 2 && replaceToken(value, vv, ' ') !== value);
+  // SITE FACTS stage 4 (value MEANING): the evidence window of group k's
+  // report, as commentaryReport takes it — the instruction's start page, its
+  // steps' added lines, and the page it ended on (the next start page).
+  const linesOfGroup = (k: number): string[] => [
+    ...(groups[k].instruction.startText?.split('\n') ?? []),
+    ...groups[k].steps.flatMap((s) => s.diff?.added ?? []),
+    ...(groups[k + 1]?.instruction.startText?.split('\n') ?? []),
+  ];
+  // For the `facts.seed` row only: what today's threading would have done
+  // with a value group k produced, over the LATER instructions' raw text —
+  // threaded somewhere, stopped at every sighting by the quoted-literal
+  // guard, or named only as an alternative. A value no later instruction
+  // names still sits in `produced` (params, url parts): 'threaded'.
+  const todayThreads = (value: string, k: number): SeedHeuristic => {
+    if (value.length < 2) return 'threaded';
+    const anywhere = threadsAnywhere(value);
+    let quoted = false;
+    let alt = false;
+    for (let j = k + 1; j < groups.length; j++) {
+      const h = groups[j];
+      let text = h.instruction.text;
+      for (const [name, v] of varEntries) text = replaceToken(text, v, `{{${name}}}`);
+      if (replaceToken(text, value, '\u0000') === text) continue;
+      if (namedAsAlternative(h.instruction.text, value) && !usedByProcedure(h, value)) {
+        alt = true;
+        continue;
+      }
+      if (threadOutsideQuotes(text, value, '\u0000', anywhere) !== text) return 'threaded';
+      quoted = true;
+    }
+    return quoted ? 'quoted' : alt ? 'alternative' : 'threaded';
+  };
 
   let prevId: string | undefined;
   let prevGroup: Group | undefined;
@@ -458,13 +505,6 @@ export function buildFlow(
     // except one this instruction names only as an alternative its procedure
     // never acts on (namedAsAlternative, fwrd86 "a Draft or Closed status").
     const alternative = (value: string): boolean => namedAsAlternative(g.instruction.text, value) && !usedByProcedure(g, value);
-    // A value the run MADE threads wherever it stands (see threadOutsideQuotes):
-    // one earlier runs watched change, one carrying a digit (a record id, an
-    // amount, a count: never a bare word), or one carrying a declared var.
-    // Anything else is a WORD, and a word inside the author's quoted name is
-    // the task's, not the run's.
-    const threadsAnywhere = (value: string): boolean =>
-      Boolean(opts.runSpecific?.(value)) || /\d/.test(value) || varEntries.some(([, vv]) => vv.length >= 2 && replaceToken(value, vv, ' ') !== value);
     for (const p of [...produced].sort((a, b) => b.value.length - a.value.length)) {
       if (alternative(p.value)) continue;
       if (p.value.length >= 2) text = threadOutsideQuotes(text, p.value, `{{${p.stepId}.${p.output}}}`, threadsAnywhere(p.value));
@@ -668,7 +708,11 @@ export function buildFlow(
       // {{04-open.tag}} for the "bench" its own instruction typed; the
       // zero-model replay of 04-open could not publish it, and 05-open went
       // to the model on every replay (19–44 turns).
-      if (replaceToken(g.instruction.text, value, ' ') !== g.instruction.text) continue;
+      // (Each exclusion below is named for the `facts.seed` shadow row, which
+      // records the first rule that stopped the value; control flow is
+      // today's: a stopped value is `continue`d past exactly as before.)
+      let stop: SeedHeuristic | null = null;
+      if (replaceToken(g.instruction.text, value, ' ') !== g.instruction.text) stop = 'echoed';
       // The same fact one instruction further back: a value the TASK stated
       // before this step ran, and before the run had shown it anywhere, is the
       // task's own vocabulary, so this step cannot be where it came from. See
@@ -687,16 +731,53 @@ export function buildFlow(
       // list columns did in round 65. A value an earlier run watched change
       // is the run's whatever its key (`RunSpecific`); a value a read of this
       // instruction returned is re-observed by a tier-A replay and stays.
-      if (!opts.runSpecific?.(value) && commentaryReport([g.instruction, ...g.steps, ...(groups[i + 1] ? [groups[i + 1].instruction] : [])], output, value, varEntries.map(([, vv]) => vv))) continue;
+      if (!stop && !opts.runSpecific?.(value) && commentaryReport([g.instruction, ...g.steps, ...(groups[i + 1] ? [groups[i + 1].instruction] : [])], output, value, varEntries.map(([, vv]) => vv))) stop = 'commentary';
       // statedBeforeShown for the evidence and the cases.
-      if (statedBeforeShown(entries, g.instruction, value)) continue;
+      if (!stop && statedBeforeShown(entries, g.instruction, value)) stop = 'stated';
       // And the same question asked of the PAGE rather than the task: a value
       // the app was already showing before this run changed anything is the
       // app's baseline data, not something a step after that point produced.
       // A later run that saw it differ outranks the page (evidence only adds
       // threading, see `RunSpecific`). See baselineOf for the evidence and the
       // cases.
-      if (!opts.runSpecific?.(value) && baseline && entries.indexOf(g.instruction) >= baseline.at && baseline.names.has(foldValue(value))) continue;
+      if (!stop && !opts.runSpecific?.(value) && baseline && entries.indexOf(g.instruction) >= baseline.at && baseline.names.has(foldValue(value))) stop = 'baseline';
+      // SITE FACTS stage 4 (value MEANING; design-site-facts.md §4b): a value
+      // that is the app's SEED name, or a proper fragment of one shown in this
+      // instruction's window, is the app's data and not the run's — threaded,
+      // it welds a coincidence of spelling into every later instruction that
+      // says the word. openproject fwop24: 01-signin reported
+      // `admin_first_name = "Bench"` (the seed admin "Bench Admin"), and the
+      // task's own words were threaded to it wherever they stood outside the
+      // author's quotes. Likewise a value whose LABEL is known to carry a
+      // picker state ("closed") or a count ("3"): no replay re-observes it as
+      // the run's (gitea fwgt17). Reliable facts only; a value earlier runs
+      // watched change, or one a reliable mint/shape fact makes an identifier,
+      // still threads (mint wins). Absent facts: nothing here speaks.
+      const factStop = opts.facts ? meaningStop(opts.facts, value, g.endUrl ?? g.instruction.url, output, () => linesOfGroup(i), Boolean(opts.runSpecific?.(value))) : null;
+      if (opts.onFactRow && opts.facts) {
+        const heuristic = stop ?? todayThreads(value, i);
+        const decided = !stop && heuristic === 'threaded';
+        const seed = factStop?.seed ?? 'none';
+        opts.onFactRow({
+          rule: 'facts.seed',
+          step: `export ${output}`.slice(0, 100),
+          fact: seed,
+          heuristic,
+          agree: (seed !== 'none') === (heuristic !== 'threaded'),
+          ...(decided && factStop?.stops && seed !== 'none' ? { applied: true as const } : {}),
+        });
+        if (factStop?.role) {
+          opts.onFactRow({
+            rule: 'facts.role',
+            step: `export ${output}`.slice(0, 100),
+            fact: factStop.role,
+            heuristic,
+            agree: heuristic !== 'threaded',
+            ...(decided && factStop.stops && seed === 'none' ? { applied: true as const } : {}),
+          });
+        }
+      }
+      if (stop || factStop?.stops) continue;
       // EVERY reported value becomes a reference. Run 1 makes no judgement
       // about which of them name a record, because it cannot: "New (unsaved)"
       // and "S00021" are both just strings a step reported, and the question
@@ -1357,16 +1438,13 @@ function baselineOf(entries: readonly RecordedEntry[]): { at: number; names: Set
   const at = entries.findIndex((e) => e.k === 'instruction' && mutatingIntent(e.text) !== null);
   if (at < 0) return null;
   const names = new Set<string>();
+  // The element-name parse is facts-value.ts elementNameOf (the seed-name
+  // observer walks this same window with it); an unparseable name is null,
+  // which is no evidence.
   const addLines = (lines: readonly string[] | undefined): void => {
     for (const line of lines ?? []) {
-      const m = /^- ([\w-]+) ("(?:[^"\\]|\\.)*")/.exec(line.trim());
-      if (!m) continue;
-      try {
-        const name = foldValue(String(JSON.parse(m[2])));
-        if (name) names.add(name);
-      } catch {
-        // an unparseable name is no evidence
-      }
+      const name = elementNameOf(line);
+      if (name) names.add(name);
     }
   };
   const addValue = (v: unknown): void => {
@@ -1382,6 +1460,53 @@ function baselineOf(entries: readonly RecordedEntry[]): { at: number; names: Set
     } else if (e.k === 'report') Object.values(e.values ?? {}).forEach(addValue);
   }
   return { at, names };
+}
+
+/**
+ * What stopped (or, for 'threaded', did not stop) a reported value in
+ * buildFlow's produced-values loop, as the `facts.seed` shadow row names it:
+ * the first of today's exclusions that spoke, or what today's threading
+ * would have done with it (buildFlow `todayThreads`).
+ */
+type SeedHeuristic = 'threaded' | 'echoed' | 'commentary' | 'stated' | 'baseline' | 'quoted' | 'alternative';
+
+/**
+ * SITE FACTS stage 4: what the origin's RELIABLE meaning facts say about a
+ * reported value at export (design-site-facts.md §4b, consumer 1).
+ *
+ *  - `seed`: 'seed' when the value is itself a seed name (seedNameFact), else
+ *    'seed-fragment' when it is a proper whole-token fragment of a seed name
+ *    shown in the report's evidence window (`lines`, facts-value.ts
+ *    seedFragmentOf); null when neither.
+ *  - `role`: the label's reliable role under shapeKeyOf(url, output), when it
+ *    is 'state' or 'count' (roleVerdict: a `name` role never decides).
+ *  - `stops`: whether the facts keep the value out of `produced`. Never for a
+ *    value earlier runs watched change (`runSpecific`), and never for one a
+ *    reliable mint or shape fact makes an identifier: MINT WINS (the stage 3
+ *    rule; a seed or role fact only ever makes a value less of a run value).
+ *    A minted value is not reported as seed at all.
+ *
+ * Null when nothing speaks. Never throws (a fact that cannot be read is no
+ * fact).
+ */
+function meaningStop(
+  sf: SiteFacts,
+  value: string,
+  url: string | undefined,
+  output: string,
+  lines: () => Iterable<string>,
+  runSpecific: boolean,
+): { seed: 'seed' | 'seed-fragment' | null; role: 'state' | 'count' | null; stops: boolean } | null {
+  try {
+    const key = url ? shapeKeyOf(url, output) : undefined;
+    if (valueVerdict(sf, value, key)?.kind === 'identifier') return null;
+    const seed = seedNameFact(sf, value) ? 'seed' : seedFragmentOf(sf, value, lines()) !== null ? 'seed-fragment' : null;
+    const role = roleVerdict(sf, key)?.role ?? null;
+    if (!seed && !role) return null;
+    return { seed, role, stops: !runSpecific };
+  } catch {
+    return null;
+  }
 }
 
 interface Group {

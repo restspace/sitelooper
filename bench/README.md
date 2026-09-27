@@ -335,7 +335,11 @@ Both snapshot and restore stop `mongod` and `rs2-server`, move the bytes, and re
   capture, counter masking), so `facts.readback`/`facts.classify`/`facts.identity` rows can carry it too.
   Stage 3 (notes/design/site-facts-stage3-contract.md) switches it on for the value-class consumers — the
   ledger's kind prior, the export's strip, the sourcing hold and the task constants — so
-  `facts.ledger`/`facts.strip`/`facts.sourcing` rows can carry `applied: true` as well.
+  `facts.ledger`/`facts.strip`/`facts.sourcing` rows can carry `applied: true` as well. Stage 4
+  (notes/design/site-facts-stage4-contract.md) adds `value.role` facts and seed-name `value.class` facts,
+  switching `applied: true` on for `facts.seed`/`facts.role` rows (the export's threading and the ledger's
+  kind by MEANING rather than punctuation); `bench/facts-report.mjs` prints `value.role` facts inline and
+  `value.class` = seed facts as a per-origin COUNT (never a hash list longer than 5, never a value).
 
 ## Known gaps
 

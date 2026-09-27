@@ -19,6 +19,8 @@ import { namedHighlightPicks } from './highlight-pick.js';
 import { dropRestoredDetours } from './restored-field.js';
 import { locatingSlots, scopeReadBySlot } from './readscope.js';
 import { keyPicks } from './key-pick.js';
+import type { ShadowRow } from './shadow.js';
+import { matchesShape, routeTemplateOf, valueClassFact, valueRoleFact, type SiteFacts } from '../execution/facts.js';
 
 /**
  * The url rules live in src/execution/url.ts, where a compiled artifact embeds
@@ -124,6 +126,15 @@ export interface CompileInput {
    * instruction's entries and the known values are consulted.
    */
   before?: readonly RecordedEntry[];
+  /**
+   * SITE FACTS stage 4 (consumer 3): the origin's site facts snapshot. A slot
+   * bound to a report output whose LABEL carries a reliable `state` or
+   * `count` role (value.role under the segment's start route) is never an
+   * identity marker. Absent: identityOf as before.
+   */
+  facts?: SiteFacts;
+  /** Receives the `facts.identity` row for each marker a role fact withheld (learn.ts buffers it). */
+  onFactRow?: (row: ShadowRow & { evidence: string[]; applied?: true }) => void;
 }
 
 /**
@@ -1234,6 +1245,42 @@ export function compileSkills(input: CompileInput): Skill[] {
   });
   const of = built.length;
   const chain = of > 1 ? newSkillId(origin, finalTemplate, now) : null;
+  // SITE FACTS stage 4 (consumer 3): the slots identityOf may make markers of
+  // on a segment. A slot bound to a report OUTPUT (`output:iN:<label>`)
+  // whose label carries a reliable `state` or `count` role on the segment's
+  // start route is a picker state or a tally, never the record's name —
+  // gitea fwgt17's `labels_picker_state = "closed"` became a marker of
+  // 08-report's procedure because the issues list shows "0 Closed". Mint
+  // wins: a value a reliable mint class or its label's mint shape makes an
+  // identifier stays eligible. No facts, or no role fact: keptSlots itself.
+  const markerSlotMemo = new Map<object, Map<string, string>>();
+  const markerSlotsOf = (b: { sg: { startUrl: string; startText?: string }; folded: SkillStep[] }): Map<string, string> => {
+    const sg = b.sg;
+    const memo = markerSlotMemo.get(sg);
+    if (memo) return memo;
+    let out = keptSlots;
+    if (input.facts) {
+      const withheld = roleSlots(input.facts, sg.startUrl, keptSlots, bindings);
+      if (withheld.size) {
+        out = new Map([...keptSlots].filter(([n]) => !withheld.has(n)));
+        const today = new Set(identityOf(sg.startText, keptSlots, knownVals, writtenSlots(b.folded)));
+        for (const [name, { role, key }] of withheld) {
+          if (!today.has(`{{${name}}}`)) continue;
+          input.onFactRow?.({
+            rule: 'facts.identity',
+            step: `marker ${bindings.get(name) ?? name}`.slice(0, 100),
+            fact: role,
+            heuristic: 'marker',
+            agree: false,
+            evidence: [`value.role ${key.slice(0, 100)} ${role}`],
+            applied: true,
+          });
+        }
+      }
+    }
+    markerSlotMemo.set(sg, out);
+    return out;
+  };
 
   return built.map((b, k) => {
     const params: Record<string, SkillParam> = {};
@@ -1255,8 +1302,8 @@ export function compileSkills(input: CompileInput): Skill[] {
         // marker in the pattern would read as a wildcard segment.
         urlPattern: urlPattern(b.sg.startUrl, new Map([...keptSlots, ...b.mintedForStart])),
         ...(b.sg.fingerprint ? { fingerprint: b.sg.fingerprint } : {}),
-        ...(identityOf(b.sg.startText, keptSlots, knownVals, writtenSlots(b.folded)).length
-          ? { requireText: identityOf(b.sg.startText, keptSlots, knownVals, writtenSlots(b.folded)) }
+        ...(identityOf(b.sg.startText, markerSlotsOf(b), knownVals, writtenSlots(b.folded)).length
+          ? { requireText: identityOf(b.sg.startText, markerSlotsOf(b), knownVals, writtenSlots(b.folded)) }
           : {}),
       },
       // Only the LAST segment finishes the work, so only it can vouch for the
@@ -1448,6 +1495,35 @@ function derivesFromKnown(value: string, known: Set<string>): boolean {
  */
 export function isVarOrigin(key: string): boolean {
   return key.startsWith('var:');
+}
+
+/**
+ * SITE FACTS stage 4: the slots bound to a report output (`output:iN:<label>`,
+ * ledger.ts bindingKey) whose label holds a reliable `state` or `count` role
+ * on `url`'s route, with that role. The role key is facts-value.ts
+ * shapeKeyOf's spelling (`${routeTemplateOf(url)}|${label}`), restated
+ * because compile.ts does not import the observer module. A value a reliable
+ * mint class or the label's mint shape makes an identifier is left out:
+ * mint wins.
+ */
+function roleSlots(sf: SiteFacts, url: string, slots: ReadonlyMap<string, string>, bindings: ReadonlyMap<string, string>): Map<string, { role: 'state' | 'count'; key: string }> {
+  const out = new Map<string, { role: 'state' | 'count'; key: string }>();
+  try {
+    for (const [name, raw] of slots) {
+      const origin = bindings.get(name);
+      const m = origin ? /^output:[^:]+:([^#]+)/.exec(origin) : null;
+      if (!m) continue;
+      const key = `${routeTemplateOf(url)}|${m[1]}`;
+      const role = valueRoleFact(sf, key);
+      if (role !== 'state' && role !== 'count') continue;
+      const value = String(raw ?? '').trim();
+      if (valueClassFact(sf, value) === 'mint' || matchesShape(sf, key, value)) continue;
+      out.set(name, { role, key });
+    }
+  } catch {
+    // a fact that cannot be read is no fact: identityOf as before
+  }
+  return out;
 }
 
 function identityOf(startText: string | undefined, slots: Map<string, string>, known: Set<string>, written: ReadonlySet<string> = new Set()): string[] {
