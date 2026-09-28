@@ -554,6 +554,21 @@ after that point is invalid, verifies (no model) are not. fwop15-cv2 and fwod88-
 for the top-up.
 
 
+## GPT-6 Luna trial, second run (main 1d12892c: harness `--granularity objective` — at most one numbered objective per call, sign-in its own call — and the unasked-word export fix 0c6af4a4) — od fully green; gt and si not, each from an export/compile gap the run exposed; op did not run (Docker Hub rate limit)
+
+Fired 15:50 UTC. The limit worked: Luna wrote one instruction per objective, as GLM does unprompted (gt 7 against 1 in the first Luna run, si 5 against 3, od 7 against 6).
+
+| runid | app | cmds (Luna run 1) | verified | replay model-free | compiled | green | n1 USD | notes |
+|---|---|---|---|---|---|---|---|---|
+| fwod103-luna | od | 7 (6) | 6/6 ×3 | **yes** (7/7 flow, 0 turns ×2) | **pass 6/6** | **yes** | 0.049 | as good as GLM's fwod101 at about a fifth of the recording cost |
+| fwgt32-luna | gt | 7 (1) | 7/7, 6/7, 6/7 | 0 turns ×2, but 07-add partial and obj 3 FAIL on both: labels=[priority-high] | 4/7 (obj 3 the same) | no | 0.115 | the Labels picker took three attempts: a blocked one, a failure that nonetheless left `bug` applied, and a repair ("The bug label is already applied; add priority-high"). The flow keeps only the repair; `reappliedByNext` refuses to adopt the failed attempt because the repair re-picked ONE of its two choices (priority-high), so `bug` is on no replay (open) |
+| fwsi29-luna | si | 5 (3) | 7/7 ×3 | NO: 04-edit and 05-verify fell back on both (19-29 turns): `unresolved reference 03-create.url.p1` | 1/7 (edits never ran) | no | 0.047 | 03-create reached the new asset by typing its tag (BA-00004, read off the form by the procedure itself) into "Lookup by Asset Tag" + Enter; compile's `mintedFill` (fwsi14) cuts the procedure before a typed app-minted value with no published source, so the skill ends at Save on /hardware and never publishes the asset id (open) |
+| fwop32-luna | op | — | — | — | — | — | — | did not run: `docker pull openproject/openproject:17.8.0` hit Docker Hub's anonymous rate limit (429) in setup |
+
+Reading: the objective bound fixes what sank Luna's first run, and odoo shows the result can match GLM outright.
+Both misses are general gaps in our export/compile, not Luna's: a failed attempt's net effect that only part of
+its successor redoes, and a typed value the procedure read off the page itself.
+
 ## GPT-6 Luna trial (main 1e1ad1a5: round-76 code; openai/gpt-6-luna replaces z-ai/glm-5.3 as orchestrator AND fallback) — si green with 0-turn replays; gt, od, op not green, each from how Luna split the task
 
 Fired 11:52 UTC, the four hardest apps, each against its last GLM run (fwgt30 and fwsi27 round 76, fwod101 and fwop30 round 75, all four green). No model errors; calls went only to DeepSeek (inner loop) and OpenAI (Luna).
