@@ -1,0 +1,10 @@
+facts http://127.0.0.1:8090: 184 relied (16 hard), 44 advisory
+warning a learned component recipe travels in the compiled artifact as data
+  why: aria-combobox/set-value: uses learned recipe r_8f114d learned in session fwop31-luna-n2 (provisional) rather than the shipped seed; the artifact carries it as data. The snapshot is compile-time state: the daemon keeps validating, learning and demoting after this file is written; the artifact runs what it was given.
+error 02-create: slot v2 is bound to {{01-signin.work_packages_link_text}}, and nothing has ever published work_packages_link_text
+  why: nothing in 01-signin's procedure reads work_packages_link_text from the page, and no report value derives it from a parameter, so no run can publish it. The recording's own value is not a substitute: passing it would make every replay work run 1's record. 02-create types or locates by v2, so the artifact would stop here on every run, part-way through the flow and with everything earlier already done.
+  fix: re-record 01-signin so it reads work_packages_link_text from an element (`sitelooper rerecord <flow file> 01-signin`), or take {{01-signin.work_packages_link_text}} out of 02-create's v2
+
+nothing written: the error(s) above are about the RECORDING, not the app — a compiled spec would fail at a locator and read as drift.
+re-record the step(s) with the fix command above.
+sitelooper: refused: unsourced-ref — see the diagnostics above

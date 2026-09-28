@@ -1,0 +1,200 @@
+{
+  "name": "fwop31-luna",
+  "origin": "http://127.0.0.1:8090",
+  "startUrl": "http://127.0.0.1:8090/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-signin",
+      "instruction": "Sign in to OpenProject at http://127.0.0.1:8090/ with username admin and password exactly {{env:APP_PASSWORD}}. In project Bench Project, read and report the exact subjects of all work packages whose subject starts with Seed:. Do not edit them.",
+      "skill": "s_3ce4fe",
+      "params": {
+        "v1": "http://127.0.0.1:8090/",
+        "v2": "admin",
+        "v3": "{{env:APP_PASSWORD}}"
+      },
+      "outputs": [
+        "project",
+        "seed_work_package_subject",
+        "seed_work_package_subject_2",
+        "seed_work_package_subject_3",
+        "work_packages_link_text",
+        "seed_work_package_subject_1",
+        "seed_subjects_2",
+        "seed_subjects_3",
+        "work_package_ids_1",
+        "work_package_ids_2",
+        "work_package_ids_3"
+      ],
+      "recorded": {
+        "project": "Bench Project",
+        "count": "3",
+        "closed_seed_work_packages": "0",
+        "seed_work_package_subject": "Seed: triage inbox",
+        "seed_work_package_subject_2": "Seed: order missing parts",
+        "seed_work_package_subject_3": "Seed: ship repaired device",
+        "work_packages_link_text": "Task",
+        "seed_work_package_subject_1": "Seed: triage inbox",
+        "seed_subjects_2": "Seed: order missing parts",
+        "seed_subjects_3": "Seed: ship repaired device",
+        "work_package_ids_1": "38",
+        "work_package_ids_2": "39",
+        "work_package_ids_3": "40",
+        "url": "http://127.0.0.1:8090/projects/bench-project/work_packages?query_props=%7B%22c%22%3A%5B%22id%22%2C%22subject%22%2C%22type%22%2C%22status%22%2C%22assignee%22%2C%22priority%22%5D%2C%22hi%22%3Atrue%2C%22g%22%3A%22%22%2C%22is%22%3Atrue%2C%22tv%22%3Afalse%2C%22hla%22%3A%5B%22status%22%2C%22priority%22%2C%22dueDate%22%5D%2C%22t%22%3A%22id%3Aasc%22%2C%22f%22%3A%5B%7B%22n%22%3A%22status%22%2C%22o%22%3A%22o%22%2C%22v%22%3A%5B%5D%7D%5D%2C%22ts%22%3A%22PT0S%22%2C%22pp%22%3A20%2C%22pa%22%3A1%7D"
+      },
+      "route": "http://127.0.0.1:8090/projects/bench-project/work_packages",
+      "outputEvidence": {
+        "project": {
+          "same": 1,
+          "differed": 0
+        },
+        "count": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "closed_seed_work_packages": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "seed_work_package_subject": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_work_package_subject_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_work_package_subject_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "work_packages_link_text": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "seed_work_package_subject_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_subjects_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_subjects_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "work_package_ids_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "work_package_ids_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "work_package_ids_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "02-create",
+      "instruction": "In Bench Project create a {{01-signin.work_packages_link_text}} titled exactly '{{runid}} Bench Work Package'. Ensure its description includes the exact runid '{{runid}}', assign it to user 'Bench Assignee' by selecting the matching autocomplete dropdown option, set status to 'In progress', set finish date to 2026-12-31, and add a comment whose text includes '{{runid}}'. Save any in-place edits as needed. Verify on the resulting work package page the displayed numeric #ID, title, description, selected assignee, status, finish date, and comment; report exact observed values. Do not modify any Seed: work packages.",
+      "skill": "s_b877ce",
+      "params": {
+        "v1": "Bench Project",
+        "v2": "{{01-signin.work_packages_link_text}}",
+        "v4": "{{runid}} Bench Work Package",
+        "v3": "{{runid}}",
+        "v5": "Bench Assignee",
+        "v6": "2026-12-31"
+      },
+      "outputs": [
+        "work_package_id",
+        "type",
+        "title",
+        "description",
+        "assignee",
+        "status",
+        "finish_date",
+        "date_field_display",
+        "comment",
+        "comment_author",
+        "created_timestamp",
+        "assignee_field_text",
+        "status_field_text",
+        "finish_date_input",
+        "ref",
+        "seed_work_packages_unchanged_1",
+        "seed_work_packages_unchanged_2",
+        "seed_work_packages_unchanged_3",
+        "seed_work_packages_unchanged_4",
+        "seed_work_packages_unchanged_5",
+        "seed_work_packages_unchanged_6"
+      ],
+      "recorded": {
+        "work_package_id": "41",
+        "type": "Task",
+        "title": "fwop31-luna-n1 Bench Work Package",
+        "description": "Created by sitelooper run fwop31-luna-n1 (Bench Work Package).",
+        "assignee": "Bench Assignee",
+        "status": "In progress",
+        "finish_date": "2026-12-31 (displayed as 12/31/2026)",
+        "date_field_display": "no start date - 12/31/2026",
+        "comment": "fwop31-luna-n1 verification comment",
+        "comment_author": "Bench Admin",
+        "created_timestamp": "09/28/2026 12:02 PM",
+        "assignee_field_text": "Bench Assignee\n×",
+        "status_field_text": "New",
+        "finish_date_input": "2026-12-31",
+        "work_package_type_label": "TASK",
+        "ref": "fwop31-luna-n1",
+        "seed_work_packages_unchanged_1": "38",
+        "seed_work_packages_unchanged_2": "Seed: triage inbox",
+        "seed_work_packages_unchanged_3": "39",
+        "seed_work_packages_unchanged_4": "Seed: order missing parts",
+        "seed_work_packages_unchanged_5": "40",
+        "seed_work_packages_unchanged_6": "Seed: ship repaired device",
+        "url": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/41/overview?query_props=%7B%22c%22%3A%5B%22id%22%2C%22subject%22%2C%22type%22%2C%22status%22%2C%22assignee%22%2C%22priority%22%5D%2C%22hi%22%3Atrue%2C%22g%22%3A%22%22%2C%22is%22%3Atrue%2C%22tv%22%3Afalse%2C%22hla%22%3A%5B%22status%22%2C%22priority%22%2C%22dueDate%22%5D%2C%22t%22%3A%22id%3Aasc%22%2C%22f%22%3A%5B%7B%22n%22%3A%22status%22%2C%22o%22%3A%22o%22%2C%22v%22%3A%5B%5D%7D%5D%2C%22ts%22%3A%22PT0S%22%2C%22pp%22%3A20%2C%22pa%22%3A1%7D",
+        "url.p4": "41"
+      },
+      "route": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:id/overview"
+    }
+  ],
+  "provenance": {
+    "session": "fwop31-luna-n1",
+    "created": "2026-09-28T12:03:08.357Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "01-signin",
+      "outputs": [
+        "count",
+        "closed_seed_work_packages"
+      ]
+    },
+    {
+      "stepId": "02-create",
+      "outputs": [
+        "work_package_type_label"
+      ]
+    }
+  ]
+}

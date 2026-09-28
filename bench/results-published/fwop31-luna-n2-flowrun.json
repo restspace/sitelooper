@@ -1,0 +1,138 @@
+{
+  "flow": "fwop31-luna",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_442d65; observed seed_work_package_subject=Seed: triage inbox, seed_work_package_subject_2=Seed: order missing parts, seed_work_package_subject_3=Seed: ship repaired device, seed_work_package_subject_1=Seed: triage inbox, seed_subjects_2=Seed: order missing parts, seed_subjects_3=Seed: ship repaired device, work_package_ids_1=38, work_package_ids_2=39, work_package_ids_3=40, project=Bench Project.",
+      "values": {
+        "seed_work_package_subject": "Seed: triage inbox",
+        "seed_work_package_subject_2": "Seed: order missing parts",
+        "seed_work_package_subject_3": "Seed: ship repaired device",
+        "seed_work_package_subject_1": "Seed: triage inbox",
+        "seed_subjects_2": "Seed: order missing parts",
+        "seed_subjects_3": "Seed: ship repaired device",
+        "work_package_ids_1": "38",
+        "work_package_ids_2": "39",
+        "work_package_ids_3": "40",
+        "project": "Bench Project"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "22/22",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_928b36: step 1: skipped — it closes the dialog \"Welcome to OpenProject, Bench Admin\" with \"Close\", and that dialog is not open this time: already in effect"
+      ],
+      "unreported": [
+        "work_packages_link_text"
+      ]
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Created the work package in Bench Project via the work-packages list's \"Create new work package\" flow (Task type): filled subject, description, selected assignee \"Bench Assignee\" from the ng-select autocomplete dropdown (option \"BA Bench Assignee <bench-assignee@example.com>\"), set status \"In progress\" from the status dropdown, and set the finish date to 2026-12-31 via the combined-date picker, then saved. The page navigated to the new work package's details view at /projects/bench-project/work_packages/details/42/activity, where the live DOM shows the numeric ID #42 in the info row (\"#42: Created by Bench Admin\"), the page title \"Task: fwop31-luna-n2 Bench Work Package (#42)\", and the subject header \"TASK | fwop31-luna-n2 Bench Work Package\". A comment was added on the Activity tab (editor collapsed, \"Actions\"/\"Add reaction\" buttons appeared and a journal item rendered), but I did not get to read the comment text back verbatim, and I did not re-read the assignee, status and finish date on the saved details page — those three were only confirmed in the create form before saving. No Seed: work packages were touched.",
+      "values": {
+        "new_work_package_id": "42",
+        "title": "fwop31-luna-n2 Bench Work Package",
+        "type": "TASK",
+        "info_row": "#42: Created by  Bench Admin. Last updated on 09/28/2026 12:05 PM.",
+        "document_title": "Task: fwop31-luna-n2 Bench Work Package (#42) | Work Packages | Bench Project | OpenProject",
+        "assignee_option_selected": "BA Bench Assignee (bench-assignee@example.com)",
+        "status_set_on_form": "In progress",
+        "finish_date_set_on_form": "2026-12-31",
+        "comment": "posted (text not read back verbatim; contained fwop31-luna-n2)",
+        "project": "Bench Project",
+        "form_assignee": "Bench Assignee\n×",
+        "form_status": "In progress",
+        "wp_id_row": "#42: Created by Bench Admin. Last updated on 09/28/2026 12:05 PM.",
+        "ref": "fwop31-luna-n2"
+      },
+      "tier": "B",
+      "recovered": true,
+      "fellBack": "unresolved reference(s): 01-signin.work_packages_link_text, 01-signin.work_packages_link_text",
+      "replayed": "2/2",
+      "repaired": false,
+      "turns": 29,
+      "warnings": [
+        "s_b877ce: step 2: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear"
+      ],
+      "unreported": [
+        "work_package_id",
+        "assignee",
+        "status",
+        "finish_date",
+        "date_field_display",
+        "comment_author",
+        "created_timestamp",
+        "assignee_field_text",
+        "status_field_text",
+        "finish_date_input",
+        "seed_work_packages_unchanged_1",
+        "seed_work_packages_unchanged_2",
+        "seed_work_packages_unchanged_3",
+        "seed_work_packages_unchanged_4",
+        "seed_work_packages_unchanged_5",
+        "seed_work_packages_unchanged_6"
+      ]
+    }
+  ],
+  "passed": 2,
+  "total": 2,
+  "repinned": 0,
+  "drift": 2,
+  "driftTickets": [
+    {
+      "flow": "fwop31-luna",
+      "step": "01-signin",
+      "skill": "s_928b36",
+      "atStep": "1",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.getByRole('button', { name: 'Close', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages",
+      "pageUrl": "http://127.0.0.1:8090/projects/bench-project/work_packages"
+    },
+    {
+      "flow": "fwop31-luna",
+      "step": "02-create",
+      "skill": "s_b877ce",
+      "similarity": 1.001,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "unresolved reference(s): 01-signin.work_packages_link_text, 01-signin.work_packages_link_text",
+      "pageUrlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/create_new?type=:id",
+      "pageUrl": "http://127.0.0.1:8090/projects/bench-project/work_packages/create_new?type=1"
+    }
+  ],
+  "wallMs": 181420,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 613650,
+    "completionTokens": 15924,
+    "cachedTokens": 549760
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 613650,
+      "completionTokens": 15924,
+      "cachedTokens": 549760
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "openai/gpt-6-luna",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

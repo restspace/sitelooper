@@ -1,0 +1,107 @@
+{
+  "flow": "fwop31-luna",
+  "status": "halted",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_442d65; observed seed_work_package_subject=Seed: triage inbox, seed_work_package_subject_2=Seed: order missing parts, seed_work_package_subject_3=Seed: ship repaired device, seed_work_package_subject_1=Seed: triage inbox, seed_subjects_2=Seed: order missing parts, seed_subjects_3=Seed: ship repaired device, work_package_ids_1=38, work_package_ids_2=39, work_package_ids_3=40, project=Bench Project.",
+      "values": {
+        "seed_work_package_subject": "Seed: triage inbox",
+        "seed_work_package_subject_2": "Seed: order missing parts",
+        "seed_work_package_subject_3": "Seed: ship repaired device",
+        "seed_work_package_subject_1": "Seed: triage inbox",
+        "seed_subjects_2": "Seed: order missing parts",
+        "seed_subjects_3": "Seed: ship repaired device",
+        "work_package_ids_1": "38",
+        "work_package_ids_2": "39",
+        "work_package_ids_3": "40",
+        "project": "Bench Project"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "22/22",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_928b36: step 1: skipped — it closes the dialog \"Welcome to OpenProject, Bench Admin\" with \"Close\", and that dialog is not open this time: already in effect"
+      ],
+      "unreported": [
+        "work_packages_link_text"
+      ]
+    },
+    {
+      "id": "02-create",
+      "status": "failure",
+      "summary": "Resumed on work package #43, observed it already existed with title “fwop31-luna-n3 Bench Work Package,” status “In progress,” assignee “Bench Assignee,” and activity text “fwop31-luna-n3.” I added and submitted a comment containing the runid; the resulting activity shows “fwop31-luna-n3.” Description and finish date are not confirmed from the resulting page, so the full requested verification is incomplete. No Seed: work packages were modified.",
+      "values": {
+        "work_package_id": "43",
+        "title": "fwop31-luna-n3 Bench Work Package",
+        "type": "Task",
+        "status": "In progress",
+        "assignee": "Bench Assignee",
+        "comment_text": "fwop31-luna-n3 (visible in Activity)",
+        "description": "not confirmed",
+        "finish_date": "not confirmed"
+      },
+      "tier": null,
+      "recovered": true,
+      "fellBack": "unresolved reference(s): 01-signin.work_packages_link_text, 01-signin.work_packages_link_text",
+      "replayed": null,
+      "repaired": false,
+      "turns": 39
+    }
+  ],
+  "passed": 1,
+  "total": 2,
+  "repinned": 0,
+  "drift": 1,
+  "driftTickets": [
+    {
+      "flow": "fwop31-luna",
+      "step": "01-signin",
+      "skill": "s_928b36",
+      "atStep": "1",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.getByRole('button', { name: 'Close', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages",
+      "pageUrl": "http://127.0.0.1:8090/projects/bench-project/work_packages"
+    }
+  ],
+  "wallMs": 142525,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 544527,
+    "completionTokens": 7272,
+    "cachedTokens": 470098
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 408460,
+      "completionTokens": 6586,
+      "cachedTokens": 374016
+    },
+    "openai/gpt-6-luna": {
+      "promptTokens": 136067,
+      "completionTokens": 686,
+      "cachedTokens": 96082
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ],
+    "openai/gpt-6-luna": [
+      "OpenAI"
+    ]
+  },
+  "recoveryModel": "openai/gpt-6-luna",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "halted",
+  "nextActions": []
+}
