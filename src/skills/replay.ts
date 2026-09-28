@@ -1632,7 +1632,8 @@ export async function replaySkill(
             await urlHeldStill(page, urlBefore, () => inFlightRequests(page));
           }
           for (const [name, d] of Object.entries(skill.derived)) {
-            if (d.step !== failIndex) continue;
+            // A value a READ mints is bound where the read publishes, below.
+            if (d.step !== failIndex || d.read) continue;
             const v = urlPart(page.url(), d.at);
             if (v !== undefined) {
               params[name] = v;
@@ -1741,6 +1742,14 @@ export async function replaySkill(
       const key = step.label ?? `read${tag}`;
       const value = outcome.read ?? flattenRead(decodeRead(outcome.result));
       res.values[key] = value;
+      // A value this read mints for a later step to type (compile.ts
+      // mintedFill's read arm, snipeit fwsi29-luna's asset tag): THIS run's.
+      for (const [name, d] of Object.entries(skill.derived ?? {})) {
+        if (d.read && d.step === failIndex && value.trim()) {
+          params[name] = value.trim();
+          res.derivedValues[name] = value.trim();
+        }
+      }
       // An echo read: this value is only what the skill itself set or chose,
       // so it confirms the control's display, not that the app persisted it.
       // Round 59: the text alone is not an echo — a read of an element that is

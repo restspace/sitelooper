@@ -71,8 +71,12 @@ export interface Skill {
    * replay reads url part `at` (urlParts label) from the live page and binds
    * it, so later steps/segments reference the replay's own value, never the
    * recorded run's. `example` is what the recording observed.
+   *
+   * With `read` (the label of that step's read), the value is the one that
+   * READ returned, not a url part, and `at` is empty (compile.ts mintedFill's
+   * read arm: snipeit fwsi29-luna's asset tag typed into a lookup).
    */
-  derived?: Record<string, { step: number; at: string; example: string }>;
+  derived?: Record<string, { step: number; at: string; example: string; read?: string }>;
   provenance: {
     session: string;
     instruction: string;

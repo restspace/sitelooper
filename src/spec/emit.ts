@@ -2142,8 +2142,8 @@ function echoReadLines(step: SkillStep, ctx: Ctx, readAt = 'null'): string[] {
 }
 
 /** The names this step mints, in the order the segment declares them. */
-function derivedHere(segment: SpecSegment, index: number): [string, { at: string; example: string }][] {
-  return Object.entries(segment.derived ?? {}).filter(([, d]) => d.step === index) as [string, { at: string; example: string }][];
+function derivedHere(segment: SpecSegment, index: number): [string, { at: string; example: string; read?: string }][] {
+  return Object.entries(segment.derived ?? {}).filter(([, d]) => d.step === index) as [string, { at: string; example: string; read?: string }][];
 }
 
 /**
@@ -2159,8 +2159,16 @@ function derivedHere(segment: SpecSegment, index: number): [string, { at: string
  * `#action=&cids=&menu_id=` did on the first cloud run.
  */
 function derivedLines(segment: SpecSegment, index: number, ctx: Ctx, out: string[], urlBefore = '', gotoFrom?: string): void {
-  const here = derivedHere(segment, index);
-  for (const [name] of here) ctx.slots.add(name);
+  const all = derivedHere(segment, index);
+  for (const [name] of all) ctx.slots.add(name);
+  // A value a READ minted (compile.ts mintedFill's read arm): bound from what
+  // this step's read just published, trimmed and only when non-empty, as
+  // replay binds it where the read publishes (skills/replay.ts).
+  for (const [name, d] of all) {
+    if (!d.read) continue;
+    out.push(`bindPart(p, ${q(name)}, (outputs[${q(`${ctx.stepId}.${d.read}`)}] ?? '').trim() || undefined); // recorded example: ${commentSafe(d.example)}`);
+  }
+  const here = all.filter(([, d]) => !d.read);
   if (!here.length) return;
   const example = (d: { example: string }) => `// recorded example: ${commentSafe(d.example)}`;
   // A goto's landing may redirect AGAIN on its own (a timer, a client-side

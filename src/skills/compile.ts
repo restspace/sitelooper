@@ -760,7 +760,8 @@ export function compileSkills(input: CompileInput): Skill[] {
     }
   }
   kept = sourcelessGoto(kept, input, recordingNotes);
-  kept = mintedFill(kept, input, slots, recordingNotes);
+  const readMints: ReadMint[] = [];
+  kept = mintedFill(kept, input, slots, recordingNotes, readMints);
   if (!kept.length) return [];
   // A url id this span minted is its OUTPUT: derived ({{dN}}, discoverMinted),
   // never a param — even when the ledger, which banked it before this compile,
@@ -866,6 +867,14 @@ export function compileSkills(input: CompileInput): Skill[] {
   // segment's start url mentions the value — otherwise the marker would just
   // blunt the minting step's own expectation for nothing.
   const mintedAll = discoverMinted(kept, beginsAt.url, slots, (s) => linkMintedParts(s, entriesBefore(input, s)));
+  // ...and values the procedure READ off the page and then typed (mintedFill's
+  // read arm): minted at the read, bound from its value at run time.
+  for (const r of readMints) {
+    // By label and recorded value, not identity: later passes may rebuild the step objects.
+    const keptIndex = kept.findIndex((s) => s.tool === 'read' && s.args.label === r.label && s.result === r.read.result);
+    if (keptIndex < 0 || mintedAll.some((m) => m.value === r.value) || mintedAll.length >= MAX_MINTED) continue;
+    mintedAll.push({ name: `d${mintedAll.length + 1}`, value: r.value, keptIndex, at: '', read: r.label, readAt: { target: r.read.args.target, what: r.read.args.what } });
+  }
   // A value the REPORT names pays too: fwec8 02-create was asked for "the
   // record ID from the URL", and its report is the only place the minted id
   // stood (see reportTemplate below).
@@ -1081,13 +1090,26 @@ export function compileSkills(input: CompileInput): Skill[] {
   // Derived-param metadata lands on the MINTING segment: which post-fold step
   // to bind from, and which url part to read there. Replay binds the value
   // from the live run's own url right after that step executes.
-  const segDerived: Record<number, Record<string, { step: number; at: string; example: string }>> = {};
+  const segDerived: Record<number, Record<string, { step: number; at: string; example: string; read?: string }>> = {};
   for (const m of minted) {
     const si = segments.findIndex((sg, k) => {
       const start = segments.slice(0, k).reduce((a, s) => a + s.steps.length, 0);
       return m.keptIndex >= start && m.keptIndex < start + sg.steps.length;
     });
     if (si < 0) continue;
+    // A value minted by a read binds at THAT read (its label), which names
+    // nothing of the value; a url mint binds at the first step its marker
+    // reaches (the minting step's own expectation).
+    if (m.read) {
+      // By target and kind: the export may have relabelled the read to the
+      // key the report published it under (fwsi29-luna's asset_tag_field
+      // became created_asset_tag), and replay publishes it under the new one.
+      const stepIdx = built[si].folded.findIndex((st) => st.tool === 'read' && st.args?.target === m.readAt?.target && (st.args?.what ?? 'text') === (m.readAt?.what ?? 'text'));
+      if (stepIdx < 0) continue;
+      const folded = built[si].folded[stepIdx];
+      (segDerived[si] ??= {})[m.name] = { step: stepIdx + 1, at: '', example: m.value, read: String(folded.label ?? folded.args?.label ?? m.read) };
+      continue;
+    }
     const marker = `{{${m.name}}}`;
     const stepIdx = built[si].folded.findIndex((st) => JSON.stringify(st).includes(marker));
     if (stepIdx < 0) continue;
@@ -1648,6 +1670,14 @@ interface MintedValue {
    * step's url gained over the url it acted on. See newStateKeys.
    */
   sole?: boolean;
+  /**
+   * Minted by a READ, not a url: the label of the kept read step that returned
+   * it (mintedFill's read arm). Bound at run time from that read's value;
+   * `at` is empty.
+   */
+  read?: string;
+  /** The read's target and kind, which find it among the folded steps (a relabel may rename it). */
+  readAt?: { target: unknown; what: unknown };
 }
 
 /**
@@ -1864,12 +1894,18 @@ function sourcelessGoto(kept: RecordedStep[], input: CompileInput, notes: Transf
  * a slot, nor is it a task constant. Then:
  *  - a published source binds it (a known value: an earlier output or url
  *    part) → a slot, bound by origin by the usual `bindings` pass;
+ *  - a READ this procedure made earlier returned it (a labelled read the
+ *    procedure keeps) → a derived value bound from that read at run time
+ *    (`readMints`, then discoverMinted's list and segDerived's `read`): the
+ *    procedure types THIS run's value. GPT-6 Luna trial, snipeit fwsi29-luna
+ *    03-create read the pre-filled `#asset_tag` (asset_tag_field = BA-00004),
+ *    saved, typed it into "Lookup by Asset Tag" and pressed Enter onto
+ *    /hardware/4; ended here, the skill stopped on the list, never published
+ *    the asset id, and 04-edit/05-verify went to the model on every replay;
  *  - otherwise the procedure ENDS before it, as sourcelessGoto's does: replay
  *    recovers there, and the artifact stops there, with this note saying why.
- * Reading this run's value off the page (a derived value from page text) is
- * the richer answer, and is not built.
  */
-function mintedFill(kept: RecordedStep[], input: CompileInput, slots: Map<string, string>, notes: TransformNote[]): RecordedStep[] {
+function mintedFill(kept: RecordedStep[], input: CompileInput, slots: Map<string, string>, notes: TransformNote[], readMints: ReadMint[] = []): RecordedStep[] {
   const slotted = new Set([...slots.values()].map((v) => v.trim()));
   const known = new Map(Object.entries(input.knownValues ?? {}).map(([k, v]) => [String(v ?? '').trim(), k] as const));
   const constants = new Set((input.taskConstants ?? []).map((v) => v.trim()));
@@ -1889,6 +1925,13 @@ function mintedFill(kept: RecordedStep[], input: CompileInput, slots: Map<string
       notes.push({ name: 'mintedFill', at: i + 1, reason: `${s.tool} typed ${JSON.stringify(v)}, a value the app minted; slotted to its published source ${origin}` });
       continue;
     }
+    const read = readReturning(kept.slice(0, i), v);
+    if (read) {
+      readMints.push({ value: v, read, label: read.args.label as string });
+      slotted.add(v);
+      notes.push({ name: 'mintedFill', at: i + 1, reason: `${s.tool} typed ${JSON.stringify(v)}, a value the app minted; bound from this procedure's own read ${JSON.stringify(read.args.label)} at run time` });
+      continue;
+    }
     notes.push({
       name: 'mintedFill',
       at: i + 1,
@@ -1897,6 +1940,34 @@ function mintedFill(kept: RecordedStep[], input: CompileInput, slots: Map<string
     return kept.slice(0, i);
   }
   return kept;
+}
+
+/** A value mintedFill binds from a read the procedure makes before typing it. */
+interface ReadMint {
+  value: string;
+  read: RecordedStep;
+  label: string;
+}
+
+/**
+ * The latest labelled single read among `steps` whose recorded value IS
+ * `value` (trimmed): the procedure's own look at the page, which a replay
+ * makes again and so can bind the typed value from.
+ */
+function readReturning(steps: readonly RecordedStep[], value: string): RecordedStep | undefined {
+  for (let k = steps.length - 1; k >= 0; k--) {
+    const s = steps[k];
+    if (s.tool !== 'read' || typeof s.args.label !== 'string' || !s.args.label || s.result === undefined) continue;
+    if (s.args.what !== undefined && s.args.what !== 'text' && s.args.what !== 'value') continue;
+    let observed: unknown;
+    try {
+      observed = JSON.parse(s.result);
+    } catch {
+      observed = s.result;
+    }
+    if (typeof observed === 'string' && observed.trim() === value) return s;
+  }
+  return undefined;
 }
 
 /**
