@@ -7,7 +7,7 @@ import path from 'node:path';
 import type { LocatorCandidate, RecordedEntry, RecordedInstruction, RecordedReport, RecordedStep, StepDiff } from '../daemon/recorder.js';
 import { rootDir } from '../shared/paths.js';
 import { escapeRe } from '../shared/text.js';
-import { carriedSteps, dropSelfNamingCandidates, urlParts, urlPattern } from './compile.js';
+import { carriedChoices, carriedSteps, dropSelfNamingCandidates, urlParts, urlPattern } from './compile.js';
 import { mintedShape, originOf as urlOriginOf, routeAt, urlPart, urlShapeOf } from '../execution/url.js';
 import { idPositionPart, linkMintedParts, pathDigitPart, pathIdPart, unseenGotoParts } from './ledger.js';
 import { MIN_ID_LEN, looksLikeId, tokenPattern } from './shape.js';
@@ -2368,6 +2368,7 @@ export function unbankedMutations(entries: RecordedEntry[]): string[] {
     const reports = span.filter((x): x is Extract<RecordedEntry, { k: 'report' }> => x.k === 'report');
     if (reports[reports.length - 1]?.status !== 'success') continue;
     for (const step of carriedSteps(entries.slice(0, i), span)) carried.add(step);
+    for (const { step } of carriedChoices(entries.slice(0, i), span)) carried.add(step);
   }
   for (const g of groups) {
     if (g.report?.status === 'success' || g.adopted || !g.mutations) continue;
