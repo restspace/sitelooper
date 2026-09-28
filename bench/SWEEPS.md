@@ -554,6 +554,19 @@ after that point is invalid, verifies (no model) are not. fwop15-cv2 and fwod88-
 for the top-up.
 
 
+## Round 76 (main 826fbb4d: the round-75 fixes — a banked url id under the text floor is a slot by provenance (f5d73278), and the check before a key press no longer blurs the focused field (49755d0b)) — gt and si green, both published; each recovered one n2 step for a reason neither fix touches
+
+Fired 10:00 UTC, gitea and snipe-it only, after both fixes verified (results/verify-r75-fix and results/verify-r75-press: 0 failures, parity 204/204, corpus 409 rows with no status change against the r73 snapshot).
+
+| round | runid | app | verified | replay model-free | compiled | green | notes |
+|---|---|---|---|---|---|---|---|
+| 76 | fwgt30 | gt | 7/7 ×3 | n2: 03-report fell back (69 turns: after step 11 the Labels picker's "Filter Label" textbox never appeared) and recovered on the right issue (#5); n3 0 turns ×7 | pass (5/7, 2 UNVERIFIABLE) | **yes** (n2 recovered) | the round-75 fix confirmed on a live compile: the skill n1 COMPILED for the labels step (s_13b413) names the heading `{{v1}} #{{v6}}` in all three locators, v6 bound to `url:i2:p3` (the id is 4 on n1). `#4` survives only in the prose template and the report template, and the n2 recovery was not misled by it. The n2 miss is the Labels picker's timing (fwgt23's shape), not a slot (open) |
+| 76 | fwsi27 | si | 7/7 ×3 | n2: 02-create fell back (24 turns) and recovered; n3 0 turns ×4 | pass (5/7, 2 UNVERIFIABLE) | **yes** (n2 recovered) | this recording closed the date picker with Escape and submitted with the Save button, so the round-75 press fix was NOT exercised. n2's Save click was reported "click NOT dispatched … Timeout 10000ms" although the journal attributes a POST /hardware (302 after 26.5s: a slow server) to that gesture; the recovery model saw the asset had been created and did not submit again (one POST /hardware in the whole run). A dispatched click whose submit is still in flight is misreported as not dispatched, which invites a double submit (open) |
+
+Reading: both fixes stand on main with every run verified and every artifact passing; the gitea one is now confirmed on a
+live compile, the snipe-it one still waits for a recording that submits with Enter. The one new finding is on the
+execution side: the click-deadline outcome ignores a request the journal has already tied to the gesture.
+
 ## Round 75 (main 7066c28d: the same code as round 74, publishing through `node bench/publish-results.mjs`) — FIVE OF FIVE PUBLISHED by the boxes themselves; od, op, gr green; gt green with one recovered replay; si verified everywhere but its replays recovered and its artifact failed
 
 Fired 18:05 UTC. The publish change (bench/sweep.mjs places each run's script/timing/trace beside its output; the prompt's step 6 is the one command `node bench/publish-results.mjs --base <runid>`; no credential wording before the push) got every box through the classifier that had refused six grafana boxes and, in round 74, snipe-it and odoo too. Grafana's store is on a branch for the first time since fwgr81.
