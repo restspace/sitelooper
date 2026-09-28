@@ -1,0 +1,190 @@
+{
+  "flow": "fwsi29-luna",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_d25cb1; observed page_title_2=Dashboard\n                :: Bench Assets, current_url=http://127.0.0.1:8098/, page_heading=Dashboard, page_title=Dashboard :: Bench Assets, login_alert=Success: \n×\nYou have successfully logged in., signed_in_user=Bench Admin.",
+      "values": {
+        "page_title_2": "Dashboard\n                :: Bench Assets",
+        "current_url": "http://127.0.0.1:8098/",
+        "page_heading": "Dashboard",
+        "page_title": "Dashboard :: Bench Assets",
+        "login_alert": "Success: \n×\nYou have successfully logged in.",
+        "signed_in_user": "Bench Admin"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "10/10",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-find",
+      "status": "success",
+      "summary": "Replayed stored procedure s_ad66bf; observed asset_count=3, asset_1_tag=SEED-0001, asset_2_tag=SEED-0002, asset_3_tag=SEED-0003, asset_1_name=Seed: Reception Laptop, asset_list_page_title=All Assets :: Bench Assets, asset_2_name=Seed: Training Laptop, asset_3_name=Seed: Spare Laptop, first_seed_name=Seed: Reception Laptop.",
+      "values": {
+        "asset_count": "3",
+        "asset_1_tag": "SEED-0001",
+        "asset_2_tag": "SEED-0002",
+        "asset_3_tag": "SEED-0003",
+        "asset_1_name": "Seed: Reception Laptop",
+        "asset_list_page_title": "All Assets :: Bench Assets",
+        "asset_2_name": "Seed: Training Laptop",
+        "asset_3_name": "Seed: Spare Laptop",
+        "first_seed_name": "Seed: Reception Laptop"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "14/14",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_b73a5f; observed run_id=fwsi29-luna-n2, created_asset_tag=BA-00005.",
+      "values": {
+        "run_id": "fwsi29-luna-n2",
+        "created_asset_tag": "BA-00005"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "12/12",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_b73a5f: report value created_asset_name is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)",
+        "s_b73a5f: report value created_asset_model is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)",
+        "s_b73a5f: report value created_asset_status is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)",
+        "s_b73a5f: report value verified_status is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)"
+      ],
+      "unreported": [
+        "created_asset_name",
+        "created_asset_model",
+        "created_asset_status",
+        "verified_status"
+      ]
+    },
+    {
+      "id": "04-edit",
+      "status": "success",
+      "summary": "Edited the existing asset 'fwsi29-luna-n2 Bench Asset' (tag BA-00005) from the All Assets list via its Update page: set Default Location by picking the searchable dropdown option \"Bench Office\" (the select2 list opened and the choice landed, select[id=rtd_location_id]=1, control now shows the Bench Office chip), expanded \"Order Related Information\" and set Purchase Date (input[name=purchase_date]) to 2026-03-15, then submitted with the form's Save button. Verified on the asset page /hardware/5: heading \"Assets fwsi29-luna-n2 Bench Asset #BA-00005 - Bench Laptop Model\", Asset Tag BA-00005, Asset Name fwsi29-luna-n2 Bench Asset, Default Location Bench Office, and \"Purchased 2026-03-15\" in the asset's info list. The All Assets list also now shows Bench Office in that asset's location column. Nothing was created and no other record was modified.",
+      "values": {
+        "asset_name": "fwsi29-luna-n2 Bench Asset",
+        "asset_tag": "BA-00005",
+        "default_location": "Bench Office",
+        "purchase_date": "2026-03-15",
+        "model": "Bench Laptop Model",
+        "asset_page_heading": "Assets  fwsi29-luna-n2 Bench Asset #BA-00005 - Bench Laptop Model",
+        "purchased_line": "Purchased 2026-03-15 - 6 months 1 week ago",
+        "purchase_date_value": "2026-03-15",
+        "purchase_date_value_afte": "2026-03-15",
+        "asset_page_url": "http://127.0.0.1:8098/hardware/5",
+        "table_a": "Update",
+        "dt": "Asset Tag",
+        "dt_2": "Asset Name",
+        "dt_3": "Default Location",
+        "dt_4": "Assets",
+        "ref": "fwsi29-luna-n2"
+      },
+      "tier": null,
+      "recovered": true,
+      "fellBack": "unresolved reference(s): 03-create.url.p1",
+      "replayed": null,
+      "repaired": false,
+      "turns": 20,
+      "unreported": [
+        "status",
+        "purchase_date_field_value_before_save",
+        "default_location_selecte",
+        "name_field_value",
+        "asset_tag_label",
+        "asset_name_label",
+        "current_value_label",
+        "last_audit_label",
+        "next_audit_date_label",
+        "default_location_label",
+        "purchase_cost_label",
+        "run_id"
+      ]
+    },
+    {
+      "id": "05-verify",
+      "status": "success",
+      "summary": "Checked out asset 'fwsi29-luna-n2 Bench Asset' (tag BA-00005) to the existing user Bench Assignee from the asset's checkout form (/hardware/5/checkout): typed in the searchable User dropdown, clicked the actual AJAX option \"Bench Assignee (bench-assignee)\" from the suggestion list (dropdown closed and the chip rendered in the field), entered the checkout note \"fwsi29-luna-n2\", and clicked Checkout once (app returned \"Asset checked out successfully.\"). Verified on the asset page http://127.0.0.1:8098/hardware/5: the page links to Bench Assignee as the assigned user, and the History table's latest row reads 2026-09-28 04:11 PM / Bench Admin / checkout / target \"Bench Assignee\" / Notes \"fwsi29-luna-n2\" — exactly one checkout entry exists. No existing user, model, status or location was created or modified.",
+      "values": {
+        "asset_name": "fwsi29-luna-n2 Bench Asset",
+        "asset_tag": "BA-00005",
+        "checked_out_to": "Bench Assignee",
+        "checkout_note": "fwsi29-luna-n2",
+        "asset_page_heading": "Assets  fwsi29-luna-n2 Bench Asset #BA-00005 - Bench Laptop Model",
+        "history_last_row": "2026-09-28 04:11 PM | Bench Admin | checkout | fwsi29-luna-n2 Bench Asset #BA-00005 - Bench Laptop Model | Bench Assignee | note: fwsi29-luna-n2",
+        "history_row_count": "3",
+        "checkout_note_last_histo": "fwsi29-luna-n2",
+        "checkout_target_last_his": "Bench Assignee",
+        "a_href_users": "User",
+        "a_href_users_2": "Bench Admin"
+      },
+      "tier": "B",
+      "recovered": true,
+      "fellBack": "unresolved reference(s): 03-create.url.p1",
+      "replayed": "1/1",
+      "repaired": false,
+      "turns": 27,
+      "unreported": [
+        "runid",
+        "last_checkout",
+        "assets_default_location",
+        "checkout_note_value",
+        "selected_user",
+        "checkout_button_label",
+        "history_tab_label"
+      ]
+    }
+  ],
+  "passed": 5,
+  "total": 5,
+  "repinned": 0,
+  "drift": 1,
+  "driftTickets": [
+    {
+      "flow": "fwsi29-luna",
+      "step": "05-verify",
+      "skill": "s_bad3b2",
+      "similarity": 0.999,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "unresolved reference(s): 03-create.url.p1",
+      "pageUrlPattern": "http://127.0.0.1:8098/hardware/:id/checkout",
+      "pageUrl": "http://127.0.0.1:8098/hardware/5/checkout"
+    }
+  ],
+  "wallMs": 163998,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 710250,
+    "completionTokens": 10426,
+    "cachedTokens": 649472
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 710250,
+      "completionTokens": 10426,
+      "cachedTokens": 649472
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "openai/gpt-6-luna",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

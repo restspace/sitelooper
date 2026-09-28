@@ -1,0 +1,38 @@
+{
+  "arm": "spec",
+  "runid": "fwsi29-luna-spec",
+  "target": "snipeit",
+  "flow": "fwsi29-luna.json",
+  "flowName": "fwsi29-luna",
+  "skillsDir": "/home/user/sitelooper/bench/results/fwsi29-luna-skills",
+  "compiled": true,
+  "flowFile": "bench/results/fwsi29-luna-spec-spec-tmp/fwsi29-luna.flow.ts",
+  "specFile": "bench/results/fwsi29-luna-spec-spec-tmp/fwsi29-luna.spec.ts",
+  "wallMs": 37546,
+  "exitCode": 1,
+  "timedOut": false,
+  "costUsd": 0,
+  "stats": {
+    "total": 1,
+    "passed": 0,
+    "failed": 1,
+    "skipped": 0
+  },
+  "tests": [
+    {
+      "title": "fwsi29-luna",
+      "status": "unexpected",
+      "ok": false,
+      "durationMs": 33009,
+      "error": "Error: 04-edit needs {{03-create.url.p1}}, and this run never published it (it was published empty). No `[sitelooper skip]` line was logged for 03-create on this run, so no read of 03-create.url.p1 was even attempted: check that 03-create is a step of this flow and that it is the step that publishes this value, rather than re-recording a read that may be working. Stopping here instead of passing an empty value into 04-edit: blank, a record-scoped locator matches every record and a known slot loses its identity, so the step would do its work to the wrong one. Everything earlier steps did stands; nothing of 04-edit has run.",
+      "drift": []
+    }
+  ],
+  "drift": [],
+  "driftCount": 0,
+  "evidence": [
+    "fwsi29-luna-spec-spec-failure.png",
+    "fwsi29-luna-spec-spec-error-context.md"
+  ],
+  "logTail": "\nRunning 1 test using 1 worker\n\n[sitelooper step] 01-signin\n[sitelooper step] 02-find\n[sitelooper warn] 03-create: report value created_asset_name is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)\n[sitelooper warn] 03-create: report value created_asset_model is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)\n[sitelooper warn] 03-create: report value created_asset_status is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)\n[sitelooper warn] 03-create: report value verified_status is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)\n[sitelooper step] 03-create\n  ✘  1 fwsi29-luna.spec.ts:9:1 › fwsi29-luna (33.0s)\n\n\n  1) fwsi29-luna.spec.ts:9:1 › fwsi29-luna › 04-edit: Edit the asset '{{runid}} Bench Asset' so its default location is the existing 'Bench Office' and its purchase date is 2026-03-15. Choose Bench Office from the searchable dropdown suggestions rather than only typing it, save, then verify on the asset page the exact name, asset tag, default location, and purchase date. \n\n    Error: 04-edit needs {{03-create.url.p1}}, and this run never published it (it was published empty). No `[sitelooper skip]` line was logged for 03-create on this run, so no read of 03-create.url.p1 was even attempted: check that 03-create is a step of this flow and that it is the step that publishes this value, rather than re-recording a read that may be working. Stopping here instead of passing an empty value into 04-edit: blank, a record-scoped locator matches every record and a known slot loses its identity, so the step would do its work to the wrong one. Everything earlier steps did stands; nothing of 04-edit has run.\n\n       at fwsi29-luna.flow.ts:17166\n\n      17164 |         ` attempted: check that ${sid} is a step of this flow and that it is the step that publishes` +\n      17165 |         ` this value, rather than re-recording a read that may be working.`;\n    > 17166 |     throw new Error(\n            |           ^\n      17167 |       `${by} needs {{${ref}}}, and this run never published it` +\n      17168 |         (value === '' ? ' (it was published empty)' : '') +\n      17169 |         `. ${trail}` +\n        at need (/home/user/sitelooper/bench/results/fwsi29-luna-spec-spec-tmp/fwsi29-luna.flow.ts:17166:11)\n        at /home/user/sitelooper/bench/results/fwsi29-luna-spec-spec-tmp/fwsi29-luna.flow.ts:20968:109\n        at runFlow (/home/user/sitelooper/bench/results/fwsi29-luna-spec-spec-tmp/fwsi29-luna.flow.ts:20967:5)\n        at /home/user/sitelooper/bench/results/fwsi29-luna-spec-spec-tmp/fwsi29-luna.spec.ts:14:21\n\n    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────\n    \n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────\n    test-results/fwsi29-luna-fwsi29-luna/test-failed-1.png\n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    Error Context: test-results/fwsi29-luna-fwsi29-luna/error-context.md\n\n  1 failed\n    fwsi29-luna.spec.ts:9:1 › fwsi29-luna ──────────────────────────────────────────────────────────\n"
+}

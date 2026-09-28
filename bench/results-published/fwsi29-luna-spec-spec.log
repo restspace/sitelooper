@@ -1,0 +1,43 @@
+
+Running 1 test using 1 worker
+
+[sitelooper step] 01-signin
+[sitelooper step] 02-find
+[sitelooper warn] 03-create: report value created_asset_name is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)
+[sitelooper warn] 03-create: report value created_asset_model is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)
+[sitelooper warn] 03-create: report value created_asset_status is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)
+[sitelooper warn] 03-create: report value verified_status is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)
+[sitelooper step] 03-create
+  ✘  1 fwsi29-luna.spec.ts:9:1 › fwsi29-luna (33.0s)
+
+
+  1) fwsi29-luna.spec.ts:9:1 › fwsi29-luna › 04-edit: Edit the asset '{{runid}} Bench Asset' so its default location is the existing 'Bench Office' and its purchase date is 2026-03-15. Choose Bench Office from the searchable dropdown suggestions rather than only typing it, save, then verify on the asset page the exact name, asset tag, default location, and purchase date. 
+
+    Error: 04-edit needs {{03-create.url.p1}}, and this run never published it (it was published empty). No `[sitelooper skip]` line was logged for 03-create on this run, so no read of 03-create.url.p1 was even attempted: check that 03-create is a step of this flow and that it is the step that publishes this value, rather than re-recording a read that may be working. Stopping here instead of passing an empty value into 04-edit: blank, a record-scoped locator matches every record and a known slot loses its identity, so the step would do its work to the wrong one. Everything earlier steps did stands; nothing of 04-edit has run.
+
+       at fwsi29-luna.flow.ts:17166
+
+      17164 |         ` attempted: check that ${sid} is a step of this flow and that it is the step that publishes` +
+      17165 |         ` this value, rather than re-recording a read that may be working.`;
+    > 17166 |     throw new Error(
+            |           ^
+      17167 |       `${by} needs {{${ref}}}, and this run never published it` +
+      17168 |         (value === '' ? ' (it was published empty)' : '') +
+      17169 |         `. ${trail}` +
+        at need (/home/user/sitelooper/bench/results/fwsi29-luna-spec-spec-tmp/fwsi29-luna.flow.ts:17166:11)
+        at /home/user/sitelooper/bench/results/fwsi29-luna-spec-spec-tmp/fwsi29-luna.flow.ts:20968:109
+        at runFlow (/home/user/sitelooper/bench/results/fwsi29-luna-spec-spec-tmp/fwsi29-luna.flow.ts:20967:5)
+        at /home/user/sitelooper/bench/results/fwsi29-luna-spec-spec-tmp/fwsi29-luna.spec.ts:14:21
+
+    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/fwsi29-luna-fwsi29-luna/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/fwsi29-luna-fwsi29-luna/error-context.md
+
+  1 failed
+    fwsi29-luna.spec.ts:9:1 › fwsi29-luna ──────────────────────────────────────────────────────────
