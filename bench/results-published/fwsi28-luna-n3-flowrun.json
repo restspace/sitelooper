@@ -1,0 +1,120 @@
+{
+  "flow": "fwsi28-luna",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_93043b; observed assets_found=3, asset_1_name=Seed: Reception Laptop, asset_1_tag=SEED-0001, asset_2_name=Seed: Training Laptop, asset_2_tag=SEED-0002, asset_3_name=Seed: Spare Laptop, asset_3_tag=SEED-0003, asset_navigation_label=Asset, asset_tag_column_heading=Asset Tag, asset_name_column_heading=Name.",
+      "values": {
+        "assets_found": "3",
+        "asset_1_name": "Seed: Reception Laptop",
+        "asset_1_tag": "SEED-0001",
+        "asset_2_name": "Seed: Training Laptop",
+        "asset_2_tag": "SEED-0002",
+        "asset_3_name": "Seed: Spare Laptop",
+        "asset_3_tag": "SEED-0003",
+        "asset_navigation_label": "Asset",
+        "asset_tag_column_heading": "Asset Tag",
+        "asset_name_column_heading": "Name"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "16/16",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_93043b: step 11: the target chain is dead and was not healed inline — the step is a synthesized read no run has ever resolved, so nothing about it has drifted",
+        "s_93043b: step 11: skipped read — no element matched any known locator for target (tried 1: page.getByRole('link', { name: 'Assets', exact: true }))"
+      ],
+      "unreported": [
+        "assets_navigation_label"
+      ]
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_9cdf50; observed asset_purchase_date_disp=Purchased 2026-03-15 - 6 months 1 week ago, run_id=fwsi28-luna-n3, purchase_date_display=Purchased 2026-03-15 - 6 months 1 week ago, asset_tag=BA-00006, asset_name=fwsi28-luna-n3 Bench Asset, model=Bench Laptop Model, status=Ready to Deploy, page_heading=Assets  fwsi28-luna-n3 Bench Asset #BA-00006 - Bench Laptop Model, asset_field_label=Asset, asset_tag_field_label=Asset Tag, location_field_label=Location, default_location_field_label=Default Location, asset_name_field_label=Asset Name.",
+      "values": {
+        "asset_purchase_date_disp": "Purchased 2026-03-15 - 6 months 1 week ago",
+        "run_id": "fwsi28-luna-n3",
+        "purchase_date_display": "Purchased 2026-03-15 - 6 months 1 week ago",
+        "asset_tag": "BA-00006",
+        "asset_name": "fwsi28-luna-n3 Bench Asset",
+        "model": "Bench Laptop Model",
+        "status": "Ready to Deploy",
+        "page_heading": "Assets  fwsi28-luna-n3 Bench Asset #BA-00006 - Bench Laptop Model",
+        "asset_field_label": "Asset",
+        "asset_tag_field_label": "Asset Tag",
+        "location_field_label": "Location",
+        "default_location_field_label": "Default Location",
+        "asset_name_field_label": "Asset Name"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "28/28",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_fa2006: step 12: read 'purchase_date' returned a value the skill itself set/selected ('2026-03-15') — confirms the control, not persistence; dropped from the report's confident values"
+      ],
+      "unreported": [
+        "purchase_date"
+      ]
+    },
+    {
+      "id": "03-verify",
+      "status": "success",
+      "summary": "Replayed stored procedure s_2e940d; observed run_id=fwsi28-luna-n3, asset_tag=BA-00006, asset_name=fwsi28-luna-n3 Bench Asset, checkout_note_exact=Checkout performed by automated run fwsi28-luna-n3, history_action=checkout, history_created_at=2026-09-28 12:10 PM, status_panel=Ready to Deploy\n        Deployed\n                        Bench Assignee, assigned_user=Bench Assignee.",
+      "values": {
+        "run_id": "fwsi28-luna-n3",
+        "asset_tag": "BA-00006",
+        "asset_name": "fwsi28-luna-n3 Bench Asset",
+        "checkout_note_exact": "Checkout performed by automated run fwsi28-luna-n3",
+        "history_action": "checkout",
+        "history_created_at": "2026-09-28 12:10 PM",
+        "status_panel": "Ready to Deploy\n        Deployed\n                        Bench Assignee",
+        "assigned_user": "Bench Assignee"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "14/14",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 3,
+  "total": 3,
+  "repinned": 0,
+  "drift": 1,
+  "driftTickets": [
+    {
+      "flow": "fwsi28-luna",
+      "step": "01-signin",
+      "skill": "s_93043b",
+      "atStep": "11",
+      "key": "target",
+      "similarity": 1.001,
+      "missedLocator": "page.getByRole('link', { name: 'Assets', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8098/hardware",
+      "pageUrl": "http://127.0.0.1:8098/hardware"
+    }
+  ],
+  "wallMs": 76864,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "cachedTokens": 0
+  },
+  "usageByModel": {},
+  "servedByModel": {},
+  "recoveryModel": "openai/gpt-6-luna",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}
