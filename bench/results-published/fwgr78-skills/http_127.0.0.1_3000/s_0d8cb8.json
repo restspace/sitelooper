@@ -1,0 +1,203 @@
+{
+ "id": "s_0d8cb8",
+ "origin": "http://127.0.0.1:3000",
+ "template": "On dashboard '{{v1}}' (uid {{v3}}): set the dashboard time range to 'Last 6 hours' (via the top time picker), add the tag 'bench' to the dashboard (via Dashboard settings → General → Tags), and when saving, make sure the save dialog option to update the dashboard's default time range IS ticked so the 6-hour range persists in the saved dashboard. Save. Then verify persistence: reload the page, open Dashboard settings → General and confirm the tag 'bench' is listed, and confirm the saved default time range is Last 6 hours (e.g. by opening a fresh new browser tab to the dashboard and checking the time picker, or checking the settings' time range). Report what you observe.",
+ "params": {
+  "v1": {
+   "example": "fwgr78-n3 Bench Dashboard",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i2:dashboard_title"
+  },
+  "v2": {
+   "example": "fwgr78-n3",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v3": {
+   "example": "efzgluvwwcdmoa",
+   "usedIn": [],
+   "known": true,
+   "binding": "03-add.url.p1"
+  },
+  "v4": {
+   "example": "fwgr78-n3-bench-dashboard",
+   "usedIn": [],
+   "known": true,
+   "binding": "03-add.url.p2"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:3000/d/{{v3}}/{{v4}}?from=:id&timezone=browser&to=now"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e84"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "data-testid TimePicker Open Button"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Time range selected: Last 6 hours"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid dashboard controls\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(1) > div > div:nth-of-type(2) > div:nth-of-type(1) > button:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 1013,
+      "y": 112,
+      "w": 153.5,
+      "h": 32,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v3}}/{{v4}}?from=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- dialog \"\"",
+     "- textbox \"Search quick ranges\"",
+     "- checkbox \"Last 5 minutes\"",
+     "- checkbox \"Last 15 minutes\"",
+     "- checkbox \"Last 30 minutes\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_b2df23",
+    "step": 1
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e165"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "text",
+      "text": "Last 1 hour"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"data-testid TimePicker Overlay Content\"] label"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > ul > li:nth-of-type(4) > label"
+     },
+     {
+      "kind": "point",
+      "x": 1016,
+      "y": 308,
+      "w": 217.6,
+      "h": 36,
+      "role": null,
+      "tag": "label",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/d/{{v3}}/{{v4}}?from=:id&timezone=browser&to=now",
+    "addedContains": [
+     "- button \"Time range selected: Last 1 hour\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_b2df23",
+    "step": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e9"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"wrapper\"] a"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(1) > header > div:nth-of-type(1) > div:nth-of-type(1) > a"
+     },
+     {
+      "kind": "point",
+      "x": 28,
+      "y": 20,
+      "w": 24,
+      "h": 24,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:3000/?from=:id&timezone=browser&to=now",
+    "alertContains": "Error loading RSS feed Make sure that the feed URL is correct and that CORS is configured correctly on the server. See N",
+    "addedContains": [
+     "- button \"Menu for panel with no title\"",
+     "- heading \"Welcome to Grafana\"",
+     "- heading \"Need help?\"",
+     "- link \"Documentation\"",
+     "- link \"Tutorials\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_b2df23",
+    "step": 3
+   }
+  }
+ ],
+ "contract": 2,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-26T22:41:51.494Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_9d1500",
+  "index": 0,
+  "of": 3
+ },
+ "variantOf": "s_b2df23",
+ "provenance": {
+  "session": "fwgr78-n3",
+  "instruction": "On dashboard 'fwgr78-n3 Bench Dashboard' (uid efzgluvwwcdmoa): set the dashboard time range to 'Last 6 hours' (via the top time picker), add the tag 'bench' to the dashboard (via Dashboard settings → General → Tags), and when saving, make sure the save dialog option to update the dashboard's default time range IS ticked so the 6-hour range persists in the saved dashboard. Save. Then verify persistence: reload the page, open Dashboard settings → General and confirm the tag 'bench' is listed, and confirm the saved default time range is Last 6 hours (e.g. by opening a fresh new browser tab to the dashboard and checking the time picker, or checking the settings' time range). Report what you observe.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-26T22:41:51.494Z"
+ },
+ "revision": 1
+}
