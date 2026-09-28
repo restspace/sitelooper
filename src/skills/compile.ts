@@ -183,14 +183,126 @@ const POPUP_LINE = /^-?\s*(dialog|alertdialog|menu|menubar|listbox|tooltip)\b/;
  * steps (`via`): a variant's start is variantStart's to decide.
  */
 export function carryOpener(before: readonly RecordedEntry[], entries: RecordedEntry[]): RecordedEntry[] {
+  let out = entries;
+  // A dead attempt's choice that stuck and this instruction took for granted (carriedChoices).
+  for (const { step, after } of carriedChoices(before, entries)) {
+    const { via: _via, result: _result, ...pick } = step;
+    const i = out.indexOf(after);
+    out = [...out.slice(0, i + 1), pick, ...out.slice(i + 1)];
+  }
   const carried = carriedSteps(before, entries);
-  if (!carried.length) return entries;
+  if (!carried.length) return out;
   const reopens = closedReopens(carried);
   return [
-    entries[0],
+    out[0],
     ...carried.map(({ via: _via, result: _result, ...step }, i): RecordedStep => (reopens.has(i) ? { ...step, closedBefore: true } : step)),
-    ...entries.slice(1),
+    ...out.slice(1),
   ];
+}
+
+/**
+ * The choices a dead instruction made that STUCK and that the instruction
+ * after it took for granted, each with the step of that instruction's own
+ * procedure it is replayed after (carryOpener splices it in).
+ *
+ * gitea fwgt32-luna-n1 04-add: 102 (a resume of 67, both set the labels to
+ * "bug and priority-high") ticked `link "bug"` and `link "priority-high"`
+ * and reported failure; Gitea had applied bug. 132, "The bug label is
+ * already applied; add priority-high", opened the picker, ticked
+ * priority-high only and succeeded. resolveGroups rightly keeps the failed
+ * attempt out of the flow (132 made its priority-high choice over again), so
+ * the flow's step was 132's procedure alone, and every replay applied
+ * priority-high only.
+ *
+ * A choice is a click with a role and name that added nothing to the page
+ * (a pick, not an opener or a commit). One is carried only when all hold:
+ *  1. the instruction just before (resumes included) ended in failure on
+ *     this page, in the very url state it began in (so resolveGroups never
+ *     adopts it), and this one made at least one of its choices over again —
+ *     it took that attempt up, not a fresh page;
+ *  2. this instruction never touches the choice's element itself, and the
+ *     opener carry (carriedSteps) does not already bring a click of it;
+ *  3. its line (`- link "bug"`) is on the page this instruction started on
+ *     and was not on the page the dead one started on — Gitea saved it;
+ *  4. the dead instruction's text names it — a stray click is never carried;
+ *  5. this instruction opens the popup the choice was made in, and after
+ *     that opening (its LAST such) nothing navigates before its last gesture
+ *     — the pick lands in the opening whose close commits it (132's first
+ *     opening was thrown away by a reload).
+ * The dead instruction's latest click of that choice is the one carried.
+ */
+export function carriedChoices(before: readonly RecordedEntry[], entries: readonly RecordedEntry[]): { step: RecordedStep; after: RecordedStep }[] {
+  const none: { step: RecordedStep; after: RecordedStep }[] = [];
+  const head = entries[0];
+  if (head?.k !== 'instruction' || !head.url || head.resume || head.startText === undefined) return none;
+  const own = entries.filter((e): e is RecordedStep => e.k === 'step');
+  if (own.some((s) => s.via)) return none;
+  let at = -1;
+  for (let k = before.length - 1; k >= 0; k--) {
+    const e = before[k];
+    if (e.k === 'instruction' && !e.resume) {
+      at = k;
+      break;
+    }
+  }
+  if (at < 0) return none;
+  const dead = before[at] as RecordedInstruction;
+  if (dead.startText === undefined || !endedInFailure(before, at)) return none;
+  const page = pathOf(head.url);
+  const end = urlBefore(before, before.length) ?? '';
+  if (pathOf(end) !== page || !dead.url || pathOf(dead.url) !== page) return none;
+  // …and took the flow nowhere: it began in the very url state it ended in.
+  // Only such an attempt is left out of the flow for a successor making its
+  // choices over again (flow.ts reappliedByNext); one that got somewhere is
+  // ADOPTED as a step, its picks with it, and a carried copy would toggle
+  // one back off (gitea fwgt23-n1: the dead attempt created the issue).
+  const partsOf = (u: string) => JSON.stringify(urlParts(u).map((p) => [p.label, p.value]));
+  if (partsOf(dead.url) !== partsOf(end)) return none;
+  const deadSteps = before.slice(at).filter((e): e is RecordedStep => e.k === 'step');
+  if (deadSteps.some((s) => s.via)) return none;
+  const choiceLine = (s: RecordedStep): string | undefined =>
+    s.tool === 'click' && s.diff && !s.diff.added?.length && !s.diff.alerts?.length ? roleLine(s) : undefined;
+  const remade = new Set(own.map(choiceLine).filter((l): l is string => l !== undefined));
+  if (!deadSteps.some((s) => {
+    const l = choiceLine(s);
+    return l !== undefined && remade.has(l);
+  })) return none;
+  // A pick the opener carry already puts in front (carriedSteps) is not carried twice (gitea fwgt11-n1 04-set).
+  const opened = new Set<RecordedEntry>(carriedSteps(before, entries));
+  const touched = new Set(own.filter((s) => isMutatingAction(s.tool)).map(roleLine).filter((l): l is string => l !== undefined));
+  const lines = (text: string) => new Set(text.split('\n').map((l) => l.trim()));
+  const was = lines(dead.startText);
+  const now = lines(head.startText);
+  const said = dead.text.toLowerCase();
+  const popupOf = (s: RecordedStep) => (s.tool === 'click' ? (s.diff?.added ?? []).filter((l) => POPUP_LINE.test(l.trim())).map((l) => l.trim()) : []);
+  const navigates = (s: RecordedStep) => s.tool === 'goto' || s.tool === 'back' || !!s.effect || (!!s.diff?.url && pathOf(s.diff.url) !== page);
+  let lastAct = -1;
+  own.forEach((s, i) => {
+    if (isMutatingAction(s.tool) && !navigates(s)) lastAct = i;
+  });
+  const out: { step: RecordedStep; after: RecordedStep }[] = [];
+  const seen = new Set<string>();
+  for (let j = deadSteps.length - 1; j >= 0; j--) {
+    const s = deadSteps[j];
+    const line = choiceLine(s);
+    if (line === undefined || seen.has(line)) continue;
+    seen.add(line);
+    if (deadSteps.some((d) => opened.has(d) && choiceLine(d) === line)) continue;
+    if (touched.has(line)) continue;
+    if (!now.has(line) || was.has(line)) continue;
+    const name = s.locators!.target!.chain!.find((c): c is Extract<LocatorCandidate, { kind: 'role' }> => c.kind === 'role')!.name;
+    if (!name || !new RegExp(`(?:^|[^a-z0-9])${escapeRe(name.toLowerCase())}(?:$|[^a-z0-9])`).test(said)) continue;
+    let popup: string[] = [];
+    for (let k = j - 1; k >= 0 && !popup.length; k--) popup = popupOf(deadSteps[k]);
+    if (!popup.length) continue;
+    let opening = -1;
+    own.forEach((o, i) => {
+      if (i < lastAct && popupOf(o).some((l) => popup.includes(l))) opening = i;
+    });
+    if (opening < 0 || own.slice(opening + 1, lastAct + 1).some(navigates)) continue;
+    out.unshift({ step: s, after: own[opening] });
+  }
+  return out;
 }
 
 /**

@@ -33,8 +33,8 @@ const sig = (e: RecordedEntry) => (e.k === 'step' ? `${e.tool} ${JSON.stringify(
 const carriedOf = (entries: RecordedEntry[]) => {
   const out = carryOpener(entries.slice(0, THIRD), entries.slice(THIRD, LAST));
   // the carried steps sit between the instruction and its own first step
-  const own = entries.slice(THIRD + 1, LAST).map(sig);
-  return out.slice(1, out.length - own.length).map(sig);
+  // (a stuck choice carriedChoices splices in further on is not one of them)
+  return out.slice(1, out.indexOf(entries[THIRD + 1])).map(sig);
 };
 
 describe('carryOpener: a picker the dead instruction opened twice (fwgt11 04-set)', () => {
@@ -57,8 +57,7 @@ describe('carryOpener: a picker the dead instruction opened twice (fwgt11 04-set
     entries.splice(AT(90), 1); // no tick in the first opening
     const shift = (n: number) => AT(n) - (n > 90 ? 1 : 0);
     const out = carryOpener(entries.slice(0, THIRD - 1), entries.slice(THIRD - 1, LAST - 1));
-    const own = entries.slice(THIRD, LAST - 1).length;
-    expect(out.slice(1, out.length - own).map(sig)).toEqual([98, 99, 102, 103, 106].map((n) => sig(entries[shift(n)])));
+    expect(out.slice(1, out.indexOf(entries[THIRD])).map(sig)).toEqual([98, 99, 102, 103, 106].map((n) => sig(entries[shift(n)])));
   });
 
   it('never reaches back past the dead instruction\'s own reload', () => {
@@ -67,8 +66,7 @@ describe('carryOpener: a picker the dead instruction opened twice (fwgt11 04-set
     const reload: RecordedStep = { k: 'step', tool: 'goto', args: { url: 'http://127.0.0.1:8095/bench/bench-repo/issues/4' }, locators: {}, diff: { url: 'http://127.0.0.1:8095/bench/bench-repo/issues/4', alerts: [], added: [] } };
     entries.splice(AT(95), 0, reload);
     const out = carryOpener(entries.slice(0, THIRD + 1), entries.slice(THIRD + 1, LAST + 1));
-    const own = entries.slice(THIRD + 2, LAST + 1).length;
-    expect(out.slice(1, out.length - own).map(sig)).toEqual([98, 99, 102, 103, 106].map((n) => sig(entries[AT(n) + 1])));
+    expect(out.slice(1, out.indexOf(entries[THIRD + 2])).map(sig)).toEqual([98, 99, 102, 103, 106].map((n) => sig(entries[AT(n) + 1])));
   });
 });
 
@@ -83,8 +81,10 @@ describe('unbankedMutations counts only what no procedure carried (fwgt11 04-set
     const entries = load();
     const reopen = entries[AT(98)] as RecordedStep;
     reopen.diff!.added = [...reopen.diff!.added!, '- link "bug"'];
-    // 98, 99, 102, 103, 106 are still carried from the latest opener
-    expect(unbankedMutations(entries)[0]).toMatch(/ran 12 state-changing step\(s\) .*\(5 more were carried/);
+    // 98, 99, 102, 103, 106 are still carried from the latest opener; with 90
+    // no longer carried in front, its bug tick is carried as a choice that
+    // stuck (107 began with `- link "bug"` applied: carriedChoices)
+    expect(unbankedMutations(entries)[0]).toMatch(/ran 11 state-changing step\(s\) .*\(6 more were carried/);
   });
 });
 
