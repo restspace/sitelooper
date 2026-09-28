@@ -1,0 +1,165 @@
+
+[sweep] run 1/3: fwod102-luna-n1 (store: /home/user/sitelooper/bench/results/fwod102-luna-skills)
+[harness] odoo: defaulting APP_URL
+[harness] odoo: defaulting APP_EMAIL
+[harness] odoo: defaulting APP_PASSWORD
+[reset] odoo: no leftover bench customers
+[harness] odoo responded 303 at http://127.0.0.1:8069/
+stopped: fwod102-luna-n1
+  flow "fwod102-luna" saved: 6 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwod102-luna.json
+  warning: note: 3 goal/report value(s) carrying a value this run made were slotted or dropped:
+  s_481eea.reportTemplate.values.sale_order_id dropped (recorded literal of a value this run made)
+  s_6f7e3b.reportTemplate.summary dropped (narrates a value this run made)
+  s_7a9f8c.reportTemplate.values.customer_name dropped (recorded literal of a value this run made)
+  warning: note: 01-signin no longer publishes model — no replay reads it from the page and the recording showed no line to read
+  warning: warning: 02-create's instruction asks to report untaxed_amount, untaxed_amount_3, and no replay can publish them: nothing in its procedure reads them from the page, so export dropped them — re-record the step so the value is read, not only reported
+  warning: note: 02-create no longer publishes line_subtotal_tax_excl, total_amount_3, ref_2 — no replay reads them from the page and the recording showed no line to read
+  warning: note: 03-add no longer publishes ref_2 — no replay reads it from the page and the recording showed no line to read
+  warning: note: 04-change no longer publishes ref — no replay reads it from the page and the recording showed no line to read
+  warning: note: 05-verify no longer publishes statusbar_states, sale_order_id — no replay reads them from the page and the recording showed no line to read
+  warning: note: 06-verify no longer publishes status_after_cancellatio_2 — no replay reads it from the page and the recording showed no line to read
+  warning: warning: 120 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[0].instruction: "Benchville" (output) in "In Odoo at http://127.0.0.1:8069/, sign in as admin using password exactly {{env:APP_PASSWORD}}. Create a customer named {{runid}} Bench Customer with City Benc"
+  flow.steps[0].params.v6: "Benchville" (output) in "Benchville"
+  flow.steps[0].route: "res.partner" (output) in "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=res.partner&view_type=form"
+  s_143202.steps[3].expect.addedContains[2]: "[E-COM11] Cabinet with Doors" (output) in "- option \"[E-COM11] Cabinet with Doors\""
+  s_143202.steps[4].args.target: "[FURN_6666] Acoustic Bloc Screens" (output) in "role=option[name=\"[FURN_6666] Acoustic Bloc Screens\"]"
+arm=sitelooper model=openai/gpt-6-luna runid=fwod102-luna-n1 stop=completed
+turns=7 wall=287.6s
+commands=6 cmdTime=267.2s cmdBytes=6444 timeouts=0
+orchestrator in=5041 cw=0 cr=21396 out=738
+inner prompt=1754408 cached=1600256 completion=16361
+spend=$0.0391 maxUsd=3
+learn: A_n=0 replayed=0/6 full=0 repaired=0 compiled=6 variants=0
+-> /home/user/sitelooper/bench/results/fwod102-luna-n1-sitelooper-result.json
+
+fwod102-luna-n1: objectives passed 6/6
+  obj 1: PASS — city="Benchville"
+  obj 2: PASS — orders for customer: 1, lines: 2
+  obj 3: PASS — 2 lines, 2 distinct products
+  obj 4: PASS — quantities: 5, 2
+  obj 5: PASS — state tracking shows confirmation
+  obj 6: PASS — final state=cancel, ref=S00021
+
+[sweep] run 2/3: fwod102-luna-n2 (replay flow fwod102-luna, no orchestrator)
+[reset] odoo: deleted 1 leftover bench order(s)
+[reset] odoo: deleted 1 leftover bench customer(s)
+[sweep] fwod102-luna-n2: 1 drift ticket(s) → fwod102-luna-n2-drift.json
+
+fwod102-luna-n2: objectives passed 6/6
+  obj 1: PASS — city="Benchville"
+  obj 2: PASS — orders for customer: 1, lines: 2
+  obj 3: PASS — 2 lines, 2 distinct products
+  obj 4: PASS — quantities: 5, 2
+  obj 5: PASS — state tracking shows confirmation
+  obj 6: PASS — final state=cancel, ref=S00022
+
+[sweep] run 3/3: fwod102-luna-n3 (replay flow fwod102-luna, no orchestrator)
+[reset] odoo: deleted 1 leftover bench order(s)
+[reset] odoo: deleted 1 leftover bench customer(s)
+[sweep] fwod102-luna-n3: 1 drift ticket(s) → fwod102-luna-n3-drift.json
+
+fwod102-luna-n3: objectives passed 6/6
+  obj 1: PASS — city="Benchville"
+  obj 2: PASS — orders for customer: 1, lines: 2
+  obj 3: PASS — 2 lines, 2 distinct products
+  obj 4: PASS — quantities: 5, 2
+  obj 5: PASS — state tracking shows confirmation
+  obj 6: PASS — final state=cancel, ref=S00023
+
+Learning sweep fwod102-luna (K=3)
+┌─────────┬───┬───────────────────┬──────────┬─────────────┬───────┬──────┬───────────┬──────┬──────────────┬────────┐
+│ (index) │ n │ runid             │ verified │ stop        │ turns │ cmds │ total_usd │ A_n  │ replayed     │ wall_s │
+├─────────┼───┼───────────────────┼──────────┼─────────────┼───────┼──────┼───────────┼──────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwod102-luna-n1' │ '6/6'    │ 'completed' │ 7     │ 6    │ 0.0391    │ 0    │ '0/6'        │ 288    │
+│ 1       │ 2 │ 'fwod102-luna-n2' │ '6/6'    │ 'success'   │ 7     │ 6    │ 0.0028    │ 0.83 │ '6/6 (flow)' │ 99     │
+│ 2       │ 3 │ 'fwod102-luna-n3' │ '6/6'    │ 'success'   │ 39    │ 6    │ 0.0153    │ 0.67 │ '6/6 (flow)' │ 186    │
+└─────────┴───┴───────────────────┴──────────┴─────────────┴───────┴──────┴───────────┴──────┴──────────────┴────────┘
+http://127.0.0.1:8069
+  s_155ccc  validated    9 steps  3/3 (100%)
+           {{v1}} the confirmed sales order {{v2}} so this run's order is no longer active. Complete any cancellation con…
+  s_481eea  validated   11 steps  3/3 (100%)
+           Confirm quotation {{v1}} into a sales order. Verify and report the order reference and the status displayed af…
+  s_6cf2d3  validated    1 steps  3/3 (100%)
+           In Odoo at {{v2}}, sign in as {{v3}} using password exactly {{v4}}. Create a customer named {{v5}} with City {…
+  s_7a9f8c  validated   18 steps  3/3 (100%)
+           On quotation {{v1}}, change the quantity on the existing first line {{v2}} from 3 to 5 without changing either…
+  s_855601  validated   22 steps  3/3 (100%)
+           On the existing quotation {{v1}} for {{v2}}, add a second order line using a different product chosen from the…
+  s_c0c1f1  validated    3 steps  3/3 (100%)
+           In Odoo at {{v2}}, sign in as {{v3}} using password exactly {{v4}}. Create a customer named {{v5}} with City {…
+  s_f1b968  demoted      3 steps  1/3 (33%)
+           In Odoo at {{v2}}, sign in as {{v3}} using password exactly {{v4}}. Create a customer named {{v5}} with City {…
+  s_143202  validated    7 steps  2/2 (100%)
+           Create a new quotation in Sales for the existing customer {{v1}}. Choose any product from the product autocomp…
+  s_4b1189  validated   15 steps  2/2 (100%)
+           Create a new quotation in Sales for the existing customer {{v1}}. Choose any product from the product autocomp…
+  s_588379  validated    2 steps  2/2 (100%)
+           Create a new quotation in Sales for the existing customer {{v1}}. Choose any product from the product autocomp…
+  s_b77289  validated    1 steps  2/2 (100%)
+           Create a new quotation in Sales for the existing customer {{v1}}. Choose any product from the product autocomp…
+  s_0e889d  provisional  3 steps  1/1 (100%)
+           In Odoo at {{v2}}, sign in as {{v3}} using password exactly {{v4}}. Create a customer named {{v5}} with City {…
+  s_0ee090  provisional  2 steps  1/1 (100%)
+           Create a new quotation in Sales for the existing customer {{v1}}. Choose any product from the product autocomp…
+  s_161bfa  provisional  1 steps  1/1 (100%)  variant of s_f1b968
+           In Odoo at http://127.0.0.1:8069/, sign in as admin using password exactly {{env:APP_PASSWORD}}. Create a cust…
+  s_1dc0df  provisional  1 steps  1/1 (100%)  variant of s_f1b968
+           In Odoo at http://127.0.0.1:8069/, sign in as admin using password exactly {{env:APP_PASSWORD}}. Create a cust…
+  s_1e89a1  provisional  1 steps  1/1 (100%)
+           In Odoo at {{v2}}, sign in as {{v3}} using password exactly {{v4}}. Create a customer named {{v5}} with City {…
+  s_20b792  provisional  6 steps  1/1 (100%)  variant of s_f1b968
+           In Odoo at http://127.0.0.1:8069/, sign in as admin using password exactly {{env:APP_PASSWORD}}. Create a cust…
+  s_35116a  provisional  1 steps  1/1 (100%)
+           In Odoo at {{v2}}, sign in as {{v3}} using password exactly {{v4}}. Create a customer named {{v5}} with City {…
+  s_39638a  provisional  1 steps  1/1 (100%)
+           Create a new quotation in Sales for the existing customer {{v1}}. Choose any product from the product autocomp…
+  s_417ae4  provisional  1 steps  1/1 (100%)
+           In Odoo at {{v2}}, sign in as {{v3}} using password exactly {{v4}}. Create a customer named {{v5}} with City {…
+  s_4aae4d  provisional  1 steps  1/1 (100%)
+           In Odoo at {{v2}}, sign in as {{v3}} using password exactly {{v4}}. Create a customer named {{v5}} with City {…
+  s_50bd0d  provisional  1 steps  1/1 (100%)
+           In Odoo at {{v2}}, sign in as {{v3}} using password exactly {{v4}}. Create a customer named {{v5}} with City {…
+  s_56e7df  provisional  1 steps  1/1 (100%)  variant of s_f1b968
+           In Odoo at http://127.0.0.1:8069/, sign in as admin using password exactly {{env:APP_PASSWORD}}. Create a cust…
+  s_5f54f6  provisional  1 steps  1/1 (100%)  variant of s_f1b968
+           In Odoo at http://127.0.0.1:8069/, sign in as admin using password exactly {{env:APP_PASSWORD}}. Create a cust…
+  s_665a39  provisional  2 steps  1/1 (100%)  variant of s_f1b968
+           In Odoo at http://127.0.0.1:8069/, sign in as admin using password exactly {{env:APP_PASSWORD}}. Create a cust…
+  s_6ba959  provisional  3 steps  1/1 (100%)
+           In Odoo at {{v2}}, sign in as {{v3}} using password exactly {{v4}}. Create a customer named {{v5}} with City {…
+  s_6f7e3b  provisional  5 steps  1/1 (100%)
+           In Odoo at {{v2}}, sign in as {{v3}} using password exactly {{v4}}. Create a customer named {{v5}} with City {…
+  s_709735  provisional  1 steps  1/1 (100%)
+           In Odoo at {{v2}}, sign in as {{v3}} using password exactly {{v4}}. Create a customer named {{v5}} with City {…
+  s_761675  provisional  3 steps  1/1 (100%)
+           In Odoo at {{v2}}, sign in as {{v3}} using password exactly {{v4}}. Create a customer named {{v5}} with City {…
+  s_7633be  provisional  4 steps  1/1 (100%)
+           In Odoo at {{v2}}, sign in as {{v3}} using password exactly {{v4}}. Create a customer named {{v5}} with City {…
+  s_79cbc2  provisional  9 steps  1/1 (100%)
+           Create a new quotation in Sales for the existing customer {{v1}}. Choose any product from the product autocomp…
+  s_7bec8c  provisional  2 steps  1/1 (100%)  variant of s_f1b968
+           In Odoo at http://127.0.0.1:8069/, sign in as admin using password exactly {{env:APP_PASSWORD}}. Create a cust…
+  s_7f22b2  provisional  1 steps  1/1 (100%)  variant of s_f1b968
+           In Odoo at http://127.0.0.1:8069/, sign in as admin using password exactly {{env:APP_PASSWORD}}. Create a cust…
+  s_80c0f8  provisional  1 steps  1/1 (100%)
+           In Odoo at {{v2}}, sign in as {{v3}} using password exactly {{v4}}. Create a customer named {{v5}} with City {…
+  s_86cf08  provisional  3 steps  1/1 (100%)  variant of s_f1b968
+           In Odoo at http://127.0.0.1:8069/, sign in as admin using password exactly {{env:APP_PASSWORD}}. Create a cust…
+  s_adb4dd  provisional  4 steps  1/1 (100%)
+           In Odoo at {{v2}}, sign in as {{v3}} using password exactly {{v4}}. Create a customer named {{v5}} with City {…
+  s_b40a08  provisional  3 steps  1/1 (100%)  variant of s_f1b968
+           In Odoo at http://127.0.0.1:8069/, sign in as admin using password exactly {{env:APP_PASSWORD}}. Create a cust…
+  s_b708a7  provisional  2 steps  1/1 (100%)
+           In Odoo at {{v2}}, sign in as {{v3}} using password exactly {{v4}}. Create a customer named {{v5}} with City {…
+  s_cf5811  provisional  6 steps  1/1 (100%)
+           In Odoo at {{v2}}, sign in as {{v3}} using password exactly {{v4}}. Create a customer named {{v5}} with City {…
+  s_eb159b  provisional 10 steps  1/1 (100%)
+           Create a new quotation in Sales for the existing customer {{v1}}. Choose any product from the product autocomp…
+  s_f1f54a  provisional  4 steps  1/1 (100%)
+           In Odoo at {{v2}}, sign in as {{v3}} using password exactly {{v4}}. Create a customer named {{v5}} with City {…
+  s_f5feff  provisional  4 steps  1/1 (100%)  variant of s_f1b968
+           In Odoo at http://127.0.0.1:8069/, sign in as admin using password exactly {{env:APP_PASSWORD}}. Create a cust…
+store: /home/user/sitelooper/bench/results/fwod102-luna-skills
+
+summary: /home/user/sitelooper/bench/results/fwod102-luna-sweep.json

@@ -1,0 +1,144 @@
+{
+ "id": "s_0ee090",
+ "origin": "http://127.0.0.1:8069",
+ "template": "Create a new quotation in Sales for the existing customer {{v1}}. Choose any product from the product autocomplete catalogue for exactly one order line with quantity 3, save the quotation, and verify/report the quotation reference, chosen product name, unit price shown by Odoo, and computed untaxed amount.",
+ "params": {
+  "v1": {
+   "example": "fwod102-luna-n3 Bench Customer",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i1:customer_name"
+  },
+  "v2": {
+   "example": "fwod102-luna-n3",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8069/web#action=:id&menu_id=:id&model=res.partner&view_type=kanban"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e5"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "html > body > header > nav > div:nth-of-type(1) > button"
+     },
+     {
+      "kind": "point",
+      "x": 24,
+      "y": 23,
+      "w": 47.4,
+      "h": 46,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action=:id&menu_id=:id&model=res.partner&view_type=kanban",
+    "addedContains": [
+     "- menu \"Discuss Contacts Sales Dashboards Invoicing Apps Settings\"",
+     "- menuitem \"Discuss\"",
+     "- menuitem \"Sales\"",
+     "- menuitem \"Dashboards\"",
+     "- menuitem \"Invoicing\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=menuitem[name=\"Sales\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "role=menuitem[name=\"Sales\"]"
+     },
+     {
+      "kind": "role",
+      "role": "menuitem",
+      "name": "Sales"
+     },
+     {
+      "kind": "css",
+      "selector": "body > header > nav > div:nth-of-type(1) > div > a:nth-of-type(3)"
+     },
+     {
+      "kind": "point",
+      "x": 80,
+      "y": 122,
+      "w": 158,
+      "h": 27,
+      "role": "menuitem",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "mints": {
+    "at": "q.action",
+    "sole": false
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8069/web#action={{d1}}&menu_id={{d2}}&model=sale.order&view_type=list",
+    "addedContains": [
+     "- menu \"Orders To Invoice Products Reporting Configuration\"",
+     "- button \"Orders\"",
+     "- button \"To Invoice\"",
+     "- button \"Products\"",
+     "- button \"Reporting\""
+    ],
+    "lineDialect": 2
+   }
+  }
+ ],
+ "derived": {
+  "d1": {
+   "step": 2,
+   "at": "q.action",
+   "example": "316"
+  },
+  "d2": {
+   "step": 2,
+   "at": "q.menu_id",
+   "example": "194"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-28T12:09:04.460Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_ba6848",
+  "index": 0,
+  "of": 4
+ },
+ "provenance": {
+  "session": "fwod102-luna-n3",
+  "instruction": "Create a new quotation in Sales for the existing customer fwod102-luna-n3 Bench Customer. Choose any product from the product autocomplete catalogue for exactly one order line with quantity 3, save the quotation, and verify/report the quotation reference, chosen product name, unit price shown by Odoo, and computed untaxed amount.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-28T12:09:04.460Z"
+ },
+ "revision": 1
+}
