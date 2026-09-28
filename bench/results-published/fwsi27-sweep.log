@@ -1,0 +1,111 @@
+
+[sweep] run 1/3: fwsi27-n1 (store: /home/user/sitelooper/bench/results/fwsi27-skills)
+[harness] snipeit: defaulting APP_URL
+[harness] snipeit: defaulting APP_EMAIL
+[harness] snipeit: defaulting APP_PASSWORD
+[reset] snipeit: no leftover bench assets
+[harness] snipeit responded 302 at http://127.0.0.1:8098/
+stopped: fwsi27-n1
+  flow "fwsi27" saved: 4 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwsi27.json
+  warning: warning: 04-change's instruction asks to report status, status_label, and only a recorded literal backs them: no read in its procedure publishes them, so a replay reports them only if the page it ends on shows that exact text — re-record the step so the value is read where it is shown
+  warning: note: 02-create no longer publishes created_by — no replay reads it from the page and the recording showed no line to read
+  warning: note: 04-change no longer publishes last_audit, next_audit_date, purchase_cost, maintenances_count, history_checkout_row_count — no replay reads them from the page and the recording showed no line to read
+  warning: warning: 222 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[1].instruction: "Bench Laptop Model" (output) in "Create a new asset in Snipe-IT with these exact values: Asset Name = '{{runid}} Bench Asset', Model = 'Bench Laptop Model' (choose it from the searchable model "
+  flow.steps[1].instruction: "Default Location" (output) in "Create a new asset in Snipe-IT with these exact values: Asset Name = '{{runid}} Bench Asset', Model = 'Bench Laptop Model' (choose it from the searchable model "
+  flow.steps[1].instruction: "Ready to Deploy" (output) in "Create a new asset in Snipe-IT with these exact values: Asset Name = '{{runid}} Bench Asset', Model = 'Bench Laptop Model' (choose it from the searchable model "
+  flow.steps[1].instruction: "Bench Office" (output) in "Create a new asset in Snipe-IT with these exact values: Asset Name = '{{runid}} Bench Asset', Model = 'Bench Laptop Model' (choose it from the searchable model "
+  flow.steps[1].instruction: "2026-03-15" (output) in "Create a new asset in Snipe-IT with these exact values: Asset Name = '{{runid}} Bench Asset', Model = 'Bench Laptop Model' (choose it from the searchable model "
+arm=sitelooper model=z-ai/glm-5.3 runid=fwsi27-n1 stop=completed
+turns=5 wall=456.6s
+commands=4 cmdTime=422.9s cmdBytes=7267 timeouts=0
+orchestrator in=5593 cw=0 cr=13632 out=3448
+inner prompt=2652584 cached=2460864 completion=37751
+spend=$0.1573 maxUsd=3
+learn: A_n=0 replayed=0/4 full=0 repaired=0 compiled=4 variants=0
+-> /home/user/sitelooper/bench/results/fwsi27-n1-sitelooper-result.json
+
+fwsi27-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed tags and names reported
+  obj 2: PASS — BA-00004, model=Bench Laptop Model, status=Ready to Deploy
+  obj 3: PASS — default location=Bench Office
+  obj 4: PASS — purchase date=2026-03-15
+  obj 5: PASS — assigned to=Bench Assignee (user bench-assignee)
+  obj 6: PASS — 1 checkout(s), 1 with a note carrying the runid
+  obj 7: PASS — asset tag BA-00004 reported
+
+[sweep] run 2/3: fwsi27-n2 (replay flow fwsi27, no orchestrator)
+[reset] snipeit: deleted 1 leftover bench asset(s)
+[sweep] fwsi27-n2: 1 drift ticket(s) → fwsi27-n2-drift.json
+
+fwsi27-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed tags and names reported
+  obj 2: PASS — BA-00004, model=Bench Laptop Model, status=Ready to Deploy
+  obj 3: PASS — default location=Bench Office
+  obj 4: PASS — purchase date=2026-03-15
+  obj 5: PASS — assigned to=Bench Assignee (user bench-assignee)
+  obj 6: PASS — 1 checkout(s), 1 with a note carrying the runid
+  obj 7: PASS — asset tag BA-00004 reported
+
+[sweep] run 3/3: fwsi27-n3 (replay flow fwsi27, no orchestrator)
+[reset] snipeit: deleted 1 leftover bench asset(s)
+
+fwsi27-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed tags and names reported
+  obj 2: PASS — BA-00004, model=Bench Laptop Model, status=Ready to Deploy
+  obj 3: PASS — default location=Bench Office
+  obj 4: PASS — purchase date=2026-03-15
+  obj 5: PASS — assigned to=Bench Assignee (user bench-assignee)
+  obj 6: PASS — 1 checkout(s), 1 with a note carrying the runid
+  obj 7: PASS — asset tag BA-00004 reported
+
+Learning sweep fwsi27 (K=3)
+┌─────────┬───┬─────────────┬──────────┬─────────────┬───────┬──────┬───────────┬──────┬──────────────┬────────┐
+│ (index) │ n │ runid       │ verified │ stop        │ turns │ cmds │ total_usd │ A_n  │ replayed     │ wall_s │
+├─────────┼───┼─────────────┼──────────┼─────────────┼───────┼──────┼───────────┼──────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwsi27-n1' │ '7/7'    │ 'completed' │ 5     │ 4    │ 0.1573    │ 0    │ '0/4'        │ 457    │
+│ 1       │ 2 │ 'fwsi27-n2' │ '7/7'    │ 'success'   │ 24    │ 4    │ 0.0104    │ 0.75 │ '4/4 (flow)' │ 169    │
+│ 2       │ 3 │ 'fwsi27-n3' │ '7/7'    │ 'success'   │ 0     │ 4    │ 0         │ 1    │ '4/4 (flow)' │ 82     │
+└─────────┴───┴─────────────┴──────────┴─────────────┴───────┴──────┴───────────┴──────┴──────────────┴────────┘
+http://127.0.0.1:8098
+  s_154883  validated    6 steps  3/3 (100%)
+           On the Snipe-IT asset detail page for asset '{{v1}}' (asset tag {{v3}}, at {{v4}}), perform a Check Out of thi…
+  s_1db0e1  validated    1 steps  3/3 (100%)
+           Create a new asset in Snipe-IT with these exact values: Asset Name = '{{v2}}', Model = '{{v3}}' (choose it fro…
+  s_4aecca  validated    1 steps  3/3 (100%)
+           Open {{v1}} and sign in with username {{v2}} and password {{v3}} — type the password into the password field e…
+  s_687231  validated    4 steps  3/3 (100%)
+           On the Snipe-IT asset detail page for asset '{{v1}}' (asset tag {{v3}}, at {{v4}}), perform a Check Out of thi…
+  s_6dbb51  validated    3 steps  3/3 (100%)
+           Open {{v1}} and sign in with username {{v2}} and password {{v3}} — type the password into the password field e…
+  s_7e0460  validated    1 steps  3/3 (100%)
+           On the Snipe-IT asset detail page for asset '{{v1}}' (asset tag {{v3}}, at {{v4}}), perform a Check Out of thi…
+  s_8b588b  validated    1 steps  3/3 (100%)
+           Open {{v1}} and sign in with username {{v2}} and password {{v3}} — type the password into the password field e…
+  s_aa2e40  validated   28 steps  3/3 (100%)
+           Verification only — do not change anything. Open the Snipe-IT asset detail page for asset tag {{v1}} ({{v2}}) …
+  s_b05ba2  validated    7 steps  3/3 (100%)
+           On the Snipe-IT asset detail page for asset '{{v1}}' (asset tag {{v3}}, at {{v4}}), perform a Check Out of thi…
+  s_c3051e  validated   17 steps  2/3 (67%)
+           Create a new asset in Snipe-IT with these exact values: Asset Name = '{{v2}}', Model = '{{v3}}' (choose it fro…
+  s_cdbdfb  validated    1 steps  3/3 (100%)
+           On the Snipe-IT asset detail page for asset '{{v1}}' (asset tag {{v3}}, at {{v4}}), perform a Check Out of thi…
+  s_ef5c5d  validated   11 steps  3/3 (100%)
+           Open {{v1}} and sign in with username {{v2}} and password {{v3}} — type the password into the password field e…
+  s_a832b7  validated    8 steps  2/2 (100%)
+           Create a new asset in Snipe-IT with these exact values: Asset Name = '{{v2}}', Model = '{{v3}}' (choose it fro…
+  s_acdfc1  validated    1 steps  2/2 (100%)
+           Create a new asset in Snipe-IT with these exact values: Asset Name = '{{v2}}', Model = '{{v3}}' (choose it fro…
+  s_31d2c9  provisional 17 steps  1/1 (100%)
+           Create a new asset in Snipe-IT with these exact values: Asset Name = '{{v2}}', Model = '{{v3}}' (choose it fro…
+  s_416a44  provisional 11 steps  1/1 (100%)
+           Create a new asset in Snipe-IT with these exact values: Asset Name = '{{v2}}', Model = '{{v3}}' (choose it fro…
+  s_52e64a  provisional 11 steps  1/1 (100%)  variant of s_c3051e
+           Create a new asset in Snipe-IT with these exact values: Asset Name = '{{v2}}', Model = '{{v3}}' (choose it fro…
+  s_e8c984  provisional 17 steps  1/1 (100%)  variant of s_c3051e
+           Create a new asset in Snipe-IT with these exact values: Asset Name = '{{v2}}', Model = '{{v3}}' (choose it fro…
+  s_ff9e52  provisional  1 steps  1/1 (100%)
+           Create a new asset in Snipe-IT with these exact values: Asset Name = '{{v2}}', Model = '{{v3}}' (choose it fro…
+store: /home/user/sitelooper/bench/results/fwsi27-skills
+
+summary: /home/user/sitelooper/bench/results/fwsi27-sweep.json

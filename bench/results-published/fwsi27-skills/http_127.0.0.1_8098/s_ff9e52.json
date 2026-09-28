@@ -1,0 +1,102 @@
+{
+ "id": "s_ff9e52",
+ "origin": "http://127.0.0.1:8098",
+ "template": "Create a new asset in Snipe-IT with these exact values: Asset Name = '{{v2}}', Model = '{{v3}}' (choose it from the searchable model dropdown — do not create a new model), Status = 'Ready to Deploy' (choose from the status dropdown), Default Location = '{{v4}}' (choose from the location dropdown — do not create a new location), Purchase Date = {{v5}}. Fill any other required fields sensibly (e.g. use an existing company/manufacturer/supplier only if required; do not create new records). Save the asset, then open the asset's detail page and report exactly what the page displays for: Asset Name, Model, Status, Default Location, Purchase Date, and the Asset Tag that Snipe-IT assigned.",
+ "params": {
+  "v1": {
+   "example": "fwsi27-n2",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v2": {
+   "example": "fwsi27-n2 Bench Asset",
+   "usedIn": [],
+   "known": true
+  },
+  "v3": {
+   "example": "Bench Laptop Model",
+   "usedIn": []
+  },
+  "v4": {
+   "example": "Bench Office",
+   "usedIn": []
+  },
+  "v5": {
+   "example": "2026-03-15",
+   "usedIn": []
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8098/hardware"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e138"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "button[name=\"btnAdd\"]"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(2) > button:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 915,
+      "y": 206,
+      "w": 38.3,
+      "h": 34,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8098/hardware/create",
+    "addedContains": [
+     "- heading \"Assets Create New\"",
+     "- button \"Save\"",
+     "- combobox \"Company\"",
+     "- combobox \"Select Company\"",
+     "- textbox \"Select Company\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_1db0e1",
+    "step": 1
+   }
+  }
+ ],
+ "contract": 2,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-09-28T10:14:55.806Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_ba23e9",
+  "index": 0,
+  "of": 3
+ },
+ "provenance": {
+  "session": "fwsi27-n2",
+  "instruction": "Create a new asset in Snipe-IT with these exact values: Asset Name = 'fwsi27-n2 Bench Asset', Model = 'Bench Laptop Model' (choose it from the searchable model dropdown — do not create a new model), Status = 'Ready to Deploy' (choose from the status dropdown), Default Location = 'Bench Office' (choose from the location dropdown — do not create a new location), Purchase Date = 2026-03-15. Fill any other required fields sensibly (e.g. use an existing company/manufacturer/supplier only if required; do not create new records). Save the asset, then open the asset's detail page and report exactly what the page displays for: Asset Name, Model, Status, Default Location, Purchase Date, and the Asset Tag that Snipe-IT assigned.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-28T10:14:55.806Z"
+ },
+ "revision": 1
+}
