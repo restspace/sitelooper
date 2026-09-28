@@ -1,0 +1,38 @@
+{
+  "arm": "spec",
+  "runid": "fwgt31-luna-spec",
+  "target": "gitea",
+  "flow": "fwgt31-luna.json",
+  "flowName": "fwgt31-luna",
+  "skillsDir": "/home/user/sitelooper/bench/results/fwgt31-luna-skills",
+  "compiled": true,
+  "flowFile": "bench/results/fwgt31-luna-spec-spec-tmp/fwgt31-luna.flow.ts",
+  "specFile": "bench/results/fwgt31-luna-spec-spec-tmp/fwgt31-luna.spec.ts",
+  "wallMs": 24772,
+  "exitCode": 1,
+  "timedOut": false,
+  "costUsd": 0,
+  "stats": {
+    "total": 1,
+    "passed": 0,
+    "failed": 1,
+    "skipped": 0
+  },
+  "tests": [
+    {
+      "title": "fwgt31-luna",
+      "status": "unexpected",
+      "ok": false,
+      "durationMs": 21250,
+      "error": "Error: 01-signin s_e6dfc9/11: the recorded page change did not appear\n\n01-signin s_e6dfc9/11: the recorded page change did not appear\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeNull\u001b[2m()\u001b[22m\n\nReceived: \u001b[31m\"after step 01-signin s_e6dfc9/11 the page did not show \\\"- link \\\\\\\"bug\\\\\\\"\\\" as it did when recorded — the step ran but probably acted on the wrong element\"\u001b[39m\n\nCall Log:\n- Timeout 5000ms exceeded while waiting on the predicate",
+      "drift": []
+    }
+  ],
+  "drift": [],
+  "driftCount": 0,
+  "evidence": [
+    "fwgt31-luna-spec-spec-failure.png",
+    "fwgt31-luna-spec-spec-error-context.md"
+  ],
+  "logTail": "\nRunning 1 test using 1 worker\n\n  ✘  1 fwgt31-luna.spec.ts:9:1 › fwgt31-luna (21.3s)\n\n\n  1) fwgt31-luna.spec.ts:9:1 › fwgt31-luna › 01-signin: In Gitea at http://127.0.0.1:8095/, sign in as admin using the password text exactly {{env:APP_PASSWORD}}. In repository bench/bench-repo, read and report the exact titles of open issues beginning Seed: without modifying them. Then create an issue titled {{runid}} Bench Issue with description including {{runid}}, exactly labels bug and priority-high, assigned to bench-assignee, milestone Bench Milestone, and a comment including {{runid}}. Verify issue shows all requested fields and report its displayed issue number (#...). \n\n    Error: 01-signin s_e6dfc9/11: the recorded page change did not appear\n\n    01-signin s_e6dfc9/11: the recorded page change did not appear\n\n    expect(received).toBeNull()\n\n    Received: \"after step 01-signin s_e6dfc9/11 the page did not show \\\"- link \\\\\\\"bug\\\\\\\"\\\" as it did when recorded — the step ran but probably acted on the wrong element\"\n\n    Call Log:\n    - Timeout 5000ms exceeded while waiting on the predicate\n\n       at fwgt31-luna.flow.ts:15051\n\n      15049 |       { timeout: EXPECT_WAIT_MS, message: `${ctx.tag}: the recorded page change did not appear` },\n      15050 |     )\n    > 15051 |     .toBeNull();\n            |      ^\n      15052 |   for (const warning of last.warnings) console.log(`[sitelooper warn] ${warning}`);\n      15053 |   if (last.unobserved) console.log(`[sitelooper unobserved] ${ctx.tag}: the page could not be captured, or observed in full, after the action`);\n      15054 |   return last;\n        at expectChanges (/home/user/sitelooper/bench/results/fwgt31-luna-spec-spec-tmp/fwgt31-luna.flow.ts:15051:6)\n        at Object.verify (/home/user/sitelooper/bench/results/fwgt31-luna-spec-spec-tmp/fwgt31-luna.flow.ts:16082:37)\n        at runStepLifecycle (/home/user/sitelooper/bench/results/fwgt31-luna-spec-spec-tmp/fwgt31-luna.flow.ts:11457:24)\n        at Object.01-signin (/home/user/sitelooper/bench/results/fwgt31-luna-spec-spec-tmp/fwgt31-luna.flow.ts:16055:9)\n        at /home/user/sitelooper/bench/results/fwgt31-luna-spec-spec-tmp/fwgt31-luna.flow.ts:17124:7\n        at runFlow (/home/user/sitelooper/bench/results/fwgt31-luna-spec-spec-tmp/fwgt31-luna.flow.ts:17123:5)\n        at /home/user/sitelooper/bench/results/fwgt31-luna-spec-spec-tmp/fwgt31-luna.spec.ts:14:21\n\n    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────\n    \n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────\n    test-results/fwgt31-luna-fwgt31-luna/test-failed-1.png\n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    Error Context: test-results/fwgt31-luna-fwgt31-luna/error-context.md\n\n  1 failed\n    fwgt31-luna.spec.ts:9:1 › fwgt31-luna ──────────────────────────────────────────────────────────\n"
+}

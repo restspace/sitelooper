@@ -1,0 +1,96 @@
+
+[sweep] run 1/3: fwgt31-luna-n1 (store: /home/user/sitelooper/bench/results/fwgt31-luna-skills)
+[harness] gitea: defaulting APP_URL
+[harness] gitea: defaulting APP_EMAIL
+[harness] gitea: defaulting APP_PASSWORD
+[reset] gitea: no leftover bench issues
+[harness] gitea responded 200 at http://127.0.0.1:8095/
+stopped: fwgt31-luna-n1
+  flow "fwgt31-luna" saved: 1 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwgt31-luna.json
+  warning: note: 1 step(s) adopted from non-success instruction(s) whose work the session continued from (01-signin) — they replay model-first with doubled budget, and a non-success there does not halt the flow
+  warning: warning: 102 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[0].instruction: "bench/bench-repo" (output) in "In Gitea at http://127.0.0.1:8095/, sign in as admin using the password text exactly {{env:APP_PASSWORD}}. In repository bench/bench-repo, read and report the e"
+  flow.steps[0].instruction: "Bench Milestone" (output) in "In Gitea at http://127.0.0.1:8095/, sign in as admin using the password text exactly {{env:APP_PASSWORD}}. In repository bench/bench-repo, read and report the e"
+  flow.steps[0].instruction: "bench-assignee" (output) in "In Gitea at http://127.0.0.1:8095/, sign in as admin using the password text exactly {{env:APP_PASSWORD}}. In repository bench/bench-repo, read and report the e"
+  flow.steps[0].instruction: "priority-high" (output) in "In Gitea at http://127.0.0.1:8095/, sign in as admin using the password text exactly {{env:APP_PASSWORD}}. In repository bench/bench-repo, read and report the e"
+  flow.steps[0].instruction: "bench-repo" (output) in "In Gitea at http://127.0.0.1:8095/, sign in as admin using the password text exactly {{env:APP_PASSWORD}}. In repository bench/bench-repo, read and report the e"
+arm=sitelooper model=openai/gpt-6-luna runid=fwgt31-luna-n1 stop=completed
+turns=3 wall=282.5s
+commands=2 cmdTime=269.5s cmdBytes=5365 timeouts=0
+orchestrator in=4238 cw=0 cr=5783 out=530
+inner prompt=1425559 cached=1316034 completion=19350
+spend=$0.032 maxUsd=3
+learn: A_n=0 replayed=0/2 full=0 repaired=0 compiled=1 variants=0
+-> /home/user/sitelooper/bench/results/fwgt31-luna-n1-sitelooper-result.json
+
+fwgt31-luna-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — #4, state=open, description includes runid=true
+  obj 3: PASS — labels=[bug, priority-high], want [bug, priority-high]
+  obj 4: PASS — assignees=[bench-assignee]
+  obj 5: PASS — milestone=Bench Milestone
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — issue #4 reported
+
+[sweep] run 2/3: fwgt31-luna-n2 (replay flow fwgt31-luna, no orchestrator)
+[reset] gitea: deleted 1 leftover bench issue(s)
+
+fwgt31-luna-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — #5, state=open, description includes runid=true
+  obj 3: PASS — labels=[bug, priority-high], want [bug, priority-high]
+  obj 4: PASS — assignees=[bench-assignee]
+  obj 5: PASS — milestone=Bench Milestone
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — issue #5 reported
+[sweep] fwgt31-luna-n2: 01-signin has no pinned skill — 76 model turn(s), on every replay
+
+[sweep] run 3/3: fwgt31-luna-n3 (replay flow fwgt31-luna, no orchestrator)
+[reset] gitea: deleted 1 leftover bench issue(s)
+[sweep] fwgt31-luna-n3: 1 drift ticket(s) → fwgt31-luna-n3-drift.json
+
+fwgt31-luna-n3: objectives passed 6/7
+  obj 1: FAIL — title(s) not in report: Seed: ship repaired device, Seed: order missing parts, Seed: triage inbox
+  obj 2: PASS — #6, state=open, description includes runid=true
+  obj 3: PASS — labels=[bug, priority-high], want [bug, priority-high]
+  obj 4: PASS — assignees=[bench-assignee]
+  obj 5: PASS — milestone=Bench Milestone
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — issue #6 reported
+
+Learning sweep fwgt31-luna (K=3)
+┌─────────┬───┬──────────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid            │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼──────────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwgt31-luna-n1' │ '7/7'    │ 'completed' │ 3     │ 2    │ 0.032     │ 0   │ '0/2'        │ 283    │
+│ 1       │ 2 │ 'fwgt31-luna-n2' │ '7/7'    │ 'success'   │ 76    │ 1    │ 0.0233    │ 0   │ '1/1 (flow)' │ 228    │
+│ 2       │ 3 │ 'fwgt31-luna-n3' │ '6/7'    │ 'halted'    │ 41    │ 1    │ 0.0302    │ 0   │ '0/1 (flow)' │ 249    │
+└─────────┴───┴──────────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:8095
+  s_024eed  validated    3 steps  2/2 (100%)
+           In Gitea at http://127.0.0.1:8095/, sign in as {{v2}} using the password text exactly {{v3}}. In repository be…
+  s_88e327  validated    1 steps  2/2 (100%)
+           In Gitea at http://127.0.0.1:8095/, sign in as {{v2}} using the password text exactly {{v3}}. In repository be…
+  s_af264a  validated    1 steps  2/2 (100%)
+           In Gitea at http://127.0.0.1:8095/, sign in as {{v2}} using the password text exactly {{v3}}. In repository be…
+  s_e6dfc9  provisional 19 steps  1/2 (50%)
+           In Gitea at http://127.0.0.1:8095/, sign in as {{v2}} using the password text exactly {{v3}}. In repository be…
+  s_e9324c  validated    1 steps  2/2 (100%)
+           In Gitea at http://127.0.0.1:8095/, sign in as {{v2}} using the password text exactly {{v3}}. In repository be…
+  s_140522  provisional  2 steps  1/1 (100%)
+           In Gitea at http://127.0.0.1:8095/, sign in as {{v2}} using the password text exactly {{v3}}. In repository be…
+  s_1aa521  provisional  1 steps  1/1 (100%)
+           In Gitea at http://127.0.0.1:8095/, sign in as {{v2}} using the password text exactly {{v3}}. In repository be…
+  s_471da1  provisional  8 steps  1/1 (100%)
+           In Gitea at http://127.0.0.1:8095/, sign in as {{v2}} using the password text exactly {{v3}}. In repository be…
+  s_9e55e6  provisional  1 steps  1/1 (100%)
+           In Gitea at http://127.0.0.1:8095/, sign in as {{v2}} using the password text exactly {{v3}}. In repository be…
+  s_d265cc  provisional 12 steps  1/1 (100%)
+           Continue the existing draft on Gitea's New Issue form for {{v1}}. Set assignee to bench-assignee using the sid…
+  s_d552b3  provisional  8 steps  1/1 (100%)
+           Continue the existing draft on Gitea's New Issue form for {{v1}}. Set assignee to bench-assignee using the sid…
+  s_edb20e  provisional  2 steps  1/1 (100%)
+           Continue the existing draft on Gitea's New Issue form for {{v1}}. Set assignee to bench-assignee using the sid…
+store: /home/user/sitelooper/bench/results/fwgt31-luna-skills
+
+summary: /home/user/sitelooper/bench/results/fwgt31-luna-sweep.json

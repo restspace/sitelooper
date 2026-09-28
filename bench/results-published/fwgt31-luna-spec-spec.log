@@ -1,0 +1,48 @@
+
+Running 1 test using 1 worker
+
+  ✘  1 fwgt31-luna.spec.ts:9:1 › fwgt31-luna (21.3s)
+
+
+  1) fwgt31-luna.spec.ts:9:1 › fwgt31-luna › 01-signin: In Gitea at http://127.0.0.1:8095/, sign in as admin using the password text exactly {{env:APP_PASSWORD}}. In repository bench/bench-repo, read and report the exact titles of open issues beginning Seed: without modifying them. Then create an issue titled {{runid}} Bench Issue with description including {{runid}}, exactly labels bug and priority-high, assigned to bench-assignee, milestone Bench Milestone, and a comment including {{runid}}. Verify issue shows all requested fields and report its displayed issue number (#...). 
+
+    Error: 01-signin s_e6dfc9/11: the recorded page change did not appear
+
+    01-signin s_e6dfc9/11: the recorded page change did not appear
+
+    expect(received).toBeNull()
+
+    Received: "after step 01-signin s_e6dfc9/11 the page did not show \"- link \\\"bug\\\"\" as it did when recorded — the step ran but probably acted on the wrong element"
+
+    Call Log:
+    - Timeout 5000ms exceeded while waiting on the predicate
+
+       at fwgt31-luna.flow.ts:15051
+
+      15049 |       { timeout: EXPECT_WAIT_MS, message: `${ctx.tag}: the recorded page change did not appear` },
+      15050 |     )
+    > 15051 |     .toBeNull();
+            |      ^
+      15052 |   for (const warning of last.warnings) console.log(`[sitelooper warn] ${warning}`);
+      15053 |   if (last.unobserved) console.log(`[sitelooper unobserved] ${ctx.tag}: the page could not be captured, or observed in full, after the action`);
+      15054 |   return last;
+        at expectChanges (/home/user/sitelooper/bench/results/fwgt31-luna-spec-spec-tmp/fwgt31-luna.flow.ts:15051:6)
+        at Object.verify (/home/user/sitelooper/bench/results/fwgt31-luna-spec-spec-tmp/fwgt31-luna.flow.ts:16082:37)
+        at runStepLifecycle (/home/user/sitelooper/bench/results/fwgt31-luna-spec-spec-tmp/fwgt31-luna.flow.ts:11457:24)
+        at Object.01-signin (/home/user/sitelooper/bench/results/fwgt31-luna-spec-spec-tmp/fwgt31-luna.flow.ts:16055:9)
+        at /home/user/sitelooper/bench/results/fwgt31-luna-spec-spec-tmp/fwgt31-luna.flow.ts:17124:7
+        at runFlow (/home/user/sitelooper/bench/results/fwgt31-luna-spec-spec-tmp/fwgt31-luna.flow.ts:17123:5)
+        at /home/user/sitelooper/bench/results/fwgt31-luna-spec-spec-tmp/fwgt31-luna.spec.ts:14:21
+
+    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/fwgt31-luna-fwgt31-luna/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/fwgt31-luna-fwgt31-luna/error-context.md
+
+  1 failed
+    fwgt31-luna.spec.ts:9:1 › fwgt31-luna ──────────────────────────────────────────────────────────
