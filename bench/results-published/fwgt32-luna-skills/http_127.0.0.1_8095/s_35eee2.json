@@ -1,0 +1,98 @@
+{
+ "id": "s_35eee2",
+ "origin": "http://127.0.0.1:8095",
+ "template": "Sign in to the Gitea app at {{v1}} using username {{v2}} and password exactly {{v3}}; verify that you are signed in and report the visible username.",
+ "params": {
+  "v1": {
+   "example": "http://127.0.0.1:8095/",
+   "usedIn": [
+    1
+   ]
+  },
+  "v2": {
+   "example": "admin",
+   "usedIn": []
+  },
+  "v3": {
+   "example": "{{env:APP_PASSWORD}}",
+   "usedIn": []
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8095/"
+ },
+ "steps": [
+  {
+   "tool": "goto",
+   "args": {
+    "url": "{{v1}}"
+   },
+   "locators": {}
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e10"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "link",
+      "name": "Sign In"
+     },
+     {
+      "kind": "css",
+      "selector": "#navbar > div:nth-of-type(2) > a"
+     },
+     {
+      "kind": "point",
+      "x": 1223,
+      "y": 25,
+      "w": 93.5,
+      "h": 36,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/user/login",
+    "addedContains": [
+     "- heading \"Sign In\"",
+     "- textbox \"Username or Email Address\"",
+     "- link \"Forgot password?\"",
+     "- textbox \"Password\"",
+     "- checkbox \"Remember This Device\""
+    ],
+    "lineDialect": 2
+   }
+  }
+ ],
+ "contract": 4,
+ "stats": {
+  "uses": 3,
+  "successes": 3,
+  "partial": 0,
+  "created": "2026-09-28T16:02:07.512Z",
+  "failedAtStep": {},
+  "fallthroughs": 2,
+  "verifiedContract": 4,
+  "lastUsed": "2026-09-28T16:16:39.111Z"
+ },
+ "status": "validated",
+ "seq": {
+  "chain": "s_7bfe6a",
+  "index": 0,
+  "of": 4
+ },
+ "provenance": {
+  "session": "fwgt32-luna-n1",
+  "instruction": "Sign in to the Gitea app at http://127.0.0.1:8095/ using username admin and password exactly {{env:APP_PASSWORD}}; verify that you are signed in and report the visible username.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-28T16:02:07.512Z"
+ },
+ "revision": 3
+}
