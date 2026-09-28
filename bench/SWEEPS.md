@@ -554,6 +554,23 @@ after that point is invalid, verifies (no model) are not. fwop15-cv2 and fwod88-
 for the top-up.
 
 
+## GPT-6 Luna trial (main 1e1ad1a5: round-76 code; openai/gpt-6-luna replaces z-ai/glm-5.3 as orchestrator AND fallback) — si green with 0-turn replays; gt, od, op not green, each from how Luna split the task
+
+Fired 11:52 UTC, the four hardest apps, each against its last GLM run (fwgt30 and fwsi27 round 76, fwod101 and fwop30 round 75, all four green). No model errors; calls went only to DeepSeek (inner loop) and OpenAI (Luna).
+
+| runid | app | cmds (GLM) | verified | replay model-free | compiled | green | n1 USD (GLM) | notes |
+|---|---|---|---|---|---|---|---|---|
+| fwgt31-luna | gt | 1 (7) | 7/7, 7/7, 6/7 | NO: the single step never graduated to a skill ("no pinned skill"): n2 76 turns; n3 halted (41 turns, "bug" label link missing) | FAIL 0/7 ("issue not found") | no | 0.032 (0.446) | the whole task — sign-in, seed report, create, labels, assignee, milestone, comment — as ONE instruction |
+| fwsi28-luna | si | 3 (4) | 7/7 ×3 | **yes** (3/3 flow, 0 turns ×2) | pass (5/7, 2 UNVERIFIABLE) | **yes** | 0.029 (0.157) | cleaner than fwsi27 (whose n2 recovered a step). The asset name was exported as `{{runid}} Bench {{01-signin.asset_navigation_label}}` — the word "Asset" threaded from a nav label step 1 read; it replays because the label never changes |
+| fwod102-luna | od | 6 (6) | 6/6 ×3 | NO: 01-signin fell back on both (7, 11 turns: expected url carries `cids=1`, replay's does not); n3 02-create 28 turns (start gate refused the customer form url) | REFUSED: 01-signin pinned to demoted s_f1b968 | no | 0.039 | Luna folded "create the customer" into the sign-in step, so the sign-in skill ends on a form url with a volatile query param. 06's verb exported as `{{05-verify.new_actions_4}}` ("Cancel" threaded from a button label) |
+| fwop31-luna | op | 2 (7) | 7/7 ×3 (n3 halted) | NO: 02-create fell back on both (29, 39 turns): `unresolved reference 01-signin.work_packages_link_text` | REFUSED: unsourced-ref (same reference) | no | 0.033 | "create a work package" exported as `create a {{01-signin.work_packages_link_text}}`: an ordinary noun in the instruction matched a link text step 1 happened to read, and replay never publishes it |
+
+Reading: Luna is ~5-14x cheaper per recording and followed the task, but as ORCHESTRATOR it writes few, very large
+instructions (gt 1, op 2), and large steps do not graduate or replay cleanly. Two failures are ours, not Luna's: the
+export threads ordinary instruction words (work package, Asset, Cancel) as references to UI labels an earlier step
+read (open: a reference should need the value to be the step's subject, not any word match), and a url expectation
+keeps odoo's volatile `cids` param (open). A fair test of Luna as the fallback model alone would keep GLM as orchestrator.
+
 ## Round 76 (main 826fbb4d: the round-75 fixes — a banked url id under the text floor is a slot by provenance (f5d73278), and the check before a key press no longer blurs the focused field (49755d0b)) — gt and si green, both published; each recovered one n2 step for a reason neither fix touches
 
 Fired 10:00 UTC, gitea and snipe-it only, after both fixes verified (results/verify-r75-fix and results/verify-r75-press: 0 failures, parity 204/204, corpus 409 rows with no status change against the r73 snapshot).
