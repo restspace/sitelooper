@@ -237,6 +237,18 @@ export async function robustClick(loc: Locator, opts: ClickOpts): Promise<string
       firstFailure ||= failure;
       // Two or more matches is the agent's problem to fix, not a tier's.
       if (/strict mode violation/i.test(failure)) throw err instanceof Error ? actionFailure('not-dispatched', 'strict', err) : err;
+      // Playwright logs "click action done" only once the pointer events have
+      // passed its hit-target check, and then waits for any navigation the
+      // click scheduled. A timeout AFTER that line is a click that went out and
+      // a page still loading, not a click that failed: fwsi27-n2's Save POSTed
+      // /hardware and the server took 26.5s to answer, the 10s tier timed out,
+      // and the deadline refusal called it "NOT dispatched" — which invites a
+      // second submit, and with budget left the forced tier would have sent one.
+      // Report it dispatched; whether it had its effect is the gates' to say.
+      if (tier.via !== 'synthetic' && POINTER_ACTION_DONE.test(failure)) {
+        opts.obs?.dispatched?.(tier.via);
+        return `${label}${tier.note} — it went out, but the page it started had not finished loading within ${Math.round(budget / 1000)}s; do not click it again, wait for the page`;
+      }
       // A DISABLED control refused the click by design, and the tiers below
       // do not get past that: a forced click on a disabled button dispatches
       // nothing the app handles, yet returned "clicked (forced past
@@ -353,6 +365,9 @@ async function enabledWithin(loc: Locator, ms: number): Promise<boolean> {
 }
 
 /** Playwright's own words for an element that left the DOM mid-action — never its generic actionability wording. */
+/** Playwright's call-log line for a pointer action that reached the page (not a trial run's). */
+const POINTER_ACTION_DONE = /(?<!trial )\b(?:click|dblclick) action done\b/;
+
 const DETACHED = /element was detached|not attached to the DOM|element is not attached|element is not stable/i;
 
 /**

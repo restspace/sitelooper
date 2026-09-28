@@ -218,6 +218,44 @@ describe('click outcomes and the action deadline', () => {
     expect(late.target.click).toHaveBeenCalledTimes(1);
     expect(late.target.evaluate).not.toHaveBeenCalled();
   });
+
+  // fwsi27-n2: Save POSTed /hardware, the server answered after 26.5s, the 10s
+  // tier timed out waiting for the navigation — and the deadline refusal said
+  // "NOT dispatched". Playwright's log proves the click went out.
+  const slowSubmit = 'locator.click: Timeout 10000ms exceeded.\nCall log:\n  - waiting for getByRole(\'button\', { name: \'Save\' })\n' +
+    '  - performing click action\n  - click action done\n  - waiting for scheduled navigations to finish';
+
+  it('a timeout after Playwright logged "click action done" is a click that went out: no second tier, never "not dispatched"', async () => {
+    const { target, loc } = clickTarget();
+    target.click.mockRejectedValueOnce(new Error(slowSubmit));
+    const dispatched = vi.fn();
+    const left = [10_000, 0];
+    const result = await robustClick(loc, { timeout: 10_000, obs: { remaining: () => left.shift() ?? 0, dispatched } });
+    expect(result).toMatch(/^clicked — it went out, but the page it started had not finished loading within 10s; do not click it again/);
+    expect(dispatched).toHaveBeenCalledWith('actionable');
+    expect(target.click).toHaveBeenCalledTimes(1);
+    expect(target.evaluate).not.toHaveBeenCalled();
+
+    // with budget left, the forced tier would have clicked Save a second time
+    const roomy = clickTarget();
+    roomy.target.click.mockRejectedValueOnce(new Error(slowSubmit));
+    await expect(robustClick(roomy.loc, { timeout: 10_000 })).resolves.toMatch(/went out/);
+    expect(roomy.target.click).toHaveBeenCalledTimes(1);
+  });
+
+  it('a click Playwright only began, or only trialled, is not proof it went out', async () => {
+    const begun = clickTarget();
+    begun.target.click.mockRejectedValueOnce(new Error('Timeout 30ms exceeded.\nCall log:\n  - performing click action\n  - <div> intercepts pointer events\n  - retrying click action'));
+    const left = [30, 0];
+    const after = await robustClick(begun.loc, { timeout: 10_000, obs: { remaining: () => left.shift() ?? 0 } }).catch((e: unknown) => e);
+    expect(after).toMatchObject({ actionOutcome: 'not-dispatched', actionReason: 'deadline' });
+
+    const trial = clickTarget();
+    trial.target.click.mockRejectedValueOnce(new Error('Timeout 30ms exceeded.\nCall log:\n  - trial click action done'));
+    const left2 = [30, 0];
+    const trialled = await robustClick(trial.loc, { timeout: 10_000, obs: { remaining: () => left2.shift() ?? 0 } }).catch((e: unknown) => e);
+    expect(trialled).toMatchObject({ actionOutcome: 'not-dispatched', actionReason: 'deadline' });
+  });
 });
 
 describe('shared DOM settling resource lifecycle', () => {
