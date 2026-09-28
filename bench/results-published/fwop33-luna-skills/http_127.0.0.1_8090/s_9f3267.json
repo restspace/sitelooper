@@ -1,0 +1,82 @@
+{
+ "id": "s_9f3267",
+ "origin": "http://127.0.0.1:8090",
+ "template": "In OpenProject, inspect Bench Project and report the exact subjects of its work packages that start with 'Seed:'; do not edit any work package.",
+ "params": {},
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8090/"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e110"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "link",
+      "name": "Projects",
+      "nth": 0
+     },
+     {
+      "kind": "css",
+      "selector": "#projects-wrapper > a"
+     },
+     {
+      "kind": "point",
+      "x": 122,
+      "y": 302,
+      "w": 219,
+      "h": 36,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8090/projects",
+    "addedContains": [
+     "- link \"Go back one menu level\"",
+     "- textbox \"Search\"",
+     "- link \"Active projects\"",
+     "- link \"My projects\"",
+     "- link \"Favorite projects\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_50f2dc",
+    "step": 1
+   }
+  }
+ ],
+ "contract": 2,
+ "stats": {
+  "uses": 2,
+  "successes": 2,
+  "partial": 0,
+  "created": "2026-09-28T22:17:11.669Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2,
+  "lastUsed": "2026-09-28T22:19:18.762Z"
+ },
+ "status": "validated",
+ "seq": {
+  "chain": "s_ca8483",
+  "index": 0,
+  "of": 4
+ },
+ "variantOf": "s_50f2dc",
+ "provenance": {
+  "session": "fwop33-luna-n2",
+  "instruction": "In OpenProject, inspect Bench Project and report the exact subjects of its work packages that start with 'Seed:'; do not edit any work package.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-28T22:17:11.669Z"
+ },
+ "revision": 2
+}

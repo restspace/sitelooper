@@ -1,0 +1,117 @@
+
+[sweep] run 1/3: fwop33-luna-n1 (store: /home/user/sitelooper/bench/results/fwop33-luna-skills)
+[harness] openproject: defaulting APP_URL
+[harness] openproject: defaulting APP_EMAIL
+[harness] openproject: defaulting APP_PASSWORD
+[reset] openproject: no leftover bench work packages
+[harness] openproject responded 302 at http://127.0.0.1:8090/
+stopped: fwop33-luna-n1
+  flow "fwop33-luna" saved: 7 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwop33-luna.json
+  warning: note: 01-signin no longer publishes navigation_menu_items — no replay reads it from the page and the recording showed no line to read
+  warning: note: 02-report no longer publishes seed_work_packages_count, edited_work_packages — no replay reads them from the page and the recording showed no line to read
+  warning: note: 03-create no longer publishes status, work_package_type, a_href_projects_bench_pr — no replay reads them from the page and the recording showed no line to read
+  warning: note: 04-set no longer publishes save_confirmation, list_cell_after_save, role_button_name_assigne_3 — no replay reads them from the page and the recording showed no line to read
+  warning: note: 05-change no longer publishes status_field_after_save — no replay reads it from the page and the recording showed no line to read
+  warning: note: 06-set no longer publishes save_confirmation, display_format_note, other_fields_unchanged, finish_date_input_value, finish_date_field_value — no replay reads them from the page and the recording showed no line to read
+  warning: note: 05-change: added a read for status_before to s_94d757 (page.getByRole('menuitem', { name: 'New', exact: true }); seen on the instruction's own page)
+  warning: note: 05-change: added a read for displayed_status_verified to s_94d757 (page.getByRole('menuitem', { name: 'In progress', exact: true }); seen on the instruction's own page)
+  warning: note: 05-change: added a read for displayed_status to s_94d757 (page.getByRole('menuitem', { name: 'In progress', exact: true }); seen on the instruction's own page)
+  warning: warning: 218 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[1].instruction: "Bench Project" (output) in "In OpenProject, inspect Bench Project and report the exact subjects of its work packages that start with 'Seed:'; do not edit any work package."
+  flow.steps[2].instruction: "Bench Project" (output) in "Create a Task work package in Bench Project titled '{{runid}} Bench Work Package' with a description that includes the exact runid {{runid}}. Submit it, verify "
+  flow.steps[2].instruction: "Task" (output) in "Create a Task work package in Bench Project titled '{{runid}} Bench Work Package' with a description that includes the exact runid {{runid}}. Submit it, verify "
+  flow.steps[2].params.v1: "Bench Project" (output) in "Bench Project"
+  flow.steps[3].instruction: "Bench Assignee" (output) in "On the work package titled '{{runid}} Bench Work Package' in Bench Project, set the Assignee to the actual autocomplete dropdown option 'Bench Assignee' (do not"
+arm=sitelooper model=openai/gpt-6-luna runid=fwop33-luna-n1 stop=completed
+turns=8 wall=464.9s
+commands=7 cmdTime=432.2s cmdBytes=11679 timeouts=0
+orchestrator in=6252 cw=0 cr=28892 out=934
+inner prompt=2509033 cached=2288035 completion=23948
+spend=$0.0535 maxUsd=3
+learn: A_n=0 replayed=0/7 full=0 repaired=0 compiled=7 variants=0
+-> /home/user/sitelooper/bench/results/fwop33-luna-n1-sitelooper-result.json
+
+fwop33-luna-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed subjects reported
+  obj 2: PASS — type=Task, description includes runid=true
+  obj 3: PASS — assignee=Bench Assignee
+  obj 4: PASS — status=In progress
+  obj 5: PASS — finish date=2026-12-31, want 2026-12-31
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — work package id 41 reported
+
+[sweep] run 2/3: fwop33-luna-n2 (replay flow fwop33-luna, no orchestrator)
+[reset] openproject: deleted 1 leftover bench work package(s)
+[sweep] fwop33-luna-n2: 7 drift ticket(s) → fwop33-luna-n2-drift.json
+
+fwop33-luna-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed subjects reported
+  obj 2: PASS — type=Task, description includes runid=true
+  obj 3: PASS — assignee=Bench Assignee
+  obj 4: PASS — status=In progress
+  obj 5: PASS — finish date=2026-12-31, want 2026-12-31
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — work package id 42 reported
+
+[sweep] run 3/3: fwop33-luna-n3 (replay flow fwop33-luna, no orchestrator)
+[reset] openproject: deleted 1 leftover bench work package(s)
+[sweep] fwop33-luna-n3: 6 drift ticket(s) → fwop33-luna-n3-drift.json
+
+fwop33-luna-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed subjects reported
+  obj 2: PASS — type=Task, description includes runid=true
+  obj 3: PASS — assignee=Bench Assignee
+  obj 4: PASS — status=In progress
+  obj 5: PASS — finish date=2026-12-31, want 2026-12-31
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — work package id 43 reported
+
+Learning sweep fwop33-luna (K=3)
+┌─────────┬───┬──────────────────┬──────────┬─────────────┬───────┬──────┬───────────┬──────┬──────────────┬────────┐
+│ (index) │ n │ runid            │ verified │ stop        │ turns │ cmds │ total_usd │ A_n  │ replayed     │ wall_s │
+├─────────┼───┼──────────────────┼──────────┼─────────────┼───────┼──────┼───────────┼──────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwop33-luna-n1' │ '7/7'    │ 'completed' │ 8     │ 7    │ 0.0535    │ 0    │ '0/7'        │ 465    │
+│ 1       │ 2 │ 'fwop33-luna-n2' │ '7/7'    │ 'success'   │ 27    │ 7    │ 0.0077    │ 0.86 │ '7/7 (flow)' │ 174    │
+│ 2       │ 3 │ 'fwop33-luna-n3' │ '7/7'    │ 'success'   │ 0     │ 7    │ 0         │ 1    │ '7/7 (flow)' │ 100    │
+└─────────┴───┴──────────────────┴──────────┴─────────────┴───────┴──────┴───────────┴──────┴──────────────┴────────┘
+http://127.0.0.1:8090
+  s_1df462  validated    2 steps  3/3 (100%)
+           Create a Task work package in {{v1}} titled '{{v3}}' with a description that includes the exact runid {{v2}}. …
+  s_2e8b50  validated    5 steps  3/3 (100%)
+           Create a Task work package in {{v1}} titled '{{v3}}' with a description that includes the exact runid {{v2}}. …
+  s_30b3c2  validated    3 steps  3/3 (100%)
+           Sign in to OpenProject at {{v1}} with username {{v2}} and password exactly {{v3}}. Verify that the authenticat…
+  s_586421  validated   10 steps  3/3 (100%)
+           Create a Task work package in {{v1}} titled '{{v3}}' with a description that includes the exact runid {{v2}}. …
+  s_94d757  validated   12 steps  3/3 (100%)
+           On work package {{v1}} '{{v3}}' in {{v5}}, change its status to exactly 'In progress', wait for inline save, a…
+  s_9667a2  validated    1 steps  3/3 (100%)
+           On work package {{v1}} '{{v3}}' in {{v5}}, add a comment whose text includes the exact runid {{v4}}, submit it…
+  s_9947c1  validated    8 steps  3/3 (100%)
+           On the work package titled '{{v1}}' in {{v3}}, set the Assignee to the actual autocomplete dropdown option 'Be…
+  s_9ab1bf  validated    8 steps  3/3 (100%)
+           On work package {{v1}} '{{v3}}' in {{v5}}, add a comment whose text includes the exact runid {{v4}}, submit it…
+  s_c8f7ee  validated   11 steps  3/3 (100%)
+           On work package {{v1}} '{{v3}}' in {{v5}}, set Finish date to 2026-12-31, let the inline edit save, and verify…
+  s_eeb9a7  validated    1 steps  3/3 (100%)
+           Sign in to OpenProject at {{v1}} with username {{v2}} and password exactly {{v3}}. Verify that the authenticat…
+  s_f269de  validated    4 steps  3/3 (100%)
+           Sign in to OpenProject at {{v1}} with username {{v2}} and password exactly {{v3}}. Verify that the authenticat…
+  s_314aab  validated    1 steps  2/2 (100%)  variant of s_50f2dc
+           In OpenProject, inspect Bench Project and report the exact subjects of its work packages that start with 'Seed…
+  s_4c3891  validated   12 steps  2/2 (100%)  variant of s_50f2dc
+           In OpenProject, inspect Bench Project and report the exact subjects of its work packages that start with 'Seed…
+  s_50f2dc  provisional 13 steps  1/2 (50%)
+           In OpenProject, inspect {{v1}} Project and report the exact subjects of its work packages that start with 'See…
+  s_9f3267  validated    1 steps  2/2 (100%)  variant of s_50f2dc
+           In OpenProject, inspect Bench Project and report the exact subjects of its work packages that start with 'Seed…
+  s_b40b6c  validated    2 steps  2/2 (100%)  variant of s_50f2dc
+           In OpenProject, inspect Bench Project and report the exact subjects of its work packages that start with 'Seed…
+  s_02b1a2  provisional  4 steps  1/1 (100%)
+           In OpenProject, inspect {{v1}} Project and report the exact subjects of its work packages that start with 'See…
+  s_3dcb65  provisional  2 steps  1/1 (100%)
+           In OpenProject, inspect {{v1}} Project and report the exact subjects of its work packages that start with 'See…
+store: /home/user/sitelooper/bench/results/fwop33-luna-skills
+
+summary: /home/user/sitelooper/bench/results/fwop33-luna-sweep.json
+exit=0
