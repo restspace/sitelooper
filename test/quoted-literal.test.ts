@@ -88,9 +88,14 @@ describe('a seed-name fragment is not threaded anywhere once the seed fact is re
     expect(first).toMatchObject({ fact: 'seed-fragment', heuristic: 'threaded', agree: false, applied: true });
   });
 
-  it('the whole seed name is a seed too (not threaded, row applied)', () => {
+  it('the whole seed name is a seed too (not threaded; today\'s unasked-word rule already agrees, so not applied)', () => {
+    // signed_in_as was volunteered by a step before the first change: the
+    // export keeps it literal without the fact (buildFlow 'unasked'), and the
+    // seed fact agrees rather than decides.
     const { rows } = build(seedFacts(['a', 'b']));
-    expect(rows.find((r) => r.step === 'export signed_in_as')).toMatchObject({ fact: 'seed', applied: true });
+    const row = rows.find((r) => r.step === 'export signed_in_as');
+    expect(row).toMatchObject({ fact: 'seed', heuristic: 'unasked', agree: true });
+    expect(row?.applied).toBeUndefined();
   });
 
   it('one session: advisory, the word still threads and the row is not applied', () => {

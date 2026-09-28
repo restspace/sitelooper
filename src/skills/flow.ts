@@ -12,6 +12,7 @@ import { mintedShape, originOf as urlOriginOf, routeAt, urlPart, urlShapeOf } fr
 import { idPositionPart, linkMintedParts, pathDigitPart, pathIdPart, unseenGotoParts } from './ledger.js';
 import { MIN_ID_LEN, looksLikeId, tokenPattern } from './shape.js';
 import { statedPlainly, threadStepParams } from './rethread.js';
+import { askedOutputs } from '../daemon/step-verdict.js';
 import { factFor, routeTemplateOf, seedNameFact, type SiteFacts } from '../execution/facts.js';
 import { elementNameOf, roleVerdict, seedFragmentOf, shapeKeyOf, valueVerdict, type ValueShadowRow } from './facts-value.js';
 
@@ -741,6 +742,30 @@ export function buildFlow(
       // threading, see `RunSpecific`). See baselineOf for the evidence and the
       // cases.
       if (!stop && !opts.runSpecific?.(value) && baseline && entries.indexOf(g.instruction) >= baseline.at && baseline.names.has(foldValue(value))) stop = 'baseline';
+      // A plain WORD the step reported without being ASKED for it, when the
+      // run cannot have made it: reported before the recording's first change
+      // (nothing the run made exists yet, so it is the app's own), or the name
+      // of a CONTROL the page offers (a button, menu item or tab: the app's
+      // action vocabulary, never a record). A later instruction saying that
+      // word is using its own vocabulary, and a reference to it is one no
+      // replay republishes. GPT-6 Luna trial: openproject fwop31-luna
+      // 01-signin (read-only, asked for the seed subjects) volunteered
+      // `work_packages_link_text = "Task"`, and 02-create's "create a Task" was
+      // exported as "create a {{01-signin.work_packages_link_text}}" —
+      // unresolved on both replays, spec refused (unsourced-ref); snipe-it
+      // fwsi28-luna's "Bench Asset" became "Bench {{01-signin.asset_navigation_label}}";
+      // odoo fwod102-luna's "Cancel the confirmed sales order" became
+      // "{{05-verify.new_actions_4}} the confirmed sales order" (the Cancel
+      // button). NOT every unasked word: odoo's "New (unsaved)" quotation and
+      // grafana's uid "bench-service-health" are records named without a
+      // digit, reported unasked after the run began changing things, and they
+      // must thread (the plan's safe default). A value that threads anywhere
+      // (a digit, a declared var, one earlier runs watched change) or an
+      // ASKED word (the step's subject) is untouched.
+      if (!stop && !threadsAnywhere(value) && !askedFor(g.instruction.text, output, value)) {
+        const beforeChange = baseline !== null && entries.indexOf(g.instruction) < baseline.at;
+        if (beforeChange || controlNamed(linesOfGroup(i), value)) stop = 'unasked';
+      }
       // SITE FACTS stage 4 (value MEANING; design-site-facts.md §4b): a value
       // that is the app's SEED name, or a proper fragment of one shown in this
       // instruction's window, is the app's data and not the run's — threaded,
@@ -1394,6 +1419,40 @@ function shownBefore(entries: readonly RecordedEntry[], at: number, value: strin
 }
 
 /**
+ * Whether `instruction` asked for `output` (askedOutputs), judged on the
+ * key's words OTHER than the value's own: a key the model built from what it
+ * read — kanboard fwkb34's `board_column_work_in_progress = "Work in progress"`
+ * answering "report the board's column names" — is asked as `board_column`.
+ * A key made of nothing but the value's words cannot be judged: asked, so the
+ * value threads as it always has.
+ */
+function askedFor(instruction: string, output: string, value: string): boolean {
+  const own = new Set(value.toLowerCase().match(/[a-z]+/g) ?? []);
+  const rest = output
+    .replace(/([a-z])([A-Z])/g, '$1_$2')
+    .toLowerCase()
+    .split(/[^a-z]+/)
+    .filter((w) => w.length > 1 && !own.has(w));
+  if (!rest.length) return true;
+  return askedOutputs(instruction, [rest.join('_')]).length > 0;
+}
+
+/**
+ * Whether a snapshot line in `lines` names a CONTROL `value`: a button, menu
+ * item or tab whose accessible name is the value, whole, case aside. Links
+ * are left out: a record is shown as a link to itself (an order number, a
+ * task title) as often as the app's chrome is.
+ */
+function controlNamed(lines: readonly string[], value: string): boolean {
+  const want = foldValue(value);
+  if (!want) return false;
+  return lines.some((line) => {
+    const m = /^\s*-\s*(button|menuitem|menuitemradio|menuitemcheckbox|tab)\s+"((?:[^"\\]|\\.)*)"/.exec(line);
+    return m !== null && foldValue(m[2]) === want;
+  });
+}
+
+/**
  * What the app was showing before this run changed anything: the entry index
  * of the first instruction that asks for a change (mutatingIntent), and the
  * folded values the recording saw up to that point — element names on the
@@ -1468,7 +1527,7 @@ function baselineOf(entries: readonly RecordedEntry[]): { at: number; names: Set
  * the first of today's exclusions that spoke, or what today's threading
  * would have done with it (buildFlow `todayThreads`).
  */
-type SeedHeuristic = 'threaded' | 'echoed' | 'commentary' | 'stated' | 'baseline' | 'quoted' | 'alternative';
+type SeedHeuristic = 'threaded' | 'echoed' | 'commentary' | 'stated' | 'baseline' | 'unasked' | 'quoted' | 'alternative';
 
 /**
  * SITE FACTS stage 4: what the origin's RELIABLE meaning facts say about a
@@ -2034,8 +2093,17 @@ const NEGATOR_RE = /^(?:not|never|no|without|cannot|don't|dont|doesn't|isn't|avo
  * a "read-only check" whose recomputed tax (£205 over two lines) contradicted
  * 03-create's (£177 over one), and it could have adopted a read-only pin for
  * a step that writes.
+ *
+ * "any" is global only standing alone or before a word for everything:
+ * openproject fwop31-luna's 02-create ("create a Task … Do not modify any
+ * Seed: work packages") read as read-only, so the recording had no first
+ * change at all.
  */
-const READ_ONLY_RE = /read[- ]?only|do(?: not|n't|nt) (?:change|modify|edit|alter) (?:any|anything|the app|the record|the data|it\b)|without (?:chang|modify|edit)(?:\w*) (?:any|anything|the app|the record|the data|it\b)/i;
+const ANY_GLOBAL = String.raw`any(?:thing)?(?=\s*(?:[.,;:!)]|$)|\s+(?:data|records?|settings?|state|values?)\b)`;
+const READ_ONLY_RE = new RegExp(
+  String.raw`read[- ]?only|do(?: not|n't|nt) (?:change|modify|edit|alter) (?:${ANY_GLOBAL}|the app|the record|the data|it\b)|without (?:chang|modify|edit)(?:\w*) (?:${ANY_GLOBAL}|the app|the record|the data|it\b)`,
+  'i',
+);
 
 /**
  * The verb this instruction asks for, or null if it asks for nothing that
