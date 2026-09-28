@@ -445,6 +445,18 @@ const coarseBlock = coarse
   ? `\n\nIMPORTANT — how to use this tool well. Each \`run_command\` does NOT perform a single action and return — it hands one instruction to an internal agent that then works autonomously, taking as many browser steps as it needs (snapshot, fill, click, wait, retry, verify), and returns ONLY when it has achieved the outcome you asked for or is genuinely stuck. So your job is to delegate an outcome and let that command run to its own report — not to drive the browser click-by-click. Give it one whole sub-goal per call — for example "create a record with these field values and report what the app computed", or "bring the item to «target state», discovering and satisfying any preconditions the app enforces, and report what was required" — and trust it to handle the intermediate steps itself. Do NOT split one sub-goal across several calls (one to open a form, another to fill it, another to submit); that interrupts an agent that would have finished the whole thing in a single call. Equally, do NOT spend a call just exploring or cataloguing the UI ("describe the app's structure", "open the dialog and list every field, option and button", "report the full contents") — that sends the agent on an open-ended survey that burns its whole budget without moving the goal forward. Ask for the outcome and let the agent read only what it needs to achieve it; if you need a specific fact back, request that one fact as part of an action, not an exhaustive inventory. Read each report, then issue the next outcome; keep every instruction about the outcome you want, not the steps to get there.`
   : '';
 
+// Opt-in on top of --coarse: an UPPER bound on a call's size. The coarse block
+// only forbids splitting a sub-goal, and a model can read "sub-goal" as the
+// whole goal: GPT-6 Luna (2026-09-28) sent gitea's seven objectives as ONE
+// instruction and openproject's five changes as one, and an instruction that
+// large never graduates to a replayable skill, so every replay went to the
+// model. GLM-5.3 had been splitting per objective unprompted. Recorded in the
+// result as `granularity`; no app specifics or task plan.
+const granularity = coarse && args.granularity === 'objective' ? 'objective' : null;
+const granularityBlock = granularity
+  ? '\n\nHow big one call should be: a sub-goal is at most ONE numbered objective of the goal. Signing in is its own first call. Never combine two objectives that change the app in one call — give each its own call, in order, and read each report before the next. Within one objective, do not split it across calls (as above).'
+  : '';
+
 // The cli text is kept byte-for-byte what it was before other arm shapes
 // existed, so every earlier cli run stays comparable with later ones.
 const armLabel = arm.bin ?? args.arm;
@@ -462,7 +474,7 @@ const systemText = `You are an automation agent completing a goal in a real web 
 
 ${toolIntro}
 
-Work through the goal to completion. Verify what you did rather than assuming a command succeeded. When the whole goal is done (or you are certain you cannot finish it), stop calling tools and reply with a final plain-text report stating, for each part of the goal, whether it succeeded and the concrete values you observed.${coarseBlock}
+Work through the goal to completion. Verify what you did rather than assuming a command succeeded. When the whole goal is done (or you are certain you cannot finish it), stop calling tools and reply with a final plain-text report stating, for each part of the goal, whether it succeeded and the concrete values you observed.${coarseBlock}${granularityBlock}
 
 Runid for this run: ${runid}. Where the goal says to name something with the runid, use exactly this value.${sessionPara}
 
@@ -1609,6 +1621,7 @@ const result = {
   timeouts: commands.filter((c) => c.killed).length,
   contextTruncations,
   coarse,
+  granularity,
   // Learning sweep accounting: deterministic fraction A_n of the inner tool's
   // browser actions that ran by replay rather than by the model.
   learn: learnDir
