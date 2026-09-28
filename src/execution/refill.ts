@@ -240,6 +240,16 @@ export async function restoreStandingFills(page: Page, ledger: StandingFills, to
   let failed = 0;
   let reloaded = false;
   let keyed = 0;
+  // A KEY PRESS submits FROM the field that has focus: nothing takes focus
+  // off it, so the check never does either (snipeit fwsi26 03-create). The
+  // recording pressed Enter in Purchase Date 60ms after filling it, focus
+  // never left, and the form submitted; the replay's check blurred the field
+  // (its date picker closed), the press focused it again (the picker opened
+  // with it) and the picker took the Enter: no POST, and the asset every
+  // later step references was never created. The blur is the click's case
+  // (fwec2): a click on Save moves focus, and a widget that drops its value
+  // there has dropped it before the submit reads the form.
+  const blurFirst = tool === 'press' ? async () => false : blurIfPlain;
   // A RELOAD INSIDE THE CHECK (round 62, vikunja fwvk13 01-signin): the page
   // replaced its document after the check had read the fields and before the
   // submit, which went out on the new, empty form with nothing refilled — and
@@ -251,7 +261,7 @@ export async function restoreStandingFills(page: Page, ledger: StandingFills, to
     // The submit is about to take focus off the field that has it; take it off
     // first, so a widget that rebuilds its value on blur (fwec2) has done so
     // before the fields are looked at.
-    for (const fill of standing) if (fill.url === url) await blurIfPlain(fill.locator);
+    for (const fill of standing) if (fill.url === url) await blurFirst(fill.locator);
     for (const fill of standing) {
       if (fill.url !== url) continue;
       const gone = replaced(fill, doc);
@@ -261,13 +271,13 @@ export async function restoreStandingFills(page: Page, ledger: StandingFills, to
       try {
         const value = typeof fill.value === 'function' ? await fill.value() : fill.value;
         await reactSafeFill(fill.locator, value);
-        await blurIfPlain(fill.locator);
+        await blurFirst(fill.locator);
         let held = await inputValueNow(fill.locator);
         // Set, and gone again at the blur: a widget that keeps its own copy of
         // the value, built from key events. Typed, as a person would.
         if (!held) {
           await typeInto(fill.locator, value);
-          await blurIfPlain(fill.locator);
+          await blurFirst(fill.locator);
           held = await inputValueNow(fill.locator);
           if (held) keyed++;
         }

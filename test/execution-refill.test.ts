@@ -231,3 +231,35 @@ describe('a value dropped at blur (fwec2 n1 03-create)', () => {
     expect(sameValue('', '12500')).toBe(false);
   });
 });
+
+describe('a key press submits from the focused field (snipeit fwsi26 03-create)', () => {
+  /** The evaluate calls that ran blurIfPlain's probe (its function blurs the element). */
+  const blurProbes = (loc: Locator) =>
+    vi.mocked((loc as unknown as { evaluate: (...a: unknown[]) => unknown }).evaluate).mock.calls.filter(([fn]) => String(fn).includes('.blur()'));
+
+  it('never takes focus off a field before a press, and still does before a click', async () => {
+    const { page } = fakePage();
+    const date = field('#purchase_date', '2026-03-15');
+    const pressed = await ledgerOf(page, [date.loc, '2026-03-15']);
+    expect(await restoreStandingFills(page, pressed, 'press', 'step 16')).toEqual([]);
+    expect(blurProbes(date.loc)).toHaveLength(0);
+
+    const clicked = await ledgerOf(page, [date.loc, '2026-03-15']);
+    await restoreStandingFills(page, clicked, 'click', 'step 16');
+    expect(blurProbes(date.loc).length).toBeGreaterThan(0);
+  });
+
+  it('still refills an emptied field before a press, without blurring it', async () => {
+    const { page } = fakePage();
+    const date = field('#purchase_date', '2026-03-15');
+    const ledger = await ledgerOf(page, [date.loc, '2026-03-15']);
+    date.state.value = '';
+    vi.mocked(reactSafeFill).mockImplementation(async (_loc: Locator, value: string) => {
+      date.state.value = value;
+    });
+    const warnings = await restoreStandingFills(page, ledger, 'press', 'step 16');
+    expect(reactSafeFill).toHaveBeenCalledTimes(1);
+    expect(warnings.join(' ')).toContain('refilled once');
+    expect(blurProbes(date.loc)).toHaveLength(0);
+  });
+});
