@@ -1,0 +1,655 @@
+{
+  "name": "fwgt33-luna",
+  "origin": "http://127.0.0.1:8095",
+  "startUrl": "http://127.0.0.1:8095/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-signin",
+      "instruction": "Sign in to the Gitea app at http://127.0.0.1:8095/ with username admin and password exactly {{env:APP_PASSWORD}}. Verify the signed-in page/account before reporting.",
+      "skill": "s_e2deb4",
+      "params": {
+        "v1": "http://127.0.0.1:8095/",
+        "v2": "admin",
+        "v3": "{{env:APP_PASSWORD}}"
+      },
+      "outputs": [
+        "account_username",
+        "page_title",
+        "signed_in_as_avatar",
+        "final_url"
+      ],
+      "recorded": {
+        "account_username": "admin",
+        "page_title": "admin - Dashboard - Gitea: Git with a cup of tea",
+        "signed_in_as_avatar": "admin",
+        "final_url": "http://127.0.0.1:8095/",
+        "url": "http://127.0.0.1:8095/"
+      },
+      "route": "http://127.0.0.1:8095/",
+      "outputEvidence": {
+        "account_username": {
+          "same": 1,
+          "differed": 0
+        },
+        "page_title": {
+          "same": 1,
+          "differed": 0
+        },
+        "signed_in_as_avatar": {
+          "same": 1,
+          "differed": 0
+        },
+        "final_url": {
+          "same": 1,
+          "differed": 0
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "02-find",
+      "instruction": "In repository bench/bench-repo, find and report the exact titles of all open issues whose title starts with 'Seed:'. Do not modify any issue; verify the issues are open and capture titles exactly as displayed.",
+      "skill": "s_ee4de9",
+      "params": {},
+      "outputs": [
+        "issue_1_title",
+        "issue_2_title",
+        "issue_3_title",
+        "open_count_label",
+        "closed_count_label",
+        "issue_state_icon_class",
+        "matching_issue_count",
+        "issues_url",
+        "matching_open_issue_titles_1",
+        "matching_open_issue_titles_2",
+        "matching_open_issue_titles_3"
+      ],
+      "recorded": {
+        "issue_1_title": "Seed: triage inbox",
+        "issue_1_url": "http://127.0.0.1:8095/bench/bench-repo/issues/1",
+        "issue_2_title": "Seed: order missing parts",
+        "issue_2_url": "http://127.0.0.1:8095/bench/bench-repo/issues/2",
+        "issue_3_title": "Seed: ship repaired device",
+        "issue_3_url": "http://127.0.0.1:8095/bench/bench-repo/issues/3",
+        "open_count_label": "3 Open",
+        "closed_count_label": "0 Closed",
+        "issue_state_icon_class": "tw-text-green svg octicon-issue-opened",
+        "matching_issue_count": "3",
+        "issues_url": "http://127.0.0.1:8095/bench/bench-repo/issues?q=&type=all&state=open&labels=&milestone=0&project=0&assignee=0&poster=0",
+        "issue_3_state_icon_class": "tw-text-green svg octicon-issue-opened",
+        "matching_open_issue_titles_1": "Seed: triage inbox",
+        "matching_open_issue_titles_2": "Seed: order missing parts",
+        "matching_open_issue_titles_3": "Seed: ship repaired device",
+        "url": "http://127.0.0.1:8095/bench/bench-repo/issues?q=&type=all&state=open&labels=&milestone=0&project=0&assignee=0&poster=0"
+      },
+      "route": "http://127.0.0.1:8095/bench/bench-repo/issues",
+      "outputEvidence": {
+        "issue_1_title": {
+          "same": 1,
+          "differed": 0
+        },
+        "issue_1_url": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "issue_2_title": {
+          "same": 1,
+          "differed": 0
+        },
+        "issue_2_url": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "issue_3_title": {
+          "same": 1,
+          "differed": 0
+        },
+        "issue_3_url": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "open_count_label": {
+          "same": 1,
+          "differed": 0
+        },
+        "closed_count_label": {
+          "same": 1,
+          "differed": 0
+        },
+        "issue_state_icon_class": {
+          "same": 1,
+          "differed": 0
+        },
+        "matching_issue_count": {
+          "same": 1,
+          "differed": 0
+        },
+        "issues_url": {
+          "same": 1,
+          "differed": 0
+        },
+        "issue_3_state_icon_class": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "matching_open_issue_titles_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "matching_open_issue_titles_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "matching_open_issue_titles_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "03-create",
+      "instruction": "In repository bench/bench-repo, create an issue titled exactly '{{runid}} Bench Issue' with a markdown description that includes the exact runid {{runid}}. Submit it and verify the created issue title, displayed issue number (as #number), and description on the issue page.",
+      "skill": "s_cb0d6b",
+      "params": {
+        "v2": "{{runid}} Bench Issue",
+        "v1": "{{runid}}"
+      },
+      "outputs": [
+        "created_issue_title",
+        "created_issue_number",
+        "created_issue_heading",
+        "created_issue_url",
+        "created_issue_description",
+        "run_id_in_description",
+        "repo_issue_count_after",
+        "issue_title_field",
+        "issue_description_field"
+      ],
+      "recorded": {
+        "created_issue_title": "fwgt33-luna-n1 Bench Issue",
+        "created_issue_number": "#4",
+        "created_issue_heading": "fwgt33-luna-n1 Bench Issue #4",
+        "created_issue_url": "http://127.0.0.1:8095/bench/bench-repo/issues/4",
+        "created_issue_description": "Run ID: fwgt33-luna-n1\n\nCreated by the automated bench run fwgt33-luna-n1 against repository bench/bench-repo.",
+        "run_id_in_description": "fwgt33-luna-n1",
+        "repo_issue_count_after": "4",
+        "issue_title_field": "fwgt33-luna-n1 Bench Issue",
+        "issue_description_field": "Run ID: fwgt33-luna-n1\n\nCreated by the automated bench run **fwgt33-luna-n1** against repository bench/bench-repo.",
+        "url": "http://127.0.0.1:8095/bench/bench-repo/issues/4",
+        "url.p3": "4"
+      },
+      "route": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "outputEvidence": {
+        "created_issue_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "created_issue_number": {
+          "same": 0,
+          "differed": 1
+        },
+        "created_issue_heading": {
+          "same": 0,
+          "differed": 1
+        },
+        "created_issue_url": {
+          "same": 0,
+          "differed": 1
+        },
+        "created_issue_description": {
+          "same": 0,
+          "differed": 1
+        },
+        "run_id_in_description": {
+          "same": 0,
+          "differed": 1
+        },
+        "repo_issue_count_after": {
+          "same": 1,
+          "differed": 0
+        },
+        "issue_title_field": {
+          "same": 0,
+          "differed": 1
+        },
+        "issue_description_field": {
+          "same": 0,
+          "differed": 1
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        },
+        "url.p3": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "04-set",
+      "instruction": "On issue {{03-create.created_issue_number}} titled '{{runid}} Bench Issue' in bench/bench-repo, set its labels to exactly bug and priority-high (no other labels). Apply each selection from the sidebar picker and verify both labels are visibly applied on the issue, with no extras.",
+      "skill": "s_adc219",
+      "params": {
+        "v1": "{{runid}} Bench Issue",
+        "v2": "{{runid}}",
+        "v3": "{{03-create.url.p3}}"
+      },
+      "outputs": [
+        "issue_title",
+        "issue_number",
+        "issue_conversation_label_event",
+        "issue_heading",
+        "run_id"
+      ],
+      "recorded": {
+        "issue_title": "fwgt33-luna-n1 Bench Issue",
+        "issue_number": "#4",
+        "labels_visible": "bug, priority-high",
+        "labels_exactly": "bug, priority-high",
+        "issue_conversation_label_event": "admin added the bug priority-high labels",
+        "issue_heading": "fwgt33-luna-n1 Bench Issue #4",
+        "run_id": "fwgt33-luna-n1"
+      },
+      "route": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "outputEvidence": {
+        "issue_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "issue_number": {
+          "same": 0,
+          "differed": 1
+        },
+        "labels_visible": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "labels_exactly": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "issue_conversation_label_event": {
+          "same": 0,
+          "differed": 1
+        },
+        "issue_heading": {
+          "same": 0,
+          "differed": 1
+        },
+        "run_id": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "05-verify",
+      "instruction": "On issue {{03-create.created_issue_number}} titled '{{runid}} Bench Issue' in bench/bench-repo, assign it to the user bench-assignee using the issue sidebar picker. Verify the assignee is applied and visibly shown on the issue.",
+      "skill": "s_74d975",
+      "params": {
+        "v1": "{{runid}} Bench Issue",
+        "v3": "bench",
+        "v2": "{{runid}}",
+        "v4": "{{03-create.url.p3}}"
+      },
+      "outputs": [
+        "issue_title",
+        "issue_number",
+        "assignee_applied",
+        "sidebar_assignee_display",
+        "assignee_id",
+        "other_assignees_status",
+        "assignee_update_request",
+        "url_of_issue_list_filtering_by_assignee",
+        "url_now",
+        "sidebar_assignee_display_2",
+        "final_url",
+        "run_id"
+      ],
+      "recorded": {
+        "issue_title": "fwgt33-luna-n1 Bench Issue",
+        "issue_number": "#4",
+        "assignee_applied": "bench-assignee",
+        "sidebar_assignee_display": "bench-assignee (Bench Assignee)",
+        "assignee_id": "3",
+        "other_assignees_status": "none (admin not assigned; 'No Assignees' empty item hidden)",
+        "assignee_update_request": "GET/fetch /bench/bench-repo/issues/assignee?issue_ids=4 (action=attach, id=3) fired when the picker closed",
+        "labels_still_present": "bug, priority-high",
+        "url_of_issue_list_filtering_by_assignee": "http://127.0.0.1:8095/bench/bench-repo/issues?assignee=3",
+        "url_now": "http://127.0.0.1:8095/bench/bench-repo/issues/4",
+        "sidebar_assignee_display_2": "bench-assignee\n(Bench Assignee)",
+        "final_url": "http://127.0.0.1:8095/bench/bench-repo/issues/4",
+        "run_id": "fwgt33-luna-n1"
+      },
+      "route": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "outputEvidence": {
+        "issue_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "issue_number": {
+          "same": 0,
+          "differed": 1
+        },
+        "assignee_applied": {
+          "same": 1,
+          "differed": 0
+        },
+        "sidebar_assignee_display": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "assignee_id": {
+          "same": 0,
+          "differed": 1
+        },
+        "other_assignees_status": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "assignee_update_request": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "labels_still_present": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "url_of_issue_list_filtering_by_assignee": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "url_now": {
+          "same": 0,
+          "differed": 1
+        },
+        "sidebar_assignee_display_2": {
+          "same": 0,
+          "differed": 1
+        },
+        "final_url": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "run_id": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "06-set",
+      "instruction": "On issue {{03-create.created_issue_number}} titled '{{runid}} Bench Issue' in bench/bench-repo, set its milestone to exactly 'Bench Milestone' using the issue sidebar picker. Close/apply the picker as needed and verify the milestone is visibly displayed and persisted on the issue.",
+      "skill": "s_c659f0",
+      "params": {
+        "v1": "{{runid}} Bench Issue",
+        "v2": "{{runid}}",
+        "v3": "{{03-create.url.p3}}"
+      },
+      "outputs": [
+        "issue_reference",
+        "milestone_set",
+        "sidebar_milestone_display",
+        "milestone_id",
+        "persisted_after_reload",
+        "assignee_still",
+        "url_after_milestone_click",
+        "run_id",
+        "milestone_link_href_1",
+        "milestone_link_href_2",
+        "milestone_link_href_3",
+        "milestone_link_href_4"
+      ],
+      "recorded": {
+        "issue_reference": "#4 fwgt33-luna-n1 Bench Issue",
+        "milestone_set": "Bench Milestone",
+        "sidebar_milestone_display": "Bench Milestone",
+        "milestone_id": "1",
+        "no_milestone_status": "hidden (empty-list tw-hidden), not displayed",
+        "milestone_update_request": "/bench/bench-repo/issues/milestone?issue_ids=4 fired; page did NOT navigate to /bench/bench-repo/milestone/1",
+        "persisted_after_reload": "yes",
+        "assignee_still": "bench-assignee",
+        "labels_still": "bug, priority-high",
+        "url_after_milestone_click": "http://127.0.0.1:8095/bench/bench-repo/issues/4",
+        "run_id": "fwgt33-luna-n1",
+        "milestone_link_href_1": "bench",
+        "milestone_link_href_2": "bench-repo",
+        "milestone_link_href_3": "milestone",
+        "milestone_link_href_4": "1"
+      },
+      "route": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "outputEvidence": {
+        "issue_reference": {
+          "same": 0,
+          "differed": 1
+        },
+        "milestone_set": {
+          "same": 1,
+          "differed": 0
+        },
+        "sidebar_milestone_display": {
+          "same": 1,
+          "differed": 0
+        },
+        "milestone_id": {
+          "same": 1,
+          "differed": 0
+        },
+        "no_milestone_status": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "milestone_update_request": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "persisted_after_reload": {
+          "same": 0,
+          "differed": 1
+        },
+        "assignee_still": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "labels_still": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "url_after_milestone_click": {
+          "same": 0,
+          "differed": 1
+        },
+        "run_id": {
+          "same": 0,
+          "differed": 1
+        },
+        "milestone_link_href_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "milestone_link_href_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "milestone_link_href_3": {
+          "same": 0,
+          "differed": 1
+        },
+        "milestone_link_href_4": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "07-add",
+      "instruction": "On issue {{03-create.created_issue_number}} titled '{{runid}} Bench Issue' in bench/bench-repo, add a comment whose text includes the exact runid {{runid}}. Submit the comment and verify the rendered comment text on the issue page.",
+      "skill": "s_224f19",
+      "params": {
+        "v1": "{{runid}} Bench Issue",
+        "v3": "bench",
+        "v4": "bench-repo",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "issue_reference",
+        "comment_text_submitted",
+        "rendered_comment_text",
+        "run_id_in_comment",
+        "comment_id_anchor",
+        "comment_field_value",
+        "comment_url",
+        "comment_form_text",
+        "rendered_comment_entry",
+        "first_comment_text"
+      ],
+      "recorded": {
+        "issue_reference": "#4 fwgt33-luna-n1 Bench Issue",
+        "comment_text_submitted": "Automated bench comment for runid fwgt33-luna-n1 — verifying the comment path on bench/bench-repo issue #4.",
+        "rendered_comment_attribution": "admin commented (Author, Owner)",
+        "rendered_comment_text": "Automated bench comment for runid fwgt33-luna-n1 — verifying the comment path on bench/bench-repo issue #4.",
+        "run_id_in_comment": "fwgt33-luna-n1",
+        "comment_id_anchor": "#issuecomment-5",
+        "comment_field_value": "Automated bench comment for runid fwgt33-luna-n1 — verifying the comment path on bench/bench-repo issue #4.",
+        "comment_url": "http://127.0.0.1:8095/bench/bench-repo/issues/4#issuecomment-5",
+        "comment_form_text": "Write\nPreview\nDrop files or click here to upload.\nReopen Issue\nComment",
+        "rendered_comment_entry": "admin commented \nAuthor\nOwner\n\nAutomated bench comment for runid fwgt33-luna-n1 — verifying the comment path on bench/bench-repo issue #4.",
+        "first_comment_text": "admin commented \nOwner\n\nRun ID: fwgt33-luna-n1\n\nCreated by the automated bench run fwgt33-luna-n1 against repository bench/bench-repo.",
+        "url": "http://127.0.0.1:8095/bench/bench-repo/issues/4#issuecomment-5",
+        "url.h0": "issuecomment-5"
+      },
+      "route": "http://127.0.0.1:8095/bench/bench-repo/issues/:id#:id",
+      "outputEvidence": {
+        "issue_reference": {
+          "same": 0,
+          "differed": 1
+        },
+        "comment_text_submitted": {
+          "same": 0,
+          "differed": 1
+        },
+        "rendered_comment_attribution": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "rendered_comment_text": {
+          "same": 0,
+          "differed": 1
+        },
+        "run_id_in_comment": {
+          "same": 0,
+          "differed": 1
+        },
+        "comment_id_anchor": {
+          "same": 0,
+          "differed": 1
+        },
+        "comment_field_value": {
+          "same": 0,
+          "differed": 1
+        },
+        "comment_url": {
+          "same": 0,
+          "differed": 1
+        },
+        "comment_form_text": {
+          "same": 1,
+          "differed": 0
+        },
+        "rendered_comment_entry": {
+          "same": 0,
+          "differed": 1
+        },
+        "first_comment_text": {
+          "same": 0,
+          "differed": 1
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        },
+        "url.h0": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "session": "fwgt33-luna-n1",
+    "created": "2026-09-28T22:14:09.269Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "02-find",
+      "outputs": [
+        "issue_1_url",
+        "issue_2_url",
+        "issue_3_url",
+        "issue_3_state_icon_class"
+      ]
+    },
+    {
+      "stepId": "04-set",
+      "outputs": [
+        "labels_visible",
+        "labels_exactly"
+      ]
+    },
+    {
+      "stepId": "05-verify",
+      "outputs": [
+        "labels_still_present"
+      ]
+    },
+    {
+      "stepId": "06-set",
+      "outputs": [
+        "no_milestone_status",
+        "milestone_update_request",
+        "labels_still"
+      ]
+    },
+    {
+      "stepId": "07-add",
+      "outputs": [
+        "rendered_comment_attribution"
+      ]
+    }
+  ]
+}
