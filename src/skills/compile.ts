@@ -927,6 +927,8 @@ export function compileSkills(input: CompileInput): Skill[] {
       // A position-only slot inside an href a selector matches on is at a url
       // position too (substituteHrefIds, snipeit fwsi3 `a[href$="/hardware/4/checkout"]`).
       if (typeof args.target === 'string' && positionalUrlSlots.length) args.target = substituteHrefIds(args.target, positionalUrlSlots);
+      // …and a role selector's NAME is the name its locator chain carries, written the same way (substituteHashIds).
+      if (typeof args.target === 'string' && positionalUrlSlots.length && /^\s*role=/.test(args.target)) args.target = substituteHashIds(args.target, positionalUrlSlots);
       const locators: Record<string, LocatorCandidate[]> = {};
       for (const [key, loc] of Object.entries(step.locators)) {
         const filled = (loc.chain ?? []).map((c) => {
@@ -2164,6 +2166,24 @@ export function discoverSlots(
       if (knownVals.includes(part.value) || varOnly.includes(part.value) || values.has(part.value)) continue;
       urlIdVals.push(part.value);
     }
+  }
+  // …and, below the text floor, EVERY banked url id, whatever step carries it
+  // or doesn't. Discovery is by provenance; USE is the writers' business. A
+  // value under two characters is never token-matched: only the positional
+  // writers touch it (substituteUrlId at its banked url position,
+  // substituteHrefIds in an href, substituteHashIds as the app's `#N` record
+  // number), each carrying its own structural evidence, and a slot none of
+  // them wrote is dropped with the other unused slots (keptSlots). Gating it
+  // on a navigation url tied discovery to ONE writer: gitea fwgt29-n1 reached
+  // issue #4 by clicking, so 05-open's live compile had no slot and its
+  // heading froze as "#4", while n2's recovery navigated there and its re-pin
+  // slotted it. A value of two or more characters keeps the navigation gate
+  // above (or textMintSlots' minted-and-carried one): the text writer matches
+  // it by its characters, so it needs evidence in the characters too.
+  for (const o of knownOrigins) {
+    if (o.value.length >= 2 || urlIdVals.includes(o.value)) continue;
+    if (knownVals.includes(o.value) || varOnly.includes(o.value) || values.has(o.value)) continue;
+    urlIdVals.push(o.value);
   }
   const slots = new Map<string, string>();
   // Known values first so a cap can never cut them: they are the slots that
