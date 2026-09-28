@@ -1,0 +1,200 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwod103-luna-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwod103-luna-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwod103-luna-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/bench/results/fwod103-luna-spec-spec-tmp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwod103-luna-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwod103-luna.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwod103-luna-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwod103-luna.spec.ts",
+      "file": "fwod103-luna.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwod103-luna",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 112102,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper step] 01-signin\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 02-create s_b1e63e/3: read 'city' returned a value the skill itself set/selected ('Benchville') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 02-create: report value verified_city_after_relo is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-create\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 03-create s_356ba9/9: read 'product' returned a value the skill itself set/selected ('Chair floor protection') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 03-create s_356ba9/10: read 'quantity' returned '3.00' from a control this step set, and nothing committed it since — it shows the control, however the app formats it, not what the app stored; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 03-create s_9d74bd/2: read 'customer' returned a value the skill itself set/selected ('fwod103-luna-spec Bench Customer') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-create\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 04-add s_b0ca81/5: read 'line2_product' returned a value the skill itself set/selected ('[E-COM11] Cabinet with Doors') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 04-add s_b0ca81/6: read 'line2_quantity' returned '2.00' from a control this step set, and nothing committed it since — it shows the control, however the app formats it, not what the app stored; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-add\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 05-change\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 06-verify\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 07-verify\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-signin: Sign in to Odoo at http://127.0.0.1:8069/ using login admin and password exactly {{env:APP_PASSWORD}}, and verify that the authenticated Odoo app is open.",
+                      "duration": 6358
+                    },
+                    {
+                      "title": "02-create: Create a customer named {{runid}} Bench Customer with City set to Benchville. Ensure the customer name is selected/accepted in Odoo, save it, then verify the saved customer and city.",
+                      "duration": 7417
+                    },
+                    {
+                      "title": "03-create: Create a new quotation for customer {{runid}} Bench Customer with exactly one order line: choose any real product from the catalogue via its autocomplete option and set quantity 3. Save the quotation and verify the customer, product, unit price, quantity, and untaxed amount shown by Odoo.",
+                      "duration": 28122
+                    },
+                    {
+                      "title": "04-add: On quotation {{03-create.order_reference}}, add a second order line using a different catalogue product selected from autocomplete, with quantity 2. Save and verify both line products/quantities and the resulting untaxed amount.",
+                      "duration": 35028
+                    },
+                    {
+                      "title": "05-change: On quotation {{03-create.order_reference}}, change the first line ({{03-create.product}}) quantity from 3 to 5, save, and verify the first line quantity and updated untaxed amount.",
+                      "duration": 9140
+                    },
+                    {
+                      "title": "06-verify: Confirm quotation {{03-create.order_reference}} to convert it to a sales order, and verify its order reference and the status shown after confirmation.",
+                      "duration": 2228
+                    },
+                    {
+                      "title": "07-verify: Cancel sales order {{03-create.order_reference}} so it is no longer active, handling any confirmation dialog if needed. Verify after the action (and reload if appropriate) the status displayed for {{03-create.order_reference}}.",
+                      "duration": 22582
+                    }
+                  ],
+                  "startTime": "2026-09-28T16:15:38.503Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": ""
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "d0804df3c1c3603a24f4-6e784a6dd7002c488adf",
+          "file": "fwod103-luna.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-28T16:15:35.831Z",
+    "duration": 115219.228,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

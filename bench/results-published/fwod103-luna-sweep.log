@@ -1,0 +1,118 @@
+
+[sweep] run 1/3: fwod103-luna-n1 (store: /home/user/sitelooper/bench/results/fwod103-luna-skills)
+[harness] odoo: defaulting APP_URL
+[harness] odoo: defaulting APP_EMAIL
+[harness] odoo: defaulting APP_PASSWORD
+[reset] odoo: no leftover bench customers
+[harness] odoo responded 303 at http://127.0.0.1:8069/
+stopped: fwod103-luna-n1
+  flow "fwod103-luna" saved: 7 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwod103-luna.json
+  warning: note: 12 goal/report value(s) carrying a value this run made were slotted or dropped:
+  s_0a2fcd.reportTemplate.values.sale_order_id dropped (recorded literal of a value this run made)
+  s_0a2fcd.reportTemplate.values.customer dropped (recorded literal of a value this run made)
+  s_0a2fcd.reportTemplate.values.quotation_url dropped (recorded literal of a value this run made)
+  s_770dd8.reportTemplate.values.sale_order_id dropped (recorded literal of a value this run made)
+  s_770dd8.reportTemplate.values.record_url dropped (recorded literal of a value this run made)
+  s_b0ca81.reportTemplate.values.sale_order_id dropped (recorded literal of a value this run made)
+  s_b0ca81.reportTemplate.values.customer dropped (recorded literal of a value this run made)
+  s_b0ca81.reportTemplate.values.quotation_url dropped (recorded literal of a value this run made)
+  s_b1e63e.reportTemplate.summary dropped (narrates a value this run made)
+  s_cd7cb0.reportTemplate.values.sale_order_id dropped (recorded literal of a value this run made)
+  s_cd7cb0.reportTemplate.values.record_url dropped (recorded literal of a value this run made)
+  s_cd7cb0.reportTemplate.summary dropped (narrates a value this run made)
+  warning: note: 01-signin no longer publishes logged_in_user — no replay reads it from the page and the recording showed no line to read
+  warning: note: 02-create no longer publishes model — no replay reads it from the page and the recording showed no line to read
+  warning: note: 03-create no longer publishes untaxed_amount — no replay reads it from the page and the recording showed no line to read
+  warning: note: 04-add no longer publishes sale_order_id — no replay reads it from the page and the recording showed no line to read
+  warning: note: 05-change no longer publishes sale_order_id — no replay reads it from the page and the recording showed no line to read
+  warning: note: 06-verify no longer publishes sale_order_id, current_stage_after_reload — no replay reads them from the page and the recording showed no line to read
+  warning: note: 07-verify no longer publishes sale_order_id, status_before, status_after_reload, statusbar_stages_after, statusbar_stages_after_reload, order_status — no replay reads them from the page and the recording showed no line to read
+  warning: warning: 170 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[1].instruction: "Benchville" (output) in "Create a customer named {{runid}} Bench Customer with City set to Benchville. Ensure the customer name is selected/accepted in Odoo, save it, then verify the sa"
+  flow.steps[1].params.v3: "Benchville" (output) in "Benchville"
+  flow.steps[1].route: "res.partner" (output) in "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=res.partner&view_type=form"
+  s_0718c1.reportTemplate.summary: "Odoo - Discuss" (output) in "Signed in to Odoo at {{v1}} with login {{v2}} and the supplied password marker; the login form accepted the credentials and the browser landed on the authentica"
+  s_0718c1.reportTemplate.summary: "YourCompany" (output) in "Signed in to Odoo at {{v1}} with login {{v2}} and the supplied password marker; the login form accepted the credentials and the browser landed on the authentica"
+arm=sitelooper model=openai/gpt-6-luna runid=fwod103-luna-n1 stop=completed
+turns=8 wall=399.9s
+commands=7 cmdTime=373.3s cmdBytes=8827 timeouts=0
+orchestrator in=5821 cw=0 cr=26667 out=764
+inner prompt=2394624 cached=2228608 completion=26109
+spend=$0.0486 maxUsd=3
+learn: A_n=0 replayed=0/7 full=0 repaired=0 compiled=7 variants=0
+-> /home/user/sitelooper/bench/results/fwod103-luna-n1-sitelooper-result.json
+
+fwod103-luna-n1: objectives passed 6/6
+  obj 1: PASS — city="Benchville"
+  obj 2: PASS — orders for customer: 1, lines: 2
+  obj 3: PASS — 2 lines, 2 distinct products
+  obj 4: PASS — quantities: 5, 2
+  obj 5: PASS — state tracking shows confirmation
+  obj 6: PASS — final state=cancel, ref=S00021
+
+[sweep] run 2/3: fwod103-luna-n2 (replay flow fwod103-luna, no orchestrator)
+[reset] odoo: deleted 1 leftover bench order(s)
+[reset] odoo: deleted 1 leftover bench customer(s)
+
+fwod103-luna-n2: objectives passed 6/6
+  obj 1: PASS — city="Benchville"
+  obj 2: PASS — orders for customer: 1, lines: 2
+  obj 3: PASS — 2 lines, 2 distinct products
+  obj 4: PASS — quantities: 5, 2
+  obj 5: PASS — state tracking shows confirmation
+  obj 6: PASS — final state=cancel, ref=S00022
+
+[sweep] run 3/3: fwod103-luna-n3 (replay flow fwod103-luna, no orchestrator)
+[reset] odoo: deleted 1 leftover bench order(s)
+[reset] odoo: deleted 1 leftover bench customer(s)
+
+fwod103-luna-n3: objectives passed 6/6
+  obj 1: PASS — city="Benchville"
+  obj 2: PASS — orders for customer: 1, lines: 2
+  obj 3: PASS — 2 lines, 2 distinct products
+  obj 4: PASS — quantities: 5, 2
+  obj 5: PASS — state tracking shows confirmation
+  obj 6: PASS — final state=cancel, ref=S00023
+
+Learning sweep fwod103-luna (K=3)
+┌─────────┬───┬───────────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid             │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼───────────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwod103-luna-n1' │ '6/6'    │ 'completed' │ 8     │ 7    │ 0.0486    │ 0   │ '0/7'        │ 400    │
+│ 1       │ 2 │ 'fwod103-luna-n2' │ '6/6'    │ 'success'   │ 0     │ 7    │ 0         │ 1   │ '7/7 (flow)' │ 136    │
+│ 2       │ 3 │ 'fwod103-luna-n3' │ '6/6'    │ 'success'   │ 0     │ 7    │ 0         │ 1   │ '7/7 (flow)' │ 137    │
+└─────────┴───┴───────────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:8069
+  s_04ee04  validated    1 steps  3/3 (100%)
+           Create a new quotation for customer {{v1}} with exactly one order line: choose any real product from the catal…
+  s_0718c1  validated    3 steps  3/3 (100%)
+           Sign in to Odoo at {{v1}} using login {{v2}} and password exactly {{v3}}, and verify that the authenticated Od…
+  s_0a2fcd  validated   23 steps  3/3 (100%)
+           On quotation {{v1}}, change the first line ({{v2}}) quantity from 3 to 5, save, and verify the first line quan…
+  s_356ba9  validated   12 steps  3/3 (100%)
+           Create a new quotation for customer {{v1}} with exactly one order line: choose any real product from the catal…
+  s_41b57f  validated    2 steps  3/3 (100%)
+           Create a new quotation for customer {{v1}} with exactly one order line: choose any real product from the catal…
+  s_6b5ad6  validated    1 steps  3/3 (100%)
+           Sign in to Odoo at {{v1}} using login {{v2}} and password exactly {{v3}}, and verify that the authenticated Od…
+  s_6cb786  validated    1 steps  3/3 (100%)
+           Create a customer named {{v2}} with City set to {{v3}}. Ensure the customer name is selected/accepted in Odoo,…
+  s_770dd8  validated   21 steps  3/3 (100%)
+           Cancel sales order {{v1}} so it is no longer active, handling any confirmation dialog if needed. Verify after …
+  s_7e2964  validated    3 steps  3/3 (100%)
+           Sign in to Odoo at {{v1}} using login {{v2}} and password exactly {{v3}}, and verify that the authenticated Od…
+  s_8cfb1f  validated    3 steps  3/3 (100%)
+           Create a customer named {{v2}} with City set to {{v3}}. Ensure the customer name is selected/accepted in Odoo,…
+  s_9d74bd  validated   14 steps  3/3 (100%)
+           Create a new quotation for customer {{v1}} with exactly one order line: choose any real product from the catal…
+  s_b0ca81  validated   43 steps  3/3 (100%)
+           On quotation {{v1}}, add a second order line using a different catalogue product selected from autocomplete, w…
+  s_b1e63e  validated    7 steps  3/3 (100%)
+           Create a customer named {{v2}} with City set to {{v3}}. Ensure the customer name is selected/accepted in Odoo,…
+  s_c9d262  validated    2 steps  3/3 (100%)
+           Create a customer named {{v2}} with City set to {{v3}}. Ensure the customer name is selected/accepted in Odoo,…
+  s_cd7cb0  validated   13 steps  3/3 (100%)
+           Confirm quotation {{v1}} to convert it to a sales order, and verify its order reference and the status shown a…
+store: /home/user/sitelooper/bench/results/fwod103-luna-skills
+
+summary: /home/user/sitelooper/bench/results/fwod103-luna-sweep.json
