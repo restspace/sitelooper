@@ -1,0 +1,203 @@
+{
+  "flow": "fwod104-luna",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_dcfed9; observed logged_in_user=Mitchell Admin, user_email=admin@yourcompany.example.com.",
+      "values": {
+        "logged_in_user": "Mitchell Admin",
+        "user_email": "admin@yourcompany.example.com"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "10/10",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_dcfed9: step 5: read 'preferences_menu' returned a value the skill itself set/selected ('Preferences') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_dcfed9: step 6: the target chain is dead and was not healed inline — the step is a synthesized read no run has ever resolved, so nothing about it has drifted",
+        "s_dcfed9: step 6: skipped read — no element matched any known locator for target (tried 1: page.getByRole('menuitem', { name: 'Log out', exact: true }))"
+      ],
+      "unreported": [
+        "preferences_menu",
+        "logout_menu_item"
+      ]
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_4c0753; observed contact_record_id=46, list_row_count=1.",
+      "values": {
+        "contact_record_id": "46",
+        "list_row_count": "1"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "17/17",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_e7f58a: step 1: read 'contact_name' returned a value the skill itself set/selected ('fwod104-luna-n3 Bench Customer') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_e7f58a: step 2: read 'city' returned a value the skill itself set/selected ('Benchville') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_4c0753: step 1: read 'ref' returned a value the skill itself set/selected ('fwod104-luna-n3') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_4c0753: report value verified_row is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)",
+        "s_4c0753: report value saved_contact_name is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)",
+        "s_4c0753: report value saved_city is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)"
+      ],
+      "unreported": [
+        "contact_name",
+        "city",
+        "saved_contact_name",
+        "saved_city",
+        "ref"
+      ]
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_cb7bba; observed tax_rate=20%, line_subtotal=£ 885.00, quotation_totals=Untaxed Amount\t£ 885.00\nTAX 20%\t\n£ 177.00\n\nTotal\t£ 1,062.00, ref_3=S00023, product_name=[FURN_6666] Acoustic Bloc Screens, unit_price=295.00, unit_price_duplicate=295.00.",
+      "values": {
+        "tax_rate": "20%",
+        "line_subtotal": "£ 885.00",
+        "quotation_totals": "Untaxed Amount\t£ 885.00\nTAX 20%\t\n£ 177.00\n\nTotal\t£ 1,062.00",
+        "ref_3": "S00023",
+        "product_name": "[FURN_6666] Acoustic Bloc Screens",
+        "unit_price": "295.00",
+        "unit_price_duplicate": "295.00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "18/18",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_cb7bba: report value ref is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)"
+      ],
+      "unreported": [
+        "ref"
+      ]
+    },
+    {
+      "id": "04-add",
+      "status": "success",
+      "summary": "Replayed stored procedure s_3877b7; observed ref=fwod104-luna-n3, quotation_reference=S00023, customer_name=fwod104-luna-n3 Bench Customer, second_product=[FURN_1118] Corner Desk Left Sit, second_quantity=2.00, second_unit_price=85.00, ref_2=FURN_1118.",
+      "values": {
+        "ref": "fwod104-luna-n3",
+        "quotation_reference": "S00023",
+        "customer_name": "fwod104-luna-n3 Bench Customer",
+        "second_product": "[FURN_1118] Corner Desk Left Sit",
+        "second_quantity": "2.00",
+        "second_unit_price": "85.00",
+        "ref_2": "FURN_1118"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "24/24",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_3877b7: step 7: the field already held the value this type enters (restored after the recording saw it emptied), so it was cleared first rather than typed onto"
+      ]
+    },
+    {
+      "id": "05-change",
+      "status": "success",
+      "summary": "Replayed stored procedure s_b95f62; observed ref=fwod104-luna-n3, statusbar_states=Sales Order\nQuotation Sent\nQuotation, untaxed_amount_2=Untaxed Amount\t£ 1,645.00\nTAX 20%\t\n£ 329.00\n\nTotal\t£ 1,974.00, quotation_reference=S00023, customer=fwod104-luna-n3 Bench Customer, line_1_product=[FURN_6666] Acoustic Bloc Screens, line_1_quantity=5.00, line_1_unit_price=295.00, line_1_subtotal=£ 1,475.00, line_2_product=[FURN_1118] Corner Desk Left Sit, line_2_unit_price=85.00, line_2_subtotal=£ 170.00, untaxed_amount=£ 1,645.00, tax_20=£ 329.00, total=£ 1,974.00, line_2_quantity=2.00, div_o_field_widget_table_2_1=TAX 20%, div_o_field_widget_table_2_2=£ 329.00, div_o_field_widget_table=Untaxed Amount\t£ 1,645.00, div_o_field_widget_table_3=Total\t£ 1,974.00.",
+      "values": {
+        "ref": "fwod104-luna-n3",
+        "statusbar_states": "Sales Order\nQuotation Sent\nQuotation",
+        "untaxed_amount_2": "Untaxed Amount\t£ 1,645.00\nTAX 20%\t\n£ 329.00\n\nTotal\t£ 1,974.00",
+        "quotation_reference": "S00023",
+        "customer": "fwod104-luna-n3 Bench Customer",
+        "line_1_product": "[FURN_6666] Acoustic Bloc Screens",
+        "line_1_quantity": "5.00",
+        "line_1_unit_price": "295.00",
+        "line_1_subtotal": "£ 1,475.00",
+        "line_2_product": "[FURN_1118] Corner Desk Left Sit",
+        "line_2_unit_price": "85.00",
+        "line_2_subtotal": "£ 170.00",
+        "untaxed_amount": "£ 1,645.00",
+        "tax_20": "£ 329.00",
+        "total": "£ 1,974.00",
+        "line_2_quantity": "2.00",
+        "div_o_field_widget_table_2_1": "TAX 20%",
+        "div_o_field_widget_table_2_2": "£ 329.00",
+        "div_o_field_widget_table": "Untaxed Amount\t£ 1,645.00",
+        "div_o_field_widget_table_3": "Total\t£ 1,974.00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "25/25",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "06-verify",
+      "status": "success",
+      "summary": "Replayed stored procedure s_e6c280; observed order_reference=S00023, status_after_confirm=Sales Order\nQuotation Sent\nQuotation, ref=fwod104-luna-n3.",
+      "values": {
+        "order_reference": "S00023",
+        "status_after_confirm": "Sales Order\nQuotation Sent\nQuotation",
+        "ref": "fwod104-luna-n3"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "4/4",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "07-verify",
+      "status": "success",
+      "summary": "Replayed stored procedure s_d1627f; observed final_status_2=Cancelled\nSales Order\nQuotation Sent\nQuotation, final_status=Cancelled, order_reference=S00023, customer=fwod104-luna-n3 Bench Customer, ref=fwod104-luna-n3.",
+      "values": {
+        "final_status_2": "Cancelled\nSales Order\nQuotation Sent\nQuotation",
+        "final_status": "Cancelled",
+        "order_reference": "S00023",
+        "customer": "fwod104-luna-n3 Bench Customer",
+        "ref": "fwod104-luna-n3"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "10/10",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 7,
+  "total": 7,
+  "repinned": 0,
+  "drift": 1,
+  "driftTickets": [
+    {
+      "flow": "fwod104-luna",
+      "step": "01-signin",
+      "skill": "s_dcfed9",
+      "atStep": "6",
+      "key": "target",
+      "similarity": 1.001,
+      "missedLocator": "page.getByRole('menuitem', { name: 'Log out', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&menu_id=:id",
+      "pageUrl": "http://127.0.0.1:8069/web#action=123&cids=1&menu_id=81"
+    }
+  ],
+  "wallMs": 191351,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "cachedTokens": 0
+  },
+  "usageByModel": {},
+  "servedByModel": {},
+  "recoveryModel": "openai/gpt-6-luna",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

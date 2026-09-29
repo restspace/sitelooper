@@ -1,0 +1,720 @@
+{
+  "name": "fwod104-luna",
+  "origin": "http://127.0.0.1:8069",
+  "startUrl": "http://127.0.0.1:8069/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-signin",
+      "instruction": "Sign in to the Odoo app at http://127.0.0.1:8069/ using login admin and password exactly {{env:APP_PASSWORD}}; verify the authenticated app is open and report the page/title or user indication.",
+      "skill": "s_60e5c1",
+      "params": {
+        "v1": "http://127.0.0.1:8069/",
+        "v2": "admin",
+        "v3": "{{env:APP_PASSWORD}}"
+      },
+      "outputs": [
+        "logged_in_user",
+        "user_email",
+        "preferences_menu",
+        "logout_menu_item"
+      ],
+      "recorded": {
+        "logged_in_user": "Mitchell Admin",
+        "user_email": "admin@yourcompany.example.com",
+        "app_open": "Odoo Discuss (inbox empty)",
+        "login_mechanism": "web login page at /web/login, Email + Password fields",
+        "preferences_menu": "Preferences",
+        "logout_menu_item": "Log out",
+        "url": "http://127.0.0.1:8069/web#action=123&cids=1&menu_id=81",
+        "url.q.action": "123"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&menu_id=:id",
+      "outputEvidence": {
+        "logged_in_user": {
+          "same": 1,
+          "differed": 0
+        },
+        "user_email": {
+          "same": 1,
+          "differed": 0
+        },
+        "app_open": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "login_mechanism": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "preferences_menu": {
+          "same": 1,
+          "differed": 0
+        },
+        "logout_menu_item": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        },
+        "url.q.action": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "02-create",
+      "instruction": "Create a customer contact named '{{runid}} Bench Customer' with City set to Benchville. Save it, then verify the saved customer record/list showing the exact name and city.",
+      "skill": "s_3c26e1",
+      "params": {
+        "v2": "{{runid}} Bench Customer",
+        "v3": "Benchville",
+        "v1": "{{runid}}"
+      },
+      "outputs": [
+        "contact_name",
+        "city",
+        "contact_record_id",
+        "list_row_count",
+        "verified_row",
+        "saved_contact_name",
+        "saved_city",
+        "ref"
+      ],
+      "recorded": {
+        "contact_name": "fwod104-luna-n1 Bench Customer",
+        "city": "Benchville",
+        "record_type": "res.partner (contact)",
+        "contact_record_id": "44",
+        "list_row_count": "1",
+        "verified_row": "fwod104-luna-n1 Bench Customer | City: Benchville",
+        "saved_contact_name": "fwod104-luna-n1 Bench Customer",
+        "saved_city": "Benchville",
+        "ref": "fwod104-luna-n1",
+        "url": "http://127.0.0.1:8069/web#action=156&model=res.partner&view_type=list&cids=1&menu_id=110",
+        "url.q.action": "156",
+        "url.q.menu_id": "110",
+        "url.q.id": "44"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&menu_id=:id&model=res.partner&view_type=list",
+      "urlRoutes": {
+        "url.q.id": "http://127.0.0.1:8069 p0=web"
+      },
+      "outputEvidence": {
+        "contact_name": {
+          "same": 0,
+          "differed": 1
+        },
+        "city": {
+          "same": 1,
+          "differed": 0
+        },
+        "record_type": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "contact_record_id": {
+          "same": 0,
+          "differed": 1
+        },
+        "list_row_count": {
+          "same": 1,
+          "differed": 0
+        },
+        "verified_row": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "saved_contact_name": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "saved_city": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        },
+        "url.q.action": {
+          "same": 1,
+          "differed": 0
+        },
+        "url.q.menu_id": {
+          "same": 1,
+          "differed": 0
+        },
+        "url.q.id": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "03-create",
+      "instruction": "Create a new quotation for customer '{{runid}} Bench Customer' with exactly one order line: choose any product from the product catalogue and set quantity 3. Save the quotation without confirming. Verify and report the chosen product name, its displayed unit price, the untaxed amount, and that there is only one line.",
+      "skill": "s_bd71c6",
+      "params": {
+        "v1": "{{runid}} Bench Customer",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "quotation_totals",
+        "tax_rate",
+        "product_name",
+        "unit_price",
+        "line_subtotal",
+        "ref",
+        "ref_3",
+        "unit_price_duplicate"
+      ],
+      "recorded": {
+        "quotation_totals": "Untaxed Amount\t£ 885.00\nTAX 20%\t\n£ 177.00\n\nTotal\t£ 1,062.00",
+        "tax_rate": "20%",
+        "product_name": "[FURN_6666] Acoustic Bloc Screens",
+        "unit_price": "295.00",
+        "line_subtotal": "£ 885.00",
+        "ref": "fwod104-luna-n1",
+        "ref_2": "FURN_6666",
+        "ref_3": "S00021",
+        "unit_price_duplicate": "295.00",
+        "url": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=21",
+        "url.q.menu_id": "194",
+        "url.q.action": "316",
+        "url.q.id": "21"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "outputEvidence": {
+        "quotation_totals": {
+          "same": 1,
+          "differed": 0
+        },
+        "tax_rate": {
+          "same": 1,
+          "differed": 0
+        },
+        "product_name": {
+          "same": 1,
+          "differed": 0
+        },
+        "unit_price": {
+          "same": 1,
+          "differed": 0
+        },
+        "line_subtotal": {
+          "same": 1,
+          "differed": 0
+        },
+        "ref": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "ref_2": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "ref_3": {
+          "same": 0,
+          "differed": 1
+        },
+        "unit_price_duplicate": {
+          "same": 1,
+          "differed": 0
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        },
+        "url.q.menu_id": {
+          "same": 1,
+          "differed": 0
+        },
+        "url.q.action": {
+          "same": 1,
+          "differed": 0
+        },
+        "url.q.id": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "04-add",
+      "instruction": "On quotation {{03-create.ref_3}} for '{{runid}} Bench Customer', add a second order line using a different catalogue product than {{03-create.product_name}} and set its quantity to 2. Save while keeping the quotation unconfirmed. Verify the second product and the new untaxed amount.",
+      "skill": "s_3877b7",
+      "params": {
+        "v1": "{{03-create.ref_3}}",
+        "v2": "{{runid}} Bench Customer",
+        "v4": "{{03-create.product_name}}",
+        "v3": "{{runid}}"
+      },
+      "outputs": [
+        "quotation_reference",
+        "customer_name",
+        "second_product",
+        "second_quantity",
+        "ref",
+        "ref_2",
+        "second_unit_price"
+      ],
+      "recorded": {
+        "quotation_reference": "S00021",
+        "customer_name": "fwod104-luna-n1 Bench Customer",
+        "second_product": "[FURN_1118] Corner Desk Left Sit",
+        "second_quantity": "2.00",
+        "second_line_subtotal": "£170.00",
+        "untaxed_amount": "£1,055.00",
+        "tax": "£211.00",
+        "total": "£1,266.00",
+        "order_line_count": "2",
+        "quotation_status": "Quotation (unconfirmed)",
+        "ref": "fwod104-luna-n1",
+        "ref_2": "FURN_1118",
+        "second_unit_price": "85.00"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "outputEvidence": {
+        "quotation_reference": {
+          "same": 0,
+          "differed": 1
+        },
+        "customer_name": {
+          "same": 0,
+          "differed": 1
+        },
+        "second_product": {
+          "same": 1,
+          "differed": 0
+        },
+        "second_quantity": {
+          "same": 1,
+          "differed": 0
+        },
+        "second_line_subtotal": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "untaxed_amount": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "tax": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "total": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "order_line_count": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "quotation_status": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "ref_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "second_unit_price": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "05-change",
+      "instruction": "On quotation {{03-create.ref_3}} for '{{runid}} Bench Customer', change the first line ({{03-create.product_name}}) quantity from 3 to 5, leaving the second line unchanged. Save without confirming and verify both quantities and the resulting untaxed amount.",
+      "skill": "s_b95f62",
+      "params": {
+        "v1": "{{03-create.ref_3}}",
+        "v2": "{{runid}} Bench Customer",
+        "v4": "{{03-create.product_name}}",
+        "v3": "{{runid}}"
+      },
+      "outputs": [
+        "quotation_reference",
+        "customer",
+        "line_1_product",
+        "line_1_quantity",
+        "line_1_unit_price",
+        "line_1_subtotal",
+        "line_2_product",
+        "line_2_unit_price",
+        "line_2_subtotal",
+        "untaxed_amount",
+        "tax_20",
+        "total",
+        "statusbar_states",
+        "untaxed_amount_2",
+        "div_o_field_widget_table",
+        "div_o_field_widget_table_3",
+        "ref",
+        "line_2_quantity",
+        "div_o_field_widget_table_2_1",
+        "div_o_field_widget_table_2_2"
+      ],
+      "recorded": {
+        "quotation_reference": "S00021",
+        "customer": "fwod104-luna-n1 Bench Customer",
+        "line_1_product": "[FURN_6666] Acoustic Bloc Screens",
+        "line_1_quantity": "5.00",
+        "line_1_unit_price": "295.00",
+        "line_1_subtotal": "£ 1,475.00",
+        "line_2_product": "[FURN_1118] Corner Desk Left Sit",
+        "line_2_unit_price": "85.00",
+        "line_2_subtotal": "£ 170.00",
+        "untaxed_amount": "£ 1,645.00",
+        "tax_20": "£ 329.00",
+        "total": "£ 1,974.00",
+        "order_line_count": "2",
+        "quotation_status_radios": "Sales Order=false, Quotation Sent=false, Quotation=true (unconfirmed)",
+        "statusbar_states": "Sales Order\nQuotation Sent\nQuotation",
+        "untaxed_amount_2": "Untaxed Amount\t£ 1,645.00\nTAX 20%\t\n£ 329.00\n\nTotal\t£ 1,974.00",
+        "div_o_field_widget_table": "Untaxed Amount\t£ 1,645.00",
+        "div_o_field_widget_table_3": "Total\t£ 1,974.00",
+        "sales_order_radio_checked": "false",
+        "quotation_radio_checked": "true",
+        "ref": "fwod104-luna-n1",
+        "ref_2": "FURN_6666",
+        "ref_3": "FURN_1118",
+        "line_2_quantity": "2.00",
+        "div_o_field_widget_table_2_1": "TAX 20%",
+        "div_o_field_widget_table_2_2": "£ 329.00"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "outputEvidence": {
+        "quotation_reference": {
+          "same": 0,
+          "differed": 1
+        },
+        "customer": {
+          "same": 0,
+          "differed": 1
+        },
+        "line_1_product": {
+          "same": 1,
+          "differed": 0
+        },
+        "line_1_quantity": {
+          "same": 1,
+          "differed": 0
+        },
+        "line_1_unit_price": {
+          "same": 1,
+          "differed": 0
+        },
+        "line_1_subtotal": {
+          "same": 0,
+          "differed": 1
+        },
+        "line_2_product": {
+          "same": 1,
+          "differed": 0
+        },
+        "line_2_unit_price": {
+          "same": 1,
+          "differed": 0
+        },
+        "line_2_subtotal": {
+          "same": 0,
+          "differed": 1
+        },
+        "untaxed_amount": {
+          "same": 0,
+          "differed": 1
+        },
+        "tax_20": {
+          "same": 0,
+          "differed": 1
+        },
+        "total": {
+          "same": 0,
+          "differed": 1
+        },
+        "order_line_count": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "quotation_status_radios": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "statusbar_states": {
+          "same": 1,
+          "differed": 0
+        },
+        "untaxed_amount_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "div_o_field_widget_table": {
+          "same": 1,
+          "differed": 0
+        },
+        "div_o_field_widget_table_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "sales_order_radio_checked": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "quotation_radio_checked": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "ref_2": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "ref_3": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "line_2_quantity": {
+          "same": 1,
+          "differed": 0
+        },
+        "div_o_field_widget_table_2_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "div_o_field_widget_table_2_2": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "06-verify",
+      "instruction": "Confirm quotation {{03-create.ref_3}} for '{{runid}} Bench Customer' so it becomes a sales order. Verify the order reference and the status shown after confirmation.",
+      "skill": "s_e6c280",
+      "params": {
+        "v1": "{{03-create.ref_3}}",
+        "v2": "{{runid}} Bench Customer",
+        "v3": "{{runid}}"
+      },
+      "outputs": [
+        "order_reference",
+        "status_after_confirm",
+        "ref"
+      ],
+      "recorded": {
+        "order_reference": "S00021",
+        "status_after_confirm": "Sales Order\nQuotation Sent\nQuotation",
+        "sales_order_radio_checked": "true",
+        "quotation_radio_checked": "false",
+        "ref": "fwod104-luna-n1"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "outputEvidence": {
+        "order_reference": {
+          "same": 0,
+          "differed": 1
+        },
+        "status_after_confirm": {
+          "same": 1,
+          "differed": 0
+        },
+        "sales_order_radio_checked": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "quotation_radio_checked": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "07-verify",
+      "instruction": "Cancel sales order {{03-create.ref_3}} for '{{runid}} Bench Customer' so the order created in this run is no longer active. Handle any confirmation dialog if shown, then verify the final status shown on the record.",
+      "skill": "s_d1627f",
+      "params": {
+        "v1": "{{03-create.ref_3}}",
+        "v2": "{{runid}} Bench Customer",
+        "v3": "{{runid}}"
+      },
+      "outputs": [
+        "order_reference",
+        "customer",
+        "final_status",
+        "status_radio_checked",
+        "confirmation_dialog",
+        "new_control_visible",
+        "final_status_2",
+        "ref"
+      ],
+      "recorded": {
+        "order_reference": "S00021",
+        "customer": "fwod104-luna-n1 Bench Customer",
+        "final_status": "Cancelled",
+        "status_radio_checked": "Cancelled (the Sales Order / Quotation Sent / Quotation radios are now disabled)",
+        "confirmation_dialog": "\"Are you sure you want to cancel this order?\" wizard (Cancel Sales Order) — handled by clicking its Cancel button",
+        "new_control_visible": "Set to Quotation button present, which Odoo shows for cancelled orders",
+        "final_status_2": "Cancelled\nSales Order\nQuotation Sent\nQuotation",
+        "status_radio_checked_2": "Cancelled",
+        "ref": "fwod104-luna-n1"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "outputEvidence": {
+        "order_reference": {
+          "same": 0,
+          "differed": 1
+        },
+        "customer": {
+          "same": 0,
+          "differed": 1
+        },
+        "final_status": {
+          "same": 1,
+          "differed": 0
+        },
+        "status_radio_checked": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "confirmation_dialog": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "new_control_visible": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "final_status_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "status_radio_checked_2": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "session": "fwod104-luna-n1",
+    "created": "2026-09-29T07:24:43.762Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "01-signin",
+      "outputs": [
+        "app_open",
+        "login_mechanism"
+      ]
+    },
+    {
+      "stepId": "02-create",
+      "outputs": [
+        "record_type"
+      ]
+    },
+    {
+      "stepId": "03-create",
+      "outputs": [
+        "ref_2"
+      ]
+    },
+    {
+      "stepId": "04-add",
+      "outputs": [
+        "second_line_subtotal",
+        "untaxed_amount",
+        "tax",
+        "total",
+        "order_line_count",
+        "quotation_status"
+      ]
+    },
+    {
+      "stepId": "05-change",
+      "outputs": [
+        "order_line_count",
+        "quotation_status_radios",
+        "sales_order_radio_checked",
+        "quotation_radio_checked",
+        "ref_2",
+        "ref_3"
+      ]
+    },
+    {
+      "stepId": "06-verify",
+      "outputs": [
+        "sales_order_radio_checked",
+        "quotation_radio_checked"
+      ]
+    },
+    {
+      "stepId": "07-verify",
+      "outputs": [
+        "status_radio_checked_2"
+      ]
+    }
+  ]
+}
