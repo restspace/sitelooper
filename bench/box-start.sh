@@ -8,7 +8,8 @@ set -u
 LOG=/tmp/setup.log
 [ -f "$LOG" ] || exit 0
 cd "${CLAUDE_PROJECT_DIR:-/home/user/sitelooper}" || exit 0
-target=$(grep -o '^==> Starting target: [a-z]*' "$LOG" | tail -1 | awk '{print $4}')
+# say() wraps headings in bold escapes, so the line never starts with ==>
+target=$(grep -o '==> Starting target: [a-z]*' "$LOG" | tail -1 | awk '{print $4}')
 if [ -n "$target" ]; then
   docker ps --format '{{.Names}}' 2>/dev/null | grep -q "$target" && exit 0
   # the cached snapshot keeps the first run's pid file and socket; a stale
