@@ -1,0 +1,271 @@
+{
+ "id": "s_c7bef3",
+ "origin": "http://127.0.0.1:8085",
+ "template": "Sign in to Kanboard at {{v1}} using username {{v2}} and password exactly {{v3}}. Verify successful sign-in and report what page is shown.",
+ "params": {
+  "v1": {
+   "example": "http://127.0.0.1:8085/",
+   "usedIn": [
+    1
+   ]
+  },
+  "v2": {
+   "example": "admin",
+   "usedIn": [
+    2
+   ]
+  },
+  "v3": {
+   "example": "{{env:APP_PASSWORD}}",
+   "usedIn": [
+    3
+   ]
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8085/"
+ },
+ "steps": [
+  {
+   "tool": "goto",
+   "args": {
+    "url": "{{v1}}"
+   },
+   "locators": {}
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e5",
+    "value": "{{v2}}"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Username"
+     },
+     {
+      "kind": "label",
+      "label": "Username"
+     },
+     {
+      "kind": "id",
+      "selector": "#form-username"
+     },
+     {
+      "kind": "css",
+      "selector": "#form-username"
+     },
+     {
+      "kind": "point",
+      "x": 619,
+      "y": 96,
+      "w": 308,
+      "h": 28,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8085/",
+    "addedContains": [
+     "- textbox \"Username\": {{v2}}"
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e7",
+    "value": "{{v3}}"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Password"
+     },
+     {
+      "kind": "label",
+      "label": "Password"
+     },
+     {
+      "kind": "id",
+      "selector": "#form-password"
+     },
+     {
+      "kind": "css",
+      "selector": "#form-password"
+     },
+     {
+      "kind": "point",
+      "x": 619,
+      "y": 152,
+      "w": 308,
+      "h": 28,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8085/",
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=button[name=\"Sign in\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "role=button[name=\"Sign in\"]"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Sign in"
+     },
+     {
+      "kind": "css",
+      "selector": "html > body > div > form > div:nth-of-type(1) > button"
+     },
+     {
+      "kind": "point",
+      "x": 505,
+      "y": 201,
+      "w": 80.7,
+      "h": 30,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8085/",
+    "addedContains": [
+     "- heading \"KB Dashboard for {{v2}}\"",
+     "- link \"Dashboard\"",
+     "- link \"My notifications\"",
+     "- link \"A\"",
+     "- link \"New project\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "header > div:nth-of-type(3) > div:nth-of-type(2) > ul > li:nth-of-type(1) > strong"
+     }
+    ]
+   },
+   "label": "username"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "html > body > header > div:nth-of-type(1) > h1"
+     },
+     {
+      "kind": "point",
+      "x": 420,
+      "y": 19,
+      "w": 820,
+      "h": 28,
+      "role": "heading",
+      "tag": "h1",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "page_heading"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#dashboard > div:nth-of-type(2) > p"
+     },
+     {
+      "kind": "point",
+      "x": 760,
+      "y": 153,
+      "w": 1020,
+      "h": 36,
+      "role": null,
+      "tag": "p",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "dashboard_empty_state_text"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "Signed in to Kanboard at {{v1}} as {{v2}} using the supplied password marker; the login form was replaced by the authenticated dashboard, confirming success. The page shown after sign-in is the Kanboard dashboard (\"Dashboard for {{v2}}\", heading \"KB Dashboard for {{v2}}\") at the same URL {{v1}}, containing the project menu (New project, New personal project, Project management, My activity stream), the overview links (Overview, My projects, My tasks, My subtasks), a Search box, a \"My notifications\" link, an \"{{v2}}\" profile menu, and the paragraph \"There is nothing assigned to you.\"",
+  "values": {
+   "username": "{{v2}}",
+   "page_heading": "KB Dashboard for {{v2}}",
+   "post_login_url": "{{v1}}",
+   "login_form_removed": "true (Username/Password/Sign in controls gone from the DOM)",
+   "dashboard_empty_state_text": "There is nothing assigned to you.",
+   "profile_menu_label": "{{v2}}"
+  }
+ },
+ "contract": 4,
+ "stats": {
+  "uses": 3,
+  "successes": 3,
+  "partial": 0,
+  "created": "2026-09-29T07:13:27.473Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 4,
+  "lastUsed": "2026-09-29T07:20:02.214Z"
+ },
+ "status": "validated",
+ "provenance": {
+  "session": "fwkb46-luna-n1",
+  "instruction": "Sign in to Kanboard at http://127.0.0.1:8085/ using username admin and password exactly {{env:APP_PASSWORD}}. Verify successful sign-in and report what page is shown.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-09-29T07:13:27.473Z"
+ },
+ "revision": 3
+}

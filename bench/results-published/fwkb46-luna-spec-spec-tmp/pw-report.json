@@ -1,0 +1,181 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwkb46-luna-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwkb46-luna-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwkb46-luna-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/bench/results/fwkb46-luna-spec-spec-tmp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwkb46-luna-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwkb46-luna.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwkb46-luna-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwkb46-luna.spec.ts",
+      "file": "fwkb46-luna.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwkb46-luna",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 52955,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper step] 01-signin\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-create\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-verify\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 05-add\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 06-set s_3df07b/5: read 'due_date_field_value_2' returned '12/31/2026 07:21' from a control this step set, and nothing committed it since — it shows the control, however the app formats it, not what the app stored; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 06-set s_3df07b/18: read 'due_date_field_value' returned a value the skill itself set/selected ('12/31/2026 00:00') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 06-set: report value due_date_requested is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 06-set\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-signin: Sign in to Kanboard at http://127.0.0.1:8085/ using username admin and password exactly {{env:APP_PASSWORD}}. Verify successful sign-in and report what page is shown.",
+                      "duration": 5677
+                    },
+                    {
+                      "title": "02-open: Open the project named Bench Board, report its board column names exactly in left-to-right order as shown, and do not modify any task.",
+                      "duration": 4906
+                    },
+                    {
+                      "title": "03-create: On Bench Board, create a task titled '{{runid}} Bench Task' with a description that includes the exact runid {{runid}}. Submit it and verify it appears on the board; report its displayed numeric task ID if visible.",
+                      "duration": 10808
+                    },
+                    {
+                      "title": "04-verify: Move the task '{{runid}} Bench Task' on Bench Board into the {{02-open.column_3}} column, then verify its task page or board placement shows that column.",
+                      "duration": 3091
+                    },
+                    {
+                      "title": "05-add: Add a comment to task '{{runid}} Bench Task' on Bench Board whose text includes the exact runid {{runid}}. Save it and verify the comment appears on the task page; report the exact comment text shown.",
+                      "duration": 3178
+                    },
+                    {
+                      "title": "06-set: Set the due date of task '{{runid}} Bench Task' on Bench Board to 2026-12-31, save, and verify the task page displays that due date exactly.",
+                      "duration": 24200
+                    }
+                  ],
+                  "startTime": "2026-09-29T07:21:03.811Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": ""
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "cb664c804df438124062-a4e74abca72302df15a1",
+          "file": "fwkb46-luna.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-29T07:21:00.661Z",
+    "duration": 56567.772000000004,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

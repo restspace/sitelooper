@@ -1,0 +1,630 @@
+{
+  "name": "fwkb46-luna",
+  "origin": "http://127.0.0.1:8085",
+  "startUrl": "http://127.0.0.1:8085/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-signin",
+      "instruction": "Sign in to Kanboard at http://127.0.0.1:8085/ using username admin and password exactly {{env:APP_PASSWORD}}. Verify successful sign-in and report what page is shown.",
+      "skill": "s_c7bef3",
+      "params": {
+        "v1": "http://127.0.0.1:8085/",
+        "v2": "admin",
+        "v3": "{{env:APP_PASSWORD}}"
+      },
+      "outputs": [
+        "username",
+        "page_heading",
+        "post_login_url",
+        "dashboard_empty_state_text",
+        "profile_menu_label"
+      ],
+      "recorded": {
+        "username": "admin",
+        "page_heading": "KB Dashboard for admin",
+        "post_login_url": "http://127.0.0.1:8085/",
+        "login_form_removed": "true (Username/Password/Sign in controls gone from the DOM)",
+        "dashboard_empty_state_text": "There is nothing assigned to you.",
+        "profile_menu_label": "admin",
+        "url": "http://127.0.0.1:8085/"
+      },
+      "route": "http://127.0.0.1:8085/",
+      "outputEvidence": {
+        "username": {
+          "same": 1,
+          "differed": 0
+        },
+        "page_heading": {
+          "same": 1,
+          "differed": 0
+        },
+        "post_login_url": {
+          "same": 1,
+          "differed": 0
+        },
+        "login_form_removed": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "dashboard_empty_state_text": {
+          "same": 1,
+          "differed": 0
+        },
+        "profile_menu_label": {
+          "same": 1,
+          "differed": 0
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "02-open",
+      "instruction": "Open the project named Bench Board, report its board column names exactly in left-to-right order as shown, and do not modify any task.",
+      "skill": "s_412111",
+      "params": {},
+      "outputs": [
+        "project_name",
+        "project_id",
+        "board_heading",
+        "column_1",
+        "column_2",
+        "column_3",
+        "column_4",
+        "column_order_1",
+        "column_order_2",
+        "column_order_3",
+        "column_order_4"
+      ],
+      "recorded": {
+        "project_name": "Bench Board",
+        "project_id": "1",
+        "board_heading": "KB Bench Board",
+        "column_1": "Backlog",
+        "column_2": "Ready",
+        "column_3": "Work in progress",
+        "column_4": "Done",
+        "task_changes": "none — read-only navigation",
+        "column_order_1": "Backlog",
+        "column_order_2": "Ready",
+        "column_order_3": "Work in progress",
+        "column_order_4": "Done",
+        "url": "http://127.0.0.1:8085/?controller=BoardViewController&action=show&project_id=1"
+      },
+      "route": "http://127.0.0.1:8085/",
+      "outputEvidence": {
+        "project_name": {
+          "same": 1,
+          "differed": 0
+        },
+        "project_id": {
+          "same": 1,
+          "differed": 0
+        },
+        "board_heading": {
+          "same": 1,
+          "differed": 0
+        },
+        "column_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "column_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "column_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "column_4": {
+          "same": 1,
+          "differed": 0
+        },
+        "task_changes": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "column_order_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "column_order_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "column_order_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "column_order_4": {
+          "same": 1,
+          "differed": 0
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "03-create",
+      "instruction": "On Bench Board, create a task titled '{{runid}} Bench Task' with a description that includes the exact runid {{runid}}. Submit it and verify it appears on the board; report its displayed numeric task ID if visible.",
+      "skill": "s_fc3a70",
+      "params": {
+        "v1": "Bench Board",
+        "v3": "{{runid}} Bench Task",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "runid",
+        "task_title",
+        "task_id",
+        "column",
+        "swimlane",
+        "status",
+        "creator",
+        "description"
+      ],
+      "recorded": {
+        "runid": "fwkb46-luna-n1",
+        "task_title": "fwkb46-luna-n1 Bench Task",
+        "task_id": "4",
+        "displayed_task_id": "#4",
+        "column": "Backlog",
+        "position": "4",
+        "swimlane": "Default swimlane",
+        "status": "open",
+        "creator": "admin",
+        "description": "Bench task created by run fwkb46-luna-n1.",
+        "board_url": "http://127.0.0.1:8085/?controller=BoardViewController&action=show&project_id=1",
+        "board_task_ids_before_and_after": "#1, #2, #3, #4 (new task is #4, the last card in Backlog)",
+        "url": "http://127.0.0.1:8085/?controller=TaskViewController&action=show&task_id=4"
+      },
+      "route": "http://127.0.0.1:8085/",
+      "outputEvidence": {
+        "runid": {
+          "same": 0,
+          "differed": 1
+        },
+        "task_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "task_id": {
+          "same": 1,
+          "differed": 0
+        },
+        "displayed_task_id": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "column": {
+          "same": 1,
+          "differed": 0
+        },
+        "position": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "swimlane": {
+          "same": 1,
+          "differed": 0
+        },
+        "status": {
+          "same": 1,
+          "differed": 0
+        },
+        "creator": {
+          "same": 1,
+          "differed": 0
+        },
+        "description": {
+          "same": 0,
+          "differed": 1
+        },
+        "board_url": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "board_task_ids_before_and_after": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "04-verify",
+      "instruction": "Move the task '{{runid}} Bench Task' on Bench Board into the {{02-open.column_3}} column, then verify its task page or board placement shows that column.",
+      "skill": "s_eac2fd",
+      "params": {
+        "v1": "{{runid}} Bench Task",
+        "v3": "Bench Board",
+        "v4": "{{02-open.column_3}}",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "task_title",
+        "task_id",
+        "runid",
+        "target_column",
+        "card_data_column_id_after_drag",
+        "task_page_column_field",
+        "task_page_position_field",
+        "task_page_swimlane",
+        "method",
+        "other_tasks_untouched",
+        "task_summary_task_summar"
+      ],
+      "recorded": {
+        "task_title": "fwkb46-luna-n1 Bench Task",
+        "task_id": "4",
+        "runid": "fwkb46-luna-n1",
+        "target_column": "Work in progress",
+        "card_data_column_id_after_drag": "3",
+        "task_page_column_field": "Column: Work in progress",
+        "task_page_position_field": "Position: 1",
+        "task_page_swimlane": "Swimlane: Default swimlane",
+        "moved_timestamp": "09/29/2026 07:14",
+        "method": "drag-and-drop of the #4 card on the board (card .task-board[data-task-id=4] dropped into .board-swimlane-tasks-1 .board-task-list[data-column-id=3]); edit form had no column selector",
+        "other_tasks_untouched": "true — only task #4 was moved",
+        "task_summary_task_summar": "Moved: 09/29/2026 07:14"
+      },
+      "route": "http://127.0.0.1:8085/",
+      "outputEvidence": {
+        "task_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "task_id": {
+          "same": 1,
+          "differed": 0
+        },
+        "runid": {
+          "same": 0,
+          "differed": 1
+        },
+        "target_column": {
+          "same": 1,
+          "differed": 0
+        },
+        "card_data_column_id_after_drag": {
+          "same": 1,
+          "differed": 0
+        },
+        "task_page_column_field": {
+          "same": 1,
+          "differed": 0
+        },
+        "task_page_position_field": {
+          "same": 1,
+          "differed": 0
+        },
+        "task_page_swimlane": {
+          "same": 1,
+          "differed": 0
+        },
+        "moved_timestamp": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "method": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "other_tasks_untouched": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "task_summary_task_summar": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "05-add",
+      "instruction": "Add a comment to task '{{runid}} Bench Task' on Bench Board whose text includes the exact runid {{runid}}. Save it and verify the comment appears on the task page; report the exact comment text shown.",
+      "skill": "s_b0bb0d",
+      "params": {
+        "v1": "{{runid}} Bench Task",
+        "v3": "Bench Board",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "task_id",
+        "task_title",
+        "runid",
+        "comment_text",
+        "comment_text_full_block",
+        "comment_visibility",
+        "persisted_after_reload"
+      ],
+      "recorded": {
+        "task_id": "4",
+        "task_title": "fwkb46-luna-n1 Bench Task",
+        "runid": "fwkb46-luna-n1",
+        "comment_text": "Comment added by run fwkb46-luna-n1.",
+        "comment_text_full_block": "A\nadmin Created at: 09/29/2026 07:15 Updated at: 09/29/2026 07:15 Visibility: Standard users\n\nComment added by run fwkb46-luna-n1.",
+        "comment_author": "admin",
+        "comment_created_at": "09/29/2026 07:15",
+        "comment_updated_at": "09/29/2026 07:15",
+        "comment_visibility": "Standard users",
+        "comment_user_initial": "A",
+        "persisted_after_reload": "yes — comment still shown after a fresh page load",
+        "comment_id": "not_shown_in_ui"
+      },
+      "route": "http://127.0.0.1:8085/",
+      "outputEvidence": {
+        "task_id": {
+          "same": 1,
+          "differed": 0
+        },
+        "task_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "runid": {
+          "same": 0,
+          "differed": 1
+        },
+        "comment_text": {
+          "same": 0,
+          "differed": 1
+        },
+        "comment_text_full_block": {
+          "same": 0,
+          "differed": 1
+        },
+        "comment_author": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "comment_created_at": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "comment_updated_at": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "comment_visibility": {
+          "same": 1,
+          "differed": 0
+        },
+        "comment_user_initial": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "persisted_after_reload": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "comment_id": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        }
+      }
+    },
+    {
+      "id": "06-set",
+      "instruction": "Set the due date of task '{{runid}} Bench Task' on Bench Board to 2026-12-31, save, and verify the task page displays that due date exactly.",
+      "skill": "s_3df07b",
+      "params": {
+        "v1": "{{runid}} Bench Task",
+        "v3": "Bench Board",
+        "v4": "2026-12-31",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "task_id",
+        "task_title",
+        "due_date_requested",
+        "due_date_field_value",
+        "due_date_set_and_stored",
+        "priority",
+        "status",
+        "column",
+        "modified_timestamp",
+        "save_alert",
+        "due_date_field_value_2",
+        "task_summary_li_sidebar_",
+        "task_summary_no_bullet_l"
+      ],
+      "recorded": {
+        "task_id": "4",
+        "task_title": "fwkb46-luna-n1 Bench Task",
+        "due_date_requested": "2026-12-31",
+        "due_date_field_value": "12/31/2026 00:00",
+        "due_date_set_and_stored": "2026-12-31 (confirmed via the edit form's date_due field, which returned 12/31/2026 00:00 after setting date+time 00:00 through the app's own date/time picker)",
+        "due_date_as_displayed_on_task_page": "12/31/2026 00:00",
+        "displayed_format": "MM/DD/YYYY HH:MM (US format) — the app does not render the ISO string anywhere",
+        "iso_string_2026-12-31_found_live_dom": "false",
+        "iso_string_2026-12-31_found_in_server_response": "false",
+        "us_string_12_31_2026_found_live_dom": "true",
+        "priority": "0",
+        "status": "open",
+        "column": "Work in progress",
+        "modified_timestamp": "09/29/2026 07:18",
+        "save_alert": "Task updated successfully.",
+        "due_date_field_value_2": "12/31/2026 07:15",
+        "edit_form_due_field_afte": "12/31/2026 00:00",
+        "task_summary_li_sidebar_": "Edit the task",
+        "task_summary_no_bullet_l": "Due date: 12/31/2026 00:00"
+      },
+      "route": "http://127.0.0.1:8085/",
+      "outputEvidence": {
+        "task_id": {
+          "same": 1,
+          "differed": 0
+        },
+        "task_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "due_date_requested": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "due_date_field_value": {
+          "same": 1,
+          "differed": 0
+        },
+        "due_date_set_and_stored": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "due_date_as_displayed_on_task_page": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "displayed_format": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "iso_string_2026-12-31_found_live_dom": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "iso_string_2026-12-31_found_in_server_response": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "us_string_12_31_2026_found_live_dom": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "priority": {
+          "same": 1,
+          "differed": 0
+        },
+        "status": {
+          "same": 1,
+          "differed": 0
+        },
+        "column": {
+          "same": 1,
+          "differed": 0
+        },
+        "modified_timestamp": {
+          "same": 0,
+          "differed": 1
+        },
+        "save_alert": {
+          "same": 0,
+          "differed": 0,
+          "empty": 1
+        },
+        "due_date_field_value_2": {
+          "same": 0,
+          "differed": 1
+        },
+        "edit_form_due_field_afte": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "task_summary_li_sidebar_": {
+          "same": 1,
+          "differed": 0
+        },
+        "task_summary_no_bullet_l": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "session": "fwkb46-luna-n1",
+    "created": "2026-09-29T07:18:54.353Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "01-signin",
+      "outputs": [
+        "login_form_removed"
+      ]
+    },
+    {
+      "stepId": "02-open",
+      "outputs": [
+        "task_changes"
+      ]
+    },
+    {
+      "stepId": "03-create",
+      "outputs": [
+        "displayed_task_id",
+        "position",
+        "board_url",
+        "board_task_ids_before_and_after"
+      ]
+    },
+    {
+      "stepId": "04-verify",
+      "outputs": [
+        "moved_timestamp"
+      ]
+    },
+    {
+      "stepId": "05-add",
+      "outputs": [
+        "comment_author",
+        "comment_created_at",
+        "comment_updated_at",
+        "comment_user_initial",
+        "comment_id"
+      ]
+    },
+    {
+      "stepId": "06-set",
+      "outputs": [
+        "due_date_as_displayed_on_task_page",
+        "displayed_format",
+        "iso_string_2026-12-31_found_live_dom",
+        "iso_string_2026-12-31_found_in_server_response",
+        "us_string_12_31_2026_found_live_dom",
+        "edit_form_due_field_afte"
+      ]
+    }
+  ]
+}

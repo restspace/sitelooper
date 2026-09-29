@@ -1,0 +1,85 @@
+
+[sweep] run 1/3: fwkb46-luna-n1 (store: /home/user/sitelooper/bench/results/fwkb46-luna-skills)
+[harness] kanboard: defaulting APP_URL
+[harness] kanboard: defaulting APP_EMAIL
+[harness] kanboard: defaulting APP_PASSWORD
+[reset] kanboard: no leftover bench tasks
+[harness] kanboard responded 302 at http://127.0.0.1:8085/
+stopped: fwkb46-luna-n1
+  flow "fwkb46-luna" saved: 6 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwkb46-luna.json
+  warning: note: 01-signin no longer publishes login_form_removed — no replay reads it from the page and the recording showed no line to read
+  warning: note: 02-open no longer publishes task_changes — no replay reads it from the page and the recording showed no line to read
+  warning: warning: 03-create's instruction asks to report displayed_task_id, and no replay can publish it: nothing in its procedure reads it from the page, so export dropped it — re-record the step so the value is read, not only reported
+  warning: note: 03-create no longer publishes position, board_url, board_task_ids_before_and_after — no replay reads them from the page and the recording showed no line to read
+  warning: note: 04-verify no longer publishes moved_timestamp — no replay reads it from the page and the recording showed no line to read
+  warning: note: 05-add no longer publishes comment_author, comment_created_at, comment_updated_at, comment_user_initial, comment_id — no replay reads them from the page and the recording showed no line to read
+  warning: note: 06-set no longer publishes due_date_as_displayed_on_task_page, displayed_format, iso_string_2026-12-31_found_live_dom, iso_string_2026-12-31_found_in_server_response, us_string_12_31_2026_found_live_dom, edit_form_due_field_afte — no replay reads them from the page and the recording showed no line to read
+  warning: warning: 153 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.startUrl: "http://127.0.0.1:8085/" (output) in "http://127.0.0.1:8085/"
+  flow.steps[0].instruction: "http://127.0.0.1:8085/" (output) in "Sign in to Kanboard at http://127.0.0.1:8085/ using username admin and password exactly {{env:APP_PASSWORD}}. Verify successful sign-in and report what page is "
+  flow.steps[0].instruction: "admin" (output) in "Sign in to Kanboard at http://127.0.0.1:8085/ using username admin and password exactly {{env:APP_PASSWORD}}. Verify successful sign-in and report what page is "
+  flow.steps[0].params.v1: "http://127.0.0.1:8085/" (output) in "http://127.0.0.1:8085/"
+  flow.steps[0].params.v2: "admin" (output) in "admin"
+arm=sitelooper model=openai/gpt-6-luna runid=fwkb46-luna-n1 stop=completed
+turns=7 wall=356.8s
+commands=6 cmdTime=333.5s cmdBytes=8124 timeouts=0
+orchestrator in=5512 cw=0 cr=21083 out=667
+inner prompt=2241490 cached=2107008 completion=38889
+spend=$0.0511 maxUsd=3
+learn: A_n=0 replayed=0/6 full=0 repaired=0 compiled=6 variants=0
+-> /home/user/sitelooper/bench/results/fwkb46-luna-n1-sitelooper-result.json
+
+fwkb46-luna-n1: objectives passed 6/6
+  obj 1: PASS — all 4 column names reported (Backlog | Ready | Work in progress | Done)
+  obj 2: PASS — description includes runid=true
+  obj 3: PASS — column=Work in progress
+  obj 4: PASS — 1 comment(s), 1 carrying the runid
+  obj 5: PASS — date_due=2026-12-31, want 2026-12-31
+  obj 6: PASS — task id 4 reported
+
+[sweep] run 2/3: fwkb46-luna-n2 (replay flow fwkb46-luna, no orchestrator)
+[reset] kanboard: deleted 1 leftover bench task(s)
+
+fwkb46-luna-n2: objectives passed 6/6
+  obj 1: PASS — all 4 column names reported (Backlog | Ready | Work in progress | Done)
+  obj 2: PASS — description includes runid=true
+  obj 3: PASS — column=Work in progress
+  obj 4: PASS — 1 comment(s), 1 carrying the runid
+  obj 5: PASS — date_due=2026-12-31, want 2026-12-31
+  obj 6: PASS — task id 4 reported
+
+[sweep] run 3/3: fwkb46-luna-n3 (replay flow fwkb46-luna, no orchestrator)
+[reset] kanboard: deleted 1 leftover bench task(s)
+
+fwkb46-luna-n3: objectives passed 6/6
+  obj 1: PASS — all 4 column names reported (Backlog | Ready | Work in progress | Done)
+  obj 2: PASS — description includes runid=true
+  obj 3: PASS — column=Work in progress
+  obj 4: PASS — 1 comment(s), 1 carrying the runid
+  obj 5: PASS — date_due=2026-12-31, want 2026-12-31
+  obj 6: PASS — task id 4 reported
+
+Learning sweep fwkb46-luna (K=3)
+┌─────────┬───┬──────────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid            │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼──────────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwkb46-luna-n1' │ '6/6'    │ 'completed' │ 7     │ 6    │ 0.0511    │ 0   │ '0/6'        │ 357    │
+│ 1       │ 2 │ 'fwkb46-luna-n2' │ '6/6'    │ 'success'   │ 0     │ 6    │ 0         │ 1   │ '6/6 (flow)' │ 56     │
+│ 2       │ 3 │ 'fwkb46-luna-n3' │ '6/6'    │ 'success'   │ 0     │ 6    │ 0         │ 1   │ '6/6 (flow)' │ 55     │
+└─────────┴───┴──────────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:8085
+  s_3df07b  validated   28 steps  3/3 (100%)
+           Set the due date of task '{{v1}}' on {{v3}} to {{v4}}, save, and verify the task page displays that due date e…
+  s_412111  validated   14 steps  3/3 (100%)
+           Open the project named Bench Board, report its board column names exactly in left-to-right order as shown, and…
+  s_b0bb0d  validated   10 steps  3/3 (100%)
+           Add a comment to task '{{v1}}' on {{v3}} whose text includes the exact runid {{v2}}. Save it and verify the co…
+  s_c7bef3  validated    7 steps  3/3 (100%)
+           Sign in to Kanboard at {{v1}} using username {{v2}} and password exactly {{v3}}. Verify successful sign-in and…
+  s_eac2fd  validated   13 steps  3/3 (100%)
+           Move the task '{{v1}}' on {{v3}} into the {{v4}} column, then verify its task page or board placement shows th…
+  s_fc3a70  validated   13 steps  3/3 (100%)
+           On {{v1}}, create a task titled '{{v3}}' with a description that includes the exact runid {{v2}}. Submit it an…
+store: /home/user/sitelooper/bench/results/fwkb46-luna-skills
+
+summary: /home/user/sitelooper/bench/results/fwkb46-luna-sweep.json
