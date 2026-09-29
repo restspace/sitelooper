@@ -1,0 +1,480 @@
+{
+  "name": "fwgr88-luna",
+  "origin": "http://127.0.0.1:3000",
+  "startUrl": "http://127.0.0.1:3000/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-signin",
+      "instruction": "Sign in to Grafana at http://127.0.0.1:3000/ using username admin and password exactly {{env:APP_PASSWORD}}. Verify the signed-in page is loaded.",
+      "skill": "s_42e15b",
+      "params": {
+        "v1": "http://127.0.0.1:3000/",
+        "v2": "admin",
+        "v3": "{{env:APP_PASSWORD}}"
+      },
+      "outputs": [
+        "dismissed_prompt",
+        "login_username",
+        "signed_in_page_heading",
+        "signed_in_page_url",
+        "unrelated_page_alert"
+      ],
+      "recorded": {
+        "dismissed_prompt": "Update your password (default admin password in use) - skipped",
+        "login_username": "admin",
+        "post_login_alert": "Logged in",
+        "signed_in_indicator": "banner with Grafana logo, Search or jump to..., New, Help, Profile (User avatar), Breadcrumbs: Home",
+        "signed_in_page_heading": "Welcome to Grafana",
+        "signed_in_page_url": "http://127.0.0.1:3000/?from=now-6h&to=now&timezone=browser",
+        "unrelated_page_alert": "Error loading RSS feed (News panel) - pre-existing on home dashboard",
+        "url": "http://127.0.0.1:3000/?from=now-6h&to=now&timezone=browser"
+      },
+      "route": "http://127.0.0.1:3000/",
+      "outputEvidence": {
+        "dismissed_prompt": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "login_username": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "post_login_alert": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "signed_in_indicator": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "signed_in_page_heading": {
+          "same": 1,
+          "differed": 0
+        },
+        "signed_in_page_url": {
+          "same": 1,
+          "differed": 0
+        },
+        "unrelated_page_alert": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "02-open",
+      "instruction": "Open the provisioned dashboard named Service health and report the exact titles of all panels as shown on the page. Do not make edits.",
+      "skill": "s_7f159c",
+      "params": {
+        "v1": "Service health"
+      },
+      "outputs": [
+        "dashboard_folder",
+        "dashboard_name",
+        "panel_count",
+        "request_rate_panel_heading",
+        "error_count_panel_heading",
+        "h2_3",
+        "panel_titles_1",
+        "panel_titles_2",
+        "panel_titles_3"
+      ],
+      "recorded": {
+        "dashboard_folder": "Bench",
+        "dashboard_name": "Service Health",
+        "dashboard_uid": "bench-service-health",
+        "dashboard_url": "http://127.0.0.1:3000/d/bench-service-health/service-health?from=now-6h&to=now&timezone=browser",
+        "panel_count": "3",
+        "url_path": "/d/bench-service-health/service-health",
+        "request_rate_panel_heading": "Request rate",
+        "error_count_panel_heading": "Error count",
+        "h2_3": "Latency by endpoint",
+        "panel_titles_1": "Request rate",
+        "panel_titles_2": "Error count",
+        "panel_titles_3": "Latency by endpoint",
+        "url": "http://127.0.0.1:3000/d/bench-service-health/service-health?from=now-6h&to=now&timezone=browser"
+      },
+      "route": "http://127.0.0.1:3000/d/bench-service-health/service-health",
+      "outputEvidence": {
+        "dashboard_folder": {
+          "same": 1,
+          "differed": 0
+        },
+        "dashboard_name": {
+          "same": 1,
+          "differed": 0
+        },
+        "dashboard_uid": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "dashboard_url": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "panel_count": {
+          "same": 1,
+          "differed": 0
+        },
+        "url_path": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "request_rate_panel_heading": {
+          "same": 1,
+          "differed": 0
+        },
+        "error_count_panel_heading": {
+          "same": 1,
+          "differed": 0
+        },
+        "h2_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "panel_titles_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "panel_titles_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "panel_titles_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "03-create",
+      "instruction": "Create a new Grafana dashboard titled {{runid}} Bench Dashboard with one Stat panel titled {{runid}} Availability. Configure its query to use the TestData data source, save the dashboard, and verify the saved dashboard and panel title/data source.",
+      "skill": "s_23daa3",
+      "params": {
+        "v3": "{{runid}} Bench Dashboard",
+        "v4": "{{runid}} Availability",
+        "v1": "{{runid}}"
+      },
+      "outputs": [
+        "dashboard_title",
+        "dashboard_uid",
+        "dashboard_url_with_edit_panel",
+        "panel_data_source",
+        "panel_title",
+        "panel_value_rendered",
+        "panel_visualization_type",
+        "query_editor_row",
+        "unsaved_changes_indicator",
+        "opened_dashboard_breadcr",
+        "panel_title_on_page",
+        "query_row_title",
+        "panel_title_input_value",
+        "query_editor_row_text",
+        "saved_dashboard_url",
+        "ref",
+        "breadcrumb_after_save_1",
+        "breadcrumb_after_save_2",
+        "breadcrumb_after_save_3",
+        "breadcrumb_after_save_4"
+      ],
+      "recorded": {
+        "dashboard_title": "fwgr88-luna-n1 Bench Dashboard",
+        "dashboard_uid": "cfzqgrx88bda8c",
+        "dashboard_url": "http://127.0.0.1:3000/d/cfzqgrx88bda8c/fwgr88-luna-n1-bench-dashboard",
+        "dashboard_url_with_edit_panel": "http://127.0.0.1:3000/d/cfzqgrx88bda8c/fwgr88-luna-n1-bench-dashboard?from=now-6h&to=now&timezone=browser",
+        "panel_data_source": "TestData",
+        "panel_title": "fwgr88-luna-n1 Availability",
+        "panel_value_rendered": "14.4",
+        "panel_visualization_type": "Stat",
+        "query_editor_row": "A (TestData) - Scenario: Random Walk",
+        "unsaved_changes_indicator": "Discard panel changes button disabled (no unsaved changes)",
+        "opened_dashboard_breadcr": "fwgr88-luna-n1 Bench Dashboard",
+        "panel_title_on_page": "fwgr88-luna-n1 Availability",
+        "visualization_type": "Stat",
+        "query_row_title": "A",
+        "panel_title_input_value": "fwgr88-luna-n1 Availability",
+        "datasource_picker_placeh": "TestData",
+        "query_editor_row_text": "A\n(TestData)\nScenario\nRandom Walk\nAlias\nLabels\nSeries count\nStart value\nMin\nMax\nSpread\nNoise\nDrop (%)",
+        "saved_dashboard_url": "http://127.0.0.1:3000/d/cfzqgrx88bda8c/fwgr88-luna-n1-bench-dashboard?from=now-6h&to=now&timezone=browser&editPanel=1",
+        "ref": "fwgr88-luna-n1",
+        "breadcrumb_after_save_1": "Home",
+        "breadcrumb_after_save_2": "Dashboards",
+        "breadcrumb_after_save_3": "fwgr88-luna-n1 Bench Dashboard",
+        "breadcrumb_after_save_4": "Edit panel",
+        "url": "http://127.0.0.1:3000/d/cfzqgrx88bda8c/fwgr88-luna-n1-bench-dashboard?from=now-6h&to=now&timezone=browser&editPanel=1",
+        "url.p1": "cfzqgrx88bda8c",
+        "url.p2": "fwgr88-luna-n1-bench-dashboard"
+      },
+      "route": "http://127.0.0.1:3000/d/cfzqgrx88bda8c/:id"
+    },
+    {
+      "id": "04-add",
+      "instruction": "Add a Text panel titled {{runid}} Notes to the existing saved dashboard {{runid}} Bench Dashboard. Set its content to include the exact runid {{runid}}, apply it, explicitly save the dashboard, and verify the saved panel title and content.",
+      "skill": "s_db6d35",
+      "params": {
+        "v4": "{{runid}} Notes",
+        "v2": "{{runid}} Bench Dashboard",
+        "v1": "{{runid}}",
+        "v5": "{{03-create.url.p1}}",
+        "v6": "{{03-create.url.p2}}"
+      },
+      "outputs": [
+        "dashboard_title",
+        "dashboard_uid",
+        "new_panel_title",
+        "new_panel_content",
+        "runid_in_content",
+        "existing_panel_title",
+        "verification_method",
+        "dashboard_title_breadcru",
+        "text_panel_title",
+        "text_panel_content",
+        "stat_panel_title",
+        "saved_dashboard_url_afte",
+        "panel_titles_after_reload_1",
+        "panel_titles_after_reload_2"
+      ],
+      "recorded": {
+        "dashboard_title": "fwgr88-luna-n1 Bench Dashboard",
+        "dashboard_uid": "cfzqgrx88bda8c",
+        "dashboard_url": "http://127.0.0.1:3000/d/cfzqgrx88bda8c/fwgr88-luna-n1-bench-dashboard",
+        "new_panel_title": "fwgr88-luna-n1 Notes",
+        "new_panel_type": "Text",
+        "new_panel_content": "fwgr88-luna-n1",
+        "runid_in_content": "fwgr88-luna-n1",
+        "existing_panel_title": "fwgr88-luna-n1 Availability",
+        "existing_panel_type": "Stat",
+        "save_confirmation": "Dashboard saved",
+        "verification_method": "full page reload of the dashboard URL, then read of the live DOM headings/paragraphs",
+        "dashboard_title_breadcru": "fwgr88-luna-n1 Bench Dashboard",
+        "text_panel_title": "fwgr88-luna-n1 Notes",
+        "text_panel_content": "fwgr88-luna-n1",
+        "stat_panel_title": "fwgr88-luna-n1 Availability",
+        "saved_dashboard_url_afte": "http://127.0.0.1:3000/d/cfzqgrx88bda8c/fwgr88-luna-n1-bench-dashboard?from=now-6h&to=now&timezone=browser",
+        "panel_titles_after_reload_1": "fwgr88-luna-n1 Notes",
+        "panel_titles_after_reload_2": "fwgr88-luna-n1 Availability"
+      },
+      "route": "http://127.0.0.1:3000/d/cfzqgrx88bda8c/:id"
+    },
+    {
+      "id": "05-set",
+      "instruction": "Set the saved dashboard {{runid}} Bench Dashboard's tag to bench and its time range to the last 6 hours. When saving, ensure the Save dashboard dialog's 'Update default time range' checkbox is ticked so the time range persists. Explicitly save and verify both the tag and persisted default time range from the page/dashboard after reload.",
+      "skill": "s_7bf4f0",
+      "params": {
+        "v1": "{{runid}} Bench Dashboard",
+        "v4": "bench",
+        "v2": "{{runid}}",
+        "v5": "{{03-create.url.p1}}",
+        "v6": "{{03-create.url.p2}}"
+      },
+      "outputs": [
+        "dashboard_title",
+        "dashboard_uid",
+        "tag_applied",
+        "tag_verified_in_settings",
+        "tag_verified_in_model",
+        "model_time_object",
+        "time_picker_after_bare_url_reload",
+        "save_dialog_checkbox",
+        "dashboard_json_model_vis",
+        "dashboard_json_visible_t",
+        "persisted_tag_chip",
+        "json_last_line",
+        "json_line_minus_11",
+        "json_line_minus_10",
+        "json_line_minus_9",
+        "json_line_minus_8",
+        "json_tags_open",
+        "json_tags_value",
+        "json_tags_close",
+        "final_time_range_label",
+        "final_dashboard_url",
+        "notes_panel_heading_after_save",
+        "h2_2",
+        "ref",
+        "panels_after_save_1",
+        "panels_after_save_2"
+      ],
+      "recorded": {
+        "dashboard_title": "fwgr88-luna-n1 Bench Dashboard",
+        "dashboard_uid": "cfzqgrx88bda8c",
+        "dashboard_url": "http://127.0.0.1:3000/d/cfzqgrx88bda8c/fwgr88-luna-n1-bench-dashboard",
+        "dashboard_version": "3",
+        "tag_applied": "bench",
+        "tag_verified_in_settings": "chip rendered as button aria-label 'Remove \"bench\" tag' on a fresh load",
+        "tag_verified_in_model": "\"tags\": [ \"bench\" ]",
+        "default_time_range_persisted": "from now-6h to now",
+        "model_time_object": "\"time\": { \"from\": \"now-6h\", \"to\": \"now\" },",
+        "time_picker_after_bare_url_reload": "Time range selected: Last 6 hours",
+        "save_dialog_checkbox": "Update default time range - aria-checked/checked state confirmed [checked] before saving",
+        "save_confirmation_alert": "Dashboard saved",
+        "dashboard_json_model_vis": "},\n  \"timepicker\": {},\n  \"timezone\": \"browser\",\n  \"title\": \"fwgr88-luna-n1 Bench Dashboard\",\n  \"uid\": \"cfzqgrx88bda8c\",\n  \"version\": 3,\n  \"weekStart\": \"\"\n}",
+        "dashboard_json_visible_t": "]\n          }\n        },\n        \"overrides\": []\n      },\n      \"gridPos\": {\n        \"h\": 8,\n        \"w\": 12,\n        \"x\": 0,\n        \"y\": 8",
+        "persisted_tag_chip": "Remove \"bench\" tag",
+        "json_last_line": "}",
+        "json_line_minus_11": "\"time\": {",
+        "json_line_minus_10": "\"from\": \"now-6h\",",
+        "json_line_minus_9": "\"to\": \"now\"",
+        "json_line_minus_8": "},",
+        "json_tags_open": "\"tags\": [",
+        "json_tags_value": "\"bench\"",
+        "json_tags_close": "],",
+        "json_templating_close": "},",
+        "final_time_range_label": "Time range selected: Last 6 hours",
+        "final_dashboard_url": "http://127.0.0.1:3000/d/cfzqgrx88bda8c/fwgr88-luna-n1-bench-dashboard?from=now-6h&to=now&timezone=browser",
+        "notes_panel_heading_after_save": "fwgr88-luna-n1 Notes",
+        "h2_2": "fwgr88-luna-n1 Availability",
+        "ref": "fwgr88-luna-n1",
+        "ref_2": "now-6h",
+        "panels_after_save_1": "fwgr88-luna-n1 Notes",
+        "panels_after_save_2": "fwgr88-luna-n1 Availability"
+      },
+      "route": "http://127.0.0.1:3000/d/cfzqgrx88bda8c/:id"
+    },
+    {
+      "id": "06-set",
+      "instruction": "Set the dashboard {{runid}} Bench Dashboard auto-refresh interval to 1m, explicitly save the dashboard, and verify after reload that the auto-refresh setting is 1m. Report the dashboard's current browser page URL exactly as read from the address/page URL after verification.",
+      "skill": "s_e91216",
+      "params": {
+        "v1": "{{03-create.opened_dashboard_breadcr}}",
+        "v2": "{{runid}}",
+        "v4": "{{05-set.url.p1}}",
+        "v5": "{{05-set.url.p2}}"
+      },
+      "outputs": [
+        "dashboard_page_url_final",
+        "dashboard_title",
+        "dashboard_uid",
+        "autorefresh_setting",
+        "refresh_button_aria_label_after_reload",
+        "save_dialog_option_used",
+        "save_confirmation_alert",
+        "dashboard_json_model_head_snippet",
+        "browser_storage_check",
+        "prior_settings_still_applied",
+        "autorefresh_button_aria_",
+        "json_model_refresh_line",
+        "final_refresh_button_lab",
+        "notes_panel_heading_after_reload",
+        "h2_2",
+        "ref",
+        "panels_after_reload_1",
+        "panels_after_reload_2"
+      ],
+      "recorded": {
+        "dashboard_page_url_final": "http://127.0.0.1:3000/d/cfzqgrx88bda8c/fwgr88-luna-n1-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m",
+        "dashboard_title": "fwgr88-luna-n1 Bench Dashboard",
+        "dashboard_uid": "cfzqgrx88bda8c",
+        "dashboard_version": "4",
+        "autorefresh_setting": "1m",
+        "refresh_button_aria_label_after_reload": "Choose refresh time interval with current interval 1 minute selected",
+        "refresh_button_visible_text_after_reload": "1m",
+        "save_dialog_option_used": "Update default refresh value (Will make the current refresh the new default) - ticked, aria-checked confirmed [checked], dialog then showed tab 'Changes 1' with Save enabled",
+        "save_confirmation_alert": "Dashboard saved",
+        "model_refresh_field": "\"refresh\": \"1m\",",
+        "dashboard_json_model_head_snippet": "{\n  \"annotations\": {\n    \"list\": [\n      {\n        \"builtIn\": 1,\n        \"datasource\": {\n          \"type\": \"grafana\",\n          \"uid\": \"-- Grafana --\"\n        },\n        \"enable\": true,",
+        "browser_storage_check": "localStorage contains no refresh key (only grafana.dashboard.timepicker.history=[] and editor UI state), so refresh=1m is not coming from browser-local storage",
+        "prior_settings_still_applied": "tag bench, default time range now-6h to now",
+        "url_after_save": "http://127.0.0.1:3000/d/cfzqgrx88bda8c/fwgr88-luna-n1-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m",
+        "autorefresh_button_aria_": "Choose refresh time interval with current interval 1 minute selected",
+        "autorefresh_displayed_te": "1m",
+        "dashboard_page_url_after": "http://127.0.0.1:3000/d/cfzqgrx88bda8c/fwgr88-luna-n1-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m",
+        "json_model_refresh_line": "\"refresh\": \"1m\",",
+        "final_refresh_button_lab": "Choose refresh time interval with current interval 1 minute selected",
+        "notes_panel_heading_after_reload": "fwgr88-luna-n1 Notes",
+        "h2_2": "fwgr88-luna-n1 Availability",
+        "ref": "fwgr88-luna-n1",
+        "panels_after_reload_1": "fwgr88-luna-n1 Notes",
+        "panels_after_reload_2": "fwgr88-luna-n1 Availability",
+        "url": "http://127.0.0.1:3000/d/cfzqgrx88bda8c/fwgr88-luna-n1-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m"
+      },
+      "route": "http://127.0.0.1:3000/d/cfzqgrx88bda8c/:id"
+    }
+  ],
+  "provenance": {
+    "session": "fwgr88-luna-n1",
+    "created": "2026-09-29T17:06:12.610Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "01-signin",
+      "outputs": [
+        "post_login_alert",
+        "signed_in_indicator"
+      ]
+    },
+    {
+      "stepId": "02-open",
+      "outputs": [
+        "dashboard_uid",
+        "dashboard_url",
+        "url_path"
+      ]
+    },
+    {
+      "stepId": "03-create",
+      "outputs": [
+        "dashboard_url",
+        "visualization_type",
+        "datasource_picker_placeh"
+      ]
+    },
+    {
+      "stepId": "04-add",
+      "outputs": [
+        "dashboard_url",
+        "new_panel_type",
+        "existing_panel_type",
+        "save_confirmation"
+      ]
+    },
+    {
+      "stepId": "05-set",
+      "outputs": [
+        "dashboard_url",
+        "dashboard_version",
+        "default_time_range_persisted",
+        "save_confirmation_alert",
+        "json_templating_close",
+        "ref_2"
+      ]
+    },
+    {
+      "stepId": "06-set",
+      "outputs": [
+        "dashboard_version",
+        "refresh_button_visible_text_after_reload",
+        "model_refresh_field",
+        "url_after_save",
+        "autorefresh_displayed_te",
+        "dashboard_page_url_after"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,108 @@
+
+[sweep] run 1/3: fwgr88-luna-n1 (store: /home/user/sitelooper/bench/results/fwgr88-luna-skills)
+[harness] grafana: defaulting APP_URL
+[harness] grafana: defaulting APP_EMAIL
+[harness] grafana: defaulting APP_PASSWORD
+[reset] grafana: deleted leftover dashboard "Service Health" (400)
+[harness] grafana responded 302 at http://127.0.0.1:3000/
+stopped: fwgr88-luna-n1
+  flow "fwgr88-luna" saved: 6 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwgr88-luna.json
+  warning: note: 01-signin no longer publishes post_login_alert, signed_in_indicator — no replay reads them from the page and the recording showed no line to read
+  warning: note: 02-open no longer publishes dashboard_uid, dashboard_url, url_path — no replay reads them from the page and the recording showed no line to read
+  warning: note: 03-create no longer publishes dashboard_url, visualization_type, datasource_picker_placeh — no replay reads them from the page and the recording showed no line to read
+  warning: note: 04-add no longer publishes dashboard_url, new_panel_type, existing_panel_type, save_confirmation — no replay reads them from the page and the recording showed no line to read
+  warning: note: 05-set no longer publishes dashboard_url, dashboard_version, default_time_range_persisted, save_confirmation_alert, json_templating_close, ref_2 — no replay reads them from the page and the recording showed no line to read
+  warning: warning: 06-set's instruction asks to report dashboard_page_url_after, and no replay can publish it: nothing in its procedure reads it from the page, so export dropped it — re-record the step so the value is read, not only reported
+  warning: note: 06-set no longer publishes dashboard_version, refresh_button_visible_text_after_reload, model_refresh_field, url_after_save, autorefresh_displayed_te — no replay reads them from the page and the recording showed no line to read
+  warning: note: 06-set: added a read for save_confirmation_alert to s_c31e90 (page.getByRole('status', { name: 'Dashboard saved', exact: true }); seen on the instruction's own page)
+  warning: warning: 148 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[0].instruction: "admin" (output) in "Sign in to Grafana at http://127.0.0.1:3000/ using username admin and password exactly {{env:APP_PASSWORD}}. Verify the signed-in page is loaded."
+  flow.steps[0].params.v2: "admin" (output) in "admin"
+  flow.steps[1].route: "bench-service-health" (output) in "http://127.0.0.1:3000/d/bench-service-health/service-health"
+  flow.steps[2].instruction: "TestData" (output) in "Create a new Grafana dashboard titled {{runid}} Bench Dashboard with one Stat panel titled {{runid}} Availability. Configure its query to use the TestData data "
+  flow.steps[2].instruction: "Bench" (output) in "Create a new Grafana dashboard titled {{runid}} Bench Dashboard with one Stat panel titled {{runid}} Availability. Configure its query to use the TestData data "
+arm=sitelooper model=openai/gpt-6-luna runid=fwgr88-luna-n1 stop=completed
+turns=7 wall=671.3s
+commands=6 cmdTime=636.1s cmdBytes=14782 timeouts=0
+orchestrator in=7362 cw=0 cr=24572 out=896
+inner prompt=3831313 cached=3591680 completion=59306
+spend=$0.0838 maxUsd=3
+learn: A_n=0 replayed=0/6 full=0 repaired=0 compiled=6 variants=0
+-> /home/user/sitelooper/bench/results/fwgr88-luna-n1-sitelooper-result.json
+
+fwgr88-luna-n1: objectives passed 6/6
+  obj 1: PASS — all 3 provisioned titles reported
+  obj 2: PASS — type=stat, datasource ok=true
+  obj 3: PASS — type=text, content includes runid=true
+  obj 4: PASS — tags=["bench"], time=now-6h..now
+  obj 5: PASS — refresh="1m"
+  obj 6: PASS — uid cfzqgrx88bda8c reported
+
+[sweep] run 2/3: fwgr88-luna-n2 (replay flow fwgr88-luna, no orchestrator)
+[reset] grafana: deleted leftover dashboard "fwgr88-luna-n1 Bench Dashboard" (200)
+[reset] grafana: deleted leftover dashboard "Service Health" (400)
+[sweep] fwgr88-luna-n2: 2 drift ticket(s) → fwgr88-luna-n2-drift.json
+
+fwgr88-luna-n2: objectives passed 6/6
+  obj 1: PASS — all 3 provisioned titles reported
+  obj 2: PASS — type=stat, datasource ok=true
+  obj 3: PASS — type=text, content includes runid=true
+  obj 4: PASS — tags=["bench"], time=now-6h..now
+  obj 5: PASS — refresh="1m"
+  obj 6: PASS — uid bfzqhlg19iz9ca reported
+
+[sweep] run 3/3: fwgr88-luna-n3 (replay flow fwgr88-luna, no orchestrator)
+[reset] grafana: deleted leftover dashboard "fwgr88-luna-n2 Bench Dashboard" (200)
+[reset] grafana: deleted leftover dashboard "Service Health" (400)
+[sweep] fwgr88-luna-n3: 2 drift ticket(s) → fwgr88-luna-n3-drift.json
+
+fwgr88-luna-n3: objectives passed 6/6
+  obj 1: PASS — all 3 provisioned titles reported
+  obj 2: PASS — type=stat, datasource ok=true
+  obj 3: PASS — type=text, content includes runid=true
+  obj 4: PASS — tags=["bench"], time=now-6h..now
+  obj 5: PASS — refresh="1m"
+  obj 6: PASS — uid dfzqhxaicfls0b reported
+
+Learning sweep fwgr88-luna (K=3)
+┌─────────┬───┬──────────────────┬──────────┬─────────────┬───────┬──────┬───────────┬──────┬──────────────┬────────┐
+│ (index) │ n │ runid            │ verified │ stop        │ turns │ cmds │ total_usd │ A_n  │ replayed     │ wall_s │
+├─────────┼───┼──────────────────┼──────────┼─────────────┼───────┼──────┼───────────┼──────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwgr88-luna-n1' │ '6/6'    │ 'completed' │ 7     │ 6    │ 0.0838    │ 0    │ '0/6'        │ 671    │
+│ 1       │ 2 │ 'fwgr88-luna-n2' │ '6/6'    │ 'success'   │ 27    │ 6    │ 0.0145    │ 0.67 │ '6/6 (flow)' │ 216    │
+│ 2       │ 3 │ 'fwgr88-luna-n3' │ '6/6'    │ 'success'   │ 17    │ 6    │ 0.013     │ 0.83 │ '6/6 (flow)' │ 210    │
+└─────────┴───┴──────────────────┴──────────┴─────────────┴───────┴──────┴───────────┴──────┴──────────────┴────────┘
+http://127.0.0.1:3000
+  s_0077a1  validated    2 steps  3/3 (100%)
+           Open the provisioned dashboard named {{v1}} and report the exact titles of all panels as shown on the page. Do…
+  s_23daa3  validated    2 steps  3/3 (100%)
+           Create a new Grafana dashboard titled {{v3}} with one Stat panel titled {{v4}}. Configure its query to use the…
+  s_2cd8c7  validated   20 steps  3/3 (100%)
+           Create a new Grafana dashboard titled {{v3}} with one Stat panel titled {{v4}}. Configure its query to use the…
+  s_42e15b  validated    1 steps  3/3 (100%)
+           Sign in to Grafana at {{v1}} using username {{v2}} and password exactly {{v3}}. Verify the signed-in page is l…
+  s_4b2582  validated   12 steps  3/3 (100%)
+           Open the provisioned dashboard named {{v1}} and report the exact titles of all panels as shown on the page. Do…
+  s_4f113a  validated    4 steps  3/3 (100%)
+           Sign in to Grafana at {{v1}} using username {{v2}} and password exactly {{v3}}. Verify the signed-in page is l…
+  s_7bf4f0  demoted     64 steps  1/3 (33%)
+           Set the saved dashboard {{v1}}'s tag to {{v4}} and its time range to the last 6 hours. When saving, ensure the…
+  s_7f159c  validated    4 steps  3/3 (100%)
+           Open the provisioned dashboard named {{v1}} and report the exact titles of all panels as shown on the page. Do…
+  s_bbc1dd  validated    8 steps  3/3 (100%)
+           Create a new Grafana dashboard titled {{v3}} with one Stat panel titled {{v4}}. Configure its query to use the…
+  s_c31e90  demoted     34 steps  1/3 (33%)
+           Set the dashboard {{v1}} auto-refresh interval to 1m, explicitly save the dashboard, and verify after reload t…
+  s_db6d35  validated   20 steps  3/3 (100%)
+           Add a Text panel titled {{v4}} to the existing saved dashboard {{v2}}. Set its content to include the exact ru…
+  s_e417bf  validated    3 steps  3/3 (100%)
+           Sign in to Grafana at {{v1}} using username {{v2}} and password exactly {{v3}}. Verify the signed-in page is l…
+  s_e91216  validated   14 steps  2/2 (100%)  variant of s_c31e90
+           Set the dashboard {{v1}} auto-refresh interval to 1m, explicitly save the dashboard, and verify after reload t…
+  s_42b622  provisional 38 steps  1/1 (100%)  variant of s_7bf4f0
+           Set the saved dashboard {{v1}}'s tag to {{v3}} and its time range to the last 6 hours. When saving, ensure the…
+  s_b47c16  provisional 30 steps  1/1 (100%)  variant of s_7bf4f0
+           Set the saved dashboard {{v1}}'s tag to {{v4}} and its time range to the last 6 hours. When saving, ensure the…
+store: /home/user/sitelooper/bench/results/fwgr88-luna-skills
+
+summary: /home/user/sitelooper/bench/results/fwgr88-luna-sweep.json
