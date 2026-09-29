@@ -38,6 +38,7 @@ import path from 'node:path';
 import { loadRates, priceRun } from './pricing.mjs';
 import { APP_DEFAULTS } from './app-defaults.mjs';
 import { resetTarget } from './app-reset.mjs';
+import { resolveEnvRefs } from './env-refs.mjs';
 
 /**
  * Three arm SHAPES, because the incumbents are not the same kind of thing:
@@ -1458,7 +1459,21 @@ if (arm.kind === 'monolithic') {
             continue;
           }
         }
-        const r = await runCommand(segments[s]);
+        // agent-browser has no secret handling: resolve {{env:APP_PASSWORD}} in
+        // the command it runs (the logged command keeps the reference). The
+        // sitelooper arm resolves the reference itself, so it gets it verbatim.
+        let run = segments[s];
+        if (args.arm !== 'sitelooper') {
+          try {
+            run = resolveEnvRefs(run);
+          } catch (err) {
+            outs.push(`[harness] ${err.message}`);
+            lastCode = 1;
+            log({ k: 'refused', turn: turns, cmd: segments[s], why: err.message });
+            continue;
+          }
+        }
+        const r = await runCommand(run);
         const bytes = Buffer.byteLength(r.out, 'utf8');
         commands.push({ turn: turns, cmd: segments[s], ms: r.ms, bytes, code: r.code, killed: r.killed });
         // `out` is what the orchestrator actually saw. It goes through the same
