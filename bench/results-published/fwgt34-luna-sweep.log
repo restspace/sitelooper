@@ -1,0 +1,105 @@
+
+[sweep] run 1/3: fwgt34-luna-n1 (store: /home/user/sitelooper/bench/results/fwgt34-luna-skills)
+[harness] gitea: defaulting APP_URL
+[harness] gitea: defaulting APP_EMAIL
+[harness] gitea: defaulting APP_PASSWORD
+[reset] gitea: no leftover bench issues
+[harness] gitea responded 200 at http://127.0.0.1:8095/
+stopped: fwgt34-luna-n1
+  flow "fwgt34-luna" saved: 7 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwgt34-luna.json
+  warning: note: 04-set no longer publishes applied_label_count, label_update_url, bug_label, priority_high_label — no replay reads them from the page and the recording showed no line to read
+  warning: note: 05-verify no longer publishes assignee_update_url, labels_still_applied, assignee_hidden_value_2, assignees_after_reload, assignee_hidden_after_re — no replay reads them from the page and the recording showed no line to read
+  warning: note: 06-set no longer publishes milestone_update_url, milestone_hidden_value_2, milestone_hidden_after_r — no replay reads them from the page and the recording showed no line to read
+  warning: note: 07-add no longer publishes comment_author, comment_timestamp_displayed — no replay reads them from the page and the recording showed no line to read
+  warning: note: 05-verify: added a read for sidebar_assignees_text to s_6d8fa9 (page.getByRole('link', { name: 'bench-assignee (Bench Assignee)', exact: true }); seen on the next instruction's start page)
+  warning: note: 06-set: added a read for milestone to s_f040f6 (page.getByRole('link', { name: 'Bench Milestone', exact: true }); seen on the next instruction's start page)
+  warning: warning: 329 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.startUrl: "http://127.0.0.1:8095/" (output) in "http://127.0.0.1:8095/"
+  flow.steps[0].instruction: "http://127.0.0.1:8095/" (output) in "Sign in to Gitea at http://127.0.0.1:8095/ as username admin using the password text exactly {{env:APP_PASSWORD}}. Verify that I am signed in and report the res"
+  flow.steps[0].instruction: "admin" (output) in "Sign in to Gitea at http://127.0.0.1:8095/ as username admin using the password text exactly {{env:APP_PASSWORD}}. Verify that I am signed in and report the res"
+  flow.steps[0].params.v1: "http://127.0.0.1:8095/" (output) in "http://127.0.0.1:8095/"
+  flow.steps[0].params.v2: "admin" (output) in "admin"
+arm=sitelooper model=openai/gpt-6-luna runid=fwgt34-luna-n1 stop=completed
+turns=8 wall=324.1s
+commands=7 cmdTime=295.3s cmdBytes=8857 timeouts=0
+orchestrator in=5774 cw=0 cr=26623 out=845
+inner prompt=1878367 cached=1735808 completion=22606
+spend=$0.0418 maxUsd=3
+learn: A_n=0 replayed=0/7 full=0 repaired=0 compiled=7 variants=0
+-> /home/user/sitelooper/bench/results/fwgt34-luna-n1-sitelooper-result.json
+
+fwgt34-luna-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — #4, state=open, description includes runid=true
+  obj 3: PASS — labels=[bug, priority-high], want [bug, priority-high]
+  obj 4: PASS — assignees=[bench-assignee]
+  obj 5: PASS — milestone=Bench Milestone
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — issue #4 reported
+
+[sweep] run 2/3: fwgt34-luna-n2 (replay flow fwgt34-luna, no orchestrator)
+[reset] gitea: deleted 1 leftover bench issue(s)
+[sweep] fwgt34-luna-n2: 2 drift ticket(s) → fwgt34-luna-n2-drift.json
+
+fwgt34-luna-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — #5, state=open, description includes runid=true
+  obj 3: PASS — labels=[bug, priority-high], want [bug, priority-high]
+  obj 4: PASS — assignees=[bench-assignee]
+  obj 5: PASS — milestone=Bench Milestone
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — issue #5 reported
+
+[sweep] run 3/3: fwgt34-luna-n3 (replay flow fwgt34-luna, no orchestrator)
+[reset] gitea: deleted 1 leftover bench issue(s)
+[sweep] fwgt34-luna-n3: 2 drift ticket(s) → fwgt34-luna-n3-drift.json
+
+fwgt34-luna-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — #6, state=open, description includes runid=true
+  obj 3: PASS — labels=[bug, priority-high], want [bug, priority-high]
+  obj 4: PASS — assignees=[bench-assignee]
+  obj 5: PASS — milestone=Bench Milestone
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — issue #6 reported
+
+Learning sweep fwgt34-luna (K=3)
+┌─────────┬───┬──────────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid            │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼──────────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwgt34-luna-n1' │ '7/7'    │ 'completed' │ 8     │ 7    │ 0.0418    │ 0   │ '0/7'        │ 324    │
+│ 1       │ 2 │ 'fwgt34-luna-n2' │ '7/7'    │ 'success'   │ 0     │ 7    │ 0         │ 1   │ '7/7 (flow)' │ 75     │
+│ 2       │ 3 │ 'fwgt34-luna-n3' │ '7/7'    │ 'success'   │ 0     │ 7    │ 0         │ 1   │ '7/7 (flow)' │ 76     │
+└─────────┴───┴──────────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:8095
+  s_059553  validated    5 steps  3/3 (100%)
+           Sign in to Gitea at {{v1}} as username {{v2}} using the password text exactly {{v3}}. Verify that I am signed …
+  s_15b9e0  validated    2 steps  3/3 (100%)
+           Sign in to Gitea at {{v1}} as username {{v2}} using the password text exactly {{v3}}. Verify that I am signed …
+  s_2f3a9e  validated   14 steps  3/3 (100%)
+           In repository bench/bench-repo, find and report the exact titles of all open issues whose title starts with Se…
+  s_31450e  validated    5 steps  3/3 (100%)
+           Create an issue in bench/bench-repo titled exactly '{{v2}}' with a description that includes the exact runid {…
+  s_352e85  validated    3 steps  3/3 (100%)
+           Sign in to Gitea at {{v1}} as username {{v2}} using the password text exactly {{v3}}. Verify that I am signed …
+  s_521394  validated    1 steps  3/3 (100%)
+           In repository bench/bench-repo, find and report the exact titles of all open issues whose title starts with Se…
+  s_6d8fa9  validated   21 steps  3/3 (100%)
+           On issue #4 titled '{{v1}}' in bench/bench-repo, assign it to user bench-assignee through the sidebar picker. …
+  s_734c3c  validated    1 steps  3/3 (100%)
+           Create an issue in bench/bench-repo titled exactly '{{v2}}' with a description that includes the exact runid {…
+  s_7833f7  validated   16 steps  3/3 (100%)
+           On issue #4 titled '{{v1}}' in bench/bench-repo, set its labels to exactly bug and priority-high (no other lab…
+  s_8bdfa3  validated    3 steps  3/3 (100%)
+           On issue #4 titled '{{v1}}' in {{v3}}/{{v4}}, add a comment whose text includes the exact runid {{v2}}. Submit…
+  s_bdea28  validated    2 steps  3/3 (100%)
+           On issue #4 titled '{{v1}}' in {{v3}}/{{v4}}, add a comment whose text includes the exact runid {{v2}}. Submit…
+  s_c566c9  validated    1 steps  3/3 (100%)
+           In repository bench/bench-repo, find and report the exact titles of all open issues whose title starts with Se…
+  s_cb61ee  validated    6 steps  3/3 (100%)
+           Create an issue in bench/bench-repo titled exactly '{{v2}}' with a description that includes the exact runid {…
+  s_f040f6  validated   15 steps  3/3 (100%)
+           On issue #4 titled '{{v1}}' in bench/bench-repo, set the milestone to 'Bench Milestone' using the sidebar pick…
+store: /home/user/sitelooper/bench/results/fwgt34-luna-skills
+
+summary: /home/user/sitelooper/bench/results/fwgt34-luna-sweep.json

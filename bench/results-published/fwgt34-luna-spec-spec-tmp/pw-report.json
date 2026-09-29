@@ -1,0 +1,188 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwgt34-luna-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwgt34-luna-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwgt34-luna-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/bench/results/fwgt34-luna-spec-spec-tmp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwgt34-luna-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwgt34-luna.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwgt34-luna-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwgt34-luna.spec.ts",
+      "file": "fwgt34-luna.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwgt34-luna",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 57228,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper step] 01-signin\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-find\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-create\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-set\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 05-verify s_6d8fa9/7: read 'assignees_sidebar_text' returned 'Assignees\nClear assignees\n  admin\n  bench-assignee\n(Bench As…' from a control this step set, and nothing committed it since — it shows the control, however the app formats it, not what the app stored; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper drift] 05-verify s_6d8fa9/20 target: primary locator('#issue-4 > div > div:nth-of-type(2) > div:nth-of-type(1) > p') missed; used #2 locator('[data-sitelooper-point=\"510,316\"]') (#1 absent)\n"
+                    },
+                    {
+                      "text": "[sitelooper skip] 05-verify s_6d8fa9/21 target: no locator recorded — value left empty\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 05-verify\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 06-set\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 07-add\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-signin: Sign in to Gitea at http://127.0.0.1:8095/ as username admin using the password text exactly {{env:APP_PASSWORD}}. Verify that I am signed in and report the resulting page/user.",
+                      "duration": 6443
+                    },
+                    {
+                      "title": "02-find: In repository bench/bench-repo, find and report the exact titles of all open issues whose title starts with Seed:. Do not edit any issue.",
+                      "duration": 7311
+                    },
+                    {
+                      "title": "03-create: Create an issue in bench/bench-repo titled exactly '{{runid}} Bench Issue' with a description that includes the exact runid {{runid}}. Submit it and verify the created issue number as displayed (#number) and title.",
+                      "duration": 10696
+                    },
+                    {
+                      "title": "04-set: On issue {{03-create.issue_number}} titled '{{runid}} Bench Issue' in bench/bench-repo, set its labels to exactly bug and priority-high (no other labels). Ensure each picker selection is applied and verify both labels are visibly applied to the issue.",
+                      "duration": 9163
+                    },
+                    {
+                      "title": "05-verify: On issue {{03-create.issue_number}} titled '{{runid}} Bench Issue' in bench/bench-repo, assign it to user bench-assignee through the sidebar picker. Verify the picker has applied and the sidebar visibly shows bench-assignee.",
+                      "duration": 15827
+                    },
+                    {
+                      "title": "06-set: On issue {{03-create.issue_number}} titled '{{runid}} Bench Issue' in bench/bench-repo, set the milestone to 'Bench Milestone' using the sidebar picker. Verify the choice is applied and still displayed after reload.",
+                      "duration": 2819
+                    },
+                    {
+                      "title": "07-add: On issue {{03-create.issue_number}} titled '{{runid}} Bench Issue' in bench/bench-repo, add a comment whose text includes the exact runid {{runid}}. Submit it and verify the comment appears on the issue page.",
+                      "duration": 4154
+                    }
+                  ],
+                  "startTime": "2026-09-29T17:03:00.140Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": "W3NpdGVsb29wZXIgZHJpZnRdIDA1LXZlcmlmeSBzXzZkOGZhOS8yMCB0YXJnZXQ6IHByaW1hcnkgbG9jYXRvcignI2lzc3VlLTQgPiBkaXYgPiBkaXY6bnRoLW9mLXR5cGUoMikgPiBkaXY6bnRoLW9mLXR5cGUoMSkgPiBwJykgbWlzc2VkOyB1c2VkICMyIGxvY2F0b3IoJ1tkYXRhLXNpdGVsb29wZXItcG9pbnQ9IjUxMCwzMTYiXScpICgjMSBhYnNlbnQp"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "60a4e04a7a0570b39725-cccd07209b6c90524738",
+          "file": "fwgt34-luna.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-29T17:02:57.964Z",
+    "duration": 59711.856999999996,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}
