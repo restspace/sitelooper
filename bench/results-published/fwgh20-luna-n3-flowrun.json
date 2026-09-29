@@ -1,0 +1,116 @@
+{
+  "flow": "fwgh20-luna",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_666169; observed signed_in_user_name=Bench Admin, signed_in_user_email=admin@bench.local, landing_page_heading=Analytics.",
+      "values": {
+        "signed_in_user_name": "Bench Admin",
+        "signed_in_user_email": "admin@bench.local",
+        "landing_page_heading": "Analytics"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "9/9",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-find",
+      "status": "success",
+      "summary": "(filter: type=published)",
+      "values": {
+        "posts_page_url": "http://127.0.0.1:8099/ghost/#/posts?type=published",
+        "published_post_title_1": "Seed: Welcome to the bench",
+        "published_post_title_2": "Seed: Release notes for September",
+        "published_post_title_3": "Seed: House style guide",
+        "published_seed_post_titles_1": "Seed: Welcome to the bench",
+        "published_seed_post_titles_2": "Seed: Release notes for September",
+        "published_seed_post_titles_3": "Seed: House style guide",
+        "filter": "Published posts"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "10/10",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_917dd1: step 9: read 'status_shown_per_row' returned a value the skill itself set/selected ('Published') — confirms the control, not persistence; dropped from the report's confident values"
+      ],
+      "unreported": [
+        "status_shown_per_row"
+      ]
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "Slug shown in settings: fwgh20-luna-n3-bench-post.",
+      "values": {
+        "post_id": "6abc451feb4dac0001869217",
+        "public_post_url": "http://127.0.0.1:8099/fwgh20-luna-n3-bench-post/",
+        "publish_time_field": "00:00",
+        "author": "Bench Admin",
+        "publish_timezone_label": "UTC",
+        "slug": "fwgh20-luna-n3-bench-post",
+        "tag": "Bench News",
+        "visibility": "Public",
+        "status": "Published"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "26/26",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_39e6bc: step 2: read 'publish_date_field' returned a value the skill itself set/selected ('2026-09-01') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_39e6bc: step 5: read 'excerpt' returned a value the skill itself set/selected ('Custom excerpt for fwgh20-luna-n3 bench verification.') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_39e6bc: step 7: read 'saved_title' returned a value the skill itself set/selected ('fwgh20-luna-n3 Bench Post') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_39e6bc: step 11: primary locator did not resolve; used fallback #2 page.locator('div:nth-of-type(1) > div > div:nth-of-type(1) > div > p > span')",
+        "s_39e6bc: step 11: read 'body_paragraph' returned a value the skill itself set/selected ('fwgh20-luna-n3') — confirms the control, not persistence; dropped from the report's confident values"
+      ],
+      "unreported": [
+        "body_paragraph",
+        "publish_date_field",
+        "saved_title",
+        "publish_date"
+      ]
+    }
+  ],
+  "passed": 3,
+  "total": 3,
+  "repinned": 0,
+  "drift": 1,
+  "driftTickets": [
+    {
+      "flow": "fwgh20-luna",
+      "step": "03-create",
+      "skill": "s_39e6bc",
+      "atStep": "11",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.getByText('fwgh20-luna-n3', { exact: true })",
+      "fallbackUsed": "page.locator('div:nth-of-type(1) > div > div:nth-of-type(1) > div > p > span')",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8099/ghost/#/editor/post/:id/",
+      "pageUrl": "http://127.0.0.1:8099/ghost/#/editor/post/6abc451feb4dac0001869217/"
+    }
+  ],
+  "wallMs": 45494,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "cachedTokens": 0
+  },
+  "usageByModel": {},
+  "servedByModel": {},
+  "recoveryModel": "openai/gpt-6-luna",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

@@ -1,0 +1,304 @@
+{
+  "name": "fwgh20-luna",
+  "origin": "http://127.0.0.1:8099",
+  "startUrl": "http://127.0.0.1:8099/ghost/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-signin",
+      "instruction": "Sign in to Ghost admin at http://127.0.0.1:8099/ghost/ using email admin@bench.local and password exactly {{env:APP_PASSWORD}}. Verify that the admin interface is signed in and report the visible page.",
+      "skill": "s_ab9a6e",
+      "params": {
+        "v1": "http://127.0.0.1:8099/ghost/",
+        "v2": "admin@bench.local",
+        "v3": "{{env:APP_PASSWORD}}"
+      },
+      "outputs": [
+        "signed_in_user_name",
+        "signed_in_user_email",
+        "landing_page_heading"
+      ],
+      "recorded": {
+        "signed_in_user_name": "Bench Admin",
+        "signed_in_user_email": "admin@bench.local",
+        "landing_page_heading": "Analytics",
+        "sidebar_items": "Analytics, Network, View site, Posts, Drafts, Scheduled, Published, Pages, Tags, Members, Comments, Settings, Help",
+        "url": "http://127.0.0.1:8099/ghost/#/analytics"
+      },
+      "route": "http://127.0.0.1:8099/ghost/#/analytics",
+      "outputEvidence": {
+        "signed_in_user_name": {
+          "same": 1,
+          "differed": 0
+        },
+        "signed_in_user_email": {
+          "same": 1,
+          "differed": 0
+        },
+        "landing_page_heading": {
+          "same": 1,
+          "differed": 0
+        },
+        "sidebar_items": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "02-find",
+      "instruction": "In Ghost admin, find and report the exact titles of all published posts whose title starts with 'Seed:'. Do not edit or publish anything; verify they are published.",
+      "skill": "s_414480",
+      "params": {},
+      "outputs": [
+        "posts_page_url",
+        "status_shown_per_row",
+        "filter",
+        "published_post_title_1",
+        "published_post_title_2",
+        "published_post_title_3",
+        "published_seed_post_titles_1",
+        "published_seed_post_titles_2",
+        "published_seed_post_titles_3"
+      ],
+      "recorded": {
+        "posts_page_url": "http://127.0.0.1:8099/ghost/#/posts?type=published",
+        "post_count": "3",
+        "status_shown_per_row": "Published",
+        "filter": "Published posts",
+        "post_ids": "6abc4436eb4dac00018691e3, 6abc4436eb4dac00018691e8, 6abc4436eb4dac00018691ed",
+        "published_post_title_1": "Seed: Welcome to the bench",
+        "published_post_title_2": "Seed: Release notes for September",
+        "published_post_title_3": "Seed: House style guide",
+        "published_seed_post_titles_1": "Seed: Welcome to the bench",
+        "published_seed_post_titles_2": "Seed: Release notes for September",
+        "published_seed_post_titles_3": "Seed: House style guide",
+        "url": "http://127.0.0.1:8099/ghost/#/posts?type=published"
+      },
+      "route": "http://127.0.0.1:8099/ghost/#/posts",
+      "outputEvidence": {
+        "posts_page_url": {
+          "same": 1,
+          "differed": 0
+        },
+        "post_count": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "status_shown_per_row": {
+          "same": 1,
+          "differed": 0
+        },
+        "filter": {
+          "same": 1,
+          "differed": 0
+        },
+        "post_ids": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "published_post_title_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "published_post_title_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "published_post_title_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "published_seed_post_titles_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "published_seed_post_titles_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "published_seed_post_titles_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "03-create",
+      "instruction": "Create and publish one public Ghost post titled '{{runid}} Bench Post'. Its body must contain exactly one paragraph that includes the text '{{runid}}'. Set its only tag by selecting the existing suggested tag 'Bench News' (not Bench Newsletter and do not create a tag). In post settings set a custom excerpt including '{{runid}}' and obtain/report the exact URL slug shown in settings. Set the publish date to 2026-09-01, but ensure the post is published now and public rather than left draft or scheduled; complete Ghost's final publish confirmation flow. Verify and report saved title, body paragraph, sole tag, excerpt, slug, public visibility/status, and publish date.",
+      "skill": "s_6f1a30",
+      "params": {
+        "v2": "{{runid}} Bench Post",
+        "v1": "{{runid}}",
+        "v3": "2026-09-01"
+      },
+      "outputs": [
+        "author",
+        "body_paragraph",
+        "excerpt",
+        "post_id",
+        "public_post_url",
+        "publish_confirmation_message",
+        "publish_date_field",
+        "publish_time_field",
+        "publish_timezone_label",
+        "saved_title",
+        "slug",
+        "status",
+        "tag",
+        "visibility",
+        "publish_date"
+      ],
+      "recorded": {
+        "author": "Bench Admin",
+        "body_paragraph": "fwgh20-luna-n1",
+        "excerpt": "Custom excerpt for fwgh20-luna-n1 bench verification.",
+        "post_id": "6abc4490eb4dac00018691f7",
+        "public_post_url": "http://127.0.0.1:8099/fwgh20-luna-n1-bench-post/",
+        "public_url_http_status": "200",
+        "publish_confirmation_message": "Boom! It's out there. That's 4 posts published.",
+        "publish_date_field": "2026-09-01",
+        "publish_time_field": "00:00",
+        "publish_timezone_label": "UTC",
+        "saved_title": "fwgh20-luna-n1 Bench Post",
+        "slug": "fwgh20-luna-n1-bench-post",
+        "status": "Published",
+        "tag": "Bench News",
+        "tag_count": "1",
+        "visibility": "Public",
+        "publish_date": "2026-09-01 00:00 UTC",
+        "url": "http://127.0.0.1:8099/ghost/#/editor/post/6abc4490eb4dac00018691f7/",
+        "url.h2": "6abc4490eb4dac00018691f7"
+      },
+      "route": "http://127.0.0.1:8099/ghost/#/editor/post/:id/",
+      "outputEvidence": {
+        "author": {
+          "same": 1,
+          "differed": 0
+        },
+        "body_paragraph": {
+          "same": 0,
+          "differed": 1
+        },
+        "excerpt": {
+          "same": 0,
+          "differed": 1
+        },
+        "post_id": {
+          "same": 0,
+          "differed": 1
+        },
+        "public_post_url": {
+          "same": 0,
+          "differed": 1
+        },
+        "public_url_http_status": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "publish_confirmation_message": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "publish_date_field": {
+          "same": 1,
+          "differed": 0
+        },
+        "publish_time_field": {
+          "same": 1,
+          "differed": 0
+        },
+        "publish_timezone_label": {
+          "same": 1,
+          "differed": 0
+        },
+        "saved_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "slug": {
+          "same": 0,
+          "differed": 1
+        },
+        "status": {
+          "same": 1,
+          "differed": 0
+        },
+        "tag": {
+          "same": 1,
+          "differed": 0
+        },
+        "tag_count": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "visibility": {
+          "same": 1,
+          "differed": 0
+        },
+        "publish_date": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        },
+        "url.h2": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "session": "fwgh20-luna-n1",
+    "created": "2026-09-29T23:08:12.478Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "01-signin",
+      "outputs": [
+        "sidebar_items"
+      ]
+    },
+    {
+      "stepId": "02-find",
+      "outputs": [
+        "post_count",
+        "post_ids"
+      ]
+    },
+    {
+      "stepId": "03-create",
+      "outputs": [
+        "public_url_http_status",
+        "tag_count"
+      ]
+    }
+  ]
+}

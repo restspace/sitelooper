@@ -1,0 +1,95 @@
+
+[sweep] run 1/3: fwgh20-luna-n1 (store: /home/user/sitelooper/bench/results/fwgh20-luna-skills)
+[harness] ghost: defaulting APP_URL
+[harness] ghost: defaulting APP_EMAIL
+[harness] ghost: defaulting APP_PASSWORD
+[reset] ghost: no posts to delete
+[harness] ghost responded 200 at http://127.0.0.1:8099/
+stopped: fwgh20-luna-n1
+  flow "fwgh20-luna" saved: 3 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwgh20-luna.json
+  warning: note: 01-signin no longer publishes sidebar_items — no replay reads it from the page and the recording showed no line to read
+  warning: note: 02-find no longer publishes post_count, post_ids — no replay reads them from the page and the recording showed no line to read
+  warning: note: 03-create no longer publishes public_url_http_status, tag_count — no replay reads them from the page and the recording showed no line to read
+  warning: note: 02-find: added a read for status_shown_per_row to s_917dd1 (page.getByRole('link', { name: 'Published', exact: true }); seen on the next instruction's start page)
+  warning: warning: 53 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[0].instruction: "admin@bench.local" (output) in "Sign in to Ghost admin at http://127.0.0.1:8099/ghost/ using email admin@bench.local and password exactly {{env:APP_PASSWORD}}. Verify that the admin interface "
+  flow.steps[0].params.v2: "admin@bench.local" (output) in "admin@bench.local"
+  flow.steps[2].instruction: "2026-09-01" (output) in "Create and publish one public Ghost post titled '{{runid}} Bench Post'. Its body must contain exactly one paragraph that includes the text '{{runid}}'. Set its "
+  flow.steps[2].instruction: "Bench News" (output) in "Create and publish one public Ghost post titled '{{runid}} Bench Post'. Its body must contain exactly one paragraph that includes the text '{{runid}}'. Set its "
+  flow.steps[2].params.v3: "2026-09-01" (output) in "2026-09-01"
+arm=sitelooper model=openai/gpt-6-luna runid=fwgh20-luna-n1 stop=completed
+turns=4 wall=141.7s
+commands=3 cmdTime=128.0s cmdBytes=3444 timeouts=0
+orchestrator in=3946 cw=0 cr=8688 out=535
+inner prompt=591929 cached=545536 completion=10157
+spend=$0.0155 maxUsd=3
+learn: A_n=0 replayed=0/3 full=0 repaired=0 compiled=3 variants=0
+-> /home/user/sitelooper/bench/results/fwgh20-luna-n1-sitelooper-result.json
+
+fwgh20-luna-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — fwgh20-luna-n1-bench-post, body includes runid=true
+  obj 3: PASS — tags=Bench News (bench-news), want only the seeded Bench News (bench-news)
+  obj 4: PASS — custom excerpt="Custom excerpt for fwgh20-luna-n1 bench verification."
+  obj 5: PASS — status=published, visibility=public
+  obj 6: PASS — published_at=2026-09-01T00:00:00.000Z, want 2026-09-01
+  obj 7: PASS — slug fwgh20-luna-n1-bench-post reported
+
+[sweep] run 2/3: fwgh20-luna-n2 (replay flow fwgh20-luna, no orchestrator)
+[reset] ghost: deleted 1 post(s) (earlier runs' and non-seed)
+[sweep] fwgh20-luna-n2: 1 drift ticket(s) → fwgh20-luna-n2-drift.json
+
+fwgh20-luna-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — fwgh20-luna-n2-bench-post, body includes runid=true
+  obj 3: PASS — tags=Bench News (bench-news), want only the seeded Bench News (bench-news)
+  obj 4: PASS — custom excerpt="Custom excerpt for fwgh20-luna-n2 bench verification."
+  obj 5: PASS — status=published, visibility=public
+  obj 6: PASS — published_at=2026-09-01T00:00:00.000Z, want 2026-09-01
+  obj 7: PASS — slug fwgh20-luna-n2-bench-post reported
+
+[sweep] run 3/3: fwgh20-luna-n3 (replay flow fwgh20-luna, no orchestrator)
+[reset] ghost: deleted 1 post(s) (earlier runs' and non-seed)
+[sweep] fwgh20-luna-n3: 1 drift ticket(s) → fwgh20-luna-n3-drift.json
+
+fwgh20-luna-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — fwgh20-luna-n3-bench-post, body includes runid=true
+  obj 3: PASS — tags=Bench News (bench-news), want only the seeded Bench News (bench-news)
+  obj 4: PASS — custom excerpt="Custom excerpt for fwgh20-luna-n3 bench verification."
+  obj 5: PASS — status=published, visibility=public
+  obj 6: PASS — published_at=2026-09-01T00:00:00.000Z, want 2026-09-01
+  obj 7: PASS — slug fwgh20-luna-n3-bench-post reported
+
+Learning sweep fwgh20-luna (K=3)
+┌─────────┬───┬──────────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid            │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼──────────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwgh20-luna-n1' │ '7/7'    │ 'completed' │ 4     │ 3    │ 0.0155    │ 0   │ '0/3'        │ 142    │
+│ 1       │ 2 │ 'fwgh20-luna-n2' │ '7/7'    │ 'success'   │ 0     │ 3    │ 0         │ 1   │ '3/3 (flow)' │ 46     │
+│ 2       │ 3 │ 'fwgh20-luna-n3' │ '7/7'    │ 'success'   │ 0     │ 3    │ 0         │ 1   │ '3/3 (flow)' │ 45     │
+└─────────┴───┴──────────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:8099
+  s_39e6bc  validated   12 steps  3/3 (100%)
+           Create and publish one public Ghost post titled '{{v2}}'. Its body must contain exactly one paragraph that inc…
+  s_3b9c81  validated    5 steps  3/3 (100%)
+           Sign in to Ghost admin at {{v1}} using email {{v2}} and password exactly {{v3}}. Verify that the admin interfa…
+  s_3c19b7  validated    2 steps  3/3 (100%)
+           Create and publish one public Ghost post titled '{{v2}}'. Its body must contain exactly one paragraph that inc…
+  s_414480  validated    1 steps  3/3 (100%)
+           In Ghost admin, find and report the exact titles of all published posts whose title starts with 'Seed:'. Do no…
+  s_666169  validated    3 steps  3/3 (100%)
+           Sign in to Ghost admin at {{v1}} using email {{v2}} and password exactly {{v3}}. Verify that the admin interfa…
+  s_6f1a30  validated    1 steps  3/3 (100%)
+           Create and publish one public Ghost post titled '{{v2}}'. Its body must contain exactly one paragraph that inc…
+  s_77bb0a  validated    2 steps  3/3 (100%)
+           Create and publish one public Ghost post titled '{{v2}}'. Its body must contain exactly one paragraph that inc…
+  s_917dd1  validated    9 steps  3/3 (100%)
+           In Ghost admin, find and report the exact titles of all published posts whose title starts with 'Seed:'. Do no…
+  s_9bdf6e  validated    9 steps  3/3 (100%)
+           Create and publish one public Ghost post titled '{{v2}}'. Its body must contain exactly one paragraph that inc…
+  s_ab9a6e  validated    1 steps  3/3 (100%)
+           Sign in to Ghost admin at {{v1}} using email {{v2}} and password exactly {{v3}}. Verify that the admin interfa…
+store: /home/user/sitelooper/bench/results/fwgh20-luna-skills
+
+summary: /home/user/sitelooper/bench/results/fwgh20-luna-sweep.json
