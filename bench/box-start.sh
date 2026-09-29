@@ -17,6 +17,7 @@ else
   pgrep -f bench/app/server.mjs >/dev/null && exit 0
   args=(--with-arm-b)
 fi
-bench/cloud-setup.sh "${args[@]}" > /tmp/session-start.log 2>&1
+setsid -w bench/cloud-setup.sh "${args[@]}" > /tmp/session-start.log 2>&1 < /dev/null
 echo "EXIT $?" >> /tmp/session-start.log
+{ echo "--- session-start"; tail -5 /tmp/session-start.log; docker ps --format '{{.Names}}' 2>&1; } >> /tmp/setup.log
 exit 0
