@@ -1,0 +1,141 @@
+{
+  "flow": "fwsi31-luna",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_dfe9e8; observed page_title=Dashboard :: Bench Assets, success_alert=Success: \n×\nYou have successfully logged in., signed_in_user=Bench Admin.",
+      "values": {
+        "page_title": "Dashboard :: Bench Assets",
+        "success_alert": "Success: \n×\nYou have successfully logged in.",
+        "signed_in_user": "Bench Admin"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "7/7",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-find",
+      "status": "success",
+      "summary": "Replayed stored procedure s_29aac5; observed asset_1_name=Seed: Reception Laptop, asset_1_tag=SEED-0001, asset_2_name=Seed: Training Laptop, asset_2_tag=SEED-0002, asset_3_name=Seed: Spare Laptop, asset_3_tag=SEED-0003, assets_total_rows=3.",
+      "values": {
+        "asset_1_name": "Seed: Reception Laptop",
+        "asset_1_tag": "SEED-0001",
+        "asset_2_name": "Seed: Training Laptop",
+        "asset_2_tag": "SEED-0002",
+        "asset_3_name": "Seed: Spare Laptop",
+        "asset_3_tag": "SEED-0003",
+        "assets_total_rows": "3"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "8/8",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_f1c795; observed asset_name_prefix=fwsi31-luna-n2, model=Bench Laptop Model, heading_shown=Assets  fwsi31-luna-n2 Bench Asset #BA-00005 - Bench Laptop Model, status=Ready to Deploy, asset_name=fwsi31-luna-n2 Bench Asset, assigned_asset_tag=BA-00005, asset_model_link=Bench Laptop Model, asset_status=Ready to Deploy.",
+      "values": {
+        "asset_name_prefix": "fwsi31-luna-n2",
+        "model": "Bench Laptop Model",
+        "heading_shown": "Assets  fwsi31-luna-n2 Bench Asset #BA-00005 - Bench Laptop Model",
+        "status": "Ready to Deploy",
+        "asset_name": "fwsi31-luna-n2 Bench Asset",
+        "assigned_asset_tag": "BA-00005",
+        "asset_model_link": "Bench Laptop Model",
+        "asset_status": "Ready to Deploy"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "19/19",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_f1c795: step 2: primary locator did not resolve; used fallback #2 page.locator('h1')"
+      ]
+    },
+    {
+      "id": "04-edit",
+      "status": "success",
+      "summary": "Replayed stored procedure s_900b17; observed asset_tag_dt=Asset Tag: BA-00005, asset_name_prefix=fwsi31-luna-n2, asset_name=fwsi31-luna-n2 Bench Asset, asset_tag=BA-00005, purchase_date_field_label=Purchase Date, default_location=Bench Office, purchase_date=2026-03-15, default_location_field_label=Default Location.",
+      "values": {
+        "asset_tag_dt": "Asset Tag: BA-00005",
+        "asset_name_prefix": "fwsi31-luna-n2",
+        "asset_name": "fwsi31-luna-n2 Bench Asset",
+        "asset_tag": "BA-00005",
+        "purchase_date_field_label": "Purchase Date",
+        "default_location": "Bench Office",
+        "purchase_date": "2026-03-15",
+        "default_location_field_label": "Default Location"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "17/17",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_900b17: step 2: the panel this toggle shows (- link \"Bench Laptop Model\") is already showing — a click would hide it; skipped as already in effect"
+      ],
+      "unreported": [
+        "saved_purchase_date_row"
+      ]
+    },
+    {
+      "id": "05-verify",
+      "status": "success",
+      "summary": "Replayed stored procedure s_608604; observed asset_name=fwsi31-luna-n2 Bench Asset, asset_tag=BA-00005, checkout_note=fwsi31-luna-n2, checkout_date=2026-09-29 11:12 PM, checked_out_to=Bench Assignee.",
+      "values": {
+        "asset_name": "fwsi31-luna-n2 Bench Asset",
+        "asset_tag": "BA-00005",
+        "checkout_note": "fwsi31-luna-n2",
+        "checkout_date": "2026-09-29 11:12 PM",
+        "checked_out_to": "Bench Assignee"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "12/12",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 5,
+  "total": 5,
+  "repinned": 0,
+  "drift": 1,
+  "driftTickets": [
+    {
+      "flow": "fwsi31-luna",
+      "step": "03-create",
+      "skill": "s_f1c795",
+      "atStep": "2",
+      "key": "target",
+      "similarity": 0.999,
+      "missedLocator": "page.getByRole('heading', { name: 'Assets fwsi31-luna-n2 Bench Asset #BA-00004 - Bench Laptop Model', exact: true })",
+      "fallbackUsed": "page.locator('h1')",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8098/hardware/:id",
+      "pageUrl": "http://127.0.0.1:8098/hardware/5"
+    }
+  ],
+  "wallMs": 77347,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "cachedTokens": 0
+  },
+  "usageByModel": {},
+  "servedByModel": {},
+  "recoveryModel": "openai/gpt-6-luna",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

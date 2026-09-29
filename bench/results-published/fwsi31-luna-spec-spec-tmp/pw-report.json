@@ -1,0 +1,171 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwsi31-luna-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwsi31-luna-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwsi31-luna-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/bench/results/fwsi31-luna-spec-spec-tmp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwsi31-luna-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwsi31-luna.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwsi31-luna-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwsi31-luna.spec.ts",
+      "file": "fwsi31-luna.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwsi31-luna",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 72411,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper step] 01-signin\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-find\n"
+                    },
+                    {
+                      "text": "[sitelooper drift] 03-create s_f1c795/2 target: primary getByRole('heading', { name: /^[\\s\\p{Co}\\p{So}\\p{Cf}]*Assets\\s+fwsi31-luna-spec\\s+Bench\\s+Asset\\s+#BA-00004\\s+-\\s+Bench\\s+Laptop\\s+Model[\\s\\p{Co}\\p{So}\\p{Cf}]*$/u }) missed; used #2 locator('h1') (#1 absent)\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-create\n"
+                    },
+                    {
+                      "text": "[sitelooper skip] 04-edit s_900b17/2: toggled panel already showing — click skipped\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-edit\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 05-verify\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-signin: Sign in to Snipe-IT at http://127.0.0.1:8098/ using username admin and password exactly {{env:APP_PASSWORD}} (type that literal token into the password field for environment substitution). Verify the signed-in page is reached.",
+                      "duration": 7618
+                    },
+                    {
+                      "title": "02-find: Without changing any assets, find all assets whose name starts with Seed: and report each asset name and asset tag exactly as displayed in Snipe-IT.",
+                      "duration": 2322
+                    },
+                    {
+                      "title": "03-create: Create a new asset named {{runid}} Bench Asset using the existing Bench Laptop Model and choose the Ready to Deploy status from its searchable dropdown (do not merely type it). Do not set location, purchase date, or check it out yet. Submit and verify the created asset's displayed name, model, status, and assigned asset tag.",
+                      "duration": 23865
+                    },
+                    {
+                      "title": "04-edit: Edit the existing asset named {{runid}} Bench Asset (currently tag {{03-create.assigned_asset_tag}}): choose Bench Office from the searchable default-location dropdown, set purchase date to 2026-03-15, save, and verify the saved location and date on the asset page.",
+                      "duration": 26018
+                    },
+                    {
+                      "title": "05-verify: Check out asset {{runid}} Bench Asset (tag {{03-create.assigned_asset_tag}}) to the existing user Bench Assignee. Choose the user from the searchable dropdown, include the note text '{{runid}}', submit the checkout once, and verify the asset's checkout shows Bench Assignee and the note.",
+                      "duration": 11871
+                    }
+                  ],
+                  "startTime": "2026-09-29T23:14:12.805Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": "W3NpdGVsb29wZXIgZHJpZnRdIDAzLWNyZWF0ZSBzX2YxYzc5NS8yIHRhcmdldDogcHJpbWFyeSBnZXRCeVJvbGUoJ2hlYWRpbmcnLCB7IG5hbWU6IC9eW1xzXHB7Q299XHB7U299XHB7Q2Z9XSpBc3NldHNccytmd3NpMzEtbHVuYS1zcGVjXHMrQmVuY2hccytBc3NldFxzKyNCQS0wMDAwNFxzKy1ccytCZW5jaFxzK0xhcHRvcFxzK01vZGVsW1xzXHB7Q299XHB7U299XHB7Q2Z9XSokL3UgfSkgbWlzc2VkOyB1c2VkICMyIGxvY2F0b3IoJ2gxJykgKCMxIGFic2VudCk="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "8f30a85c835973d8b757-abd09ee3a916fe5277e8",
+          "file": "fwsi31-luna.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-29T23:14:10.419Z",
+    "duration": 75006.74,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

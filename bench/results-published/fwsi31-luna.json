@@ -1,0 +1,471 @@
+{
+  "name": "fwsi31-luna",
+  "origin": "http://127.0.0.1:8098",
+  "startUrl": "http://127.0.0.1:8098/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-signin",
+      "instruction": "Sign in to Snipe-IT at http://127.0.0.1:8098/ using username admin and password exactly {{env:APP_PASSWORD}} (type that literal token into the password field for environment substitution). Verify the signed-in page is reached.",
+      "skill": "s_09cd25",
+      "params": {
+        "v1": "http://127.0.0.1:8098/",
+        "v2": "admin",
+        "v3": "{{env:APP_PASSWORD}}"
+      },
+      "outputs": [
+        "page_title",
+        "signed_in_user",
+        "success_alert"
+      ],
+      "recorded": {
+        "page_title": "Dashboard :: Bench Assets",
+        "signed_in_user": "Bench Admin",
+        "success_alert": "Success: × You have successfully logged in.",
+        "dashboard_asset_counters": "3/0/0/0/3",
+        "url": "http://127.0.0.1:8098/"
+      },
+      "route": "http://127.0.0.1:8098/",
+      "outputEvidence": {
+        "page_title": {
+          "same": 1,
+          "differed": 0
+        },
+        "signed_in_user": {
+          "same": 1,
+          "differed": 0
+        },
+        "success_alert": {
+          "same": 0,
+          "differed": 1
+        },
+        "dashboard_asset_counters": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "02-find",
+      "instruction": "Without changing any assets, find all assets whose name starts with Seed: and report each asset name and asset tag exactly as displayed in Snipe-IT.",
+      "skill": "s_e02398",
+      "params": {},
+      "outputs": [
+        "asset_1_name",
+        "asset_1_tag",
+        "asset_2_name",
+        "asset_2_tag",
+        "asset_3_name",
+        "asset_3_tag",
+        "assets_total_rows"
+      ],
+      "recorded": {
+        "asset_1_name": "Seed: Reception Laptop",
+        "asset_1_tag": "SEED-0001",
+        "asset_2_name": "Seed: Training Laptop",
+        "asset_2_tag": "SEED-0002",
+        "asset_3_name": "Seed: Spare Laptop",
+        "asset_3_tag": "SEED-0003",
+        "assets_total_rows": "3",
+        "url": "http://127.0.0.1:8098/hardware"
+      },
+      "route": "http://127.0.0.1:8098/hardware",
+      "outputEvidence": {
+        "asset_1_name": {
+          "same": 1,
+          "differed": 0
+        },
+        "asset_1_tag": {
+          "same": 1,
+          "differed": 0
+        },
+        "asset_2_name": {
+          "same": 1,
+          "differed": 0
+        },
+        "asset_2_tag": {
+          "same": 1,
+          "differed": 0
+        },
+        "asset_3_name": {
+          "same": 1,
+          "differed": 0
+        },
+        "asset_3_tag": {
+          "same": 1,
+          "differed": 0
+        },
+        "assets_total_rows": {
+          "same": 1,
+          "differed": 0
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "03-create",
+      "instruction": "Create a new asset named {{runid}} Bench Asset using the existing Bench Laptop Model and choose the Ready to Deploy status from its searchable dropdown (do not merely type it). Do not set location, purchase date, or check it out yet. Submit and verify the created asset's displayed name, model, status, and assigned asset tag.",
+      "skill": "s_6d4019",
+      "params": {
+        "v2": "{{runid}} Bench Asset",
+        "v3": "Bench Laptop",
+        "v1": "{{runid}}"
+      },
+      "outputs": [
+        "asset_name",
+        "assigned_asset_tag",
+        "model",
+        "status",
+        "heading_shown",
+        "asset_heading",
+        "asset_status",
+        "asset_model_link",
+        "asset_name_prefix"
+      ],
+      "recorded": {
+        "asset_name": "fwsi31-luna-n1 Bench Asset",
+        "assigned_asset_tag": "BA-00004",
+        "model": "Bench Laptop Model",
+        "status": "Ready to Deploy",
+        "heading_shown": "Assets  fwsi31-luna-n1 Bench Asset #BA-00004 - Bench Laptop Model",
+        "location": "No value (not set)",
+        "purchase_date": "No value (not set)",
+        "checkouts": "0",
+        "asset_heading": "Assets  fwsi31-luna-n1 Bench Asset #BA-00004 - Bench Laptop Model",
+        "asset_status": "Ready to Deploy",
+        "asset_model_link": "Bench Laptop Model",
+        "asset_name_prefix": "fwsi31-luna-n1",
+        "url": "http://127.0.0.1:8098/hardware/4",
+        "url.p1": "4"
+      },
+      "route": "http://127.0.0.1:8098/hardware/:id",
+      "outputEvidence": {
+        "asset_name": {
+          "same": 0,
+          "differed": 1
+        },
+        "assigned_asset_tag": {
+          "same": 0,
+          "differed": 1
+        },
+        "model": {
+          "same": 1,
+          "differed": 0
+        },
+        "status": {
+          "same": 1,
+          "differed": 0
+        },
+        "heading_shown": {
+          "same": 0,
+          "differed": 1
+        },
+        "location": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "purchase_date": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "checkouts": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "asset_heading": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "asset_status": {
+          "same": 1,
+          "differed": 0
+        },
+        "asset_model_link": {
+          "same": 1,
+          "differed": 0
+        },
+        "asset_name_prefix": {
+          "same": 0,
+          "differed": 1
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        },
+        "url.p1": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "04-edit",
+      "instruction": "Edit the existing asset named {{runid}} Bench Asset (currently tag {{03-create.assigned_asset_tag}}): choose Bench Office from the searchable default-location dropdown, set purchase date to 2026-03-15, save, and verify the saved location and date on the asset page.",
+      "skill": "s_ebc5e7",
+      "params": {
+        "v1": "{{runid}} Bench Asset",
+        "v3": "{{03-create.assigned_asset_tag}}",
+        "v4": "2026-03-15",
+        "v2": "{{runid}}",
+        "v5": "{{03-create.url.p1}}"
+      },
+      "outputs": [
+        "asset_name",
+        "asset_tag",
+        "asset_tag_dt",
+        "purchase_date",
+        "purchase_date_detail",
+        "default_location",
+        "default_location_detail",
+        "saved_location_row",
+        "saved_purchase_date_row",
+        "purchase_date_field_label",
+        "default_location_field_label",
+        "asset_name_prefix"
+      ],
+      "recorded": {
+        "asset_name": "fwsi31-luna-n1 Bench Asset",
+        "asset_tag": "BA-00004",
+        "asset_tag_dt": "Asset Tag: BA-00004",
+        "purchase_date": "2026-03-15",
+        "purchase_date_detail": "Purchase Date: 2026-03-15 (view page details block)",
+        "default_location": "Bench Office",
+        "default_location_detail": "Default Location: [id: 1] Bench Office",
+        "save_confirmation": "Success: Asset updated successfully.",
+        "saved_location_row": "Default Location:    [id: 1] Bench Office",
+        "saved_purchase_date_row": "Purchase Date:    2026-03-15",
+        "purchase_date_field_label": "Purchase Date",
+        "default_location_field_label": "Default Location",
+        "asset_name_prefix": "fwsi31-luna-n1"
+      },
+      "route": "http://127.0.0.1:8098/hardware/:id",
+      "outputEvidence": {
+        "asset_name": {
+          "same": 0,
+          "differed": 1
+        },
+        "asset_tag": {
+          "same": 0,
+          "differed": 1
+        },
+        "asset_tag_dt": {
+          "same": 0,
+          "differed": 1
+        },
+        "purchase_date": {
+          "same": 1,
+          "differed": 0
+        },
+        "purchase_date_detail": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "default_location": {
+          "same": 1,
+          "differed": 0
+        },
+        "default_location_detail": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "save_confirmation": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "saved_location_row": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "saved_purchase_date_row": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "purchase_date_field_label": {
+          "same": 1,
+          "differed": 0
+        },
+        "default_location_field_label": {
+          "same": 1,
+          "differed": 0
+        },
+        "asset_name_prefix": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "05-verify",
+      "instruction": "Check out asset {{runid}} Bench Asset (tag {{03-create.assigned_asset_tag}}) to the existing user Bench Assignee. Choose the user from the searchable dropdown, include the note text '{{runid}}', submit the checkout once, and verify the asset's checkout shows Bench Assignee and the note.",
+      "skill": "s_ffe62e",
+      "params": {
+        "v1": "{{runid}} Bench Asset",
+        "v3": "{{03-create.assigned_asset_tag}}",
+        "v2": "{{runid}}",
+        "v4": "{{03-create.url.p1}}"
+      },
+      "outputs": [
+        "asset_name",
+        "asset_tag",
+        "checked_out_to",
+        "checkout_note",
+        "checkout_success_alert",
+        "checkout_date"
+      ],
+      "recorded": {
+        "asset_name": "fwsi31-luna-n1 Bench Asset",
+        "asset_tag": "BA-00004",
+        "checked_out_to": "Bench Assignee",
+        "checkout_note": "fwsi31-luna-n1",
+        "checkout_success_alert": "Success: × Asset checked out successfully.",
+        "checkout_date": "2026-09-29 11:10 PM",
+        "checkout_form_url": "http://127.0.0.1:8098/hardware/4/checkout",
+        "asset_page_url": "http://127.0.0.1:8098/hardware/4",
+        "history_tab_url": "http://127.0.0.1:8098/hardware/4#history",
+        "history_checkout_row": "2026-09-29 11:10 PM | Bench Admin | checkout | fwsi31-luna-n1 Bench Asset #BA-00004 - Bench Laptop Model | Bench Assignee | qty 1 | fwsi31-luna-n1",
+        "status": "Ready to Deploy (Deployed)",
+        "last_checkout": "2026-09-29 18 seconds ago",
+        "asset_page_counters": "Checkouts 1 / Checkins 0",
+        "history_event_count": "3 (create new, update, checkout)",
+        "url": "http://127.0.0.1:8098/hardware/4#history"
+      },
+      "route": "http://127.0.0.1:8098/hardware/:id#history",
+      "outputEvidence": {
+        "asset_name": {
+          "same": 0,
+          "differed": 1
+        },
+        "asset_tag": {
+          "same": 0,
+          "differed": 1
+        },
+        "checked_out_to": {
+          "same": 1,
+          "differed": 0
+        },
+        "checkout_note": {
+          "same": 0,
+          "differed": 1
+        },
+        "checkout_success_alert": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "checkout_date": {
+          "same": 0,
+          "differed": 1
+        },
+        "checkout_form_url": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "asset_page_url": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "history_tab_url": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "history_checkout_row": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "status": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "last_checkout": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "asset_page_counters": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "history_event_count": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "session": "fwsi31-luna-n1",
+    "created": "2026-09-29T23:11:17.498Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "01-signin",
+      "outputs": [
+        "dashboard_asset_counters"
+      ]
+    },
+    {
+      "stepId": "03-create",
+      "outputs": [
+        "location",
+        "purchase_date",
+        "checkouts"
+      ]
+    },
+    {
+      "stepId": "04-edit",
+      "outputs": [
+        "save_confirmation"
+      ]
+    },
+    {
+      "stepId": "05-verify",
+      "outputs": [
+        "checkout_form_url",
+        "asset_page_url",
+        "history_tab_url",
+        "history_checkout_row",
+        "status",
+        "last_checkout",
+        "asset_page_counters",
+        "history_event_count"
+      ]
+    }
+  ]
+}

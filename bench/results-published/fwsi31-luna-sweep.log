@@ -1,0 +1,112 @@
+
+[sweep] run 1/3: fwsi31-luna-n1 (store: /home/user/sitelooper/bench/results/fwsi31-luna-skills)
+[harness] snipeit: defaulting APP_URL
+[harness] snipeit: defaulting APP_EMAIL
+[harness] snipeit: defaulting APP_PASSWORD
+[reset] snipeit: no leftover bench assets
+[harness] snipeit responded 302 at http://127.0.0.1:8098/
+stopped: fwsi31-luna-n1
+  flow "fwsi31-luna" saved: 5 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwsi31-luna.json
+  warning: note: 01-signin no longer publishes dashboard_asset_counters — no replay reads it from the page and the recording showed no line to read
+  warning: note: 03-create no longer publishes location, purchase_date, checkouts — no replay reads them from the page and the recording showed no line to read
+  warning: note: 04-edit no longer publishes save_confirmation — no replay reads it from the page and the recording showed no line to read
+  warning: note: 05-verify no longer publishes checkout_form_url, asset_page_url, history_tab_url, history_checkout_row, status, last_checkout, asset_page_counters, history_event_count — no replay reads them from the page and the recording showed no line to read
+  warning: note: 03-create: added a read for asset_status to s_f1c795 (page.getByRole('link', { name: 'Ready to Deploy', exact: true }); seen on the next instruction's start page)
+  warning: warning: 103 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[2].instruction: "Bench Laptop Model" (output) in "Create a new asset named {{runid}} Bench Asset using the existing Bench Laptop Model and choose the Ready to Deploy status from its searchable dropdown (do not "
+  flow.steps[2].instruction: "Ready to Deploy" (output) in "Create a new asset named {{runid}} Bench Asset using the existing Bench Laptop Model and choose the Ready to Deploy status from its searchable dropdown (do not "
+  flow.steps[3].instruction: "Bench Office" (output) in "Edit the existing asset named {{runid}} Bench Asset (currently tag {{03-create.assigned_asset_tag}}): choose Bench Office from the searchable default-location d"
+  flow.steps[3].instruction: "2026-03-15" (output) in "Edit the existing asset named {{runid}} Bench Asset (currently tag {{03-create.assigned_asset_tag}}): choose Bench Office from the searchable default-location d"
+  flow.steps[3].params.v4: "2026-03-15" (output) in "2026-03-15"
+arm=sitelooper model=openai/gpt-6-luna runid=fwsi31-luna-n1 stop=completed
+turns=6 wall=298.5s
+commands=5 cmdTime=275.9s cmdBytes=6164 timeouts=0
+orchestrator in=4898 cw=0 cr=16387 out=969
+inner prompt=1826569 cached=1699840 completion=19776
+spend=$0.0373 maxUsd=3
+learn: A_n=0 replayed=0/5 full=0 repaired=0 compiled=5 variants=0
+-> /home/user/sitelooper/bench/results/fwsi31-luna-n1-sitelooper-result.json
+
+fwsi31-luna-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed tags and names reported
+  obj 2: PASS — BA-00004, model=Bench Laptop Model, status=Ready to Deploy
+  obj 3: PASS — default location=Bench Office
+  obj 4: PASS — purchase date=2026-03-15
+  obj 5: PASS — assigned to=Bench Assignee (user bench-assignee)
+  obj 6: PASS — 1 checkout(s), 1 with a note carrying the runid
+  obj 7: PASS — asset tag BA-00004 reported
+
+[sweep] run 2/3: fwsi31-luna-n2 (replay flow fwsi31-luna, no orchestrator)
+[reset] snipeit: deleted 1 leftover bench asset(s)
+[sweep] fwsi31-luna-n2: 1 drift ticket(s) → fwsi31-luna-n2-drift.json
+
+fwsi31-luna-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed tags and names reported
+  obj 2: PASS — BA-00005, model=Bench Laptop Model, status=Ready to Deploy
+  obj 3: PASS — default location=Bench Office
+  obj 4: PASS — purchase date=2026-03-15
+  obj 5: PASS — assigned to=Bench Assignee (user bench-assignee)
+  obj 6: PASS — 1 checkout(s), 1 with a note carrying the runid
+  obj 7: PASS — asset tag BA-00005 reported
+
+[sweep] run 3/3: fwsi31-luna-n3 (replay flow fwsi31-luna, no orchestrator)
+[reset] snipeit: deleted 1 leftover bench asset(s)
+[sweep] fwsi31-luna-n3: 1 drift ticket(s) → fwsi31-luna-n3-drift.json
+
+fwsi31-luna-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed tags and names reported
+  obj 2: PASS — BA-00006, model=Bench Laptop Model, status=Ready to Deploy
+  obj 3: PASS — default location=Bench Office
+  obj 4: PASS — purchase date=2026-03-15
+  obj 5: PASS — assigned to=Bench Assignee (user bench-assignee)
+  obj 6: PASS — 1 checkout(s), 1 with a note carrying the runid
+  obj 7: PASS — asset tag BA-00006 reported
+
+Learning sweep fwsi31-luna (K=3)
+┌─────────┬───┬──────────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid            │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼──────────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwsi31-luna-n1' │ '7/7'    │ 'completed' │ 6     │ 5    │ 0.0373    │ 0   │ '0/5'        │ 298    │
+│ 1       │ 2 │ 'fwsi31-luna-n2' │ '7/7'    │ 'success'   │ 0     │ 5    │ 0         │ 1   │ '5/5 (flow)' │ 77     │
+│ 2       │ 3 │ 'fwsi31-luna-n3' │ '7/7'    │ 'success'   │ 0     │ 5    │ 0         │ 1   │ '5/5 (flow)' │ 78     │
+└─────────┴───┴──────────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:8098
+  s_09cd25  validated    1 steps  3/3 (100%)
+           Sign in to Snipe-IT at {{v1}} using username {{v2}} and password exactly {{v3}} (type that literal token into …
+  s_293053  validated    4 steps  3/3 (100%)
+           Check out asset {{v1}} (tag {{v3}}) to the existing user Bench Assignee. Choose the user from the searchable d…
+  s_29aac5  validated    7 steps  3/3 (100%)
+           Without changing any assets, find all assets whose name starts with Seed: and report each asset name and asset…
+  s_39f482  validated    1 steps  3/3 (100%)
+           Check out asset {{v1}} (tag {{v3}}) to the existing user Bench Assignee. Choose the user from the searchable d…
+  s_5bc661  validated    1 steps  3/3 (100%)
+           Edit the existing asset named {{v1}} (currently tag {{v3}}): choose Bench Office from the searchable default-l…
+  s_608604  validated    5 steps  3/3 (100%)
+           Check out asset {{v1}} (tag {{v3}}) to the existing user Bench Assignee. Choose the user from the searchable d…
+  s_6d4019  validated    1 steps  3/3 (100%)
+           Create a new asset named {{v2}} using the existing {{v3}} Model and choose the Ready to Deploy status from its…
+  s_834ff9  validated    3 steps  3/3 (100%)
+           Sign in to Snipe-IT at {{v1}} using username {{v2}} and password exactly {{v3}} (type that literal token into …
+  s_900b17  validated    8 steps  3/3 (100%)
+           Edit the existing asset named {{v1}} (currently tag {{v3}}): choose Bench Office from the searchable default-l…
+  s_a4d8d1  validated    8 steps  3/3 (100%)
+           Create a new asset named {{v2}} using the existing {{v3}} Model and choose the Ready to Deploy status from its…
+  s_b5d6fd  validated    7 steps  3/3 (100%)
+           Edit the existing asset named {{v1}} (currently tag {{v3}}): choose Bench Office from the searchable default-l…
+  s_dbeb99  validated    1 steps  3/3 (100%)
+           Check out asset {{v1}} (tag {{v3}}) to the existing user Bench Assignee. Choose the user from the searchable d…
+  s_dfe9e8  validated    3 steps  3/3 (100%)
+           Sign in to Snipe-IT at {{v1}} using username {{v2}} and password exactly {{v3}} (type that literal token into …
+  s_e02398  validated    1 steps  3/3 (100%)
+           Without changing any assets, find all assets whose name starts with Seed: and report each asset name and asset…
+  s_e9faf3  validated    1 steps  3/3 (100%)
+           Create a new asset named {{v2}} using the existing {{v3}} Model and choose the Ready to Deploy status from its…
+  s_ebc5e7  validated    1 steps  3/3 (100%)
+           Edit the existing asset named {{v1}} (currently tag {{v3}}): choose Bench Office from the searchable default-l…
+  s_f1c795  validated    9 steps  3/3 (100%)
+           Create a new asset named {{v2}} using the existing {{v3}} Model and choose the Ready to Deploy status from its…
+  s_ffe62e  validated    1 steps  3/3 (100%)
+           Check out asset {{v1}} (tag {{v3}}) to the existing user Bench Assignee. Choose the user from the searchable d…
+store: /home/user/sitelooper/bench/results/fwsi31-luna-skills
+
+summary: /home/user/sitelooper/bench/results/fwsi31-luna-sweep.json
