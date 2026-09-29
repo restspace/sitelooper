@@ -11,6 +11,9 @@ cd "${CLAUDE_PROJECT_DIR:-/home/user/sitelooper}" || exit 0
 target=$(grep -o '^==> Starting target: [a-z]*' "$LOG" | tail -1 | awk '{print $4}')
 if [ -n "$target" ]; then
   docker ps --format '{{.Names}}' 2>/dev/null | grep -q "$target" && exit 0
+  # the cached snapshot keeps the first run's pid file and socket; a stale
+  # pid file makes a new dockerd exit at once
+  rm -f /var/run/docker.pid /var/run/docker.sock /var/run/docker/containerd/containerd.pid
   args=(--with-arm-b --with-target "$target")
 else
   # repairdesk: the app is a node server, not a container
@@ -18,6 +21,14 @@ else
   args=(--with-arm-b)
 fi
 setsid -w bench/cloud-setup.sh "${args[@]}" > /tmp/session-start.log 2>&1 < /dev/null
-echo "EXIT $?" >> /tmp/session-start.log
-{ echo "--- session-start"; tail -5 /tmp/session-start.log; docker ps --format '{{.Names}}' 2>&1; } >> /tmp/setup.log
+rc=$?
+{
+  echo "--- session-start (restored box)"
+  tail -8 /tmp/session-start.log
+  echo "--- dockerd.log"
+  tail -15 /tmp/dockerd.log 2>/dev/null
+  echo "--- docker ps"
+  docker ps --format '{{.Names}}' 2>&1
+  echo "EXIT $rc"
+} >> "$LOG"
 exit 0
