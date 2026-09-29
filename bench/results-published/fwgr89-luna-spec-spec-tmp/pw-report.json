@@ -1,0 +1,199 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwgr89-luna-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwgr89-luna-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwgr89-luna-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/bench/results/fwgr89-luna-spec-spec-tmp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwgr89-luna-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwgr89-luna.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwgr89-luna-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwgr89-luna.spec.ts",
+      "file": "fwgr89-luna.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwgr89-luna",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 138679,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper step] 01-signin\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-open\n"
+                    },
+                    {
+                      "text": "[sitelooper skip] 03-create s_f1dd76/9: recorded popup already showing — click skipped\n"
+                    },
+                    {
+                      "text": "[sitelooper skip] 03-create s_f1dd76/11: toggled panel already showing — click skipped\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 03-create s_f1dd76/19: expected alert containing \"Dashboard saved\"\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 03-create s_e2ab5c/19: read 'panel_title' returned a value the skill itself set/selected ('fwgr89-luna-spec Availability') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-create\n"
+                    },
+                    {
+                      "text": "[sitelooper recipe] filled via recipe monaco/set-value (r_f2510e); value verified on the component\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-add\n"
+                    },
+                    {
+                      "text": "[sitelooper recipe] filled via recipe monaco/set-value (r_f2510e); value verified on the component\n"
+                    },
+                    {
+                      "text": "[sitelooper skip] 05-set s_461d7e/32 target: read target not found — value left empty\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 05-set\n"
+                    },
+                    {
+                      "text": "[sitelooper drift] 06-set s_549e15/2 target: primary locator('[data-testid=\"data-testid dashboard controls\"] span') missed; used #3 getByText('1m', { exact: true }) (#1 ambiguous)\n"
+                    },
+                    {
+                      "text": "[sitelooper skip] 06-set s_549e15/13 target: read target not found — value left empty\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 06-set\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-signin: Sign in to Grafana at http://127.0.0.1:3000/ using username admin and password exactly {{env:APP_PASSWORD}}; verify that the authenticated Grafana page is open.",
+                      "duration": 10913
+                    },
+                    {
+                      "title": "02-open: Open the provisioned dashboard named Service health, report every panel title exactly as shown, and verify the dashboard page is open.",
+                      "duration": 8945
+                    },
+                    {
+                      "title": "03-create: Create and save a NEW Grafana dashboard titled {{runid}} Bench Dashboard with a Stat panel titled {{runid}} Availability; configure that panel's query to use the TestData data source. Verify the saved dashboard and panel title/data source, and report the current browser page URL.",
+                      "duration": 52439
+                    },
+                    {
+                      "title": "04-add: On the saved dashboard {{runid}} Bench Dashboard, add a Text visualization panel titled {{runid}} Notes whose text content includes the exact runid {{runid}}, apply it, and explicitly save the dashboard. Verify the Text panel title and its content are present on the saved dashboard.",
+                      "duration": 22453
+                    },
+                    {
+                      "title": "05-set: Set the saved dashboard {{runid}} Bench Dashboard tag to include bench and set its time range to the last 6 hours. Explicitly save, making sure to tick the Save dashboard dialog's Update default time range option so the range is persisted. Verify the tag and persistence of the last-6-hours default after saving/reloading.",
+                      "duration": 29490
+                    },
+                    {
+                      "title": "06-set: Set the saved dashboard {{runid}} Bench Dashboard auto-refresh interval to 1m and explicitly save the dashboard. Verify after saving or reloading that the top-bar refresh control shows 1m and the dashboard is saved.",
+                      "duration": 11268
+                    }
+                  ],
+                  "startTime": "2026-09-29T22:14:50.253Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": "W3NpdGVsb29wZXIgZHJpZnRdIDA2LXNldCBzXzU0OWUxNS8yIHRhcmdldDogcHJpbWFyeSBsb2NhdG9yKCdbZGF0YS10ZXN0aWQ9ImRhdGEtdGVzdGlkIGRhc2hib2FyZCBjb250cm9scyJdIHNwYW4nKSBtaXNzZWQ7IHVzZWQgIzMgZ2V0QnlUZXh0KCcxbScsIHsgZXhhY3Q6IHRydWUgfSkgKCMxIGFtYmlndW91cyk="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "c3f276d89238b09fbfa8-61c5d19c5bccc1ffc4d9",
+          "file": "fwgr89-luna.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-29T22:14:47.849Z",
+    "duration": 149915.81,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}
