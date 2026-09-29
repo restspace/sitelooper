@@ -3158,17 +3158,34 @@ function splitExpectLine(line: string): SplitLine | null {
  *
  * Applied to the NAME and the VALUE of a line, never to its role: a read that
  * published the word "row" must not turn `- row "…"` into `- {{*}} "…"`.
+ *
+ * Nor inside a marker, and never for a value with no letter or digit. grafana
+ * fwgr88-luna-n1 05-set read the JSON model editor's last line after
+ * Control+End and published "}"; every `}` in the step's expectations became
+ * a wildcard, markers included: `{{v1}}` → `{{v1}{{*}}` and `{{*}}` →
+ * `{{*{{*}}{{*}}`. Neither matches anything, so both replays fell back at
+ * the editor step, the pin was demoted and the compile refused it. A bare
+ * bracket or comma identifies nothing on a page to begin with.
  */
 export function maskPublishedValues(line: string, published: readonly string[], sets: readonly SetValue[] = []): string {
   const split = splitExpectLine(line);
   if (!split) return line;
   let { name, value } = split;
   for (const v of published) {
+    if (!/[\p{L}\p{N}]/u.test(v)) continue;
     const replacement = keepSetValues(v, sets) ?? WILDCARD;
-    if (name && occursAsToken(name, v)) name = replaceAsToken(name, v, replacement);
-    if (value && occursAsToken(value, v)) value = replaceAsToken(value, v, replacement);
+    if (name && occursAsToken(name, v)) name = replaceOutsideMarkers(name, v, replacement);
+    if (value && occursAsToken(value, v)) value = replaceOutsideMarkers(value, v, replacement);
   }
   return name === split.name && value === split.value ? line : split.rebuild(name, value);
+}
+
+/** replaceAsToken over the text between `{{…}}` markers only: a marker is never rewritten. */
+function replaceOutsideMarkers(text: string, value: string, replacement: string): string {
+  return text
+    .split(/(\{\{[^{}]*\}\})/)
+    .map((part, i) => (i % 2 ? part : replaceAsToken(part, value, replacement)))
+    .join('');
 }
 
 /** A value the procedure itself set: what it typed (`value`, slots filled with their examples) and how the step wrote it (`template`). */
