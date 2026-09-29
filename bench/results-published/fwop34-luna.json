@@ -1,0 +1,662 @@
+{
+  "name": "fwop34-luna",
+  "origin": "http://127.0.0.1:8090",
+  "startUrl": "http://127.0.0.1:8090/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-signin",
+      "instruction": "Sign in to OpenProject at http://127.0.0.1:8090/ using username admin and the password exactly as the text {{env:APP_PASSWORD}}; verify the app is signed in.",
+      "skill": "s_0c813e",
+      "params": {
+        "v1": "http://127.0.0.1:8090/",
+        "v2": "admin",
+        "v3": "{{env:APP_PASSWORD}}"
+      },
+      "outputs": [
+        "signed_in_as",
+        "post_login_url",
+        "login_link_count_after_signin",
+        "signed_in_url"
+      ],
+      "recorded": {
+        "signed_in_as": "admin (displayed user: Bench Admin, initials BA)",
+        "post_login_url": "http://127.0.0.1:8090/?first_time_user=true",
+        "login_link_count_after_signin": "0",
+        "signed_in_url": "http://127.0.0.1:8090/?first_time_user=true",
+        "url": "http://127.0.0.1:8090/?first_time_user=true"
+      },
+      "route": "http://127.0.0.1:8090/",
+      "outputEvidence": {
+        "signed_in_as": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "post_login_url": {
+          "same": 0,
+          "differed": 1
+        },
+        "login_link_count_after_signin": {
+          "same": 1,
+          "differed": 0
+        },
+        "signed_in_url": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "02-report",
+      "instruction": "In OpenProject, inspect project Bench Project and report the subjects of all work packages whose subject starts with Seed:, exactly as shown. Do not edit anything.",
+      "skill": "s_a32e5a",
+      "params": {},
+      "outputs": [
+        "project",
+        "pagination_summary",
+        "subject_1",
+        "subject_2",
+        "subject_3",
+        "subject_1_2",
+        "subject_2_2",
+        "subject_3_2"
+      ],
+      "recorded": {
+        "project": "Bench Project",
+        "total_work_packages_in_project": "3",
+        "pagination_summary": "(1 - 3/3) You are on the only page.",
+        "subject_1": "Seed: triage inbox",
+        "subject_2": "Seed: order missing parts",
+        "subject_3": "Seed: ship repaired device",
+        "seed_prefixed_count": "3",
+        "non_seed_subjects_found": "none",
+        "subject_1_2": "Work package leaf at level 0.\nSeed: triage inbox",
+        "subject_2_2": "Work package leaf at level 0.\nSeed: order missing parts",
+        "subject_3_2": "Work package leaf at level 0.\nSeed: ship repaired device",
+        "url": "http://127.0.0.1:8090/projects/bench-project/work_packages?query_props=%7B%22c%22%3A%5B%22id%22%2C%22subject%22%2C%22type%22%2C%22status%22%2C%22assignee%22%2C%22priority%22%5D%2C%22hi%22%3Atrue%2C%22g%22%3A%22%22%2C%22is%22%3Atrue%2C%22tv%22%3Afalse%2C%22hla%22%3A%5B%22status%22%2C%22priority%22%2C%22dueDate%22%5D%2C%22t%22%3A%22id%3Aasc%22%2C%22f%22%3A%5B%5D%2C%22ts%22%3A%22PT0S%22%2C%22pp%22%3A20%2C%22pa%22%3A1%7D"
+      },
+      "route": "http://127.0.0.1:8090/projects/bench-project/work_packages",
+      "outputEvidence": {
+        "project": {
+          "same": 1,
+          "differed": 0
+        },
+        "total_work_packages_in_project": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "pagination_summary": {
+          "same": 0,
+          "differed": 1
+        },
+        "subject_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "subject_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "subject_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_prefixed_count": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "non_seed_subjects_found": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "subject_1_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "subject_2_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "subject_3_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "03-create",
+      "instruction": "In Bench Project create a work package of type Task titled exactly '{{runid}} Bench Work Package' with a description that includes the exact runid {{runid}}. Submit/create it, then verify the task exists and report its displayed #ID and description.",
+      "skill": "s_ea4107",
+      "params": {
+        "v1": "Bench Project",
+        "v3": "{{runid}} Bench Work Package",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "project",
+        "work_package_id",
+        "wp_numeric_id",
+        "subject_title",
+        "description",
+        "author",
+        "created",
+        "success_alert",
+        "ref"
+      ],
+      "recorded": {
+        "project": "Bench Project",
+        "work_package_id": "#41",
+        "wp_numeric_id": "41",
+        "type": "Task",
+        "subject_title": "fwop34-luna-n1 Bench Work Package",
+        "description": "Created as part of run fwop34-luna-n1. This description includes the exact runid fwop34-luna-n1 for traceability.",
+        "status": "New",
+        "priority": "Normal",
+        "author": "Bench Admin",
+        "created": "09/29/2026 4:59 PM",
+        "success_alert": "Successful creation.",
+        "ref": "fwop34-luna-n1",
+        "url": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/41/overview?query_props=%7B%22c%22%3A%5B%22id%22%2C%22subject%22%2C%22type%22%2C%22status%22%2C%22assignee%22%2C%22priority%22%5D%2C%22hi%22%3Atrue%2C%22g%22%3A%22%22%2C%22is%22%3Atrue%2C%22tv%22%3Afalse%2C%22hla%22%3A%5B%22status%22%2C%22priority%22%2C%22dueDate%22%5D%2C%22t%22%3A%22id%3Aasc%22%2C%22f%22%3A%5B%5D%2C%22ts%22%3A%22PT0S%22%2C%22pp%22%3A20%2C%22pa%22%3A1%7D",
+        "url.p4": "41"
+      },
+      "route": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:id/overview",
+      "outputEvidence": {
+        "project": {
+          "same": 1,
+          "differed": 0
+        },
+        "work_package_id": {
+          "same": 0,
+          "differed": 1
+        },
+        "wp_numeric_id": {
+          "same": 0,
+          "differed": 1
+        },
+        "type": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "subject_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "description": {
+          "same": 0,
+          "differed": 1
+        },
+        "status": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "priority": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "author": {
+          "same": 1,
+          "differed": 0
+        },
+        "created": {
+          "same": 0,
+          "differed": 1
+        },
+        "success_alert": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        },
+        "url.p4": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "04-set",
+      "instruction": "On the newly created work package '{{runid}} Bench Work Package' ({{03-create.work_package_id}}), set Assignee to Bench Assignee by selecting the actual autocomplete dropdown option (not just typing). Verify the saved assignee displayed on the page.",
+      "skill": "s_1ecb59",
+      "params": {
+        "v1": "{{runid}} Bench Work Package",
+        "v3": "{{03-create.work_package_id}}",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "work_package_id",
+        "subject",
+        "assignee_field_display",
+        "assignee_aria_label",
+        "save_alert",
+        "assignee_display",
+        "ref"
+      ],
+      "recorded": {
+        "work_package_id": "#41",
+        "subject": "fwop34-luna-n1 Bench Work Package",
+        "assignee_field_display": "BA Bench Assignee",
+        "assignee_aria_label": "Assignee Bench Assignee: Edit",
+        "selected_dropdown_option": "BA Bench Assignee bench-assignee@example.com",
+        "save_alert": "Successful update.",
+        "assignee_display": "BA\nBench Assignee",
+        "ref": "fwop34-luna-n1"
+      },
+      "route": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:id/overview",
+      "urlVariance": [
+        "41",
+        "42"
+      ],
+      "outputEvidence": {
+        "work_package_id": {
+          "same": 0,
+          "differed": 1
+        },
+        "subject": {
+          "same": 0,
+          "differed": 1
+        },
+        "assignee_field_display": {
+          "same": 0,
+          "differed": 1
+        },
+        "assignee_aria_label": {
+          "same": 1,
+          "differed": 0
+        },
+        "selected_dropdown_option": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "save_alert": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "assignee_display": {
+          "same": 1,
+          "differed": 0
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "05-change",
+      "instruction": "On work package '{{runid}} Bench Work Package' ({{03-create.work_package_id}}), change status to exactly 'In progress' and verify the saved status on the page.",
+      "skill": "s_61e8cd",
+      "params": {
+        "v1": "{{runid}} Bench Work Package",
+        "v3": "{{03-create.work_package_id}}",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "work_package_id",
+        "subject",
+        "status_option_selected",
+        "saved_status_display",
+        "details_panel_status_read",
+        "save_alert",
+        "details_status_display",
+        "table_status_aria",
+        "ref",
+        "status_options_offered_1",
+        "status_options_offered_2",
+        "status_options_offered_3",
+        "status_options_offered_4"
+      ],
+      "recorded": {
+        "work_package_id": "#41",
+        "subject": "fwop34-luna-n1 Bench Work Package",
+        "status_option_selected": "In progress",
+        "saved_status_display": "In progress",
+        "details_panel_status_read": "In progress",
+        "save_alert": "Successful update.",
+        "details_status_display": "In progress",
+        "table_status_aria": "Status New: Edit",
+        "ref": "fwop34-luna-n1",
+        "status_options_offered_1": "New",
+        "status_options_offered_2": "Closed",
+        "status_options_offered_3": "On hold",
+        "status_options_offered_4": "Rejected"
+      },
+      "route": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:id/overview",
+      "urlVariance": [
+        "41",
+        "42"
+      ],
+      "outputEvidence": {
+        "work_package_id": {
+          "same": 0,
+          "differed": 1
+        },
+        "subject": {
+          "same": 0,
+          "differed": 1
+        },
+        "status_option_selected": {
+          "same": 1,
+          "differed": 0
+        },
+        "saved_status_display": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "details_panel_status_read": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "save_alert": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "details_status_display": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "table_status_aria": {
+          "same": 1,
+          "differed": 0
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "status_options_offered_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "status_options_offered_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "status_options_offered_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "status_options_offered_4": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "06-set",
+      "instruction": "On work package '{{runid}} Bench Work Package' ({{03-create.work_package_id}}), set the Finish date to 2026-12-31 and verify the saved date as displayed on the page.",
+      "skill": "s_afae50",
+      "params": {
+        "v1": "{{runid}} Bench Work Package",
+        "v3": "{{03-create.work_package_id}}",
+        "v5": "2026-12-31",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "work_package_id",
+        "subject",
+        "field_used",
+        "finish_date_set",
+        "finish_date_input_value_after_save",
+        "details_panel_display",
+        "save_alert",
+        "finish_date_typed_value",
+        "combined_date_aria",
+        "ref"
+      ],
+      "recorded": {
+        "work_package_id": "#41",
+        "subject": "fwop34-luna-n1 Bench Work Package",
+        "field_used": "combined Start date / Finish date field in the work package details panel (Datepicker dialog)",
+        "finish_date_set": "2026-12-31",
+        "finish_date_input_value_after_save": "2026-12-31",
+        "details_panel_display": "no start date - 12/31/2026",
+        "calendar_shown_months": "December 2026 / January 2027",
+        "save_alert": "Successful update.",
+        "finish_date_typed_value": "2026-12-31",
+        "combined_date_display": "no start date - 12/31/2026",
+        "combined_date_aria": "Start date : Edit",
+        "final_date_display": "no start date - 12/31/2026",
+        "ref": "fwop34-luna-n1"
+      },
+      "route": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:id/overview",
+      "urlVariance": [
+        "41",
+        "42"
+      ],
+      "outputEvidence": {
+        "work_package_id": {
+          "same": 0,
+          "differed": 1
+        },
+        "subject": {
+          "same": 0,
+          "differed": 1
+        },
+        "field_used": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "finish_date_set": {
+          "same": 1,
+          "differed": 0
+        },
+        "finish_date_input_value_after_save": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "details_panel_display": {
+          "same": 1,
+          "differed": 0
+        },
+        "calendar_shown_months": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "save_alert": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "finish_date_typed_value": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "combined_date_display": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "combined_date_aria": {
+          "same": 1,
+          "differed": 0
+        },
+        "final_date_display": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "07-add",
+      "instruction": "Add a comment to work package '{{runid}} Bench Work Package' ({{03-create.work_package_id}}) whose text includes the exact runid {{runid}}. Submit it and verify the comment text appears in the work package activity.",
+      "skill": "s_e60e77",
+      "params": {
+        "v1": "{{runid}} Bench Work Package",
+        "v3": "{{03-create.work_package_id}}",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "work_package_id",
+        "subject",
+        "tab_used",
+        "activity_entry_text",
+        "comment_author",
+        "class_work_packages_acti_2",
+        "ref",
+        "comment_text_submitted_1",
+        "comment_text_submitted_2"
+      ],
+      "recorded": {
+        "work_package_id": "#41",
+        "subject": "fwop34-luna-n1 Bench Work Package",
+        "tab_used": "Activity",
+        "activity_entry_text": "BA Bench Admin created this on 09/29/2026 04:59 PM — Automated verification comment for run fwop34-luna-n1: assignee, status and finish date were set on this work package.",
+        "comment_author": "Bench Admin",
+        "comment_shown": "true",
+        "class_work_packages_acti": "BA\nBench Admin\ncreated this on\n09/29/2026 04:59 PM",
+        "class_work_packages_acti_2": "created this on",
+        "ref": "fwop34-luna-n1",
+        "comment_text_submitted_1": "Automated verification comment for run fwop34-luna-n1: assignee",
+        "comment_text_submitted_2": "status and finish date were set on this work package.",
+        "url": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/41/activity?query_props=%7B%22c%22%3A%5B%22id%22%2C%22subject%22%2C%22type%22%2C%22status%22%2C%22assignee%22%2C%22priority%22%5D%2C%22hi%22%3Atrue%2C%22g%22%3A%22%22%2C%22is%22%3Atrue%2C%22tv%22%3Afalse%2C%22hla%22%3A%5B%22status%22%2C%22priority%22%2C%22dueDate%22%5D%2C%22t%22%3A%22id%3Aasc%22%2C%22f%22%3A%5B%5D%2C%22ts%22%3A%22PT0S%22%2C%22pp%22%3A20%2C%22pa%22%3A1%7D"
+      },
+      "route": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:id/activity",
+      "urlVariance": [
+        "41",
+        "42"
+      ],
+      "outputEvidence": {
+        "work_package_id": {
+          "same": 0,
+          "differed": 1
+        },
+        "subject": {
+          "same": 0,
+          "differed": 1
+        },
+        "tab_used": {
+          "same": 0,
+          "differed": 1
+        },
+        "activity_entry_text": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "comment_author": {
+          "same": 1,
+          "differed": 0
+        },
+        "comment_shown": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "class_work_packages_acti": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "class_work_packages_acti_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "comment_text_submitted_1": {
+          "same": 0,
+          "differed": 1
+        },
+        "comment_text_submitted_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "session": "fwop34-luna-n1",
+    "created": "2026-09-29T17:02:52.332Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "02-report",
+      "outputs": [
+        "total_work_packages_in_project",
+        "seed_prefixed_count",
+        "non_seed_subjects_found"
+      ]
+    },
+    {
+      "stepId": "03-create",
+      "outputs": [
+        "type",
+        "status",
+        "priority"
+      ]
+    },
+    {
+      "stepId": "04-set",
+      "outputs": [
+        "selected_dropdown_option"
+      ]
+    },
+    {
+      "stepId": "06-set",
+      "outputs": [
+        "calendar_shown_months",
+        "combined_date_display",
+        "final_date_display"
+      ]
+    },
+    {
+      "stepId": "07-add",
+      "outputs": [
+        "comment_shown",
+        "class_work_packages_acti"
+      ]
+    }
+  ]
+}
