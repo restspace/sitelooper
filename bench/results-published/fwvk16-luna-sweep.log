@@ -1,0 +1,104 @@
+
+[sweep] run 1/3: fwvk16-luna-n1 (store: /home/user/sitelooper/bench/results/fwvk16-luna-skills)
+[harness] vikunja: defaulting APP_URL
+[harness] vikunja: defaulting APP_EMAIL
+[harness] vikunja: defaulting APP_PASSWORD
+[reset] vikunja: no leftover bench tasks
+[harness] vikunja responded 200 at http://127.0.0.1:8096/
+stopped: fwvk16-luna-n1
+  flow "fwvk16-luna" saved: 7 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwvk16-luna.json
+  warning: note: 02-report no longer publishes task_count_in_project, active_filter_query — no replay reads them from the page and the recording showed no line to read
+  warning: warning: 81 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.startUrl: "http://127.0.0.1:8096/" (output) in "http://127.0.0.1:8096/"
+  flow.steps[0].instruction: "http://127.0.0.1:8096/" (output) in "Sign in to Vikunja at http://127.0.0.1:8096/ using username admin and password exactly {{env:APP_PASSWORD}}. Verify that the signed-in app is open and report th"
+  flow.steps[0].instruction: "{{env:APP_PASSWORD}}" (output) in "Sign in to Vikunja at http://127.0.0.1:8096/ using username admin and password exactly {{env:APP_PASSWORD}}. Verify that the signed-in app is open and report th"
+  flow.steps[0].instruction: "admin" (output) in "Sign in to Vikunja at http://127.0.0.1:8096/ using username admin and password exactly {{env:APP_PASSWORD}}. Verify that the signed-in app is open and report th"
+  flow.steps[0].params.v1: "http://127.0.0.1:8096/" (output) in "http://127.0.0.1:8096/"
+  warning: {{03-create.task_identifier}} (used by 05-set) can only be re-observed by model recovery — consider re-recording so the value is read from the page.
+  warning: 03-create reports task_identifier, but no segment of the procedure it pins (s_0ad254, through its last segment s_2518dd) re-reads it from the page — a replay without the model will succeed without that value; re-record so a read for it lands in s_2518dd.
+arm=sitelooper model=openai/gpt-6-luna runid=fwvk16-luna-n1 stop=completed
+turns=8 wall=269.6s
+commands=7 cmdTime=247.6s cmdBytes=7547 timeouts=0
+orchestrator in=5447 cw=0 cr=26831 out=829
+inner prompt=1710791 cached=1587200 completion=19537
+spend=$0.0365 maxUsd=3
+learn: A_n=0 replayed=0/7 full=0 repaired=0 compiled=7 variants=0
+-> /home/user/sitelooper/bench/results/fwvk16-luna-n1-sitelooper-result.json
+
+fwvk16-luna-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — project=Bench Project, description includes runid=true
+  obj 3: PASS — due date=2026-12-31T12:00:00Z, want 2026-12-31
+  obj 4: PASS — priority=3 (want 3 = High)
+  obj 5: PASS — labels=Backend#1; seeded Backend is #1
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — identifier BENCH-4 reported
+
+[sweep] run 2/3: fwvk16-luna-n2 (replay flow fwvk16-luna, no orchestrator)
+[reset] vikunja: deleted 1 leftover bench task(s)
+[reset] vikunja: re-created "Seed: ship repaired device" as BENCH-4 so the next task is BENCH-5
+[sweep] fwvk16-luna-n2: 4 drift ticket(s) → fwvk16-luna-n2-drift.json
+
+fwvk16-luna-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — project=Bench Project, description includes runid=true
+  obj 3: PASS — due date=2026-12-31T12:00:00Z, want 2026-12-31
+  obj 4: PASS — priority=3 (want 3 = High)
+  obj 5: PASS — labels=Backend#1; seeded Backend is #1
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — identifier BENCH-5 reported
+
+[sweep] run 3/3: fwvk16-luna-n3 (replay flow fwvk16-luna, no orchestrator)
+[reset] vikunja: deleted 1 leftover bench task(s)
+[reset] vikunja: re-created "Seed: ship repaired device" as BENCH-5 so the next task is BENCH-6
+[sweep] fwvk16-luna-n3: 4 drift ticket(s) → fwvk16-luna-n3-drift.json
+
+fwvk16-luna-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — project=Bench Project, description includes runid=true
+  obj 3: PASS — due date=2026-12-31T12:00:00Z, want 2026-12-31
+  obj 4: PASS — priority=3 (want 3 = High)
+  obj 5: PASS — labels=Backend#1; seeded Backend is #1
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — identifier BENCH-6 reported
+
+Learning sweep fwvk16-luna (K=3)
+┌─────────┬───┬──────────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid            │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼──────────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwvk16-luna-n1' │ '7/7'    │ 'completed' │ 8     │ 7    │ 0.0365    │ 0   │ '0/7'        │ 270    │
+│ 1       │ 2 │ 'fwvk16-luna-n2' │ '7/7'    │ 'success'   │ 0     │ 7    │ 0         │ 1   │ '7/7 (flow)' │ 76     │
+│ 2       │ 3 │ 'fwvk16-luna-n3' │ '7/7'    │ 'success'   │ 0     │ 7    │ 0         │ 1   │ '7/7 (flow)' │ 76     │
+└─────────┴───┴──────────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:8096
+  s_0ad254  validated    1 steps  3/3 (100%)
+           In {{v1}}, create a task titled '{{v3}}' with a description that includes the exact runid '{{v2}}'. Submit it,…
+  s_23669f  validated    8 steps  3/3 (100%)
+           On '{{v1}}' ({{v3}}), attach the existing Backend label by selecting it from the label suggestions, not by cre…
+  s_2518dd  validated    3 steps  3/3 (100%)
+           In {{v1}}, create a task titled '{{v3}}' with a description that includes the exact runid '{{v2}}'. Submit it,…
+  s_3b9427  validated    1 steps  3/3 (100%)
+           Sign in to Vikunja at {{v1}} using username {{v2}} and password exactly {{v3}}. Verify that the signed-in app …
+  s_3f583e  validated    5 steps  3/3 (100%)
+           On the page for '{{v1}}' ({{v3}}), add a comment whose text includes the exact runid '{{v2}}'. Submit the comm…
+  s_5177d7  validated    3 steps  3/3 (100%)
+           In {{v1}}, create a task titled '{{v3}}' with a description that includes the exact runid '{{v2}}'. Submit it,…
+  s_64d950  validated    1 steps  3/3 (100%)
+           On the page for '{{v1}}' in {{v3}}, set its due date to 2026-12-{{v4}}. Ensure it is saved and report the exac…
+  s_6eda58  validated    1 steps  3/3 (100%)
+           In the {{v1}} project, identify and report the exact titles of every task whose title starts with 'Seed:'. Do …
+  s_7ebec1  validated    6 steps  3/3 (100%)
+           On the page for '{{v1}}' ({{v3}}), set its priority to High and verify the task page displays High after savin…
+  s_9045c6  validated    5 steps  3/3 (100%)
+           In {{v1}}, create a task titled '{{v3}}' with a description that includes the exact runid '{{v2}}'. Submit it,…
+  s_9241f6  validated    9 steps  3/3 (100%)
+           Sign in to Vikunja at {{v1}} using username {{v2}} and password exactly {{v3}}. Verify that the signed-in app …
+  s_aadba7  validated   29 steps  3/3 (100%)
+           In the {{v1}} project, identify and report the exact titles of every task whose title starts with 'Seed:'. Do …
+  s_aba8c2  validated   17 steps  3/3 (100%)
+           On the page for '{{v1}}' in {{v3}}, set its due date to 2026-12-{{v4}}. Ensure it is saved and report the exac…
+  s_e629e2  validated    6 steps  3/3 (100%)
+           Sign in to Vikunja at {{v1}} using username {{v2}} and password exactly {{v3}}. Verify that the signed-in app …
+store: /home/user/sitelooper/bench/results/fwvk16-luna-skills
+
+summary: /home/user/sitelooper/bench/results/fwvk16-luna-sweep.json
