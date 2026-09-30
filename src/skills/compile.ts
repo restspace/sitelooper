@@ -5,7 +5,7 @@ import { urlMatches } from '../execution/url.js';
 /** What the recorder knew about one action (daemon/step-evidence.ts StepEvidence), as abandonedLinkClick reads it. */
 type RecordedEvidence = NonNullable<RecordedStep['obs']>;
 import type { Report } from '../agent/report.js';
-import { contractFor, newSkillId, originOf, type Skill, type SkillParam, type SkillStep, type StepExpectation } from './store.js';
+import { CONTROL_ARGS, contractFor, newSkillId, originOf, type Skill, type SkillParam, type SkillStep, type StepExpectation } from './store.js';
 import { MIN_ID_LEN, digitDominant, looksLikeId, skeleton, tokenPattern } from './shape.js';
 import { linkMintedParts, occursAsToken, replaceAsToken, unseenGotoParts } from './ledger.js';
 import { WILDCARD, escapeRe, identityRe, maskVolatile } from '../shared/text.js';
@@ -65,6 +65,11 @@ export interface TransformNote {
 
 /** Args whose string values are candidates for parameter slots. */
 const VALUE_ARGS = new Set(['value', 'text', 'option', 'url', 'prompt_text']);
+
+/** `substituteDeep` over a step's args, with its control args (store.ts CONTROL_ARGS) kept as recorded. */
+function substituteArgs(args: Record<string, unknown>, slots: Map<string, string>): Record<string, unknown> {
+  return Object.fromEntries(Object.entries(args).map(([k, v]) => [k, CONTROL_ARGS.has(k) ? v : substituteDeep(v, slots)]));
+}
 
 /** Steps whose recorded diff is a landing, not an effect (see expectationFor). */
 export const NAVIGATION_TOOLS = new Set(['goto', 'back']);
@@ -1023,7 +1028,7 @@ export function compileSkills(input: CompileInput): Skill[] {
       // post-nav url is the first downstream occurrence).
       const mintedBefore = mintedMap((m) => m.keptIndex < g);
       const mintedHere = mintedMap((m) => m.keptIndex <= g);
-      const args = substituteDeep(substituteDeep(step.args, textSlots), mintedBefore) as Record<string, unknown>;
+      const args = substituteArgs(substituteArgs(step.args, textSlots), mintedBefore);
       // A navigation url is rebuilt from the RECORDED string, because a
       // url-origin slot may only be written at the position the ledger banked
       // it at. substitute() is textual and position-blind: it refuses a number

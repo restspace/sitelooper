@@ -220,6 +220,34 @@ export function contractFor(steps: readonly SkillStep[]): number {
 }
 
 /**
+ * Args that say HOW a tool acts, never on what: a read's kind and attribute
+ * name, a wait's state, a click's modifiers, a dialog's answer. Compile never
+ * slots them, even when a run value spells the same word: espocrm fwec17 read
+ * a cell whose value was "text", and every later read's `what: "text"` became
+ * `{{v4}}`, which compile refused and replay would fill with the next run's cell.
+ */
+export const CONTROL_ARGS: ReadonlySet<string> = new Set(['what', 'attr', 'state', 'modifiers', 'action']);
+
+/**
+ * Put back a control arg a build before 0.5.1 stored as a whole slot, from
+ * the example the slot was recorded with (the word it replaced). In place;
+ * true when anything changed.
+ */
+export function restoreControlArgs(skill: Skill): boolean {
+  let changed = false;
+  for (const step of skill.steps ?? []) {
+    for (const k of CONTROL_ARGS) {
+      const m = typeof step.args?.[k] === 'string' ? /^\{\{([vd]\d+)\}\}$/.exec(step.args[k] as string) : null;
+      const example = m ? skill.params?.[m[1]]?.example : undefined;
+      if (typeof example !== 'string' || example === '') continue;
+      step.args[k] = example;
+      changed = true;
+    }
+  }
+  return changed;
+}
+
+/**
  * Can this build execute the procedure as written?
  *
  * Refusing is the whole point: a procedure from a newer build means fields
@@ -895,7 +923,10 @@ export class SkillStore {
    */
   private admit(skill: Skill, file: string): boolean {
     const verdict = contractVerdict(skill);
-    if (verdict.ok) return true;
+    if (verdict.ok) {
+      restoreControlArgs(skill);
+      return true;
+    }
     // Keyed on the id as well as the file: a legacy whole-file store holds
     // many procedures, and each refused one is its own thing to report.
     if (!this.unreadable.some((u) => u.file === file && u.id === skill.id)) {
