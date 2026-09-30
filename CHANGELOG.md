@@ -1,5 +1,70 @@
 # Changelog
 
+## 0.5.0 — 2026-09-30
+
+### Site facts
+- sitelooper now keeps a per-origin store of what it has observed about each site, beside the
+  skill store: which URL positions are record ids, how the app formats dates, money and counts,
+  which values are minted by the app, and which names were on the page before any run changed
+  anything. Replays, recovery and `compile` consult these facts instead of guessing from a value's
+  shape. For example, a record number the app prints is referenced, not frozen, and a seeded
+  name is never mistaken for a run value. Seed names and credentials are stored only as hashes.
+- `compile` carries a snapshot of the facts it relied on into the flow, and prints one line per
+  origin (`facts <origin>: N relied (M hard), K advisory`). `--json` output includes them.
+
+### Replays
+- A key press, a select2-style highlight committed by click and a keyboard pick all replay as a
+  pick of the option's name, not its position.
+- A slow submit that Playwright logged as done before its timeout is not treated as a failed
+  click.
+- The check before a key press leaves focus where the recording left it.
+- A popup's opener is skipped only when the popup and every other effect of the click already
+  show.
+- A pick this run already applied is not un-ticked; a disclosure pair is one toggle; a click the
+  app ignored once is pressed again.
+- Every wait the shared execution code makes is bounded.
+- A `page.evaluate` that sends a request or patches `fetch` is refused as a recorded mutation,
+  since no replay would reproduce it.
+
+### Reports and values
+- A value is reported only where this run's page showed it, and a value the run typed is
+  reported only where it was committed. A value no line of the page showed is the model's
+  conclusion, not a published read.
+- Labelled composites are carved into the element texts they are made of; counts of nothing
+  read as `0`; a verdict with commentary stays a verdict.
+- An id the app minted is referenced at any URL position, including one-digit ids and ids
+  printed in a control's name.
+
+### Compile
+- A value the procedure read and then typed is bound from that read in the compiled script.
+- A choice made by an attempt that failed but stuck is carried into the instruction that
+  relied on it.
+- `compile` never wildcards inside a `{{…}}` marker, nor on a punctuation-only published value.
+- An element named by a template (`what={{vN}}`) is refused with a named reason rather than
+  compiled into a read that would come back blank.
+
+### Recording
+- A journal of network, page and navigation events is kept while recording (off with
+  `SITELOOPER_JOURNAL=0`). With `SITELOOPER_JOURNAL_FEEDBACK=on` its facts are told to the
+  recording model (default off).
+- Vision (default off): `SITELOOPER_VISION=on` or `config set vision on` shows the recording
+  model its screenshots when the model accepts images; `SITELOOPER_VISION_AUTO=on` attaches one
+  after each state-changing action.
+- Sourcing hold (default off): with `SITELOOPER_SOURCING_HOLD=on` a report value with no
+  observed source is held back and asked for again, rather than published.
+- `rerecord` keeps the re-recorded step's reported values and retires the chain it replaces.
+
+### CLI
+- An argument or `--stdin` text holding `$0` as expanded by a shell (`/bin/sh`) is refused,
+  since the shell has already substituted it; `--allow-shell-path` overrides.
+
+### Verification
+- The September 2026 matrix, ten apps on cloud boxes against reset instances, scored by each
+  app's own database or API: every sitelooper run verified every objective (30 of 30), every
+  replay ran with zero model turns, and nine of ten compiled specs pass. EspoCRM's refused
+  (templated element, above). Detail in `bench/RESULTS.md` and `bench/MATRIX-2026-09.md`.
+
+
 ## 0.4.1 — 2026-09-23
 
 ### Credentials
