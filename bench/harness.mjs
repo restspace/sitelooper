@@ -39,6 +39,7 @@ import { loadRates, priceRun } from './pricing.mjs';
 import { APP_DEFAULTS } from './app-defaults.mjs';
 import { resetTarget } from './app-reset.mjs';
 import { resolveEnvRefs } from './env-refs.mjs';
+import { bodyRetryReason } from './or-errors.mjs';
 
 /**
  * Three arm SHAPES, because the incumbents are not the same kind of thing:
@@ -1068,11 +1069,19 @@ async function post(body, headers) {
       });
       throw new Error(`API ${res.status}: ${res.text.slice(0, 500)}`);
     }
+    let json;
     try {
-      return JSON.parse(res.text);
+      json = JSON.parse(res.text);
     } catch (err) {
       lastErr = `bad JSON: ${err?.message ?? err}`;
+      continue;
     }
+    const retryReason = bodyRetryReason(json);
+    if (retryReason) {
+      lastErr = retryReason;
+      continue;
+    }
+    return json;
   }
   throw new Error(`model call failed after ${ATTEMPTS} attempts (last: ${lastErr})`);
 }
