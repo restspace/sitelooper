@@ -1,0 +1,685 @@
+{
+  "name": "fwrd95-luna",
+  "origin": "http://127.0.0.1:4180",
+  "startUrl": "http://127.0.0.1:4180/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-signin",
+      "instruction": "Sign in to the repair-desk app at http://127.0.0.1:4180/ using email bench@example.com and the password exactly as the literal text {{env:APP_PASSWORD}} (the environment fills it when typed). Verify that the authenticated app is open and report the visible result.",
+      "skill": "s_86ca79",
+      "params": {
+        "v1": "http://127.0.0.1:4180/",
+        "v2": "bench@example.com",
+        "v3": "{{env:APP_PASSWORD}}"
+      },
+      "outputs": [
+        "signed_in_user",
+        "repair_tickets_page_heading",
+        "active_tickets_list_summary",
+        "newest_ticket_reference",
+        "newest_ticket_title"
+      ],
+      "recorded": {
+        "signed_in_user": "Bench User",
+        "repair_tickets_page_heading": "Repair tickets",
+        "active_tickets_list_summary": "Showing 1–10 of 13",
+        "newest_ticket_reference": "RD-1014",
+        "newest_ticket_title": "Under-counter fridge door misaligned",
+        "url": "http://127.0.0.1:4180/#/tickets"
+      },
+      "route": "http://127.0.0.1:4180/#/tickets",
+      "outputEvidence": {
+        "signed_in_user": {
+          "same": 1,
+          "differed": 0
+        },
+        "repair_tickets_page_heading": {
+          "same": 1,
+          "differed": 0
+        },
+        "active_tickets_list_summary": {
+          "same": 1,
+          "differed": 0
+        },
+        "newest_ticket_reference": {
+          "same": 1,
+          "differed": 0
+        },
+        "newest_ticket_title": {
+          "same": 1,
+          "differed": 0
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "02-create",
+      "instruction": "Create a repair ticket titled {{runid}} RD Bench Ticket, satisfying any required fields with appropriate values, then wait for the ticket to appear in the app and report its title and visible reference/status.",
+      "skill": "s_0aacb1",
+      "params": {
+        "v2": "{{runid}} RD Bench Ticket",
+        "v1": "{{runid}}"
+      },
+      "outputs": [
+        "ticket_reference",
+        "ticket_title",
+        "ticket_customer",
+        "ticket_parts_count",
+        "ticket_created",
+        "tickets_list_after",
+        "run_reference_prefix"
+      ],
+      "recorded": {
+        "ticket_reference": "RD-1015",
+        "ticket_title": "fwrd95-luna-n1 RD Bench Ticket",
+        "ticket_customer": "Luna Facilities",
+        "ticket_status": "Draft",
+        "ticket_parts_count": "0",
+        "ticket_created": "2026-09-29",
+        "tickets_list_after": "Showing 1–10 of 14",
+        "tickets_list_before": "Showing 1–10 of 13",
+        "run_reference_prefix": "fwrd95-luna-n1"
+      },
+      "route": "http://127.0.0.1:4180/#/tickets",
+      "outputEvidence": {
+        "ticket_reference": {
+          "same": 0,
+          "differed": 1
+        },
+        "ticket_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "ticket_customer": {
+          "same": 1,
+          "differed": 0
+        },
+        "ticket_status": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "ticket_parts_count": {
+          "same": 1,
+          "differed": 0
+        },
+        "ticket_created": {
+          "same": 0,
+          "differed": 1
+        },
+        "tickets_list_after": {
+          "same": 1,
+          "differed": 0
+        },
+        "tickets_list_before": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "run_reference_prefix": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "03-add",
+      "instruction": "On ticket {{02-create.ticket_reference}} ({{runid}} RD Bench Ticket), add a part named {{runid}} RD Part A with cost 100 and markup 25. Wait for the saved part to appear and report the app-computed price displayed.",
+      "skill": "s_ac71b0",
+      "params": {
+        "v1": "{{02-create.ticket_reference}}",
+        "v2": "{{runid}} RD Bench Ticket",
+        "v4": "{{runid}} RD Part A",
+        "v5": "100",
+        "v6": "25",
+        "v3": "{{runid}}"
+      },
+      "outputs": [
+        "ticket_reference",
+        "ticket_title",
+        "part_name",
+        "part_cost",
+        "part_markup",
+        "part_quantity",
+        "part_supplier",
+        "app_computed_price",
+        "parts_table_total",
+        "run_reference_prefix"
+      ],
+      "recorded": {
+        "ticket_reference": "RD-1015",
+        "ticket_title": "fwrd95-luna-n1 RD Bench Ticket",
+        "part_name": "fwrd95-luna-n1 RD Part A",
+        "part_cost": "$100.00",
+        "part_markup": "25%",
+        "part_quantity": "1",
+        "part_supplier": "No supplier",
+        "app_computed_price": "$125.00",
+        "parts_table_total": "Total (price × quantity) $125.00",
+        "run_reference_prefix": "fwrd95-luna-n1",
+        "url": "http://127.0.0.1:4180/#/tickets/t15",
+        "url.h1": "t15"
+      },
+      "route": "http://127.0.0.1:4180/#/tickets/:id",
+      "outputEvidence": {
+        "ticket_reference": {
+          "same": 0,
+          "differed": 1
+        },
+        "ticket_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "part_name": {
+          "same": 0,
+          "differed": 1
+        },
+        "part_cost": {
+          "same": 1,
+          "differed": 0
+        },
+        "part_markup": {
+          "same": 1,
+          "differed": 0
+        },
+        "part_quantity": {
+          "same": 1,
+          "differed": 0
+        },
+        "part_supplier": {
+          "same": 1,
+          "differed": 0
+        },
+        "app_computed_price": {
+          "same": 1,
+          "differed": 0
+        },
+        "parts_table_total": {
+          "same": 0,
+          "differed": 1
+        },
+        "run_reference_prefix": {
+          "same": 0,
+          "differed": 1
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        },
+        "url.h1": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "04-add",
+      "instruction": "On ticket {{02-create.ticket_reference}}, add a second part named {{runid}} RD Part B with cost 200 and markup 25. Wait for the saved part to appear and report the computed price for Part B.",
+      "skill": "s_34d73d",
+      "params": {
+        "v1": "{{02-create.ticket_reference}}",
+        "v3": "{{runid}} RD Part B",
+        "v4": "200",
+        "v5": "25",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "ticket_reference",
+        "ticket_title",
+        "part_a_name",
+        "part_a_cost",
+        "part_a_markup",
+        "part_a_quantity",
+        "part_a_supplier",
+        "part_a_price",
+        "part_b_name",
+        "part_b_cost",
+        "part_b_markup",
+        "part_b_computed_price",
+        "parts_table_contents",
+        "parts_total_after",
+        "run_reference_prefix"
+      ],
+      "recorded": {
+        "ticket_reference": "RD-1015",
+        "ticket_title": "fwrd95-luna-n1 RD Bench Ticket",
+        "part_a_name": "fwrd95-luna-n1 RD Part A",
+        "part_a_cost": "$100.00",
+        "part_a_markup": "25%",
+        "part_a_quantity": "1",
+        "part_a_supplier": "No supplier",
+        "part_a_price": "$125.00",
+        "part_b_name": "fwrd95-luna-n1 RD Part B",
+        "part_b_cost": "$200.00",
+        "part_b_markup": "25%",
+        "part_b_quantity": "1",
+        "part_b_supplier": "No supplier",
+        "part_b_computed_price": "$250.00",
+        "parts_table_contents": "NAME\tCOST\tMARKUP\tQTY\tSUPPLIER\tPRICE\tACTIONS\nfwrd95-luna-n1 RD Part A\t$100.00\t25%\t1\tNo supplier\t$125.00\tEdit Delete\nfwrd95-luna-n1 RD Part B\t$200.00\t25%\t1\tNo supplier\t$250.00\tEdit Delete\nTotal (price × quantity)\t$375.00",
+        "parts_total_after": "$375.00",
+        "run_reference_prefix": "fwrd95-luna-n1"
+      },
+      "route": "http://127.0.0.1:4180/#/tickets/:id",
+      "outputEvidence": {
+        "ticket_reference": {
+          "same": 0,
+          "differed": 1
+        },
+        "ticket_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "part_a_name": {
+          "same": 0,
+          "differed": 1
+        },
+        "part_a_cost": {
+          "same": 1,
+          "differed": 0
+        },
+        "part_a_markup": {
+          "same": 1,
+          "differed": 0
+        },
+        "part_a_quantity": {
+          "same": 1,
+          "differed": 0
+        },
+        "part_a_supplier": {
+          "same": 1,
+          "differed": 0
+        },
+        "part_a_price": {
+          "same": 1,
+          "differed": 0
+        },
+        "part_b_name": {
+          "same": 0,
+          "differed": 1
+        },
+        "part_b_cost": {
+          "same": 1,
+          "differed": 0
+        },
+        "part_b_markup": {
+          "same": 1,
+          "differed": 0
+        },
+        "part_b_quantity": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "part_b_supplier": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "part_b_computed_price": {
+          "same": 1,
+          "differed": 0
+        },
+        "parts_table_contents": {
+          "same": 0,
+          "differed": 1
+        },
+        "parts_total_after": {
+          "same": 1,
+          "differed": 0
+        },
+        "run_reference_prefix": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "05-edit",
+      "instruction": "Edit {{runid}} RD Part A on ticket {{02-create.ticket_reference}}, changing its cost from 100 to 150 while keeping markup 25. Save, wait for the row to refresh, and report the updated cost and computed price.",
+      "skill": "s_9c1460",
+      "params": {
+        "v1": "{{runid}} RD Part A",
+        "v3": "{{02-create.ticket_reference}}",
+        "v4": "150",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "ticket_reference",
+        "part_a_name",
+        "part_a_updated_cost",
+        "part_a_markup",
+        "part_a_quantity",
+        "part_a_updated_computed_price",
+        "part_b_cost",
+        "part_b_price",
+        "parts_total_after",
+        "parts_table_contents",
+        "run_reference_prefix"
+      ],
+      "recorded": {
+        "ticket_reference": "RD-1015",
+        "part_a_name": "fwrd95-luna-n1 RD Part A",
+        "part_a_updated_cost": "$150.00",
+        "part_a_markup": "25%",
+        "part_a_quantity": "1",
+        "part_a_updated_computed_price": "$187.50",
+        "part_b_cost": "$200.00",
+        "part_b_price": "$250.00",
+        "parts_total_after": "$437.50",
+        "parts_total_before": "$375.00",
+        "parts_table_contents": "NAME\tCOST\tMARKUP\tQTY\tSUPPLIER\tPRICE\tACTIONS\nfwrd95-luna-n1 RD Part A\t$150.00\t25%\t1\tNo supplier\t$187.50\tEdit Delete\nfwrd95-luna-n1 RD Part B\t$200.00\t25%\t1\tNo supplier\t$250.00\tEdit Delete\nTotal (price × quantity)\t$437.50",
+        "run_reference_prefix": "fwrd95-luna-n1"
+      },
+      "route": "http://127.0.0.1:4180/#/tickets/:id",
+      "outputEvidence": {
+        "ticket_reference": {
+          "same": 0,
+          "differed": 1
+        },
+        "part_a_name": {
+          "same": 0,
+          "differed": 1
+        },
+        "part_a_updated_cost": {
+          "same": 1,
+          "differed": 0
+        },
+        "part_a_markup": {
+          "same": 1,
+          "differed": 0
+        },
+        "part_a_quantity": {
+          "same": 1,
+          "differed": 0
+        },
+        "part_a_updated_computed_price": {
+          "same": 1,
+          "differed": 0
+        },
+        "part_b_cost": {
+          "same": 1,
+          "differed": 0
+        },
+        "part_b_price": {
+          "same": 1,
+          "differed": 0
+        },
+        "parts_total_after": {
+          "same": 1,
+          "differed": 0
+        },
+        "parts_total_before": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "parts_table_contents": {
+          "same": 0,
+          "differed": 1
+        },
+        "run_reference_prefix": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "06-change",
+      "instruction": "On ticket {{02-create.ticket_reference}}, change the ticket status to Ready. The app enforces preconditions: discover the specific blockers shown, satisfy all required conditions, then retry Ready. Verify the final status and report exactly what the app required (including any confirmation text or prerequisite changes).",
+      "skill": "s_6c65fd",
+      "params": {
+        "v1": "{{02-create.ticket_reference}}",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "ticket_reference",
+        "final_status",
+        "blocker_alert_text",
+        "part_a_final_row",
+        "part_b_final_row",
+        "parts_total",
+        "prerequisite_change",
+        "run_reference_prefix",
+        "buttons_after_ready_1",
+        "buttons_after_ready_2"
+      ],
+      "recorded": {
+        "ticket_reference": "RD-1015",
+        "final_status": "Ready",
+        "blocker_alert_text": "Ticket is not ready / Part \"fwrd95-luna-n1 RD Part A\" has no supplier / Part \"fwrd95-luna-n1 RD Part B\" has no supplier",
+        "part_a_final_row": "fwrd95-luna-n1 RD Part A | $150.00 | 25% | 1 | Bench Supply Co | $187.50",
+        "part_b_final_row": "fwrd95-luna-n1 RD Part B | $200.00 | 25% | 1 | Bench Supply Co | $250.00",
+        "parts_total": "$437.50",
+        "prerequisite_change": "set Supplier = \"Bench Supply Co\" on both parts via each row's Edit dialog",
+        "run_reference_prefix": "fwrd95-luna-n1",
+        "buttons_after_ready_1": "Mark Draft",
+        "buttons_after_ready_2": "Mark Closed"
+      },
+      "route": "http://127.0.0.1:4180/#/tickets/:id",
+      "outputEvidence": {
+        "ticket_reference": {
+          "same": 0,
+          "differed": 1
+        },
+        "final_status": {
+          "same": 1,
+          "differed": 0
+        },
+        "blocker_alert_text": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "part_a_final_row": {
+          "same": 0,
+          "differed": 1
+        },
+        "part_b_final_row": {
+          "same": 0,
+          "differed": 1
+        },
+        "parts_total": {
+          "same": 1,
+          "differed": 0
+        },
+        "prerequisite_change": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "run_reference_prefix": {
+          "same": 0,
+          "differed": 1
+        },
+        "buttons_after_ready_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "buttons_after_ready_2": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "07-remove",
+      "instruction": "On ticket {{02-create.ticket_reference}}, remove both parts {{runid}} RD Part A and {{runid}} RD Part B, wait until both are absent from the Parts table, then archive the ticket using the app's archive action. Verify that both parts are gone and that the ticket is archived/not active, reporting any confirmation text and the resulting visible status/list evidence.",
+      "skill": "s_139b2b",
+      "params": {
+        "v1": "{{02-create.ticket_reference}}",
+        "v2": "{{runid}} RD Part A",
+        "v4": "{{runid}} RD Part B",
+        "v3": "{{runid}}"
+      },
+      "outputs": [
+        "ticket_reference",
+        "delete_part_a_confirm_text",
+        "delete_part_b_confirm_text",
+        "parts_table_after_deletes",
+        "archive_confirmation_text",
+        "list_default_active_count",
+        "list_with_show_archived",
+        "delete_part_confirm_text",
+        "delete_part_b_confirmation_text",
+        "archived_ticket_title",
+        "parts_section_heading",
+        "parts_table_empty_state",
+        "run_reference_prefix"
+      ],
+      "recorded": {
+        "ticket_reference": "RD-1015",
+        "delete_part_a_confirm_text": "Confirm — Delete the part \"fwrd95-luna-n1 RD Part A\" from this ticket? This cannot be undone. (Cancel / Delete part)",
+        "delete_part_b_confirm_text": "Confirm — Delete the part \"fwrd95-luna-n1 RD Part B\" from this ticket? This cannot be undone. (Cancel / Delete part)",
+        "parts_table_after_deletes": "NAME\tCOST\tMARKUP\tQTY\tSUPPLIER\tPRICE\tACTIONS | No parts on this ticket yet.",
+        "ticket_status_after_archive": "Status: Ready, Archived",
+        "buttons_after_archive": "Mark Draft, Mark Closed, Unarchive ticket",
+        "archive_confirmation_text": "none — no dialog or toast appeared; the only visible change was the Archive ticket button becoming Unarchive ticket",
+        "list_default_active_count": "Showing 1–10 of 13 (RD-1015 absent)",
+        "list_with_show_archived": "Showing 1–10 of 15",
+        "rd_1015_row_with_archived": "RD-1015 | fwrd95-luna-n1 RD Bench Ticket Archived | Luna Facilities | Ready | 0 | 2026-09-29",
+        "delete_part_confirm_text": "Confirm\n\nDelete the part \"fwrd95-luna-n1 RD Part A\" from this ticket? This cannot be undone.\n\nCancel\nDelete part",
+        "delete_part_b_confirmation_text": "Confirm\n\nDelete the part \"fwrd95-luna-n1 RD Part B\" from this ticket? This cannot be undone.\n\nCancel\nDelete part",
+        "tickets_count_with_archi": "Showing 1–10 of 15",
+        "archived_ticket_title": "fwrd95-luna-n1 RD Bench Ticket",
+        "unarchive_ticket_button": "Unarchive ticket",
+        "parts_section_heading": "Parts",
+        "parts_table_empty_state": "No parts on this ticket yet.",
+        "run_reference_prefix": "fwrd95-luna-n1"
+      },
+      "route": "http://127.0.0.1:4180/#/tickets",
+      "outputEvidence": {
+        "ticket_reference": {
+          "same": 0,
+          "differed": 1
+        },
+        "delete_part_a_confirm_text": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "delete_part_b_confirm_text": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "parts_table_after_deletes": {
+          "same": 1,
+          "differed": 0
+        },
+        "ticket_status_after_archive": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "buttons_after_archive": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "archive_confirmation_text": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "list_default_active_count": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "list_with_show_archived": {
+          "same": 1,
+          "differed": 0
+        },
+        "rd_1015_row_with_archived": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "delete_part_confirm_text": {
+          "same": 0,
+          "differed": 1
+        },
+        "delete_part_b_confirmation_text": {
+          "same": 0,
+          "differed": 1
+        },
+        "tickets_count_with_archi": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "archived_ticket_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "unarchive_ticket_button": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "parts_section_heading": {
+          "same": 0,
+          "differed": 1
+        },
+        "parts_table_empty_state": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "run_reference_prefix": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "session": "fwrd95-luna-n1",
+    "created": "2026-09-30T00:00:33.817Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "02-create",
+      "outputs": [
+        "ticket_status",
+        "tickets_list_before"
+      ]
+    },
+    {
+      "stepId": "04-add",
+      "outputs": [
+        "part_b_quantity",
+        "part_b_supplier"
+      ]
+    },
+    {
+      "stepId": "05-edit",
+      "outputs": [
+        "parts_total_before"
+      ]
+    },
+    {
+      "stepId": "07-remove",
+      "outputs": [
+        "ticket_status_after_archive",
+        "buttons_after_archive",
+        "rd_1015_row_with_archived",
+        "tickets_count_with_archi",
+        "unarchive_ticket_button"
+      ]
+    }
+  ]
+}

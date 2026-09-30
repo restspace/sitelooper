@@ -1,0 +1,182 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwrd95-luna-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwrd95-luna-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwrd95-luna-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/bench/results/fwrd95-luna-spec-spec-tmp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwrd95-luna-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwrd95-luna.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwrd95-luna-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwrd95-luna.spec.ts",
+      "file": "fwrd95-luna.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwrd95-luna",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 52121,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper step] 01-signin\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-create\n"
+                    },
+                    {
+                      "text": "[sitelooper drift] 03-add s_c133a8/6 target: primary getByText('RD-1018', { exact: true }) missed; used #2 getByTestId('ticket-ref') (#1 ambiguous)\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-add\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-add\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 05-edit\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 06-change\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 07-remove\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-signin: Sign in to the repair-desk app at http://127.0.0.1:4180/ using email bench@example.com and the password exactly as the literal text {{env:APP_PASSWORD}} (the environment fills it when typed). Verify that the authenticated app is open and report the visible result.",
+                      "duration": 5731
+                    },
+                    {
+                      "title": "02-create: Create a repair ticket titled {{runid}} RD Bench Ticket, satisfying any required fields with appropriate values, then wait for the ticket to appear in the app and report its title and visible reference/status.",
+                      "duration": 3551
+                    },
+                    {
+                      "title": "03-add: On ticket {{02-create.ticket_reference}} ({{runid}} RD Bench Ticket), add a part named {{runid}} RD Part A with cost 100 and markup 25. Wait for the saved part to appear and report the app-computed price displayed.",
+                      "duration": 12826
+                    },
+                    {
+                      "title": "04-add: On ticket {{02-create.ticket_reference}}, add a second part named {{runid}} RD Part B with cost 200 and markup 25. Wait for the saved part to appear and report the computed price for Part B.",
+                      "duration": 14776
+                    },
+                    {
+                      "title": "05-edit: Edit {{runid}} RD Part A on ticket {{02-create.ticket_reference}}, changing its cost from 100 to 150 while keeping markup 25. Save, wait for the row to refresh, and report the updated cost and computed price.",
+                      "duration": 2438
+                    },
+                    {
+                      "title": "06-change: On ticket {{02-create.ticket_reference}}, change the ticket status to Ready. The app enforces preconditions: discover the specific blockers shown, satisfy all required conditions, then retry Ready. Verify the final status and report exactly what the app required (including any confirmation text or prerequisite changes).",
+                      "duration": 6519
+                    },
+                    {
+                      "title": "07-remove: On ticket {{02-create.ticket_reference}}, remove both parts {{runid}} RD Part A and {{runid}} RD Part B, wait until both are absent from the Parts table, then archive the ticket using the app's archive action. Verify that both parts are gone and that the ticket is archived/not active, reporting any confirmation text and the resulting visible status/list evidence.",
+                      "duration": 5694
+                    }
+                  ],
+                  "startTime": "2026-09-30T00:02:31.476Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": "W3NpdGVsb29wZXIgZHJpZnRdIDAzLWFkZCBzX2MxMzNhOC82IHRhcmdldDogcHJpbWFyeSBnZXRCeVRleHQoJ1JELTEwMTgnLCB7IGV4YWN0OiB0cnVlIH0pIG1pc3NlZDsgdXNlZCAjMiBnZXRCeVRlc3RJZCgndGlja2V0LXJlZicpICgjMSBhbWJpZ3VvdXMp"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "07f2d8630b553101e8b2-34b933a8d78685e9a6d0",
+          "file": "fwrd95-luna.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-09-30T00:02:29.305Z",
+    "duration": 54524.889,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}
