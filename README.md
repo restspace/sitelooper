@@ -26,25 +26,40 @@ state is queried.*
 
 ## Results
 
-Each run was scored against the app's own database or API, never against the tool's own
-report. These are four of the ten benchmarked apps, compared with an agent (agent-browser) that
-redoes the job on every run:
+Ten self-hosted apps, each job done once to record it, then twice more with no model, then as a
+compiled Playwright spec. The comparator is [agent-browser](https://github.com/vercel-labs/agent-browser)
+driven by an LLM, which redoes the job on every run. Every run was scored against the app's own
+database or API, never against the tool's own report. September 2026:
 
-| app | agent, every run | sitelooper, first run | sitelooper replay | compiled spec |
-|---|---|---|---|---|
-| repair-desk | 6/6 · $0.19 · 67s | 6/6 · $0.08 · 396s | **6/6 · $0 · 31s** | 6/6 · 35s |
-| Kanboard | 2/6 (turn cap) · $0.77 · 118s | 6/6 · $0.07 · 320s | **6/6 · $0 · 28s** | 4/4 + 2 report-only · 25s |
-| Grafana | 6/6 · $1.05 · 448s | 6/6 · $0.10 · 801s | **6/6 · $0 · 76s** | 4/4 + 2 report-only · 77s |
-| Odoo | 6/6 · $1.51 · 302s | 6/6 · $0.11 · 482s | **6/6 · $0 · 62s** | 6/6 · 55s |
+| app | sitelooper, first run | sitelooper replay ×2 | compiled spec | agent-browser, GPT-6 Luna | agent-browser, GPT-6.1 Sol |
+|---|---|---|---|---|---|
+| repair-desk | 6/6 · $0.02 · 187s | **6/6 · $0 · 52s** | 6/6 | 6/6 · $0.01 | 6/6 · $0.29 |
+| Odoo | 6/6 · $0.07 · 589s | **6/6 · $0 · 193s** | 6/6 | 3/6 · $0.02 | 6/6 · $0.37 |
+| Grafana | 6/6 · $0.09 · 615s | **6/6 · $0 · 145s** | pass | 5/6, then 6/6 · $0.04 | 4/6 · $0.33 |
+| Kanboard | 6/6 · $0.05 · 357s | **6/6 · $0 · 56s** | 4/4 + 2 report-only | 6/6, duplicate comment · $0.005 | 6/6 · $0.23 |
+| OpenProject | 7/7 · $0.05 · 377s | **7/7 · $0 · 93-132s** | 5/5 + 2 report-only | 7/7, duplicate comment · $0.02 | 7/7 · $0.38 |
+| Gitea | 7/7 · $0.04 · 324s | **7/7 · $0 · 76s** | 5/5 + 2 report-only | 6/7 · $0.09 | 7/7 · $0.25 |
+| Vikunja | 7/7 · $0.04 · 270s | **7/7 · $0 · 76s** | 5/5 + 2 report-only | 7/7, duplicate comment · $0.01 | 7/7 · $0.28 |
+| EspoCRM | 7/7 · $0.06 · 454s | **7/7 · $0 · 165s** | refused to compile | 1/7 · $0.02 | 7/7 · $0.23 |
+| Snipe-IT | 7/7 · $0.04 · 298s | **7/7 · $0 · 78s** | 5/5 + 2 report-only | 1/7 · $0.02 | 7/7 · $0.25 |
+| Ghost | 7/7 · $0.02 · 142s | **7/7 · $0 · 46s** | 5/5 + 2 report-only | 7/7 · $0.005 | 7/7 · $0.10 |
 
-When the same agent wrote its own Playwright script from its run, the scripts verified
-**14 of 48** objectives across these four apps. On Odoo, one script confirmed a sales order with
-no lines and only then reported failure. sitelooper's compiled specs verified **20 of 20**
-checkable objectives.
+- **sitelooper verified every objective in all 30 runs**, with GPT-6 Luna writing the
+  instructions and DeepSeek V4.1 Flash driving the browser. Every replay ran with zero model
+  calls. Nine of the ten compiled specs pass; EspoCRM's refuses to compile rather than guess.
+- **agent-browser on the same model was clean on 3 of 11 runs.** It failed outright on Odoo,
+  EspoCRM and Snipe-IT, posted duplicate comments on three apps, and twice reported work as done
+  that the app had not saved.
+- **On GPT-6.1 Sol, about 20× the per-token price, agent-browser was clean on 9 of 10.** It still
+  pays that price on every run, and on Grafana it again reported unsaved settings as verified.
 
-- [bench/RESULTS.md](bench/RESULTS.md): all ten apps, the protocol, and what the benchmark does
-  not show
-- [bench/RESULTS-HISTORY.md](bench/RESULTS-HISTORY.md): the full matrices from rounds 24–32
+Report-only objectives ask a run to state a value in its final report, which a compiled spec does
+not write.
+
+- [bench/RESULTS.md](bench/RESULTS.md): the protocol, the models, costs, and what the benchmark
+  does not show
+- [bench/MATRIX-2026-09.md](bench/MATRIX-2026-09.md): every run, with its run id, commit and
+  results branch
 - [bench/SWEEPS.md](bench/SWEEPS.md): one row per sweep, with the cause of every miss
 
 ## Quick start

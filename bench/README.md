@@ -354,14 +354,9 @@ These are open, and the benchmark is not publishable until they are closed:
    in-process in milliseconds, with no processes to stop and no filesystem copy to get wrong,
    and the harness now picks the right mechanism from `--target`. So this gap is really only
    open for the private target, and only until a sweep confirms the baseline holds.
-2. **Single application — a second target now exists, but nothing has been run against it.**
-   A benchmark run only against a private app cannot be reproduced by a reader.
-   `bench/app/` is a neutral target that ships with this repo and needs no credentials or
-   provisioning: `node bench/app/server.mjs`, zero dependencies (see `bench/app/README.md`),
-   with `bench/tasks/repairdesk-ticket-flow.md` as the structurally equivalent task. What is
-   still missing is results: **every number published so far comes from the private app.**
-   This gap closes when a sweep has been run against the neutral target and the two targets'
-   figures are reported side by side.
+2. **Closed: the published numbers are reproducible.** Every figure in [RESULTS.md](RESULTS.md)
+   comes from the in-repo repair-desk app (`node bench/app/server.mjs`) or one of nine
+   self-hosted third-party apps under `bench/thirdparty/`, not from the private app.
 3. **The task set was written while developing sitelooper** against this app, which risks
    selection bias toward flows it handles well. The neutral target reduces the app-specific
    part of this but not all of it: `repairdesk-ticket-flow.md` is deliberately a structural

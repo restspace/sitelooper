@@ -554,6 +554,29 @@ after that point is invalid, verifies (no model) are not. fwop15-cv2 and fwod88-
 for the top-up.
 
 
+## Full Luna batch, all ten apps, with agent-browser on Luna and on GPT-6.1 Sol (main 1c4b8b14 → 7a890f25, 2026-09-29/30) — 9/10 green; ec verified and replayed model-free but refused to compile
+
+Same flags as the second Luna run (`--granularity objective`). Each app on its own cloud environment whose setup script
+brings the target up; a restored (cached) environment is brought back by the SessionStart hook `bench/box-start.sh`
+(8e7dcd93). The agent-browser comparison for every app is in [MATRIX-2026-09.md](MATRIX-2026-09.md).
+
+| runid | app | verified | replay model-free | compiled | green | n1 USD | notes |
+|---|---|---|---|---|---|---|---|
+| fwgt34-luna | gt | 7/7 ×3 | **yes** (7/7 flow, 0 turns ×2) | pass (5/7, 2 UNVERIFIABLE) | **yes** | 0.042 | carry-choice (944421c9) holds: the labels picker replays |
+| fwop34-luna | op | 7/7 ×3 | **yes** (7/7 flow, 0 turns ×2) | pass (5/7, 2 UNVERIFIABLE), drift 2 | **yes** | 0.046 | |
+| fwod104-luna | od | 6/6 ×3 | **yes** (7/7 flow, 0 turns ×2) | pass, drift 0 (6/6) | **yes** | 0.075 | |
+| fwkb46-luna | kb | 6/6 ×3 | **yes** (6/6 flow, 0 turns ×2) | pass, drift 0 (4/6, 2 UNVERIFIABLE) | **yes** | 0.051 | |
+| fwgr88-luna | gr | 6/6 ×3 | NO: 05-set fell back on n2 (15 turns) and n3 (17); n2 06-set tier B (12 turns) | REFUSED: demoted pin s_7bf4f0 | no | — | a read published "}" and the expectation mask replaced it inside `{{v1}}`-style markers, breaking them → fix/r80-marker-mask, merged 822838f0 |
+| fwgr89-luna | gr | 6/6 ×3 | **yes** (6/6 flow, 0 turns ×2) | pass (1/1, verifier not published) | **yes** | 0.092 | the re-sweep on the marker-mask fix; no `{{*{{` or `}{{` in any expectation |
+| fwsi31-luna | si | 7/7 ×3 | **yes** (5/5 flow, 0 turns ×2) | pass (5/7, 2 UNVERIFIABLE) | **yes** | 0.037 | the first all-green snipe-it on Luna: read-mint (736b7f36) binds the tag 03-create reads off its own form |
+| fwvk16-luna | vk | 7/7 ×3 | **yes** (7/7 flow, 0 turns ×2) | pass (5/7, 2 UNVERIFIABLE), drift 3 | **yes** | 0.037 | |
+| fwec17-luna | ec | 7/7 ×3 | **yes** (7/7 flow, 0 turns ×2) | REFUSED: `07-open: reads what={{v4}}, which a standalone spec has no form for` (opportunity_name, post_time, posted_text) | no | 0.060 | a templated read target: the replayer resolves `{{v4}}` at run time, a standalone spec cannot. Open |
+| fwgh20-luna | gh | 7/7 ×3 | **yes** (3/3 flow, 0 turns ×2) | pass (5/7, 2 UNVERIFIABLE) | **yes** | 0.016 | |
+| fwrd95-luna | rd | 6/6 ×3 | **yes** (7/7 flow, 0 turns ×2) | pass, drift 1 (6/6) | **yes** | 0.024 | |
+
+Reading: with one objective per instruction, Luna as orchestrator records flows that replay with no model on every
+app, at $0.02-0.09 a recording. agent-browser on the same model was clean on 3 of 11 runs; on GPT-6.1 Sol, 9 of 10.
+
 ## GPT-6 Luna trial, second run (main 1d12892c: harness `--granularity objective` — at most one numbered objective per call, sign-in its own call — and the unasked-word export fix 0c6af4a4) — od fully green; gt and si not, each from an export/compile gap the run exposed; op did not run (Docker Hub rate limit)
 
 Fired 15:50 UTC. The limit worked: Luna wrote one instruction per objective, as GLM does unprompted (gt 7 against 1 in the first Luna run, si 5 against 3, od 7 against 6).
