@@ -1,0 +1,346 @@
+{
+  "flow": "fwen2-luna",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_c42e2e; observed page_heading=Home.",
+      "values": {
+        "page_heading": "Home"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "5/5",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_c42e2e: report value username is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)",
+        "s_c42e2e: report value user_menu_label is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)"
+      ],
+      "unreported": [
+        "username",
+        "user_menu_label"
+      ]
+    },
+    {
+      "id": "02-find",
+      "status": "success",
+      "summary": "Using the Sales Order list at http://127.0.0.1:8100/app/sales-order I added a filter on \"Customer Name\" with operator \"like\" and value \"Seed:%\", applied it (URL now carries customer_name=[\"like\",\"Seed:%\"]), and the listing returned exactly 3 rows, header showing \"3 of 3\". The customer names shown are: Seed: Cobalt Retail (SAL-ORD-2026-00003), Seed: Beacon Supplies (SAL-ORD-2026-00002) and Seed: Alpha Traders (SAL-ORD-2026-00001). I opened SAL-ORD-2026-00003 read-only to cross-check and its Customer field also reads \"Seed: Cobalt Retail\" with Delivery Date 2026-12-31; no records were created, edited or deleted — only filters were used and the form was viewed. Only the first detail record was opened for verification; the other two names come from the list rows only.",
+      "values": {
+        "customer_name_1": "Seed: Cobalt Retail",
+        "customer_name_2": "Seed: Beacon Supplies",
+        "customer_name_3": "Seed: Alpha Traders",
+        "delivery_date": "2026-12-31",
+        "filter_applied": "Customer Name like Seed:%",
+        "matching_sales_order_count": "3 of 3",
+        "page_size_selector_values": "20, 100, 500, 2500",
+        "sales_order_1": "SAL-ORD-2026-00003",
+        "sales_order_2": "SAL-ORD-2026-00002",
+        "sales_order_3": "SAL-ORD-2026-00001",
+        "detail_customer_name": "Seed: Cobalt Retail",
+        "detail_delivery_date": "2026-12-31",
+        "list_column_headers_1": "Customer Name",
+        "list_column_headers_2": "Status",
+        "list_column_headers_3": "Delivery Date",
+        "list_column_headers_4": "ID"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_c12ca0 stopped at step 1 — after step 1 expected url http://127.0.0.1:8100/app/sales-order?company=[\"like\",\"%Bench Company%\"]&status=[\"in\",[\"To Deliver\",\"To Deliver and Bill\"]] but browser is at http://127.0.0.1:8100/app/sales-order?company=[\"like\",\"%Bench Company%\"]&status=[\"in\",[\"To Deliver\",\"To Deliver and Bill\"]]",
+      "replayed": "0/1",
+      "repaired": false,
+      "turns": 30,
+      "unreported": [
+        "filter_used",
+        "result_count",
+        "status_of_listed_orders",
+        "detail_page_heading",
+        "detail_customer_field",
+        "intermediate_filter_url_seen"
+      ]
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_ca1c05; observed breadcrumb_link=fwen2-luna-n3 Bench Customer, ref=fwen2-luna-n3, created_customer_name=fwen2-luna-n3 Bench Customer, customer_url=http://127.0.0.1:8100/app/customer/fwen2-luna-n3%20Bench%20Customer.",
+      "values": {
+        "breadcrumb_link": "fwen2-luna-n3 Bench Customer",
+        "ref": "fwen2-luna-n3",
+        "created_customer_name": "fwen2-luna-n3 Bench Customer",
+        "customer_url": "http://127.0.0.1:8100/app/customer/fwen2-luna-n3%20Bench%20Customer"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "5/5",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "customer_name",
+        "customer_name_field_value",
+        "customer_record_url",
+        "page_title",
+        "status",
+        "current_url",
+        "page_title_title_text",
+        "run_id"
+      ]
+    },
+    {
+      "id": "04-create",
+      "status": "success",
+      "summary": "Created a new Sales Order for the existing customer 'fwen2-luna-n3 Bench Customer' and saved it as a draft (SAL-ORD-2026-00004, live URL http://127.0.0.1:8100/app/sales-order/SAL-ORD-2026-00004, \"Saved\" alert shown). The customer was chosen from the link suggestions (typed the name, the dropdown listed 4 results, I clicked the \"fwen2-luna-n3 Bench Customer\" option, the list closed and an \"Open Link\" indicator appeared), not merely typed. Delivery Date was set to 2026-12-31 on the header and persisted on the saved document. The save initially raised a \"Missing Fields\" validation because the Items grid had a populated row with an empty Item Code, so I set Item Code from the link suggestions to the existing item \"Bench Gadget\" (qty 1, rate 125.00) to allow the draft to save — the only field I added beyond the instruction. Read back from the saved document: customer field = \"fwen2-luna-n3 Bench Customer\", delivery date = \"2026-12-31\", status pill = \"Draft\".",
+      "values": {
+        "docstatus_status": "Draft",
+        "saved_customer": "fwen2-luna-n3 Bench Customer",
+        "saved_delivery_date": "2026-12-31",
+        "sales_order_id": "SAL-ORD-2026-00004",
+        "customer_selection": "chosen from link suggestions (dropdown option clicked, list closed)",
+        "item_added_outside_instruction": "Bench Gadget (qty 1, rate 125.00) — needed to pass mandatory-fields validation",
+        "save_alert": "Saved",
+        "customer_field_value": "fwen2-luna-n3 Bench Customer",
+        "delivery_date_value": "2026-12-31",
+        "ref": "fwen2-luna-n3"
+      },
+      "tier": "B",
+      "recovered": true,
+      "fellBack": "the flow step has no pinned skill",
+      "replayed": "1/1",
+      "repaired": false,
+      "turns": 20,
+      "unreported": [
+        "customer_name",
+        "customer_selected_from_suggestion",
+        "delivery_date",
+        "visible_item",
+        "visible_item_quantity",
+        "visible_item_rate",
+        "saved_order_reference",
+        "sales_order_url",
+        "item_selected",
+        "item_qty",
+        "item_rate",
+        "item_amount",
+        "item_delivery_date",
+        "grand_total",
+        "saved_order_delivery_dat",
+        "saved_order_customer_inp",
+        "saved_order_heading",
+        "saved_order_status",
+        "run_id"
+      ]
+    },
+    {
+      "id": "05-edit",
+      "status": "success",
+      "summary": "Replayed stored procedure s_368740; observed so_url_after_save=http://127.0.0.1:8100/app/sales-order/SAL-ORD-2026-00004, customer_final=fwen2-luna-n3 Bench Customer, sales_order_url=http://127.0.0.1:8100/app/sales-order/SAL-ORD-2026-00004, item_row_count=2, item_name_1=Bench Gadget, grand_total=$ 662.50, customer=fwen2-luna-n3 Bench Customer, delivery_date=2026-12-31, sales_order_id=SAL-ORD-2026-00004, item_codes_1=Bench Gadget, doc_status=Draft, run_id=fwen2-luna-n3.",
+      "values": {
+        "so_url_after_save": "http://127.0.0.1:8100/app/sales-order/SAL-ORD-2026-00004",
+        "customer_final": "fwen2-luna-n3 Bench Customer",
+        "sales_order_url": "http://127.0.0.1:8100/app/sales-order/SAL-ORD-2026-00004",
+        "item_row_count": "2",
+        "item_name_1": "Bench Gadget",
+        "grand_total": "$ 662.50",
+        "customer": "fwen2-luna-n3 Bench Customer",
+        "delivery_date": "2026-12-31",
+        "sales_order_id": "SAL-ORD-2026-00004",
+        "item_codes_1": "Bench Gadget",
+        "doc_status": "Draft",
+        "run_id": "fwen2-luna-n3"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "24/24",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_368740: identity marker \"Bench Widget\" is not on the page, but the url names this run's record (path[2]=SAL-ORD-2026-00004) — the marker is stale; proceeding",
+        "s_368740: step 1: primary locator did not resolve; used fallback #2 page.getByText('1', { exact: true }).nth(1)",
+        "s_368740: step 13: read 'item_name_2' returned 'Bench Gadget' from a control this step set, and nothing committed it since — it shows the control, however the app formats it, not what the app stored; dropped from the report's confident values",
+        "s_368740: step 19: read 'item_name_2' returned 'Bench Gadget' from a control this step set, and nothing committed it since — it shows the control, however the app formats it, not what the app stored; dropped from the report's confident values",
+        "s_368740: step 21: read 'item_codes_2' returned 'Bench Gadget' from a control this step set, and nothing committed it since — it shows the control, however the app formats it, not what the app stored; dropped from the report's confident values",
+        "s_368740: step 24: the target chain is dead and was not healed inline — the step is a synthesized read no run has ever resolved, so nothing about it has drifted",
+        "s_368740: step 24: skipped read — no element matched any known locator for target (tried 1: page.getByRole('alert', { name: 'Saved', exact: true }))"
+      ],
+      "unreported": [
+        "line_1",
+        "save_alert",
+        "item_name_2",
+        "item_codes_2"
+      ]
+    },
+    {
+      "id": "06-verify",
+      "status": "success",
+      "summary": "Replayed stored procedure s_90379c; observed customer=fwen2-luna-n3 Bench Customer, url_after_submit=http://127.0.0.1:8100/app/sales-order/SAL-ORD-2026-00004, run_id=fwen2-luna-n3, status_after_submit=To Deliver and Bill, sales_order_url=http://127.0.0.1:8100/app/sales-order/SAL-ORD-2026-00004, sales_order_id=SAL-ORD-2026-00004.",
+      "values": {
+        "customer": "fwen2-luna-n3 Bench Customer",
+        "url_after_submit": "http://127.0.0.1:8100/app/sales-order/SAL-ORD-2026-00004",
+        "run_id": "fwen2-luna-n3",
+        "status_after_submit": "To Deliver and Bill",
+        "sales_order_url": "http://127.0.0.1:8100/app/sales-order/SAL-ORD-2026-00004",
+        "sales_order_id": "SAL-ORD-2026-00004"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "7/7",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_90379c: step 6: skipped read — no element matched any known locator for target (tried 1: page.locator('div:nth-of-type(10) > div > div > div:nth-of-type(3) > div:nth-of-type(2) > button:nth-of-type(2)'))"
+      ],
+      "unreported": [
+        "confirmation_answer",
+        "confirmation_dialog",
+        "doc_status"
+      ]
+    },
+    {
+      "id": "07-add",
+      "status": "success",
+      "summary": "Replayed stored procedure s_e4886d; observed sales_order_id=SAL-ORD-2026-00004.",
+      "values": {
+        "sales_order_id": "SAL-ORD-2026-00004"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "5/5",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_e4886d: step 4: skipped read — no element matched any known locator for target (tried 1: page.locator('div:nth-of-type(10) > div > div > div:nth-of-type(3) > div:nth-of-type(2) > button:nth-of-type(2)'))",
+        "s_e4886d: step 5: primary locator did not resolve; used fallback #2 elementAt(637, 1834) /* p */",
+        "s_e4886d: step 5: read 'comment_text_posted' returned a value the skill itself set/selected ('Timeline comment from automated run fwen2-luna-n3') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_e4886d: report value run_id is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)"
+      ],
+      "unreported": [
+        "runid_present",
+        "timeline_entry_rendered",
+        "run_id"
+      ]
+    }
+  ],
+  "passed": 7,
+  "total": 7,
+  "repinned": 0,
+  "drift": 7,
+  "driftTickets": [
+    {
+      "flow": "fwen2-luna",
+      "step": "02-find",
+      "skill": "s_c12ca0",
+      "similarity": 1,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_c12ca0 stopped at step 1 — after step 1 expected url http://127.0.0.1:8100/app/sales-order?company=[\"like\",\"%Bench Company%\"]&status=[\"in\",[\"To Deliver\",\"To Deliver and Bill\"]] but browser is at http://127.0.0.1:8100/app/sales-order?company=[\"like\",\"%Bench Company%\"]&status=[\"in\",[\"To Deliver\",\"To Deliver and Bill\"]]",
+      "reason": "after step 1 expected url http://127.0.0.1:8100/app/sales-order?company=[\"like\",\"%Bench Company%\"]&status=[\"in\",[\"To Deliver\",\"To Deliver and Bill\"]] but browser is at http://127.0.0.1:8100/app/sales-order?company=[\"like\",\"%Bench Company%\"]&status=[\"in\",[\"To Deliver\",\"To Deliver and Bill\"]]",
+      "pageUrlPattern": "http://127.0.0.1:8100/app/sales-order?company=[\"like\",\"%Bench Company%\"]&status=[\"in\",[\"To Deliver\",\"To Deliver and Bill\"]]",
+      "pageUrl": "http://127.0.0.1:8100/app/sales-order?company=%5B%22like%22%2C%22%25Bench+Company%25%22%5D&status=%5B%22in%22%2C%5B%22To+Deliver%22%2C%22To+Deliver+and+Bill%22%5D%5D"
+    },
+    {
+      "flow": "fwen2-luna",
+      "step": "04-create",
+      "skill": "s_6b15c9",
+      "similarity": 0.999,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "the flow step has no pinned skill",
+      "pageUrlPattern": "http://127.0.0.1:8100/app/sales-order/new-sales-order-tluwgpyxqv",
+      "pageUrl": "http://127.0.0.1:8100/app/sales-order/new-sales-order-tluwgpyxqv"
+    },
+    {
+      "flow": "fwen2-luna",
+      "step": "05-edit",
+      "skill": "s_368740",
+      "atStep": "1",
+      "key": "target",
+      "similarity": 0.536,
+      "missedLocator": "page.locator('div:nth-of-type(1) > div > div > div:nth-of-type(5) > div:nth-of-type(2) > div')",
+      "fallbackUsed": "page.getByText('1', { exact: true }).nth(1)",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8100/app/sales-order/:id",
+      "pageUrl": "http://127.0.0.1:8100/app/sales-order/SAL-ORD-2026-00004"
+    },
+    {
+      "flow": "fwen2-luna",
+      "step": "05-edit",
+      "skill": "s_368740",
+      "atStep": "24",
+      "key": "target",
+      "similarity": 0.536,
+      "missedLocator": "page.getByRole('alert', { name: 'Saved', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8100/app/sales-order/:id",
+      "pageUrl": "http://127.0.0.1:8100/app/sales-order/SAL-ORD-2026-00004"
+    },
+    {
+      "flow": "fwen2-luna",
+      "step": "06-verify",
+      "skill": "s_90379c",
+      "atStep": "6",
+      "key": "target",
+      "similarity": 0.511,
+      "missedLocator": "page.locator('div:nth-of-type(10) > div > div > div:nth-of-type(3) > div:nth-of-type(2) > button:nth-of-type(2)')",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8100/app/sales-order/:id",
+      "pageUrl": "http://127.0.0.1:8100/app/sales-order/SAL-ORD-2026-00004"
+    },
+    {
+      "flow": "fwen2-luna",
+      "step": "07-add",
+      "skill": "s_e4886d",
+      "atStep": "4",
+      "key": "target",
+      "similarity": 0.527,
+      "missedLocator": "page.locator('div:nth-of-type(10) > div > div > div:nth-of-type(3) > div:nth-of-type(2) > button:nth-of-type(2)')",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8100/app/sales-order/:id",
+      "pageUrl": "http://127.0.0.1:8100/app/sales-order/SAL-ORD-2026-00004"
+    },
+    {
+      "flow": "fwen2-luna",
+      "step": "07-add",
+      "skill": "s_e4886d",
+      "atStep": "5",
+      "key": "target",
+      "similarity": 0.527,
+      "missedLocator": "page.locator('#comment-ur0m78ruek > div > div:nth-of-type(1) > div > p')",
+      "fallbackUsed": "elementAt(637, 1834) /* p */",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8100/app/sales-order/:id",
+      "pageUrl": "http://127.0.0.1:8100/app/sales-order/SAL-ORD-2026-00004"
+    }
+  ],
+  "wallMs": 238343,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 738637,
+    "completionTokens": 13128,
+    "cachedTokens": 691072
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 738637,
+      "completionTokens": 13128,
+      "cachedTokens": 691072
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "openai/gpt-6-luna",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

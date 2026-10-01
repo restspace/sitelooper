@@ -1,0 +1,182 @@
+
+[sweep] run 1/3: fwen2-luna-n1 (store: /home/user/sitelooper/bench/results/fwen2-luna-skills)
+[harness] erpnext: defaulting APP_URL
+[harness] erpnext: defaulting APP_EMAIL
+[harness] erpnext: defaulting APP_PASSWORD
+[reset] erpnext: no sales orders to delete
+[harness] erpnext responded 200 at http://127.0.0.1:8100/
+stopped: fwen2-luna-n1
+  flow "fwen2-luna" saved: 7 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwen2-luna.json
+  warning: note: 01-signin no longer publishes final_url — no replay reads it from the page and the recording showed no line to read
+  warning: note: 02-find no longer publishes sales_order_id — no replay reads it from the page and the recording showed no line to read
+  warning: note: 03-create no longer publishes customer_list_url — no replay reads it from the page and the recording showed no line to read
+  warning: note: 05-edit no longer publishes line_2, grand_total_final, delivery_date_final — no replay reads them from the page and the recording showed no line to read
+  warning: note: 06-verify no longer publishes buttons_present_after, docstatus_display — no replay reads them from the page and the recording showed no line to read
+  warning: note: 07-add no longer publishes record_status_still — no replay reads it from the page and the recording showed no line to read
+  warning: note: 05-edit: added a read for save_alert to s_368740 (page.getByRole('alert', { name: 'Saved', exact: true }); seen on the instruction's own page)
+  warning: note: 1 step(s) adopted from non-success instruction(s) whose work the session continued from (04-create) — they replay model-first with doubled budget, and a non-success there does not halt the flow
+  warning: warning: 1 value(s) KNOWN to be this run's survived unslotted — a replay will act on or wait for the recording's value (non-fatal outside locators):
+  flow.steps[2].route: "fwen2-luna-n1" (var) in "http://127.0.0.1:8100/app/customer/fwen2-luna-n1%20Bench%20Customer"
+  warning: warning: 99 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[0].instruction: "Administrator" (output) in "Sign in to ERPNext at http://127.0.0.1:8100/ using username Administrator and password exactly {{env:APP_PASSWORD}}. Verify that the authenticated app is open."
+  flow.steps[0].params.v2: "Administrator" (output) in "Administrator"
+  flow.steps[0].route: "http://127.0.0.1:8100/app/home" (output) in "http://127.0.0.1:8100/app/home"
+  flow.steps[2].route: "http://127.0.0.1:8100/app/customer/fwen2-luna-n1%20Bench%20Customer" (output) in "http://127.0.0.1:8100/app/customer/fwen2-luna-n1%20Bench%20Customer"
+  flow.steps[4].instruction: "Bench Widget" (output) in "Edit Sales Order {{04-create.url.p2}} so its Items table contains exactly two item lines: Bench Widget quantity 3 and Bench Gadget quantity 2. Choose both exact"
+  warning: {{04-create.docstatus_status}} (used by 06-verify) can only be re-observed by model recovery — consider re-recording so the value is read from the page.
+arm=sitelooper model=openai/gpt-6-luna runid=fwen2-luna-n1 stop=completed
+turns=9 wall=860.3s
+commands=8 cmdTime=823.6s cmdBytes=14840 timeouts=0
+orchestrator in=7633 cw=0 cr=38039 out=1340
+inner prompt=5572344 cached=4969484 completion=41817
+spend=$0.1215 maxUsd=3
+learn: A_n=0 replayed=0/8 full=0 repaired=0 compiled=7 variants=0
+-> /home/user/sitelooper/bench/results/fwen2-luna-n1-sitelooper-result.json
+
+fwen2-luna-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed customer names reported
+  obj 2: PASS — customer=fwen2-luna-n1 Bench Customer
+  obj 3: PASS — id=SAL-ORD-2026-00004, delivery_date=2026-12-31
+  obj 4: PASS — lines: Bench Widget x3 @ 40; Bench Gadget x2 @ 125
+  obj 5: PASS — docstatus=1 status=To Deliver and Bill
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — sales order id SAL-ORD-2026-00004 reported
+
+[sweep] run 2/3: fwen2-luna-n2 (replay flow fwen2-luna, no orchestrator)
+[reset] erpnext: cleared saved list settings for Sales Order (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view, updated_on)
+[reset] erpnext: cleared saved list settings for Customer (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view)
+[reset] erpnext: cleared saved list settings for Item (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view)
+[reset] erpnext: cleared saved list settings for Sales Invoice (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view)
+[reset] erpnext: cleared saved list settings for Quotation (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view)
+[reset] erpnext: cleared saved list settings for Delivery Note (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view)
+[reset] erpnext: deleted 1 sales order(s) (earlier runs' and non-seed)
+[reset] erpnext: deleted customer "fwen2-luna-n1 Bench Customer"
+[sweep] fwen2-luna-n2: 6 drift ticket(s) → fwen2-luna-n2-drift.json
+
+fwen2-luna-n2: objectives passed 6/7
+  obj 1: PASS — all 3 seed customer names reported
+  obj 2: PASS — customer=fwen2-luna-n2 Bench Customer
+  obj 3: PASS — id=SAL-ORD-2026-00004, delivery_date=2026-12-31
+  obj 4: FAIL — lines: Bench Gadget x3 @ 125; Bench Gadget x2 @ 125
+  obj 5: PASS — docstatus=1 status=To Deliver and Bill
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — sales order id SAL-ORD-2026-00004 reported
+[sweep] fwen2-luna-n2: 04-create has no pinned skill — 39 model turn(s), on every replay
+
+[sweep] run 3/3: fwen2-luna-n3 (replay flow fwen2-luna, no orchestrator)
+[reset] erpnext: cleared saved list settings for Sales Order (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view, updated_on)
+[reset] erpnext: cleared saved list settings for Customer (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view)
+[reset] erpnext: cleared saved list settings for Item (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view)
+[reset] erpnext: cleared saved list settings for Sales Invoice (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view)
+[reset] erpnext: cleared saved list settings for Quotation (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view)
+[reset] erpnext: cleared saved list settings for Delivery Note (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view)
+[reset] erpnext: deleted 1 sales order(s) (earlier runs' and non-seed)
+[reset] erpnext: deleted customer "fwen2-luna-n2 Bench Customer"
+[sweep] fwen2-luna-n3: 7 drift ticket(s) → fwen2-luna-n3-drift.json
+
+fwen2-luna-n3: objectives passed 6/7
+  obj 1: PASS — all 3 seed customer names reported
+  obj 2: PASS — customer=fwen2-luna-n3 Bench Customer
+  obj 3: PASS — id=SAL-ORD-2026-00004, delivery_date=2026-12-31
+  obj 4: FAIL — lines: Bench Gadget x3 @ 125; Bench Gadget x2 @ 125
+  obj 5: PASS — docstatus=1 status=To Deliver and Bill
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — sales order id SAL-ORD-2026-00004 reported
+[sweep] fwen2-luna-n3: 04-create has no pinned skill — 20 model turn(s), on every replay
+
+Learning sweep fwen2-luna (K=3)
+┌─────────┬───┬─────────────────┬──────────┬─────────────┬───────┬──────┬───────────┬──────┬──────────────┬────────┐
+│ (index) │ n │ runid           │ verified │ stop        │ turns │ cmds │ total_usd │ A_n  │ replayed     │ wall_s │
+├─────────┼───┼─────────────────┼──────────┼─────────────┼───────┼──────┼───────────┼──────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwen2-luna-n1' │ '7/7'    │ 'completed' │ 9     │ 8    │ 0.1215    │ 0    │ '0/8'        │ 860    │
+│ 1       │ 2 │ 'fwen2-luna-n2' │ '6/7'    │ 'success'   │ 67    │ 7    │ 0.0258    │ 0.57 │ '7/7 (flow)' │ 286    │
+│ 2       │ 3 │ 'fwen2-luna-n3' │ '6/7'    │ 'success'   │ 50    │ 7    │ 0.0171    │ 0.71 │ '7/7 (flow)' │ 238    │
+└─────────┴───┴─────────────────┴──────────┴─────────────┴───────┴──────┴───────────┴──────┴──────────────┴────────┘
+http://127.0.0.1:8100
+  s_24ea1c  validated    3 steps  3/3 (100%)
+           Sign in to ERPNext at {{v1}} using username {{v2}} and password exactly {{v3}}. Verify that the authenticated …
+  s_368740  validated   24 steps  3/3 (100%)
+           Edit Sales Order {{v1}} so its Items table contains exactly two item lines: {{v2}} quantity 3 and Bench Gadget…
+  s_414242  validated    1 steps  3/3 (100%)
+           Sign in to ERPNext at {{v1}} using username {{v2}} and password exactly {{v3}}. Verify that the authenticated …
+  s_90379c  validated    7 steps  3/3 (100%)
+           Submit Sales Order {{v1}} (not just save it), confirm the submission when prompted, and verify the record stat…
+  s_b7014d  validated    1 steps  3/3 (100%)
+           Find the existing Sales Orders whose customer name starts with '{{v1}}' without changing any records. Report t…
+  s_c12ca0  demoted      1 steps  1/3 (33%)
+           Find the existing Sales Orders whose customer name starts with '{{v1}}' without changing any records. Report t…
+  s_c42e2e  validated    1 steps  3/3 (100%)
+           Sign in to ERPNext at {{v1}} using username {{v2}} and password exactly {{v3}}. Verify that the authenticated …
+  s_e4886d  validated    5 steps  3/3 (100%)
+           Add a timeline comment to submitted Sales Order {{v1}} whose text includes the exact runid '{{v2}}'. Save/post…
+  s_056615  validated    2 steps  2/2 (100%)
+           Create a Customer named exactly '{{v2}}' (customer group and territory may use defaults). Save it and verify t…
+  s_3f93b3  validated    1 steps  2/2 (100%)
+           Create a Customer named exactly '{{v2}}' (customer group and territory may use defaults). Save it and verify t…
+  s_6b15c9  validated    1 steps  2/2 (100%)
+           Create a new Sales Order for the existing customer '{{v1}}' and set {{v3}} to {{v4}}. Save as a draft; ensure …
+  s_ca1c05  validated    2 steps  2/2 (100%)
+           Create a Customer named exactly '{{v2}}' (customer group and territory may use defaults). Save it and verify t…
+  s_0e1a6c  provisional 10 steps  1/1 (100%)  variant of s_c12ca0
+           Find the existing Sales Orders whose customer name starts with '{{v1}}' without changing any records. Report t…
+  s_163320  provisional  1 steps  1/1 (100%)
+           Find the existing Sales Orders whose customer name starts with '{{v1}}' without changing any records. Report t…
+  s_18c9f9  provisional 10 steps  1/1 (100%)
+           Find the existing Sales Orders whose customer name starts with 'Seed:' without changing any records. Report th…
+  s_2e3920  provisional 16 steps  1/1 (100%)
+           Find the existing Sales Orders whose customer name starts with '{{v1}}' without changing any records. Report t…
+  s_2e6632  provisional  6 steps  1/1 (100%)
+           Create a new Sales Order for the existing customer '{{v1}}' and set {{v3}} to {{v4}}. Save as a draft; ensure …
+  s_31835a  provisional 27 steps  1/1 (100%)  variant of s_c12ca0
+           Find the existing Sales Orders whose customer name starts with '{{v1}}' without changing any records. Report t…
+  s_38ac2f  provisional  1 steps  1/1 (100%)
+           Find the existing Sales Orders whose customer name starts with 'Seed:' without changing any records. Report th…
+  s_38ca7d  provisional 10 steps  1/1 (100%)
+           Find the existing Sales Orders whose customer name starts with '{{v1}}' without changing any records. Report t…
+  s_42f3a6  provisional  1 steps  1/1 (100%)
+           Create a Customer named exactly '{{v2}}' (customer group and territory may use defaults). Save it and verify t…
+  s_4d34f7  provisional  1 steps  1/1 (100%)
+           Create a new Sales Order for the existing customer '{{v1}}' and set {{v3}} to {{v4}}. Save as a draft; ensure …
+  s_52d04e  provisional  3 steps  1/1 (100%)
+           Find the existing Sales Orders whose customer name starts with 'Seed:' without changing any records. Report th…
+  s_58c134  provisional  1 steps  1/1 (100%)
+           Find the existing Sales Orders whose customer name starts with '{{v1}}' without changing any records. Report t…
+  s_61679a  provisional 11 steps  1/1 (100%)
+           Find the existing Sales Orders whose customer name starts with 'Seed:' without changing any records. Report th…
+  s_7c7008  provisional 11 steps  1/1 (100%)  variant of s_c12ca0
+           Find the existing Sales Orders whose customer name starts with 'Seed:' without changing any records. Report th…
+  s_7f9480  provisional  2 steps  1/1 (100%)
+           Complete and save the current new Sales Order as a draft for customer '{{v1}}' with Delivery Date {{v3}}. Ensu…
+  s_87910b  provisional  1 steps  1/1 (100%)  variant of s_c12ca0
+           Find the existing Sales Orders whose customer name starts with 'Seed:' without changing any records. Report th…
+  s_956e51  provisional  8 steps  1/1 (100%)
+           Complete and save the current new Sales Order as a draft for customer '{{v1}}' with Delivery Date {{v3}}. Ensu…
+  s_979d67  provisional  9 steps  1/1 (100%)
+           Find the existing Sales Orders whose customer name starts with '{{v1}}' without changing any records. Report t…
+  s_a94ae8  provisional  1 steps  1/1 (100%)  variant of s_c12ca0
+           Find the existing Sales Orders whose customer name starts with '{{v1}}' without changing any records. Report t…
+  s_aaedb7  provisional  1 steps  1/1 (100%)  variant of s_c12ca0
+           Find the existing Sales Orders whose customer name starts with '{{v1}}' without changing any records. Report t…
+  s_aeba2b  provisional 15 steps  1/1 (100%)
+           Create a new Sales Order for the existing customer '{{v1}}' and set {{v3}} to {{v4}}. Save as a draft; ensure …
+  s_ba8b5d  provisional 10 steps  1/1 (100%)
+           Create a new Sales Order for the existing customer '{{v1}}' and set {{v3}} to {{v4}}. Save as a draft; ensure …
+  s_c5f96e  provisional  7 steps  1/1 (100%)
+           Create a Customer named exactly '{{v2}}' (customer group and territory may use defaults). Save it and verify t…
+  s_c61036  provisional  1 steps  1/1 (100%)
+           Find the existing Sales Orders whose customer name starts with 'Seed:' without changing any records. Report th…
+  s_cf0904  provisional  3 steps  1/1 (100%)  variant of s_c12ca0
+           Find the existing Sales Orders whose customer name starts with 'Seed:' without changing any records. Report th…
+  s_d41b90  provisional  1 steps  1/1 (100%)
+           Find the existing Sales Orders whose customer name starts with '{{v1}}' without changing any records. Report t…
+  s_d67694  provisional 27 steps  1/1 (100%)
+           Find the existing Sales Orders whose customer name starts with '{{v1}}' without changing any records. Report t…
+  s_ddc5f8  provisional  6 steps  1/1 (100%)
+           Create a Customer named exactly '{{v2}}' (customer group and territory may use defaults). Save it and verify t…
+  s_f22f94  provisional 13 steps  1/1 (100%)
+           Create a new Sales Order for the existing customer '{{v1}}' and set {{v3}} to {{v4}}. Save as a draft; ensure …
+  s_ff0a2f  provisional 10 steps  1/1 (100%)  variant of s_c12ca0
+           Find the existing Sales Orders whose customer name starts with 'Seed:' without changing any records. Report th…
+store: /home/user/sitelooper/bench/results/fwen2-luna-skills
+
+summary: /home/user/sitelooper/bench/results/fwen2-luna-sweep.json

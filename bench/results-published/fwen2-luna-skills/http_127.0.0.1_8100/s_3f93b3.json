@@ -1,0 +1,54 @@
+{
+ "id": "s_3f93b3",
+ "origin": "http://127.0.0.1:8100",
+ "template": "Create a Customer named exactly '{{v2}}' (customer group and territory may use defaults). Save it and verify the created customer record shows that exact customer name.",
+ "params": {
+  "v1": {
+   "example": "fwen2-luna-n2",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v2": {
+   "example": "fwen2-luna-n2 Bench Customer",
+   "usedIn": [],
+   "known": true
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8100/app/sales-order?customer_name=[\"like\",\"%Seed:%\"]"
+ },
+ "steps": [
+  {
+   "tool": "goto",
+   "args": {
+    "url": "http://127.0.0.1:8100/app/customer/new"
+   },
+   "locators": {}
+  }
+ ],
+ "contract": 4,
+ "stats": {
+  "uses": 2,
+  "successes": 2,
+  "partial": 0,
+  "created": "2026-10-01T16:40:32.630Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 4,
+  "lastUsed": "2026-10-01T16:45:07.936Z"
+ },
+ "status": "validated",
+ "seq": {
+  "chain": "s_aeabc6",
+  "index": 0,
+  "of": 3
+ },
+ "provenance": {
+  "session": "fwen2-luna-n2",
+  "instruction": "Create a Customer named exactly 'fwen2-luna-n2 Bench Customer' (customer group and territory may use defaults). Save it and verify the created customer record shows that exact customer name.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-10-01T16:40:32.630Z"
+ },
+ "revision": 2
+}

@@ -1,0 +1,86 @@
+{
+ "id": "s_c61036",
+ "origin": "http://127.0.0.1:8100",
+ "template": "Find the existing Sales Orders whose customer name starts with 'Seed:' without changing any records. Report the customer names exactly as shown in the Sales Orders listing/details, and verify the list results.",
+ "params": {
+  "v1": {
+   "example": "fwen2-luna-n3",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8100/app/home"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e85"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "link",
+      "name": "Selling"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div > div:nth-of-type(2) > div:nth-of-type(4) > div:nth-of-type(1) > a"
+     },
+     {
+      "kind": "point",
+      "x": 100,
+      "y": 251,
+      "w": 190.8,
+      "h": 28.3,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8100/app/selling",
+    "addedContains": [
+     "- heading \"Selling\"",
+     "- link \"Sales Order\"",
+     "- link \"Sales Analytics\"",
+     "- link \"Point of Sale\"",
+     "- link \"Dashboard\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_b7014d",
+    "step": 1
+   }
+  }
+ ],
+ "contract": 2,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-10-01T16:45:00.776Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_4d1423",
+  "index": 0,
+  "of": 5
+ },
+ "provenance": {
+  "session": "fwen2-luna-n3",
+  "instruction": "Find the existing Sales Orders whose customer name starts with 'Seed:' without changing any records. Report the customer names exactly as shown in the Sales Orders listing/details, and verify the list results.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-10-01T16:45:00.776Z"
+ },
+ "revision": 1
+}
