@@ -1,0 +1,225 @@
+{
+ "id": "s_76525a",
+ "origin": "http://127.0.0.1:8100",
+ "template": "Create a customer named exactly '{{v2}}' (defaults for customer group and territory are acceptable), save it, and verify the saved customer name.",
+ "params": {
+  "v1": {
+   "example": "fwen3-luna-n2",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v2": {
+   "example": "fwen3-luna-n2 Bench Customer",
+   "usedIn": [
+    1,
+    4
+   ],
+   "known": true
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8100/app/customer?customer_name=:var"
+ },
+ "steps": [
+  {
+   "tool": "fill",
+   "args": {
+    "target": "role=textbox[name=\"Customer Name\"]",
+    "value": "{{v2}}"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "role=textbox[name=\"Customer Name\"]"
+     },
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Customer Name"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "Customer Name"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > input"
+     },
+     {
+      "kind": "point",
+      "x": 457,
+      "y": 138,
+      "w": 140,
+      "h": 28,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8100/app/customer",
+    "addedContains": [
+     "- textbox \"Customer Name\": {{v2}}"
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=button[name=\"Filter\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "role=button[name=\"Filter\"]"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div > button:nth-of-type(1)",
+      "nth": 1
+     },
+     {
+      "kind": "point",
+      "x": 998,
+      "y": 139,
+      "w": 71.1,
+      "h": 29,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8100/app/customer?customer_name=[\"like\",\"%{{v2}}%\"]",
+    "addedContains": [
+     "- button \"+ Add a Filter\"",
+     "- button \"Clear Filters\"",
+     "- button \"Apply Filters\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e144"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Clear all filters"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div > button:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 1049,
+      "y": 139,
+      "w": 33,
+      "h": 29,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8100/app/customer?customer_name=[\"like\",\"%{{v2}}%\"]&name=:var",
+    "addedContains": [
+     "- textbox \"Customer Name\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e268"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "link",
+      "name": "{{v2}}"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > span:nth-of-type(2) > a"
+     },
+     {
+      "kind": "point",
+      "x": 386,
+      "y": 230,
+      "w": 219.1,
+      "h": 21,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8100/app/customer/{{v2}}",
+    "addedContains": [
+     "- heading \"{{v2}}\"",
+     "- button \"View\"",
+     "- button \"Create\"",
+     "- button \"Actions\"",
+     "- button \"Save\""
+    ],
+    "lineDialect": 2
+   }
+  }
+ ],
+ "contract": 2,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-10-01T21:37:17.912Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_93b16c",
+  "index": 1,
+  "of": 3
+ },
+ "variantOf": "s_d77b76",
+ "provenance": {
+  "session": "fwen3-luna-n2",
+  "instruction": "Create a customer named exactly 'fwen3-luna-n2 Bench Customer' (defaults for customer group and territory are acceptable), save it, and verify the saved customer name.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-10-01T21:37:17.912Z"
+ },
+ "revision": 3,
+ "factRewrites": [
+  {
+   "k": "route.query",
+   "key": "http://127.0.0.1:8100/app/customer?customer_name",
+   "at": "2026-10-01T21:38:42.314Z"
+  },
+  {
+   "k": "route.query",
+   "key": "http://127.0.0.1:8100/app/customer?name",
+   "at": "2026-10-01T21:40:50.751Z"
+  }
+ ]
+}

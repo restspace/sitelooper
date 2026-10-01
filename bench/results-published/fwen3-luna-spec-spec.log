@@ -1,0 +1,37 @@
+
+Running 1 test using 1 worker
+
+  ✘  1 fwen3-luna.spec.ts:9:1 › fwen3-luna (3.6s)
+
+
+  1) fwen3-luna.spec.ts:9:1 › fwen3-luna › 01-signin: Sign in to ERPNext at http://127.0.0.1:8100/ using username Administrator and enter the password exactly as the literal text {{env:APP_PASSWORD}}; verify that the signed-in app is open. 
+
+    Error: 01-signin s_c137ad: not on the page this procedure starts from (expects http://127.0.0.1:8100/app/home, browser is at http://127.0.0.1:8100/login) — nothing of this segment has run
+
+       at fwen3-luna.flow.ts:16619
+
+      16617 |   const verdict = preconditionVerdictWithFacts(siteFactsAt(url), pattern, url, p, similarity, mints);
+      16618 |   for (const line of verdict.warnings) logWarning(`${where}: ${line}`);
+    > 16619 |   if (verdict.refuse) throw new Error(`${where}: ${verdict.refuse} — nothing of this segment has run`);
+            |                             ^
+      16620 | }
+      16621 |
+      16622 | /**
+        at preconditionGate (/home/user/sitelooper/bench/results/fwen3-luna-spec-spec-tmp/fwen3-luna.flow.ts:16619:29)
+        at Object.01-signin (/home/user/sitelooper/bench/results/fwen3-luna-spec-spec-tmp/fwen3-luna.flow.ts:17227:11)
+        at /home/user/sitelooper/bench/results/fwen3-luna-spec-spec-tmp/fwen3-luna.flow.ts:21504:7
+        at runFlow (/home/user/sitelooper/bench/results/fwen3-luna-spec-spec-tmp/fwen3-luna.flow.ts:21503:5)
+        at /home/user/sitelooper/bench/results/fwen3-luna-spec-spec-tmp/fwen3-luna.spec.ts:14:21
+
+    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/fwen3-luna-fwen3-luna/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/fwen3-luna-fwen3-luna/error-context.md
+
+  1 failed
+    fwen3-luna.spec.ts:9:1 › fwen3-luna ────────────────────────────────────────────────────────────

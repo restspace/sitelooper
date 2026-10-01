@@ -1,0 +1,38 @@
+{
+  "arm": "spec",
+  "runid": "fwen3-luna-spec",
+  "target": "erpnext",
+  "flow": "fwen3-luna.json",
+  "flowName": "fwen3-luna",
+  "skillsDir": "/home/user/sitelooper/bench/results/fwen3-luna-skills",
+  "compiled": true,
+  "flowFile": "bench/results/fwen3-luna-spec-spec-tmp/fwen3-luna.flow.ts",
+  "specFile": "bench/results/fwen3-luna-spec-spec-tmp/fwen3-luna.spec.ts",
+  "wallMs": 16193,
+  "exitCode": 1,
+  "timedOut": false,
+  "costUsd": 0,
+  "stats": {
+    "total": 1,
+    "passed": 0,
+    "failed": 1,
+    "skipped": 0
+  },
+  "tests": [
+    {
+      "title": "fwen3-luna",
+      "status": "unexpected",
+      "ok": false,
+      "durationMs": 3572,
+      "error": "Error: 01-signin s_c137ad: not on the page this procedure starts from (expects http://127.0.0.1:8100/app/home, browser is at http://127.0.0.1:8100/login) — nothing of this segment has run",
+      "drift": []
+    }
+  ],
+  "drift": [],
+  "driftCount": 0,
+  "evidence": [
+    "fwen3-luna-spec-spec-failure.png",
+    "fwen3-luna-spec-spec-error-context.md"
+  ],
+  "logTail": "\nRunning 1 test using 1 worker\n\n  ✘  1 fwen3-luna.spec.ts:9:1 › fwen3-luna (3.6s)\n\n\n  1) fwen3-luna.spec.ts:9:1 › fwen3-luna › 01-signin: Sign in to ERPNext at http://127.0.0.1:8100/ using username Administrator and enter the password exactly as the literal text {{env:APP_PASSWORD}}; verify that the signed-in app is open. \n\n    Error: 01-signin s_c137ad: not on the page this procedure starts from (expects http://127.0.0.1:8100/app/home, browser is at http://127.0.0.1:8100/login) — nothing of this segment has run\n\n       at fwen3-luna.flow.ts:16619\n\n      16617 |   const verdict = preconditionVerdictWithFacts(siteFactsAt(url), pattern, url, p, similarity, mints);\n      16618 |   for (const line of verdict.warnings) logWarning(`${where}: ${line}`);\n    > 16619 |   if (verdict.refuse) throw new Error(`${where}: ${verdict.refuse} — nothing of this segment has run`);\n            |                             ^\n      16620 | }\n      16621 |\n      16622 | /**\n        at preconditionGate (/home/user/sitelooper/bench/results/fwen3-luna-spec-spec-tmp/fwen3-luna.flow.ts:16619:29)\n        at Object.01-signin (/home/user/sitelooper/bench/results/fwen3-luna-spec-spec-tmp/fwen3-luna.flow.ts:17227:11)\n        at /home/user/sitelooper/bench/results/fwen3-luna-spec-spec-tmp/fwen3-luna.flow.ts:21504:7\n        at runFlow (/home/user/sitelooper/bench/results/fwen3-luna-spec-spec-tmp/fwen3-luna.flow.ts:21503:5)\n        at /home/user/sitelooper/bench/results/fwen3-luna-spec-spec-tmp/fwen3-luna.spec.ts:14:21\n\n    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────\n    \n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────\n    test-results/fwen3-luna-fwen3-luna/test-failed-1.png\n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    Error Context: test-results/fwen3-luna-fwen3-luna/error-context.md\n\n  1 failed\n    fwen3-luna.spec.ts:9:1 › fwen3-luna ────────────────────────────────────────────────────────────\n"
+}

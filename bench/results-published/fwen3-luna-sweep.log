@@ -1,0 +1,176 @@
+
+[sweep] run 1/3: fwen3-luna-n1 (store: /home/user/sitelooper/bench/results/fwen3-luna-skills)
+[harness] erpnext: defaulting APP_URL
+[harness] erpnext: defaulting APP_EMAIL
+[harness] erpnext: defaulting APP_PASSWORD
+[reset] erpnext: cleared saved list settings for Sales Order (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view, updated_on)
+[reset] erpnext: cleared saved list settings for Customer (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view)
+[reset] erpnext: cleared saved list settings for Item (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view)
+[reset] erpnext: cleared saved list settings for Sales Invoice (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view)
+[reset] erpnext: cleared saved list settings for Quotation (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view)
+[reset] erpnext: cleared saved list settings for Delivery Note (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view)
+[reset] erpnext: deleted 1 sales order(s) (earlier runs' and non-seed)
+[reset] erpnext: deleted customer "fwen3-luna-n1 Bench Customer"
+[harness] erpnext responded 200 at http://127.0.0.1:8100/
+stopped: fwen3-luna-n1
+  flow "fwen3-luna" saved: 6 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwen3-luna.json
+  warning: warning: ignored 89 entries from an earlier take in session 'fwen3-luna-n1' — this flow covers only what this daemon recorded
+  warning: note: dropped 3 locator candidate(s) carrying a value this run minted (known only by export time)
+  warning: note: 01-signin no longer publishes login_url, final_url — no replay reads them from the page and the recording showed no line to read
+  warning: note: 02-find no longer publishes list_url, page_size_options, page_size_option_100, page_size_option_500, page_size_option_2500 — no replay reads them from the page and the recording showed no line to read
+  warning: note: 03-create no longer publishes created — no replay reads it from the page and the recording showed no line to read
+  warning: note: 04-create no longer publishes verified_status, line_amounts — no replay reads them from the page and the recording showed no line to read
+  warning: note: 05-verify no longer publishes so_status_pill, so_status_field_value, submission_docstatus — no replay reads them from the page and the recording showed no line to read
+  warning: note: 06-add no longer publishes order_status — no replay reads it from the page and the recording showed no line to read
+  warning: warning: 1 value(s) KNOWN to be this run's survived unslotted — a replay will act on or wait for the recording's value (non-fatal outside locators):
+  flow.steps[2].route: "fwen3-luna-n1" (var) in "http://127.0.0.1:8100/app/customer/fwen3-luna-n1%20Bench%20Customer"
+  warning: warning: 151 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.name: "fwen3" (output) in "fwen3-luna"
+  flow.steps[0].instruction: "{{env:APP_PASSWORD}}" (output) in "Sign in to ERPNext at http://127.0.0.1:8100/ using username Administrator and enter the password exactly as the literal text {{env:APP_PASSWORD}}; verify that t"
+  flow.steps[0].instruction: "Administrator" (output) in "Sign in to ERPNext at http://127.0.0.1:8100/ using username Administrator and enter the password exactly as the literal text {{env:APP_PASSWORD}}; verify that t"
+  flow.steps[0].params.v2: "Administrator" (output) in "Administrator"
+  flow.steps[0].params.v3: "{{env:APP_PASSWORD}}" (output) in "{{env:APP_PASSWORD}}"
+arm=sitelooper model=openai/gpt-6-luna runid=fwen3-luna-n1 stop=completed
+turns=7 wall=500.7s
+commands=6 cmdTime=474.0s cmdBytes=11390 timeouts=0
+orchestrator in=4240 cw=0 cr=26500 out=803
+inner prompt=1917319 cached=1786752 completion=23096
+spend=$0.04 maxUsd=3
+learn: A_n=0 replayed=0/6 full=0 repaired=0 compiled=6 variants=0
+-> /home/user/sitelooper/bench/results/fwen3-luna-n1-sitelooper-result.json
+
+fwen3-luna-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed customer names reported
+  obj 2: PASS — customer=fwen3-luna-n1 Bench Customer
+  obj 3: PASS — id=SAL-ORD-2026-00004, delivery_date=2026-12-31
+  obj 4: PASS — lines: Bench Widget x3 @ 40; Bench Gadget x2 @ 125
+  obj 5: PASS — docstatus=1 status=To Deliver and Bill
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — sales order id SAL-ORD-2026-00004 reported
+
+[sweep] run 2/3: fwen3-luna-n2 (replay flow fwen3-luna, no orchestrator)
+[reset] erpnext: cleared saved list settings for Sales Order (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view, updated_on)
+[reset] erpnext: cleared saved list settings for Customer (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view, updated_on)
+[reset] erpnext: cleared saved list settings for Item (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view)
+[reset] erpnext: cleared saved list settings for Sales Invoice (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view)
+[reset] erpnext: cleared saved list settings for Quotation (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view)
+[reset] erpnext: cleared saved list settings for Delivery Note (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view)
+[reset] erpnext: deleted 1 sales order(s) (earlier runs' and non-seed)
+[reset] erpnext: deleted customer "fwen3-luna-n1 Bench Customer"
+[sweep] fwen3-luna-n2: 7 drift ticket(s) → fwen3-luna-n2-drift.json
+
+fwen3-luna-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed customer names reported
+  obj 2: PASS — customer=fwen3-luna-n2 Bench Customer
+  obj 3: PASS — id=SAL-ORD-2026-00004, delivery_date=2026-12-31
+  obj 4: PASS — lines: Bench Widget x3 @ 40; Bench Gadget x2 @ 125
+  obj 5: PASS — docstatus=1 status=To Deliver and Bill
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — sales order id SAL-ORD-2026-00004 reported
+
+[sweep] run 3/3: fwen3-luna-n3 (replay flow fwen3-luna, no orchestrator)
+[reset] erpnext: cleared saved list settings for Sales Order (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view, updated_on)
+[reset] erpnext: cleared saved list settings for Customer (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view, updated_on)
+[reset] erpnext: cleared saved list settings for Item (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view)
+[reset] erpnext: cleared saved list settings for Sales Invoice (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view)
+[reset] erpnext: cleared saved list settings for Quotation (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view)
+[reset] erpnext: cleared saved list settings for Delivery Note (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view)
+[reset] erpnext: deleted 1 sales order(s) (earlier runs' and non-seed)
+[reset] erpnext: deleted customer "fwen3-luna-n2 Bench Customer"
+[sweep] fwen3-luna-n3: 7 drift ticket(s) → fwen3-luna-n3-drift.json
+
+fwen3-luna-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed customer names reported
+  obj 2: PASS — customer=fwen3-luna-n3 Bench Customer
+  obj 3: PASS — id=SAL-ORD-2026-00004, delivery_date=2026-12-31
+  obj 4: PASS — lines: Bench Widget x3 @ 40; Bench Gadget x2 @ 125
+  obj 5: PASS — docstatus=1 status=To Deliver and Bill
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — sales order id SAL-ORD-2026-00004 reported
+
+Learning sweep fwen3-luna (K=3)
+┌─────────┬───┬─────────────────┬──────────┬─────────────┬───────┬──────┬───────────┬──────┬──────────────┬────────┐
+│ (index) │ n │ runid           │ verified │ stop        │ turns │ cmds │ total_usd │ A_n  │ replayed     │ wall_s │
+├─────────┼───┼─────────────────┼──────────┼─────────────┼───────┼──────┼───────────┼──────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwen3-luna-n1' │ '7/7'    │ 'completed' │ 7     │ 6    │ 0.04      │ 0    │ '0/6'        │ 501    │
+│ 1       │ 2 │ 'fwen3-luna-n2' │ '7/7'    │ 'success'   │ 21    │ 6    │ 0.0073    │ 0.67 │ '6/6 (flow)' │ 207    │
+│ 2       │ 3 │ 'fwen3-luna-n3' │ '7/7'    │ 'success'   │ 18    │ 6    │ 0.0075    │ 0.67 │ '6/6 (flow)' │ 207    │
+└─────────┴───┴─────────────────┴──────────┴─────────────┴───────┴──────┴───────────┴──────┴──────────────┴────────┘
+http://127.0.0.1:8100
+  s_03a3ea  validated    2 steps  3/3 (100%)
+           Create a Sales Order for the customer '{{v1}}' with delivery date {{v4}} and exactly two Items table lines: ch…
+  s_04ca97  validated    1 steps  3/3 (100%)
+           Create a customer named exactly '{{v2}}' (defaults for customer group and territory are acceptable), save it, …
+  s_226948  validated   10 steps  3/3 (100%)
+           Submit the existing draft Sales Order {{v1}}, confirm the submission when ERPNext asks, and verify the saved o…
+  s_2a7eea  validated    2 steps  3/3 (100%)
+           Create a customer named exactly '{{v2}}' (defaults for customer group and territory are acceptable), save it, …
+  s_3ac5c9  validated    1 steps  3/3 (100%)
+           Sign in to ERPNext at {{v1}} using username {{v2}} and enter the password exactly as the literal text {{v3}}; …
+  s_5f16c9  validated    1 steps  3/3 (100%)
+           Find and report the names of all existing Sales Orders whose customer name starts with 'Seed:', exactly as dis…
+  s_a44ad3  validated   12 steps  3/3 (100%)
+           Create a Sales Order for the customer '{{v1}}' with delivery date {{v4}} and exactly two Items table lines: ch…
+  s_d77b76  validated    2 steps  2/3 (67%)
+           Create a customer named exactly '{{v2}}' (defaults for customer group and territory are acceptable), save it, …
+  s_e2e57a  validated    9 steps  3/3 (100%)
+           On Sales Order {{v1}}, add a timeline comment whose text includes the exact runid '{{v2}}', save/post the comm…
+  s_e8699a  validated   18 steps  3/3 (100%)
+           Find and report the names of all existing Sales Orders whose customer name starts with 'Seed:', exactly as dis…
+  s_eb97e2  validated    1 steps  3/3 (100%)
+           Find and report the names of all existing Sales Orders whose customer name starts with 'Seed:', exactly as dis…
+  s_eca36a  validated   18 steps  3/3 (100%)
+           Create a Sales Order for the customer '{{v1}}' with delivery date {{v4}} and exactly two Items table lines: ch…
+  s_ef7d0c  validated    4 steps  3/3 (100%)
+           Find and report the names of all existing Sales Orders whose customer name starts with 'Seed:', exactly as dis…
+  s_1c5910  provisional  1 steps  1/1 (100%)
+           Sign in to ERPNext at http://127.0.0.1:8100/ using username {{v1}} and enter the password exactly as the liter…
+  s_22291c  provisional  1 steps  1/1 (100%)
+           Create a customer named exactly '{{v2}}' (defaults for customer group and territory are acceptable), save it, …
+  s_38f404  provisional  5 steps  1/1 (100%)
+           Create a customer named exactly '{{v2}}' (defaults for customer group and territory are acceptable), save it, …
+  s_60ca38  provisional  2 steps  1/1 (100%)
+           Create a customer named exactly '{{v2}}' (defaults for customer group and territory are acceptable), save it, …
+  s_663dfd  provisional  4 steps  1/1 (100%)
+           Create a customer named exactly '{{v2}}' (defaults for customer group and territory are acceptable), save it, …
+  s_76525a  provisional  4 steps  1/1 (100%)  variant of s_d77b76
+           Create a customer named exactly '{{v2}}' (defaults for customer group and territory are acceptable), save it, …
+  s_7bd8e0  provisional  7 steps  1/1 (100%)
+           Create a customer named exactly '{{v2}}' (defaults for customer group and territory are acceptable), save it, …
+  s_7c7f95  provisional  4 steps  1/1 (100%)
+           Sign in to ERPNext at http://127.0.0.1:8100/ using username {{v1}} and enter the password exactly as the liter…
+  s_867be0  provisional  3 steps  1/1 (100%)
+           Sign in to ERPNext at http://127.0.0.1:8100/ using username {{v1}} and enter the password exactly as the liter…
+  s_8d4528  provisional  1 steps  1/1 (100%)  variant of s_d77b76
+           Create a customer named exactly '{{v2}}' (defaults for customer group and territory are acceptable), save it, …
+  s_976c2f  provisional  3 steps  1/1 (100%)
+           Sign in to ERPNext at http://127.0.0.1:8100/ using username {{v1}} and enter the password exactly as the liter…
+  s_984597  provisional  1 steps  1/1 (100%)
+           Sign in to ERPNext at http://127.0.0.1:8100/ using username {{v1}} and enter the password exactly as the liter…
+  s_9ec66d  provisional  2 steps  1/1 (100%)
+           Create a customer named exactly '{{v2}}' (defaults for customer group and territory are acceptable), save it, …
+  s_a3a9b4  provisional  2 steps  1/1 (100%)
+           Create a customer named exactly '{{v2}}' (defaults for customer group and territory are acceptable), save it, …
+  s_adbeec  provisional  1 steps  1/1 (100%)
+           Create a customer named exactly '{{v2}}' (defaults for customer group and territory are acceptable), save it, …
+  s_beb1c9  provisional  2 steps  1/1 (100%)  variant of s_d77b76
+           Create a customer named exactly '{{v2}}' (defaults for customer group and territory are acceptable), save it, …
+  s_c137ad  provisional  3 steps  1/1 (100%)
+           Sign in to ERPNext at {{v1}} using username {{v2}} and enter the password exactly as the literal text {{v3}}; …
+  s_c1898c  provisional  1 steps  1/1 (100%)
+           Create a customer named exactly '{{v2}}' (defaults for customer group and territory are acceptable), save it, …
+  s_cd4a3b  provisional  3 steps  1/1 (100%)
+           Sign in to ERPNext at http://127.0.0.1:8100/ using username {{v1}} and enter the password exactly as the liter…
+  s_e21a21  provisional  3 steps  1/1 (100%)
+           Sign in to ERPNext at {{v1}} using username {{v2}} and enter the password exactly as the literal text {{v3}}; …
+  s_e70ba6  provisional  2 steps  1/1 (100%)
+           Create a customer named exactly '{{v2}}' (defaults for customer group and territory are acceptable), save it, …
+  s_eaa135  provisional  1 steps  1/1 (100%)
+           Sign in to ERPNext at {{v1}} using username {{v2}} and enter the password exactly as the literal text {{v3}}; …
+  s_eb6554  provisional  6 steps  1/1 (100%)
+           Create a customer named exactly '{{v2}}' (defaults for customer group and territory are acceptable), save it, …
+  s_fbd83e  provisional  8 steps  1/1 (100%)
+           Create a customer named exactly '{{v2}}' (defaults for customer group and territory are acceptable), save it, …
+store: /home/user/sitelooper/bench/results/fwen3-luna-skills
+
+summary: /home/user/sitelooper/bench/results/fwen3-luna-sweep.json

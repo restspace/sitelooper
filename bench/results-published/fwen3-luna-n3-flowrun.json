@@ -1,0 +1,322 @@
+{
+  "flow": "fwen3-luna",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Signed in to ERPNext at http://127.0.0.1:8100/login using username \"Administrator\" and the supplied password marker; after submitting Login the app navigated to http://127.0.0.1:8100/app/home (\"Home\") and the ERPNext desk UI is rendered with the user menu showing \"Administrator\", confirming the signed-in app is open.",
+      "values": {
+        "signed_in_user": "Administrator (shown in the top-bar User Menu avatar; buttons \"No new notifications\", \"Help Dropdown\", \"User Menu\" present)",
+        "final_url": "http://127.0.0.1:8100/app/home",
+        "page_heading": "Home",
+        "workspace_links_present": "Accounting, Buying, Selling, Stock, Assets, Manufacturing, Quality, Projects, Support, Users, Website, CRM, Tools, ERPNext Settings, Integrations, Build",
+        "signed_in_user_2": "A",
+        "user_menu_aria_label": "User Menu",
+        "form_input": "Administrator"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_c137ad stopped at step ? — not on the page this procedure starts from (expects http://127.0.0.1:8100/app/home, browser is at http://127.0.0.1:8100/login) — nothing was run",
+      "replayed": "0/3",
+      "repaired": false,
+      "turns": 7,
+      "unreported": [
+        "username",
+        "password_entered",
+        "user_menu_shows"
+      ]
+    },
+    {
+      "id": "02-find",
+      "status": "success",
+      "summary": "Replayed stored procedure s_e8699a; observed total_sales_orders=3, order_1_1=SAL-ORD-2026-00001, order_1_2=Seed: Alpha Traders, list_count=3 of 3, order_1_reference=SAL-ORD-2026-00001, order_2_reference=SAL-ORD-2026-00002, order_2_customer_name=Seed: Beacon Supplies, order_3_customer_name=Seed: Cobalt Retail, matching_customer_names_2=Seed: Beacon Supplies, matching_customer_names_3=Seed: Cobalt Retail, order_3_1=SAL-ORD-2026-00003, order_3_2=Seed: Cobalt Retail, order_3_reference=SAL-ORD-2026-00003.",
+      "values": {
+        "total_sales_orders": "3",
+        "order_1_1": "SAL-ORD-2026-00001",
+        "order_1_2": "Seed: Alpha Traders",
+        "list_count": "3 of 3",
+        "order_1_reference": "SAL-ORD-2026-00001",
+        "order_2_reference": "SAL-ORD-2026-00002",
+        "order_2_customer_name": "Seed: Beacon Supplies",
+        "order_3_customer_name": "Seed: Cobalt Retail",
+        "matching_customer_names_2": "Seed: Beacon Supplies",
+        "matching_customer_names_3": "Seed: Cobalt Retail",
+        "order_3_1": "SAL-ORD-2026-00003",
+        "order_3_2": "Seed: Cobalt Retail",
+        "order_3_reference": "SAL-ORD-2026-00003"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "24/24",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_e8699a: step 9: read 'order_1_customer_name' returned a value the skill itself set/selected ('Seed: Alpha Traders') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_e8699a: step 13: read 'matching_customer_names_1' returned a value the skill itself set/selected ('Seed: Alpha Traders') — confirms the control, not persistence; dropped from the report's confident values"
+      ],
+      "unreported": [
+        "order_1_customer_name",
+        "order_2",
+        "matching_customer_names_1"
+      ]
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "The customer created by the replayed segments exists exactly as requested: after clearing the stale list filters, the Customer list (http://127.0.0.1:8100/app/customer) shows a row named \"fwen3-luna-n3 Bench Customer\" (Enabled / Commercial), and opening that row leads to its own record at /app/customer/fwen3-luna-n3%20Bench%20Customer, whose \"Customer Name\" field reads \"fwen3-luna-n3 Bench Customer\" and which shows \"You created this · just now\". Nothing was modified — no Save was issued from the record page.",
+      "values": {
+        "saved_customer_name_field_value": "fwen3-luna-n3 Bench Customer",
+        "customer_record_url": "http://127.0.0.1:8100/app/customer/fwen3-luna-n3%20Bench%20Customer",
+        "other_customers_in_list": "Seed: Cobalt Retail, Seed: Beacon Supplies, Seed: Alpha Traders, Bench Customers Group, Bench Customer Ltd, Bench Customer",
+        "note": "A Customer Name filter of \"fwen3\" returned 'No Customer found with matching filters' even though the record exists; the record was confirmed after clearing all filters.",
+        "current_url": "http://127.0.0.1:8100/app/customer?name=undefined&customer_name=%5B%22like%22%2C%22%25fwen3%25%22%5D",
+        "list_row_container_level": "Customer Name",
+        "list_row_container_level_2": "Bench Customer",
+        "ref": "fwen3-luna-n3",
+        "ref_2": "luna-n3",
+        "ref_3": "luna-n1",
+        "list_row_text_1": "fwen3-luna-n3 Bench Customer",
+        "list_row_text_2": "Enabled",
+        "list_row_text_3": "Commercial"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_38f404 stopped at step ? — not on the page this procedure starts from (expects http://127.0.0.1:8100/app/customer?customer_name=[\"like\",\"%=fwen3-luna-n3 Bench Customer%\"], browser is at http://127.0.0.1:8100/app/customer?customer_name=[\"like\",\"%=fwen3-luna-n1 Bench Customer%\"]) — nothing was run",
+      "replayed": "0/5",
+      "repaired": false,
+      "turns": 11,
+      "warnings": [
+        "s_d77b76: step 1: read 'customer_name' returned a value the skill itself set/selected ('fwen3-luna-n3 Bench Customer') — confirms the control, not persistence; dropped from the report's confident values"
+      ],
+      "unreported": [
+        "customer_name",
+        "customer_id",
+        "customer_group",
+        "territory",
+        "status",
+        "record_url",
+        "saved_customer_name",
+        "customer_list_rows",
+        "data_fieldname_customer_",
+        "customer_run_id"
+      ]
+    },
+    {
+      "id": "04-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_eca36a; observed sales_order_id_2=fwen3-luna-n3 Bench Customer, verified_customer=fwen3-luna-n3 Bench Customer, verified_so_title=fwen3-luna-n3 Bench Customer, customer=fwen3-luna-n3 Bench Customer, item_1=Bench Widget, item_2=Bench Gadget, item_1_qty=3, item_2_qty=2, item_1_rate=$ 40.00, item_2_rate=$ 125.00, sales_order_url=http://127.0.0.1:8100/app/sales-order/SAL-ORD-2026-00004, verified_status_2=Draft, sales_order_id=SAL-ORD-2026-00004, customer_run_id=fwen3-luna-n3.",
+      "values": {
+        "sales_order_id_2": "fwen3-luna-n3 Bench Customer",
+        "verified_customer": "fwen3-luna-n3 Bench Customer",
+        "verified_so_title": "fwen3-luna-n3 Bench Customer",
+        "customer": "fwen3-luna-n3 Bench Customer",
+        "item_1": "Bench Widget",
+        "item_2": "Bench Gadget",
+        "item_1_qty": "3",
+        "item_2_qty": "2",
+        "item_1_rate": "$ 40.00",
+        "item_2_rate": "$ 125.00",
+        "sales_order_url": "http://127.0.0.1:8100/app/sales-order/SAL-ORD-2026-00004",
+        "verified_status_2": "Draft",
+        "sales_order_id": "SAL-ORD-2026-00004",
+        "customer_run_id": "fwen3-luna-n3"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "32/32",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_a44ad3: step 4: read 'item_grid_rows_before_dropdown_commit' returned '1\n \nitem_code\ndelivery_date\nqty\nrate\namount' from a control this step set, and nothing committed it since — it shows the control, however the app formats it, not what the app stored; dropped from the report's confident values",
+        "s_eca36a: step 3: read 'delivery_date' returned a value the skill itself set/selected ('2026-12-31') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_eca36a: step 4: primary locator did not resolve; used fallback #2 page.locator('[data-fieldname=\"items\"] .grid-body .grid-row .col[data-fieldname=\"item_code\"] .static-area').nth(0)",
+        "s_eca36a: step 16: primary locator did not resolve; used fallback #2 page.locator('div:nth-of-type(1) > div:nth-of-type(1) > div > div:nth-of-type(3) > div:nth-of-type(2) > a')",
+        "s_eca36a: report value verified_delivery_date is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)"
+      ],
+      "unreported": [
+        "delivery_date",
+        "item_grid_rows_before_dropdown_commit",
+        "verified_delivery_date"
+      ]
+    },
+    {
+      "id": "05-verify",
+      "status": "success",
+      "summary": "Replayed stored procedure s_226948; observed indicator_before=Draft, status_after_submit=To Deliver and Bill, sales_order_id=SAL-ORD-2026-00004, previous_status=Draft, activity_timeline_1=You submitted this document · just now, activity_timeline_2=You changed the value of Status from Draft to To Deliver and Bill · just now, activity_timeline_3=Administrator To Deliver and Bill · just now.",
+      "values": {
+        "indicator_before": "Draft",
+        "status_after_submit": "To Deliver and Bill",
+        "sales_order_id": "SAL-ORD-2026-00004",
+        "previous_status": "Draft",
+        "activity_timeline_1": "You submitted this document · just now",
+        "activity_timeline_2": "You changed the value of Status from Draft to To Deliver and Bill · just now",
+        "activity_timeline_3": "Administrator To Deliver and Bill · just now"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "10/10",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_226948: step 7: read 'cancel_button_present' returned a value the skill itself set/selected ('Yes') — confirms the control, not persistence; dropped from the report's confident values"
+      ],
+      "unreported": [
+        "cancel_button_present"
+      ]
+    },
+    {
+      "id": "06-add",
+      "status": "success",
+      "summary": "Replayed stored procedure s_e2e57a; observed customer_run_id=fwen3-luna-n3, timeline_text_after_comm=Activity\nNew Email\nA\n You commented · just now\nEdit\n\nrunid fwen3-luna-n3\n\nYou submitted this document · just now\nYou changed the value of Status from Draft to To Deliver and Bill · just now\nAdministrator To Deliver and Bill · just now\nYou last edited this · just now\nYou created this · just now, sales_order_id=SAL-ORD-2026-00004, timeline_entry_after_reload_2=runid fwen3-luna-n3, comment_text_posted=runid fwen3-luna-n3.",
+      "values": {
+        "customer_run_id": "fwen3-luna-n3",
+        "timeline_text_after_comm": "Activity\nNew Email\nA\n You commented · just now\nEdit\n\nrunid fwen3-luna-n3\n\nYou submitted this document · just now\nYou changed the value of Status from Draft to To Deliver and Bill · just now\nAdministrator To Deliver and Bill · just now\nYou last edited this · just now\nYou created this · just now",
+        "sales_order_id": "SAL-ORD-2026-00004",
+        "timeline_entry_after_reload_2": "runid fwen3-luna-n3",
+        "comment_text_posted": "runid fwen3-luna-n3"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "9/9",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_e2e57a: step 7: primary locator did not resolve; used fallback #2 elementAt(383, 1795) /* span */",
+        "s_e2e57a: step 7: read errored — the element no longer shows the value where the recording saw it (\"A\\n{{=}}\")",
+        "s_e2e57a: step 8: primary locator did not resolve; used fallback #2 elementAt(637, 1834) /* p */",
+        "s_e2e57a: step 9: primary locator did not resolve; used fallback #2 elementAt(637, 1834) /* p */"
+      ],
+      "unreported": [
+        "timeline_entry_after_reload_1"
+      ]
+    }
+  ],
+  "passed": 6,
+  "total": 6,
+  "repinned": 0,
+  "drift": 7,
+  "driftTickets": [
+    {
+      "flow": "fwen3-luna",
+      "step": "01-signin",
+      "skill": "s_c137ad",
+      "similarity": 0.078,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_c137ad stopped at step ? — not on the page this procedure starts from (expects http://127.0.0.1:8100/app/home, browser is at http://127.0.0.1:8100/login) — nothing was run",
+      "reason": "not on the page this procedure starts from (expects http://127.0.0.1:8100/app/home, browser is at http://127.0.0.1:8100/login) — nothing was run",
+      "pageUrlPattern": "http://127.0.0.1:8100/login#login",
+      "pageUrl": "http://127.0.0.1:8100/login#login"
+    },
+    {
+      "flow": "fwen3-luna",
+      "step": "03-create",
+      "skill": "s_38f404",
+      "similarity": 0.998,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_38f404 stopped at step ? — not on the page this procedure starts from (expects http://127.0.0.1:8100/app/customer?customer_name=[\"like\",\"%=fwen3-luna-n3 Bench Customer%\"], browser is at http://127.0.0.1:8100/app/customer?customer_name=[\"like\",\"%=fwen3-luna-n1 Bench Customer%\"]) — nothing was run",
+      "reason": "not on the page this procedure starts from (expects http://127.0.0.1:8100/app/customer?customer_name=[\"like\",\"%=fwen3-luna-n3 Bench Customer%\"], browser is at http://127.0.0.1:8100/app/customer?customer_name=[\"like\",\"%=fwen3-luna-n1 Bench Customer%\"]) — nothing was run",
+      "pageUrlPattern": "http://127.0.0.1:8100/app/customer?customer_name=[\"like\",\"%=fwen3-luna-n1 Bench Customer%\"]",
+      "pageUrl": "http://127.0.0.1:8100/app/customer?customer_name=%5B%22like%22%2C%22%25%3Dfwen3-luna-n1+Bench+Customer%25%22%5D"
+    },
+    {
+      "flow": "fwen3-luna",
+      "step": "04-create",
+      "skill": "s_eca36a",
+      "atStep": "4",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.getByText('Bench Widget', { exact: true })",
+      "fallbackUsed": "page.locator('[data-fieldname=\"items\"] .grid-body .grid-row .col[data-fieldname=\"item_code\"] .static-area').nth(0)",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8100/app/sales-order/:id",
+      "pageUrl": "http://127.0.0.1:8100/app/sales-order/SAL-ORD-2026-00004"
+    },
+    {
+      "flow": "fwen3-luna",
+      "step": "04-create",
+      "skill": "s_eca36a",
+      "atStep": "16",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.getByText('Bench Widget', { exact: true })",
+      "fallbackUsed": "page.locator('div:nth-of-type(1) > div:nth-of-type(1) > div > div:nth-of-type(3) > div:nth-of-type(2) > a')",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8100/app/sales-order/:id",
+      "pageUrl": "http://127.0.0.1:8100/app/sales-order/SAL-ORD-2026-00004"
+    },
+    {
+      "flow": "fwen3-luna",
+      "step": "06-add",
+      "skill": "s_e2e57a",
+      "atStep": "7",
+      "key": "target",
+      "similarity": 1.001,
+      "missedLocator": "page.locator('[id^=\"comment-cqvccru\"] > div > span > span:nth-of-type(1) > span')",
+      "fallbackUsed": "elementAt(383, 1795) /* span */",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8100/app/sales-order/:id",
+      "pageUrl": "http://127.0.0.1:8100/app/sales-order/SAL-ORD-2026-00004"
+    },
+    {
+      "flow": "fwen3-luna",
+      "step": "06-add",
+      "skill": "s_e2e57a",
+      "atStep": "8",
+      "key": "target",
+      "similarity": 1.001,
+      "missedLocator": "page.locator('[id^=\"comment-cqvccru\"] > div > div:nth-of-type(1) > div > p')",
+      "fallbackUsed": "elementAt(637, 1834) /* p */",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8100/app/sales-order/:id",
+      "pageUrl": "http://127.0.0.1:8100/app/sales-order/SAL-ORD-2026-00004"
+    },
+    {
+      "flow": "fwen3-luna",
+      "step": "06-add",
+      "skill": "s_e2e57a",
+      "atStep": "9",
+      "key": "target",
+      "similarity": 1.001,
+      "missedLocator": "page.locator('[id^=\"comment-cqvccru\"] > div > div:nth-of-type(1) > div > p')",
+      "fallbackUsed": "elementAt(637, 1834) /* p */",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8100/app/sales-order/:id",
+      "pageUrl": "http://127.0.0.1:8100/app/sales-order/SAL-ORD-2026-00004"
+    }
+  ],
+  "wallMs": 207206,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 230852,
+    "completionTokens": 5363,
+    "cachedTokens": 206592
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 230852,
+      "completionTokens": 5363,
+      "cachedTokens": 206592
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "openai/gpt-6-luna",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}
