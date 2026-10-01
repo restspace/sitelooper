@@ -630,3 +630,30 @@ describe('a recorded line whose name this run took past the name cap (round 63, 
     expect(verdict.stop).toMatch(/did not show/);
   });
 });
+
+describe('expectedChangesVerdict on a click the url gate took as a link landing (fwen1-luna 02-find s_548f8c/3)', () => {
+  const FORM = ['- heading "Seed: Beacon Supplies"', '- button "Update Items"'];
+
+  it('does not require changes recorded on the page the link left of the page it opened', async () => {
+    const v = await expectedChangesVerdict(['- button "{{*}} Filter Applied"'], {}, { ...ctx(), leftByLink: true }, seen(FORM, FORM));
+    expect(v.stop).toBeUndefined();
+    expect(v.confirmed).toBeUndefined();
+    expect(v.warnings.join('\n')).toMatch(/captured on the page the clicked link left/);
+  });
+
+  it('stops on the same look without it, as the replay did', async () => {
+    const v = await expectedChangesVerdict(['- button "{{*}} Filter Applied"'], {}, ctx(), seen(FORM, FORM));
+    expect(v.stop).toMatch(/did not have its recorded effect/);
+  });
+
+  it('still requires a slotted (identity) line', async () => {
+    const v = await expectedChangesVerdict(['- heading "{{v1}} (old)"'], { v1: 'Seed: Beacon Supplies' }, { ...ctx(), leftByLink: true }, seen(FORM, FORM));
+    expect(v.stop).toMatch(/did not show/);
+  });
+
+  it('says the diff leg was missing when it was', async () => {
+    const v = await expectedChangesVerdict(['- button "{{*}} Filter Applied"'], {}, { ...ctx(), leftByLink: true }, seen(null, FORM));
+    expect(v.stop).toBeUndefined();
+    expect(v.unobserved).toBe(true);
+  });
+});

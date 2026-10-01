@@ -148,6 +148,23 @@ export function linkLandingWarning(
   return `${where}: recorded url ${shown} is the page the clicked link left (captured before its navigation committed); the click went where the link points, ${liveUrl} — accepted`;
 }
 
+/**
+ * Whether the url gate takes this step as a link landing (linkLandingWarning
+ * on a url the recorded pattern does not match): the recording's page changes
+ * were then captured on the page the link left, and the page-change gate does
+ * not require them of the page it opened (expect.ts ChangeContext.leftByLink).
+ * Both runners ask it with the link their click reported.
+ */
+export function leftByLink(
+  pattern: string | undefined,
+  liveUrl: string,
+  params: Record<string, string>,
+  link: { from: string; href: string } | undefined,
+): boolean {
+  if (!pattern || !link || urlMatches(pattern, liveUrl, params)) return false;
+  return linkLandingWarning(pattern, liveUrl, params, '', link) !== null;
+}
+
 function describeDiffs(diffs: UrlSegDiff[]): string {
   return diffs.map((d) => `${d.expected}→${d.actual}`).join(', ');
 }

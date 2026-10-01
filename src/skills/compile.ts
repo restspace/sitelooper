@@ -18,6 +18,7 @@ import { collapseTogglePairs, dropSupersededSets, sameControl } from './toggles.
 import { namedHighlightPicks } from './highlight-pick.js';
 import { dropRestoredDetours } from './restored-field.js';
 import { dropRetriedSubmits } from './retried-submit.js';
+import { appMintedPositions, generaliseAppMinted, generaliseAppMintedDeep } from './app-minted-url.js';
 import { locatingSlots, scopeReadBySlot } from './readscope.js';
 import { keyPicks } from './key-pick.js';
 import type { ShadowRow } from './shadow.js';
@@ -881,6 +882,12 @@ export function compileSkills(input: CompileInput): Skill[] {
   const readMints: ReadMint[] = [];
   kept = mintedFill(kept, input, slots, recordingNotes, readMints);
   if (!kept.length) return [];
+  // Url positions the APP minted under this recording — a form instance's
+  // made-up address (ERPNext's `new-sales-order-rxojnkvnht`, fwen1): every
+  // pattern carrying one is written `:var`, and the seam rule below compares
+  // through it. Evidence only: see skills/app-minted-url.ts.
+  const appMinted = appMintedPositions(startUrl, steps);
+  const sameTemplate = (a: string, b: string) => generaliseAppMinted(urlPattern(a, slots, { query: false }), appMinted) === generaliseAppMinted(urlPattern(b, slots, { query: false }), appMinted);
   // A url id this span minted is its OUTPUT: derived ({{dN}}, discoverMinted),
   // never a param — even when the ledger, which banked it before this compile,
   // handed it in as known. See ownUrlMints.
@@ -965,7 +972,7 @@ export function compileSkills(input: CompileInput): Skill[] {
       continue;
     }
     if (step.diff?.url && step.diff.url !== currentUrl) {
-      const crossed = urlPattern(step.diff.url, slots, { query: false }) !== urlPattern(currentUrl, slots, { query: false });
+      const crossed = !sameTemplate(step.diff.url, currentUrl);
       currentUrl = step.diff.url;
       if (crossed) {
         segments.push(seg);
@@ -1428,7 +1435,7 @@ export function compileSkills(input: CompileInput): Skill[] {
     return out;
   };
 
-  return built.map((b, k) => {
+  const compiled = built.map((b, k) => {
     const params: Record<string, SkillParam> = {};
     for (const name of keptSlots.keys()) {
       const value = keptSlots.get(name) ?? '';
@@ -1484,6 +1491,11 @@ export function compileSkills(input: CompileInput): Skill[] {
       },
     };
   });
+  for (const skill of compiled) {
+    generaliseAppMintedDeep(skill.preconditions, appMinted);
+    generaliseAppMintedDeep(skill.steps, appMinted);
+  }
+  return compiled;
 }
 
 const MIN_GOAL_LEN = 3;

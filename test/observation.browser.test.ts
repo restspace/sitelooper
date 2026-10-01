@@ -246,20 +246,65 @@ d('the structured observation (real browser)', () => {
     expect(await presence(page, ['- button "Nowhere"'], 2)).toBe('absent');
     expect(await presence(page, ['- button "Late"'], 2)).toBe('present');
 
-    // 5,000 elements ahead of Late: past the element cap, so Late is not seen —
-    // and its absence is not claimed
+    // 5,000 rendered elements ahead of Late: past the dialect-1 element cap,
+    // so dialect 1 does not see Late and does not claim its absence; the rest
+    // walk (rendered elements past the cap, on its own budget) does see it,
+    // and covers the page for dialect 2
     await open(`${fx.origin}/observe?grid=0&pad=5000`);
     const padded = await captureLines(page, 2);
-    expect(padded?.coverage.nodesTruncated).toBe(true);
-    expect(padded?.complete).toBe(false);
-    expect(padded?.lines).not.toContain('- button "Late"');
+    expect(padded?.coverage.legacyNodesTruncated).toBe(true);
+    expect(padded?.complete, describeCoverage(padded!.coverage)).toBe(true);
+    expect(padded?.lines).toContain('- button "Late"');
+    expect(await presence(page, ['- button "Late"'], 2)).toBe('present');
+    expect(await presence(page, ['- button "Nowhere"'], 2)).toBe('absent');
+    const padded1 = await captureLines(page, 1);
+    expect(padded1?.complete).toBe(false);
+    expect(describeCoverage(padded1!.coverage)).toMatch(/element cap was reached/);
+    expect(padded1?.lines).not.toContain('- button "Late"');
+    expect(await presence(page, ['- button "Late"'], 1)).toBe('unknown');
+
+    // More rendered elements than the rest budget too: Late is not seen, and
+    // its absence is not claimed in either dialect
+    await open(`${fx.origin}/observe?grid=0&pad=${SNAPSHOT_LIMITS.maxNodes + SNAPSHOT_LIMITS.maxRestNodes + 500}`);
+    const overflow = await captureLines(page, 2);
+    expect(overflow?.coverage.nodesTruncated).toBe(true);
+    expect(overflow?.complete).toBe(false);
+    expect(overflow?.lines).not.toContain('- button "Late"');
     expect(await presence(page, ['- button "Late"'], 2)).toBe('unknown');
     expect(await presence(page, ['- button "Late"'], 1)).toBe('unknown');
+
+    // A Frappe desk (fwen1-luna 02-find): 30,000 elements of display:none
+    // pages ahead of the one on screen. Skipped whole, they spend no budget —
+    // the look covers the page, finds Late, and can call a line absent; no
+    // hidden element is described.
+    await open(`${fx.origin}/observe?grid=0&pad=3990&hidden=30000`);
+    const desk = await captureLines(page, 2);
+    expect(desk?.coverage.nodesTruncated).toBe(false);
+    expect(desk?.complete, describeCoverage(desk!.coverage)).toBe(true);
+    expect(desk?.coverage.nodesWalked).toBeLessThan(SNAPSHOT_LIMITS.maxNodes + 200);
+    expect(desk?.lines).toContain('- button "Late"');
+    expect(desk?.lines.some((l) => l.includes('Hidden'))).toBe(false);
+    expect(await presence(page, ['- button "Nowhere"'], 2)).toBe('absent');
 
     await open(`${fx.origin}/observe?grid=0&many=450`);
     const many = await captureLines(page, 2);
     expect(many?.coverage.linesTruncated).toBe(true);
     expect(await presence(page, ['- button "Nowhere"'], 2)).toBe('unknown');
+  }, 60_000);
+
+  it('does not take a status region clipped out of sight for an alert; a role=alert is kept however it is drawn', async () => {
+    // fwen1-luna-n2 03-create: Awesomplete's "Begin typing for results." on
+    // every Frappe link field, plus the 1px and clip-path screen-reader-only
+    // patterns, beside a visible status and a clipped role=alert.
+    await open(`${fx.origin}/observe?grid=0&sr=1`);
+    const { o } = await bothOf();
+    for (const d of [1, 2] as const) {
+      const alerts = renderAlerts(o, d);
+      expect(alerts).toContain('Saved');
+      expect(alerts).toContain('Hidden error');
+      expect(alerts.some((a) => /Begin typing|Screen reader hint|Clip path hint/.test(a))).toBe(false);
+    }
+    expect(o.coverage.alertsTruncated).toBe(false);
   }, 60_000);
 
   it('records a visible frame it could not read as a gap, never as an empty frame', async () => {

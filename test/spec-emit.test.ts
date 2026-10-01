@@ -730,6 +730,15 @@ describe('expectations', () => {
    * (decoding, trailing slashes, an unbound `{{dN}}`, a live hash route, `:id`
    * inside a segment, and the soft match it had no notion of).
    */
+  it("asks the page-change gate the shared leftByLink with the link the click reported, as replay does (fwen1-luna 02-find)", () => {
+    const whole = withExpect({ urlPattern: 'http://app.test/items', addedContains: ['- button "1 Filter Applied"'], lineDialect: 2 });
+    expect(bodiesOf(whole)).toContain("leftByLink: leftByLink('http://app.test/items', page.url(), p, obs1?.link())");
+    expect(whole).toContain('function leftByLink(');
+    // no url expectation, or not a click: nothing to have landed
+    expect(bodiesOf(withExpect({ addedContains: ['- button "x"'] }))).not.toContain('leftByLink');
+    expect(bodiesOf(withExpect({ urlPattern: 'http://app.test/items', addedContains: ['- textbox "x": y'] }, 'fill', { target: '@e1', value: 'y' }))).not.toContain('leftByLink');
+  });
+
   it('checks a recorded url through the shared urlEffect verdict, whatever the pattern shape', () => {
     const path = withExpect({ urlPattern: 'http://app.test/items/:id' });
     expect(path).toContain("await urlEffect(page, 'http://app.test/items/:id', p, '01-do s_test1/1', volatile1, obs1?.link());");

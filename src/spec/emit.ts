@@ -1106,7 +1106,7 @@ const HELPERS: { token: string; source: string[] }[] = [
       '  page: Page,',
       '  recorded: string[],',
       '  p: Record<string, string>,',
-      '  ctx: { tag: string; tool: string; value?: string; positionalResolution: boolean },',
+      '  ctx: { tag: string; tool: string; value?: string; positionalResolution: boolean; leftByLink?: boolean },',
       '  linesBefore: string[] | null,',
       '  dialect: LineDialect = 1,',
       '  linesAfter: string[] | null = null,',
@@ -1657,12 +1657,18 @@ function originSource(step: SkillStep): string {
  * A recorded dialog that did not open comes back as `absentDialog`, which the
  * body remembers for the steps that were going to act inside it.
  */
-function expectationLines(step: SkillStep, ctx: Ctx, out: string[], linesBefore: string, linesAfter: string): string | null {
+function expectationLines(step: SkillStep, ctx: Ctx, out: string[], linesBefore: string, linesAfter: string, observed?: string): string | null {
   const recorded = recordedChanges(step);
   if (!recorded.length) return null;
   noteSlots(recorded, ctx);
   const where = `${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex}`;
-  const value = typeof step.args?.value === 'string' ? `, value: ${src(step.args.value)}` : '';
+  // A click the url gate took as a link landing: its recorded changes were
+  // seen on the page the link left (the shared leftByLink, as replay asks it,
+  // with the link the click reported — the same one urlEffect is given).
+  const pattern = step.expect?.urlPattern;
+  const landed =
+    pattern && observed && (step.tool === 'click' || step.tool === 'dblclick') ? `, leftByLink: leftByLink(${q(pattern)}, page.url(), p, ${observed}?.link())` : '';
+  const value = (typeof step.args?.value === 'string' ? `, value: ${src(step.args.value)}` : '') + landed;
   // Positional resolution is what the step's resolution REPORTED, at run
   // time (replay's own per-step flag), not a compile-time guess over the chain.
   const call =
@@ -2429,7 +2435,7 @@ function emitSkillStep(recorded: SkillStep, segment: SpecSegment, index: number,
   // page the daemon's diff is taken from, before the alert settle, the bind's
   // url wait and the url gate move it on.
   const linesAfter = linesBefore && recordedChanges(step).length ? `linesAfter${ctx.urls}` : null;
-  const changes = linesBefore && linesAfter ? expectationLines(step, ctx, checks, linesBefore, linesAfter) : null;
+  const changes = linesBefore && linesAfter ? expectationLines(step, ctx, checks, linesBefore, linesAfter, observed) : null;
   // Replay's expectedRemovals gate, after the page changes and before the
   // alerts: a hide whose lines all survive the click did not have its effect.
   const hidden = hideEffectLines(step);

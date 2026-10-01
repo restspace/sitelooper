@@ -271,6 +271,10 @@ const ALLOWLIST: Record<string, { hits: string[]; answers: string }> = {
     answers: 'tokenises prose for proseIdentifiers (digitDominant judges each token), and skips a url scheme (syntax) so a host is never cited',
   },
   'src/daemon/diff.ts': { hits: ['[a-z0-9-]*'], answers: 'parses an aria-snapshot role name (syntax)' },
+  'src/skills/app-minted-url.ts': {
+    hits: ['[a-z0-9+.-]*'],
+    answers: 'splits a stored url pattern at its scheme (syntax) to rewrite an app-minted path position; which position is minted is decided by recording evidence, never by its shape',
+  },
   'src/execution/fingerprint.ts': { hits: ['[0-9a-f]{6'], answers: 'CLASS_HASH_HEX_RUN, page-side (decision 3C)' },
   'src/execution/url.ts': {
     hits: ['[0-9a-f]{8'],

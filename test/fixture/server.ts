@@ -1642,11 +1642,14 @@ document.querySelector('.mark').addEventListener('click', async (e) => {
  * frame from `cross` (another origin, when given), a `display:none` iframe,
  * and a grid that says it has 500 rows while rendering 20. `?pad=N` puts N
  * elements ahead of a trailing `Late` button, past the element cap;
- * `?many=N` renders N buttons, past the line cap.
+ * `?hidden=N` puts N elements ahead of it inside a display:none container
+ * (a Frappe desk's hidden pages); `?many=N` renders N buttons, past the line
+ * cap.
  */
 const OBSERVE = (q: URLSearchParams) => {
   const cross = q.get('cross');
   const pad = Number(q.get('pad') ?? 0);
+  const hidden = Number(q.get('hidden') ?? 0);
   const many = Number(q.get('many') ?? 0);
   return `<!doctype html><html><head><meta charset="utf-8"><title>Observe</title></head><body>
 <h1>Observe</h1>
@@ -1662,8 +1665,13 @@ ${q.get('grid') === '0' ? '' : `<div role="grid" aria-label="Orders" aria-rowcou
 ${Array.from({ length: 20 }, (_, i) => `<div role="row"><span role="cell">Order ${i + 1}</span></div>`).join('\n')}
 </div>`}
 <div role="status">Saved</div>
+${q.get('sr') === '1' ? `<div class="awesomplete"><input aria-label="Customer Group"><span class="visually-hidden" role="status" aria-live="assertive" aria-atomic="true" style="position:absolute;clip:rect(0,0,0,0)">Begin typing for results.</span></div>
+<span role="status" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;white-space:nowrap;border:0">Screen reader hint</span>
+<span role="status" style="position:absolute;clip-path:inset(50%)">Clip path hint</span>
+<span role="alert" style="position:absolute;clip:rect(0,0,0,0)">Hidden error</span>` : ''}
 ${Array.from({ length: many }, (_, i) => `<button type="button">B${i}</button>`).join('')}
 <div id="pad">${Array.from({ length: pad }, () => '<span></span>').join('')}</div>
+${hidden ? `<div id="hidden-pages" style="display:none">${Array.from({ length: hidden }, (_, i) => (i % 100 ? '<span></span>' : `<button type="button">Hidden ${i}</button>`)).join('')}</div>` : ''}
 <button type="button" id="late">Late</button>
 <script>
 const host = document.getElementById('panel');
