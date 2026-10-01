@@ -1,0 +1,57 @@
+{
+ "id": "s_72af1f",
+ "origin": "http://127.0.0.1:8100",
+ "template": "Create a Customer named exactly '{{v2}}' using the default customer group and territory, save it, and verify the customer record exists with that exact name.",
+ "params": {
+  "v1": {
+   "example": "fwen1-luna-n3",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v2": {
+   "example": "fwen1-luna-n3 Bench Customer",
+   "usedIn": [],
+   "known": true
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8100/app/sales-order/:id"
+ },
+ "steps": [
+  {
+   "tool": "goto",
+   "args": {
+    "url": "http://127.0.0.1:8100/app/customer/new"
+   },
+   "locators": {},
+   "via": {
+    "skill": "s_a01446",
+    "step": 1
+   }
+  }
+ ],
+ "contract": 4,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-10-01T13:48:20.755Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 4
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_4abae2",
+  "index": 0,
+  "of": 3
+ },
+ "provenance": {
+  "session": "fwen1-luna-n3",
+  "instruction": "Create a Customer named exactly 'fwen1-luna-n3 Bench Customer' using the default customer group and territory, save it, and verify the customer record exists with that exact name.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-10-01T13:48:20.755Z"
+ },
+ "revision": 1
+}

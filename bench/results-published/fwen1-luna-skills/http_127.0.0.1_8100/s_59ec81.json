@@ -1,0 +1,64 @@
+{
+ "id": "s_59ec81",
+ "origin": "http://127.0.0.1:8100",
+ "template": "Create a Sales Order for the existing customer '{{v1}}'. Set delivery date to {{v3}} and create exactly two Items-table lines: select the actual 'Bench Widget' item with quantity 3 and the actual 'Bench Gadget' item with quantity 2, using each item's default rate. Save the Sales Order as a draft, then verify the customer, date, exact two item names, quantities, rates and the saved page address/ID.",
+ "params": {
+  "v1": {
+   "example": "fwen1-luna-n3 Bench Customer",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i3:customer_name_field_value"
+  },
+  "v2": {
+   "example": "fwen1-luna-n3",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v3": {
+   "example": "2026-12-31",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i2:list_row_1_text_3"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8100/app/customer/{{v1}}"
+ },
+ "steps": [
+  {
+   "tool": "goto",
+   "args": {
+    "url": "http://127.0.0.1:8100/app/sales-order/new"
+   },
+   "locators": {},
+   "via": {
+    "skill": "s_b47808",
+    "step": 1
+   }
+  }
+ ],
+ "contract": 4,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-10-01T13:50:07.025Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 4
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_00d538",
+  "index": 0,
+  "of": 3
+ },
+ "provenance": {
+  "session": "fwen1-luna-n3",
+  "instruction": "Create a Sales Order for the existing customer 'fwen1-luna-n3 Bench Customer'. Set delivery date to 2026-12-31 and create exactly two Items-table lines: select the actual 'Bench Widget' item with quantity 3 and the actual 'Bench Gadget' item with quantity 2, using each item's default rate. Save the Sales Order as a draft, then verify the customer, date, exact two item names, quantities, rates and the saved page address/ID.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-10-01T13:50:07.025Z"
+ },
+ "revision": 1
+}

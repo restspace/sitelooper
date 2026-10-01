@@ -1,0 +1,179 @@
+
+[sweep] run 1/3: fwen1-luna-n1 (store: /home/user/sitelooper/bench/results/fwen1-luna-skills)
+[harness] erpnext: defaulting APP_URL
+[harness] erpnext: defaulting APP_EMAIL
+[harness] erpnext: defaulting APP_PASSWORD
+[reset] erpnext: no sales orders to delete
+[harness] erpnext responded 200 at http://127.0.0.1:8100/
+stopped: fwen1-luna-n1
+  flow "fwen1-luna" saved: 6 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwen1-luna.json
+  warning: note: dropped 1 locator candidate(s) carrying a value this run minted (known only by export time)
+  warning: warning: 02-find's instruction asks to report customer_name_1, customer_name_2, and no replay can publish them: nothing in its procedure reads them from the page, so export dropped them — re-record the step so the value is read, not only reported
+  warning: note: 02-find no longer publishes matching_count, order_reference_2, detail_verified_customer_name, page_length_options, rows_seen, filter_query, verified_customer_name — no replay reads them from the page and the recording showed no line to read
+  warning: note: 03-create no longer publishes customer_status — no replay reads it from the page and the recording showed no line to read
+  warning: note: 04-create no longer publishes item_1_qty, item_2_qty, line_count, tax_row, edit_mode_item_code_placeholder_labels, sales_order_4_status — no replay reads them from the page and the recording showed no line to read
+  warning: note: 05-verify no longer publishes sales_order_status_after, sales_order_status_submi — no replay reads them from the page and the recording showed no line to read
+  warning: warning: 104 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[0].instruction: "Administrator" (output) in "Sign in to ERPNext at http://127.0.0.1:8100/ as Administrator using the password exactly as the text {{env:APP_PASSWORD}} (do not substitute or expose it). Veri"
+  flow.steps[0].params.v2: "Administrator" (output) in "Administrator"
+  flow.steps[0].route: "http://127.0.0.1:8100/app/home" (output) in "http://127.0.0.1:8100/app/home"
+  flow.steps[3].instruction: "Bench Widget" (output) in "Create a Sales Order for the existing customer '{{runid}} Bench Customer'. Set delivery date to 2026-12-31 and create exactly two Items-table lines: select the "
+  flow.steps[3].instruction: "Bench Gadget" (output) in "Create a Sales Order for the existing customer '{{runid}} Bench Customer'. Set delivery date to 2026-12-31 and create exactly two Items-table lines: select the "
+arm=sitelooper model=openai/gpt-6-luna runid=fwen1-luna-n1 stop=completed
+turns=7 wall=399.8s
+commands=6 cmdTime=366.3s cmdBytes=8419 timeouts=0
+orchestrator in=5732 cw=0 cr=23062 out=802
+inner prompt=1999002 cached=1854592 completion=23352
+spend=$0.0426 maxUsd=3
+learn: A_n=0 replayed=0/6 full=0 repaired=0 compiled=6 variants=0
+-> /home/user/sitelooper/bench/results/fwen1-luna-n1-sitelooper-result.json
+
+fwen1-luna-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed customer names reported
+  obj 2: PASS — customer=fwen1-luna-n1 Bench Customer
+  obj 3: PASS — id=SAL-ORD-2026-00004, delivery_date=2026-12-31
+  obj 4: PASS — lines: Bench Widget x3 @ 40; Bench Gadget x2 @ 125
+  obj 5: PASS — docstatus=1 status=To Deliver and Bill
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — sales order id SAL-ORD-2026-00004 reported
+
+[sweep] run 2/3: fwen1-luna-n2 (replay flow fwen1-luna, no orchestrator)
+[reset] erpnext: deleted 1 sales order(s) (earlier runs' and non-seed)
+[reset] erpnext: deleted customer "fwen1-luna-n1 Bench Customer"
+[sweep] fwen1-luna-n2: 3 drift ticket(s) → fwen1-luna-n2-drift.json
+
+fwen1-luna-n2: objectives passed 2/7
+  obj 1: PASS — all 3 seed customer names reported
+  obj 2: PASS — customer=fwen1-luna-n2 Bench Customer
+  obj 3: FAIL — no sales order for the customer
+  obj 4: FAIL — no sales order
+  obj 5: FAIL — no sales order
+  obj 6: FAIL — no sales order
+  obj 7: FAIL — no sales order to report
+
+[sweep] run 3/3: fwen1-luna-n3 (replay flow fwen1-luna, no orchestrator)
+[reset] erpnext: no sales orders to delete
+[reset] erpnext: deleted customer "fwen1-luna-n2 Bench Customer"
+[sweep] fwen1-luna-n3: 6 drift ticket(s) → fwen1-luna-n3-drift.json
+
+fwen1-luna-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed customer names reported
+  obj 2: PASS — customer=fwen1-luna-n3 Bench Customer
+  obj 3: PASS — id=SAL-ORD-2026-00004, delivery_date=2026-12-31
+  obj 4: PASS — lines: Bench Widget x3 @ 40; Bench Gadget x2 @ 125
+  obj 5: PASS — docstatus=1 status=To Deliver and Bill
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — sales order id SAL-ORD-2026-00004 reported
+
+Learning sweep fwen1-luna (K=3)
+┌─────────┬───┬─────────────────┬──────────┬─────────────┬───────┬──────┬───────────┬──────┬──────────────┬────────┐
+│ (index) │ n │ runid           │ verified │ stop        │ turns │ cmds │ total_usd │ A_n  │ replayed     │ wall_s │
+├─────────┼───┼─────────────────┼──────────┼─────────────┼───────┼──────┼───────────┼──────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwen1-luna-n1' │ '7/7'    │ 'completed' │ 7     │ 6    │ 0.0426    │ 0    │ '0/6'        │ 400    │
+│ 1       │ 2 │ 'fwen1-luna-n2' │ '2/7'    │ 'halted'    │ 72    │ 6    │ 0.0253    │ 0.25 │ '3/6 (flow)' │ 236    │
+│ 2       │ 3 │ 'fwen1-luna-n3' │ '7/7'    │ 'success'   │ 40    │ 6    │ 0.0161    │ 0.5  │ '6/6 (flow)' │ 230    │
+└─────────┴───┴─────────────────┴──────────┴─────────────┴───────┴──────┴───────────┴──────┴──────────────┴────────┘
+http://127.0.0.1:8100
+  s_050128  validated    2 steps  2/3 (67%)
+           Find the existing Sales Orders whose customer name starts with 'Seed:' and report the customer names exactly a…
+  s_055da3  validated    1 steps  3/3 (100%)
+           Sign in to ERPNext at {{v1}} as {{v2}} using the password exactly as the text {{v3}} (do not substitute or exp…
+  s_0eb8c2  validated    2 steps  3/3 (100%)
+           Find the existing Sales Orders whose customer name starts with 'Seed:' and report the customer names exactly a…
+  s_2011f1  validated    3 steps  3/3 (100%)
+           Sign in to ERPNext at {{v1}} as {{v2}} using the password exactly as the text {{v3}} (do not substitute or exp…
+  s_a01446  validated    1 steps  2/3 (67%)
+           Create a Customer named exactly '{{v2}}' using the default customer group and territory, save it, and verify t…
+  s_b47808  validated    1 steps  3/3 (100%)
+           Create a Sales Order for the existing customer '{{v1}}'. Set delivery date to {{v3}} and create exactly two It…
+  s_ee89b4  validated    1 steps  3/3 (100%)
+           Sign in to ERPNext at {{v1}} as {{v2}} using the password exactly as the text {{v3}} (do not substitute or exp…
+  s_548f8c  provisional 12 steps  1/2 (50%)
+           Find the existing Sales Orders whose customer name starts with 'Seed:' and report the customer names exactly a…
+  s_60d73f  validated    2 steps  2/2 (100%)
+           Find the existing Sales Orders whose customer name starts with 'Seed:' and report the customer names exactly a…
+  s_a18847  validated    8 steps  2/2 (100%)
+           On submitted Sales Order {{v1}}, add a timeline comment whose text includes exactly the runid '{{v2}}'. Verify…
+  s_f96968  validated    8 steps  2/2 (100%)
+           Submit Sales Order {{v1}} and confirm the submission when prompted. Verify the saved Sales Order's status is s…
+  s_04a5a4  provisional  2 steps  1/1 (100%)
+           Find the existing Sales Orders whose customer name starts with '{{v1}}' and report the customer names exactly …
+  s_06f565  provisional  1 steps  1/1 (100%)  variant of s_050128
+           Find the existing Sales Orders whose customer name starts with 'Seed:' and report the customer names exactly a…
+  s_0bab1c  provisional 11 steps  1/1 (100%)
+           Create a Sales Order for the existing customer '{{v1}}'. Set delivery date to {{v3}} and create exactly two It…
+  s_0f7f00  provisional  1 steps  1/1 (100%)
+           Create a Customer named exactly '{{v2}}' using the default customer group and territory, save it, and verify t…
+  s_221b17  provisional  3 steps  1/1 (100%)  variant of s_548f8c
+           Find the existing Sales Orders whose customer name starts with '{{v1}}' and report the customer names exactly …
+  s_22cac9  provisional  3 steps  1/1 (100%)
+           Find the existing Sales Orders whose customer name starts with '{{v1}}' and report the customer names exactly …
+  s_2832e8  provisional 11 steps  1/1 (100%)
+           Find the existing Sales Orders whose customer name starts with '{{v1}}' and report the customer names exactly …
+  s_41f58c  provisional  1 steps  1/1 (100%)
+           Find the existing Sales Orders whose customer name starts with 'Seed:' and report the customer names exactly a…
+  s_442bcf  provisional  1 steps  1/1 (100%)
+           Create a Customer named exactly '{{v2}}' using the default customer group and territory, save it, and verify t…
+  s_495240  provisional  2 steps  1/1 (100%)
+           Find the existing Sales Orders whose customer name starts with '{{v1}}' and report the customer names exactly …
+  s_4a6ac9  provisional  2 steps  1/1 (100%)
+           Find the existing Sales Orders whose customer name starts with 'Seed:' and report the customer names exactly a…
+  s_53387e  provisional 15 steps  1/1 (100%)
+           Create a Sales Order for the existing customer '{{v1}}'. Set delivery date to {{v3}} and create exactly two It…
+  s_59ec81  provisional  1 steps  1/1 (100%)
+           Create a Sales Order for the existing customer '{{v1}}'. Set delivery date to {{v3}} and create exactly two It…
+  s_5a917d  provisional  2 steps  1/1 (100%)
+           Find the existing Sales Orders whose customer name starts with 'Seed:' and report the customer names exactly a…
+  s_5e350c  provisional 18 steps  1/1 (100%)
+           Create a Sales Order for the existing customer '{{v1}}'. Set delivery date to {{v3}} and create exactly two It…
+  s_60d128  provisional  6 steps  1/1 (100%)
+           Find the existing Sales Orders whose customer name starts with '{{v1}}' and report the customer names exactly …
+  s_613ac4  provisional  1 steps  1/1 (100%)
+           Find the existing Sales Orders whose customer name starts with 'Seed:' and report the customer names exactly a…
+  s_6b6511  provisional  1 steps  1/1 (100%)  variant of s_050128
+           Find the existing Sales Orders whose customer name starts with 'Seed:' and report the customer names exactly a…
+  s_715b0a  provisional  1 steps  1/1 (100%)
+           Create a Customer named exactly '{{v2}}' using the default customer group and territory, save it, and verify t…
+  s_72af1f  provisional  1 steps  1/1 (100%)
+           Create a Customer named exactly '{{v2}}' using the default customer group and territory, save it, and verify t…
+  s_770839  provisional  1 steps  1/1 (100%)  variant of s_548f8c
+           Find the existing Sales Orders whose customer name starts with '{{v1}}' and report the customer names exactly …
+  s_83bb7b  provisional  1 steps  1/1 (100%)  variant of s_050128
+           Find the existing Sales Orders whose customer name starts with 'Seed:' and report the customer names exactly a…
+  s_84cea1  provisional  2 steps  1/1 (100%)
+           Create a Customer named exactly '{{v2}}' using the default customer group and territory, save it, and verify t…
+  s_862776  provisional  2 steps  1/1 (100%)
+           Find the existing Sales Orders whose customer name starts with '{{v1}}' and report the customer names exactly …
+  s_8ce8c1  provisional  6 steps  1/1 (100%)  variant of s_548f8c
+           Find the existing Sales Orders whose customer name starts with '{{v1}}' and report the customer names exactly …
+  s_93b50e  provisional  1 steps  1/1 (100%)
+           Find the existing Sales Orders whose customer name starts with '{{v1}}' and report the customer names exactly …
+  s_967264  provisional 11 steps  1/1 (100%)  variant of s_548f8c
+           Find the existing Sales Orders whose customer name starts with '{{v1}}' and report the customer names exactly …
+  s_a79ebc  provisional  4 steps  1/1 (100%)
+           Create a Customer named exactly '{{v2}}' using the default customer group and territory, save it, and verify t…
+  s_af04dd  provisional  4 steps  1/1 (100%)
+           Create a Customer named exactly '{{v2}}' using the default customer group and territory, save it, and verify t…
+  s_b0b213  provisional  7 steps  1/1 (100%)  variant of s_050128
+           Find the existing Sales Orders whose customer name starts with 'Seed:' and report the customer names exactly a…
+  s_b9ea09  provisional  1 steps  1/1 (100%)
+           Find the existing Sales Orders whose customer name starts with 'Seed:' and report the customer names exactly a…
+  s_bb9f4a  provisional  6 steps  1/1 (100%)
+           Find the existing Sales Orders whose customer name starts with 'Seed:' and report the customer names exactly a…
+  s_bf5c5d  provisional  2 steps  1/1 (100%)  variant of s_050128
+           Find the existing Sales Orders whose customer name starts with 'Seed:' and report the customer names exactly a…
+  s_bf970e  provisional  4 steps  1/1 (100%)  variant of s_a01446
+           Create a Customer named exactly '{{v2}}' using the default customer group and territory, save it, and verify t…
+  s_c5c3ef  provisional  7 steps  1/1 (100%)
+           Find the existing Sales Orders whose customer name starts with 'Seed:' and report the customer names exactly a…
+  s_d95522  provisional 13 steps  1/1 (100%)
+           Create a Sales Order for the existing customer '{{v1}}'. Set delivery date to {{v3}} and create exactly two It…
+  s_dd0194  provisional  6 steps  1/1 (100%)  variant of s_050128
+           Find the existing Sales Orders whose customer name starts with 'Seed:' and report the customer names exactly a…
+  s_f5f5b5  provisional  1 steps  1/1 (100%)  variant of s_a01446
+           Create a Customer named exactly '{{v2}}' using the default customer group and territory, save it, and verify t…
+  s_ffc76d  provisional  2 steps  1/1 (100%)  variant of s_a01446
+           Create a Customer named exactly '{{v2}}' using the default customer group and territory, save it, and verify t…
+store: /home/user/sitelooper/bench/results/fwen1-luna-skills
+
+summary: /home/user/sitelooper/bench/results/fwen1-luna-sweep.json

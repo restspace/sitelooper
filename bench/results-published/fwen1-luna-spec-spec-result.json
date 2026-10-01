@@ -1,0 +1,38 @@
+{
+  "arm": "spec",
+  "runid": "fwen1-luna-spec",
+  "target": "erpnext",
+  "flow": "fwen1-luna.json",
+  "flowName": "fwen1-luna",
+  "skillsDir": "/home/user/sitelooper/bench/results/fwen1-luna-skills",
+  "compiled": true,
+  "flowFile": "bench/results/fwen1-luna-spec-spec-tmp/fwen1-luna.flow.ts",
+  "specFile": "bench/results/fwen1-luna-spec-spec-tmp/fwen1-luna.spec.ts",
+  "wallMs": 32928,
+  "exitCode": 1,
+  "timedOut": false,
+  "costUsd": 0,
+  "stats": {
+    "total": 1,
+    "passed": 0,
+    "failed": 1,
+    "skipped": 0
+  },
+  "tests": [
+    {
+      "title": "fwen1-luna",
+      "status": "unexpected",
+      "ok": false,
+      "durationMs": 28179,
+      "error": "Error: 02-find s_548f8c/3: the recorded page change did not appear\n\n02-find s_548f8c/3: the recorded page change did not appear\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeNull\u001b[2m()\u001b[22m\n\nReceived: \u001b[31m\"after step 02-find s_548f8c/3 none of the 1 recorded page change(s) appeared (e.g. \\\"- button \\\\\\\"{{*}} Filter Applied\\\\\\\"\\\"), and that could not be confirmed: capture incomplete (the element cap was reached (4000 walked)) — the step ran but its effect was not established\"\u001b[39m\n\nCall Log:\n- Timeout 5000ms exceeded while waiting on the predicate",
+      "drift": []
+    }
+  ],
+  "drift": [],
+  "driftCount": 0,
+  "evidence": [
+    "fwen1-luna-spec-spec-failure.png",
+    "fwen1-luna-spec-spec-error-context.md"
+  ],
+  "logTail": "\nRunning 1 test using 1 worker\n\n[sitelooper warn] 01-signin: report value signed_in_user is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)\n[sitelooper step] 01-signin\n[sitelooper warn] 02-find s_548f8c/3: recorded url http://127.0.0.1:8100/app/sales-order?delivery_date=2026-12-31 is the page the clicked link left (captured before its navigation committed); the click went where the link points, http://127.0.0.1:8100/app/sales-order/SAL-ORD-2026-00002 — accepted\n  ✘  1 fwen1-luna.spec.ts:9:1 › fwen1-luna (28.2s)\n\n\n  1) fwen1-luna.spec.ts:9:1 › fwen1-luna › 02-find: Find the existing Sales Orders whose customer name starts with 'Seed:' and report the customer names exactly as displayed. This is read-only: do not edit any seed order. Verify each reported result in the Sales Orders list/details. \n\n    Error: 02-find s_548f8c/3: the recorded page change did not appear\n\n    02-find s_548f8c/3: the recorded page change did not appear\n\n    expect(received).toBeNull()\n\n    Received: \"after step 02-find s_548f8c/3 none of the 1 recorded page change(s) appeared (e.g. \\\"- button \\\\\\\"{{*}} Filter Applied\\\\\\\"\\\"), and that could not be confirmed: capture incomplete (the element cap was reached (4000 walked)) — the step ran but its effect was not established\"\n\n    Call Log:\n    - Timeout 5000ms exceeded while waiting on the predicate\n\n       at fwen1-luna.flow.ts:16415\n\n      16413 |       { timeout: EXPECT_WAIT_MS, message: `${ctx.tag}: the recorded page change did not appear` },\n      16414 |     )\n    > 16415 |     .toBeNull();\n            |      ^\n      16416 |   for (const warning of last.warnings) console.log(`[sitelooper warn] ${warning}`);\n      16417 |   if (last.unobserved) console.log(`[sitelooper unobserved] ${ctx.tag}: the page could not be captured, or observed in full, after the action`);\n      16418 |   return last;\n        at expectChanges (/home/user/sitelooper/bench/results/fwen1-luna-spec-spec-tmp/fwen1-luna.flow.ts:16415:6)\n        at Object.verify (/home/user/sitelooper/bench/results/fwen1-luna-spec-spec-tmp/fwen1-luna.flow.ts:17278:36)\n        at runStepLifecycle (/home/user/sitelooper/bench/results/fwen1-luna-spec-spec-tmp/fwen1-luna.flow.ts:12764:24)\n        at Object.02-find (/home/user/sitelooper/bench/results/fwen1-luna-spec-spec-tmp/fwen1-luna.flow.ts:17241:9)\n        at /home/user/sitelooper/bench/results/fwen1-luna-spec-spec-tmp/fwen1-luna.flow.ts:20067:7\n        at runFlow (/home/user/sitelooper/bench/results/fwen1-luna-spec-spec-tmp/fwen1-luna.flow.ts:20066:5)\n        at /home/user/sitelooper/bench/results/fwen1-luna-spec-spec-tmp/fwen1-luna.spec.ts:14:21\n\n    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────\n    \n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────\n    test-results/fwen1-luna-fwen1-luna/test-failed-1.png\n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    Error Context: test-results/fwen1-luna-fwen1-luna/error-context.md\n\n  1 failed\n    fwen1-luna.spec.ts:9:1 › fwen1-luna ────────────────────────────────────────────────────────────\n"
+}

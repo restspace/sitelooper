@@ -1,0 +1,241 @@
+{
+ "id": "s_8ce8c1",
+ "origin": "http://127.0.0.1:8100",
+ "template": "Find the existing Sales Orders whose customer name starts with '{{v1}}' and report the customer names exactly as displayed. This is read-only: do not edit any seed order. Verify each reported result in the Sales Orders list/details.",
+ "params": {
+  "v1": {
+   "example": "Seed:",
+   "usedIn": []
+  },
+  "v2": {
+   "example": "SAL-ORD-2026-00003",
+   "usedIn": [],
+   "known": true,
+   "binding": "url:i2:p2"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8100/app/sales-order/{{v2}}",
+  "requireText": [
+   "{{v2}}"
+  ]
+ },
+ "steps": [
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text",
+    "scopedBy": "v1"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(1) > div > div > div:nth-of-type(1) > h3"
+     },
+     {
+      "kind": "point",
+      "x": 137,
+      "y": 78,
+      "w": 183.1,
+      "h": 24,
+      "role": "heading",
+      "tag": "h3",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "customer_name_3"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#navbar-breadcrumbs > li:nth-of-type(3) > a"
+     },
+     {
+      "kind": "point",
+      "x": 318,
+      "y": 24,
+      "w": 170.7,
+      "h": 17,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "customer_name_3_order"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text",
+    "scopedBy": "v1"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(1) > div > div > div:nth-of-type(1) > h3"
+     },
+     {
+      "kind": "point",
+      "x": 137,
+      "y": 78,
+      "w": 183.1,
+      "h": 24,
+      "role": "heading",
+      "tag": "h3",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "list_row_1_text_1"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div > div > div:nth-of-type(1) > span > span"
+     },
+     {
+      "kind": "point",
+      "x": 301,
+      "y": 78,
+      "w": 109.4,
+      "h": 19.5,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "list_row_1_text_2"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "value"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "input[data-fieldname=\"delivery_date\"]"
+     },
+     {
+      "kind": "css",
+      "selector": "form > div:nth-of-type(2) > div > div:nth-of-type(2) > div:nth-of-type(1) > input",
+      "nth": 0
+     },
+     {
+      "kind": "point",
+      "x": 738,
+      "y": 285,
+      "w": 307.4,
+      "h": 28,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "list_row_1_text_3"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#navbar-breadcrumbs > li:nth-of-type(3) > a"
+     },
+     {
+      "kind": "point",
+      "x": 318,
+      "y": 24,
+      "w": 170.7,
+      "h": 17,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "list_row_1_text_4"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "Opened the Sales Orders list and applied a read-only Customer Name filter (like %{{v1}}%), which returned exactly 3 orders, all starting with \"{{v1}}\". Each name was read off the list rows and re-verified on the order's own detail page (title heading / Customer link): SAL-ORD-2026-00001 = \"{{v1}} Alpha Traders\", {{d1}} = \"{{v1}} Beacon Supplies\", {{v2}} = \"{{v1}} Cobalt Retail\". The list's page-size controls showed the row-limit options 20 / 100 / 500 / 2500 (default 20), so all 3 results were on one page. No order was edited, saved or submitted.",
+  "values": {
+   "customer_name_1": "{{v1}} Alpha Traders",
+   "customer_name_1_order": "SAL-ORD-2026-00001",
+   "customer_name_2": "{{v1}} Beacon Supplies",
+   "customer_name_2_order": "{{d1}}",
+   "customer_name_3": "{{v1}} Cobalt Retail",
+   "customer_name_3_order": "{{v2}}",
+   "detail_title_SAL-ORD-2026-00001": "Frappe (title text for {{v1}} Alpha Traders order)",
+   "list_page_size_options": "20, 100, 500, 2500",
+   "list_row_2_text": "{{v1}} Beacon Supplies / To Deliver and Bill / 2026-12-31 / {{d1}}",
+   "list_row_3_text": "{{v1}} Alpha Traders / To Deliver and Bill / 2026-12-31 / SAL-ORD-2026-00001",
+   "seed_order_count": "3",
+   "row1_full_text": "{{v1}} Cobalt Retail\nTo Deliver and Bill\n2026-12-31\n{{v2}}\n12 m\n0\n·",
+   "row2_full_text": "{{v1}} Beacon Supplies\nTo Deliver and Bill\n2026-12-31\n{{d1}}\n12 m\n0\n·",
+   "row3_full_text": "{{v1}} Alpha Traders\nTo Deliver and Bill\n2026-12-31\nSAL-ORD-2026-00001\n12 m\n0\n·",
+   "list_row_1_text_1": "{{v1}} Cobalt Retail",
+   "list_row_1_text_2": "To Deliver and Bill",
+   "list_row_1_text_3": "2026-12-31",
+   "list_row_1_text_4": "{{v2}}"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-10-01T13:47:58.586Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_1dbb6b",
+  "index": 3,
+  "of": 4
+ },
+ "variantOf": "s_548f8c",
+ "provenance": {
+  "session": "fwen1-luna-n3",
+  "instruction": "Find the existing Sales Orders whose customer name starts with 'Seed:' and report the customer names exactly as displayed. This is read-only: do not edit any seed order. Verify each reported result in the Sales Orders list/details.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-10-01T13:47:58.586Z"
+ },
+ "revision": 1
+}

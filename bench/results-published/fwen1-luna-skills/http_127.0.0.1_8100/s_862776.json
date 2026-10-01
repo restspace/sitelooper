@@ -1,0 +1,146 @@
+{
+ "id": "s_862776",
+ "origin": "http://127.0.0.1:8100",
+ "template": "Find the existing Sales Orders whose customer name starts with '{{v1}}' and report the customer names exactly as displayed. This is read-only: do not edit any seed order. Verify each reported result in the Sales Orders list/details.",
+ "params": {
+  "v1": {
+   "example": "Seed:",
+   "usedIn": []
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8100/app/home"
+ },
+ "steps": [
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e12",
+    "value": "Sales Order"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "combobox",
+      "name": "Search or type a command (Ctrl + G)"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "Search or type a command (Ctrl + G)"
+     },
+     {
+      "kind": "id",
+      "selector": "#navbar-search"
+     },
+     {
+      "kind": "css",
+      "selector": "#navbar-search"
+     },
+     {
+      "kind": "point",
+      "x": 935,
+      "y": 24,
+      "w": 300,
+      "h": 28,
+      "role": "combobox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8100/app/home",
+    "alertContains": "9 results found",
+    "addedContains": [
+     "- combobox \"Search or type a command (Ctrl + G)\": {{*}}",
+     "- listbox \"\"",
+     "- link \"Sales Order List\"",
+     "- link \"Sales Order Report\"",
+     "- link \"New Sales Order\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_0eb8c2",
+    "step": 1
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e377"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "scoped",
+      "container": "#awesomplete_list_1 li",
+      "hasText": "Sales Order List",
+      "selector": "a"
+     },
+     {
+      "kind": "role",
+      "role": "link",
+      "name": "Sales Order List"
+     },
+     {
+      "kind": "css",
+      "selector": "#awesomplete_list_1 > li:nth-of-type(1) > a"
+     },
+     {
+      "kind": "point",
+      "x": 845,
+      "y": 59,
+      "w": 97,
+      "h": 16,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8100/app/sales-order",
+    "alertContains": "Begin typing for results.",
+    "addedContains": [
+     "- link \"Sales Order\"",
+     "- combobox \"Search or type a command (Ctrl + G)\"",
+     "- heading \"Sales Order\"",
+     "- button \"List View\"",
+     "- button \"Menu\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_0eb8c2",
+    "step": 2
+   }
+  }
+ ],
+ "contract": 2,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-10-01T13:47:58.631Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_7dea69",
+  "index": 0,
+  "of": 7
+ },
+ "provenance": {
+  "session": "fwen1-luna-n3",
+  "instruction": "Find the existing Sales Orders whose customer name starts with 'Seed:' and report the customer names exactly as displayed. This is read-only: do not edit any seed order. Verify each reported result in the Sales Orders list/details.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-10-01T13:47:58.631Z"
+ },
+ "revision": 1
+}

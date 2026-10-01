@@ -1,0 +1,187 @@
+{
+  "flow": "fwen1-luna",
+  "status": "halted",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_055da3; observed home_url=http://127.0.0.1:8100/app/home.",
+      "values": {
+        "home_url": "http://127.0.0.1:8100/app/home"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "5/5",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_055da3: report value signed_in_user is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)"
+      ],
+      "unreported": [
+        "signed_in_user"
+      ]
+    },
+    {
+      "id": "02-find",
+      "status": "success",
+      "summary": "Filtered the Sales Order list (read-only) by Customer Name using the filter \"like: Seed:%\" and found 3 matching sales orders; the list paging area showed \"3 of 3\". Customer names exactly as displayed: \"Seed: Cobalt Retail\", \"Seed: Beacon Supplies\", \"Seed: Alpha Traders\". I confirmed the first of these in detail by opening SAL-ORD-2026-00001, whose page heading and Customer field both display \"Seed: Alpha Traders\". No record was edited, saved or created.",
+      "values": {
+        "match_count": "3 of 3",
+        "customer_name_1": "Seed: Cobalt Retail",
+        "sales_order_1": "SAL-ORD-2026-00003",
+        "customer_name_2": "Seed: Beacon Supplies",
+        "sales_order_2": "SAL-ORD-2026-00002",
+        "customer_name_3": "Seed: Alpha Traders",
+        "sales_order_3": "SAL-ORD-2026-00001",
+        "filter_used": "Customer Name like %Seed:%",
+        "verified_detail_order": "SAL-ORD-2026-00001 (heading + Customer field show 'Seed: Alpha Traders')",
+        "sales_order_list_url": "http://127.0.0.1:8100/app/sales-order?name=undefined&customer_name=%5B%22like%22%2C%22Seed%3A%25%22%5D",
+        "list_url_after_back": "http://127.0.0.1:8100/app/sales-order",
+        "ref": "level-3"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_050128 stopped at step 2 — no element matched any known locator for target (tried 3: page.getByRole('link', { name: 'Seed: Cobalt Retail', exact: true }), page.locator('div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > span:nth-of-type(2) > a'), elementAt(341, 267) /* link */)",
+      "replayed": "1/2",
+      "repaired": false,
+      "turns": 29,
+      "unreported": [
+        "order_reference_1",
+        "order_reference_3",
+        "detail_verified_order_reference",
+        "filtered_list_url"
+      ]
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "Created the Customer 'fwen1-luna-n2 Bench Customer' on the New Customer form with defaults left untouched (Customer Group \"Commercial\", Territory \"United States\", Customer Type \"Company\"), clicked Save and saw the \"Saved\" alert, which routed to the record page /app/customer/fwen1-luna-n2 Bench Customer. The saved record's fields read back exactly \"fwen1-luna-n2 Bench Customer\" (Customer Name), \"Commercial\" (Customer Group) and \"United States\" (Territory), and the Customer list (now \"7 of 7\", sorted by Last Updated On descending) shows the top row as \"fwen1-luna-n2 Bench Customer\" with Customer Group Commercial and ID \"fwen1-luna-n2 Bench Customer\".",
+      "values": {
+        "customer_name": "fwen1-luna-n2 Bench Customer",
+        "customer_group": "Commercial",
+        "territory": "United States",
+        "customer_type": "Company",
+        "saved_alert": "Saved",
+        "customer_list_count": "7 of 7",
+        "list_top_row": "fwen1-luna-n2 Bench Customer — Customer Group: Commercial, ID: fwen1-luna-n2 Bench Customer",
+        "customer_name_field": "fwen1-luna-n2 Bench Customer",
+        "customer_group_field": "Commercial",
+        "territory_field": "United States",
+        "ref": "fwen1-luna-n2"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_a01446 stopped at step 1 — step 1 raised an alert the recording never saw: Begin typing for results. | Begin typing for results. | Begin typing for results. | Begin typing for results. | Begin typing for results.",
+      "replayed": "0/1",
+      "repaired": false,
+      "turns": 7,
+      "unreported": [
+        "customer_id",
+        "list_total",
+        "record_url",
+        "created_customer_name"
+      ]
+    },
+    {
+      "id": "04-create",
+      "status": "failure",
+      "summary": "The unsaved Sales Order form now has the requested customer, delivery date, and exactly two item rows: Bench Widget qty 3 at its default rate 40.00 (amount 120.00), and Bench Gadget qty 2 at its default rate 125.00 (amount 250.00). However, I could not complete the save and final verification before the turn limit: Save was not clicked, so I cannot report a persisted draft, status, or saved order ID/address. The current page remains the unsaved form at /app/sales-order/new-sales-order-odmclosvvb.",
+      "values": {
+        "customer": "fwen1-luna-n2 Bench Customer",
+        "delivery_date": "2026-12-31",
+        "item_line_1": "Bench Widget — qty 3, rate 40.00, amount 120.00",
+        "item_line_2": "Bench Gadget — qty 2, rate 125.00, amount 250.00",
+        "item_rows": "2 populated item rows",
+        "status": "not visible; unsaved form",
+        "sales_order_id": "none; save not completed"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_d95522 stopped at step ? — not on the page this procedure starts from (expects http://127.0.0.1:8100/app/sales-order/new-sales-order-rxojnkvnht, browser is at http://127.0.0.1:8100/app/sales-order/new-sales-order-odmclosvvb) — nothing was run",
+      "replayed": "0/13",
+      "repaired": false,
+      "turns": 36,
+      "warnings": [
+        "s_b47808: step 1: the page's alerts could not be observed in full after the action — whether it raised an alert is unknown, not clear"
+      ]
+    }
+  ],
+  "passed": 3,
+  "total": 6,
+  "repinned": 0,
+  "drift": 3,
+  "driftTickets": [
+    {
+      "flow": "fwen1-luna",
+      "step": "02-find",
+      "skill": "s_050128",
+      "atStep": "2",
+      "key": "target",
+      "similarity": 0.994,
+      "missedLocator": "page.getByRole('link', { name: 'Seed: Cobalt Retail', exact: true })",
+      "fallbackUsed": null,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:8100/app/sales-order?customer_name=:id",
+      "pageUrl": "http://127.0.0.1:8100/app/sales-order?customer_name=%5B%22like%22%2C%22%25SAL-ORD-2026-00001%25%22%5D"
+    },
+    {
+      "flow": "fwen1-luna",
+      "step": "03-create",
+      "skill": "s_a01446",
+      "similarity": 0.989,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_a01446 stopped at step 1 — step 1 raised an alert the recording never saw: Begin typing for results. | Begin typing for results. | Begin typing for results. | Begin typing for results. | Begin typing for results.",
+      "reason": "step 1 raised an alert the recording never saw: Begin typing for results. | Begin typing for results. | Begin typing for results. | Begin typing for results. | Begin typing for results.",
+      "pageUrlPattern": "http://127.0.0.1:8100/app/customer/new-customer-efenhcjpvh",
+      "pageUrl": "http://127.0.0.1:8100/app/customer/new-customer-efenhcjpvh"
+    },
+    {
+      "flow": "fwen1-luna",
+      "step": "04-create",
+      "skill": "s_d95522",
+      "similarity": 1.001,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_d95522 stopped at step ? — not on the page this procedure starts from (expects http://127.0.0.1:8100/app/sales-order/new-sales-order-rxojnkvnht, browser is at http://127.0.0.1:8100/app/sales-order/new-sales-order-odmclosvvb) — nothing was run",
+      "reason": "not on the page this procedure starts from (expects http://127.0.0.1:8100/app/sales-order/new-sales-order-rxojnkvnht, browser is at http://127.0.0.1:8100/app/sales-order/new-sales-order-odmclosvvb) — nothing was run",
+      "pageUrlPattern": "http://127.0.0.1:8100/app/sales-order/new-sales-order-odmclosvvb",
+      "pageUrl": "http://127.0.0.1:8100/app/sales-order/new-sales-order-odmclosvvb"
+    }
+  ],
+  "wallMs": 236240,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 1138307,
+    "completionTokens": 12713,
+    "cachedTokens": 1029686
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 1010471,
+      "completionTokens": 11964,
+      "cachedTokens": 945408
+    },
+    "openai/gpt-6-luna": {
+      "promptTokens": 127836,
+      "completionTokens": 749,
+      "cachedTokens": 84278
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ],
+    "openai/gpt-6-luna": [
+      "OpenAI"
+    ]
+  },
+  "recoveryModel": "openai/gpt-6-luna",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "halted",
+  "nextActions": []
+}
