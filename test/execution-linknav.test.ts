@@ -15,7 +15,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import type { Locator, Page } from 'playwright-core';
 import { LINK_COMMIT_GRACE_MS, LINK_NAV_WAIT_MS, beginAction, pageTraffic, type ActionClock, type DomPort } from '../src/execution/action.js';
 import { linkHrefOf, robustClick } from '../src/execution/browser.js';
-import { linkLandingWarning, urlEffectVerdict } from '../src/execution/gates.js';
+import { leftByLink, linkLandingWarning, urlEffectVerdict } from '../src/execution/gates.js';
 
 function simulation() {
   let t = 0;
@@ -285,5 +285,18 @@ describe('the url gate on a link click recorded before its navigation committed'
     const from = `${ORIGIN}/projects/alpha`;
     const w = linkLandingWarning(`${ORIGIN}/projects/{{v1}}`, `${ORIGIN}/projects/alpha/work_packages`, { v1: 'alpha' }, 'step 2', { from, href: `${ORIGIN}/projects/alpha/work_packages` });
     expect(w).toMatch(/^step 2: recorded url/);
+  });
+});
+
+describe('leftByLink: the page-change gate asks the url gate\'s link-landing rule', () => {
+  const link = { from: LIST, href: PROJECT };
+  it('holds only when the url gate would accept a link landing', () => {
+    expect(leftByLink(LIST, PROJECT, {}, link)).toBe(true);
+    // the recorded url matched: no landing to excuse anything
+    expect(leftByLink(PROJECT, PROJECT, {}, link)).toBe(false);
+    // no url expectation, no link, or a click that went elsewhere
+    expect(leftByLink(undefined, PROJECT, {}, link)).toBe(false);
+    expect(leftByLink(LIST, PROJECT, {}, undefined)).toBe(false);
+    expect(leftByLink(LIST, `${ORIGIN}/login`, {}, link)).toBe(false);
   });
 });

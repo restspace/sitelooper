@@ -1,7 +1,7 @@
 import { changedCreation, dispatchesFirstMatch, isMutatingAction, isReadAction, runStepLifecycle, spansEveryMatch, type StepActionResult } from '../execution/lifecycle.js';
 import { outcomeLabel, outcomeOfError, urlHeldStill, type ActionOutcome } from '../execution/browser.js';
 import { inFlightRequests, type ActionExpectation } from '../execution/action.js';
-import { IDENTITY_POLL_MS, IDENTITY_WAIT_MS, SOFT_MATCH_MIN_SIMILARITY, alertVerdict, errorPageVerdict, gotoLandingVerdict, isErrorPageUrl, landedOnRecordedPage, markersBound, preconditionVerdict, retargetNavigation, segmentGate, fillableChain, linkLandingWarning, unfilledStepVerdict, urlEffectVerdict, urlRecordParts } from '../execution/gates.js';
+import { IDENTITY_POLL_MS, IDENTITY_WAIT_MS, SOFT_MATCH_MIN_SIMILARITY, alertVerdict, errorPageVerdict, gotoLandingVerdict, isErrorPageUrl, landedOnRecordedPage, markersBound, preconditionVerdict, retargetNavigation, segmentGate, fillableChain, leftByLink, linkLandingWarning, unfilledStepVerdict, urlEffectVerdict, urlRecordParts } from '../execution/gates.js';
 import type { UrlSegDiff } from '../execution/url.js';
 import { emptyFacts } from '../execution/facts.js';
 import { landingVerdictWithFacts, preconditionVerdictWithFacts } from '../execution/facts-route.js';
@@ -2129,7 +2129,16 @@ const expectedChanges: StepGate = async ({ outcome, step, params, tag, args, pag
     // Stage 2 (site facts): the controls a reliable `counter` fact on this
     // route names have their leading counts masked whatever the role
     // (execution/facts-display.ts counterNames), as the artifact masks them.
-    { tag, tool: step.tool, value: typeof args.value === 'string' ? args.value : undefined, positionalResolution, counters: countersAt(facts, page.url()) },
+    // A click the url gate took as a link landing (leftByLink): its recorded
+    // changes were seen on the page the link left, as the artifact asks it.
+    {
+      tag,
+      tool: step.tool,
+      value: typeof args.value === 'string' ? args.value : undefined,
+      positionalResolution,
+      counters: countersAt(facts, page.url()),
+      leftByLink: leftByLink(step.expect.urlPattern, page.url(), params, outcome.link),
+    },
     { added: outcome.captureFailed ? null : added, live: (look) => captureLines(page, d, look) },
   );
   return verdict.stop || verdict.unobserved || verdict.absentDialog || verdict.confirmed || verdict.inDiff || verdict.warnings.length ? verdict : null;

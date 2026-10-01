@@ -13,6 +13,7 @@ import { describe, expect, it } from 'vitest';
 import type { Page } from 'playwright-core';
 import { replaySkill, type StepRunResult } from '../src/skills/replay.js';
 import type { Skill, SkillStep } from '../src/skills/store.js';
+import { documentOf, isObserveArg } from './fixture/observation.js';
 
 process.env.SITELOOPER_RESOLVE_WAIT_MS = '0';
 
@@ -92,5 +93,67 @@ describe('a link click recorded on the page it left', () => {
     const res = await replayWith({ from: LIST, href: PROJECT }, 'http://127.0.0.1:8090/login');
     expect(res.ok).toBe(false);
     expect(res.reason).toMatch(/expected url/);
+  });
+});
+
+/**
+ * fwen1-luna 02-find s_548f8c/3 (ERPNext): a click on the "Seed: Beacon
+ * Supplies" link in the Sales Order list, recorded staying on the list with
+ * the list's `- button "1 Filter Applied"` as its page change — both captured
+ * before the order's form replaced the list. The replay went where the link
+ * points (url gate: accepted) and then stopped on the list's button, which a
+ * form page does not show.
+ */
+describe('a link click recorded on the page it left, with page changes from that page', () => {
+  const ORDERS = 'http://127.0.0.1:8100/app/sales-order?delivery_date=2026-12-31';
+  const ORDER = 'http://127.0.0.1:8100/app/sales-order/SAL-ORD-2026-00002';
+  const FORM = ['- heading "Seed: Beacon Supplies"', '- button "Update Items"'];
+
+  async function replayOrder(link: StepRunResult['link'], expectLines: string[]) {
+    const state = { url: ORDERS };
+    const page = Object.assign(fakePage(state), {
+      // The live look: the form, observed in full.
+      async evaluate(_fn: unknown, arg: unknown) {
+        return isObserveArg(arg) ? documentOf(FORM) : '';
+      },
+    }) as unknown as Page;
+    const step: SkillStep = {
+      tool: 'click',
+      args: { target: 'role=link[name="Seed: Beacon Supplies"]' },
+      locators: { target: [{ kind: 'role', role: 'link', name: 'Seed: Beacon Supplies' }] as SkillStep['locators']['target'] },
+      expect: { urlPattern: ORDERS, addedContains: expectLines, lineDialect: 2 },
+    };
+    return replaySkill({ ...skillOf([step]), preconditions: { urlPattern: ORDERS } }, { v1: 'Seed: Beacon Supplies' }, {
+      page,
+      exec: async () => {
+        state.url = ORDER;
+        return { result: 'clicked', settled: true, diff: { url: ORDER, alerts: [], added: FORM }, ...(link ? { link } : {}) };
+      },
+    });
+  }
+
+  it("does not require the page the link left of the page it opened", async () => {
+    const res = await replayOrder({ from: ORDERS, href: ORDER }, ['- button "{{*}} Filter Applied"']);
+    expect(res.reason).toBeUndefined();
+    expect(res.ok).toBe(true);
+    expect(res.warnings.join('\n')).toContain('were captured on the page the clicked link left');
+  });
+
+  it('still stops when no link was reported: nothing says the recording captured the page the link left', async () => {
+    const res = await replayOrder(undefined, ['- button "{{*}} Filter Applied"']);
+    expect(res.ok).toBe(false);
+    expect(res.reason).toMatch(/expected url/);
+  });
+
+  it('confirms the change, unwarned, when the page the link opened does show it', async () => {
+    const res = await replayOrder({ from: ORDERS, href: ORDER }, ['- button "Update Items"']);
+    expect(res.ok).toBe(true);
+    expect(res.warnings.join('\n')).not.toContain('were captured on the page the clicked link left');
+  });
+
+  it('still requires a slotted (identity) change of the page the link opened', async () => {
+    const res = await replayOrder({ from: ORDERS, href: ORDER }, ['- heading "{{v1}} (archived)"']);
+    expect(res.ok).toBe(false);
+    expect(res.reason).toMatch(/did not show/);
   });
 });

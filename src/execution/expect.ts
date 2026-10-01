@@ -309,6 +309,14 @@ export interface ChangeContext {
    * (execution/facts-display.ts counterNames): liveLines' third argument.
    */
   counters?: readonly string[];
+  /**
+   * The url gate accepted this click as a link landing (gates.ts
+   * linkLandingWarning): the recording saw no navigation — its url, and so
+   * its page changes, were captured on the page the link LEFT — and this run
+   * went where the link points. Recorded changes without a slot are then not
+   * required of the page the link opened (fwen1-luna 02-find s_548f8c/3).
+   */
+  leftByLink?: boolean;
 }
 
 export interface ChangeVerdict {
@@ -566,6 +574,18 @@ async function changesVerdict(
       if (dialog !== undefined) {
         warnings.push(`step ${tag}: the recorded dialog ${JSON.stringify(dialog)} did not open — conditional UI, treated as absent; steps that name one of its controls will be skipped`);
         return { warnings, absentDialog: { name: dialog, lines: plain } };
+      }
+      // A link that went where it points, recorded as staying on the page it
+      // left (fwen1-luna 02-find s_548f8c/3, ERPNext): the recording's
+      // `- button "1 Filter Applied"` was the Sales Order LIST, seen before
+      // the order's form replaced it; this run is on the form, where the
+      // list's button is not shown. The navigation the url gate accepted is
+      // the step's effect; a slotted line (identity) is still required above.
+      if (ctx.leftByLink) {
+        warnings.push(
+          `step ${tag}: its ${plain.length} recorded page change(s) (e.g. ${JSON.stringify(plain[0])}) were captured on the page the clicked link left — not required of the page the link opened`,
+        );
+        return added === null ? { warnings, unobserved: true } : { warnings };
       }
       if (!seen.complete) {
         return { warnings, unobserved: true, stop: `after step ${tag} none of the ${plain.length} recorded page change(s) appeared (e.g. ${JSON.stringify(plain[0])}), and that could not be confirmed: capture incomplete (${seen.why}) — the step ran but its effect was not established` };

@@ -39,7 +39,7 @@ export type LineDialect = 1 | 2;
 export const CURRENT_DIALECT = 2 as const;
 
 /** What a capture is allowed to walk and return — passed INTO the page, since observeDocumentInPage is serialised. */
-export const SNAPSHOT_LIMITS = { maxAlerts: 5, maxAlertChars: 200, maxNodes: 4_000, maxLines: 400 };
+export const SNAPSHOT_LIMITS = { maxAlerts: 5, maxAlertChars: 200, maxNodes: 4_000, maxLines: 400, maxRestNodes: 8_000, maxRestLines: 400 };
 
 /**
  * The budget open shadow roots are walked under, ON TOP of SNAPSHOT_LIMITS: a
@@ -89,6 +89,15 @@ export interface ObservationCoverage {
   nodeCap: number;
   /** More elements existed than any walk was allowed to look at. */
   nodesTruncated: boolean;
+  /**
+   * The dialect-1 walk (Pass A, the first `nodeCap` elements in document
+   * order) stopped before the document's last element. The rest walk can
+   * still cover the page for dialect 2 — its nodes are never legacy — so a
+   * dialect-1 look is incomplete on this alone (inDialect). Absent on an
+   * observation made before the rest walk existed, where `nodesTruncated`
+   * already said it.
+   */
+  legacyNodesTruncated?: boolean;
   /** A walk stopped at its line cap. */
   linesTruncated: boolean;
   /** More visible live regions existed than were kept. */
@@ -131,6 +140,14 @@ export interface ObserveDocumentOptions {
   maxLines: number;
   maxExtraNodes: number;
   maxExtraLines: number;
+  /**
+   * The budget for the elements past `maxNodes` (Pass A2): only RENDERED ones
+   * are walked and counted — a `display:none` subtree is skipped whole.
+   * Absent (an artifact compiled before the rest walk existed): no rest walk,
+   * the cap is where the look stops, as it always was.
+   */
+  maxRestNodes?: number;
+  maxRestLines?: number;
   /** This document is the main one, whose light-DOM walk is dialect 1's. False inside a frame. */
   legacy: boolean;
   /** Roles whose elements are named in full, past NAME_CAP (see FullNameLook). Absent: every name is capped, as it always was. */
@@ -284,7 +301,39 @@ export function observeDocumentInPage(opts: ObserveDocumentOptions): DocumentObs
   };
 
   const LIVE_REGION = '[role=alert],[role=status]';
-  const visibleText = (els: Element[]) =>
+  // A STATUS region clipped to nothing is a screen-reader-only hint, never
+  // something the page showed (fwen1-luna-n2 03-create, ERPNext): every
+  // Frappe link field carries Awesomplete's `<span class="visually-hidden"
+  // role="status" aria-live="assertive">Begin typing for results.</span>`,
+  // absolutely positioned and clipped to rect(0,0,0,0). It has client rects,
+  // so it passed as a visible live region, and opening the New Customer form
+  // "raised an alert the recording never saw" five times over. Decided by
+  // how it is drawn — the clip / clip-path / 1px-box patterns that hide an
+  // element from sight while leaving it to assistive tech — never by its
+  // text. Only role=status: an alert (role=alert) is the app reporting an
+  // outcome, and is kept however it is drawn.
+  const clippedAway = (clip: string): boolean => {
+    const m = /^rect\(([^)]*)\)$/.exec(clip.trim());
+    if (!m) return false;
+    const [top, right, bottom, left] = m[1].split(/[\s,]+/).map((v) => parseFloat(v));
+    if (![top, right, bottom, left].every((v) => Number.isFinite(v))) return false;
+    return right - left <= 1 || bottom - top <= 1;
+  };
+  const visuallyHidden = (el: Element): boolean => {
+    for (let e: Element | null = el; e && e !== e.ownerDocument.body; e = e.parentElement) {
+      const cs = getComputedStyle(e);
+      if ((cs.position === 'absolute' || cs.position === 'fixed') && clippedAway(cs.clip)) return true;
+      if (/^inset\((50|100)%\)$/.test(cs.clipPath.trim())) return true;
+      if (cs.overflow === 'hidden') {
+        const r = e.getBoundingClientRect();
+        if (r.width <= 1 && r.height <= 1) return true;
+      }
+    }
+    return false;
+  };
+  const shownRegion = (el: Element): boolean =>
+    el.getClientRects().length > 0 && !(clean(el.getAttribute('role')).split(' ')[0] === 'status' && visuallyHidden(el));
+  const visibleText =(els: Element[]) =>
     els.map((el) => clean((el as HTMLElement).innerText).slice(0, opts.maxAlertChars)).filter((text) => text.length > 0);
 
   const coverage: DocumentObservation['coverage'] = {
@@ -301,6 +350,7 @@ export function observeDocumentInPage(opts: ObserveDocumentOptions): DocumentObs
   // Pass A: the dialect-1 walk, exactly as the first capture walked.
   const all = Array.from(document.querySelectorAll('*'));
   coverage.nodesTruncated = all.length > opts.maxNodes;
+  if (coverage.nodesTruncated) coverage.legacyNodesTruncated = true;
   const walked = all.slice(0, opts.maxNodes);
   let lines = 0;
   for (const el of walked) {
@@ -314,6 +364,48 @@ export function observeDocumentInPage(opts: ObserveDocumentOptions): DocumentObs
       nodes.push(node);
       lines++;
     }
+  }
+
+  // Pass A2: the elements past the cap, RENDERED ones only, on their own
+  // budget (fwen1-luna 02-find, ERPNext). A Frappe desk keeps every page it
+  // has shown in the DOM, display:none, beside the one on screen, plus
+  // templates and closed menus: a look at the Sales Order list "reached the
+  // element cap (4000 walked)", and no effect on that page could be
+  // confirmed or refuted. A display:none subtree renders nothing — describe()
+  // drops every element in it (no client rects), whatever its own style — so
+  // skipping it whole loses no line and spends no budget. These nodes are
+  // never legacy: dialect 1 stays the first capture's exact walk, and stays
+  // truncated (legacyNodesTruncated, inDialect).
+  const rest: Element[] = [];
+  if (coverage.nodesTruncated && !coverage.linesTruncated && typeof opts.maxRestNodes === 'number') {
+    const restLineCap = opts.maxRestLines ?? opts.maxLines;
+    let restLines = 0;
+    let hiddenRoot: Element | null = null;
+    let finished = true;
+    for (let i = opts.maxNodes; i < all.length; i++) {
+      const el = all[i];
+      // querySelectorAll is document order: a hidden root's descendants follow it contiguously.
+      if (hiddenRoot && hiddenRoot.contains(el)) continue;
+      hiddenRoot = null;
+      // No box and display:none (not display:contents, whose children do render).
+      if (el.getClientRects().length === 0 && getComputedStyle(el).display === 'none') {
+        hiddenRoot = el;
+        continue;
+      }
+      if (rest.length >= opts.maxRestNodes || restLines >= restLineCap) {
+        if (restLines >= restLineCap) coverage.linesTruncated = true;
+        finished = false;
+        break;
+      }
+      rest.push(el);
+      coverage.nodesWalked++;
+      const node = describe(el, [], false);
+      if (node) {
+        nodes.push(node);
+        restLines++;
+      }
+    }
+    coverage.nodesTruncated = !finished;
   }
 
   // Pass B: open shadow roots, on their own budget. A CLOSED root reports
@@ -341,13 +433,14 @@ export function observeDocumentInPage(opts: ObserveDocumentOptions): DocumentObs
         extraLines++;
       }
       if (extraLines >= opts.maxExtraLines && !node && roleOf(el)) coverage.linesTruncated = true;
-      if (el.matches(LIVE_REGION) && el.getClientRects().length > 0) shadowAlerts.push(el);
+      if (el.matches(LIVE_REGION) && shownRegion(el)) shadowAlerts.push(el);
       if (el.shadowRoot) walkShadow(el, inner);
     }
   };
   for (const el of walked) if (el.shadowRoot) walkShadow(el, []);
+  for (const el of rest) if (el.shadowRoot) walkShadow(el, []);
 
-  const lightAlerts = Array.from(document.querySelectorAll(LIVE_REGION)).filter((el) => el.getClientRects().length > 0);
+  const lightAlerts = Array.from(document.querySelectorAll(LIVE_REGION)).filter(shownRegion);
   coverage.alertsTruncated = lightAlerts.length > opts.maxAlerts || shadowAlerts.length > opts.maxAlerts;
   const alerts: ObservedAlert[] = [
     ...visibleText(lightAlerts.slice(0, opts.maxAlerts)).map((text) => ({ text, legacy: opts.legacy })),
@@ -648,7 +741,17 @@ export function describeCoverage(c: ObservationCoverage): string {
  */
 export async function capturePage(page: Page, d: LineDialect = 1, look: FullNameLook = {}): Promise<{ lines: string[]; alerts: string[]; coverage: ObservationCoverage } | null> {
   const o = await observePage(page, look);
-  return o ? { lines: renderLines(o, d), alerts: renderAlerts(o, d), coverage: o.coverage } : null;
+  return o ? { lines: renderLines(o, d), alerts: renderAlerts(o, d), coverage: inDialect(o.coverage, d) } : null;
+}
+
+/**
+ * The coverage as a look in dialect `d` has it. The rest walk (Pass A2) can
+ * cover a page past the element cap, but its nodes are dialect 2's only: in
+ * dialect 1 the cap still stops the look, and a line missing from it is not
+ * absent.
+ */
+export function inDialect(c: ObservationCoverage, d: LineDialect): ObservationCoverage {
+  return d === 1 && c.legacyNodesTruncated && !c.nodesTruncated ? { ...c, nodesTruncated: true } : c;
 }
 
 /**
