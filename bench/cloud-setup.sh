@@ -330,6 +330,49 @@ for WITH_TARGET in $WITH_TARGETS; do
       # as for kanboard.
       node bench/reset-app.mjs --target ghost
       ;;
+    erpnext)
+      # Ten containers from frappe_docker's pwd.yml. On first boot the
+      # one-shot create-site container runs `bench new-site --install-app
+      # erpnext`, which takes several minutes (5-10 on a cold box); allow 15,
+      # printing progress, and stop at once if it exits non-zero. A restored
+      # box's create-site sees the existing site and exits 0 in seconds.
+      en_compose=(docker compose -f bench/thirdparty/erpnext/docker-compose.yml)
+      en_state=""
+      for i in $(seq 1 450); do
+        en_id="$("${en_compose[@]}" ps -a -q create-site 2>/dev/null | head -1)"
+        en_state="$( [ -n "$en_id" ] && docker inspect -f '{{.State.Status}} {{.State.ExitCode}}' "$en_id" 2>/dev/null || echo 'absent -')"
+        case "$en_state" in
+          "exited 0") break ;;
+          exited*)
+            "${en_compose[@]}" logs --tail 60 create-site || true
+            die "erpnext create-site failed ($en_state); its log is above" ;;
+        esac
+        if [ $((i % 15)) -eq 0 ]; then
+          echo "    erpnext create-site: ${en_state} after $((i * 2))s; last log: $("${en_compose[@]}" logs --tail 1 --no-log-prefix create-site 2>/dev/null | tr -d '\r' | cut -c1-150)"
+        fi
+        sleep 2
+      done
+      [ "$en_state" = "exited 0" ] || { "${en_compose[@]}" logs --tail 60 create-site || true; die "erpnext create-site did not finish in 15 minutes (state: ${en_state})"; }
+      echo "    erpnext create-site: done"
+      # Then the site itself: /api/method/ping answers {"message":"pong"} once
+      # nginx -> gunicorn -> the "frontend" site all work.
+      for _ in $(seq 1 90); do
+        code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 http://127.0.0.1:8100/api/method/ping || true)"
+        [ "$code" = "200" ] && break; sleep 2
+      done
+      echo "    erpnext api ping: HTTP ${code:-unreachable}"
+      [ "$code" = "200" ] || { "${en_compose[@]}" ps -a || true; "${en_compose[@]}" logs --tail 30 backend frontend || true; die "erpnext site does not answer /api/method/ping"; }
+      # seed.sh completes the Setup Wizard (company Bench Company, USD, fiscal
+      # year 2026) and skips it when done; the reset is the idempotent seed
+      # for everything else, as for kanboard.
+      bash bench/thirdparty/erpnext/seed.sh
+      node bench/reset-app.mjs --target erpnext
+      # Readiness probe: the desk login page (the reset above already proved
+      # the API, the company and the Seed: orders, or it would have failed).
+      code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 http://127.0.0.1:8100/login || true)"
+      echo "    erpnext login page: HTTP ${code:-unreachable}"
+      [ "$code" = "200" ] || die "erpnext /login is not 200"
+      ;;
   esac
 done
 

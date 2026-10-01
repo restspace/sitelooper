@@ -176,6 +176,14 @@ const TARGETS = {
     reset: () => resetTarget('ghost'),
     notReadyHint: 'Start it with: docker compose -f bench/thirdparty/ghost/docker-compose.yml up -d',
   },
+  erpnext: {
+    task: 'tasks/erpnext-sales-order-flow.md',
+    defaults: APP_DEFAULTS.erpnext,
+    // Reset is also the idempotent seed (after seed.sh's setup wizard) — see resetErpnext.
+    reset: () => resetTarget('erpnext'),
+    notReadyHint:
+      'Start it with: docker compose -f bench/thirdparty/erpnext/docker-compose.yml up -d (then seed.sh once; site creation takes minutes)',
+  },
   grafana: {
     task: 'tasks/grafana-dashboard-flow.md',
     defaults: APP_DEFAULTS.grafana,

@@ -22,11 +22,12 @@ since a run that dies on a CAPTCHA says nothing about sitelooper.
 | EspoCRM 10.0 | 8097 | Backbone.js SPA, hash routes; **pencil inline edit and full Edit forms**; link fields with autocomplete + select-modal; Stream posts; 17-char hex record ids only in the url | admin / bench-admin-pass |
 | Snipe-IT 8.7 | 8098 | Laravel Blade + jQuery; **select2 AJAX dropdowns for every relation**; bootstrap-table lists over /api/v1; datepicker; a separate check-out form; minted `BA-<n>` asset tags | admin / bench-admin-pass |
 | Ghost 6.64 | 8099 | Ember.js admin SPA, hash routes; **Koenig/Lexical contenteditable post body**; settings side panel with a create-on-type tag input, excerpt textarea and date picker; multi-stage publish modal; title-derived slugs | admin@bench.local / bench-admin-pass |
+| ERPNext 15 (Frappe) | 8100 | Frappe desk, its own jQuery SPA framework on /app history routes; **Awesomplete link fields that count only once a record is chosen**; an editable child-table grid (Add Row, cells become inputs on click); Save then Submit with a confirm dialog (docstatus); minted naming-series ids `SAL-ORD-<year>-<n>` in url and heading; timeline comment box | Administrator / bench-admin-pass |
 
 Bring one up with:
 
     docker compose -f bench/thirdparty/<name>/docker-compose.yml up -d
-    bash bench/thirdparty/<name>/seed.sh      # odoo, openproject, gitea and snipeit only
+    bash bench/thirdparty/<name>/seed.sh      # odoo, openproject, gitea, snipeit and erpnext only
 
 Reset either with `down -v` followed by `up -d` and a re-seed.
 

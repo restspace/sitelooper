@@ -819,6 +819,219 @@ async function resetGhost() {
   // The install's sample pages are left alone: the task never looks at pages.
 }
 
+/**
+ * ERPNext reset doubles as the SEED, as kanboard's does. It needs the Setup
+ * Wizard completed first (bench/thirdparty/erpnext/seed.sh: company Bench
+ * Company, USD, fiscal year 2026) and refuses loudly without it. Then, every
+ * time:
+ *
+ * - System Settings: dates as yyyy-mm-dd (the task states 2026-12-31 in ISO;
+ *   the wizard's United States default is mm-dd-yyyy, the espocrm fwec1 trap),
+ *   onboarding and update/change-log popups off. Selling Settings: customers
+ *   named by Customer Name, default price list Standard Selling.
+ * - a fiscal year covering today and 2026, so a Sales Order dated today saves.
+ * - customers "Bench Customer" plus look-alikes "Bench Customer Ltd" and
+ *   "Bench Customers Group", and the three "Seed: ..." customers.
+ * - non-stock items "Bench Widget" (40), "Bench Gadget" (125) and a look-alike
+ *   "Bench Widget Pro" (55), each with a Standard Selling Item Price.
+ * - exactly three Sales Orders: one SUBMITTED order per Seed: customer, one
+ *   line each, no comments. EVERY other Sales Order (earlier runs' orders for
+ *   "<runid> Bench Customer", drafts, amendments, an order a wayward run put
+ *   on a look-alike customer, a seed order a run cancelled or commented on)
+ *   is cancelled if submitted, has its comments deleted, and is DELETED; a
+ *   missing seed order is re-created. Naming-series ids keep counting up
+ *   (SAL-ORD-2026-00004, -00005, ...), so a stored id never passes by
+ *   coincidence.
+ * - every customer outside the kept set, and every item with "Bench" in its
+ *   code outside the kept set, is deleted (a failure there is a warning: an
+ *   earlier runid's leftover cannot collide with this run's names).
+ *
+ * Everything goes through /api/resource and /api/method with a session
+ * cookie from POST /api/method/login as Administrator. A session that never
+ * loaded /app has no CSRF token, and Frappe skips the CSRF check for it.
+ */
+async function resetErpnext() {
+  const base = (process.env.APP_URL || 'http://127.0.0.1:8100/').replace(/\/$/, '');
+  const usr = process.env.ERPNEXT_USER || 'Administrator';
+  const pwd = process.env.ERPNEXT_PASSWORD || 'bench-admin-pass';
+  let cookie = '';
+  /** The server's own message out of a Frappe error body, for the thrown error. */
+  const why = (text) => {
+    try {
+      const j = JSON.parse(text);
+      const msgs = j._server_messages ? JSON.parse(j._server_messages).map((m) => { try { return JSON.parse(m).message; } catch { return m; } }) : [];
+      return [j.exc_type, ...msgs, j.exception].filter(Boolean).join(' | ').replace(/<[^>]+>/g, '').slice(0, 400);
+    } catch {
+      return text.slice(0, 300);
+    }
+  };
+  const call = async (method, route, body) => {
+    const res = await fetch(`${base}${route}`, {
+      method,
+      headers: { accept: 'application/json', ...(cookie ? { cookie } : {}), ...(body ? { 'content-type': 'application/json' } : {}) },
+      ...(body ? { body: JSON.stringify(body) } : {}),
+    });
+    const text = await res.text();
+    if (!res.ok) throw new Error(`erpnext ${method} ${decodeURIComponent(route)}: HTTP ${res.status} ${why(text)}`);
+    return { res, body: text ? JSON.parse(text) : null };
+  };
+  const R = (doctype, name) => `/api/resource/${encodeURIComponent(doctype)}${name === undefined ? '' : `/${encodeURIComponent(name)}`}`;
+  const list = async (doctype, filters = [], fields = ['name']) => {
+    const q = new URLSearchParams({ filters: JSON.stringify(filters), fields: JSON.stringify(fields), limit_page_length: '0' });
+    return (await call('GET', `${R(doctype)}?${q}`)).body.data;
+  };
+  const get = async (doctype, name) => (await call('GET', R(doctype, name))).body.data;
+  const insert = async (doctype, doc) => (await call('POST', R(doctype), doc)).body.data;
+  const update = async (doctype, name, patch) => (await call('PUT', R(doctype, name), patch)).body.data;
+  const remove = (doctype, name) => call('DELETE', R(doctype, name));
+  const method = async (m, args) => (await call('POST', `/api/method/${m}`, args)).body?.message;
+
+  // Sign in. A refused login is the stack not being up or the password not
+  // being the one create-site was given; say which call failed.
+  const login = await call('POST', '/api/method/login', { usr, pwd });
+  cookie = login.res.headers.getSetCookie().map((c) => c.split(';')[0]).join('; ');
+  if (!/\bsid=/.test(cookie) || /\bsid=Guest\b/.test(cookie)) throw new Error(`erpnext: login as ${usr} gave no session cookie (${cookie || 'none'})`);
+
+  // The Setup Wizard must be done: that is what made the company and its accounts.
+  const company = (await list('Company', [['name', '=', 'Bench Company']]))[0];
+  if (!company) throw new Error('erpnext: company "Bench Company" not found — the setup wizard is not complete; run bash bench/thirdparty/erpnext/seed.sh first');
+
+  await update('System Settings', 'System Settings', {
+    date_format: 'yyyy-mm-dd', enable_onboarding: 0, disable_system_update_notification: 1, disable_change_log_notification: 1,
+  });
+
+  // Fiscal years: 2026 (the task's delivery date) and today's (a Sales Order is dated today).
+  const today = new Date().toISOString().slice(0, 10);
+  const years = await list('Fiscal Year', [], ['name', 'year_start_date', 'year_end_date']);
+  for (const y of [...new Set([2026, Number(today.slice(0, 4))])]) {
+    const day = `${y}-06-30`;
+    if (years.some((f) => f.year_start_date <= day && day <= f.year_end_date)) continue;
+    await insert('Fiscal Year', { year: String(y), year_start_date: `${y}-01-01`, year_end_date: `${y}-12-31` });
+    log(`erpnext: created fiscal year ${y}`);
+  }
+
+  // Leaf groups for the records seeded below (a group node is refused).
+  const leaf = async (doctype, preferred) => {
+    const leaves = (await list(doctype, [['is_group', '=', 0]])).map((r) => r.name);
+    const pick = leaves.includes(preferred) ? preferred : leaves[0];
+    if (!pick) throw new Error(`erpnext: no non-group ${doctype} exists — did the setup wizard's fixtures install?`);
+    return pick;
+  };
+  const customerGroup = await leaf('Customer Group', 'Commercial');
+  const territory = await leaf('Territory', 'United States');
+  const itemGroup = await leaf('Item Group', 'Products');
+
+  await update('Selling Settings', 'Selling Settings', {
+    cust_master_name: 'Customer Name', selling_price_list: 'Standard Selling', customer_group: customerGroup, territory,
+  });
+
+  // Customers: the one the task links, its look-alikes, and the seed orders' customers.
+  const SEED = [
+    { customer: 'Seed: Alpha Traders', item: 'Bench Widget', qty: 5 },
+    { customer: 'Seed: Beacon Supplies', item: 'Bench Gadget', qty: 1 },
+    { customer: 'Seed: Cobalt Retail', item: 'Bench Widget', qty: 12 },
+  ];
+  const KEEP_CUSTOMERS = ['Bench Customer', 'Bench Customer Ltd', 'Bench Customers Group', ...SEED.map((s) => s.customer)];
+  const customers = await list('Customer', [], ['name', 'customer_name', 'disabled']);
+  for (const name of KEEP_CUSTOMERS) {
+    const found = customers.find((c) => c.name === name);
+    if (found) {
+      if (found.disabled) await update('Customer', name, { disabled: 0 });
+      continue;
+    }
+    await insert('Customer', { customer_name: name, customer_type: 'Company', customer_group: customerGroup, territory });
+    log(`erpnext: created customer "${name}"`);
+  }
+
+  // Items and their selling prices.
+  const ITEMS = [['Bench Widget', 40], ['Bench Gadget', 125], ['Bench Widget Pro', 55]];
+  const items = await list('Item', [['item_code', 'like', '%Bench%']], ['name', 'disabled']);
+  for (const [code, rate] of ITEMS) {
+    const found = items.find((i) => i.name === code);
+    if (!found) {
+      await insert('Item', {
+        item_code: code, item_name: code, item_group: itemGroup, stock_uom: 'Nos',
+        is_stock_item: 0, include_item_in_manufacturing: 0, is_sales_item: 1,
+      });
+      log(`erpnext: created item "${code}"`);
+    } else if (found.disabled) {
+      await update('Item', code, { disabled: 0 });
+    }
+    const prices = await list('Item Price', [['item_code', '=', code], ['price_list', '=', 'Standard Selling']], ['name', 'price_list_rate']);
+    if (!prices.length) {
+      await insert('Item Price', { item_code: code, price_list: 'Standard Selling', price_list_rate: rate });
+    } else {
+      for (const p of prices) if (Number(p.price_list_rate) !== rate) await update('Item Price', p.name, { price_list_rate: rate });
+    }
+  }
+
+  // Sales Orders: exactly the seed set, each as seeded.
+  const seedDelivery = `${today.slice(0, 4)}-12-31`;
+  const commentsOn = (name) =>
+    list('Comment', [['reference_doctype', '=', 'Sales Order'], ['reference_name', '=', name]], ['name', 'comment_type']);
+  const orders = await list('Sales Order', [], ['name', 'customer', 'docstatus', 'delivery_date', 'creation']);
+  orders.sort((a, b) => String(a.creation).localeCompare(String(b.creation)));
+  const doomed = [];
+  for (const o of orders) {
+    const s = SEED.find((x) => x.customer === o.customer);
+    let pristine = false;
+    if (s && !s.kept && o.docstatus === 1 && o.delivery_date === seedDelivery) {
+      const doc = await get('Sales Order', o.name);
+      pristine = doc.items.length === 1 && doc.items[0].item_code === s.item && Number(doc.items[0].qty) === s.qty &&
+        !(await commentsOn(o.name)).some((c) => c.comment_type === 'Comment');
+    }
+    if (pristine) s.kept = true;
+    else doomed.push(o);
+  }
+  // Newest first: an amendment (SAL-ORD-...-00004-1) links its cancelled
+  // original through amended_from, and would block the original's deletion.
+  let removed = 0;
+  for (const o of doomed.reverse()) {
+    if (o.docstatus === 1) await method('frappe.client.cancel', { doctype: 'Sales Order', name: o.name });
+    for (const c of await commentsOn(o.name)) await remove('Comment', c.name);
+    await remove('Sales Order', o.name);
+    removed++;
+  }
+  log(removed ? `erpnext: deleted ${removed} sales order(s) (earlier runs' and non-seed)` : 'erpnext: no sales orders to delete');
+  for (const s of SEED) {
+    if (s.kept) continue;
+    const rate = ITEMS.find(([code]) => code === s.item)[1];
+    const so = await insert('Sales Order', {
+      customer: s.customer, company: company.name, transaction_date: today, delivery_date: seedDelivery,
+      order_type: 'Sales', currency: 'USD', conversion_rate: 1,
+      selling_price_list: 'Standard Selling', price_list_currency: 'USD', plc_conversion_rate: 1,
+      items: [{ item_code: s.item, qty: s.qty, rate, uom: 'Nos', conversion_factor: 1, delivery_date: seedDelivery }],
+      docstatus: 1,
+    });
+    // An insert with docstatus 1 submits in one call; if this version saved a
+    // draft instead, submit it the way the form's Submit button does.
+    if (so.docstatus === 0) await method('frappe.client.submit', { doc: await get('Sales Order', so.name) });
+    const now = await get('Sales Order', so.name);
+    if (now.docstatus !== 1) throw new Error(`erpnext: seed sales order ${so.name} for "${s.customer}" is docstatus ${now.docstatus}, not submitted`);
+    log(`erpnext: seeded sales order ${so.name} for "${s.customer}"`);
+  }
+
+  // Customers and Bench items a run made (or a look-alike it created by typing).
+  for (const c of customers) {
+    if (KEEP_CUSTOMERS.includes(c.name)) continue;
+    try {
+      await remove('Customer', c.name);
+      log(`erpnext: deleted customer "${c.name}"`);
+    } catch (e) {
+      log(`erpnext: WARNING could not delete customer "${c.name}": ${e.message}`);
+    }
+  }
+  for (const i of items) {
+    if (ITEMS.some(([code]) => code === i.name)) continue;
+    try {
+      await remove('Item', i.name);
+      log(`erpnext: deleted item "${i.name}"`);
+    } catch (e) {
+      log(`erpnext: WARNING could not delete item "${i.name}": ${e.message}`);
+    }
+  }
+}
+
 function resetAtelyr() {
   log('atelyr: restoring datastore baseline');
   execFileSync(process.execPath, [path.join(here, 'reset.mjs'), '--restore'], { stdio: 'inherit' });
@@ -836,6 +1049,7 @@ const RESETS = {
   espocrm: resetEspocrm,
   snipeit: resetSnipeit,
   ghost: resetGhost,
+  erpnext: resetErpnext,
 };
 
 export const RESET_TARGETS = Object.keys(RESETS);
