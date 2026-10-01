@@ -1,0 +1,581 @@
+{
+  "name": "fwec19-luna",
+  "origin": "http://127.0.0.1:8097",
+  "startUrl": "http://127.0.0.1:8097/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-signin",
+      "instruction": "Sign in to EspoCRM at http://127.0.0.1:8097/ using username admin and password exactly {{env:APP_PASSWORD}}; verify the app is signed in and report the visible result.",
+      "skill": "s_29cdc3",
+      "params": {
+        "v1": "http://127.0.0.1:8097/",
+        "v2": "admin",
+        "v3": "{{env:APP_PASSWORD}}"
+      },
+      "outputs": [
+        "username_used"
+      ],
+      "recorded": {
+        "username_used": "admin",
+        "post_login_state": "EspoCRM authenticated home screen visible: nav menu (Home, Accounts, Contacts, Leads, Opportunities, Emails, Meetings, Calls, Tasks, Calendar, Cases, Knowledge Base), search box, Stream panel showing 'No Data', heading 'My Activities'",
+        "url": "http://127.0.0.1:8097/"
+      },
+      "route": "http://127.0.0.1:8097/",
+      "outputEvidence": {
+        "username_used": {
+          "same": 0,
+          "differed": 1
+        },
+        "post_login_state": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "02-open",
+      "instruction": "Open Opportunities and report the exact names of all opportunities whose name starts with 'Seed:'; do not edit any records.",
+      "skill": "s_1c439f",
+      "params": {},
+      "outputs": [
+        "opportunity_name",
+        "list_cell_data_name_name_2",
+        "list_cell_data_name_name_3",
+        "seed_opportunity_names_1",
+        "seed_opportunity_names_2",
+        "seed_opportunity_names_3"
+      ],
+      "recorded": {
+        "module_url": "http://127.0.0.1:8097/#Opportunity",
+        "total_records": "1–3 / 3 (pagination says 3 opportunities total)",
+        "records_edited": "none",
+        "opportunity_name": "Seed: training package",
+        "list_cell_data_name_name_2": "Seed: pilot expansion",
+        "list_cell_data_name_name_3": "Seed: annual support renewal",
+        "seed_opportunity_names_1": "Seed: training package",
+        "seed_opportunity_names_2": "Seed: pilot expansion",
+        "seed_opportunity_names_3": "Seed: annual support renewal",
+        "url": "http://127.0.0.1:8097/#Opportunity"
+      },
+      "route": "http://127.0.0.1:8097/#Opportunity",
+      "outputEvidence": {
+        "module_url": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "total_records": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "records_edited": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "opportunity_name": {
+          "same": 1,
+          "differed": 0
+        },
+        "list_cell_data_name_name_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "list_cell_data_name_name_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_opportunity_names_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_opportunity_names_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_opportunity_names_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "03-create",
+      "instruction": "Create an opportunity named '{{runid}} Bench Opportunity' linked to the actual account 'Bench Account', with a description including '{{runid}}', stage Negotiation, amount 12500 in the default currency, close date 2026-12-31, and assigned to the actual user 'Bench Assignee'. Use suggestions or a select dialog to choose linked records, save, then verify the saved values and report the record ID visible in the opportunity URL.",
+      "outputs": [
+        "opportunity_name",
+        "description",
+        "stage",
+        "account",
+        "account_id",
+        "assigned_user",
+        "assigned_user_id",
+        "amount_after_blur",
+        "close_date_after_blur",
+        "save_action",
+        "record_id",
+        "opportunity_id",
+        "opportunity_detail_url",
+        "name",
+        "amount",
+        "amount_display",
+        "currency",
+        "close_date",
+        "probability",
+        "opportunities_total_after_save",
+        "close_date_input_type",
+        "amount_input_type",
+        "close_date_after_tab",
+        "amount_immediate",
+        "amount_after_click_away",
+        "amount_after_format_atte",
+        "amount_final",
+        "close_date_final",
+        "name_value",
+        "account_value",
+        "stage_value",
+        "assigned_user_value",
+        "description_value",
+        "currency_unit",
+        "saved_opportunity_url",
+        "amount_on_detail",
+        "name_on_detail",
+        "edit_close_date_input",
+        "edit_amount_input",
+        "edit_stage_input",
+        "final_url",
+        "account_href",
+        "assigned_user_href",
+        "saved_description_text",
+        "run_id"
+      ],
+      "recorded": {
+        "opportunity_name": "fwec19-luna-n1 Bench Opportunity",
+        "description": "Created by fwec19-luna-n1 automation check.",
+        "stage": "Negotiation",
+        "account": "Bench Account",
+        "account_id": "6abe142f1acf21471",
+        "assigned_user": "Bench Assignee",
+        "assigned_user_id": "6abe1430a5bbc54d2",
+        "amount_after_blur": "",
+        "close_date_after_blur": "",
+        "save_action": "clicked Save; no redirect or visible confirmation",
+        "record_id": "unavailable; unsaved",
+        "opportunity_id": "6abe36128cfa23492",
+        "opportunity_detail_url": "http://127.0.0.1:8097/#Opportunity/view/6abe36128cfa23492",
+        "name": "fwec19-luna-n1 Bench Opportunity",
+        "amount": "12,500.00",
+        "amount_display": "$12,500.00",
+        "currency": "USD",
+        "close_date": "2026-12-31",
+        "probability": "80",
+        "opportunities_total_after_save": "1–4 / 4",
+        "close_date_input_type": "text",
+        "amount_input_type": "text",
+        "close_date_after_tab": "2026-12-31",
+        "amount_immediate": "12,500",
+        "amount_after_click_away": "12,500.00",
+        "amount_after_format_atte": "125,000,012,500.00",
+        "amount_final": "12,500.00",
+        "close_date_final": "2026-12-31",
+        "name_value": "fwec19-luna-n1 Bench Opportunity",
+        "account_value": "Bench Account",
+        "stage_value": "Negotiation",
+        "assigned_user_value": "Bench Assignee",
+        "description_value": "Created by fwec19-luna-n1 automation check.",
+        "currency_unit": "USD",
+        "saved_opportunity_url": "http://127.0.0.1:8097/#Opportunity/view/6abe36128cfa23492",
+        "amount_on_detail": "$12,500.00",
+        "name_on_detail": "fwec19-luna-n1 Bench Opportunity",
+        "edit_close_date_input": "2026-12-31",
+        "edit_amount_input": "12,500.00",
+        "edit_stage_input": "Negotiation",
+        "final_url": "http://127.0.0.1:8097/#Opportunity/view/6abe36128cfa23492",
+        "account_href": "#Account/view/6abe142f1acf21471",
+        "assigned_user_href": "#User/view/6abe1430a5bbc54d2",
+        "saved_description_text": "Created by fwec19-luna-n1 automation check.",
+        "run_id": "fwec19-luna-n1",
+        "url": "http://127.0.0.1:8097/#Opportunity/view/6abe36128cfa23492",
+        "url.h2": "6abe36128cfa23492"
+      },
+      "route": "http://127.0.0.1:8097/#Opportunity/view/:id",
+      "outputEvidence": {
+        "opportunity_name": {
+          "same": 0,
+          "differed": 1
+        },
+        "description": {
+          "same": 0,
+          "differed": 1
+        },
+        "stage": {
+          "same": 1,
+          "differed": 0
+        },
+        "account": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "account_id": {
+          "same": 1,
+          "differed": 0
+        },
+        "assigned_user": {
+          "same": 1,
+          "differed": 0
+        },
+        "assigned_user_id": {
+          "same": 1,
+          "differed": 0
+        },
+        "save_action": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "record_id": {
+          "same": 0,
+          "differed": 1
+        },
+        "opportunity_id": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "opportunity_detail_url": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "name": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "amount": {
+          "same": 0,
+          "differed": 1
+        },
+        "amount_display": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "currency": {
+          "same": 0,
+          "differed": 1
+        },
+        "close_date": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "probability": {
+          "same": 1,
+          "differed": 0
+        },
+        "opportunities_total_after_save": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "close_date_input_type": {
+          "same": 1,
+          "differed": 0
+        },
+        "amount_input_type": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "close_date_after_tab": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "amount_immediate": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "amount_after_click_away": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "amount_after_format_atte": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "amount_final": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "close_date_final": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "name_value": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "account_value": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "stage_value": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "assigned_user_value": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "description_value": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "currency_unit": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "saved_opportunity_url": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "amount_on_detail": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "name_on_detail": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "edit_close_date_input": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "edit_amount_input": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "edit_stage_input": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "final_url": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "account_href": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "assigned_user_href": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "saved_description_text": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "run_id": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        },
+        "url.h2": {
+          "same": 0,
+          "differed": 1
+        }
+      },
+      "skill": "s_d5fd04",
+      "params": {
+        "v1": "{{runid}}",
+        "v2": "{{runid}} Bench Opportunity",
+        "v3": "Bench Account",
+        "v4": "12500",
+        "v5": "31"
+      }
+    },
+    {
+      "id": "04-create",
+      "instruction": "On the saved opportunity '{{runid}} Bench Opportunity', create and verify a Stream post whose {{03-create.close_date_input_type}} includes exactly the runid '{{runid}}'. Then report the post {{03-create.close_date_input_type}} and confirm the opportunity is still the saved record.",
+      "skill": "s_c818c1",
+      "params": {
+        "v1": "{{runid}} Bench Opportunity",
+        "v3": "{{03-create.close_date_input_type}}",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "stream_post_text",
+        "stream_entry_region",
+        "posted_by",
+        "post_time",
+        "opportunity_name",
+        "opportunity_detail_url",
+        "account",
+        "assigned_user",
+        "stage",
+        "amount",
+        "record_name_on_page",
+        "stream_first_entry_regio",
+        "run_id"
+      ],
+      "recorded": {
+        "stream_post_text": "fwec19-luna-n1 stream post verification",
+        "stream_entry_region": "Admin | fwec19-luna-n1 stream post verification | 10:31",
+        "posted_by": "Admin",
+        "post_time": "10:31",
+        "opportunity_id": "6abe36128cfa23492",
+        "opportunity_name": "fwec19-luna-n1 Bench Opportunity",
+        "opportunity_detail_url": "http://127.0.0.1:8097/#Opportunity/view/6abe36128cfa23492",
+        "account": "Bench Account",
+        "assigned_user": "Bench Assignee",
+        "stage": "Negotiation",
+        "amount": "$12,500.00",
+        "current_url": "http://127.0.0.1:8097/#Opportunity/view/6abe36128cfa23492",
+        "record_name_on_page": "fwec19-luna-n1 Bench Opportunity",
+        "stream_first_entry_regio": "Admin\n\nfwec19-luna-n1 stream post verification\n\n10:31",
+        "run_id": "fwec19-luna-n1"
+      },
+      "route": "http://127.0.0.1:8097/#Opportunity/view/:id",
+      "outputEvidence": {
+        "stream_post_text": {
+          "same": 0,
+          "differed": 1
+        },
+        "stream_entry_region": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "posted_by": {
+          "same": 1,
+          "differed": 0
+        },
+        "post_time": {
+          "same": 0,
+          "differed": 1
+        },
+        "opportunity_id": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "opportunity_name": {
+          "same": 0,
+          "differed": 1
+        },
+        "opportunity_detail_url": {
+          "same": 0,
+          "differed": 1
+        },
+        "account": {
+          "same": 1,
+          "differed": 0
+        },
+        "assigned_user": {
+          "same": 1,
+          "differed": 0
+        },
+        "stage": {
+          "same": 1,
+          "differed": 0
+        },
+        "amount": {
+          "same": 1,
+          "differed": 0
+        },
+        "current_url": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "record_name_on_page": {
+          "same": 0,
+          "differed": 1
+        },
+        "stream_first_entry_regio": {
+          "same": 0,
+          "differed": 1
+        },
+        "run_id": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "session": "fwec19-luna-n1",
+    "created": "2026-10-01T10:31:30.592Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "01-signin",
+      "outputs": [
+        "post_login_state"
+      ]
+    },
+    {
+      "stepId": "02-open",
+      "outputs": [
+        "module_url",
+        "total_records",
+        "records_edited"
+      ]
+    },
+    {
+      "stepId": "04-create",
+      "outputs": [
+        "opportunity_id",
+        "current_url"
+      ]
+    }
+  ]
+}

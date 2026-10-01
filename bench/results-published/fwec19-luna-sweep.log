@@ -1,0 +1,98 @@
+
+[sweep] run 1/3: fwec19-luna-n1 (store: /home/user/sitelooper/bench/results/fwec19-luna-skills)
+[harness] espocrm: defaulting APP_URL
+[harness] espocrm: defaulting APP_EMAIL
+[harness] espocrm: defaulting APP_PASSWORD
+[reset] espocrm: no leftover bench opportunities
+[harness] espocrm responded 200 at http://127.0.0.1:8097/
+stopped: fwec19-luna-n1
+  flow "fwec19-luna" saved: 4 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwec19-luna.json
+  warning: note: 01-signin no longer publishes post_login_state — no replay reads it from the page and the recording showed no line to read
+  warning: note: 02-open no longer publishes module_url, total_records, records_edited — no replay reads them from the page and the recording showed no line to read
+  warning: note: 04-create no longer publishes opportunity_id, current_url — no replay reads them from the page and the recording showed no line to read
+  warning: note: 1 step(s) adopted from non-success instruction(s) whose work the session continued from (03-create) — they replay model-first with doubled budget, and a non-success there does not halt the flow
+  warning: warning: 168 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[0].instruction: "admin" (output) in "Sign in to EspoCRM at http://127.0.0.1:8097/ using username admin and password exactly {{env:APP_PASSWORD}}; verify the app is signed in and report the visible "
+  flow.steps[0].params.v2: "admin" (output) in "admin"
+  flow.steps[1].route: "http://127.0.0.1:8097/#Opportunity" (output) in "http://127.0.0.1:8097/#Opportunity"
+  flow.steps[2].instruction: "Bench Assignee" (output) in "Create an opportunity named '{{runid}} Bench Opportunity' linked to the actual account 'Bench Account', with a description including '{{runid}}', stage Negotiat"
+  flow.steps[2].instruction: "Bench Account" (output) in "Create an opportunity named '{{runid}} Bench Opportunity' linked to the actual account 'Bench Account', with a description including '{{runid}}', stage Negotiat"
+  warning: {{03-create.close_date_input_type}} (used by 04-create) can only be re-observed by model recovery, and 04-create's procedure types or locates by it — so `sitelooper spec` will REFUSE to compile this flow (unsourced-ref) until 03-create reads close_date_input_type from an element. Re-record 03-create now, while this session is still open.
+arm=sitelooper model=openai/gpt-6-luna runid=fwec19-luna-n1 stop=completed
+turns=6 wall=320.4s
+commands=5 cmdTime=297.4s cmdBytes=8500 timeouts=0
+orchestrator in=5555 cw=0 cr=17433 out=795
+inner prompt=1749917 cached=1582395 completion=21870
+spend=$0.0429 maxUsd=3
+learn: A_n=0 replayed=0/5 full=0 repaired=0 compiled=4 variants=0
+-> /home/user/sitelooper/bench/results/fwec19-luna-n1-sitelooper-result.json
+
+fwec19-luna-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: PASS — id=6abe36128cfa23492, account=Bench Account, description includes runid=true
+  obj 3: PASS — stage=Negotiation
+  obj 4: PASS — amount=12500 USD, closeDate=2026-12-31
+  obj 5: PASS — assignedUser=Bench Assignee
+  obj 6: PASS — 1 post(s), 1 carrying the runid
+  obj 7: PASS — record id 6abe36128cfa23492 reported
+
+[sweep] run 2/3: fwec19-luna-n2 (replay flow fwec19-luna, no orchestrator)
+[reset] espocrm: deleted 1 leftover bench opportunit(ies)
+
+fwec19-luna-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: PASS — id=6abe37154959d41d1, account=Bench Account, description includes runid=true
+  obj 3: PASS — stage=Negotiation
+  obj 4: PASS — amount=12500 USD, closeDate=2026-12-31
+  obj 5: PASS — assignedUser=Bench Assignee
+  obj 6: PASS — 1 post(s), 1 carrying the runid
+  obj 7: PASS — record id 6abe37154959d41d1 reported
+[sweep] fwec19-luna-n2: 03-create has no pinned skill — 45 model turn(s), on every replay
+
+[sweep] run 3/3: fwec19-luna-n3 (replay flow fwec19-luna, no orchestrator)
+[reset] espocrm: deleted 1 leftover bench opportunit(ies)
+[sweep] fwec19-luna-n3: 1 drift ticket(s) → fwec19-luna-n3-drift.json
+
+fwec19-luna-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: PASS — id=6abe374e746efaf17, account=Bench Account, description includes runid=true
+  obj 3: PASS — stage=Negotiation
+  obj 4: PASS — amount=12500 USD, closeDate=2026-12-31
+  obj 5: PASS — assignedUser=Bench Assignee
+  obj 6: PASS — 1 post(s), 1 carrying the runid
+  obj 7: PASS — record id 6abe374e746efaf17 reported
+
+Learning sweep fwec19-luna (K=3)
+┌─────────┬───┬──────────────────┬──────────┬─────────────┬───────┬──────┬───────────┬──────┬──────────────┬────────┐
+│ (index) │ n │ runid            │ verified │ stop        │ turns │ cmds │ total_usd │ A_n  │ replayed     │ wall_s │
+├─────────┼───┼──────────────────┼──────────┼─────────────┼───────┼──────┼───────────┼──────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwec19-luna-n1' │ '7/7'    │ 'completed' │ 6     │ 5    │ 0.0429    │ 0    │ '0/5'        │ 320    │
+│ 1       │ 2 │ 'fwec19-luna-n2' │ '7/7'    │ 'success'   │ 45    │ 4    │ 0.0206    │ 0.75 │ '4/4 (flow)' │ 161    │
+│ 2       │ 3 │ 'fwec19-luna-n3' │ '7/7'    │ 'success'   │ 0     │ 4    │ 0         │ 1    │ '4/4 (flow)' │ 49     │
+└─────────┴───┴──────────────────┴──────────┴─────────────┴───────┴──────┴───────────┴──────┴──────────────┴────────┘
+http://127.0.0.1:8097
+  s_1c439f  validated    1 steps  3/3 (100%)
+           Open Opportunities and report the exact names of all opportunities whose name starts with 'Seed:'; do not edit…
+  s_29cdc3  validated    5 steps  3/3 (100%)
+           Sign in to EspoCRM at {{v1}} using username {{v2}} and password exactly {{v3}}; verify the app is signed in an…
+  s_be6ba8  validated    9 steps  3/3 (100%)
+           Open Opportunities and report the exact names of all opportunities whose name starts with 'Seed:'; do not edit…
+  s_c818c1  validated   12 steps  3/3 (100%)
+           On the saved opportunity '{{v1}}', create and verify a Stream post whose {{v3}} includes exactly the runid '{{…
+  s_4cac2d  validated    9 steps  2/2 (100%)
+           Create an opportunity named '{{v2}}' linked to the actual account '{{v3}}', with a description including '{{v1…
+  s_b1806a  validated   22 steps  2/2 (100%)
+           Create an opportunity named '{{v2}}' linked to the actual account '{{v3}}', with a description including '{{v1…
+  s_d5fd04  validated    1 steps  2/2 (100%)
+           Create an opportunity named '{{v2}}' linked to the actual account '{{v3}}', with a description including '{{v1…
+  s_5313a5  provisional 28 steps  1/1 (100%)
+           Finish creating and saving the unsaved opportunity '{{v1}}' on the current EspoCRM form. Keep the confirmed li…
+  s_6b88a0  provisional 15 steps  1/1 (100%)
+           Finish creating and saving the unsaved opportunity '{{v1}}' on the current EspoCRM form. Keep the confirmed li…
+  s_77a865  provisional  1 steps  1/1 (100%)
+           Finish creating and saving the unsaved opportunity '{{v1}}' on the current EspoCRM form. Keep the confirmed li…
+  s_9ee826  provisional  4 steps  1/1 (100%)
+           Finish creating and saving the unsaved opportunity '{{v1}}' on the current EspoCRM form. Keep the confirmed li…
+store: /home/user/sitelooper/bench/results/fwec19-luna-skills
+
+summary: /home/user/sitelooper/bench/results/fwec19-luna-sweep.json
