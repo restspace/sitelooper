@@ -892,6 +892,26 @@ async function resetErpnext() {
   cookie = login.res.headers.getSetCookie().map((c) => c.split(';')[0]).join('; ');
   if (!/\bsid=/.test(cookie) || /\bsid=Guest\b/.test(cookie)) throw new Error(`erpnext: login as ${usr} gave no session cookie (${cookie || 'none'})`);
 
+  // Per-user list view state (filters, sort, page length, group-by sidebar,
+  // List/Report/Kanban view, last_view) lives in __UserSettings, cached in redis
+  // ("_user_settings" hash, read before the table). A replay on a reset app must
+  // not open on the previous run's filtered list. user_settings.save is
+  // whitelisted but MERGES top-level keys (an empty object is a no-op), so read
+  // the current keys and overwrite each with an empty value. The cache is what
+  // get() reads, and save() writes the cache, so this takes effect at once.
+  // Only the signed-in user's rows are reachable (the session user is the key).
+  for (const doctype of ['Sales Order', 'Customer', 'Item', 'Sales Invoice', 'Quotation', 'Delivery Note']) {
+    let current = (await call('POST', '/api/method/frappe.model.utils.user_settings.get', { doctype })).body?.message;
+    if (typeof current === 'string') current = JSON.parse(current || '{}');
+    if (!current || typeof current !== 'object') current = {};
+    const blank = {};
+    for (const k of Object.keys(current)) blank[k] = k === 'last_view' ? null : {};
+    for (const k of ['List', 'Report', 'Kanban', 'Calendar', 'Gantt', 'Image', 'Inbox', 'Dashboard']) blank[k] = {};
+    blank.last_view = null;
+    await call('POST', '/api/method/frappe.model.utils.user_settings.save', { doctype, user_settings: JSON.stringify(blank) });
+    if (Object.keys(current).length) log(`erpnext: cleared saved list settings for ${doctype} (${Object.keys(current).join(', ')})`);
+  }
+
   // The Setup Wizard must be done: that is what made the company and its accounts.
   const company = (await list('Company', [['name', '=', 'Bench Company']]))[0];
   if (!company) throw new Error('erpnext: company "Bench Company" not found — the setup wizard is not complete; run bash bench/thirdparty/erpnext/seed.sh first');
