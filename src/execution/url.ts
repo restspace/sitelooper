@@ -96,11 +96,45 @@ export function queryPairs(search: string): Map<string, string> {
   return out;
 }
 
+/**
+ * decodeURIComponent, and on text it rejects, every escape that does decode
+ * with the rest left as written. A stored url pattern keeps query values
+ * DECODED (compile.ts urlPattern), so a value that itself holds a '%' comes
+ * back through `new URL` with a bare '%' beside real escapes, and the whole
+ * value used to stay undecoded: erpnext's list filter
+ * `company=["like","%Bench Company%"]` read as `[%22like%22,%22%Bench%20…`
+ * against the live url's `["like","%Bench Company%"]`, and fwen2-luna's
+ * 02-find stopped on "expected url X but browser is at X" — the same text
+ * twice — on both replays. Text that decodes whole is unchanged.
+ */
 export function safeDecode(s: string): string {
   try {
     return decodeURIComponent(s);
   } catch {
-    return s;
+    return s.replace(/(?:%[0-9A-Fa-f]{2})+/g, (run) => {
+      let out = '';
+      let i = 0;
+      while (i < run.length) {
+        let taken = 0;
+        // The longest run of escapes from here that is one or more whole
+        // UTF-8 characters (at most four bytes each); a lone escape that is
+        // none (`%Be` from "%Bench") is text, as the '%' before it was typed.
+        for (let n = Math.min(4, (run.length - i) / 3); n >= 1 && !taken; n--) {
+          try {
+            out += decodeURIComponent(run.slice(i, i + 3 * n));
+            taken = 3 * n;
+          } catch {
+            // shorter next
+          }
+        }
+        if (!taken) {
+          out += run.slice(i, i + 3);
+          taken = 3;
+        }
+        i += taken;
+      }
+      return out;
+    });
   }
 }
 

@@ -500,7 +500,9 @@ export function buildFlow(
     }
     prevId = id;
     prevGroup = g;
-    let text = g.instruction.text;
+    // A merged continuation's instruction finishes the step (resolveGroups):
+    // referenced with it, as one text.
+    let text = [g.instruction.text, ...(g.continuations ?? []).map((c) => `Then, to finish: ${c}`)].join('\n\n');
     for (const [name, value] of varEntries) text = replaceToken(text, value, `{{${name}}}`);
     // Reference earlier outputs (longest values first so nested ids resolve),
     // except one this instruction names only as an alternative its procedure
@@ -1594,6 +1596,12 @@ interface Group {
    * dropped with it. unbankedMutations names the pair.
    */
   undoneBy?: Group;
+  /**
+   * The instructions of continuations resolveGroups merged into this adopted
+   * group, in order: what the session was told to finish the step with. The
+   * flow step's instruction carries them (see resolveGroups).
+   */
+  continuations?: string[];
   /** Every recorded page diff of this instruction's steps, in order (liveReadsFor reads the last page's). */
   diffs: StepDiff[];
   /** This instruction's state-changing steps, in order (reappliedByNext compares them). */
@@ -1763,6 +1771,27 @@ function resolveGroups(groups: Group[]): Group[] {
       g.mutations += next.mutations;
       g.mutationsDiffed += next.mutationsDiffed;
       g.mutationsEffective += next.mutationsEffective;
+      // ...and the continuation's INSTRUCTION, which the merge used to drop.
+      // The merged step owns the continuation's report values, so its replay
+      // must be told what produced them: fwen2-luna's 04-create was "create
+      // a sales order for X, delivery date D, save as draft" (blocked twice on
+      // the mandatory Items grid), completed by "...ensure Items has at least
+      // one valid item row (select Bench Widget from its dropdown if
+      // needed)... save". Without the second sentence the model-first replays
+      // picked Bench Gadget, and 05-edit — recorded on a Widget row — edited a
+      // Gadget row. The continuation's own procedure stays dropped (above).
+      // Carried only on that evidence: the continuation STATES a value the
+      // merged step records and its first instruction never states — a
+      // choice no replay of the first instruction alone could make. A rescue
+      // that only says how to get past the page it was given (fwod69's
+      // "there is a blocking 'Configure your product' modal. Dismiss it…",
+      // a modal a clean replay may never meet) names no such value and is
+      // not carried.
+      const chose = Object.values(values).some((v) => {
+        const s = String(v ?? '').trim();
+        return s.length >= 3 && statedPlainly(next.instruction.text, s) && !statedPlainly(g.instruction.text, s);
+      });
+      if (chose) g.continuations = [...(g.continuations ?? []), next.instruction.text];
       kept[i + 1] = false;
       // The merged group now ends where its continuation did; a further
       // continuation of THAT is judged against the merged group.
