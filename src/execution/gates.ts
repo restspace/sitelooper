@@ -469,14 +469,24 @@ export type FingerprintSimilarity = number | null | 'unmeasured';
  * and Odoo landed it on `view_type=list`; the steps after it read the list as
  * if it were the order. Two values that both look minted (ids, uids) are a
  * volatile id, not a different view. Null when the landing is acceptable.
+ *
+ * `recorded` is what the RECORDING watched the app answer this very goto with
+ * (SkillStep.landedAs, filled with this run's params): per key, the value the
+ * app put there in place of the one the goto asked for. A key landing on
+ * exactly that value is the view the recording was given and worked on, not
+ * another one — ERPNext answers `?customer_name==X` with
+ * `?customer_name=["like","%=X%"]` on every run, and fwen3-luna-n2's 03-create
+ * stopped there on a landing identical in kind to the recorded one. Any other
+ * value at that key is judged as before.
  */
-export function gotoLandingVerdict(target: string, landed: string, where: string): string | null {
+export function gotoLandingVerdict(target: string, landed: string, where: string, recorded: Readonly<Record<string, string>> = {}): string | null {
   const t = urlShapeOf(target);
   const l = urlShapeOf(landed);
   if (!t || !l || t.origin !== l.origin) return null;
   const pairs: [string, string, string][] = [];
-  for (const [key, val] of t.query) if (l.query.has(key)) pairs.push([key, val, l.query.get(key)!]);
-  for (const [key, val] of t.hashState) if (l.hashState.has(key)) pairs.push([key, val, l.hashState.get(key)!]);
+  const asRecorded = (key: string, got: string): boolean => Object.prototype.hasOwnProperty.call(recorded, key) && recorded[key] === got;
+  for (const [key, val] of t.query) if (l.query.has(key) && !asRecorded(key, l.query.get(key)!)) pairs.push([key, val, l.query.get(key)!]);
+  for (const [key, val] of t.hashState) if (l.hashState.has(key) && !asRecorded(key, l.hashState.get(key)!)) pairs.push([key, val, l.hashState.get(key)!]);
   // An EMPTY requested value asks for no particular view: the app filling in
   // its default is the landing the request left open. fwod48's recording
   // typed `web#action=&model=&view_type=list&cids=1&menu_id=`, Odoo landed on
@@ -486,6 +496,32 @@ export function gotoLandingVerdict(target: string, landed: string, where: string
   if (!differ.length) return null;
   const said = differ.map(([key, want, got]) => `${key}=${clip(got, 40)} where it was sent to ${key}=${clip(want, 40)}`).join(', ');
   return `${where} navigated but landed on another view: ${said} — the page it asked for was not given`;
+}
+
+/**
+ * Whether a DETOUR segment (Skill.detour) has nothing to do on this run: the
+ * recording's goto to `asked` was sent elsewhere by the app, the segment's
+ * steps worked their way back to the page it had asked for, and THIS run's
+ * goto was simply given that page. True only when the browser is on the page
+ * the goto asked for (a strict match) and is not on the page the segment
+ * starts from (neither a strict nor a soft match of its own `pattern`) — so
+ * a browser the app redirected as it did at record time runs the segment as
+ * recorded, and any third page is left to the segment's own gate to refuse.
+ *
+ * Evidence, not shape: the redirect and the return are both the recording's
+ * own urls (compile.ts detourOf); this only asks where the browser is now.
+ * Skipping proves nothing about the page that follows — the next segment's
+ * precondition gate asks that, exactly as it would after the detour had run.
+ * Both runners ask this at the same place: before the segment's first step.
+ */
+export function detourGiven(asked: string, pattern: string, url: string, params: Record<string, string>): boolean {
+  if (urlMatches(pattern, url, params) || softUrlMatch(pattern, url, params)) return false;
+  return urlMatches(asked, url, params);
+}
+
+/** What a runner says when it skips a detour segment (detourGiven), one wording for both. */
+export function detourSkippedNote(id: string, asked: string, url: string): string {
+  return `${id} skipped: it is the detour the recording took when its goto to ${clip(asked, 80)} was sent elsewhere, and this run's goto was given ${clip(url, 80)} — nothing for it to do`;
 }
 
 /** Tools that act on the browser or the tab itself and never on anything in the page. */

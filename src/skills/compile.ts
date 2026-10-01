@@ -1058,6 +1058,9 @@ export function compileSkills(input: CompileInput): Skill[] {
       // the RECORDING run's action id. A minted value is rewritten at the
       // url position it was minted from, and nowhere else.
       if (typeof args.url === 'string') args.url = substituteUrlParts(args.url, minted.filter((m) => m.keptIndex < g));
+      // …and an ESCAPE hides a slot value from the textual pass altogether
+      // (substituteEscapedUrl, fwen3-luna 03-create's `?customer_name=%3D…`).
+      if (NAVIGATION_TOOLS.has(step.tool) && typeof args.url === 'string') args.url = substituteEscapedUrl(args.url, textSlots);
       // A position-only slot inside an href a selector matches on is at a url
       // position too (substituteHrefIds, snipeit fwsi3 `a[href$="/hardware/4/checkout"]`).
       if (typeof args.target === 'string' && positionalUrlSlots.length) args.target = substituteHrefIds(args.target, positionalUrlSlots);
@@ -1140,6 +1143,13 @@ export function compileSkills(input: CompileInput): Skill[] {
         if (typeof typed === 'string' && recordedDoubled(step.diff?.added ?? [], step.locators.target?.chain ?? [], typed)) out.doubledAsRecorded = true;
       }
       if (pressedAgain.has(step)) out.repeatIfNoEffect = true;
+      // The landing the app gave this goto where it rewrote a key the goto
+      // asked for (SkillStep.landedAs): the recording's own evidence of what
+      // "the page it asked for" looks like on this app.
+      if (step.tool === 'goto') {
+        const landedAs = recordedLanding(step, textSlots);
+        if (landedAs) out.landedAs = landedAs;
+      }
       if (step.effect) {
         out.effect =
           step.effect.kind === 'popup' && step.afterUrl
@@ -1435,7 +1445,50 @@ export function compileSkills(input: CompileInput): Skill[] {
     return out;
   };
 
+  /**
+   * Segment `k` as a DETOUR (Skill.detour), read off the recording: the
+   * segment before it ends in a goto the app landed on ANOTHER page template
+   * than the one it was addressed to (which is why a segment starts here), and
+   * this segment's last step lands back on the page that goto asked for —
+   * where the next segment starts. Its whole recorded effect is the way from
+   * where the app sent the goto to where the goto was going.
+   *
+   * Never one that publishes a read, mints a value or creates a record: a
+   * later step may need what it produced. And never one that ENTERS anything —
+   * a typed, filled or chosen value, a slot of the instruction, an address:
+   * `goto /` answered with `/login`, the credentials, and back to `/` is the
+   * most common sign-in there is (grafana, openproject, snipe-it, vikunja in
+   * the fixtures), and there the "way back" is the very thing the instruction
+   * asked for, carrying its values. Only a segment that uses none of the
+   * instruction's values and enters nothing is the app's errand rather than
+   * the instruction's. Returns the goto's address as the compiled step holds it.
+   */
+  const detourOf = (k: number): string | undefined => {
+    if (k < 1 || k >= built.length - 1) return undefined;
+    const sent = built[k - 1].sg.steps[built[k - 1].sg.steps.length - 1];
+    const goto = built[k - 1].folded[built[k - 1].folded.length - 1];
+    if (!sent || sent.tool !== 'goto' || typeof sent.args.url !== 'string' || !sent.diff?.url) return undefined;
+    if (!goto || goto.tool !== 'goto' || typeof goto.args.url !== 'string') return undefined;
+    let asked: string;
+    try {
+      asked = new URL(sent.args.url, sent.diff.url).href;
+    } catch {
+      return undefined;
+    }
+    if (sameTemplate(asked, sent.diff.url)) return undefined;
+    const steps = built[k].sg.steps;
+    const back = steps[steps.length - 1]?.diff?.url;
+    if (!back || !urlMatches(asked, back)) return undefined;
+    // …and no earlier step of it had already been there: the return is its last act.
+    if (steps.slice(0, -1).some((s) => s.diff?.url && urlMatches(asked, s.diff.url))) return undefined;
+    if (segDerived[k] || built[k].folded.some((s) => s.label !== undefined || s.mints || s.tool === 'loop')) return undefined;
+    if (Object.values(built[k].segParams).some((p) => p.usedIn.length)) return undefined;
+    if (built[k].folded.some((s) => Object.entries(s.args).some(([key, value]) => VALUE_ARGS.has(key) && typeof value === 'string' && value.length > 0))) return undefined;
+    return goto.args.url;
+  };
+
   const compiled = built.map((b, k) => {
+    const detour = detourOf(k);
     const markers = identityOf(b.sg.startText, markerSlotsOf(b), knownVals, writtenSlots(b.folded));
     anchorMarkerValues(b.folded, markers, (s) => b.recordedDiffs.get(s), textSlots, b.notes);
     const params: Record<string, SkillParam> = {};
@@ -1481,6 +1534,7 @@ export function compileSkills(input: CompileInput): Skill[] {
       stats: { uses: 1, successes: 1, partial: 0, created: now, failedAtStep: {}, fallthroughs: 0, verifiedContract: contractFor(b.folded) },
       status: 'provisional' as const,
       ...(chain ? { seq: { chain, index: k, of } } : {}),
+      ...(detour ? { detour: { asked: detour } } : {}),
       ...(input.variantOf ? { variantOf: input.variantOf } : {}),
       provenance: {
         session: input.session,
@@ -2449,6 +2503,88 @@ export function substituteUrlParts(url: string, minted: UrlPositionSlot[]): stri
     out = replaceAtUrlPart(out, m.at, m.value, `{{${m.name}}}`);
   }
   return out;
+}
+
+/**
+ * What the app answered a recorded goto with, at each query or hash-state key
+ * the goto ASKED for and the landing carries with another value — slotted, so
+ * a later run compares its own values (SkillStep.landedAs). Evidence only: the
+ * recorded step's own address and its own landing (the goto-redirect evidence
+ * app-minted-url.ts reads for path positions). Undefined when the landing gave
+ * every asked key back as sent, or the step recorded no landing.
+ */
+export function recordedLanding(step: RecordedStep, slots: Map<string, string>): Record<string, string> | undefined {
+  const landed = step.diff?.url;
+  if (typeof step.args?.url !== 'string' || !landed) return undefined;
+  let asked: string;
+  try {
+    asked = new URL(step.args.url, landed).href;
+  } catch {
+    return undefined;
+  }
+  const a = urlShapeOf(asked);
+  const l = urlShapeOf(landed);
+  if (!a || !l || a.origin !== l.origin) return undefined;
+  const out: Record<string, string> = {};
+  for (const [sent, got] of [[a.query, l.query], [a.hashState, l.hashState]] as const) {
+    for (const [key, value] of sent) {
+      const given = got.get(key);
+      if (given !== undefined && given !== value && !CREDENTIAL_KEY.test(key)) out[key] = substitute(given, slots);
+    }
+  }
+  return Object.keys(out).length ? out : undefined;
+}
+
+/**
+ * Slot values a navigation url spells PERCENT-ENCODED, written as their
+ * markers. `substitute` is textual and whole-token, and an escape is text: in
+ * `?customer_name=%3Dfwen3-luna-n1%20Bench%20Customer` the `%3D` (an '=') ends
+ * in a letter, so the run id after it is not a whole token, and the name with
+ * its `%20`s is not in the text at all. fwen3-luna 03-create kept that goto
+ * as recorded while every pattern around it carried `{{v2}}`, and both
+ * replays navigated to the RECORDING run's customer filter.
+ *
+ * Read where a url is read everywhere else (urlPattern, urlShapeOf): on the
+ * DECODED path segment or query value — and only on a piece that carries an
+ * escape and gains a marker by it. A piece the textual pass could already
+ * read keeps what it wrote (`?customer={{v2}}%20Bench%20Customer`), so no
+ * stored url changes but one a value was hidden in. The text around a marker
+ * is written back encoded; a marker is filled as every url marker is.
+ */
+export function substituteEscapedUrl(url: string, slots: Map<string, string>): string {
+  if (!slots.size || !url.includes('%')) return url;
+  const piece = (raw: string, query: boolean): string => {
+    if (!raw.includes('%')) return raw;
+    const decoded = safeDecode(query ? raw.replace(/\+/g, ' ') : raw);
+    const filled = substitute(decoded, slots);
+    if (filled === decoded) return raw;
+    return filled
+      .split(/(\{\{[^{}]*\}\})/)
+      .map((part, i) => (i % 2 ? part : encodeURIComponent(part)))
+      .join('');
+  };
+  const span = pathSpan(url);
+  if (!span) return url;
+  const hashAt = url.indexOf('#', span.end);
+  const rest = url.slice(span.end, hashAt < 0 ? url.length : hashAt);
+  const hash = hashAt < 0 ? '' : url.slice(hashAt);
+  const path = url
+    .slice(span.start, span.end)
+    .split('/')
+    .map((seg) => piece(seg, false))
+    .join('/');
+  const query = rest.startsWith('?')
+    ? '?' +
+      rest
+        .slice(1)
+        .split('&')
+        .map((pair) => {
+          const eq = pair.indexOf('=');
+          return eq < 0 ? pair : `${pair.slice(0, eq + 1)}${piece(pair.slice(eq + 1), true)}`;
+        })
+        .join('&')
+    : rest;
+  return url.slice(0, span.start) + path + query + hash;
 }
 
 /**

@@ -13,7 +13,8 @@ import { MAX_STRAY_GESTURES_FOR_PIN, agentGesturesOutsideReplay, bindSkill, canA
 import { threadStepParams } from '../skills/rethread.js';
 import { buildFlow, consumedReportedOutputs, consumedUrlOutputs, ignorableRefs, jsonLeaves, lintFlowRefs, lintUnboundParams, lintUnpublishedOutputs, listFlows, liveReadsFor, liveReadsForRecovery, loadFlow, loadFlowFile, lookupOutput, mutatingIntent, noteOutputEvidence, pruneUnsourcedOutputs, recoveryRoute, remapParams, resolveInstruction, resolveStepParams, softResolveInstruction, saveFlow, staleInstructionIds, taskConstants, textMints, unbankedMutations, unreportedOutputs, urlOutputs, varyingValues, type RunSpecific, commentaryReport } from '../skills/flow.js';
 import { applyRelabelToEntries, applyRelabelToSkills, relabelCases, requestRelabelPlan, runValueKeyRenames } from '../skills/relabel.js';
-import { goalSatisfied, renderChainStop } from '../skills/replay.js';
+import { goalSatisfied, pastDetours, renderChainStop } from '../skills/replay.js';
+import { detourSkippedNote } from '../execution/gates.js';
 import { drainDrift, llmProposer, recordCandidateEvidence } from '../skills/repair.js';
 import { cascadeProposer } from '../skills/repair-jev.js';
 import { expectationDecisions, recordedTexts, recordedValues, threadingDecisions } from '../skills/triage.js';
@@ -1616,7 +1617,17 @@ ${describeLeaks(certain.slice(0, 30))}${certain.length > 30 ? `\n  … and ${cer
           `so it was unpinned and its skill demoted; the rest of the flow exported normally. Fix: ${rerecordFix(file, q.step)}`,
       );
     }
-    if (prior) warnings.unshift(`warning: ignored ${prior} entr${prior === 1 ? 'y' : 'ies'} from an earlier take in session '${this.opts.session}' — this flow covers only what this daemon recorded`);
+    // The earlier take's ENTRIES are left out, but its browser was not: a
+    // session's profile (cookies, a sign-in) outlives its daemon, so this take
+    // began wherever that one stopped. fwen3-luna-n1's second take found the
+    // first one's sign-in still live, and its recorded "sign in" opens with a
+    // log-out no clean browser can replay. Said here, where the flow is made.
+    if (prior) {
+      warnings.unshift(
+        `warning: ignored ${prior} entr${prior === 1 ? 'y' : 'ies'} from an earlier take in session '${this.opts.session}' — this flow covers only what this daemon recorded. ` +
+          `That take's browser profile (cookies, any sign-in) was still this session's, so this recording may have started from a state a clean browser does not have; record under a new session name for a flow that starts clean`,
+      );
+    }
     return { path: file, name: flow.name, steps: flow.steps.length, vars: flow.vars, ...(warnings.length ? { warnings } : {}) };
   }
 
@@ -2906,7 +2917,27 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
     // later in the chain hands ALL of it to recovery (renderChainStop).
     const earlier: { skill: typeof current; res: typeof replay }[] = [];
     while (replay.ok && current.seq && current.seq.index < current.seq.of - 1) {
-      const next = store.list(origin).find((s) => s.seq?.chain === current.seq!.chain && s.seq?.index === current.seq!.index + 1);
+      const segmentAt = (index: number) => store.list(origin).find((s) => s.seq?.chain === current.seq!.chain && s.seq?.index === index);
+      // A DETOUR segment with nothing to do on this run is passed over
+      // (Skill.detour, replay.ts pastDetours over the shared detourGiven — the
+      // artifact asks the same before the same segment): the recording's goto
+      // was sent elsewhere and that segment worked its way back; this run's
+      // goto was given the page it asked for. fwen3-luna's 01-signin: recorded
+      // signed in, so a log-out segment sits between `goto /login` and the
+      // sign-in; a browser that is not signed in is already on /login. The
+      // segment after it is gated on its own precondition as ever, and no
+      // outcome is recorded for a segment that did not run.
+      const liveUrl = await this.browser
+        .getPage()
+        .then((p) => p.url())
+        .catch(() => '');
+      const passed = pastDetours(segmentAt, current.seq.index + 1, liveUrl, { ...match.params, ...derived });
+      for (const skipped of passed.skipped) {
+        const note = detourSkippedNote(skipped.id, skipped.detour!.asked, liveUrl);
+        progress(`[skill] chain ${current.seq.chain}: ${note}`);
+        agg.warnings.push(note);
+      }
+      const next = passed.next;
       if (!next) {
         replay = { ...replay, ok: false, reason: `segment ${current.seq.index + 2}/${current.seq.of} of this procedure chain is missing from the store` };
         break;

@@ -101,6 +101,26 @@ for (let n = own.from ? 2 : 1; n <= own.k; n++) {
   // pays once, later executions are near-script.
   const replayOnly = Boolean(own.flow) && n > 1;
   console.error(`\n[sweep] run ${n}/${own.k}: ${runid}${replayOnly ? ` (replay flow ${own.flow}, no orchestrator)` : learnDir ? ` (store: ${learnDir})` : ' (no store)'}`);
+  // A run starts in ITS OWN browser. The daemon keeps a session's profile
+  // (cookies) and script under sessions/<runid>, so a sweep relaunched under
+  // the same base — the box's first attempt was cut off — began its recording
+  // in the browser the dead attempt had left SIGNED IN: fwen3-luna-n1's take 2
+  // found `goto /login` redirected to /app/home, logged out, signed in again,
+  // and the flow's sign-in was compiled with that log-out in it (the export
+  // only says "ignored 89 entries from an earlier take"). Both replays and the
+  // compiled spec, in clean browsers, stopped there. An earlier attempt's
+  // session is stopped and removed before the run; its published files, the
+  // skill store and the flows are elsewhere and are not touched.
+  const staleSession = path.join(process.env.SITELOOPER_HOME ?? path.join(os.homedir(), '.sitelooper'), 'sessions', runid);
+  if (fs.existsSync(staleSession)) {
+    spawnSync(armBin, ['stop', '--session', runid], { stdio: 'ignore', shell: process.platform === 'win32' });
+    try {
+      fs.rmSync(staleSession, { recursive: true, force: true });
+      console.error(`[sweep] ${runid}: removed the session an earlier attempt under this runid left (browser profile and script) — this run starts clean`);
+    } catch (err) {
+      console.error(`[sweep] ${runid}: could not remove the earlier attempt's session at ${staleSession}: ${err.message} — this run may start in its browser state`);
+    }
+  }
   if (replayOnly) {
     // A spend-capped/incomplete run 1 saves no flow; replaying it anyway
     // writes empty flowrun files that LOOK like runs (swa-n2/n3). Skip with

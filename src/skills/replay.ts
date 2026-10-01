@@ -1,7 +1,7 @@
 import { changedCreation, dispatchesFirstMatch, isMutatingAction, isReadAction, runStepLifecycle, spansEveryMatch, type StepActionResult } from '../execution/lifecycle.js';
 import { outcomeLabel, outcomeOfError, urlHeldStill, type ActionOutcome } from '../execution/browser.js';
 import { inFlightRequests, type ActionExpectation } from '../execution/action.js';
-import { IDENTITY_POLL_MS, IDENTITY_WAIT_MS, SOFT_MATCH_MIN_SIMILARITY, alertVerdict, errorPageVerdict, gotoLandingVerdict, isErrorPageUrl, landedOnRecordedPage, markersBound, preconditionVerdict, retargetNavigation, segmentGate, fillableChain, leftByLink, linkLandingWarning, unfilledStepVerdict, urlEffectVerdict, urlRecordParts } from '../execution/gates.js';
+import { IDENTITY_POLL_MS, IDENTITY_WAIT_MS, SOFT_MATCH_MIN_SIMILARITY, alertVerdict, detourGiven, errorPageVerdict, gotoLandingVerdict, isErrorPageUrl, landedOnRecordedPage, markersBound, preconditionVerdict, retargetNavigation, segmentGate, fillableChain, leftByLink, linkLandingWarning, unfilledStepVerdict, urlEffectVerdict, urlRecordParts } from '../execution/gates.js';
 import type { UrlSegDiff } from '../execution/url.js';
 import { emptyFacts } from '../execution/facts.js';
 import { landingVerdictWithFacts, preconditionVerdictWithFacts } from '../execution/facts-route.js';
@@ -2192,11 +2192,14 @@ const errorPage: StepGate = ({ page, tag }) => {
  * gotoLandingVerdict, decided by a reliable site fact where one bears on a
  * disputed key: landingVerdictWithFacts, as the artifact asks it).
  */
-const gotoLanding: StepGate = ({ page, step, args, tag, facts }) => {
+const gotoLanding: StepGate = ({ page, step, args, params, tag, facts }) => {
   if (step.tool !== 'goto' || typeof args.url !== 'string') return null;
   const landed = page.url();
-  const stop = landingVerdictWithFacts(facts?.snapshot(landed) ?? emptyFacts(originOf(landed) ?? ''), args.url, landed, `step ${tag}`);
-  if (facts) facts.landing(args.url, landed, gotoLandingVerdict(args.url, landed, `step ${tag}`) !== null, `goto step ${tag}`, true);
+  // What the recording watched the app answer this goto with, in this run's
+  // values (SkillStep.landedAs): that landing is the recorded view.
+  const recorded = step.landedAs ? (fillParamsDeep(step.landedAs, params) as Record<string, string>) : {};
+  const stop = landingVerdictWithFacts(facts?.snapshot(landed) ?? emptyFacts(originOf(landed) ?? ''), args.url, landed, `step ${tag}`, recorded);
+  if (facts) facts.landing(args.url, landed, gotoLandingVerdict(args.url, landed, `step ${tag}`, recorded) !== null, `goto step ${tag}`, true);
   return stop ? { stop } : null;
 };
 
@@ -2620,6 +2623,31 @@ export function renderReplay(skill: Skill, res: ReplayResult): string {
   }
   if (res.warnings.length) lines.push(`notes: ${res.warnings.join('; ')}`);
   return lines.join('\n');
+}
+
+/**
+ * The next segment of a chain to RUN, from `index` on, with every detour
+ * segment that has nothing to do on this run passed over (Skill.detour, the
+ * shared detourGiven): the browser is on the page the recording's redirected
+ * goto had asked for, not on the page the detour starts from. The LAST
+ * segment is never passed over — something must end the chain and carry its
+ * report — and a segment that is no detour, or whose start page the browser
+ * is on, is returned to be run and gated as ever. `next` is undefined when
+ * the chain has no segment at the index reached (a store missing one).
+ */
+export function pastDetours(
+  segmentAt: (index: number) => Skill | undefined,
+  index: number,
+  url: string,
+  params: Record<string, string>,
+): { next: Skill | undefined; skipped: Skill[] } {
+  const skipped: Skill[] = [];
+  let next = segmentAt(index);
+  while (url && next?.detour && next.seq && next.seq.index < next.seq.of - 1 && detourGiven(next.detour.asked, next.preconditions.urlPattern, url, params)) {
+    skipped.push(next);
+    next = segmentAt(next.seq.index + 1);
+  }
+  return { next, skipped };
 }
 
 /**
