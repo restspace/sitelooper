@@ -143,6 +143,13 @@ export interface SpecSegment {
    * see them.
    */
   report?: { summary: string; values: Record<string, string> };
+  /**
+   * `Skill.detour`, verbatim: this segment is the way back from where the app
+   * sent the goto before it to the page that goto asked for. The emitter
+   * guards the whole segment with the shared detourGiven, where the daemon's
+   * chain walk asks it (replay.ts pastDetours).
+   */
+  detour?: { asked: string };
 }
 
 /**
@@ -189,6 +196,8 @@ function toSegment(skill: Skill, goalBearing = false, last = false): SpecSegment
   if (skill.preconditions.requireText?.length) seg.preconditions.requireText = skill.preconditions.requireText;
   if (isFingerprintVector(skill.preconditions.fingerprint)) seg.preconditions.fingerprint = skill.preconditions.fingerprint;
   if (skill.derived) seg.derived = skill.derived;
+  // A detour is passed over only between other segments, as the daemon's walk does.
+  if (skill.detour && !last) seg.detour = { asked: skill.detour.asked };
   // The goal travels only where it can be acted on: see SpecSegment.goal.
   if (goalBearing && skill.goal?.requireText?.length) {
     seg.goal = { requireText: [...skill.goal.requireText] };

@@ -64,6 +64,7 @@ function toSkill(spec: SpecFlow, step: SpecStep, seg: SpecSegment, index: number
     provenance: { session: `spec:${spec.name}`, instruction: step.instruction, created: now },
   };
   if (seg.derived) skill.derived = seg.derived;
+  if (seg.detour) skill.detour = { asked: seg.detour.asked };
   // The goal and the report template it needs travel together, and both are
   // part of the procedure rather than bookkeeping: a repair that lowered a
   // spec, replayed it and re-emitted would otherwise drop the "already

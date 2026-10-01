@@ -2419,7 +2419,12 @@ function emitSkillStep(recorded: SkillStep, segment: SpecSegment, index: number,
     // when this segment's volatility evidence redirected it, as replay judges
     // its own (mutated) `args.url`.
     const sent = nav ? `${nav}.url` : src(step.args.url);
-    checks.push(`{ const landed = page.url(); const landing = landingVerdictWithFacts(siteFactsAt(landed), ${sent}, landed, ${q(where)}); if (landing) throw new Error(landing); }`);
+    // What the recording watched the app answer this goto with, in this run's
+    // values (SkillStep.landedAs): handed to the verdict as replay hands it.
+    const landedAs = Object.entries(step.landedAs ?? {});
+    noteSlots(step.landedAs ?? {}, ctx);
+    const recorded = landedAs.length ? `, { ${landedAs.map(([key, value]) => `${q(key)}: ${src(value)}`).join(', ')} }` : '';
+    checks.push(`{ const landed = page.url(); const landing = landingVerdictWithFacts(siteFactsAt(landed), ${sent}, landed, ${q(where)}${recorded}); if (landing) throw new Error(landing); }`);
   }
   effectLines(step, ctx, checks, observed);
   // A read raises no alert of its own (replay exempts it), unless the
@@ -4111,7 +4116,25 @@ export function emitFlowFile(spec: SpecFlow, o: EmitOptions): { source: string; 
       const ledgerAt = lines.length;
       for (const [i, segment] of step.segments.entries()) {
         if (i) lines.push('');
-        lines.push(...emitSegment(segment, ctx));
+        const body = emitSegment(segment, ctx);
+        // A detour segment with nothing to do on this run is passed over
+        // (SpecSegment.detour): the shared detourGiven, asked before the
+        // segment's first step as the daemon's chain walk asks it (replay.ts
+        // pastDetours). Never the first or the last segment — the daemon
+        // reaches a detour only by walking on from an earlier one, and the
+        // last one ends the chain.
+        if (segment.detour && i > 0 && i < step.segments.length - 1) {
+          noteSlots(segment.detour.asked, ctx);
+          noteSlots(segment.preconditions.urlPattern, ctx);
+          lines.push(
+            `// ${segment.id} is the detour the recording took when the goto before it was sent elsewhere: skipped when this run's goto was given the page it asked for.`,
+            `if (detourGiven(${q(segment.detour.asked)}, ${q(segment.preconditions.urlPattern)}, page.url(), p)) {`,
+            `  logWarning(${q(`${step.id} `)} + detourSkippedNote(${q(segment.id)}, ${q(segment.detour.asked)}, page.url()));`,
+            '} else {',
+            ...body.map((line) => (line ? `  ${line}` : line)),
+            '}',
+          );
+        } else lines.push(...body);
       }
       const templated = reportTemplateLines(step, ctx, consumed);
       if (templated.length) lines.push('', ...templated);

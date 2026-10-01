@@ -66,6 +66,25 @@ export interface Skill {
    */
   seq?: { chain: string; index: number; of: number };
   /**
+   * This chain segment is a DETOUR the recording took because the app sent a
+   * goto somewhere else: the segment before it ends in a goto addressed to
+   * `asked`, the app landed that goto on this segment's start page instead,
+   * and this segment's steps end back on the page the goto asked for — where
+   * the next segment starts (compile.ts detourOf). fwen3-luna-n1's sign-in
+   * was recorded in a browser that was already signed in: `goto /login` was
+   * redirected to `/app/home`, the agent logged out (this segment) and signed
+   * in. On a browser that is NOT signed in the same goto is given `/login`,
+   * and the log-out has nothing to act on — both replays and the compiled
+   * spec stopped there ("expects …/app/home, browser is at …/login").
+   *
+   * Both runners skip the segment when the browser is on the page the goto
+   * asked for and not on the page this segment starts from (gates.ts
+   * detourGiven); the next segment's own gate still judges the page. On the
+   * page the recording was sent to, it runs as recorded. Optional: a build
+   * that ignores it refuses at this segment's start gate, as before.
+   */
+  detour?: { asked: string };
+  /**
    * Values this procedure MINTS while running (a created record's id, a
    * generated uid), keyed by their {{dN}} marker: after `step` executes,
    * replay reads url part `at` (urlParts label) from the live page and binds
@@ -388,6 +407,19 @@ export interface SkillStep {
    * Optional: a build that ignores it stops there, as before.
    */
   doubledAsRecorded?: true;
+  /**
+   * A goto the app ANSWERED WITH ANOTHER VALUE at a key it was asked for, in
+   * the recording itself: per query (or hash-state) key both urls carry, the
+   * value the recorded landing held where it differed from the one the goto
+   * sent, slotted as the url is (compile.ts recordedLanding). ERPNext rewrites
+   * `?customer_name==X` to `?customer_name=["like","%=X%"]`, on every run:
+   * the recording worked on that landing, and fwen3-luna-n2's 03-create was
+   * stopped on the same one as "another view". Both runners hand it, filled,
+   * to the landing verdict (gates.ts gotoLandingVerdict), which then takes
+   * exactly that value at that key as the page the goto was given — and any
+   * other value as before. Optional: a build that ignores it stops there.
+   */
+  landedAs?: Record<string, string>;
   expect?: StepExpectation;
   /** For read/read_all steps: which report value this read supplied, if any. */
   label?: string;

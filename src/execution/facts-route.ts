@@ -170,7 +170,7 @@ interface LandingDecision {
   message: string | null;
 }
 
-function landingDecision(sf: SiteFacts, target: string, landed: string, where: string): LandingDecision | null {
+function landingDecision(sf: SiteFacts, target: string, landed: string, where: string, recorded: Readonly<Record<string, string>> = {}): LandingDecision | null {
   const t = urlShapeOf(target);
   const l = urlShapeOf(landed);
   if (!t || !l || t.origin !== l.origin) return null;
@@ -182,7 +182,7 @@ function landingDecision(sf: SiteFacts, target: string, landed: string, where: s
   const decided = [...kinds.values()].some((v) => v === 'state' || v === 'routing');
   const split = oneSided.filter((k) => kinds.get(k) === 'routing' && (literal(keyValue(t, k)) || literal(keyValue(l, k))));
   const asked = rewriteQuery(target, (k, v) => (kinds.get(k) === 'state' ? null : v));
-  const byRule = gotoLandingVerdict(asked, landed, where);
+  const byRule = gotoLandingVerdict(asked, landed, where, recorded);
   let message = byRule;
   if (message === null && split.length) {
     const said = split.map((k) => `${k}=${shown40(keyValue(l, k))} where it was sent to ${k}=${shown40(keyValue(t, k))}`).join(', ');
@@ -208,11 +208,13 @@ export function landingByFacts(sf: SiteFacts, target: string, landed: string): {
  * a reliable `route.query` fact decides a key the two urls dispute — then the
  * facts' verdict (landingByFacts), its stop written as gotoLandingVerdict
  * would write it and prefixed "by fact: ". Byte-identical to
- * gotoLandingVerdict when no reliable fact decides.
+ * gotoLandingVerdict when no reliable fact decides. `recorded` is the
+ * landing the recording watched this goto get (gotoLandingVerdict), handed
+ * to the rule on either path.
  */
-export function landingVerdictWithFacts(sf: SiteFacts, target: string, landed: string, where: string): string | null {
-  const d = landingDecision(sf, target, landed, where);
-  if (!d || !d.decided) return gotoLandingVerdict(target, landed, where);
+export function landingVerdictWithFacts(sf: SiteFacts, target: string, landed: string, where: string, recorded: Readonly<Record<string, string>> = {}): string | null {
+  const d = landingDecision(sf, target, landed, where, recorded);
+  if (!d || !d.decided) return gotoLandingVerdict(target, landed, where, recorded);
   return d.message === null ? null : `by fact: ${d.message}`;
 }
 
