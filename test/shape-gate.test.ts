@@ -277,8 +277,9 @@ const ALLOWLIST: Record<string, { hits: string[]; answers: string }> = {
   },
   'src/execution/fingerprint.ts': { hits: ['[0-9a-f]{6'], answers: 'CLASS_HASH_HEX_RUN, page-side (decision 3C)' },
   'src/execution/url.ts': {
-    hits: ['[0-9a-f]{8'],
-    answers: 'mintedShape, whether a disagreeing url segment may be generalised at all — the generatedToken arm of shape.ts restated, because a module the artifact embeds may import nothing',
+    hits: ['[0-9a-f]{8', '[0-9A-Fa-f]{2'],
+    answers:
+      'mintedShape, whether a disagreeing url segment may be generalised at all — the generatedToken arm of shape.ts restated, because a module the artifact embeds may import nothing; and safeDecode\'s percent-escape `%XX` (syntax, RFC 3986), decoding what decodeURIComponent rejects whole',
   },
   'src/daemon/recorder.ts': {
     hits: ['[0-9a-f]{8', '[0-9a-z]{1', '[0-9a-z]{1'],

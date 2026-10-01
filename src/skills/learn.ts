@@ -1173,7 +1173,18 @@ export const MAX_STRAY_GESTURES_FOR_PIN = 2;
 export function mutates(store: SkillStore, id: string | undefined): boolean {
   const skill = id ? store.get(id) : null;
   if (!skill) return false;
-  return mutatesSteps(skill.steps);
+  if (mutatesSteps(skill.steps)) return true;
+  // A procedure is its CHAIN from this segment on: a pin names a chain's
+  // head, and replay runs every segment after it. fwen2-luna's adopted
+  // 04-create recovered cleanly on n2 and n3 and never graduated, because
+  // the chain its recovery compiled (s_2ee388: `goto /app/sales-order/new`,
+  // then the fills and the save, then the reads) was judged by its head
+  // alone — one goto, "read-only" — and canAdoptPin silently refused a
+  // read-only procedure for a step that asks to create something. The step
+  // stayed model-first on every replay and the compile had no procedure.
+  if (!skill.seq || !store.list) return false;
+  const { chain, index } = skill.seq;
+  return store.list(skill.origin).some((s) => s.seq?.chain === chain && (s.seq.index ?? 0) > index && mutatesSteps(s.steps));
 }
 
 /**

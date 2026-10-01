@@ -1436,6 +1436,8 @@ export function compileSkills(input: CompileInput): Skill[] {
   };
 
   const compiled = built.map((b, k) => {
+    const markers = identityOf(b.sg.startText, markerSlotsOf(b), knownVals, writtenSlots(b.folded));
+    anchorMarkerValues(b.folded, markers, (s) => b.recordedDiffs.get(s), textSlots, b.notes);
     const params: Record<string, SkillParam> = {};
     for (const name of keptSlots.keys()) {
       const value = keptSlots.get(name) ?? '';
@@ -1455,9 +1457,7 @@ export function compileSkills(input: CompileInput): Skill[] {
         // marker in the pattern would read as a wildcard segment.
         urlPattern: urlPattern(b.sg.startUrl, new Map([...keptSlots, ...b.mintedForStart])),
         ...(b.sg.fingerprint ? { fingerprint: b.sg.fingerprint } : {}),
-        ...(identityOf(b.sg.startText, markerSlotsOf(b), knownVals, writtenSlots(b.folded)).length
-          ? { requireText: identityOf(b.sg.startText, markerSlotsOf(b), knownVals, writtenSlots(b.folded)) }
-          : {}),
+        ...(markers.length ? { requireText: markers } : {}),
       },
       // Only the LAST segment finishes the work, so only it can vouch for the
       // end state — an earlier segment carrying the goal would let a chain be
@@ -3545,6 +3545,63 @@ export function unfreezeExpectations(
   if (watched && !notes.some((n) => n.name === 'unfreezeExpectations')) {
     notes.push({ name: 'unfreezeExpectations', at: 1, reason: `${watched} expectation line(s) carried a name this recording watched change` });
   }
+}
+
+/**
+ * The half of maskForeignValue's rule that the procedure's own preconditions
+ * overrule. A control's displayed value that this step did not type is the
+ * app's, and is wildcarded (fwod49) — unless the value is one of the
+ * segment's identity markers (`preconditions.requireText`): compile has
+ * already judged that value to name what this procedure works on, on the
+ * evidence that the page showed it before the work and nothing in the
+ * procedure writes it (identityOf). A control revealing it is then the
+ * procedure's own evidence that it reached that thing, and the line keeps
+ * the slot, which makes it HARD (expect.ts changesVerdict).
+ *
+ * fwen2-luna's 05-edit is why. The recording opened row 1 of the order's
+ * Items grid by clicking its qty cell, and the editor that opened showed
+ * `- combobox "Item Code": Bench Widget` — {{v2}}, an identity marker of the
+ * skill — before it set that row's qty to 3 and added Bench Gadget x2. The
+ * line was stored as `: {{*}}`, so on n2 and n3, whose 04-create had put
+ * Bench Gadget in row 1, the click opened a Gadget row, every line still
+ * matched, the qty went onto the wrong item, and the step reported success
+ * at tier A with the order holding "Bench Gadget x3; Bench Gadget x2". The
+ * identity gate had warned the marker was missing and proceeded on the url.
+ *
+ * Only a whole-value slot at an editable role, and only where the wildcarded
+ * line is still there to replace: nothing is added that the recording's
+ * expectation did not already carry in looser form.
+ */
+export function anchorMarkerValues(
+  steps: SkillStep[],
+  markers: readonly string[],
+  diffOf: (step: SkillStep) => StepDiff | undefined,
+  slots: Map<string, string>,
+  notes: TransformNote[],
+): number {
+  const names = new Set(markers.map((m) => /^\{\{(v\d+)\}\}$/.exec(m)?.[1]).filter((n): n is string => Boolean(n)));
+  if (!names.size) return 0;
+  let changed = 0;
+  steps.forEach((step, si) => {
+    const lines = step.expect?.addedContains;
+    const diff = diffOf(step);
+    if (!lines?.length || !diff || NAVIGATION_TOOLS.has(step.tool)) return;
+    for (const raw of diff.added) {
+      if (TRANSIENT_LINE.test(raw)) continue;
+      const line = maskMinted(maskVolatile(substitute(raw, slots)));
+      if (maskPopupItem(line) !== line) continue;
+      const m = /^-?\s*(textbox|searchbox|spinbutton|combobox)\b[^:]*:\s*\{\{(v\d+)\}\}\s*$/.exec(line.trim());
+      if (!m || !names.has(m[2])) continue;
+      const loose = maskForeignValue(line, []).slice(0, 120);
+      const at = lines.indexOf(loose);
+      const firm = line.slice(0, 120);
+      if (at < 0 || firm === loose || lines.includes(firm)) continue;
+      lines[at] = firm;
+      changed += 1;
+      notes.push({ name: 'anchorMarkerValues', at: si + 1, reason: `a control showed the identity marker {{${m[2]}}} this procedure works on: ${JSON.stringify(loose)} → ${JSON.stringify(firm)}` });
+    }
+  });
+  return changed;
 }
 
 /**
