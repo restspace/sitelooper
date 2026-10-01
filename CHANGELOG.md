@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.5.1 — unreleased
+
+### Compile
+- A read's kind (`what`) and attribute, a wait's state, a click's modifiers and a dialog's answer
+  are never slotted, even when a value the run reported spells the same word. EspoCRM fwec17
+  reported a field value "text", and compile turned every later read's `what: "text"` into
+  `{{v4}}` and refused the spec; a replay would have read whatever the next run's field held.
+  Skills stored with such a slot are repaired when loaded.
+
 ## 0.5.0 — 2026-09-30
 
 ### Site facts
@@ -40,8 +49,6 @@
 - A choice made by an attempt that failed but stuck is carried into the instruction that
   relied on it.
 - `compile` never wildcards inside a `{{…}}` marker, nor on a punctuation-only published value.
-- An element named by a template (`what={{vN}}`) is refused with a named reason rather than
-  compiled into a read that would come back blank.
 
 ### Recording
 - A journal of network, page and navigation events is kept while recording (off with
@@ -62,7 +69,7 @@
 - The September 2026 matrix, ten apps on cloud boxes against reset instances, scored by each
   app's own database or API: every sitelooper run verified every objective (30 of 30), every
   replay ran with zero model turns, and nine of ten compiled specs pass. EspoCRM's refused
-  (templated element, above). Detail in `bench/RESULTS.md` and `bench/MATRIX-2026-09.md`.
+  (a compile bug, fixed in 0.5.1). Detail in `bench/RESULTS.md` and `bench/MATRIX-2026-09.md`.
 
 
 ## 0.4.1 — 2026-09-23

@@ -115,9 +115,13 @@ A target is **green** for sitelooper only when all three hold:
 - the compiled script compiles and passes, with at most report-only objectives unverifiable.
 
 Nine of ten targets were green in this batch. EspoCRM met the first two conditions but not the
-third: its 07-open step reads three values through an element named by a template
-(`what={{v4}}`), which the replayer resolves at run time but a standalone spec cannot, so compile
-refuses rather than emit reads that would come back blank. That gap is open.
+third: compile refused 07-open's three reads as `what={{v4}}`. That was a compile bug, not a
+limit of standalone specs: 06-open had reported a value that was the word "text", and compile
+slotted that word into the reads' `what: "text"`. Fixed in `19d133bd` (control args are never
+slotted, and stored skills are repaired on load); the published fwec17 store now compiles. The
+re-sweep (fwec18-luna) verified 7/7 on every run but is not green either: its recording retried a
+failing Save five times, the replays' first Save succeeded and stopped on the recorded url, and
+compile refused the demoted skill. See [MATRIX-2026-09.md](MATRIX-2026-09.md).
 
 Report-only objectives ask the run to state a value in its final report. A compiled spec writes no
 report, so they are unverifiable for the compiled arm and are shown as "+ 2 report-only". The
