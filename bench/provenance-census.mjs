@@ -40,7 +40,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.resolve(HERE, '..');
 const PUB = 'bench/results-published';
-const APPS = ['rd', 'od', 'gr', 'kb', 'op', 'gt', 'vk', 'ec', 'si', 'gh'];
+const APPS = ['rd', 'od', 'gr', 'kb', 'op', 'gt', 'vk', 'ec', 'si', 'gh', 'en'];
 
 const argv = process.argv.slice(2);
 const opt = (name) => {
@@ -97,7 +97,7 @@ function untar(buf, destDir) {
 function parseBranch(name) {
   const short = name.replace(/^.*?results\//, '');
   const runid = short.split('-')[0];
-  const m = /^fw(rd|od|gr|kb|op|gt|vk|ec|si|gh)(\d*)$/.exec(runid);
+  const m = /^fw(rd|od|gr|kb|op|gt|vk|ec|si|gh|en)(\d*)$/.exec(runid);
   return m ? { ref: `refs/remotes/origin/results/${short}`, short, runid, app: m[1], num: m[2] ? Number(m[2]) : 0 } : null;
 }
 
@@ -124,7 +124,7 @@ function sweepVerdicts() {
   for (const line of text.split('\n')) {
     if (!line.startsWith('|')) continue;
     const cells = line.split('|').map((c) => c.trim());
-    const runid = cells.find((c) => /^fw(rd|od|gr|kb|op|gt|vk|ec|si|gh)\d+$/.test(c));
+    const runid = cells.find((c) => /^fw(rd|od|gr|kb|op|gt|vk|ec|si|gh|en)\d+$/.test(c));
     if (!runid) continue;
     const green = /^(\*\*yes\*\*|yes\*?)$/i.test(cells[cells.length - 3] ?? '');
     out.set(runid, { round: cells[1], green });

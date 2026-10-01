@@ -15,7 +15,7 @@
  * the compiler was willing to ship an artifact, not that the artifact passes.
  *
  * Usage:
- *   node bench/corpus-check.mjs [--apps rd,od,gr,kb,op,gt,vk,ec,si,gh] [--limit N] [--since fwrd50]
+ *   node bench/corpus-check.mjs [--apps rd,od,gr,kb,op,gt,vk,ec,si,gh,en] [--limit N] [--since fwrd50]
  *                               [--jobs 2] [--baseline <file>] [--out <file>]
  *                               [--at <commit>] [--no-fetch] [--compile-only]
  *                               [--quiet]
@@ -132,13 +132,13 @@ function untar(buf, destDir) {
 // enumerate
 // ---------------------------------------------------------------------------
 
-const APPS = ['rd', 'od', 'gr', 'kb', 'op', 'gt', 'vk', 'ec', 'si', 'gh'];
+const APPS = ['rd', 'od', 'gr', 'kb', 'op', 'gt', 'vk', 'ec', 'si', 'gh', 'en'];
 
 /** `results/fwrd69-hh6jhj` → { runid: 'fwrd69', app: 'rd', num: 69 }. */
 function parseBranch(name) {
   const short = name.replace(/^.*?results\//, '');
   const [runid, ...rest] = short.split('-');
-  const m = /^fw(rd|od|gr|kb|op|gt|vk|ec|si|gh)(\d*)$/.exec(runid);
+  const m = /^fw(rd|od|gr|kb|op|gt|vk|ec|si|gh|en)(\d*)$/.exec(runid);
   if (!m) return null;
   // Only a re-publish suffix (a 6-char id the cloud appends) repeats a runid.
   // A named suffix is a different experiment on the same recording — the

@@ -80,4 +80,12 @@ export const APP_DEFAULTS = {
     APP_EMAIL: 'admin@bench.local',
     APP_PASSWORD: 'bench-admin-pass',
   },
+  // create-site gives Administrator this password (bench new-site
+  // --admin-password) and seed.sh completes the Setup Wizard, so a sign-in
+  // lands on the desk. Frappe's login field takes the user name as well as an email.
+  erpnext: {
+    APP_URL: 'http://127.0.0.1:8100/',
+    APP_EMAIL: 'Administrator',
+    APP_PASSWORD: 'bench-admin-pass',
+  },
 };

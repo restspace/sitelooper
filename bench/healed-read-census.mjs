@@ -29,7 +29,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.resolve(HERE, '..');
 const PUB = 'bench/results-published';
-const APPS = ['rd', 'od', 'gr', 'kb', 'op', 'gt', 'vk', 'ec', 'si', 'gh'];
+const APPS = ['rd', 'od', 'gr', 'kb', 'op', 'gt', 'vk', 'ec', 'si', 'gh', 'en'];
 const argv = process.argv.slice(2);
 const opt = (name) => {
   const i = argv.indexOf(name);
@@ -84,7 +84,7 @@ function branches() {
   const byRunid = new Map();
   for (const ref of refs.sort()) {
     const runid = ref.replace(/^.*?results\//, '').split('-')[0];
-    const m = /^fw(rd|od|gr|kb|op|gt|vk|ec|si|gh)(\d*)$/.exec(runid);
+    const m = /^fw(rd|od|gr|kb|op|gt|vk|ec|si|gh|en)(\d*)$/.exec(runid);
     if (m) byRunid.set(runid, { ref, runid, app: m[1], num: Number(m[2] || 0) });
   }
   return [...byRunid.values()].filter((e) => !apps || apps.has(e.app)).sort((a, b) => (a.app === b.app ? a.num - b.num : APPS.indexOf(a.app) - APPS.indexOf(b.app)));
@@ -95,7 +95,7 @@ function sweepVerdicts() {
   for (const line of fs.readFileSync(path.join(REPO, 'bench/SWEEPS.md'), 'utf8').split('\n')) {
     if (!line.startsWith('|')) continue;
     const cells = line.split('|').map((c) => c.trim());
-    const runid = cells.find((c) => /^fw(rd|od|gr|kb|op|gt|vk|ec|si|gh)\d+$/.test(c));
+    const runid = cells.find((c) => /^fw(rd|od|gr|kb|op|gt|vk|ec|si|gh|en)\d+$/.test(c));
     if (runid) out.set(runid, { round: cells[1], green: /^(\*\*yes\*\*|yes\*?)$/i.test(cells[cells.length - 3] ?? '') });
   }
   return out;
