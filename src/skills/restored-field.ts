@@ -43,12 +43,12 @@ const SETS = new Set(['fill', 'type']);
 /** Kept inside a dropped detour: a read may publish a value the report uses. */
 const KEEP_IN_DETOUR = new Set(['read', 'read_all']);
 
-function allEvents(steps: readonly RecordedStep[]): JournalEvent[] {
+export function allEvents(steps: readonly RecordedStep[]): JournalEvent[] {
   return steps.flatMap((s) => [...(s.journal?.ev ?? []), ...(s.journal?.gap?.ev ?? [])]);
 }
 
 /** The events a step caused: in its window, or late from it. */
-function caused(step: RecordedStep, events: readonly JournalEvent[]): JournalEvent[] {
+export function caused(step: RecordedStep, events: readonly JournalEvent[]): JournalEvent[] {
   const w = step.journal?.w;
   if (w === undefined) return [];
   return events.filter((e) => (e.c?.[0] === 'in' || e.c?.[0] === 'late') && e.c[1] === w);
@@ -57,13 +57,13 @@ function caused(step: RecordedStep, events: readonly JournalEvent[]): JournalEve
 /** A named field (`textbox "Asset Tag"`); an unnamed one cannot be told from its neighbours. */
 const named = (f: unknown): f is string => typeof f === 'string' && /"[^"]+"$/.test(f);
 
-const isWrite = (e: JournalEvent) => e.k === 'req' && WRITES.has(String(e.m));
+export const isWrite = (e: JournalEvent) => e.k === 'req' && WRITES.has(String(e.m));
 const status = (e: JournalEvent) => (typeof e.s === 'number' ? e.s : undefined);
-const succeeded = (e: JournalEvent) => {
+export const succeeded = (e: JournalEvent) => {
   const s = status(e);
   return s !== undefined && s >= 200 && s < 400;
 };
-const refused = (e: JournalEvent) => {
+export const refused = (e: JournalEvent) => {
   const s = status(e);
   return s !== undefined && s >= 400 && s < 500;
 };
