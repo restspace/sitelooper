@@ -863,3 +863,11 @@ gt15-cv3 by repair) · compile fixed, artifact passes Playwright, verifier 5/6 1
 in the start-url pattern 1 (si; a site fact, stage 1) · non-deterministic step then fixed 1 (op15-cv → op15-cv3) ·
 inconclusive on a driver choice, since re-run 2 (gt, si cv2) · driver parse miss over a step that would not re-pin 1 (vk). Cost of a converged run stays 2 flow runs / ≤46 turns; a
 wrong step choice costs 9-16 flow runs and 59-207 turns, which is why the choice rule matters more than the round cap.
+
+## ERPNext, target eleven (main 79f78efa, 2026-10-01)
+
+ERPNext v15.121.5 (Frappe desk) on :8100, onboarded without a local stack; fwen1 was also its smoke test: setup, seed, reset and verifier all worked first time. Luna flags as fwec19-luna.
+
+| runid | app | verified | replay model-free | compiled | green | n1 USD | notes |
+|---|---|---|---|---|---|---|---|
+| fwen1-luna | en | 7/7, 2/7, 7/7 | no (n2 72 turns, halted; n3 40 turns) | FAIL at 02-find (0/7) | no | 0.043 | n1 7/7 in 6 commands, 400s. Four new-idiom gaps: (1) Frappe mints a random new-doc url `/app/sales-order/new-sales-order-<10 chars>` per form (and `/app/customer/new` redirects to `new-customer-<10>`); the start gate froze n1's slug, so 03-create and 04-create were "not on the page this procedure starts from" on both replays (n2 04-create then ran out of turns before Save → 5 objectives fail). (2) 02-find's expectation `button "{{*}} Filter Applied"` could not be confirmed: "capture incomplete (the element cap was reached (4000 walked))" on the list page, n3 and the compiled spec alike. (3) n2 02-find: the recorded `Seed: Cobalt Retail` link was absent — ERPNext persists list filters/sort per user (__UserSettings), so a replay starts on the recording's leftover list state; the reset should clear it. (4) n2 03-create: Awesomplete's live-region text "Begin typing for results." read as an alert the recording never saw |
