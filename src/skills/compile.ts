@@ -17,6 +17,7 @@ import { recordedDoubled } from '../execution/refill.js';
 import { collapseTogglePairs, dropSupersededSets, sameControl } from './toggles.js';
 import { namedHighlightPicks } from './highlight-pick.js';
 import { dropRestoredDetours } from './restored-field.js';
+import { dropRetriedSubmits } from './retried-submit.js';
 import { locatingSlots, scopeReadBySlot } from './readscope.js';
 import { keyPicks } from './key-pick.js';
 import type { ShadowRow } from './shadow.js';
@@ -822,7 +823,7 @@ export function compileSkills(input: CompileInput): Skill[] {
   // whose value the run actually reported; drop the rest.
   /** What the recording-level passes dropped, noted on the first segment (built below). */
   const recordingNotes: TransformNote[] = [];
-  const replayable = dropSupersededSets(collapseTogglePairs(expandListReads(dropEvalAssignedCandidates(creditUncreditedPopups(dropRestoredDetours(namedHighlightPicks(steps)), recordingNotes), recordingNotes), reportValues))).filter((step) => {
+  const replayable = dropSupersededSets(collapseTogglePairs(expandListReads(dropEvalAssignedCandidates(creditUncreditedPopups(dropRetriedSubmits(dropRestoredDetours(namedHighlightPicks(steps))), recordingNotes), recordingNotes), reportValues))).filter((step) => {
     if (step.tool === 'screenshot' || step.tool === 'eval') return false;
     // A bare tab listing (`tabs` with no switch_to) is the agent looking, like
     // a screenshot: it changes nothing and publishes nothing. openproject
