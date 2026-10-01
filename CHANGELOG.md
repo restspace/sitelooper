@@ -8,6 +8,12 @@
   reported a field value "text", and compile turned every later read's `what: "text"` into
   `{{v4}}` and refused the spec; a replay would have read whatever the next run's field held.
   Skills stored with such a slot are repaired when loaded.
+- A submit the recording had to retry compiles to the attempt that took. When a Save was
+  refused in the browser (no request sent, the url held), the same values were entered again and
+  a later Save's request succeeded carrying them, the refused attempts and the superseded
+  refills are dropped (EspoCRM fwec18: four refused Saves; on replay the first Save took at once
+  and the step stopped on the record's page). Decided from the recorder's network journal only;
+  a recording without one compiles as before.
 
 ## 0.5.0 — 2026-09-30
 
