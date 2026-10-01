@@ -1,0 +1,346 @@
+{
+  "name": "fwec18-luna",
+  "origin": "http://127.0.0.1:8097",
+  "startUrl": "http://127.0.0.1:8097/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-signin",
+      "instruction": "Sign in to EspoCRM at http://127.0.0.1:8097/ using username admin and password exactly {{env:APP_PASSWORD}}. Verify that the CRM is signed in and report the resulting page.",
+      "skill": "s_c088f6",
+      "params": {
+        "v1": "http://127.0.0.1:8097/",
+        "v2": "admin",
+        "v3": "{{env:APP_PASSWORD}}"
+      },
+      "outputs": [
+        "dashlet_1_title",
+        "dashlet_2_title",
+        "post_login_url",
+        "screenshots",
+        "username",
+        "resulting_page",
+        "dashboard_url"
+      ],
+      "recorded": {
+        "dashlet_1_title": "Stream",
+        "dashlet_2_title": "My Activities",
+        "login_verified_by": "user menu showed 'Admin / Administration / Preferences / About / Log Out' (Log Out present; Administration is admin-only)",
+        "post_login_url": "http://127.0.0.1:8097/",
+        "screenshots": "espo_home.png, espo_user_menu.png",
+        "username": "admin",
+        "resulting_page": "EspoCRM home dashboard with Stream and My Activities dashlets",
+        "dashboard_url": "http://127.0.0.1:8097/",
+        "url": "http://127.0.0.1:8097/"
+      },
+      "route": "http://127.0.0.1:8097/",
+      "outputEvidence": {
+        "dashlet_1_title": {
+          "same": 2,
+          "differed": 0
+        },
+        "dashlet_2_title": {
+          "same": 2,
+          "differed": 0
+        },
+        "login_verified_by": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "post_login_url": {
+          "same": 2,
+          "differed": 0
+        },
+        "screenshots": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "username": {
+          "same": 0,
+          "differed": 2
+        },
+        "resulting_page": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "dashboard_url": {
+          "same": 2,
+          "differed": 0
+        },
+        "url": {
+          "same": 2,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "02-report",
+      "instruction": "In EspoCRM, inspect the Opportunities list and report the exact names of all opportunities whose name starts with 'Seed:'. Do not modify them.",
+      "skill": "s_78c893",
+      "params": {},
+      "outputs": [
+        "seed_opportunity_name_1",
+        "seed_opportunity_name_2",
+        "seed_opportunity_name_3",
+        "opportunities_starting_with_Seed_1",
+        "opportunities_starting_with_Seed_2",
+        "opportunities_starting_with_Seed_3"
+      ],
+      "recorded": {
+        "list_total_records": "3 (pagination shows \"1–3 / 3\")",
+        "seed_opportunity_name_1": "Seed: training package",
+        "seed_opportunity_name_2": "Seed: pilot expansion",
+        "seed_opportunity_name_3": "Seed: annual support renewal",
+        "opportunities_starting_with_Seed_1": "Seed: training package",
+        "opportunities_starting_with_Seed_2": "Seed: pilot expansion",
+        "opportunities_starting_with_Seed_3": "Seed: annual support renewal",
+        "url": "http://127.0.0.1:8097/#Opportunity"
+      },
+      "route": "http://127.0.0.1:8097/#Opportunity",
+      "outputEvidence": {
+        "list_total_records": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "seed_opportunity_name_1": {
+          "same": 2,
+          "differed": 0
+        },
+        "seed_opportunity_name_2": {
+          "same": 2,
+          "differed": 0
+        },
+        "seed_opportunity_name_3": {
+          "same": 2,
+          "differed": 0
+        },
+        "opportunities_starting_with_Seed_1": {
+          "same": 2,
+          "differed": 0
+        },
+        "opportunities_starting_with_Seed_2": {
+          "same": 2,
+          "differed": 0
+        },
+        "opportunities_starting_with_Seed_3": {
+          "same": 2,
+          "differed": 0
+        },
+        "url": {
+          "same": 2,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "03-create",
+      "instruction": "Create an EspoCRM opportunity named '{{runid}} Bench Opportunity', linked by choosing the actual 'Bench Account' record, with description including '{{runid}}', stage Negotiation, amount 12500 in the default currency, close date 2026-12-31, and assigned user chosen as the actual 'Bench Assignee' record. Save it, then verify the saved opportunity page shows these values and report the exact record URL/ID. Do not alter any Seed opportunities.",
+      "skill": "s_ae5ad9",
+      "params": {
+        "v2": "{{runid}} Bench Opportunity",
+        "v1": "{{runid}}",
+        "v3": "12500",
+        "v4": "2026-12-31",
+        "v7": "Bench Assignee"
+      },
+      "outputs": [
+        "opportunity_id",
+        "opportunity_name",
+        "account",
+        "stage",
+        "amount",
+        "description",
+        "assigned_user",
+        "saved_page_close_date_display",
+        "form_close_date_before_save",
+        "record_url",
+        "amount_before_save",
+        "amount_value"
+      ],
+      "recorded": {
+        "opportunity_id": "6abe1598d0a46f4ec",
+        "opportunity_name": "fwec18-luna-n1 Bench Opportunity",
+        "account": "Bench Account",
+        "stage": "Negotiation",
+        "amount": "$12,500.00",
+        "description": "fwec18-luna-n1",
+        "assigned_user": "Bench Assignee",
+        "saved_page_close_date_display": "Dec 31",
+        "form_close_date_before_save": "2026-12-31",
+        "record_url": "http://127.0.0.1:8097/#Opportunity/view/6abe1598d0a46f4ec",
+        "amount_before_save": "12500",
+        "amount_value": "12,500",
+        "close_date_display": "Dec 31",
+        "url": "http://127.0.0.1:8097/#Opportunity/view/6abe1598d0a46f4ec",
+        "url.h2": "6abe1598d0a46f4ec"
+      },
+      "route": "http://127.0.0.1:8097/#Opportunity/view/:id",
+      "outputEvidence": {
+        "opportunity_id": {
+          "same": 0,
+          "differed": 1,
+          "absent": 1
+        },
+        "opportunity_name": {
+          "same": 0,
+          "differed": 2
+        },
+        "account": {
+          "same": 2,
+          "differed": 0
+        },
+        "stage": {
+          "same": 2,
+          "differed": 0
+        },
+        "amount": {
+          "same": 0,
+          "differed": 2
+        },
+        "description": {
+          "same": 0,
+          "differed": 2
+        },
+        "assigned_user": {
+          "same": 2,
+          "differed": 0
+        },
+        "saved_page_close_date_display": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "form_close_date_before_save": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "record_url": {
+          "same": 0,
+          "differed": 1,
+          "absent": 1
+        },
+        "amount_before_save": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "amount_value": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "close_date_display": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "url": {
+          "same": 0,
+          "differed": 2
+        },
+        "url.h2": {
+          "same": 0,
+          "differed": 2
+        }
+      }
+    },
+    {
+      "id": "04-add",
+      "instruction": "On the saved opportunity '{{runid}} Bench Opportunity' (record URL ending #Opportunity/view/{{03-create.url.h2}}), add a Stream post whose text includes exactly the runid '{{runid}}'. Verify the new post appears in that opportunity's Stream and report its text.",
+      "skill": "s_70d3de",
+      "params": {
+        "v1": "{{runid}} Bench Opportunity",
+        "v3": "{{03-create.url.h2}}",
+        "v4": "Stream",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "post_text",
+        "post_author",
+        "post_timestamp",
+        "opportunity_name",
+        "opportunity_id"
+      ],
+      "recorded": {
+        "post_text": "fwec18-luna-n1",
+        "post_author": "Admin",
+        "post_timestamp": "08:11",
+        "post_note_url": "http://127.0.0.1:8097/#Note/view/6abe15b1e70ddf2a7",
+        "opportunity_name": "fwec18-luna-n1 Bench Opportunity",
+        "opportunity_id": "6abe1598d0a46f4ec"
+      },
+      "route": "http://127.0.0.1:8097/#Opportunity/view/:id",
+      "outputEvidence": {
+        "post_text": {
+          "same": 0,
+          "differed": 2
+        },
+        "post_author": {
+          "same": 2,
+          "differed": 0
+        },
+        "post_timestamp": {
+          "same": 0,
+          "differed": 2
+        },
+        "post_note_url": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "opportunity_name": {
+          "same": 0,
+          "differed": 2
+        },
+        "opportunity_id": {
+          "same": 0,
+          "differed": 2
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "session": "fwec18-luna-n1",
+    "created": "2026-10-01T08:11:50.682Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "01-signin",
+      "outputs": [
+        "login_verified_by"
+      ]
+    },
+    {
+      "stepId": "02-report",
+      "outputs": [
+        "list_total_records"
+      ]
+    },
+    {
+      "stepId": "03-create",
+      "outputs": [
+        "close_date_display"
+      ]
+    },
+    {
+      "stepId": "04-add",
+      "outputs": [
+        "post_note_url"
+      ]
+    }
+  ]
+}

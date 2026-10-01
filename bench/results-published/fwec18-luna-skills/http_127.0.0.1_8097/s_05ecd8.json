@@ -1,0 +1,98 @@
+{
+ "id": "s_05ecd8",
+ "origin": "http://127.0.0.1:8097",
+ "template": "Create an EspoCRM opportunity named '{{v2}}', linked by choosing the actual 'Bench Account' record, with description including '{{v1}}', stage Negotiation, amount {{v3}} in the default currency, close date {{v4}}, and assigned user chosen as the actual '{{v7}}' record. Save it, then verify the saved opportunity page shows these values and report the exact record URL/ID. Do not alter any Seed opportunities.",
+ "params": {
+  "v1": {
+   "example": "fwec18-luna-n3",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v2": {
+   "example": "fwec18-luna-n3 Bench Opportunity",
+   "usedIn": [],
+   "known": true
+  },
+  "v3": {
+   "example": "12500",
+   "usedIn": []
+  },
+  "v4": {
+   "example": "2026-12-31",
+   "usedIn": []
+  },
+  "v7": {
+   "example": "Bench Assignee",
+   "usedIn": []
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8097/#Opportunity"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e161"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#main > div:nth-of-type(1) > div > div:nth-of-type(2) > div > a"
+     },
+     {
+      "kind": "point",
+      "x": 1170,
+      "y": 65,
+      "w": 168.2,
+      "h": 36,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8097/#Opportunity/create",
+    "addedContains": [
+     "- heading \"Opportunitiescreate\"",
+     "- link \"Opportunities\"",
+     "- button \"Ctrl+Enter\"",
+     "- button \"Esc\"",
+     "- textbox \"Select\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_ae5ad9",
+    "step": 1
+   }
+  }
+ ],
+ "contract": 2,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-10-01T08:17:22.320Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_777211",
+  "index": 0,
+  "of": 6
+ },
+ "provenance": {
+  "session": "fwec18-luna-n3",
+  "instruction": "Create an EspoCRM opportunity named 'fwec18-luna-n3 Bench Opportunity', linked by choosing the actual 'Bench Account' record, with description including 'fwec18-luna-n3', stage Negotiation, amount 12500 in the default currency, close date 2026-12-31, and assigned user chosen as the actual 'Bench Assignee' record. Save it, then verify the saved opportunity page shows these values and report the exact record URL/ID. Do not alter any Seed opportunities.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-10-01T08:17:22.320Z"
+ },
+ "revision": 1
+}

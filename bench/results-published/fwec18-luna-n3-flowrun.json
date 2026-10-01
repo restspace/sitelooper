@@ -1,0 +1,174 @@
+{
+  "flow": "fwec18-luna",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_c088f6; observed dashboard_url=http://127.0.0.1:8097/, post_login_url=http://127.0.0.1:8097/, dashlet_1_title=Stream, dashlet_2_title=My Activities, username=Admin.",
+      "unanswered": [
+        "resulting_page"
+      ],
+      "values": {
+        "dashboard_url": "http://127.0.0.1:8097/",
+        "post_login_url": "http://127.0.0.1:8097/",
+        "dashlet_1_title": "Stream",
+        "dashlet_2_title": "My Activities",
+        "username": "Admin"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "12/12",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-report",
+      "status": "success",
+      "summary": "Replayed stored procedure s_a22e42; observed seed_opportunity_name_1=Seed: training package, seed_opportunity_name_2=Seed: pilot expansion, seed_opportunity_name_3=Seed: annual support renewal, opportunities_starting_with_Seed_1=Seed: training package, opportunities_starting_with_Seed_2=Seed: pilot expansion, opportunities_starting_with_Seed_3=Seed: annual support renewal.",
+      "values": {
+        "seed_opportunity_name_1": "Seed: training package",
+        "seed_opportunity_name_2": "Seed: pilot expansion",
+        "seed_opportunity_name_3": "Seed: annual support renewal",
+        "opportunities_starting_with_Seed_1": "Seed: training package",
+        "opportunities_starting_with_Seed_2": "Seed: pilot expansion",
+        "opportunities_starting_with_Seed_3": "Seed: annual support renewal"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "13/13",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "The opportunity 'fwec18-luna-n3 Bench Opportunity' already existed (the replayed save click had gone through and redirected to its record page), so no second record was created; I verified the saved record instead. Its page shows Account link \"Bench Account\", Stage \"Negotiation\", Amount \"$12,500.00\", Close Date \"Dec 31\" (this detail view renders close dates without a year), Assigned User link \"Bench Assignee\" and Description \"fwec18-luna-n3\". Opening its edit form read-only (then Cancel, no save) confirmed the persisted values including closeDate \"2026-12-31\" and currency USD. The Opportunities list holds exactly 4 records — the 3 Seed opportunities plus this one — so nothing was duplicated or altered. (close_date_detail_view_display: no year shown in this view)",
+      "values": {
+        "opportunity_id": "6abe16a0616d13422",
+        "record_url": "http://127.0.0.1:8097/#Opportunity/view/6abe16a0616d13422",
+        "opportunity_name": "fwec18-luna-n3 Bench Opportunity",
+        "account": "Bench Account",
+        "stage": "Negotiation",
+        "amount": "12,500.00",
+        "amount_displayed": "$12,500.00",
+        "currency": "USD",
+        "close_date_raw_in_edit_form": "2026-12-31",
+        "close_date_detail_view_display": "Dec 31",
+        "assigned_user": "Bench Assignee",
+        "description": "fwec18-luna-n3",
+        "opportunity_count_in_list": "4",
+        "opportunity_url": "http://127.0.0.1:8097/#Opportunity/view/6abe16a0616d13422",
+        "close_date_displayed": "Dec 31",
+        "description_displayed": "fwec18-luna-n3",
+        "edit_close_date_value": "2026-12-31",
+        "edit_amount_value": "12,500.00",
+        "edit_stage_value": "Negotiation",
+        "edit_description_value": "fwec18-luna-n3",
+        "edit_assigned_user_value": "Bench Assignee",
+        "edit_account_value": "Bench Account",
+        "edit_name_value": "fwec18-luna-n3 Bench Opportunity",
+        "data_name_closedate": "Close Date",
+        "ref": "36-45"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_b7d27e stopped at step 35 — after step 35 expected url http://127.0.0.1:8097/#Opportunity/create but browser is at http://127.0.0.1:8097/#Opportunity/view/6abe16a0616d13422",
+      "replayed": "34/45",
+      "repaired": false,
+      "turns": 27,
+      "warnings": [
+        "s_b7d27e: step 5: read 'form_close_date_before_save' returned a value the skill itself set/selected ('2026-12-31') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_b7d27e: step 6: 2 field(s) this procedure filled were empty again before this press (the page rebuilt its form, or dropped the value when the field lost focus, after the fills were checked) — refilled once",
+        "s_b7d27e: step 33: 2 field(s) this procedure filled were empty again before this click (the page rebuilt its form, or dropped the value when the field lost focus, after the fills were checked); 1 of them kept only a value typed key by key — 1 refilled, 1 could not be"
+      ],
+      "unreported": [
+        "saved_page_close_date_display",
+        "form_close_date_before_save",
+        "amount_before_save",
+        "amount_value"
+      ]
+    },
+    {
+      "id": "04-add",
+      "status": "success",
+      "summary": "Replayed stored procedure s_70d3de; observed opportunity_id=6abe16a0616d13422, post_timestamp=08:17, opportunity_name=fwec18-luna-n3 Bench Opportunity, post_author=Admin.",
+      "values": {
+        "opportunity_id": "6abe16a0616d13422",
+        "post_timestamp": "08:17",
+        "opportunity_name": "fwec18-luna-n3 Bench Opportunity",
+        "post_author": "Admin"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "6/6",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_70d3de: step 5: primary locator did not resolve; used fallback #2 page.locator('div:nth-of-type(5) > div > div > div:nth-of-type(1) > div > p')",
+        "s_70d3de: step 5: read 'post_text' returned a value the skill itself set/selected ('fwec18-luna-n3') — confirms the control, not persistence; dropped from the report's confident values"
+      ],
+      "unreported": [
+        "post_text"
+      ]
+    }
+  ],
+  "passed": 4,
+  "total": 4,
+  "repinned": 0,
+  "drift": 2,
+  "driftTickets": [
+    {
+      "flow": "fwec18-luna",
+      "step": "03-create",
+      "skill": "s_b7d27e",
+      "similarity": 1,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_b7d27e stopped at step 35 — after step 35 expected url http://127.0.0.1:8097/#Opportunity/create but browser is at http://127.0.0.1:8097/#Opportunity/view/6abe16a0616d13422",
+      "reason": "after step 35 expected url http://127.0.0.1:8097/#Opportunity/create but browser is at http://127.0.0.1:8097/#Opportunity/view/6abe16a0616d13422",
+      "pageUrlPattern": "http://127.0.0.1:8097/#Opportunity/view/:id",
+      "pageUrl": "http://127.0.0.1:8097/#Opportunity/view/6abe16a0616d13422"
+    },
+    {
+      "flow": "fwec18-luna",
+      "step": "04-add",
+      "skill": "s_70d3de",
+      "atStep": "5",
+      "key": "target",
+      "similarity": 0.999,
+      "missedLocator": "page.getByText('fwec18-luna-n3', { exact: true })",
+      "fallbackUsed": "page.locator('div:nth-of-type(5) > div > div > div:nth-of-type(1) > div > p')",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8097/#Opportunity/view/:id",
+      "pageUrl": "http://127.0.0.1:8097/#Opportunity/view/6abe16a0616d13422"
+    }
+  ],
+  "wallMs": 196148,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 491321,
+    "completionTokens": 12180,
+    "cachedTokens": 451200
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 491321,
+      "completionTokens": 12180,
+      "cachedTokens": 451200
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "openai/gpt-6-luna",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

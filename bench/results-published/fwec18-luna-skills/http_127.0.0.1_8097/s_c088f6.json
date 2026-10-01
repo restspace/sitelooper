@@ -1,0 +1,392 @@
+{
+ "id": "s_c088f6",
+ "origin": "http://127.0.0.1:8097",
+ "template": "Sign in to EspoCRM at {{v1}} using username {{v2}} and password exactly {{v3}}. Verify that the CRM is signed in and report the resulting page.",
+ "params": {
+  "v1": {
+   "example": "http://127.0.0.1:8097/",
+   "usedIn": [
+    1
+   ]
+  },
+  "v2": {
+   "example": "admin",
+   "usedIn": [
+    2
+   ]
+  },
+  "v3": {
+   "example": "{{env:APP_PASSWORD}}",
+   "usedIn": [
+    3
+   ]
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8097/"
+ },
+ "steps": [
+  {
+   "tool": "goto",
+   "args": {
+    "url": "{{v1}}"
+   },
+   "locators": {}
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e13",
+    "value": "{{v2}}"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Username"
+     },
+     {
+      "kind": "label",
+      "label": "Username"
+     },
+     {
+      "kind": "id",
+      "selector": "#field-userName"
+     },
+     {
+      "kind": "css",
+      "selector": "#field-userName"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 262,
+      "w": 370,
+      "h": 36,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8097/",
+    "addedContains": [
+     "- textbox \"Username\": {{v2}}"
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e17",
+    "value": "{{v3}}"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Password"
+     },
+     {
+      "kind": "label",
+      "label": "Password"
+     },
+     {
+      "kind": "id",
+      "selector": "#field-password"
+     },
+     {
+      "kind": "css",
+      "selector": "#field-password"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 334,
+      "w": 370,
+      "h": 36,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8097/",
+    "addedContains": [
+     "- textbox \"Password\": {{v3}}"
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e21"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Log in"
+     },
+     {
+      "kind": "id",
+      "selector": "#btn-login"
+     },
+     {
+      "kind": "css",
+      "selector": "#btn-login"
+     },
+     {
+      "kind": "point",
+      "x": 495,
+      "y": 386,
+      "w": 80,
+      "h": 36,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8097/",
+    "addedContains": [
+     "- searchbox \"Search\"",
+     "- button \"Last Viewed\"",
+     "- button \"Create\"",
+     "- button \"Notifications\"",
+     "- button \"Menu\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "what": "url",
+    "label": "dashboard_url"
+   },
+   "locators": {},
+   "label": "post_login_url"
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e110"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "id",
+      "selector": "#nav-menu-dropdown"
+     },
+     {
+      "kind": "css",
+      "selector": "#nav-menu-dropdown"
+     },
+     {
+      "kind": "point",
+      "x": 1252,
+      "y": 16,
+      "w": 34,
+      "h": 32,
+      "role": "button",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8097/",
+    "addedContains": [
+     "- menu \"Admin Administration Preferences About Log Out\"",
+     "- link \"Admin\"",
+     "- link \"Administration\"",
+     "- link \"Preferences\"",
+     "- link \"About\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "press",
+   "args": {
+    "key": "Escape"
+   },
+   "locators": {},
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8097/",
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "header h4, .dashlet .panel-title, .dashlet-title",
+    "what": "text",
+    "label": "dashlet_1_title"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "header h4, .dashlet .panel-title, .dashlet-title",
+      "nth": 0
+     }
+    ]
+   },
+   "label": "dashlet_1_title"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "header h4, .dashlet .panel-title, .dashlet-title",
+    "what": "text",
+    "label": "dashlet_2_title"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "header h4, .dashlet .panel-title, .dashlet-title",
+      "nth": 1
+     }
+    ]
+   },
+   "label": "dashlet_2_title"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": ".dashlet .panel-title >> nth=0",
+    "what": "text",
+    "label": "dashlet_1_title"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".dashlet .panel-title >> nth=0"
+     },
+     {
+      "kind": "role",
+      "role": "heading",
+      "name": "Stream"
+     },
+     {
+      "kind": "css",
+      "selector": "#dashlet-default-stream > div:nth-of-type(1) > h4"
+     },
+     {
+      "kind": "point",
+      "x": 341,
+      "y": 114,
+      "w": 530.3,
+      "h": 30,
+      "role": "heading",
+      "tag": "h4",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "dashlet_1_title"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": ".dashlet .panel-title >> nth=1",
+    "what": "text",
+    "label": "dashlet_2_title"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".dashlet .panel-title >> nth=1"
+     },
+     {
+      "kind": "role",
+      "role": "heading",
+      "name": "My Activities"
+     },
+     {
+      "kind": "css",
+      "selector": "#dashlet-default-activities > div:nth-of-type(1) > h4"
+     },
+     {
+      "kind": "point",
+      "x": 944,
+      "y": 114,
+      "w": 530.3,
+      "h": 30,
+      "role": "heading",
+      "tag": "h4",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "dashlet_2_title"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "ul > li:nth-of-type(5) > ul > li:nth-of-type(1) > a > span"
+     }
+    ]
+   },
+   "label": "username"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "Signed in to EspoCRM at {{v1}} with username {{v2}} and the supplied password marker. The password was accepted and the browser landed on the authenticated home page at {{v1}} (not the login form). Verified on the live page: the app shell rendered the main nav (Home, Accounts, Contacts, Leads, Opportunities, Emails, Meetings, Calls, Tasks, Calendar, Cases, Knowledge Base), two dashlets titled \"Stream\" and \"My Activities\" were read off the page, and the user menu opened showing Admin / Administration / Preferences / About / Log Out — the Log Out entry and the admin-only Administration link confirm an active session as {{v2}}. Screenshots saved at espo_home.png and espo_user_menu.png.",
+  "values": {
+   "dashlet_1_title": "Stream",
+   "dashlet_2_title": "My Activities",
+   "login_verified_by": "user menu showed 'Admin / Administration / Preferences / About / Log Out' (Log Out present; Administration is admin-only)",
+   "post_login_url": "{{v1}}",
+   "screenshots": "espo_home.png, espo_user_menu.png",
+   "username": "{{v2}}",
+   "resulting_page": "EspoCRM home dashboard with Stream and My Activities dashlets",
+   "dashboard_url": "{{v1}}"
+  }
+ },
+ "contract": 4,
+ "stats": {
+  "uses": 3,
+  "successes": 3,
+  "partial": 0,
+  "created": "2026-10-01T08:07:40.323Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 4,
+  "lastUsed": "2026-10-01T08:14:22.113Z"
+ },
+ "status": "validated",
+ "provenance": {
+  "session": "fwec18-luna-n1",
+  "instruction": "Sign in to EspoCRM at http://127.0.0.1:8097/ using username admin and password exactly {{env:APP_PASSWORD}}. Verify that the CRM is signed in and report the resulting page.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-10-01T08:07:40.323Z"
+ },
+ "revision": 3
+}

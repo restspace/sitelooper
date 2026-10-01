@@ -1,0 +1,130 @@
+
+[sweep] run 1/3: fwec18-luna-n1 (store: /home/user/sitelooper/bench/results/fwec18-luna-skills)
+[harness] espocrm: defaulting APP_URL
+[harness] espocrm: defaulting APP_EMAIL
+[harness] espocrm: defaulting APP_PASSWORD
+[reset] espocrm: no leftover bench opportunities
+[harness] espocrm responded 200 at http://127.0.0.1:8097/
+stopped: fwec18-luna-n1
+  flow "fwec18-luna" saved: 4 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwec18-luna.json
+  warning: warning: 01-signin's instruction asks to report resulting_page, and only a recorded literal backs it: no read in its procedure publishes it, so a replay reports it only if the page it ends on shows that exact text — re-record the step so the value is read where it is shown
+  warning: note: 01-signin no longer publishes login_verified_by — no replay reads it from the page and the recording showed no line to read
+  warning: note: 02-report no longer publishes list_total_records — no replay reads it from the page and the recording showed no line to read
+  warning: note: 03-create no longer publishes close_date_display — no replay reads it from the page and the recording showed no line to read
+  warning: note: 04-add no longer publishes post_note_url — no replay reads it from the page and the recording showed no line to read
+  warning: warning: 132 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.startUrl: "http://127.0.0.1:8097/" (output) in "http://127.0.0.1:8097/"
+  flow.steps[0].instruction: "http://127.0.0.1:8097/" (output) in "Sign in to EspoCRM at http://127.0.0.1:8097/ using username admin and password exactly {{env:APP_PASSWORD}}. Verify that the CRM is signed in and report the res"
+  flow.steps[0].instruction: "admin" (output) in "Sign in to EspoCRM at http://127.0.0.1:8097/ using username admin and password exactly {{env:APP_PASSWORD}}. Verify that the CRM is signed in and report the res"
+  flow.steps[0].params.v1: "http://127.0.0.1:8097/" (output) in "http://127.0.0.1:8097/"
+  flow.steps[0].params.v2: "admin" (output) in "admin"
+arm=sitelooper model=openai/gpt-6-luna runid=fwec18-luna-n1 stop=completed
+turns=5 wall=294.4s
+commands=4 cmdTime=266.5s cmdBytes=5395 timeouts=0
+orchestrator in=4504 cw=0 cr=12876 out=784
+inner prompt=1521065 cached=1323337 completion=16171
+spend=$0.0403 maxUsd=3
+learn: A_n=0 replayed=0/4 full=0 repaired=0 compiled=4 variants=0
+-> /home/user/sitelooper/bench/results/fwec18-luna-n1-sitelooper-result.json
+
+fwec18-luna-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: PASS — id=6abe1598d0a46f4ec, account=Bench Account, description includes runid=true
+  obj 3: PASS — stage=Negotiation
+  obj 4: PASS — amount=12500 USD, closeDate=2026-12-31
+  obj 5: PASS — assignedUser=Bench Assignee
+  obj 6: PASS — 1 post(s), 1 carrying the runid
+  obj 7: PASS — record id 6abe1598d0a46f4ec reported
+
+[sweep] run 2/3: fwec18-luna-n2 (replay flow fwec18-luna, no orchestrator)
+[reset] espocrm: deleted 1 leftover bench opportunit(ies)
+[sweep] fwec18-luna-n2: 2 drift ticket(s) → fwec18-luna-n2-drift.json
+
+fwec18-luna-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: PASS — id=6abe160fa5b73222e, account=Bench Account, description includes runid=true
+  obj 3: PASS — stage=Negotiation
+  obj 4: PASS — amount=12500 USD, closeDate=2026-12-31
+  obj 5: PASS — assignedUser=Bench Assignee
+  obj 6: PASS — 1 post(s), 1 carrying the runid
+  obj 7: PASS — record id 6abe160fa5b73222e reported
+
+[sweep] run 3/3: fwec18-luna-n3 (replay flow fwec18-luna, no orchestrator)
+[reset] espocrm: deleted 1 leftover bench opportunit(ies)
+[sweep] fwec18-luna-n3: 2 drift ticket(s) → fwec18-luna-n3-drift.json
+
+fwec18-luna-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: PASS — id=6abe16a0616d13422, account=Bench Account, description includes runid=true
+  obj 3: PASS — stage=Negotiation
+  obj 4: PASS — amount=12500 USD, closeDate=2026-12-31
+  obj 5: PASS — assignedUser=Bench Assignee
+  obj 6: PASS — 1 post(s), 1 carrying the runid
+  obj 7: PASS — record id 6abe16a0616d13422 reported
+
+Learning sweep fwec18-luna (K=3)
+┌─────────┬───┬──────────────────┬──────────┬─────────────┬───────┬──────┬───────────┬──────┬──────────────┬────────┐
+│ (index) │ n │ runid            │ verified │ stop        │ turns │ cmds │ total_usd │ A_n  │ replayed     │ wall_s │
+├─────────┼───┼──────────────────┼──────────┼─────────────┼───────┼──────┼───────────┼──────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwec18-luna-n1' │ '7/7'    │ 'completed' │ 5     │ 4    │ 0.0403    │ 0    │ '0/4'        │ 294    │
+│ 1       │ 2 │ 'fwec18-luna-n2' │ '7/7'    │ 'success'   │ 15    │ 4    │ 0.0065    │ 0.75 │ '4/4 (flow)' │ 123    │
+│ 2       │ 3 │ 'fwec18-luna-n3' │ '7/7'    │ 'success'   │ 27    │ 4    │ 0.0147    │ 0.75 │ '4/4 (flow)' │ 196    │
+└─────────┴───┴──────────────────┴──────────┴─────────────┴───────┴──────┴───────────┴──────┴──────────────┴────────┘
+http://127.0.0.1:8097
+  s_70d3de  validated    6 steps  3/3 (100%)
+           On the saved opportunity '{{v1}}' (record URL ending #Opportunity/view/{{v3}}), add a {{v4}} post whose text i…
+  s_78c893  validated    1 steps  3/3 (100%)
+           In EspoCRM, inspect the Opportunities list and report the exact names of all opportunities whose name starts w…
+  s_a22e42  validated   12 steps  3/3 (100%)
+           In EspoCRM, inspect the Opportunities list and report the exact names of all opportunities whose name starts w…
+  s_ae5ad9  validated    1 steps  3/3 (100%)
+           Create an EspoCRM opportunity named '{{v2}}', linked by choosing the actual 'Bench Account' record, with descr…
+  s_b7d27e  demoted     45 steps  1/3 (33%)
+           Create an EspoCRM opportunity named '{{v2}}', linked by choosing the actual 'Bench Account' record, with descr…
+  s_c088f6  validated   12 steps  3/3 (100%)
+           Sign in to EspoCRM at {{v1}} using username {{v2}} and password exactly {{v3}}. Verify that the CRM is signed …
+  s_014b59  provisional  5 steps  1/1 (100%)  variant of s_b7d27e
+           Create an EspoCRM opportunity named '{{v2}}', linked by choosing the actual 'Bench Account' record, with descr…
+  s_05ecd8  provisional  1 steps  1/1 (100%)
+           Create an EspoCRM opportunity named '{{v2}}', linked by choosing the actual 'Bench Account' record, with descr…
+  s_09a344  provisional 12 steps  1/1 (100%)
+           Create an EspoCRM opportunity named '{{v2}}', linked by choosing the actual 'Bench Account' record, with descr…
+  s_0f4d12  provisional 35 steps  1/1 (100%)
+           Create an EspoCRM opportunity named '{{v2}}', linked by choosing the actual 'Bench Account' record, with descr…
+  s_12181b  provisional  5 steps  1/1 (100%)
+           Create an EspoCRM opportunity named '{{v2}}', linked by choosing the actual 'Bench Account' record, with descr…
+  s_27b764  provisional  5 steps  1/1 (100%)
+           Create an EspoCRM opportunity named '{{v2}}', linked by choosing the actual 'Bench Account' record, with descr…
+  s_2c64f2  provisional 10 steps  1/1 (100%)  variant of s_b7d27e
+           Create an EspoCRM opportunity named '{{v2}}', linked by choosing the actual 'Bench Account' record, with descr…
+  s_381510  provisional  8 steps  1/1 (100%)
+           Create an EspoCRM opportunity named '{{v2}}', linked by choosing the actual 'Bench Account' record, with descr…
+  s_4a0131  provisional  4 steps  1/1 (100%)  variant of s_b7d27e
+           Create an EspoCRM opportunity named '{{v2}}', linked by choosing the actual 'Bench Account' record, with descr…
+  s_68708a  provisional 35 steps  1/1 (100%)  variant of s_b7d27e
+           Create an EspoCRM opportunity named '{{v2}}', linked by choosing the actual 'Bench Account' record, with descr…
+  s_7a7596  provisional 35 steps  1/1 (100%)  variant of s_b7d27e
+           Create an EspoCRM opportunity named '{{v2}}', linked by choosing the actual 'Bench Account' record, with descr…
+  s_956ae8  provisional  5 steps  1/1 (100%)  variant of s_b7d27e
+           Create an EspoCRM opportunity named '{{v2}}', linked by choosing the actual 'Bench Account' record, with descr…
+  s_a0b7f8  provisional 12 steps  1/1 (100%)  variant of s_b7d27e
+           Create an EspoCRM opportunity named '{{v2}}', linked by choosing the actual 'Bench Account' record, with descr…
+  s_a0e2fa  provisional  4 steps  1/1 (100%)
+           Create an EspoCRM opportunity named '{{v2}}', linked by choosing the actual 'Bench Account' record, with descr…
+  s_c1dd67  provisional 35 steps  1/1 (100%)
+           Create an EspoCRM opportunity named '{{v2}}', linked by choosing the actual 'Bench Account' record, with descr…
+  s_cacbe0  provisional  7 steps  1/1 (100%)  variant of s_b7d27e
+           Create an EspoCRM opportunity named '{{v2}}', linked by choosing the actual 'Bench Account' record, with descr…
+  s_d335c1  provisional  7 steps  1/1 (100%)
+           Create an EspoCRM opportunity named '{{v2}}', linked by choosing the actual 'Bench Account' record, with descr…
+  s_dcb972  provisional  1 steps  1/1 (100%)
+           Create an EspoCRM opportunity named '{{v2}}', linked by choosing the actual 'Bench Account' record, with descr…
+  s_de75dc  provisional  1 steps  1/1 (100%)
+           Create an EspoCRM opportunity named '{{v2}}', linked by choosing the actual 'Bench Account' record, with descr…
+  s_fd99dc  provisional  1 steps  1/1 (100%)  variant of s_b7d27e
+           Create an EspoCRM opportunity named '{{v2}}', linked by choosing the actual 'Bench Account' record, with descr…
+  s_ff75c5  provisional 10 steps  1/1 (100%)
+           Create an EspoCRM opportunity named '{{v2}}', linked by choosing the actual 'Bench Account' record, with descr…
+store: /home/user/sitelooper/bench/results/fwec18-luna-skills
+
+summary: /home/user/sitelooper/bench/results/fwec18-luna-sweep.json
