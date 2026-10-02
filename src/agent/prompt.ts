@@ -37,7 +37,20 @@ export interface PromptParts {
   notes: string[];
 }
 
-export function buildSystemPrompt(parts: PromptParts): string {
+/**
+ * What `sitelooper assert` adds (LoopOptions.assert). Where a rule above and
+ * one here disagree, this one holds: the rules above describe doing work, and
+ * an assertion does none.
+ */
+export const ASSERT_RULES = `--- ASSERT MODE (overrides the method above wherever they differ) ---
+This instruction is a CONDITION TO CHECK on the page as it is now, not work to do.
+A1. Never act. No clicking, typing, hovering, scrolling, navigating, eval or batch: only snapshot, read, read_all, wait_for, screenshot and report exist here, and anything else is refused. Do not try to make the condition true.
+A2. Express the condition as one or more wait_for calls on EXACTLY the element(s) that show it — the row, cell, field, heading or banner itself, never a container that merely includes it. States: visible, hidden, text_equals, text_contains, count, value_equals (a form field's current value), url_contains (the page url; no target). Something that must NOT be showing is a wait_for hidden (or count 0) on the element that would show it.
+A3. Those wait_for calls ARE the assertion: each one that holds is recorded and re-run on every later run, without you. snapshot and read are only for finding the element; a value you read proves nothing until a wait_for states it.
+A4. The expected text of a wait_for must be written in the assertion itself. Never compare an element with a value you read off the page — that is the page agreeing with itself, and it is refused. If the assertion states no value to compare with, report failure and say which value has no stated source.
+A5. When every wait_for the condition needs has held, report success. If a wait_for does not hold (it times out) on the right element, or the element the condition is about is not on the page, the condition does not hold: report failure and say what the page shows instead. A success report with no wait_for that held is recorded as a failure.`;
+
+export function buildSystemPrompt(parts: PromptParts, mode: { assert?: boolean } = {}): string {
   const sections: string[] = [OPERATING_RULES];
   if (parts.briefing && parts.briefing.trim()) {
     sections.push('--- APP BRIEFING (conventions and selector knowledge for the app under test) ---\n' + parts.briefing.trim());
@@ -45,5 +58,8 @@ export function buildSystemPrompt(parts: PromptParts): string {
   if (parts.notes.length) {
     sections.push('--- SESSION NOTES (facts recorded during this run; treat as ground truth) ---\n' + parts.notes.map((n) => `- ${n}`).join('\n'));
   }
+  // Last, so everything before it stays the byte-identical prefix an ordinary
+  // instruction's prompt has (the header comment's caching reason).
+  if (mode.assert) sections.push(ASSERT_RULES);
   return sections.join('\n\n');
 }

@@ -629,10 +629,14 @@ export class ScriptRecorder {
     }
   }
 
-  /** Mark the start of one `do` instruction; becomes a test.step in the script. */
+  /**
+   * Mark the start of one `do` instruction; becomes a test.step in the script.
+   * `assert`: the instruction is a `sitelooper assert` (RecordedInstruction.assert) —
+   * a resume of one carries it too, so the merged group is still an assertion.
+   */
   beginInstruction(
     text: string,
-    context: { url?: string; fingerprint?: number[]; startText?: string; startDialect?: 2; startTextComplete?: boolean; resume?: true } = {},
+    context: { url?: string; fingerprint?: number[]; startText?: string; startDialect?: 2; startTextComplete?: boolean; resume?: true; assert?: true } = {},
   ): void {
     this.append({ k: 'instruction', text, ...context });
   }

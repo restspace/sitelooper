@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
 import { liftFlowFile } from './lift.js';
+import { assertionCounts } from './ir.js';
 import { envName, runSpecCheck, inputEnvCollisions, type SpecCheckOptions, type SpecCheckResult } from './check.js';
 
 export interface ReadinessOptions extends SpecCheckOptions {
@@ -43,6 +44,15 @@ export interface ReadinessReport {
   failureDetection: 'verified' | 'not-configured' | 'failed';
   negativeResult?: SpecCheckResult;
   evidenceFile: string;
+  /**
+   * The assertions the compiled flow carries (`sitelooper assert`): how many of
+   * its steps are assertions, and how many checks they hold between them. Each
+   * is a condition the caller stated, which fails the run when it does not hold,
+   * so a verified run with some is evidence about the app and not only about
+   * the procedure. Evidence only: no outcome depends on it. Zero for a file
+   * whose FLOW could not be read.
+   */
+  assertions: { steps: number; checks: number };
 }
 
 /** The TODO an older compiler wrote when it dropped a point candidate; the current one resolves the point instead. */
@@ -78,6 +88,7 @@ export function runReadinessCheck(o: ReadinessOptions, check: typeof runSpecChec
     schemaVersion: 1, stage: 'readiness', state: 'compiled', executionVerified: false, outcome: 'blocked',
     artifactHash: '', verifiedAt: null, requiredRuns: count, distinctDatasets: 0,
     runs: [], blockers: [], failureDetection: 'not-configured', evidenceFile,
+    assertions: { steps: 0, checks: 0 },
   };
   const unchanged = (): boolean => {
     try { return artifactHash(flowFile, specFile) === report.artifactHash; } catch { return false; }
@@ -127,6 +138,7 @@ export function runReadinessCheck(o: ReadinessOptions, check: typeof runSpecChec
   if (source.includes('// @sitelooper-flow-begin')) {
     try {
       const { spec } = liftFlowFile(source);
+      report.assertions = assertionCounts(spec);
       for (const name of spec.vars) if (!requiredInputs.includes(name)) requiredInputs.push(name);
       for (const step of spec.steps) {
         if (!requiredSteps.includes(step.id)) requiredSteps.push(step.id);

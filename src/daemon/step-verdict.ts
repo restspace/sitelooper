@@ -41,6 +41,7 @@
  */
 
 import { givenPartialReason } from '../execution/report.js';
+import { assertFailure, type AssertFailureKind } from '../execution/assert.js';
 
 export interface StepVerdictInput {
   /** What the step reported. */
@@ -267,4 +268,111 @@ export function unansweredForStep(input: {
   const asked = unansweredAsks(input.instruction, [...input.outputs, ...input.pruned], [...Object.keys(input.reported), ...input.published], input.recorded);
   const literal = literalOnlyAsks(input.instruction, input.outputs, input.chain).filter((o) => !(o in input.reported));
   return [...new Set([...asked, ...literal])];
+}
+
+/*
+ * AN ASSERTION STEP (`sitelooper assert`, FlowStep.kind 'assert').
+ *
+ * Every other flow step is a piece of work, and a step whose procedure stops
+ * is handed on: another candidate, the cheap model, the stronger one, a
+ * re-pin. An assertion is a question, and each of those would change the
+ * answer — a model that "recovers" a failed check has either made it true or
+ * decided it for itself. So the step runs here, and this function is handed
+ * exactly ONE capability: `replay`, which runs a stored segment against the
+ * page with no model. There is no provider in its inputs, so there is no path
+ * on which it can consult one; the flow runner routes a step of this kind
+ * here before anything else looks at it (server.ts runFlow).
+ *
+ * Every way of not passing is `assert-failed`, with the kind execution/
+ * assert.ts defines: `failed` when the page was read and the condition does
+ * not hold; `unlocatable` when the check could not be made — its target was
+ * not found by any recorded candidate, the step has no assertion procedure to
+ * run, a value it needs was never published, or its start gate refused the
+ * page. The one exception is a run that was STOPPED (`aborted`): that says
+ * nothing about the page, and is `blocked`, as for any step.
+ */
+
+/** What one replayed segment reports back, as runAssertStep reads it (replay.ts ReplayResult, structurally). */
+export interface AssertReplay {
+  ok: boolean;
+  stepsRun: number;
+  stepsTotal: number;
+  refused?: boolean;
+  reason?: string;
+  assertFailed?: { kind: AssertFailureKind; message: string };
+  derivedValues?: Record<string, string>;
+}
+
+/** A stored procedure segment, as runAssertStep reads it (store.ts Skill, structurally). */
+export interface AssertSegment {
+  id: string;
+  assert?: true;
+}
+
+export interface AssertStepOutcome<S extends AssertSegment = AssertSegment, R extends AssertReplay = AssertReplay> {
+  status: 'success' | 'assert-failed' | 'blocked';
+  summary: string;
+  /** Set with 'assert-failed': which way it missed, and the message raised. */
+  assert?: { kind: AssertFailureKind; message: string };
+  /** Set with 'blocked': why the run stopped. */
+  reason?: string;
+  /** Checks that ran over checks recorded, across the chain; null when nothing was replayed. */
+  replayed: string | null;
+  /** Every segment that was replayed, in order, with what it reported (drift telemetry, the store's success count). */
+  ran: { skill: S; res: R }[];
+}
+
+export async function runAssertStep<S extends AssertSegment, R extends AssertReplay>(input: {
+  /** The step's sentence with this run's values filled in: what a miss before any replay is reported under. */
+  sentence: string;
+  /** The step's pinned skill id, when it has one. */
+  pin?: string;
+  /** The pinned procedure's segments in chain order; empty when the store does not hold the pin. */
+  chain: readonly S[];
+  /** The pin's params for this run; null when they could not be bound. */
+  params: Record<string, string> | null;
+  /** References this run could not fill that the procedure or its sentence needs. */
+  unresolved: readonly string[];
+  /** Replay one segment with no model. The only way this function touches the page. */
+  replay: (skill: S, params: Record<string, string>) => Promise<R>;
+  /** Whether the run itself was stopped (a signal, a budget). */
+  aborted: () => boolean;
+}): Promise<AssertStepOutcome<S, R>> {
+  const ran: { skill: S; res: R }[] = [];
+  const tally = (): string | null => (ran.length ? `${ran.reduce((n, r) => n + r.res.stepsRun, 0)}/${ran.reduce((n, r) => n + r.res.stepsTotal, 0)}` : null);
+  const miss = (kind: AssertFailureKind, message: string): AssertStepOutcome<S, R> => ({ status: 'assert-failed', summary: message, assert: { kind, message }, replayed: tally(), ran });
+  const uncheckable = (detail: string): AssertStepOutcome<S, R> => miss('unlocatable', assertFailure('unlocatable', input.sentence, detail));
+
+  if (!input.pin) return uncheckable('the flow step has no pinned assertion procedure, so there is no recorded check to run — re-record the assertion');
+  if (!input.chain.length) return uncheckable(`its pinned procedure ${input.pin} is not in the skill store`);
+  // A pin that is not an assertion procedure is never run under an assertion
+  // step: its steps may act, and nothing here would stop them.
+  const other = input.chain.find((s) => !s.assert);
+  if (other) return uncheckable(`its pinned procedure ${other.id} is not an assertion procedure`);
+  if (input.unresolved.length) return uncheckable(`reference(s) ${input.unresolved.join(', ')} were not published by an earlier step of this run, so the expected value is unknown`);
+  if (!input.params) return uncheckable(`the values of its pinned procedure ${input.pin} could not be bound from the step`);
+
+  const params = { ...input.params };
+  for (const skill of input.chain) {
+    if (input.aborted()) return { status: 'blocked', summary: 'run stopped', reason: 'run stopped', replayed: tally(), ran };
+    let res: R;
+    try {
+      res = await input.replay(skill, params);
+    } catch (err) {
+      const said = (err instanceof Error ? err.message : String(err)).slice(0, 200);
+      if (input.aborted()) return { status: 'blocked', summary: 'run stopped', reason: 'run stopped', replayed: tally(), ran };
+      return uncheckable(`replaying ${skill.id} threw before completing: ${said}`);
+    }
+    ran.push({ skill, res });
+    if (res.assertFailed) return miss(res.assertFailed.kind, res.assertFailed.message);
+    if (!res.ok) {
+      // Stopped with no assertion booked: the run was cut short, or the
+      // procedure never started (its gate refused this page, a value was
+      // missing). Neither read the condition; only the first is not a verdict.
+      if (input.aborted()) return { status: 'blocked', summary: 'run stopped', reason: 'run stopped', replayed: tally(), ran };
+      return uncheckable(`${skill.id} ${res.refused ? 'could not start' : 'stopped'}: ${(res.reason ?? 'no reason recorded').slice(0, 300)}`);
+    }
+    Object.assign(params, res.derivedValues ?? {});
+  }
+  return { status: 'success', summary: `assertion holds: ${input.sentence}`, replayed: tally(), ran };
 }

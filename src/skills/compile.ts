@@ -804,6 +804,13 @@ export function compileSkills(input: CompileInput): Skill[] {
   const head = input.entries.find((e): e is RecordedInstruction => e.k === 'instruction');
   const steps = input.entries.filter((e): e is RecordedStep => e.k === 'step');
   if (!steps.length) return [];
+  // AN ASSERTION (`sitelooper assert`, execution/assert.ts): the instruction
+  // was a condition to check, so its procedure is its checks and nothing else
+  // — the `wait_for` steps that held. See the `asserting` branches below.
+  // Never a repair of another procedure either: a variant inherits its
+  // parent's place in selection, and a check must not stand in for work.
+  const asserting = head?.assert === true;
+  if (asserting && (input.variantOf || input.stoppedAt)) input = { ...input, variantOf: undefined, stoppedAt: undefined };
   // What each key press picked, by NAME, from the recording's journal
   // (skills/key-pick.ts, gitea fwgt13): the fact a keyboard pick replays by.
   const keyPicked = new Map([...keyPicks(steps)].map(([i, pick]) => [steps[i], pick] as const));
@@ -838,6 +845,16 @@ export function compileSkills(input: CompileInput): Skill[] {
     return true;
   });
   let kept = replayable.length ? replayable : steps;
+  // An assertion keeps only its waits. The reads and looks around them were
+  // the model finding the element; replayed, a read that misses is skipped
+  // with a warning, which is exactly what a check must never be. Every
+  // recorded wait held (a failed step is never an entry, recorder.ts
+  // RecordedStep.failed), so each one is a condition the caller's sentence was
+  // seen to rest on. None at all is nothing checkable, and no skill.
+  if (asserting) {
+    kept = steps.filter((s) => s.tool === 'wait_for');
+    if (!kept.length) return [];
+  }
   // A variant covers only the territory it repaired: steps that were replayed
   // via a DIFFERENT stored skill (an earlier segment completing cleanly) are
   // that skill's procedure, not this variant's.
@@ -1219,11 +1236,16 @@ export function compileSkills(input: CompileInput): Skill[] {
     });
     const mintedForStart = mintedMap((m) => m.keptIndex < base);
     const notes: TransformNote[] = [...takenNotes];
-    const folded = foldLoops(
-      coalesceControls(namedKeyPicks(dropDismissedDialogs(dropSupersededNavigation(markRequiredRemovals(skillSteps, (s) => recordedDiffs.get(s)), notes, (s) => recordedDiffs.get(s), (s) => recordedObs.get(s)), notes, (s) => recordedDiffs.get(s)), notes), notes),
-      input.instruction,
-      notes,
-    );
+    // An assertion's waits are kept as recorded: every transform below removes
+    // or folds steps on evidence about what an ACTION did, and a check that a
+    // transform dropped is a check no run makes.
+    const folded = asserting
+      ? skillSteps
+      : foldLoops(
+          coalesceControls(namedKeyPicks(dropDismissedDialogs(dropSupersededNavigation(markRequiredRemovals(skillSteps, (s) => recordedDiffs.get(s)), notes, (s) => recordedDiffs.get(s), (s) => recordedObs.get(s)), notes, (s) => recordedDiffs.get(s)), notes), notes),
+          input.instruction,
+          notes,
+        );
     return { sg, segParams, mintedForStart, folded, notes, recordedDiffs };
   });
 
@@ -1506,9 +1528,27 @@ export function compileSkills(input: CompileInput): Skill[] {
     return goto.args.url;
   };
 
+  // An assertion's steps each carry the caller's sentence (SkillStep.assert):
+  // what both runners raise, with this run's values filled in, when the check
+  // misses. A wait has no recorded effect to verify and publishes nothing, so
+  // neither an expectation nor a label rides along.
+  if (asserting) {
+    for (const b of built) {
+      b.folded = b.folded.map((step) => {
+        const { expect: _expect, label: _label, ...check } = step;
+        return { assert: { message: finalTemplate }, ...check };
+      });
+    }
+  }
+
   const compiled = built.map((b, k) => {
-    const detour = detourOf(k);
-    const markers = identityOf(b.sg.startText, markerSlotsOf(b), knownVals, writtenSlots(b.folded));
+    // No detour: a check the runners may pass over is not a check.
+    const detour = asserting ? undefined : detourOf(k);
+    // No identity markers: they are the caller's values the start page showed,
+    // which for an assertion is usually the very text it expects. As a
+    // precondition that text would refuse the procedure ("a different record")
+    // before its wait could report the condition false — the wait is the judge.
+    const markers = asserting ? [] : identityOf(b.sg.startText, markerSlotsOf(b), knownVals, writtenSlots(b.folded));
     anchorMarkerValues(b.folded, markers, (s) => b.recordedDiffs.get(s), textSlots, b.notes);
     const params: Record<string, SkillParam> = {};
     for (const name of keptSlots.keys()) {
@@ -1520,6 +1560,7 @@ export function compileSkills(input: CompileInput): Skill[] {
       };
     }
     return {
+      ...(asserting ? { assert: true as const } : {}),
       id: newSkillId(origin, of > 1 ? `${finalTemplate}#${k}` : finalTemplate, now),
       origin,
       template: finalTemplate,
@@ -1534,11 +1575,15 @@ export function compileSkills(input: CompileInput): Skill[] {
       // Only the LAST segment finishes the work, so only it can vouch for the
       // end state — an earlier segment carrying the goal would let a chain be
       // skipped from its head on evidence its tail produced.
-      ...(k === of - 1 && goal ? { goal } : {}),
+      // Never on an assertion: a goal is what lets a step be skipped as
+      // already satisfied, and an assertion is never skipped.
+      ...(k === of - 1 && goal && !asserting ? { goal } : {}),
       steps: b.folded,
       ...(segDerived[k] ? { derived: segDerived[k] } : {}),
       // Only the last segment can vouch for the instruction's end state.
-      ...(k === of - 1 ? { reportTemplate } : {}),
+      // An assertion reports its own sentence and no values: it has no outputs,
+      // and the recording model's prose about the page is not its finding.
+      ...(k === of - 1 ? { reportTemplate: asserting ? { summary: finalTemplate, values: {} } : reportTemplate } : {}),
       // Stamped where the procedure is BORN, not in SkillStore.write: every
       // outcome recorded against a legacy procedure goes through write too,
       // so stamping there would quietly relabel an old file as current on its
@@ -3940,6 +3985,10 @@ export function stableFirst(chain: LocatorCandidate[], stated: readonly string[]
 
 /** Steps are structurally the same procedure: same tools, same primary locator shapes. */
 export function sameProcedure(a: Skill, b: Skill): boolean {
+  // An assertion is never the same procedure as one that is not: the same
+  // wait, by the same kind of locator, is a step that may be recovered in one
+  // and the run's answer in the other (Skill.assert).
+  if (Boolean(a.assert) !== Boolean(b.assert)) return false;
   if (a.steps.length !== b.steps.length) return false;
   return a.steps.every((s, i) => {
     const t = b.steps[i];

@@ -58,6 +58,7 @@ import { hasTotpMarker, resolveSecrets, resolveSecretsAsync } from '../shared/se
 import { appliedPickCandidates, armKeyboardPick, closeBeforeReopen, keyboardPickVerdict, isNavigation, pickAlreadyApplied, pickBaseline, hideBefore, hideEffectLines, hideVerdict, pressHadNoEffect, toggleAlreadyShown, toggleEffectLines } from '../execution/toggle.js';
 import { alreadyAddedLines, positionalClickVerdict, recordedAccessibleName } from '../execution/positional.js';
 import { mayNavigateToDestination, navigateToDestination, textHeldElsewhere } from '../execution/recover.js';
+import { assertFailure, assertFailureKind, type AssertFailureKind } from '../execution/assert.js';
 import { CONTEXT_CONTRACT, contractOf, contractVerdict, isVerified, originOf, stepsCarryContext, type Skill, type SkillStep } from './store.js';
 import { armPageEffect, describeFramePath, pageIndexVerdict, rootFor, stepEffect, type Root } from '../execution/context.js';
 
@@ -520,6 +521,21 @@ export interface ReplayResult {
    * but the characters to go on again.
    */
   urlDiffs: UrlSegDiff[];
+  /**
+   * An ASSERTION step missed (SkillStep.assert, execution/assert.ts): the
+   * replay stopped at `step` (1-based, `failedAt`) and this is the run's
+   * answer, not drift. `kind` says which way — `failed`: the condition was
+   * read and does not hold; `unlocatable`: no recorded way of finding the
+   * target resolved (or the check could not be made at all). `message` is the
+   * whole `assertFailure(...)` text, also in `reason`; `sentence` is the
+   * caller's own sentence with this run's values filled in. A caller must not
+   * hand such a stop to a model, try another candidate after it, or count it
+   * against the procedure. Typed so no caller parses `reason`.
+   *
+   * Absent when the replay REFUSED (wrong page, missing params: `refused`):
+   * nothing was checked, and what that means is the caller's to say.
+   */
+  assertFailed?: { kind: AssertFailureKind; message: string; sentence: string; step: number };
   /** Cosine similarity between the stored start-page fingerprint and the live page, if both exist. */
   similarity: number | null;
   url: string;
@@ -656,6 +672,14 @@ export async function replaySkill(
   // 05-open: s_6a1629's v10 sat in the Save step's `- cell "{{v10}}"` only;
   // the artifact ran and passed, both daemon replays refused the pin.
   const missing = Object.keys(skill.params).filter((p) => !(p in params) || params[p] === '');
+  // An assertion with a value it was not given cannot be checked: the rule
+  // below would run it and leave the unfilled lines unchecked, which for a
+  // procedure made only of checks is a pass nobody verified.
+  if (skill.assert && missing.length) {
+    res.refused = true;
+    res.reason = `missing params: ${missing.map((m) => `${m} (e.g. ${JSON.stringify(skill.params[m].example)})`).join(', ')} — an assertion with an unfilled value cannot be checked — nothing was run`;
+    return res;
+  }
   const chain = opts.chain?.length ? opts.chain : [skill];
   const acting = missing.filter((p) => slotActs(chain, p));
   if (acting.length) {
@@ -1010,6 +1034,18 @@ export async function replaySkill(
       args.url = retarget.url;
     }
     const head = `${tag}. ${step.tool} ${describeArgs(step.tool, args)}`;
+    // An assertion step's miss (SkillStep.assert): the run's answer, raised in
+    // the one wording both runners use, and booked where no caller has to
+    // parse it (ReplayResult.assertFailed).
+    const missed = (kind: AssertFailureKind, detail: string): 'stop' => {
+      const sentence = fillParams(step.assert!.message, params);
+      const message = assertFailure(kind, sentence, detail);
+      res.failedAt = failIndex;
+      res.reason = message;
+      res.assertFailed = { kind, message, sentence, step: failIndex };
+      res.lines.push(`${head} → FAILED: ${message}`);
+      return 'stop';
+    };
 
     // The agent's observation turns were implicit waits; a replay has none,
     // so let the DOM go quiet before looking for this step's target. Generic
@@ -1169,7 +1205,10 @@ export async function replaySkill(
         // One rung BELOW the recorded chain and one ABOVE model recovery: a
         // locator proposed from the live page, which the step's own recorded
         // expectations then verify exactly as they verify a replayed one.
-        const healedLocator = await tryHeal(step, tag, key, chain, dead);
+        // Never for an assertion: a locator proposed from the live page is a
+        // re-location, and an assertion's target is found by what was
+        // recorded or not at all (the user's decision 3, CONTRACT-assert.md).
+        const healedLocator = step.assert ? null : await tryHeal(step, tag, key, chain, dead);
         if (healedLocator) {
           resolved[key] = healedLocator;
           if (key === 'target') offRecord = 'an inline heal';
@@ -1260,6 +1299,11 @@ export async function replaySkill(
     }
     if (!resolveError) absentDialog = null;
     if (resolveError) {
+      // An assertion whose target no recorded candidate found stops here,
+      // ahead of every rung below: each of them either skips the step (an
+      // absent dialog, a dismissal or hide "already in effect") or reaches
+      // the page another way, and an assertion is never skipped or re-located.
+      if (step.assert) return missed('unlocatable', resolveError);
       if (isRead) {
         if (step.label && step.locators.target?.length) {
           readsSkipped++;
@@ -1588,6 +1632,23 @@ export async function replaySkill(
             // below writes the line, once.
             return { status: 'completed', value: { result: `condition met in fallback #${heldBy.index + 1}` } };
           }
+          // An assertion's wait that did not hold — no candidate of its own
+          // chain showed the text either — is the answer the caller asked
+          // for: `failed`, with the wait's own words as the detail. A wait cut
+          // short by the run's budget proved nothing and stays an ordinary stop.
+          if (step.assert && !opts.signal?.aborted) {
+            const detail = clip(message, 300);
+            // The wait may raise the shared wording itself (tools.ts waitFor,
+            // for the assert-only states): its kind stands, and it is not wrapped twice.
+            const own = assertFailureKind(message);
+            if (own) {
+              res.failedAt = failIndex;
+              res.reason = detail;
+              res.assertFailed = { kind: own, message: detail, sentence: fillParams(step.assert.message, params), step: failIndex };
+              res.lines.push(`${head} → FAILED: ${detail}`);
+            } else missed('failed', detail);
+            return { status: 'stopped' };
+          }
           // What the failure proves about the action. Only a proof that nothing
           // went out gives back `acted` — and only as it stood before this step,
           // so an earlier step's dispatch is never forgotten. `unknown` keeps it:
@@ -1810,7 +1871,26 @@ export async function replaySkill(
     ambiguousNth?: number,
   ): Promise<'ran' | 'skipped' | 'stop'> => {
     const depth = pendingHeals.length;
-    const verdict = await runStepBody(step, tag, failIndex, sink, ambiguousNth);
+    let verdict = await runStepBody(step, tag, failIndex, sink, ambiguousNth);
+    // AN ASSERTION STEP EITHER RAN OR IS A MISS — whatever path the body took.
+    // The body's own assertion branches book the ordinary misses; this is the
+    // backstop that makes a skip impossible rather than merely unreached. Every
+    // "skipped as already in effect" rule, the absent-dialog skip and a skipped
+    // read return 'skipped' through here, and a stop from a gate or a page
+    // check (an error page, a step recorded on another tab) returns 'stop'
+    // with no assertion booked: for a check, each of those means it could not
+    // be made, which is `unlocatable`. Not when the run's own budget cut it
+    // short — that is no verdict on the page.
+    if (step.assert && verdict !== 'ran' && !res.assertFailed && !opts.signal?.aborted) {
+      const sentence = fillParams(step.assert.message, params);
+      const detail = verdict === 'skipped' ? `the check was skipped (${clip(res.lines[res.lines.length - 1] ?? 'no reason recorded', 200)})` : clip(res.reason ?? 'no reason recorded', 300);
+      const message = assertFailure('unlocatable', sentence, detail);
+      res.failedAt = failIndex;
+      res.reason = message;
+      res.assertFailed = { kind: 'unlocatable', message, sentence, step: failIndex };
+      res.lines.push(`${tag}. ${step.tool} → FAILED: ${message}`);
+      verdict = 'stop';
+    }
     for (const proposal of pendingHeals.splice(depth)) {
       const verified = verdict === 'ran';
       proposal.settled?.(verified);
@@ -2580,6 +2660,14 @@ export function renderReplay(skill: Skill, res: ReplayResult): string {
   if (!res.ok && res.failedAt !== undefined && res.failedAt < res.stepsTotal) {
     lines.push(`  not run: steps ${res.failedAt + 1}-${res.stepsTotal}`);
   }
+  // A missed assertion is the answer, not a procedure to finish: nothing
+  // below (continue from here, a record may already exist) applies to it.
+  if (res.assertFailed) {
+    lines.push(res.assertFailed.message);
+    lines.push(`${skill.id} is an assertion: this is its result. Report it as it stands — do not act on the page to make it hold.`);
+    if (res.warnings.length) lines.push(`notes: ${res.warnings.join('; ')}`);
+    return lines.join('\n');
+  }
   if (!res.ok) {
     // "Steps 1-0 HAVE run" is what a stop at step 1 used to say (fwop3 05-add).
     lines.push(
@@ -2688,7 +2776,9 @@ export function renderChainStop(earlier: readonly { skill: Skill; res: ReplayRes
 /** Which stored skills could apply on this page, best first. */
 export function candidatesFor(skills: Skill[], url: string, limit = 5): Skill[] {
   return skills
-    .filter((s) => s.status !== 'demoted' && !(s.seq && s.seq.index > 0) && urlMatches(s.preconditions.urlPattern, url))
+    // Never an assertion procedure (Skill.assert): this list is offered to a
+    // model as ways of doing an instruction's work, and a check does none.
+    .filter((s) => s.status !== 'demoted' && !s.assert && !(s.seq && s.seq.index > 0) && urlMatches(s.preconditions.urlPattern, url))
     .sort((a, b) => {
       const rank = (s: Skill) => (isVerified(s) ? 1 : 0);
       const rate = (s: Skill) => (s.stats.uses ? s.stats.successes / s.stats.uses : 0);

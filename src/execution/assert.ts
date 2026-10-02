@@ -45,7 +45,36 @@ const PREFIX: Record<AssertFailureKind, string> = {
  * the runner saw (the underlying wait's own error text).
  */
 export function assertFailure(kind: AssertFailureKind, message: string, detail: string): string {
-  return `${PREFIX[kind]}: ${message}${detail ? ` — ${detail}` : ''}`;
+  const shown = plainDetail(detail);
+  return `${PREFIX[kind]}: ${message}${shown ? ` — ${shown}` : ''}`;
+}
+
+/** The longest detail a failure carries: the daemon's replay already clipped its own to this. */
+const DETAIL_MAX = 300;
+
+/**
+ * A runner's error text as one plain line. Playwright's `expect` errors — what
+ * the artifact catches — are multi-line and coloured for a terminal; the
+ * daemon's wait raises one plain sentence. Normalised here, in the one place
+ * both pass through, so the same miss reads the same in a flow run's report
+ * and in a test report.
+ */
+function plainDetail(detail: string): string {
+  const ESC = String.fromCharCode(27);
+  let plain = '';
+  for (let i = 0; i < detail.length; i++) {
+    // A terminal colour sequence: ESC [ … m.
+    if (detail[i] === ESC && detail[i + 1] === '[') {
+      const end = detail.indexOf('m', i);
+      if (end > 0) {
+        i = end;
+        continue;
+      }
+    }
+    plain += detail[i];
+  }
+  const line = plain.replace(/\s+/g, ' ').trim();
+  return line.length <= DETAIL_MAX ? line : line.slice(0, DETAIL_MAX) + '…';
 }
 
 /** The kind an error message produced by assertFailure carries, or null for any other error. */

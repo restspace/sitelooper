@@ -28,6 +28,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { createRequire } from 'node:module';
+import { assertFailureKind, type AssertFailureKind } from '../execution/assert.js';
 import type { Diagnostic } from './diagnostics.js';
 
 /** One test result from the Playwright JSON reporter, flattened. */
@@ -105,6 +106,14 @@ export interface SpecCheckResult {
    * by hand — and every result written before goals existed — has none.
    */
   satisfied?: string[];
+  /**
+   * The failure was one of the flow's assertions missing (`sitelooper assert`):
+   * which way — the condition did not hold, or its target could not be found —
+   * and the message the step raised (execution/assert.ts assertFailure), the
+   * shape the daemon's flow run reports as FlowStepResult.assert. Absent for
+   * every other failure and for a pass.
+   */
+  assert?: { kind: AssertFailureKind; message: string };
   /** The one-paragraph sentence the CLI prints. */
   verdict: string;
   /** The scratch dir the run happened in — kept ONLY on failure, where the
@@ -273,6 +282,18 @@ export function parseSpecReport(report: unknown, files: string[] = []): ParsedSp
   };
 }
 
+/**
+ * The assertion a failure message reports, when it is one. Playwright's JSON
+ * reporter writes a thrown Error as "Error: <message>", so that head is taken
+ * off before the shared assertFailureKind reads the prefix assertFailure wrote.
+ */
+export function assertMiss(error: string | null): { kind: AssertFailureKind; message: string } | null {
+  if (!error) return null;
+  const message = error.startsWith('Error: ') ? error.slice('Error: '.length) : error;
+  const kind = assertFailureKind(message);
+  return kind ? { kind, message } : null;
+}
+
 /** One line of the failure, short enough to read in a terminal. */
 function shortError(message: string | null): string {
   if (!message) return 'the spec failed with no error message';
@@ -329,7 +350,12 @@ export function verdictFor(
     ? ` — the step's recording is the problem, not the emitter: ${flaggedStep(r.anchor, flagged)!.what}`
     : liveReplayPassed
       ? ' — this is an emitter defect, not drift: the live replay passed this step'
-      : ' — run it yourself with the config in the workspace below to see the full trace';
+      : assertMiss(r.error)
+        ? // An assertion missing is the flow's own verdict on the app, said as such: there is no locator to go and repair.
+          assertMiss(r.error)!.kind === 'failed'
+          ? ' — an assertion of the flow did not hold on this run'
+          : ' — an assertion of the flow could not be checked: no recorded locator for its target resolved'
+        : ' — run it yourself with the config in the workspace below to see the full trace';
   const timeout = r.timedOut ? ' (the runner was killed on timeout)' : '';
   return `spec check: FAILED${where} — ${shortError(r.error)}${why}${timeout}`;
 }
@@ -508,6 +534,7 @@ export function runSpecCheck(o: SpecCheckOptions): SpecCheckResult {
     satisfied: parsed.satisfied, executedSteps: parsed.executedSteps, tests: parsed.tests,
     skippedCount: parsed.tests.filter((t) => t.status === 'skipped').length,
     workspace: work, specFile: specSrc,
+    ...(!passed && assertMiss(error) ? { assert: assertMiss(error)! } : {}),
   };
   if (passed) {
     // work is an absolute mkdtemp child of dir; never remove a computed project path.
