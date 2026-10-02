@@ -8,7 +8,7 @@ import { factsFor, reliable, renderings, routeTemplateOf, type SiteFacts } from 
 import { pointLocator } from '../execution/point.js';
 import { dispatchesFirstMatch } from '../execution/lifecycle.js';
 import { rootFor, type FramePath, type PageEffect, type Root } from '../execution/context.js';
-import { urlPattern } from '../skills/compile.js';
+import { takenBackLines, urlPattern } from '../skills/compile.js';
 import { foldValue } from '../skills/flow.js';
 import { isRefTarget, refHint, refOf, resolveTarget } from './refs.js';
 import { tagComponent } from '../skills/components.js';
@@ -1719,6 +1719,18 @@ export function selectionReadBack(steps: readonly RecordedStep[], value: string,
  * commits a split. A value some ONE line shows whole is left to the live
  * read-back: located by its own recorded text it would miss on every run
  * whose value differs. Provenance only: the recorded diff and the report.
+ *
+ * WHERE IT STAYED SHOWN (round 86, erpnext fwen4-luna 02-find). A step's added
+ * lines are a place to read only if the page kept them. n1's #16 added the
+ * three "Seed: …" customer links and the app emptied the list a moment later,
+ * with no gesture (compile.ts takenBackLines: the next gap diff lists them
+ * removed); the reads filed after #16 found one link and missed two on both
+ * replays ("skipped read — no element matched … 'Seed: Beacon Supplies'"),
+ * and 02-find ended partial. Lines the page took back are not a sighting. And
+ * what the page GAINED between two gestures (a step's `journal.gap.added`) is
+ * one: it stood on the page when that step began, so the reads go right
+ * before it — n1's list came back after "Clear all filters" (#30) and stood
+ * through the reads that followed, which is where every replay read it.
  */
 export async function shownReadBack(
   steps: readonly RecordedStep[],
@@ -1729,10 +1741,19 @@ export async function shownReadBack(
   const raw = report.evidence?.values?.[key];
   if (typeof raw !== 'string' || !raw.trim()) return null;
   const line = /^- ([\w-]+) ("(?:[^"\\]|\\.)*")/;
+  const takenBack = takenBackLines(steps);
+  /** Newest first: what each step added and the page kept (read after it), then what the page had gained by itself when the step began (read before it). */
+  const sightings: { after: RecordedStep; lines: readonly string[] }[] = [];
   for (let i = steps.length - 1; i >= 0; i--) {
     const step = steps[i];
+    const gone = step.diff ? takenBack.get(step.diff) : undefined;
+    sightings.push({ after: step, lines: (step.diff?.added ?? []).filter((l) => !gone?.has(l.trim())) });
+    // The gap diff is of this step's own page: only when the step before it ran on that page too.
+    if (i > 0 && step.journal?.gap?.added?.length && steps[i - 1].page === step.page) sightings.push({ after: steps[i - 1], lines: step.journal.gap.added });
+  }
+  for (const { after, lines } of sightings) {
     const shown: { role: string; name: string }[] = [];
-    for (const l of step.diff?.added ?? []) {
+    for (const l of lines) {
       const m = line.exec(l.trim());
       if (!m) continue;
       try {
@@ -1756,7 +1777,7 @@ export async function shownReadBack(
       };
     };
     const { names, pinned } = await flattenContainedComposite(report, key, shown.map((s) => s.name), instruction, pin);
-    if (names.length) return { after: step, reads: pinned, names };
+    if (names.length) return { after, reads: pinned, names };
   }
   return null;
 }

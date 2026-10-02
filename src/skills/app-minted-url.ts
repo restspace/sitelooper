@@ -20,7 +20,19 @@
  *    procedure typed `new`, the app answered `new-sales-order-rxojnkvnht`;
  *  - or the url changed at exactly one such position during a `fill` or
  *    `type`, a step that cannot navigate — the page was rewritten under the
- *    procedure, not by it (`/app/customer/new` → `new-customer-uqaxhomexe`).
+ *    procedure, not by it (`/app/customer/new` → `new-customer-uqaxhomexe`);
+ *  - or a link the procedure CLICKED said where it points (its href, which
+ *    the click's settle recorded) and the browser landed one position away
+ *    from there: the goto evidence, the address asked by the element instead
+ *    of typed by the procedure;
+ *  - or a gesture that addressed nothing (a click on a control with no href,
+ *    a key press) opened a page whose url the app RENAMED, at exactly one
+ *    position, when the procedure saved what it had typed there
+ *    (provisionalPosition). fwen4-luna: the awesomebar's "New Sales Order",
+ *    an `<a>` with no href, landed on `new-sales-order-uzdrpbgnbt`, and Save
+ *    — a write carrying the typed customer and date — moved that position to
+ *    `SAL-ORD-2026-00004`. What stood there before the save named nothing
+ *    the server had; only that value is generalised, never the saved one.
  *
  * And the value the app put there must be new to the recording: never part of
  * any url the run had seen before that step, nor carrying a value the step
@@ -29,6 +41,11 @@
  * route, below at least one segment the two urls share: a root that sends
  * `/login` to `/home` is the app choosing a different PAGE, and generalising
  * the first segment would make every one-segment url match every other.
+ * A provisional value answers to more, since no address was asked for it to
+ * differ from: nothing the recording had shown by then may carry it — no page
+ * line, read result, locator, link href, typed text, nor what the caller
+ * named. A click that opens a record lands on a value the page showed (the
+ * link's name or href), or one no later save renames: that stays an identity.
  *
  * What it buys: every url pattern of the compiled procedure that carries one
  * of the two values (the one asked for and the one given) at that route and
@@ -39,6 +56,7 @@
  */
 import type { RecordedStep } from '../daemon/recorder.js';
 import { originOf, routeAt, safeDecode, urlPart, urlParts, urlShapeOf } from '../execution/url.js';
+import { allEvents, caused, isWrite, succeeded } from './restored-field.js';
 
 /** One url position the app minted: the route it sits on (url.ts routeAt), its label, and the values seen there. */
 export interface AppMintedPosition {
@@ -46,11 +64,13 @@ export interface AppMintedPosition {
   label: string;
   /** How many route parts (path and hash-route segments) the url had: the evidence is about that template, not a deeper one. */
   parts: number;
-  /** The value the procedure asked for (or stood on) and the value the app put there instead. */
+  /** The value the procedure asked for (or stood on) and the value the app put there instead; for a provisional position, that value alone. */
   values: string[];
 }
 
 const VALUE_ENTRY = new Set(['fill', 'type']);
+/** Steps that name their destination: their landing is judged against the address they asked for. */
+const ADDRESSED = new Set(['goto', 'back']);
 
 /** The route-bearing parts of a url: path `p<i>` and hash-route `h<i>` labels — never query or state, nor an in-page anchor (`#history`, url.ts hashAnchor). */
 function routeParts(url: string): { label: string; value: string }[] {
@@ -81,12 +101,82 @@ function typedBy(step: RecordedStep): string[] {
   return [step.args?.value, step.args?.text].filter((v): v is string => typeof v === 'string' && v.trim().length > 0).map((v) => v.trim().toLowerCase());
 }
 
+/** Whether two urls are the same route: origin and every path and hash-route part (query and state aside). */
+function sameRoute(a: string, b: string): boolean {
+  if (originOf(a) !== originOf(b)) return false;
+  const x = routeParts(a);
+  const y = routeParts(b);
+  return x.length === y.length && x.every((p, i) => p.label === y[i].label && p.value === y[i].value);
+}
+
+/** Everything a step put in front of the procedure as text: its page changes, what it read, what it acted on, the link it followed. */
+function shownBy(step: RecordedStep): string[] {
+  const out: string[] = [
+    ...(step.diff?.added ?? []),
+    ...(step.diff?.removed ?? []),
+    ...(step.diff?.alerts ?? []),
+    ...(step.obs?.removed ?? []),
+    ...(step.journal?.gap?.added ?? []),
+    ...(step.journal?.gap?.removed ?? []),
+  ];
+  if (typeof step.result === 'string') out.push(step.result);
+  for (const v of Object.values(step.args ?? {})) if (typeof v === 'string') out.push(v);
+  for (const loc of [...Object.values(step.locators ?? {}), ...(step.linkedFrom ? [step.linkedFrom] : [])]) {
+    out.push(JSON.stringify(loc?.chain ?? []), loc?.raw ?? '');
+  }
+  if (step.obs?.settle?.link) out.push(safeDecode(step.obs.settle.link.href));
+  return out;
+}
+
+/**
+ * The position of `landed` — the url step `i`, a gesture that addressed
+ * nothing, opened — that held a PROVISIONAL value: one the app replaced when
+ * the procedure saved the page. Three recorded facts, none of them a look at
+ * the value:
+ *  - every step after `i` stayed on that route until one moved the url at
+ *    exactly one position of it (oneRedirectedPosition), below a shared
+ *    segment, and that step was a gesture on the page — not a navigation the
+ *    procedure addressed, and not a fill (the rule above);
+ *  - that step's own journal window made a write request the server accepted;
+ *  - and the request CARRIED a value the procedure had typed on that page
+ *    after `i` (the journal's `carries`): the app saved the procedure's
+ *    entries and then named the page.
+ * A recording without the journal holds none of this and gives null. So does
+ * a click that browses on from a record (nothing typed there was saved), and
+ * a save that leaves the url alone.
+ */
+function provisionalPosition(steps: readonly RecordedStep[], i: number, landed: string): { label: string; from: string; to: string } | null {
+  const typedIn = new Set<number>();
+  for (let j = i + 1; j < steps.length; j++) {
+    const s = steps[j];
+    const url = s.diff?.url;
+    if (!url || sameRoute(url, landed)) {
+      if (VALUE_ENTRY.has(s.tool) && s.journal?.w !== undefined) typedIn.add(s.journal.w);
+      continue;
+    }
+    if (ADDRESSED.has(s.tool) || VALUE_ENTRY.has(s.tool) || !typedIn.size) return null;
+    const d = oneRedirectedPosition(landed, url);
+    if (!d) return null;
+    const saved = caused(s, allEvents(steps.slice(j))).some(
+      (e) => isWrite(e) && succeeded(e) && Array.isArray(e.carries) && (e.carries as unknown[]).some((w) => typeof w === 'number' && typedIn.has(w)),
+    );
+    return saved ? d : null;
+  }
+  return null;
+}
+
 /**
  * Every route position the app minted in this recording (see the module note),
  * walked in order from `startUrl`. Steps without a url diff move nothing.
+ * `known` is what the caller named before the recording began (the
+ * instruction, the values it was given): a value found there is the caller's.
  */
-export function appMintedPositions(startUrl: string | undefined, steps: readonly RecordedStep[]): AppMintedPosition[] {
+export function appMintedPositions(startUrl: string | undefined, steps: readonly RecordedStep[], known: readonly string[] = []): AppMintedPosition[] {
   const out: AppMintedPosition[] = [];
+  /** What the caller named and the recording has shown so far, lower-cased. */
+  const shown: string[] = known.map((k) => k.toLowerCase());
+  /** What the procedure has typed so far. */
+  const typedSoFar: string[] = [];
   const seen = new Set<string>();
   const see = (url: string | undefined) => {
     if (url) for (const p of urlParts(url)) seen.add(p.value);
@@ -103,6 +193,23 @@ export function appMintedPositions(startUrl: string | undefined, steps: readonly
         asked = undefined;
       }
     } else if (VALUE_ENTRY.has(step.tool)) asked = current;
+    // A clicked link's own href is the address that click asked for.
+    else if (!ADDRESSED.has(step.tool) && step.obs?.settle?.link?.href) asked = step.obs.settle.link.href;
+    for (const text of shownBy(step)) shown.push(text.toLowerCase());
+    if (landed && !asked && current && !ADDRESSED.has(step.tool) && !sameRoute(landed, current)) {
+      // A gesture that addressed nothing opened this page: see provisionalPosition.
+      const d = provisionalPosition(steps, steps.indexOf(step), landed);
+      const route = d ? routeAt(landed, d.label) : null;
+      const value = d?.from.toLowerCase() ?? '';
+      if (d && route && !seen.has(d.from) && !typedSoFar.some((t) => value.includes(t)) && !shown.some((text) => text.includes(value))) {
+        const parts = routeParts(landed).length;
+        const known = out.find((m) => m.route === route && m.label === d.label && m.parts === parts);
+        if (known) {
+          if (!known.values.includes(d.from)) known.values.push(d.from);
+        } else out.push({ route, label: d.label, parts, values: [d.from] });
+      }
+    }
+    typedSoFar.push(...typedBy(step));
     if (landed && asked) {
       const d = oneRedirectedPosition(asked, landed);
       const typed = typedBy(step);

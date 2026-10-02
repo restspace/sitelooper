@@ -19,6 +19,7 @@ import { namedHighlightPicks } from './highlight-pick.js';
 import { dropRestoredDetours } from './restored-field.js';
 import { dropRetriedSubmits } from './retried-submit.js';
 import { appMintedPositions, generaliseAppMinted, generaliseAppMintedDeep } from './app-minted-url.js';
+import { DEBOUNCE_MS, type JournalEvent } from '../daemon/journal-attribute.js';
 import { locatingSlots, scopeReadBySlot } from './readscope.js';
 import { keyPicks } from './key-pick.js';
 import type { ShadowRow } from './shadow.js';
@@ -886,7 +887,10 @@ export function compileSkills(input: CompileInput): Skill[] {
   // made-up address (ERPNext's `new-sales-order-rxojnkvnht`, fwen1): every
   // pattern carrying one is written `:var`, and the seam rule below compares
   // through it. Evidence only: see skills/app-minted-url.ts.
-  const appMinted = appMintedPositions(startUrl, steps);
+  const appMinted = appMintedPositions(startUrl, steps, [input.instruction, ...Object.values(input.knownValues ?? {}).map(String)]);
+  // Page changes the app took back before the next gesture are not a step's
+  // lasting effect (erpnext fwen4-luna 02-find): see takenBackLines.
+  const takenBack = takenBackLines(steps);
   const sameTemplate = (a: string, b: string) => generaliseAppMinted(urlPattern(a, slots, { query: false }), appMinted) === generaliseAppMinted(urlPattern(b, slots, { query: false }), appMinted);
   // A url id this span minted is its OUTPUT: derived ({{dN}}, discoverMinted),
   // never a param — even when the ledger, which banked it before this compile,
@@ -1028,6 +1032,8 @@ export function compileSkills(input: CompileInput): Skill[] {
     // ...and what the recorder knew about each action (RecordedStep.obs): the
     // settle's link and the uncapped totals decide an abandoned link click (fwop15).
     const recordedObs = new WeakMap<SkillStep, RecordedEvidence>();
+    /** What takenBackLines kept out of an expectation, noted once the segment's notes exist. */
+    const takenNotes: TransformNote[] = [];
     const skillSteps: SkillStep[] = sg.steps.map((step, i) => {
       const g = base + i;
       // A minted value is a reference only DOWNSTREAM of its mint: in this
@@ -1170,7 +1176,20 @@ export function compileSkills(input: CompileInput): Skill[] {
       // no reference to what it minted — so `derived` could not find it.
       const prevKept = kept[g - 1];
       const popupHide = Boolean(prevKept && entryPopup(step.diff?.removed ?? [], prevKept.tool, prevKept.diff, prevKept.args));
-      const expect = expectationFor(step, new Map([...textSlots, ...mintedHere]), popupHide);
+      const taken = step.diff ? takenBack.get(step.diff) : undefined;
+      // Never the whole evidence of a step that mints or may be committing
+      // work (commitsWork): a Save that never happened must not pass silently.
+      const recordedAt = taken ? steps.findIndex((r) => r.diff === step.diff) : -1;
+      const vital = Boolean(mintedHereOnly) || (recordedAt >= 0 && commitsWork(steps, recordedAt));
+      const slotsHere = new Map([...textSlots, ...mintedHere]);
+      const expect = expectationFor(step, slotsHere, popupHide, taken ? { lines: taken, vital } : undefined);
+      if (taken) {
+        const whole = expectationFor(step, slotsHere, popupHide)?.addedContains ?? [];
+        const dropped = whole.filter((l) => !(expect?.addedContains ?? []).includes(l));
+        if (dropped.length) {
+          takenNotes.push({ name: 'takenBackLines', at: i + 1, reason: `page change(s) the app took back before the next gesture, by the recording's own gap diff — not this step's lasting effect: ${JSON.stringify(dropped)}` });
+        }
+      }
       if (popupHide) entryPopupHides.add(out);
       if (expect) out.expect = substituteDeep(expect, mintedHere) as StepExpectation;
       // A text mint with no origin to bind is the recording's record all the
@@ -1199,7 +1218,7 @@ export function compileSkills(input: CompileInput): Skill[] {
       return out;
     });
     const mintedForStart = mintedMap((m) => m.keptIndex < base);
-    const notes: TransformNote[] = [];
+    const notes: TransformNote[] = [...takenNotes];
     const folded = foldLoops(
       coalesceControls(namedKeyPicks(dropDismissedDialogs(dropSupersededNavigation(markRequiredRemovals(skillSteps, (s) => recordedDiffs.get(s)), notes, (s) => recordedDiffs.get(s), (s) => recordedObs.get(s)), notes, (s) => recordedDiffs.get(s)), notes), notes),
       input.instruction,
@@ -3172,7 +3191,13 @@ export function typedValues(step: RecordedStep, slots: Map<string, string>): str
     .filter((v) => v.length > 0);
 }
 
-function expectationFor(step: RecordedStep, slots: Map<string, string>, popupHide = false): StepExpectation | undefined {
+function expectationFor(
+  step: RecordedStep,
+  slots: Map<string, string>,
+  popupHide = false,
+  /** Added lines the page took back before the next gesture (takenBackLines); `vital` when they may not ALL go. */
+  takenBack?: { lines: ReadonlySet<string>; vital: boolean },
+): StepExpectation | undefined {
   // A navigation's diff is its LANDING — the next segment's start url,
   // fingerprint and startText — not an effect to assert: none of it becomes
   // an expectation, exactly as when goto/back were never diffed.
@@ -3211,10 +3236,16 @@ function expectationFor(step: RecordedStep, slots: Map<string, string>, popupHid
     // rules, decided here where the step's own args are still in hand, and
     // both leaving the wildcard that identifiesNothing then sweeps up.
     const typed = typedValues(step, slots);
-    const lasting = step.diff.added
-      .filter((l) => !TRANSIENT_LINE.test(l))
-      .map((l) => maskPopupItem(maskForeignValue(maskMinted(maskVolatile(substitute(l, slots))), typed)))
-      .filter((l) => !identifiesNothing(l));
+    const compiled = (added: readonly string[]): string[] =>
+      added
+        .filter((l) => !TRANSIENT_LINE.test(l))
+        .map((l) => maskPopupItem(maskForeignValue(maskMinted(maskVolatile(substitute(l, slots))), typed)))
+        .filter((l) => !identifiesNothing(l));
+    // A line the page took back before the next gesture is the page in
+    // transit too, by the recording's own gap diff (takenBackLines) — dropped
+    // BEFORE the budget is spent, so the lines that stayed take its place.
+    const stayed = takenBack ? compiled(step.diff.added.filter((l) => !takenBack.lines.has(l.trim()))) : [];
+    const lasting = takenBack && (stayed.length || !takenBack.vital) ? stayed : compiled(step.diff.added);
     if (lasting.length) out.addedContains = lasting.slice(0, MAX_ADDED_LINES).map((l) => l.slice(0, 120));
   }
   // The dialog this step closed (StepDiff.removed, kept by the recorder only
@@ -4212,6 +4243,70 @@ function dropFlashedLines(
     }
     notes.push({ name: 'dropFlashedLines', at: si + 1, reason: `line(s) a later step recorded appearing again, never recorded going: a flash, not this step's effect: ${JSON.stringify(drop)}` });
   });
+}
+
+/**
+ * THE PAGE TOOK IT BACK (round 86, erpnext fwen4-luna 02-find).
+ *
+ * n1 #15 filled the list's Customer Name filter and #16 clicked the Filter
+ * button. #16's diff caught the list the FILL's debounced refresh had just
+ * drawn — `- link "Seed: Cobalt Retail"`, `… Beacon Supplies`, `… Alpha
+ * Traders` — beside the filter popover the click opened. One list refresh
+ * later (Frappe throttles them a second apart; the journal dates it 120 ms
+ * after #16's capture) the popover's blank `ID =` row was applied, the url
+ * became `?name=undefined&…` and the list was EMPTY: the gap diff recorded on
+ * the next diffed step (#19, `gap.since` = #16's window) lists the three links
+ * as removed, with no gesture in between. s_1e98e5 step 4 carried them as its
+ * hard, slotted expectation. The daemon's replays caught them in the same
+ * second-long window; the compiled spec, whose click opened the popover before
+ * that refresh, never saw them: "after step 02-find s_1e98e5/4 the page did
+ * not show "- link \"Seed: Cobalt Retail\"" / … as it did when recorded".
+ *
+ * So a line a step added is not its lasting effect when the recording itself
+ * watched the page take it back before the next gesture. Recorded facts only:
+ *  - the next step that carries a gap diff measured it from THIS step's
+ *    after-capture (`journal.gap.since` is this step's window), and lists the
+ *    line among what the page lost;
+ *  - no `eval` ran in between (the procedure's own hand on the page);
+ *  - and the page MOVED by itself: that gap diff found it at another url
+ *    (`gap.url`), and the journal dates a navigation within DEBOUNCE_MS of
+ *    this step's capture — the page was still in motion when it was
+ *    captured. A toast that fades, a dialog the next step's own wait saw
+ *    close, a list that polls half a minute later: none of them moves the
+ *    url a moment after the capture, and each stays the step's effect (over
+ *    the 391 published recordings of the eleven apps, the gap diff alone
+ *    names 105 such steps — grafana's "Dashboard saved", ERPNext's "Missing
+ *    Fields" — and with this, only fwen4-luna's emptied list).
+ * A recording without the journal's gap diff gives nothing, and compiles as
+ * before. Keyed by the step's diff (compile matches kept steps by it).
+ */
+export function takenBackLines(steps: readonly RecordedStep[]): Map<StepDiff, Set<string>> {
+  const out = new Map<StepDiff, Set<string>>();
+  steps.forEach((step, i) => {
+    const w = step.journal?.w;
+    const captured = step.obs?.at?.c ?? step.obs?.at?.s;
+    if (!step.diff?.added.length || w === undefined || captured === undefined) return;
+    const between: JournalEvent[] = [];
+    for (let j = i + 1; j < steps.length; j++) {
+      const next = steps[j];
+      if (next.tool === 'eval') return;
+      const gap = next.journal?.gap;
+      between.push(...(gap?.ev ?? []));
+      if (gap?.since === undefined) {
+        // A step with a diff of its own and no gap diff: the page between the two was not compared.
+        if (next.diff) return;
+        continue;
+      }
+      if (gap.since !== w) return;
+      const moved = between.some((e) => e.k === 'nav' && e.t >= captured && e.t - captured <= DEBOUNCE_MS);
+      if (gap.url === undefined || !moved) return;
+      const gone = new Set((gap.removed ?? []).map((l) => l.trim()));
+      const lines = new Set(step.diff!.added.map((l) => l.trim()).filter((l) => gone.has(l)));
+      if (lines.size) out.set(step.diff!, lines);
+      return;
+    }
+  });
+  return out;
 }
 
 /**
