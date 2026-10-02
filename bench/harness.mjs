@@ -467,6 +467,16 @@ const granularityBlock = granularity
   ? '\n\nHow big one call should be: a sub-goal is at most ONE numbered objective of the goal. Signing in is its own first call. Never combine two objectives that change the app in one call — give each its own call, in order, and read each report before the next. Within one objective, do not split it across calls (as above).'
   : '';
 
+// Opt-in, sitelooper only: teach the orchestrator the `assert` command, so the
+// recording carries assertion steps a replay re-checks with no model (and the
+// sweep's --assert-negative run has something to corrupt). Off by default: the
+// block changes what the orchestrator issues, and every earlier sweep was run
+// without it. Recorded in the result as `asserts`; no app specifics or task plan.
+const asserts = Boolean(args.asserts) && args.arm === 'sitelooper';
+const assertsBlock = asserts
+  ? `\n\nAssertions. Besides \`do\`, the tool has \`assert\`: \`${arm.bin} --session ${runid} assert "<one sentence stating a condition the page must show>"\`. It changes nothing: it checks the condition on the page the browser is on (exit 0 holds, exit 1 does not hold) and records the check, so every later replay of this session re-checks it. After each call that changes the app, issue ONE assert stating the outcome that call was meant to produce, using the exact values the goal gives (names, quantities, dates, statuses). Write every expected value in the sentence itself: an assert cannot expect a value you did not state. If an assert does not hold, the app is not in the state you wanted — put it right with another \`do\`, then assert again; never reword an assert to match a page that is wrong. Do not use assert to obtain values for your report; reading and reporting stay in \`do\`.`
+  : '';
+
 // The cli text is kept byte-for-byte what it was before other arm shapes
 // existed, so every earlier cli run stays comparable with later ones.
 const armLabel = arm.bin ?? args.arm;
@@ -484,7 +494,7 @@ const systemText = `You are an automation agent completing a goal in a real web 
 
 ${toolIntro}
 
-Work through the goal to completion. Verify what you did rather than assuming a command succeeded. When the whole goal is done (or you are certain you cannot finish it), stop calling tools and reply with a final plain-text report stating, for each part of the goal, whether it succeeded and the concrete values you observed.${coarseBlock}${granularityBlock}
+Work through the goal to completion. Verify what you did rather than assuming a command succeeded. When the whole goal is done (or you are certain you cannot finish it), stop calling tools and reply with a final plain-text report stating, for each part of the goal, whether it succeeded and the concrete values you observed.${coarseBlock}${granularityBlock}${assertsBlock}
 
 Runid for this run: ${runid}. Where the goal says to name something with the runid, use exactly this value.${sessionPara}
 
@@ -1654,6 +1664,7 @@ const result = {
   contextTruncations,
   coarse,
   granularity,
+  asserts,
   // Learning sweep accounting: deterministic fraction A_n of the inner tool's
   // browser actions that ran by replay rather than by the model.
   learn: learnDir
