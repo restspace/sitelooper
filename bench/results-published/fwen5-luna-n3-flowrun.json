@@ -1,0 +1,305 @@
+{
+  "flow": "fwen5-luna",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_93b7cf; observed login_page_url=http://127.0.0.1:8100/, home_page_heading=Home.",
+      "values": {
+        "login_page_url": "http://127.0.0.1:8100/",
+        "home_page_heading": "Home"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "5/5",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_93b7cf: report value signed_in_user is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)"
+      ],
+      "unreported": [
+        "signed_in_user"
+      ]
+    },
+    {
+      "id": "02-report",
+      "status": "success",
+      "summary": "Replayed stored procedure s_ff98ad; observed customer_name_1=Seed: Cobalt Retail, customer_name_2=Seed: Beacon Supplies, customer_name_3=Seed: Alpha Traders, matching_sales_orders_list_count=3 of 3, sales_order_id_2=SAL-ORD-2026-00002, sales_order_id_3=SAL-ORD-2026-00001, verified_sales_order_id=SAL-ORD-2026-00003, verified_sales_order_customer=Seed: Cobalt Retail, sales_order_id_1=SAL-ORD-2026-00003.",
+      "values": {
+        "customer_name_1": "Seed: Cobalt Retail",
+        "customer_name_2": "Seed: Beacon Supplies",
+        "customer_name_3": "Seed: Alpha Traders",
+        "matching_sales_orders_list_count": "3 of 3",
+        "sales_order_id_2": "SAL-ORD-2026-00002",
+        "sales_order_id_3": "SAL-ORD-2026-00001",
+        "verified_sales_order_id": "SAL-ORD-2026-00003",
+        "verified_sales_order_customer": "Seed: Cobalt Retail",
+        "sales_order_id_1": "SAL-ORD-2026-00003"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "15/15",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_595655; observed ref=fwen5-luna-n3, customer_record_url=/app/customer/fwen5-luna-n3%20Bench%20Customer, customer_name=fwen5-luna-n3 Bench Customer, customer_group=Commercial, customer_territory=United States, customer_list_count=7 of 7.",
+      "values": {
+        "ref": "fwen5-luna-n3",
+        "customer_record_url": "/app/customer/fwen5-luna-n3%20Bench%20Customer",
+        "customer_name": "fwen5-luna-n3 Bench Customer",
+        "customer_group": "Commercial",
+        "customer_territory": "United States",
+        "customer_list_count": "7 of 7"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "10/10",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_595655: step 2: primary locator did not resolve; used fallback #2 page.locator('div > div:nth-of-type(1) > div > div > div:nth-of-type(1) > h3').nth(3)"
+      ],
+      "unreported": [
+        "new_customer_record_url"
+      ]
+    },
+    {
+      "id": "04-create",
+      "status": "success",
+      "summary": "Record URL: http://127.0.0.1:8100/app/sales-order/SAL-ORD-2026-00004.",
+      "values": {
+        "sales_order_record_url": "http://127.0.0.1:8100/app/sales-order/SAL-ORD-2026-00004",
+        "customer_name": "fwen5-luna-n3 Bench Customer",
+        "sales_order_url": "http://127.0.0.1:8100/app/sales-order/SAL-ORD-2026-00004",
+        "customer": "fwen5-luna-n3 Bench Customer",
+        "sales_order_id": "SAL-ORD-2026-00004",
+        "status": "Draft",
+        "sales_order_item": "Bench Widget",
+        "ref": "fwen5-luna-n3",
+        "item_quantity": "1",
+        "item_rate": "$ 40.00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "25/25",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_7c3c91: step 3: the field already held the value this type enters (restored after the recording saw it emptied), so it was cleared first rather than typed onto",
+        "s_ae7c21: step 1: read 'delivery_date' returned a value the skill itself set/selected ('2026-12-31') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_ae7c21: step 3: skipped read — no element matched any known locator for target (none recorded)"
+      ],
+      "unreported": [
+        "delivery_date"
+      ]
+    },
+    {
+      "id": "05-set",
+      "status": "success",
+      "summary": "Replayed stored procedure s_9d6cc6; observed delivery_date=2026-12-31, item_1_rate=40.00, item_2_rate=125.00, item_1_name=Bench Widget, sales_order_record_url=http://127.0.0.1:8100/app/sales-order/SAL-ORD-2026-00004, item_1_amount=120.00, item_2_amount=250.00, sales_order_id=SAL-ORD-2026-00004, sales_order_status_field=Status\n\t\t\t\t\t\t\n\t\t\t\t\t\n\t\t\t\t\t\n\t\t\t\t\t\t\n\t\t\t\t\t\tDraft\n\t\t\t\t\t\t\n\t\t\t\t\t\n\t\t\t\t\n\t\t\tstatus, customer=fwen5-luna-n3 Bench Customer, document_status=Draft, ref=fwen5-luna-n3.",
+      "values": {
+        "delivery_date": "2026-12-31",
+        "item_1_rate": "40.00",
+        "item_2_rate": "125.00",
+        "item_1_name": "Bench Widget",
+        "sales_order_record_url": "http://127.0.0.1:8100/app/sales-order/SAL-ORD-2026-00004",
+        "item_1_amount": "120.00",
+        "item_2_amount": "250.00",
+        "sales_order_id": "SAL-ORD-2026-00004",
+        "sales_order_status_field": "Status\n\t\t\t\t\t\t\n\t\t\t\t\t\n\t\t\t\t\t\n\t\t\t\t\t\t\n\t\t\t\t\t\tDraft\n\t\t\t\t\t\t\n\t\t\t\t\t\n\t\t\t\t\n\t\t\tstatus",
+        "customer": "fwen5-luna-n3 Bench Customer",
+        "document_status": "Draft",
+        "ref": "fwen5-luna-n3"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "27/27",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_9d6cc6: step 6: primary locator did not resolve; used fallback #2 page.locator('div > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(2) > div > div:nth-of-type(3)').nth(2)",
+        "s_9d6cc6: step 7: primary locator did not resolve; used fallback #2 page.getByRole('combobox', { name: 'Item Code', exact: true })",
+        "s_9d6cc6: step 14: read 'item_2_name' returned a value the skill itself set/selected ('Bench Gadget') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_9d6cc6: step 20: read 'item_2_name' returned a value the skill itself set/selected ('Bench Gadget') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_9d6cc6: step 24: primary locator did not resolve; used fallback #2 page.locator('div > div:nth-of-type(1) > div > div > div:nth-of-type(1) > h3').nth(2)",
+        "s_9d6cc6: step 27: the target chain is dead and was not healed inline — the step is a synthesized read no run has ever resolved, so nothing about it has drifted",
+        "s_9d6cc6: step 27: skipped read — no element matched any known locator for target (tried 1: page.getByRole('alert', { name: 'Saved', exact: true }))"
+      ],
+      "unreported": [
+        "item_2_name",
+        "save_alert"
+      ]
+    },
+    {
+      "id": "06-verify",
+      "status": "success",
+      "summary": "Replayed stored procedure s_4f8403; observed record_title=fwen5-luna-n3 Bench Customer, document_status=To Deliver and Bill, item_1_indicator=Bench Widget, item_2_indicator=Bench Gadget, document_status_display=Status\n\t\t\t\t\t\t\n\t\t\t\t\t\n\t\t\t\t\t\n\t\t\t\t\t\t\n\t\t\t\t\t\tTo Deliver and Bill\n\t\t\t\t\t\t\n\t\t\t\t\t\n\t\t\t\t\n\t\t\tstatus, customer=fwen5-luna-n3 Bench Customer, record_url=http://127.0.0.1:8100/app/sales-order/SAL-ORD-2026-00004, record_id=SAL-ORD-2026-00004, delivery_date=2026-12-31, items_still_present_1=Bench Widget, items_still_present_2=Bench Gadget, confirm_dialog_message=submitted.",
+      "values": {
+        "record_title": "fwen5-luna-n3 Bench Customer",
+        "document_status": "To Deliver and Bill",
+        "item_1_indicator": "Bench Widget",
+        "item_2_indicator": "Bench Gadget",
+        "document_status_display": "Status\n\t\t\t\t\t\t\n\t\t\t\t\t\n\t\t\t\t\t\n\t\t\t\t\t\t\n\t\t\t\t\t\tTo Deliver and Bill\n\t\t\t\t\t\t\n\t\t\t\t\t\n\t\t\t\t\n\t\t\tstatus",
+        "customer": "fwen5-luna-n3 Bench Customer",
+        "record_url": "http://127.0.0.1:8100/app/sales-order/SAL-ORD-2026-00004",
+        "record_id": "SAL-ORD-2026-00004",
+        "delivery_date": "2026-12-31",
+        "items_still_present_1": "Bench Widget",
+        "items_still_present_2": "Bench Gadget",
+        "confirm_dialog_message": "submitted"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "21/21",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_4f8403: step 3: skipped read — no element matched any known locator for target (tried 2: page.locator('div:nth-of-type(1) > div > div > div:nth-of-type(1) > span > span'), elementAt(385, 78) /* span */)"
+      ],
+      "unreported": [
+        "sales_order_status"
+      ]
+    },
+    {
+      "id": "07-add",
+      "status": "success",
+      "summary": "Replayed stored procedure s_044e71; observed comment_author=Administrator, record_id=SAL-ORD-2026-00004.",
+      "values": {
+        "comment_author": "Administrator",
+        "record_id": "SAL-ORD-2026-00004"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "4/4",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_044e71: report value comment_text is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)",
+        "s_044e71: report value runid_in_comment is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)"
+      ],
+      "unreported": [
+        "runid_in_comment"
+      ]
+    }
+  ],
+  "passed": 7,
+  "total": 7,
+  "repinned": 0,
+  "drift": 7,
+  "driftTickets": [
+    {
+      "flow": "fwen5-luna",
+      "step": "03-create",
+      "skill": "s_595655",
+      "atStep": "2",
+      "key": "target",
+      "similarity": 0.999,
+      "missedLocator": "page.getByText('fwen5-luna-n3 Bench Customer', { exact: true })",
+      "fallbackUsed": "page.locator('div > div:nth-of-type(1) > div > div > div:nth-of-type(1) > h3').nth(3)",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8100/app/customer",
+      "pageUrl": "http://127.0.0.1:8100/app/customer"
+    },
+    {
+      "flow": "fwen5-luna",
+      "step": "04-create",
+      "skill": "s_ae7c21",
+      "atStep": "3",
+      "key": "target",
+      "similarity": 0.999,
+      "missedLocator": "(none recorded)",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8100/app/sales-order/:id",
+      "pageUrl": "http://127.0.0.1:8100/app/sales-order/SAL-ORD-2026-00004"
+    },
+    {
+      "flow": "fwen5-luna",
+      "step": "05-set",
+      "skill": "s_9d6cc6",
+      "atStep": "6",
+      "key": "target",
+      "similarity": 0.999,
+      "missedLocator": "page.locator('.grid-body .grid-row[data-name=\"new-sales-order-item-curuwsrjxu\"] > .data-row > div[data-fieldname=\"item_code\"]')",
+      "fallbackUsed": "page.locator('div > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(2) > div > div:nth-of-type(3)').nth(2)",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8100/app/sales-order/:id",
+      "pageUrl": "http://127.0.0.1:8100/app/sales-order/SAL-ORD-2026-00004"
+    },
+    {
+      "flow": "fwen5-luna",
+      "step": "05-set",
+      "skill": "s_9d6cc6",
+      "atStep": "7",
+      "key": "target",
+      "similarity": 0.999,
+      "missedLocator": "page.locator('.grid-body .grid-row[data-name=\"new-sales-order-item-curuwsrjxu\"] input[data-fieldname=\"item_code\"]')",
+      "fallbackUsed": "page.getByRole('combobox', { name: 'Item Code', exact: true })",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8100/app/sales-order/:id",
+      "pageUrl": "http://127.0.0.1:8100/app/sales-order/SAL-ORD-2026-00004"
+    },
+    {
+      "flow": "fwen5-luna",
+      "step": "05-set",
+      "skill": "s_9d6cc6",
+      "atStep": "24",
+      "key": "target",
+      "similarity": 0.999,
+      "missedLocator": "page.getByText('fwen5-luna-n3 Bench Customer', { exact: true })",
+      "fallbackUsed": "page.locator('div > div:nth-of-type(1) > div > div > div:nth-of-type(1) > h3').nth(2)",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8100/app/sales-order/:id",
+      "pageUrl": "http://127.0.0.1:8100/app/sales-order/SAL-ORD-2026-00004"
+    },
+    {
+      "flow": "fwen5-luna",
+      "step": "05-set",
+      "skill": "s_9d6cc6",
+      "atStep": "27",
+      "key": "target",
+      "similarity": 0.999,
+      "missedLocator": "page.getByRole('alert', { name: 'Saved', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8100/app/sales-order/:id",
+      "pageUrl": "http://127.0.0.1:8100/app/sales-order/SAL-ORD-2026-00004"
+    },
+    {
+      "flow": "fwen5-luna",
+      "step": "06-verify",
+      "skill": "s_4f8403",
+      "atStep": "3",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.locator('div:nth-of-type(1) > div > div > div:nth-of-type(1) > span > span')",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8100/app/sales-order/:id",
+      "pageUrl": "http://127.0.0.1:8100/app/sales-order/SAL-ORD-2026-00004"
+    }
+  ],
+  "wallMs": 144428,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "cachedTokens": 0
+  },
+  "usageByModel": {},
+  "servedByModel": {},
+  "recoveryModel": "openai/gpt-6-luna",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}
