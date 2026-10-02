@@ -1,4 +1,4 @@
-import { changedCreation, dispatchesFirstMatch, isMutatingAction, isReadAction, runStepLifecycle, spansEveryMatch, type StepActionResult } from '../execution/lifecycle.js';
+import { changedCreation, dispatchesFirstMatch, holdForRecordedMove, isMutatingAction, isReadAction, runStepLifecycle, spansEveryMatch, type StepActionResult } from '../execution/lifecycle.js';
 import { outcomeLabel, outcomeOfError, urlHeldStill, type ActionOutcome } from '../execution/browser.js';
 import { inFlightRequests, type ActionExpectation } from '../execution/action.js';
 import { IDENTITY_POLL_MS, IDENTITY_WAIT_MS, SOFT_MATCH_MIN_SIMILARITY, alertVerdict, detourGiven, errorPageVerdict, gotoLandingVerdict, isErrorPageUrl, landedOnRecordedPage, markersBound, preconditionVerdict, retargetNavigation, segmentGate, fillableChain, leftByLink, linkLandingWarning, unfilledStepVerdict, urlEffectVerdict, urlRecordParts } from '../execution/gates.js';
@@ -1480,6 +1480,8 @@ export async function replaySkill(
     const warnings: string[] = [];
     /** Where a recorded page effect left the procedure, once the action has run. */
     let movedTo: Page | null = null;
+    /** When the action settled: what a recorded late move is timed from (SkillStep.movedAfterMs). */
+    let settledAt = 0;
     /** Whether an earlier step of this replay had already dispatched something (see `acted`). */
     let actedBefore = res.acted;
     /**
@@ -1667,6 +1669,7 @@ export async function replaySkill(
 
       },
       settle: async (value) => {
+        settledAt = Date.now();
         // A navigation renders a route skeleton first; let it hydrate before
         // the effect gates look for the recorded content. An action whose
         // observation settled the page (the executor's) has waited on exactly
@@ -1847,6 +1850,13 @@ export async function replaySkill(
         const filled = String(args.value ?? '');
         await noteFill(standing, resolved.target, hasTotpMarker(filled) ? () => resolveSecretsAsync(filled) : resolveSecrets(filled), page);
       }
+      // The recording watched the page move by itself after this step, before
+      // its next one went out (SkillStep.movedAfterMs): the next step is held
+      // that long, timed from this action's settle, so it never meets the
+      // page mid-move (the shared holdForRecordedMove; erpnext fwen6-luna
+      // 02-find, whose Filter click reached the list before its second refresh).
+      const held = await holdForRecordedMove(step.movedAfterMs, settledAt);
+      if (held) res.lines[res.lines.length - 1] += ` — held ${held} ms: the recording saw the page still moving ${step.movedAfterMs} ms after this step`;
     }
     return 'ran';
   };

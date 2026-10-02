@@ -2629,6 +2629,7 @@ function emitSkillStep(recorded: SkillStep, segment: SpecSegment, index: number,
   // already raised passes through assertMissed as it stands.
   const checkOf = assertedBy(step, segment, ctx);
   const backstop = checkOf ? `assertMissed('unlocatable', ${src(checkOf.message)}, err)` : null;
+  const movedHold = typeof step.movedAfterMs === 'number' && step.movedAfterMs > 0 && !isRead && !landing ? `movedSettled${ctx.urls}` : undefined;
   const head = [
     `// @step ${where}`,
     `let ${urlBefore} = '';`,
@@ -2640,6 +2641,7 @@ function emitSkillStep(recorded: SkillStep, segment: SpecSegment, index: number,
     ...(refill ? [`let ${refill.doc}: number | null = null;`] : []),
     ...(landing ? [`let ${landing}: Awaited<ReturnType<typeof armPageEffect>> | null = null;`, `let ${moved}: Page | null = null;`] : []),
     ...(observed ? [`let ${observed}: ActionObservation | null = null;`] : []),
+    ...(movedHold ? [`let ${movedHold} = 0;`] : []),
   ];
   const lifecycle = [
     'await runStepLifecycle({',
@@ -2665,6 +2667,8 @@ function emitSkillStep(recorded: SkillStep, segment: SpecSegment, index: number,
     ...(observed
       ? [`    if (${observed}) await ${observed}.settle();`, `    else if (page.url() !== ${urlBefore}) await settle(page);`]
       : [`    if (page.url() !== ${urlBefore}) await settle(page);`]),
+    // What a recorded late move is timed from: the action's settle, as replay times it.
+    ...(movedHold ? [`    ${movedHold} = Date.now();`] : []),
     // The page-change observation too, first: the capture tools.ts runStep
     // takes the moment the action settled, which the daemon's diff is (fwop14).
     ...(linesAfter ? [`    ${linesAfter} = await capturePageLines(page${dialectArg(step)});`] : []),
@@ -2716,6 +2720,13 @@ function emitSkillStep(recorded: SkillStep, segment: SpecSegment, index: number,
   return [
     ...head,
     ...body,
+    // The recording watched the page move by itself after this step, before
+    // its next one went out (SkillStep.movedAfterMs, erpnext fwen6-luna
+    // 02-find): the next step is held that long from the action's settle, as
+    // replay's runStepBody holds it (the shared holdForRecordedMove). A step
+    // that was skipped settled nothing and holds nothing; nor does one that
+    // moved the procedure to another page, as in replay.
+    ...(movedHold ? [`if (${movedHold}) await holdForRecordedMove(${step.movedAfterMs}, ${movedHold});`] : []),
     // Every later step of this body, and every later flow step (run.page), is
     // asked of the page the procedure continued on.
     ...(moved ? [`if (${moved}) page = run.page = ${moved};`] : []),

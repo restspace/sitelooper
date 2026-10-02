@@ -207,6 +207,56 @@ document.getElementById('go').addEventListener('click', () => {
 </body></html>`;
 
 /**
+ * Round 87, ERPNext fwen6-luna 02-find, in miniature: a list whose Customer
+ * Name filter refreshes it TWICE — the field's change asks for a refresh 300
+ * and 500 ms after the input, and refreshes are throttled a second apart
+ * (leading and trailing), so the second runs a second after the first, as
+ * Frappe's did (n1: request 26 ms after the fill's capture, the url written
+ * again 1025 ms after it). The Filter button opens a popover holding a blank
+ * `ID =` row, and a refresh that runs while it is open applies that row: the
+ * url gains `name=undefined` and the list is empty ("0 of 0"). `#refreshes`
+ * counts them, the first being the page's own.
+ */
+const FILTER_LIST = `<!doctype html><html><head><meta charset="utf-8"><title>Sales Order</title></head><body>
+<h1>Sales Order</h1>
+<label for="cn">Customer Name</label><input id="cn" placeholder="Customer Name">
+<button id="filter" type="button">Filter</button>
+<div id="popover" hidden><select aria-label="Filter field"><option>ID</option></select><select aria-label="Filter condition"><option>=</option></select><button type="button">Apply Filters</button></div>
+<ul id="rows"></ul>
+<p id="count"></p>
+<p id="refreshes"></p>
+<script>
+const ROWS = ['Seed: Cobalt Retail', 'Seed: Beacon Supplies', 'Seed: Alpha Traders', 'Walk-in Customer'];
+let refreshes = 0;
+function refresh() {
+  refreshes++;
+  const typed = document.getElementById('cn').value;
+  const blank = !document.getElementById('popover').hidden;
+  const shown = blank ? [] : ROWS.filter((r) => r.toLowerCase().includes(typed.toLowerCase()));
+  document.getElementById('rows').innerHTML = shown.map((r) => '<li><a href="#">' + r + '</a></li>').join('');
+  document.getElementById('count').textContent = shown.length + ' of ' + shown.length;
+  document.getElementById('refreshes').textContent = refreshes + ' refreshes';
+  const query = (blank ? ['name=undefined'] : []).concat(typed ? ['customer_name=' + encodeURIComponent(typed)] : []);
+  history.replaceState(null, '', '/filter-list' + (query.length ? '?' + query.join('&') : ''));
+}
+let previous = 0;
+let timer = null;
+function refreshThrottled() {
+  const remaining = 1000 - (Date.now() - previous);
+  if (remaining <= 0) {
+    previous = Date.now();
+    refresh();
+  } else if (!timer) {
+    timer = setTimeout(() => { timer = null; previous = Date.now(); refresh(); }, remaining);
+  }
+}
+document.getElementById('cn').addEventListener('input', () => { setTimeout(refreshThrottled, 300); setTimeout(refreshThrottled, 500); });
+document.getElementById('filter').addEventListener('click', () => { document.getElementById('popover').hidden = false; });
+refresh();
+</script>
+</body></html>`;
+
+/**
  * Round 59's echo cases side by side (echoAt): a field an app RE-RENDERS
  * (the same field, a new node); a combobox whose display span shows the
  * option chosen from its listbox; a live preview mirroring a textarea with no
@@ -1981,6 +2031,11 @@ export async function createFixtureServer(initialCount = 10): Promise<FixtureSer
     if (url === '/espo-form') {
       res.writeHead(200, { 'content-type': 'text/html' });
       res.end(ESPO_FORM);
+      return;
+    }
+    if (url === '/filter-list' || url.startsWith('/filter-list?')) {
+      res.writeHead(200, { 'content-type': 'text/html' });
+      res.end(FILTER_LIST);
       return;
     }
     if (url === '/signin') {
