@@ -1,0 +1,149 @@
+
+[sweep] run 1/3: fwen7-luna-n1 (store: /home/user/sitelooper/bench/results/fwen7-luna-skills)
+[harness] erpnext: defaulting APP_URL
+[harness] erpnext: defaulting APP_EMAIL
+[harness] erpnext: defaulting APP_PASSWORD
+[reset] erpnext: cleared saved list settings for Sales Order (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view)
+[reset] erpnext: cleared saved list settings for Customer (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view)
+[reset] erpnext: cleared saved list settings for Item (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view)
+[reset] erpnext: cleared saved list settings for Sales Invoice (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view)
+[reset] erpnext: cleared saved list settings for Quotation (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view)
+[reset] erpnext: cleared saved list settings for Delivery Note (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view)
+[reset] erpnext: no sales orders to delete
+[harness] erpnext responded 200 at http://127.0.0.1:8100/
+stopped: fwen7-luna-n1
+  flow "fwen7-luna" saved: 10 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwen7-luna.json
+  warning: note: 01-signin no longer publishes landing_page — no replay reads it from the page and the recording showed no line to read
+  warning: note: 02-find no longer publishes sales_order_page_length_options, sales_order_status_cobalt_retail — no replay reads them from the page and the recording showed no line to read
+  warning: note: 03-create no longer publishes customer_type, customer_group, territory — no replay reads them from the page and the recording showed no line to read
+  warning: note: 05-verify no longer publishes sales_order_save_button, item_code_fieldname, item_amount_fieldname — no replay reads them from the page and the recording showed no line to read
+  warning: note: 07-verify no longer publishes row_count — no replay reads it from the page and the recording showed no line to read
+  warning: note: 09-add no longer publishes timeline_comment_counter — no replay reads it from the page and the recording showed no line to read
+  warning: note: 1 step(s) adopted from non-success instruction(s) whose work the session continued from (04-create) — they replay model-first with doubled budget, and a non-success there does not halt the flow
+  warning: warning: 175 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[0].instruction: "Administrator" (output) in "Sign in to ERPNext at http://127.0.0.1:8100/ as Administrator using the password exactly as the literal text {{env:APP_PASSWORD}} (the browser fills it when typ"
+  flow.steps[0].params.v2: "Administrator" (output) in "Administrator"
+  flow.steps[1].instruction: "customer" (output) in "Find existing Sales Orders with customer names beginning exactly 'Seed:' and report all such customer names exactly as displayed. Do not modify any Sales Order."
+  flow.steps[2].instruction: "territory" (output) in "Create a customer named '{{runid}} Bench Customer', leaving customer group and territory at defaults. Save it and verify the customer record exists with that ex"
+  flow.steps[2].instruction: "customer" (output) in "Create a customer named '{{runid}} Bench Customer', leaving customer group and territory at defaults. Save it and verify the customer record exists with that ex"
+arm=sitelooper model=openai/gpt-6-luna runid=fwen7-luna-n1 stop=completed
+turns=11 wall=587.8s
+commands=10 cmdTime=522.8s cmdBytes=15870 timeouts=0
+orchestrator in=8577 cw=0 cr=53282 out=1379
+inner prompt=2951189 cached=2638370 completion=36103
+spend=$0.0746 maxUsd=3
+learn: A_n=0 replayed=0/10 full=0 repaired=0 compiled=9 variants=0
+-> /home/user/sitelooper/bench/results/fwen7-luna-n1-sitelooper-result.json
+
+fwen7-luna-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed customer names reported
+  obj 2: PASS — customer=fwen7-luna-n1 Bench Customer
+  obj 3: PASS — id=SAL-ORD-2026-00004, delivery_date=2026-12-31
+  obj 4: PASS — lines: Bench Widget x3 @ 40; Bench Gadget x2 @ 125
+  obj 5: PASS — docstatus=1 status=To Deliver and Bill
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — sales order id SAL-ORD-2026-00004 reported
+
+[sweep] run 2/3: fwen7-luna-n2 (replay flow fwen7-luna, no orchestrator)
+[reset] erpnext: cleared saved list settings for Sales Order (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view, updated_on)
+[reset] erpnext: cleared saved list settings for Customer (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view, updated_on)
+[reset] erpnext: cleared saved list settings for Item (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view)
+[reset] erpnext: cleared saved list settings for Sales Invoice (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view)
+[reset] erpnext: cleared saved list settings for Quotation (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view)
+[reset] erpnext: cleared saved list settings for Delivery Note (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view)
+[reset] erpnext: deleted 1 sales order(s) (earlier runs' and non-seed)
+[reset] erpnext: deleted customer "fwen7-luna-n1 Bench Customer"
+[sweep] fwen7-luna-n2: 3 drift ticket(s) → fwen7-luna-n2-drift.json
+
+fwen7-luna-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed customer names reported
+  obj 2: PASS — customer=fwen7-luna-n2 Bench Customer
+  obj 3: PASS — id=SAL-ORD-2026-00004, delivery_date=2026-12-31
+  obj 4: PASS — lines: Bench Widget x3 @ 40; Bench Gadget x2 @ 125
+  obj 5: PASS — docstatus=1 status=To Deliver and Bill
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — sales order id SAL-ORD-2026-00004 reported
+[sweep] fwen7-luna-n2: 04-create has no pinned skill — 32 model turn(s), on every replay
+
+[sweep] run 3/3: fwen7-luna-n3 (replay flow fwen7-luna, no orchestrator)
+[reset] erpnext: cleared saved list settings for Sales Order (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view, updated_on)
+[reset] erpnext: cleared saved list settings for Customer (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view, updated_on)
+[reset] erpnext: cleared saved list settings for Item (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view)
+[reset] erpnext: cleared saved list settings for Sales Invoice (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view)
+[reset] erpnext: cleared saved list settings for Quotation (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view)
+[reset] erpnext: cleared saved list settings for Delivery Note (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view)
+[reset] erpnext: deleted 1 sales order(s) (earlier runs' and non-seed)
+[reset] erpnext: deleted customer "fwen7-luna-n2 Bench Customer"
+[sweep] fwen7-luna-n3: 9 drift ticket(s) → fwen7-luna-n3-drift.json
+
+fwen7-luna-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed customer names reported
+  obj 2: PASS — customer=fwen7-luna-n3 Bench Customer
+  obj 3: PASS — id=SAL-ORD-2026-00004, delivery_date=2026-12-31
+  obj 4: PASS — lines: Bench Widget x3 @ 40; Bench Gadget x2 @ 125
+  obj 5: PASS — docstatus=1 status=To Deliver and Bill
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — sales order id SAL-ORD-2026-00004 reported
+
+Learning sweep fwen7-luna (K=3)
+┌─────────┬───┬─────────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬────────────────┬────────┐
+│ (index) │ n │ runid           │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed       │ wall_s │
+├─────────┼───┼─────────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼────────────────┼────────┤
+│ 0       │ 1 │ 'fwen7-luna-n1' │ '7/7'    │ 'completed' │ 11    │ 10   │ 0.0746    │ 0   │ '0/10'         │ 588    │
+│ 1       │ 2 │ 'fwen7-luna-n2' │ '7/7'    │ 'success'   │ 32    │ 10   │ 0.0153    │ 0.9 │ '10/10 (flow)' │ 265    │
+│ 2       │ 3 │ 'fwen7-luna-n3' │ '7/7'    │ 'success'   │ 0     │ 10   │ 0         │ 1   │ '10/10 (flow)' │ 228    │
+└─────────┴───┴─────────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴────────────────┴────────┘
+http://127.0.0.1:8100
+  s_044233  validated    1 steps  3/3 (100%)
+           Find existing Sales Orders with customer names beginning exactly 'Seed:' and report all such customer names ex…
+  s_0c412e  validated    6 steps  3/3 (100%)
+           Create a customer named '{{v2}}', leaving customer group and territory at defaults. Save it and verify the cus…
+  s_235afc  validated    1 steps  3/3 (100%)
+           Sign in to ERPNext at {{v1}} as {{v2}} using the password exactly as the literal text {{v3}} (the browser fill…
+  s_483fa4  validated    9 steps  3/3 (100%)
+           Create a customer named '{{v2}}', leaving customer group and territory at defaults. Save it and verify the cus…
+  s_51b36b  validated   17 steps  3/3 (100%)
+           Add a timeline comment to submitted Sales Order {{v1}} whose text includes the exact runid '{{v2}}'. {{v3}}/po…
+  s_792b2c  validated   15 steps  3/3 (100%)
+           Correct the existing draft Sales Order {{v1}} for '{{v2}}'. Ensure exactly two linked item rows: exact 'Bench …
+  s_94052a  validated    4 steps  3/3 (100%)
+           Submitted Sales Order {{v1}} has a timeline comment with exact text '{{v2}}' and its page URL ID is {{v1}}.
+  s_c1d2b6  validated   13 steps  3/3 (100%)
+           Sales Order {{v1}} for {{v2}} is submitted with status {{v4}}, delivery date {{v5}}, and exactly two rows: {{v…
+  s_c5f252  validated   10 steps  3/3 (100%)
+           Sales Order {{v1}} for {{v2}} is saved with delivery date {{v4}} and exactly two rows: {{v8}} quantity 3 {{v5}…
+  s_d3c3ad  validated   17 steps  3/3 (100%)
+           Find existing Sales Orders with customer names beginning exactly 'Seed:' and report all such customer names ex…
+  s_d46690  validated   14 steps  3/3 (100%)
+           Submit Sales Order {{v1}} for '{{v2}}', confirm the submission dialog if asked, and verify the persisted docum…
+  s_d5c81d  validated    5 steps  3/3 (100%)
+           Create a customer named '{{v2}}', leaving customer group and territory at defaults. Save it and verify the cus…
+  s_f38175  validated    1 steps  3/3 (100%)
+           Find existing Sales Orders with customer names beginning exactly 'Seed:' and report all such customer names ex…
+  s_fab25b  validated    3 steps  3/3 (100%)
+           Sign in to ERPNext at {{v1}} as {{v2}} using the password exactly as the literal text {{v3}} (the browser fill…
+  s_2e88ea  validated    1 steps  2/2 (100%)
+           Create a Sales Order for the customer '{{v1}}' with delivery date {{v3}} and exactly two item rows: choose the…
+  s_2fa74b  validated   19 steps  2/2 (100%)
+           Create a Sales Order for the customer '{{v1}}' with delivery date {{v3}} and exactly two item rows: choose the…
+  s_3ca03c  validated    2 steps  2/2 (100%)
+           Create a Sales Order for the customer '{{v1}}' with delivery date {{v3}} and exactly two item rows: choose the…
+  s_49dd7e  validated    3 steps  2/2 (100%)
+           Create a Sales Order for the customer '{{v1}}' with delivery date {{v3}} and exactly two item rows: choose the…
+  s_99ad33  validated   26 steps  2/2 (100%)
+           Create a Sales Order for the customer '{{v1}}' with delivery date {{v3}} and exactly two item rows: choose the…
+store: /home/user/sitelooper/bench/results/fwen7-luna-skills
+
+
+[sweep] assert-negative: fwen7-luna-neg replays fwen7-luna with 10-assert's expected values corrupted (v2)
+[reset] erpnext: cleared saved list settings for Sales Order (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view, updated_on)
+[reset] erpnext: cleared saved list settings for Customer (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view, updated_on)
+[reset] erpnext: cleared saved list settings for Item (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view)
+[reset] erpnext: cleared saved list settings for Sales Invoice (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view)
+[reset] erpnext: cleared saved list settings for Quotation (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view)
+[reset] erpnext: cleared saved list settings for Delivery Note (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view)
+[reset] erpnext: deleted 1 sales order(s) (earlier runs' and non-seed)
+[reset] erpnext: deleted customer "fwen7-luna-n3 Bench Customer"
+assert-negative: pass at 10-assert (assert-failed, failed, 0 model turn(s) at the step, 0 in the run)
+  assertion failed: Submitted Sales Order SAL-ORD-2026-00004 has a timeline comment with exact text 'fwen7-luna-neg — timeline comment added by the sitelooper run to verify the comment timeline on SAL-ORD-2026-00004. ~neg' and its page URL ID is SAL-ORD-2026-00004. — wait_for text_equals timed out after 10000ms (last: text="fwen7-luna-neg — timeline comment added by the sitelooper run to verify the comment timeline on SAL-ORD-2026-00004.") — value never changed from text="fwen7-luna-neg — timeline comment added by the sitelooper run to verify the comment timelin…
+summary: /home/user/sitelooper/bench/results/fwen7-luna-sweep.json
