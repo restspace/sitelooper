@@ -577,6 +577,28 @@ compile time from the chain.
 
 ---
 
+### `assert.ts` — what a missed assertion says
+
+`assertFailure`, `assertFailureKind`, `valueHolds`, `urlHolds`, `statedIn`, and the
+state lists (`ASSERT_STATES`, `ASSERT_ONLY_STATES`, `ASSERT_TEXT_STATES`). An
+assertion (`sitelooper assert`) is a recorded `wait_for` step carrying
+`assert: { message }`; it resolves and waits as any wait does. What this module
+fixes is what a miss means and says. Both runners raise the one message
+`assertFailure(kind, sentence, detail)`: `assertion failed: <sentence> — <detail>`
+when the page was read and the condition does not hold, or `assertion could not
+be checked: <sentence> — <detail>` when no recorded locator resolved. The daemon
+reads the kind back with `assertFailureKind` and reports the step as
+`assert-failed` with no recovery (`runAssertStep`, `src/daemon/step-verdict.ts`).
+The artifact throws the same message, so Playwright reports it as the test failure
+(the emitted `assertMissed`).
+
+`valueHolds` (`value_equals`) and `urlHolds` (`url_contains`) are the comparisons
+for the two states only an assertion can record. The daemon's `waitFor`
+(`src/agent/tools.ts`) and the emitted `expectValue` and `expectUrl` helpers both
+call them, so a field value and a url are judged the same way. `statedIn` is the
+stated-source rule and is used at record time only: an expected text must appear
+in the caller's own sentence.
+
 ## How embedding works
 
 `src/spec/runtime-source.ts` is the whole mechanism. It is deliberately **not** a
@@ -666,6 +688,7 @@ sitelooper check <name.flow.ts> --var k=v
 | Recipe learning, validation, demotion, stats | `storeBook`'s `onAttempt` → `ComponentStore.recordOutcome` after every attempt; `learnRecipes` after a recording; `pickRecipe` over a fresh read on every call | none — `snapshotBook` over `SpecFlow.recipes`, frozen at compile time | The RUNNER is shared (`recipes.ts`, above); recipe SELECTION evidence is daemon state, like candidate retirement. An artifact has no store to record into and no session to learn from, so it drives every widget with the recipe the store had chosen when the flow was compiled, and never demotes or revives one. Drift after the compile — a seed the store has since demoted, a variant it has since learned — is not diagnosed; that is what "snapshot" means. Recompile to refresh it. |
 | Page fingerprint (old files only) | measured and compared against the recording | a `.flow.ts` compiled before the vector travelled: `'unmeasured'` — refuses a soft url match | Such a file has no vector to measure against. It is the STRICTER runner and says so per segment (`unmeasured-precondition`); recompiling carries the vector, and a recompiled artifact measures exactly as replay does (`fingerprint.ts`, above). |
 | `upload` path resolution | daemon defaults | Playwright defaults | Trivia; listed so it is not rediscovered as a finding. (The `type` delay is no longer here: the emitted `type` adapter passes tools.ts's 20ms default and 10s timeout.) |
+| Assertion detail text | the `detail` of `assertFailure` is the daemon wait's own error, one plain sentence (`wait_for text_equals timed out after …ms (last: …)`) | the `detail` is Playwright's `expect` error for `visible`, `hidden`, `text_equals`, `text_contains` and `count`, flattened to one line with colour codes removed | The kind and the sentence are identical in both runners. For `value_equals` and `url_contains` the whole message matches too, because the emitted `expectValue` and `expectUrl` raise the daemon's words. For the other five, each runner reports what its own wait threw. `assertFailure` collapses whitespace and clips to 300 characters, but cannot make two libraries' errors read alike. Nothing decides on the detail text. |
 
 Out of scope for this branch entirely: recorder chain verification, and the
 opt-in contract-weakening guards at mutation call sites. They are separate seams.

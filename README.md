@@ -83,6 +83,7 @@ sitelooper --session ticket --learn open http://localhost:3000
 sitelooper --session ticket var runid=demo
 sitelooper --session ticket do "Sign in as {{env:TEST_USER}} using {{env:TEST_PASSWORD}} and verify the dashboard opens"
 sitelooper --session ticket do "Create a ticket titled 'demo Test'; verify it appears and report its id"
+sitelooper --session ticket assert "the ticket list shows 'demo Test' with status Open"
 sitelooper --session ticket stop --save-flow ticket
 sitelooper flow export ticket --out .sitelooper/procedures.json
 ```
@@ -146,6 +147,44 @@ a statistical guarantee against flakiness.
 `--negative-spec <file>` adds an authored fault-injection test that must fail its outcome
 assertion, and it reports `failureDetection: verified`. See
 [project fixtures and negative checks](docs/testing-workflow.md).
+
+### Assertions: conditions that must hold on every run
+
+`do` records what the agent did. `assert` records something you want to be true, and it makes
+that check impossible to skip. It takes a sentence and never acts on the page:
+
+```sh
+sitelooper --session ticket assert "the order total is 370.00"
+sitelooper --session ticket assert "no error banner is showing"
+```
+
+The sentence is checked against the page now. Exit `0` means it held, `1` means it did not, and
+`2` means the check could not run. In a `--learn` session a passing assert is also recorded as its
+own step of the saved flow. A model finds the element once, at record time. After that the step
+replays and compiles with no model.
+
+An assert can record seven conditions: an element is visible, an element is hidden, its text
+equals a value, its text contains a value, a count of matching elements, a form field's value,
+and the page url contains a value.
+
+The expected value must be written in the sentence. It can be a literal, the value of a declared
+var, or a value an earlier step reported. A value the agent only read off the page does not count:
+"the total is correct" would turn into "the total equals whatever it shows", and the page would
+agree with itself on every run. If the sentence states no value to compare with, the assert fails
+and says so.
+
+A recorded assert is strict. If it does not hold, or its element cannot be found, there is no
+recovery ladder, no model call and no re-pin, and nothing may skip it as already done:
+
+- In `sitelooper run` the step's status is `assert-failed` and the flow halts.
+- In the compiled spec the test fails with `assertion failed: <your sentence> — <detail>`, or
+  `assertion could not be checked: <your sentence> — <detail>` when no recorded locator found the
+  element.
+
+`assert` is for conditions a sentence can state. For anything else, such as a computed
+comparison or a check against the app's own API, write an `expect` call in your `.spec.ts`. That
+file is yours, and recompiling never overwrites it. See
+[choosing between the two](docs/testing-workflow.md#recorded-assertions-and-hand-written-ones).
 
 ### Project configuration
 

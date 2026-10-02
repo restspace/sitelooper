@@ -477,6 +477,20 @@ usually the same one; but nothing guarantees that, and "orders two working
 candidates" must not be read as "acts on the same element". A candidate that
 fails a guard is refused by both runners whatever its order.
 
+### Assertion detail text — runner-specific, by design
+
+`sitelooper assert` steps raise one message in both runners (`assertFailure`,
+`src/execution/assert.ts`): `assertion failed: <sentence> — <detail>` or
+`assertion could not be checked: <sentence> — <detail>`. The kind and the
+sentence are identical. The `detail` is each runner's own underlying error. For
+`visible`, `hidden`, `text_equals`, `text_contains` and `count` the daemon
+reports its own wait's sentence (`wait_for … timed out after …ms (last: …)`) and
+the artifact reports Playwright's `expect` error, flattened to one line with
+colour codes stripped. For `value_equals` and `url_contains` the emitted
+`expectValue` and `expectUrl` raise the daemon's own words, so the whole message
+matches. Both are clipped to 300 characters. No verdict depends on the detail;
+only a person reading a report sees the difference.
+
 ---
 
 ## Undetermined

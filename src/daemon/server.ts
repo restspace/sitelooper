@@ -1139,6 +1139,13 @@ ${describeLeaks(leaks.slice(0, 6))}`);
         const name = String(a.name ?? '').trim();
         if (!name) throw new Error('var requires a name (e.g. `var runid=k7`)');
         this.state.setVar(name, String(a.value ?? ''));
+        // Banked now, not only after the next instruction (seedLedger in
+        // `do`): the zero-model match binds a slot the template never states
+        // by its origin (learn.ts bindSkill), and a session's FIRST instruction
+        // found no `var:<name>` there. assert-e2e: `var runid=q9`, `open`,
+        // then a stored assertion whose count check carries the runid only in
+        // a fallback locator bound nothing and was handed to the model.
+        this.seedLedger();
         return { vars: this.state.vars };
       }
 
