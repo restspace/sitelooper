@@ -41,6 +41,9 @@ for (let i = 0; i < argv.length; i++) {
   else if (a === '--verify-cmd') own.verifyCmd = argv[++i] ?? '';
   else if (a === '--reset-cmd') own.resetCmd = argv[++i] ?? '';
   else if (a === '--from') own.from = argv[++i] ?? '';
+  // The sweep's own: after the replays, one more replay of the flow with an
+  // assertion's expected value corrupted (see the block after the loop).
+  else if (a === '--assert-negative') own.assertNegative = true;
   else if (a === '--target') {
     // Captured AND passed on: the harness needs it for run 1, and the sweep
     // needs it to give replays the target's app credentials.
@@ -309,6 +312,91 @@ if (learnDir) {
   });
   console.log(skills.stdout);
 }
+// --assert-negative: does an assertion that should fail, fail?
+//
+// Green replays say the flow's assertions hold on a correct app; they say
+// nothing about whether one would notice a wrong one. So the flow is replayed
+// once more against a reset app with ONE assertion's expected values corrupted
+// (its bound params, each with a suffix the app never shows), and that step
+// must come back `assert-failed` with no model turn, every step before it
+// having passed. The LAST assertion with a value to corrupt is taken, so the
+// run also shows the flow reaching it. A flow with no such assertion is
+// reported as skipped, never as a pass.
+let assertNegative = null;
+if (own.assertNegative && own.flow) {
+  const negRunid = `${own.base}-neg`;
+  const negFlow = `${own.flow}-neg`;
+  const flowFile = path.join(flowsDir, `${own.flow.replace(/[^A-Za-z0-9._-]+/g, '_')}.json`);
+  try {
+    const flow = JSON.parse(fs.readFileSync(flowFile, 'utf8'));
+    const assertSteps = flow.steps.filter((s) => s.kind === 'assert');
+    const target = [...assertSteps].reverse().find((s) => s.params && Object.keys(s.params).length);
+    if (!target) {
+      assertNegative = { verdict: 'skipped', assertSteps: assertSteps.length, why: assertSteps.length ? 'no assertion step binds a value to corrupt' : 'the flow has no assertion step' };
+    } else {
+      // A value with text of its own is the one to corrupt: a param that is
+      // nothing but a reference ({{runid}}, an earlier step's url id) may also
+      // address the page the assertion starts on, and a miss at that gate says
+      // less than a check that read the page and found it wrong (fwen6-luna-neg
+      // corrupted the order id and stopped at the start gate, 'unlocatable').
+      // Bare references are corrupted only when the step binds nothing else.
+      const ownText = (v) => String(v).replace(/\{\{[^{}]*\}\}/g, '').trim() !== '';
+      const stated = Object.keys(target.params).filter((k) => ownText(target.params[k]));
+      const chosen = stated.length ? stated : Object.keys(target.params);
+      const before = Object.fromEntries(chosen.map((k) => [k, target.params[k]]));
+      for (const k of chosen) target.params[k] = `${target.params[k]} ~neg`;
+      flow.name = negFlow;
+      fs.writeFileSync(path.join(flowsDir, `${negFlow.replace(/[^A-Za-z0-9._-]+/g, '_')}.json`), JSON.stringify(flow, null, 2));
+      console.error(`\n[sweep] assert-negative: ${negRunid} replays ${own.flow} with ${target.id}'s expected values corrupted (${Object.keys(before).join(', ')})`);
+      const appDefaults = APP_DEFAULTS[own.target] ?? {};
+      const reset = own.resetCmd
+        ? spawnSync(own.resetCmd, { stdio: 'inherit', env: { ...appDefaults, ...process.env }, shell: true })
+        : spawnSync(process.execPath, [path.join(here, 'reset-app.mjs'), '--target', own.target], { stdio: 'inherit', env: { ...appDefaults, ...process.env } });
+      if (reset.status !== 0) {
+        assertNegative = { verdict: 'skipped', assertSteps: assertSteps.length, step: target.id, why: `app reset failed (exit ${reset.status})` };
+      } else {
+        const env = {
+          ...appDefaults,
+          ...process.env,
+          SITELOOPER_SKILLS: '1',
+          ...(learnDir ? { SITELOOPER_SKILLS_DIR: learnDir } : {}),
+          SITELOOPER_FLOWS_DIR: flowsDir,
+        };
+        const fr = spawnSync(armBin, ['--session', negRunid, 'run', negFlow, '--var', `runid=${negRunid}`, '--json'], { stdio: ['inherit', 'pipe', 'inherit'], env, shell: process.platform === 'win32' });
+        if (fr.stdout && fr.stdout.length) fs.writeFileSync(path.join(outDir, `${negRunid}-flowrun.json`), fr.stdout);
+        spawnSync(armBin, ['stop', '--session', negRunid], { stdio: 'ignore', env, shell: process.platform === 'win32' });
+        for (const f of ['script', 'timing', 'trace']) {
+          const from = path.join(process.env.SITELOOPER_HOME ?? path.join(os.homedir(), '.sitelooper'), 'sessions', negRunid, `${f}.jsonl`);
+          try {
+            if (fs.existsSync(from)) fs.copyFileSync(from, path.join(outDir, `${negRunid}-${f}.jsonl`));
+          } catch { /* the flowrun is the record that matters */ }
+        }
+        const run = JSON.parse(fr.stdout);
+        const at = run.steps.findIndex((s) => s.id === target.id);
+        const hit = at >= 0 ? run.steps[at] : null;
+        const earlierOk = at >= 0 && run.steps.slice(0, at).every((s) => s.status === 'success');
+        const ok = Boolean(hit) && hit.status === 'assert-failed' && (hit.turns ?? 0) === 0 && earlierOk && run.status !== 'success';
+        assertNegative = {
+          verdict: ok ? 'pass' : 'FAIL',
+          assertSteps: assertSteps.length,
+          step: target.id,
+          corrupted: before,
+          stepStatus: hit?.status ?? 'not reached',
+          kind: hit?.assert?.kind ?? null,
+          message: hit?.assert?.message ?? hit?.summary ?? null,
+          turns: hit?.turns ?? 0,
+          runTurns: run.steps.reduce((a, s) => a + (s.turns ?? 0), 0),
+          earlierOk,
+          flowStatus: run.status,
+        };
+      }
+    }
+  } catch (err) {
+    assertNegative = { verdict: 'skipped', why: `could not run it: ${err.message}` };
+  }
+  console.log(`assert-negative: ${assertNegative.verdict}${assertNegative.step ? ` at ${assertNegative.step}` : ''}${assertNegative.stepStatus ? ` (${assertNegative.stepStatus}${assertNegative.kind ? `, ${assertNegative.kind}` : ''}, ${assertNegative.turns} model turn(s) at the step, ${assertNegative.runTurns} in the run)` : ''}${assertNegative.why ? ` — ${assertNegative.why}` : ''}`);
+  if (assertNegative.message) console.log(`  ${assertNegative.message}`);
+}
 const summary = path.join(outDir, `${own.base}-sweep.json`);
-fs.writeFileSync(summary, JSON.stringify({ base: own.base, k: own.k, learnDir, rows }, null, 2));
+fs.writeFileSync(summary, JSON.stringify({ base: own.base, k: own.k, learnDir, rows, ...(assertNegative ? { assertNegative } : {}) }, null, 2));
 console.log(`summary: ${summary}`);
