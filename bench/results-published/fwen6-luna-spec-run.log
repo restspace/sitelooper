@@ -1,0 +1,23 @@
+[spec-replay] resetting erpnext
+[reset] erpnext: cleared saved list settings for Sales Order (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view, updated_on)
+[reset] erpnext: cleared saved list settings for Customer (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view)
+[reset] erpnext: cleared saved list settings for Item (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view)
+[reset] erpnext: cleared saved list settings for Sales Invoice (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view)
+[reset] erpnext: cleared saved list settings for Quotation (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view)
+[reset] erpnext: cleared saved list settings for Delivery Note (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view)
+[reset] erpnext: deleted 1 sales order(s) (earlier runs' and non-seed)
+[reset] erpnext: deleted customer "fwen6-luna-neg Bench Customer"
+[spec-replay] compiling: /opt/node22/bin/node /home/user/sitelooper/bin/sitelooper.js compile bench/results/flows/fwen6-luna.json --out /home/user/sitelooper/bench/results/fwen6-luna-spec-spec-tmp --overwrite-spec
+facts http://127.0.0.1:8100: 98 relied (36 hard), 51 advisory
+warning a learned component recipe travels in the compiled artifact as data
+  why: aria-combobox/set-value: uses learned recipe r_b768c0 learned in session fwen6-luna-n1 (validated) rather than the shipped seed; the artifact carries it as data. The snapshot is compile-time state: the daemon keeps validating, learning and demoting after this file is written; the artifact runs what it was given.
+error 02-find: it is pinned to the demoted skill s_19d614 — the compiled spec inherits a procedure whose last replays failed at the same step
+  why: s_19d614 is demoted: 2 of 4 replays succeeded; replay failed at step 8 on 2 of them; 2 of the 2 stop(s) were recovered (the step still finished); the demotion was two consecutive failures at step 8; last used 2026-10-02T09:59:18.145Z.
+  fix: sitelooper rerecord bench/results/flows/fwen6-luna.json 02-find
+
+nothing written: the error(s) above are about the RECORDING, not the app — a compiled spec would fail at a locator and read as drift.
+re-record the step(s) with the fix command above, or pass --allow-demoted to compile the demoted pin anyway.
+  warning: 05-create: step 12 (read item_rate_fieldname) has no locator left — it publishes nothing, as replay skips it
+  warning: 05-create: step 14 (read item_quantity_fieldname) has no locator left — it publishes nothing, as replay skips it
+sitelooper: refused: a step is pinned to a demoted skill — see the diagnostics above (--allow-demoted compiles it anyway)
+[spec-replay] fwen6-luna-spec: not compilable — result written (exit 2)
