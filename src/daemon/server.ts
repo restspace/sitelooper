@@ -3,8 +3,8 @@ import net from 'node:net';
 import path from 'node:path';
 import { AnthropicProvider, OpenAICompatProvider, resolveProviderConfig, type Provider } from '../agent/llm.js';
 import { buildSystemOne, resolveSystemOneConfig, type SystemOne } from '../agent/system-one.js';
-import { runEscalatingInstruction, type InstructionResult, type LoopActor, type SkillRecord } from '../agent/loop.js';
-import { askedOutputs, literalOnlyAsks, partialReasons, unansweredForStep } from './step-verdict.js';
+import { runEscalatingInstruction, type AssertionCheck, type InstructionResult, type LoopActor, type SkillRecord } from '../agent/loop.js';
+import { askedOutputs, literalOnlyAsks, partialReasons, runAssertStep, unansweredForStep } from './step-verdict.js';
 import { executeTool } from '../agent/tools.js';
 import { urlPattern as compiledUrlPattern, carryOpener, dropAbsentReadLocators, dropDeadReadLocators, fillParams, markReadsProven, stranded, stripRunValueCandidates, urlMatches, urlParts } from '../skills/compile.js';
 import type { DriftTicket } from '../skills/repair.js';
@@ -13,7 +13,7 @@ import { MAX_STRAY_GESTURES_FOR_PIN, agentGesturesOutsideReplay, bindSkill, canA
 import { threadStepParams } from '../skills/rethread.js';
 import { buildFlow, consumedReportedOutputs, consumedUrlOutputs, ignorableRefs, jsonLeaves, lintFlowRefs, lintUnboundParams, lintUnpublishedOutputs, listFlows, liveReadsFor, liveReadsForRecovery, loadFlow, loadFlowFile, lookupOutput, mutatingIntent, noteOutputEvidence, pruneUnsourcedOutputs, recoveryRoute, remapParams, resolveInstruction, resolveStepParams, softResolveInstruction, saveFlow, staleInstructionIds, taskConstants, textMints, unbankedMutations, unreportedOutputs, urlOutputs, varyingValues, type RunSpecific, commentaryReport } from '../skills/flow.js';
 import { applyRelabelToEntries, applyRelabelToSkills, relabelCases, requestRelabelPlan, runValueKeyRenames } from '../skills/relabel.js';
-import { goalSatisfied, pastDetours, renderChainStop } from '../skills/replay.js';
+import { goalSatisfied, pastDetours, renderChainStop, structural, type ReplayResult } from '../skills/replay.js';
 import { detourSkippedNote } from '../execution/gates.js';
 import { drainDrift, llmProposer, recordCandidateEvidence } from '../skills/repair.js';
 import { cascadeProposer } from '../skills/repair-jev.js';
@@ -43,6 +43,7 @@ import { literalCredentialsIn, markLiteralCredentials, setKnownCredentialHashes 
 import { BrowserSession } from './browser.js';
 import { DEFAULT_BROWSER_PROFILE, urlTrail } from '../execution/browser.js';
 import { visitedUrlPart } from '../execution/url.js';
+import { assertFailureKind } from '../execution/assert.js';
 import { observedChange } from '../execution/lifecycle.js';
 import { givenWarning, referenceValue, shownForReport, templateValue, typedWarning } from '../execution/report.js';
 import { startPageSettled } from '../execution/action.js';
@@ -928,7 +929,15 @@ ${describeLeaks(leaks.slice(0, 6))}`);
         return { clearedMessages: before };
       }
 
-      case 'do': {
+      // `assert` is `do` under another contract, not another path: the same
+      // zero-model replay, agent loop and learning. What differs is what the
+      // model may do (LoopOptions.assert: observe, and state the condition as
+      // wait_for calls) and what a stored ASSERTION's miss means — the answer,
+      // returned as a failure, never a stop the agent takes over from
+      // (execution/assert.ts).
+      case 'do':
+      case 'assert': {
+        const asserting = req.command === 'assert';
         const overrides = {
           provider: a.provider ? String(a.provider) : undefined,
           model: a.model ? String(a.model) : undefined,
@@ -955,8 +964,10 @@ ${describeLeaks(leaks.slice(0, 6))}`);
           screenshotDir,
           signal: controller.signal,
           onProgress: progress,
-          ...(this.actingActor() ? { actor: this.actingActor() } : this.actorShadow() ? { shadow: this.actorShadow() } : {}),
-          ...(this.locateReadBack() ? { locateReadBack: this.locateReadBack()! } : {}),
+          // An assertion takes no first-tier actor (it would act) and sources
+          // no read-backs (it publishes nothing).
+          ...(asserting ? { assert: true as const } : this.actingActor() ? { actor: this.actingActor() } : this.actorShadow() ? { shadow: this.actorShadow() } : {}),
+          ...(!asserting && this.locateReadBack() ? { locateReadBack: this.locateReadBack()! } : {}),
         };
         // Where this instruction's recording starts, so learning can read back
         // exactly what it did (and nothing from earlier instructions).
@@ -966,10 +977,20 @@ ${describeLeaks(leaks.slice(0, 6))}`);
           // instruction word for word replays without any LLM call. If it
           // stops part-way the agent takes over with the partial result in
           // hand, exactly as it would after calling run_skill itself.
-          const direct = await this.replayDirect(instruction, screenshotDir, controller.signal, progress);
+          const direct = await this.replayDirect(instruction, screenshotDir, controller.signal, progress, undefined, asserting ? { assert: true } : undefined);
+          // The stored assertion this command replayed, when it did: its
+          // checks are the result's `assertions`, and its miss is final.
+          const replayedAssert = asserting && direct.replayed?.skill.assert ? direct.replayed : null;
           let result: InstructionResult;
           if (direct.done) {
-            result = direct.done;
+            result = replayedAssert ? { ...direct.done, assertions: replayedAssertions(replayedAssert.skill, replayedAssert.params) } : direct.done;
+          } else if (replayedAssert && direct.partial) {
+            // A direct replay of a stored assertion that missed: exit 1, no
+            // agent. The model locating the element again and finding the
+            // condition some other way is exactly the recovery an assertion
+            // must not have (contract: failure policy).
+            result = this.missedAssertion(instruction, replayedAssert, direct.partial, controller.signal.aborted);
+            progress(`[assert] ${replayedAssert.skill.id} did not hold at step ${direct.partial.failedAt ?? '?'} — returned as the answer, without the model`);
           } else {
             result = await runEscalatingInstruction(
               provider,
@@ -1118,6 +1139,13 @@ ${describeLeaks(leaks.slice(0, 6))}`);
         const name = String(a.name ?? '').trim();
         if (!name) throw new Error('var requires a name (e.g. `var runid=k7`)');
         this.state.setVar(name, String(a.value ?? ''));
+        // Banked now, not only after the next instruction (seedLedger in
+        // `do`): the zero-model match binds a slot the template never states
+        // by its origin (learn.ts bindSkill), and a session's FIRST instruction
+        // found no `var:<name>` there. assert-e2e: `var runid=q9`, `open`,
+        // then a stored assertion whose count check carries the runid only in
+        // a fallback locator bound nothing and was handed to the model.
+        this.seedLedger();
         return { vars: this.state.vars };
       }
 
@@ -1890,7 +1918,11 @@ ${describeLeaks(certain.slice(0, 30))}${certain.length > 30 ? `\n  … and ${cer
       // skipped as ignorable and the value was never looked for.) What keeps
       // this safe is unchanged: recordedStandIn refuses anything but a value
       // the procedure uses as page vocabulary, and the page must be showing it.
-      if (pinned) {
+      //
+      // Never for an assertion step: its expected value has to come from this
+      // run (execution/assert.ts statedIn). The recording's value, taken
+      // because the page shows it, is the page agreeing with itself.
+      if (pinned && step.kind !== 'assert') {
         const before = [...resolveInstruction(step, varsIn, outputs).missing, ...(resolveStepParams(step, varsIn, outputs)?.missing ?? [])];
         const runValues = Object.values(varsIn);
         for (const ref of new Set(before)) {
@@ -1935,6 +1967,37 @@ ${describeLeaks(certain.slice(0, 30))}${certain.length > 30 ? `\n  … and ${cer
       const unresolved = blocking.length > 0;
       const recoveryText = unresolved ? softResolveInstruction(step, varsIn, outputs, flow) : text;
       opts.progress(`[flow ${flow.name}] ${step.id}: ${(unresolved ? recoveryText : text).slice(0, 80)}`);
+
+      // AN ASSERTION STEP (FlowStep.kind 'assert') is decided here, ahead of
+      // everything below, and none of it ever sees one: not the
+      // already-satisfied shortcut (an assertion is never skipped), not the
+      // candidate selection (its pin is the check, not a hint), not recovery,
+      // learning, the re-pin or the read synthesis. Its pinned procedure is
+      // replayed with no model, and a miss halts the flow (runAssertFlowStep,
+      // step-verdict.ts runAssertStep).
+      if (step.kind === 'assert') {
+        this.instructionIndex += 1;
+        this.ledger.beginInstruction(this.instructionIndex);
+        ledgerSteps.set(`i${this.instructionIndex}`, { id: step.id, outputs: [] });
+        const checked = await this.runAssertFlowStep(flow.name, step, {
+          text,
+          pinned,
+          chain: [...chain].sort((a, b) => (a.seq?.index ?? 0) - (b.seq?.index ?? 0)),
+          params: bound?.params ?? null,
+          unresolved: blocking,
+          screenshotDir,
+          signal: opts.signal,
+          progress: opts.progress,
+        });
+        outputs[step.id] = {};
+        stepResults.push(checked.result);
+        driftTickets.push(...checked.tickets);
+        if (checked.result.status !== 'success') {
+          halted = true;
+          break;
+        }
+        continue;
+      }
 
       // Already satisfied? Before anything runs — before the zero-model replay
       // and long before the model — ask whether this record is ALREADY in the
@@ -2698,6 +2761,128 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
   }
 
   /**
+   * One assertion step of a flow run (FlowStep.kind 'assert'): its pinned
+   * procedure replayed segment by segment with NO model on any path, and the
+   * step's result. The decision is step-verdict.ts runAssertStep, which is
+   * handed the replay and nothing else; this method supplies the daemon's
+   * side — the replay itself, the recording group, the store's success count
+   * and the drift tickets.
+   *
+   * What it deliberately does not do, each of which the ordinary step path
+   * does: try another candidate, hand a stop to recovery, learn from the run,
+   * move or re-bind the pin, synthesize or retire reads, fold candidate
+   * evidence onto the stored chain, or count a miss against the procedure. A
+   * check that failed is a check that worked; two failing runs of a broken
+   * app must not demote it (and with it refuse the flow's compile).
+   */
+  private async runAssertFlowStep(
+    flowName: string,
+    step: { id: string; skill?: string },
+    input: {
+      /** The step's sentence with this run's references filled in. */
+      text: string;
+      pinned: Skill | null;
+      /** The pin's chain, in segment order. */
+      chain: Skill[];
+      /** The flow's stored bindings for the pin, resolved; null when the step carries none. */
+      params: Record<string, string> | null;
+      unresolved: string[];
+      screenshotDir: string;
+      signal: AbortSignal;
+      progress: (m: string) => void;
+    },
+  ): Promise<{ result: FlowStepResult; tickets: DriftTicket[] }> {
+    const store = this.browser.learn;
+    const { pinned, text } = input;
+    // The flow's bindings are authoritative; a step exported without any binds
+    // from its own sentence, as a pinned step does (learn.ts selectCandidates).
+    const params = input.params ?? (pinned ? (Object.keys(pinned.params).length ? bindSkill(pinned, text, this.knownValues()) : {}) : null);
+    let url = '';
+    try {
+      url = (await this.browser.getPage()).url();
+    } catch {
+      /* browser gone — the replay below says so */
+    }
+    // Recorded as the assertion it is, so a flow exported from this session
+    // keeps the step's kind (RecordedInstruction.assert).
+    this.browser.script?.beginInstruction(text, { ...(url ? { url } : {}), assert: true });
+    const outcome = await runAssertStep<Skill, ReplayResult>({
+      sentence: text,
+      pin: step.skill,
+      chain: input.chain,
+      params,
+      unresolved: input.unresolved,
+      aborted: () => input.signal.aborted,
+      replay: async (skill, bound) => {
+        input.progress(`[assert] checking ${skill.id} without the model`);
+        const execution = await executeTool(this.browser, 'run_skill', { id: skill.id, params: bound }, input.screenshotDir, input.signal);
+        if (!execution.replay) throw new Error(execution.result.slice(0, 200));
+        return execution.replay;
+      },
+    });
+    const tickets: DriftTicket[] = [];
+    const warnings: string[] = [];
+    for (const { skill, res } of outcome.ran) {
+      // A clean replay counts toward the procedure's validation; a miss is
+      // never a strike (see above).
+      if (res.ok) store?.recordOutcome(skill.id, { ok: true, fallthroughs: res.fallthroughs, instructionSucceeded: true });
+      warnings.push(...res.warnings.map((w) => `${skill.id}: ${w}`));
+      const pageUrlPattern = res.url ? compiledUrlPattern(res.url) : undefined;
+      for (const m of res.misses) {
+        // Drift is filed as for any step WHERE ITS REPAIR NEEDS NO MODEL: a
+        // recorded candidate that names the element stood in for the primary,
+        // and the drain puts it first (repair.ts promote-fallback). Every
+        // other miss — the whole chain dead, or only a positional rung left —
+        // is what the drain would ask a model to re-locate, and an
+        // assertion's target is never re-located (CONTRACT-assert.md, decision
+        // 3). Those are filed with no locator to patch and the miss in
+        // `reason`, which triage reports and leaves alone.
+        const stood = m.usedIndex !== undefined ? skill.steps[Number(m.step) - 1]?.locators[m.key]?.[m.usedIndex] : undefined;
+        const promotable = Boolean(m.used !== null && stood && !structural(stood));
+        tickets.push({
+          flow: flowName, step: step.id, skill: skill.id, atStep: m.step, key: m.key, similarity: res.similarity, recovered: false,
+          ...(promotable
+            ? { missedLocator: m.primary, fallbackUsed: m.used, ...(m.usedIndex !== undefined ? { fallbackIndex: m.usedIndex } : {}) }
+            : { missedLocator: null, fallbackUsed: null, reason: `assertion: ${m.primary} did not resolve${m.used ? `; ${m.used} stood in` : ' and nothing recorded stood in'} — never re-located by a model, re-record the assertion if the page changed` }),
+          ...(pageUrlPattern ? { pageUrlPattern } : {}),
+          ...(res.url ? { pageUrl: res.url } : {}),
+        });
+      }
+    }
+    const status = outcome.status === 'success' ? ('success' as const) : outcome.status === 'blocked' ? ('blocked' as const) : ('failure' as const);
+    input.progress(`[flow ${flowName}] ${step.id}: ${outcome.status === 'success' ? outcome.summary : outcome.status === 'blocked' ? 'stopped before the assertion was checked' : `ASSERTION ${outcome.assert?.kind === 'failed' ? 'FAILED' : 'COULD NOT BE CHECKED'} — ${outcome.summary}`}`.slice(0, 600));
+    // Keep the conversation and the recording coherent for what follows, as
+    // a zero-model replay does (replayDirectOnce).
+    this.state.messages.push({ role: 'user', content: text });
+    this.state.messages.push({ role: 'assistant', content: `[report] ${status}: ${outcome.summary}` });
+    this.browser.script?.endInstruction({
+      status,
+      summary: outcome.summary,
+      values: {},
+      ...(pinned ? { skill: pinned.id } : {}),
+      ...(params && Object.keys(params).length ? { skillParams: params } : {}),
+      tier: 'A',
+    });
+    return {
+      tickets,
+      result: {
+        id: step.id,
+        status: outcome.status,
+        summary: outcome.summary,
+        ...(outcome.assert ? { assert: outcome.assert } : {}),
+        ...(outcome.reason ? { reason: outcome.reason } : {}),
+        values: {},
+        tier: 'A',
+        recovered: false,
+        replayed: outcome.replayed,
+        repaired: false,
+        turns: 0,
+        ...(warnings.length ? { warnings: warnings.slice(0, MAX_STEP_WARNINGS) } : {}),
+      },
+    };
+  }
+
+  /**
    * Tier A: try a validated, template-matching skill before the model is
    * involved at all. Returns a finished result when the replay completed, a
    * prelude for the agent when it stopped part-way, or nothing when no skill
@@ -2714,6 +2899,8 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
     signal: AbortSignal,
     progress: (m: string) => void,
     chosen?: { id: string; params?: Record<string, string> },
+    /** `assert`: the `sitelooper assert` command's replay — only assertion procedures match (learn.ts matchTemplate). */
+    mode?: { assert?: boolean },
   ) {
     let trail: ReturnType<typeof urlTrail> | null = null;
     try {
@@ -2722,7 +2909,7 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
       trail = null;
     }
     try {
-      return await this.replayDirectOnce(instruction, screenshotDir, signal, progress, trail?.urls ?? [], chosen);
+      return await this.replayDirectOnce(instruction, screenshotDir, signal, progress, trail?.urls ?? [], chosen, mode);
     } finally {
       trail?.stop();
     }
@@ -2737,6 +2924,7 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
     visited: readonly string[],
     /** Flow replay pins the skill (and may supply its params); without it, fall back to a validated template match. */
     chosen?: { id: string; params?: Record<string, string> },
+    mode?: { assert?: boolean },
     /**
      * `why` explains a fallback. Tier B is expensive and its causes are not
      * visible from the outside: a step that fell back with no locator miss and
@@ -2758,6 +2946,13 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
      * carried the step instead, a read-only sibling included (fwod68 03-open).
      */
     pinPast?: boolean;
+    /**
+     * The procedure that ran (the segment that stopped, on a stop) and the
+     * params it ran with, on `done` and on a part-way stop alike: what the
+     * `assert` command lists its checks from, and how it knows the stop was
+     * a stored assertion's miss.
+     */
+    replayed?: { skill: Skill; params: Record<string, string> };
   }> {
     // What the replays below WATCHED a url position hold that the recording did
     // not (ledger.ts urlVarianceValues). Carried out of here on every exit,
@@ -2785,18 +2980,24 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
     // selection is by the store's own lifecycle (validated > success rate >
     // experience), so a fragile pin cannot dominate the step run after run.
     let candidates: { skill: import('../skills/store.js').Skill; params: Record<string, string> }[];
-    const startNav = process.env.SITELOOPER_START_NAV === 'on';
+    const asserting = Boolean(mode?.assert);
+    // Never for an assertion: going to a procedure's start page is acting,
+    // and an assertion is about the page the caller left the browser on.
+    const startNav = !asserting && process.env.SITELOOPER_START_NAV === 'on';
     if (chosen) {
       candidates = selectCandidates(store.list(origin), chosen.id, instruction, chosen.params, this.knownValues());
     } else {
-      const skills = store.list(origin);
-      let m = matchTemplate(skills, instruction, url, this.knownValues());
+      // An assertion is matched only by `assert`, and `assert` matches only
+      // assertions (learn.ts matchTemplate): filtered here too, so the
+      // reworded match below is asked about the same set.
+      const skills = store.list(origin).filter((sk) => Boolean(sk.assert) === asserting);
+      let m = matchTemplate(skills, instruction, url, this.knownValues(), { assert: asserting });
       // SITELOOPER_START_NAV=on: a skill that starts on a CONCRETE page is eligible from
       // anywhere (paraphrase.ts concreteStart) — tried as if the browser stood there, and
       // navigated to below only if it is the one chosen.
       if (!m && startNav) {
         for (const start of new Set(skills.map(concreteStart).filter((s): s is string => Boolean(s)))) {
-          m = matchTemplate(skills, instruction, start, this.knownValues());
+          m = matchTemplate(skills, instruction, start, this.knownValues(), { assert: asserting });
           if (m) break;
         }
       }
@@ -2804,7 +3005,10 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
       candidates = m ? [m] : [];
     }
     if (!candidates.length) return { why: chosen ? `the pinned skill ${chosen.id} bound no params for this instruction` : 'no validated skill matched the instruction and page' };
-    this.browser.script?.beginInstruction(instruction, { url });
+    // An assertion's replay is recorded as an assertion (RecordedInstruction
+    // .assert): the command's own, and a flow step whose every candidate is
+    // an assertion procedure.
+    this.browser.script?.beginInstruction(instruction, { url, ...(asserting || candidates.every((c) => c.skill.assert) ? { assert: true as const } : {}) });
     let match: { skill: import('../skills/store.js').Skill; params: Record<string, string> } | null = null;
     let replay: NonNullable<Awaited<ReturnType<typeof executeTool>>['replay']> | null = null;
     let attempts = 0;
@@ -2848,7 +3052,12 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
       match = cand;
       replay = r;
       if (r.ok) break;
-      if (r.stepsRun === 0 && !r.acted && !r.created.length) {
+      // An assertion that missed at its FIRST check has also run no step and
+      // touched nothing, and it is not a candidate that failed to start: the
+      // miss is its answer (execution/assert.ts). No strike, no next
+      // candidate — it stops below like any part-way stop, and the caller
+      // reads the miss off `partial.failReason`.
+      if (r.stepsRun === 0 && !r.acted && !r.created.length && !cand.skill.assert) {
         // Failed before touching the page — safe to try the next candidate.
         // `stepsRun === 0` alone does NOT establish that: a step whose action
         // fires and whose expectation then fails stops without counting, so
@@ -3031,6 +3240,7 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
         partial: record,
         why: `${last.id} stopped at step ${replay.failedAt ?? '?'} — ${replay.reason ?? 'no reason recorded'}`,
         ...(pinPast ? { pinPast } : {}),
+        replayed: { skill: last, params: { ...match.params, ...derived } },
       });
     }
     // Drop echo reads from the report's confident values: a value the skill
@@ -3117,7 +3327,43 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
         ...(Object.keys(references).length ? { references } : {}),
       },
       ...(pinPast ? { pinPast } : {}),
+      replayed: { skill: match.skill, params: { ...match.params, ...derived } },
     });
+  }
+
+  /**
+   * The result of an `assert` whose stored assertion MISSED on direct replay
+   * (the part-way stop replayDirect returned): a failure carrying the message
+   * the replay raised (assertFailure's text, in `partial.failReason`), zero
+   * turns, and the instruction group closed as the loop would close it — the
+   * replay opened it and nothing else will. `blocked` only when the stop was
+   * the operator's, which says nothing about the condition.
+   */
+  private missedAssertion(
+    instruction: string,
+    replayed: { skill: Skill; params: Record<string, string> },
+    partial: Partial<SkillRecord>,
+    stopped: boolean,
+  ): InstructionResult {
+    const status = stopped ? ('blocked' as const) : ('failure' as const);
+    const summary = stopped
+      ? `The assertion was stopped before it was checked (${replayed.skill.id}, step ${partial.failedAt ?? '?'}).`
+      : (partial.failReason ?? `the stored assertion ${replayed.skill.id} stopped at step ${partial.failedAt ?? '?'} without a reason`);
+    const kind = assertFailureKind(partial.failReason ?? '');
+    this.state.messages.push({ role: 'user', content: instruction });
+    this.state.messages.push({ role: 'assistant', content: `[report] ${status}: ${summary}` });
+    this.browser.script?.endInstruction({ status, summary, values: {}, skill: replayed.skill.id, ...(Object.keys(replayed.params).length ? { skillParams: replayed.params } : {}), tier: 'A' });
+    return {
+      report: { status, summary },
+      turns: 0,
+      usage: { promptTokens: 0, completionTokens: 0, cachedTokens: 0 },
+      timing: { totalMs: 0, modelMs: 0, toolMs: 0, modelCalls: 0, turns: [] },
+      screenshots: [],
+      skill: { listed: [replayed.skill.id], repaired: false, ...partial } as SkillRecord,
+      assertions: stopped ? [] : replayedAssertions(replayed.skill, replayed.params, partial.failedAt),
+      // Which way it missed, read back off the message the replay raised.
+      ...(!stopped && kind ? { assertFailed: { kind, message: summary } } : {}),
+    };
   }
 
   private async shutdown(): Promise<void> {
@@ -3269,6 +3515,38 @@ function diffUsageByModel(before: UsageLedger, after: UsageLedger): Record<strin
       cachedTokens: u.cachedTokens - (b?.cachedTokens ?? 0),
     };
     if (d.promptTokens || d.completionTokens || d.cachedTokens) out[model] = d;
+  }
+  return out;
+}
+
+/**
+ * The checks a replayed assertion procedure made, as the `assert` result
+ * lists them (loop.ts AssertionCheck): its wait_for steps with this run's
+ * params filled in, the target as the step's first recorded locator. With
+ * `failedAt` (1-based, the step the replay stopped at): the steps before it
+ * held, that one did not, and the ones after it were never checked and are
+ * not listed.
+ */
+function replayedAssertions(skill: Skill, params: Record<string, string>, failedAt?: number): AssertionCheck[] {
+  const out: AssertionCheck[] = [];
+  for (const [i, step] of skill.steps.entries()) {
+    if (step.tool !== 'wait_for' || (failedAt !== undefined && i + 1 > failedAt)) continue;
+    const args = step.args ?? {};
+    const state = String(args.state);
+    const first = step.locators?.target?.[0];
+    let target: string | undefined;
+    try {
+      target = first ? fillParams(candidateExpr(first), params) : undefined;
+    } catch {
+      target = undefined;
+    }
+    out.push({
+      state,
+      ...(target ? { target } : {}),
+      ...(typeof args.text === 'string' ? { text: fillParams(args.text, params) } : {}),
+      ...(state === 'count' && typeof args.count === 'number' ? { count: args.count } : {}),
+      held: failedAt === undefined || i + 1 < failedAt,
+    });
   }
   return out;
 }

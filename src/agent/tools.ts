@@ -8,6 +8,7 @@ import { DIALOG_LINE } from '../execution/expect.js';
 import { POPUP_WAIT_MS, type PageEffect } from '../execution/context.js';
 import { isElementRead, readElements } from '../execution/observe.js';
 import { textHolds } from '../execution/text.js';
+import { ASSERT_ONLY_STATES, ASSERT_STATES, ASSERT_TEXT_STATES, statedIn, urlHolds, valueHolds, type AssertState } from '../execution/assert.js';
 export { fireWhenAttached, urlHeldStill } from '../execution/browser.js';
 import { ACTION_DEADLINE_MS, type BrowserSession } from '../daemon/browser.js';
 import { clip } from '../shared/text.js';
@@ -438,9 +439,84 @@ export const TOOL_DEFS: ToolDef[] = [
   },
 ];
 
+/**
+ * The tools an assertion may use (`sitelooper assert`, LoopOptions.assert):
+ * the ones that only look. An assertion checks the page as it is, so anything
+ * that could change what the page shows — a click, a hover that opens a menu,
+ * a scroll that loads rows, an eval, a navigation — is neither offered
+ * (toolDefsFor) nor run (assertRefusal). `report` closes the instruction and
+ * is handled by the loop.
+ */
+export const ASSERT_TOOLS: ReadonlySet<string> = new Set(['snapshot', 'read', 'read_all', 'wait_for', 'screenshot', 'report']);
+
+/**
+ * wait_for as an assertion is offered it: the same tool, with the two states
+ * only an assertion may record (execution/assert.ts ASSERT_ONLY_STATES) and
+ * the stated-source rule said where the model reads it. `target` is not
+ * required, because `url_contains` has none.
+ */
+const ASSERT_WAIT_FOR: ToolDef = {
+  name: 'wait_for',
+  description:
+    'Check ONE condition of the assertion on the element that shows it: visible, hidden, text_equals, text_contains, count, value_equals (the current value of a form field), or url_contains (the page url contains text; no target). ' +
+    'Returns at once when the condition holds, and fails after timeout_ms when it does not. Each wait_for that holds is recorded as part of the assertion and re-run on every later run. ' +
+    'The expected text must be written in the assertion itself: a value you only read off the page is refused.',
+  parameters: {
+    type: 'object',
+    required: ['state'],
+    properties: {
+      target: { ...TARGET, description: TARGET.description + ' Exactly the element that shows the condition. Omit for url_contains.' },
+      state: { type: 'string', enum: [...ASSERT_STATES] },
+      text: { type: 'string', description: 'Expected text for text_equals/text_contains/value_equals/url_contains, exactly as the assertion states it.' },
+      count: { type: 'number', description: 'Expected element count for count.' },
+      timeout_ms: { type: 'number', description: 'Default 10000.' },
+    },
+  },
+};
+
+const isAssertOnlyState = (state: unknown): boolean => (ASSERT_ONLY_STATES as readonly unknown[]).includes(state);
+
+/**
+ * Why a tool call is refused in assert mode, or null when it may run.
+ *
+ * By NAME first: a model that is not offered `click` can still write it, and
+ * an assertion that acted would be recorded as a check and replayed as one.
+ * Then THE STATED-SOURCE RULE (execution/assert.ts statedIn): a wait_for that
+ * compares against text must take that text from the assertion's own
+ * sentence. The check is on where the value came from, never on what it
+ * looks like.
+ */
+export function assertRefusal(name: string, args: Record<string, unknown>, instruction: string): string | null {
+  if (!ASSERT_TOOLS.has(name)) {
+    return `${name} is not available: this instruction is an assertion, a condition to check on the page as it is, never work to do. Only ${[...ASSERT_TOOLS].join(', ')} exist here. If the condition does not hold on this page, call report with status failure and say what the page shows.`;
+  }
+  if (name !== 'wait_for') return null;
+  const state = args.state;
+  if (!(ASSERT_STATES as readonly unknown[]).includes(state)) {
+    return `wait_for state ${JSON.stringify(state)} is not one an assertion can state — use one of ${ASSERT_STATES.join(', ')}.`;
+  }
+  if (state !== 'url_contains' && (typeof args.target !== 'string' || !args.target.trim())) {
+    return `wait_for ${String(state)} needs a target: the element that shows the condition (only url_contains takes none).`;
+  }
+  if ((ASSERT_TEXT_STATES as readonly unknown[]).includes(state)) {
+    const text = args.text;
+    if (typeof text !== 'string' || !text.trim()) return `wait_for ${String(state)} needs text: the expected value, exactly as the assertion states it.`;
+    if (!statedIn(instruction, text)) {
+      return (
+        `wait_for ${String(state)} refused: the expected text ${JSON.stringify(text)} is not written in the assertion. An assertion's expected value must be stated by the caller, in the assertion's own sentence; ` +
+        `a value read off the page is the page agreeing with itself. Use the text the assertion states, on exactly the element that should show it. ` +
+        `If the assertion states no value to compare this element with, call report with status failure and say which value has no stated source.`
+      );
+    }
+  }
+  return null;
+}
+
 export interface ToolExecution {
   result: string;
   isError: boolean;
+  /** Assert mode: the call was refused before anything ran (assertRefusal) — not a check that was made and missed. */
+  refused?: true;
   /**
    * For `batch`: what each step cost, plus the closing page diff. A batch is up
    * to ten actions behind one number, and fwrdj3/fwrdj4 each had three batches
@@ -465,9 +541,15 @@ export interface ToolExecution {
   outcome?: ActionOutcome;
 }
 
-/** Tool definitions for a session: run_skill only exists when a skill store is attached. */
-export function toolDefsFor(session: BrowserSession, vision: Pick<VisionSettings, 'on'> = { on: false }): ToolDef[] {
-  const defs = session.learn ? TOOL_DEFS : TOOL_DEFS.filter((t) => t.name !== 'run_skill');
+/**
+ * Tool definitions for a session: run_skill only exists when a skill store is
+ * attached. In assert mode only the observing tools (ASSERT_TOOLS), with
+ * wait_for in its assertion form; every other mode gets TOOL_DEFS, which
+ * never names the assert-only states.
+ */
+export function toolDefsFor(session: BrowserSession, vision: Pick<VisionSettings, 'on'> = { on: false }, mode: { assert?: boolean } = {}): ToolDef[] {
+  const all = mode.assert ? TOOL_DEFS.filter((t) => ASSERT_TOOLS.has(t.name)).map((t) => (t.name === 'wait_for' ? ASSERT_WAIT_FOR : t)) : TOOL_DEFS;
+  const defs = session.learn ? all : all.filter((t) => t.name !== 'run_skill');
   // Vision off: the very same definitions, byte for byte.
   return vision.on ? defs.map((t) => (t.name === 'screenshot' ? { ...t, description: VISION_SCREENSHOT_DESCRIPTION } : t)) : defs;
 }
@@ -488,9 +570,30 @@ export async function executeTool(
   screenshotDir: string,
   /** Cancels cooperative waits (wait_for polling) when the caller's deadline expires. */
   signal?: AbortSignal,
-  /** `deadlineMs`: the whole-action deadline of a state-changing tool (ACTION_DEADLINE_MS). */
-  options: { deadlineMs?: number } = {},
+  /**
+   * `deadlineMs`: the whole-action deadline of a state-changing tool (ACTION_DEADLINE_MS).
+   * `assert`: the call is a model's, inside an assertion (LoopOptions.assert) — `instruction`
+   * is the caller's own sentence, the only source an expected text may have (assertRefusal).
+   */
+  options: { deadlineMs?: number; assert?: { instruction: string } } = {},
 ): Promise<ToolExecution> {
+  if (options.assert) {
+    const refusal = assertRefusal(name, args, options.assert.instruction);
+    if (refusal) return { result: truncate(`ERROR: ${refusal}`, TOOL_RESULT_BUDGET), isError: true, refused: true };
+    // The url has no element: a target the model wrote beside url_contains
+    // would be described and recorded as the step's locator, and every replay
+    // would then have to find an element the condition never looked at.
+    if (name === 'wait_for' && args.state === 'url_contains' && 'target' in args) {
+      const { target: _unused, ...rest } = args;
+      args = rest;
+    }
+  } else if (name === 'wait_for' && isAssertOnlyState(args.state)) {
+    // Never offered outside an assertion (TOOL_DEFS), and not run for a model
+    // that writes it anyway: an ordinary instruction's recording must not
+    // carry a state only an assert step is compiled and replayed for. Replay
+    // dispatches a stored step through runStep, never through here.
+    return { result: `ERROR: wait_for state ${JSON.stringify(args.state)} exists only for \`sitelooper assert\` — use visible, hidden, text_equals, text_contains or count.`, isError: true };
+  }
   // The whole tool call is the daemon's window (journal.ts); the action inside
   // it opens its own, narrower one at dispatch (runStep).
   const toolWindow = session.journal?.open('daemon', `tool:${name}`);
@@ -1215,6 +1318,11 @@ async function executeBatch(
         `step ${i + 1}: ${tool ? `"${tool}" cannot be used inside a batch` : 'missing "tool"'} — allowed tools are ${[...BATCHABLE].join(', ')}. Nothing was executed; re-issue without that step.`,
       );
     }
+    // As the single-tool path refuses it: a batch is never an assertion's (assertRefusal refuses batch by name).
+    const batchedState = ((step as { args?: { state?: unknown } }).args ?? (step as { state?: unknown }))?.state;
+    if (tool === 'wait_for' && isAssertOnlyState(batchedState)) {
+      return fail(`step ${i + 1}: wait_for state ${JSON.stringify(batchedState)} exists only for \`sitelooper assert\`. Nothing was executed.`);
+    }
     // A step written FLAT — {"tool":"click","target":"@e5"} instead of
     // {"tool":"click","args":{"target":"@e5"}} — says exactly what it means, and a
     // long session's model writes it that way more and more. It used to run with NO
@@ -1872,7 +1980,11 @@ async function waitFor(
   resolved?: Locator,
 ): Promise<string> {
   const timeout = typeof args.timeout_ms === 'number' ? args.timeout_ms : 10_000;
-  const state = String(args.state);
+  const state = String(args.state) as AssertState;
+  // `url_contains` (an assertion's state, execution/assert.ts) is a fact about
+  // the page, not about an element: it has no target and resolves nothing.
+  if (state === 'url_contains') return waitForUrl(page, String(args.text ?? ''), timeout, signal);
+  if (!resolved && (typeof args.target !== 'string' || !args.target.trim())) throw new Error(`wait_for ${state} needs a target`);
   const loc = resolved ?? resolveTarget(page, String(args.target));
 
   // A SINGULAR wait state asks about one element — is it visible, does it show
@@ -1915,6 +2027,15 @@ async function waitFor(
       const count = await loc.count();
       last = `count=${count}`;
       if (count === Number(args.count)) return `condition met: ${last}`;
+    } else if (state === 'value_equals') {
+      // A field's CURRENT value (an assertion's state): what `read what=value`
+      // reads (observe.ts readElements → inputValue), compared as text_equals
+      // compares text (assert.ts valueHolds). An element with no value — not
+      // an input, textarea or select, or not there — holds nothing: null is
+      // never equal, whatever was asked for.
+      const value = await loc.first().inputValue({ timeout: 1000 }).catch(() => null);
+      last = value === null ? 'value=(no field value)' : `value=${JSON.stringify(value.slice(0, 200))}`;
+      if (value !== null && valueHolds(value, String(args.text))) return `condition met: ${last}`;
     } else {
       const text = (await loc.first().innerText({ timeout: 1000 }).catch(() => null)) ?? '';
       last = `text=${JSON.stringify(text.slice(0, 200))}`;
@@ -1926,15 +2047,7 @@ async function waitFor(
     if (firstObserved === null) firstObserved = last;
     // Wake early on cancellation so an abandoned wait stops polling the page
     // instead of ticking on in the background for the rest of its own timeout.
-    await new Promise<void>((resolve) => {
-      const timer = setTimeout(done, 250);
-      function done() {
-        clearTimeout(timer);
-        signal?.removeEventListener('abort', done);
-        resolve();
-      }
-      signal?.addEventListener('abort', done, { once: true });
-    });
+    await pollGap(signal);
   }
   if (signal?.aborted) cancelled();
   // If the observed value never budged, the condition is likely unsatisfiable
@@ -1944,4 +2057,37 @@ async function waitFor(
       ? ` — value never changed from ${last}, so this condition may be unsatisfiable (e.g. count against a virtualised list renders only visible rows); assert on a stable indicator instead`
       : '';
   throw new Error(`wait_for ${state} timed out after ${timeout}ms (last: ${last})${stableHint}`);
+}
+
+/** wait_for's poll gap; a cancelled wait wakes at once instead of ticking out its own timeout. */
+function pollGap(signal?: AbortSignal): Promise<void> {
+  return new Promise<void>((resolve) => {
+    const timer = setTimeout(done, 250);
+    function done() {
+      clearTimeout(timer);
+      signal?.removeEventListener('abort', done);
+      resolve();
+    }
+    signal?.addEventListener('abort', done, { once: true });
+  });
+}
+
+/**
+ * `url_contains`: the page url contains the text (assert.ts urlHolds — plain
+ * containment, neither side normalised). Polled like every other wait, since
+ * a client-side route may still be settling when the assertion is asked; the
+ * url is read at least once whatever the timeout.
+ */
+async function waitForUrl(page: Page, want: string, timeout: number, signal?: AbortSignal): Promise<string> {
+  const deadline = Date.now() + timeout;
+  let last = '';
+  do {
+    if (signal?.aborted) throw new Error('wait_for cancelled: instruction budget exhausted');
+    const url = page.url();
+    last = `url=${JSON.stringify(url.slice(0, 300))}`;
+    if (urlHolds(url, want)) return `condition met: ${last}`;
+    await pollGap(signal);
+  } while (Date.now() < deadline);
+  if (signal?.aborted) throw new Error('wait_for cancelled: instruction budget exhausted');
+  throw new Error(`wait_for url_contains timed out after ${timeout}ms (last: ${last})`);
 }

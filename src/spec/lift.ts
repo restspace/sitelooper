@@ -144,6 +144,11 @@ function validateSpecShape(v: unknown): asserts v is SpecFlow {
     if (!Array.isArray(step.segments)) {
       throw new LiftError(`${stepWhere}: "segments" must be an array`);
     }
+    // An assertion's flags decide its failure policy in both runners, so a
+    // hand-edited one is refused rather than read as "not an assertion".
+    if (step.kind !== undefined && step.kind !== 'assert') {
+      throw new LiftError(`${stepWhere}: "kind" must be "assert" when present (found ${JSON.stringify(step.kind)})`);
+    }
 
     (step.segments as unknown[]).forEach((rawSeg, segIndex) => {
       const segWhere = describeSegment(stepWhere, rawSeg, segIndex);
@@ -158,6 +163,9 @@ function validateSpecShape(v: unknown): asserts v is SpecFlow {
         throw new LiftError(`${segWhere}: "steps" must be an array`);
       }
       validatePreconditionFingerprint(segWhere, seg.preconditions);
+      if (seg.assert !== undefined && seg.assert !== true) {
+        throw new LiftError(`${segWhere}: "assert" must be true when present (found ${JSON.stringify(seg.assert)})`);
+      }
 
       const visit = (rawSkillStep: unknown, skillStepWhere: string) => {
         if (typeof rawSkillStep !== 'object' || rawSkillStep === null || Array.isArray(rawSkillStep)) {
@@ -175,6 +183,12 @@ function validateSpecShape(v: unknown): asserts v is SpecFlow {
           throw new LiftError(`${skillStepWhere}: "locators" must be an object`);
         }
         validatePageContext(skillStepWhere, skillStep);
+        if (skillStep.assert !== undefined) {
+          const a = skillStep.assert as { message?: unknown } | null;
+          if (typeof a !== 'object' || a === null || typeof a.message !== 'string') {
+            throw new LiftError(`${skillStepWhere}: "assert" must be { message: string } when present`);
+          }
+        }
         if (Array.isArray(skillStep.body)) skillStep.body.forEach((b, i) => visit(b, `${skillStepWhere}, body[${i}]`));
       };
       (seg.steps as unknown[]).forEach((rawSkillStep, skillStepIndex) => visit(rawSkillStep, `${segWhere}, steps[${skillStepIndex}]`));

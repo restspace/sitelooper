@@ -49,6 +49,7 @@ import { carryOpener, compileSkills } from '../src/skills/compile.js';
 import { FIXTURE_TOTP_SEED, createFixtureServer, type FixtureServer } from './fixture/server.js';
 import { hotpCode, totpSeed } from '../src/execution/totp.js';
 import { valueHash } from '../src/daemon/journal-attribute.js';
+import { assertFailure, assertFailureKind } from '../src/execution/assert.js';
 
 const enabled = process.env.BP_PARITY_TESTS === '1';
 const d = enabled ? describe : describe.skip;
@@ -7335,5 +7336,99 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
         expect(emittedLog).toEqual(['commit:login:admin:pass-x62']);
       }, 180_000);
     }
+  });
+
+  /**
+   * `sitelooper assert` (notes/CONTRACT-assert.md, "Failure policy"). An
+   * assertion is a recorded `wait_for` carrying `assert: { message }`, in a
+   * procedure flagged `assert`. Both runners resolve and wait as they always
+   * do; what a miss MEANS is decided once, in src/execution/assert.ts: the
+   * condition did not hold ('failed'), or no recorded locator for its target
+   * resolved ('unlocatable'), raised as assertFailure(kind, <the caller's
+   * sentence with this run's values>, <the runner's own detail>).
+   *
+   * So each leg is compared on the classification and on the message up to the
+   * detail, which is the underlying wait's own error and is each runner's to
+   * word — except for `url_contains`, where both poll the shared urlHolds and
+   * say the miss in the same words, so the whole message is compared. The
+   * mutation log is empty on every leg: a check acts on nothing.
+   */
+  describe('an assertion that misses is the same failure in both runners (sitelooper assert)', () => {
+    const MESSAGE = 'the target shows {{v1}}';
+    const check = (args: Record<string, unknown>, target: SkillStep['locators']['target'] | null): SkillStep => ({
+      tool: 'wait_for',
+      args: { ...(target ? { target: '@e1' } : {}), timeout_ms: 1_000, ...args },
+      locators: target ? { target } : {},
+      assert: { message: MESSAGE },
+    });
+    const params: Record<string, SkillParam> = { v1: { example: 'Item 2', usedIn: [1], known: true } };
+    const assertSkill = (step: SkillStep): Skill => ({ ...skillOf([step]), id: 's_assert', template: MESSAGE, params, assert: true });
+    const assertFlow = (step: SkillStep): SpecFlow => ({
+      version: 1,
+      name: 'parity-assert',
+      origin,
+      startUrl: `${origin}/`,
+      vars: [],
+      steps: [
+        {
+          id: '01-assert',
+          instruction: MESSAGE,
+          params: {},
+          outputs: [],
+          kind: 'assert',
+          segments: [{ id: 's_assert', template: MESSAGE, params, preconditions: { urlPattern: `${origin}/` }, steps: [step], assert: true }],
+        },
+      ],
+    });
+    const run = async (step: SkillStep, value: string) => bothOf(assertSkill(step), assertFlow(step), { v1: value });
+    const TARGET: SkillStep['locators']['target'] = [{ kind: 'css', selector: '#target' }];
+
+    it('holds on both when the page shows what the caller stated', async () => {
+      const { replay, emitted, replayLog, emittedLog } = await run(check({ state: 'text_equals', text: '{{v1}}' }, TARGET), 'Item 2');
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      expect(replayLog).toEqual([]);
+      expect(emittedLog).toEqual([]);
+    }, 180_000);
+
+    it('failed: the condition does not hold — same kind, same sentence, each runner’s own detail', async () => {
+      const { replay, emitted, replayLog, emittedLog } = await run(check({ state: 'text_equals', text: '{{v1}}' }, TARGET), 'Item 3');
+      expect(replay.ok).toBe(false);
+      expect(emitted.ok).toBe(false);
+      expect(assertFailureKind(replay.reason ?? '')).toBe('failed');
+      expect(assertFailureKind(emitted.reason ?? '')).toBe('failed');
+      // the caller's sentence, filled with THIS run's value, ahead of the detail
+      const head = assertFailure('failed', 'the target shows Item 3', '');
+      expect(replay.reason!.startsWith(`${head} — `), replay.reason!).toBe(true);
+      expect(emitted.reason!.startsWith(`${head} — `), emitted.reason!).toBe(true);
+      expect(replayLog).toEqual([]);
+      expect(emittedLog).toEqual([]);
+    }, 180_000);
+
+    it('unlocatable: no recorded locator resolves — same kind, same sentence, and neither runner looks for it another way', async () => {
+      const { replay, emitted, replayLog, emittedLog } = await run(check({ state: 'text_equals', text: '{{v1}}' }, [{ kind: 'css', selector: '#no-such-target' }]), 'Item 2');
+      expect(replay.ok).toBe(false);
+      expect(emitted.ok).toBe(false);
+      expect(assertFailureKind(replay.reason ?? '')).toBe('unlocatable');
+      expect(assertFailureKind(emitted.reason ?? '')).toBe('unlocatable');
+      const head = assertFailure('unlocatable', 'the target shows Item 2', '');
+      expect(replay.reason!.startsWith(`${head} — `), replay.reason!).toBe(true);
+      expect(emitted.reason!.startsWith(`${head} — `), emitted.reason!).toBe(true);
+      expect(replayLog).toEqual([]);
+      expect(emittedLog).toEqual([]);
+    }, 180_000);
+
+    it('url_contains: no target, the shared urlHolds, and the whole message is the same in both', async () => {
+      const held = await run(check({ state: 'url_contains', text: new URL(origin).host }, null), 'Item 2');
+      expect(held.replay.ok, held.replay.reason ?? '').toBe(true);
+      expect(held.emitted.ok, held.emitted.reason ?? '').toBe(true);
+
+      const { replay, emitted } = await run(check({ state: 'url_contains', text: '/orders' }, null), 'Item 2');
+      expect(replay.ok).toBe(false);
+      expect(emitted.ok).toBe(false);
+      const message = assertFailure('failed', 'the target shows Item 2', `wait_for url_contains timed out after 1000ms (last: url="${origin}/")`);
+      expect(replay.reason).toBe(message);
+      expect(emitted.reason).toBe(message);
+    }, 180_000);
   });
 });

@@ -63,6 +63,10 @@ Authoring:
   open <url>                               # deterministic navigation, no model
   do "<instruction>"                      # one logical, verifiable outcome
   do --instruction-file <file> | --stdin    # multiline input without shell quoting
+  assert "<condition>"                    # check a condition now; never acts. Exit 0 held, 1 not held,
+      2 unavailable. In a --learn session a passing assert becomes a flow step that fails the run when
+      it does not hold (no model, no recovery). State the expected text in the sentence itself.
+      Takes --timeout, --max-turns, --json, --instruction-file/--stdin and the provider/model options.
   brief <file.md> [--append]                # optional app conventions
   note "<text>" | reset                   # session context; reset keeps browser state
   peek [--selector <css>] [--interactive]
@@ -528,13 +532,13 @@ async function main(): Promise<void> {
   if (flags.has('force')) fail('--force was split: use --allow-demoted to permit a demoted pin, or --overwrite-spec to replace your spec', 2);
   let instructionText: string | undefined;
   if (flags.has('instruction-file') || flags.has('stdin')) {
-    if (!['do', 'rerecord'].includes(command)) fail('--instruction-file and --stdin are supported by do and rerecord', 2);
+    if (!['do', 'assert', 'rerecord'].includes(command)) fail('--instruction-file and --stdin are supported by do, assert and rerecord', 2);
     if (flags.has('instruction-file') && flags.has('stdin')) fail('choose --instruction-file or --stdin', 2);
-    if ((command === 'do' && positional.length) || flags.has('instruction')) fail('supply the instruction only once', 2);
+    if (((command === 'do' || command === 'assert') && positional.length) || flags.has('instruction')) fail('supply the instruction only once', 2);
     const instruction = fs.readFileSync(flags.has('stdin') ? 0 : String(flags.get('instruction-file')), 'utf8').trim();
     if (!instruction) fail('instruction input is empty', 2);
     instructionText = instruction;
-    if (command === 'do') positional.push(instruction);
+    if (command === 'do' || command === 'assert') positional.push(instruction);
     else flags.set('instruction', instruction);
   }
   // A shell's `$0` in any argument or in the instruction text: fwrd85's
@@ -686,12 +690,17 @@ async function main(): Promise<void> {
 
   try {
     switch (command) {
-      case 'do': {
+      // `assert` is `do` with a condition for an instruction: the same request
+      // and result, a verdict line that says ASSERT-FAILED, and the checks
+      // (wait_for calls) the verdict rests on. Exit 0 held, 1 not held.
+      case 'do':
+      case 'assert': {
+        const asserting = command === 'assert';
         const instruction = positional.join(' ').trim();
-        if (!instruction) fail('do requires an instruction', 2);
+        if (!instruction) fail(asserting ? 'assert requires a condition sentence' : 'do requires an instruction', 2);
         const res = await request(
           conn,
-          'do',
+          asserting ? 'assert' : 'do',
           {
             instruction,
             maxTurns: flags.has('max-turns') ? Number(flags.get('max-turns')) : undefined,
@@ -739,12 +748,21 @@ async function main(): Promise<void> {
             totalActions: number;
           };
           learned?: { compiled?: string; merged?: string; variantOf?: string; superseded?: string; outcome?: { skill: string; status: string; ok: boolean } };
+          /** `assert` only: the checks made, in order (agent/loop.ts AssertionCheck). */
+          assertions?: { state: string; target?: string; text?: string; count?: number; held: boolean }[];
         };
         if (json) {
           emitCommandJson(data);
         } else {
-          const mark = data.report.status === 'success' ? 'OK' : data.report.status.toUpperCase();
+          // An assertion that does not hold is not an agent that failed: named
+          // for what it is. `blocked` (timed out, stopped) stays BLOCKED — the
+          // condition was never answered.
+          const mark = data.report.status === 'success' ? 'OK' : asserting && data.report.status === 'failure' ? 'ASSERT-FAILED' : data.report.status.toUpperCase();
           console.log(`[${mark}] ${data.report.summary}`);
+          for (const c of data.assertions ?? []) {
+            const what = c.text !== undefined ? ` ${JSON.stringify(c.text)}` : c.count !== undefined ? ` ${c.count}` : '';
+            console.log(`  ${c.held ? 'held' : 'NOT held'}: ${c.state}${what}${c.target ? ` on ${c.target}` : ''}`);
+          }
           if (data.escalation) {
             const e = data.escalation;
             console.log(
@@ -844,7 +862,7 @@ async function main(): Promise<void> {
         if (!res.ok) fail(res.error ?? 'unknown error', res.errorKind === 'infra' ? 2 : 1);
         const data = res.data as {
           flow: string; status: string; passed: number; total: number; repinned: number; wallMs: number;
-          steps: { id: string; status: string; summary?: string; tier?: string | null; replayed?: string | null; repaired?: boolean; turns?: number; repinned?: string; satisfied?: boolean }[];
+          steps: { id: string; status: string; summary?: string; tier?: string | null; replayed?: string | null; repaired?: boolean; turns?: number; repinned?: string; satisfied?: boolean; assert?: { kind: string; message: string } }[];
         };
         if (json) emitCommandJson(data);
         else {
@@ -852,9 +870,12 @@ async function main(): Promise<void> {
             const mark = st.status === 'success' ? 'OK' : st.status.toUpperCase();
             // `satisfied` is not a cheaper replay, it is no replay at all: the
             // page already showed this step's goal for this record.
-            const how = st.satisfied ? 'satisfied' : st.tier === 'A' ? 'replay' : st.replayed ? (st.repaired ? `replay+repair ${st.replayed}` : `replay ${st.replayed}`) : 'agent';
+            // An assertion that missed ran no agent, whatever tier the step carries:
+            // it was checked, or (unlocatable) its target could not be found to check.
+            const missed = st.status === 'assert-failed' || st.assert ? (st.assert?.kind === 'unlocatable' ? 'assert, target not found' : 'assert') : null;
+            const how = missed ?? (st.satisfied ? 'satisfied' : st.tier === 'A' ? 'replay' : st.replayed ? (st.repaired ? `replay+repair ${st.replayed}` : `replay ${st.replayed}`) : 'agent');
             console.log(`[${mark}] ${st.id}  (${how}${st.turns ? `, ${st.turns} turns` : ''})${st.repinned ? ` re-pinned ${st.repinned}` : ''}`);
-            if (st.status !== 'success' && st.summary) console.log(`       ${st.summary}`);
+            if (st.status !== 'success' && (st.summary || st.assert?.message)) console.log(`       ${st.summary || st.assert?.message}`);
           }
           console.log(`${data.flow}: ${data.passed}/${data.total} steps, ${(data.wallMs / 1000).toFixed(1)}s${data.repinned ? `, ${data.repinned} step(s) re-pinned` : ''} — ${data.status}`);
         }

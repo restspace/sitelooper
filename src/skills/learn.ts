@@ -127,8 +127,17 @@ export function learnFromInstruction(
   const out: LearnedRecord = {};
   const sk = input.result.skill;
   const succeeded = input.result.report.status === 'success';
+  // An assertion (`sitelooper assert`): its recording compiles to a procedure
+  // of checks, never to a repair of whatever was replayed on the way.
+  const asserting = instructionEntry(input.entries)?.assert === true;
+  // An assertion procedure that MISSED is not a procedure that drifted: the
+  // miss is the answer it exists to give (execution/assert.ts). Counted as a
+  // strike, two failing runs of a broken app would demote the check, and a
+  // demoted pin refuses the flow's compile — the check would be retired for
+  // working. Its clean replays still count, which is how it validates.
+  const missedAssert = Boolean(sk?.invoked && sk.stepsReplayed !== sk.stepsTotal && store.get(sk.invoked)?.assert);
 
-  if (sk?.invoked && !sk.refused) {
+  if (sk?.invoked && !sk.refused && !missedAssert) {
     const ok = sk.stepsReplayed === sk.stepsTotal;
     const updated = store.recordOutcome(
       sk.invoked,
@@ -173,12 +182,12 @@ export function learnFromInstruction(
   // decideRepin falls back to.
   const fullReplay = sk?.invoked && !sk.refused && sk.stepsReplayed === sk.stepsTotal;
   if (fullReplay && agentGesturesOutsideReplay(input.entries) <= MAX_STRAY_GESTURES_FOR_PIN) return Object.keys(out).length ? out : null;
-  const variantOf = sk?.invoked && !sk.refused && sk.stepsReplayed < sk.stepsTotal ? sk.invoked : undefined;
+  const variantOf = !asserting && sk?.invoked && !sk.refused && sk.stepsReplayed < sk.stepsTotal ? sk.invoked : undefined;
 
   // The replayed step that stopped this replay, when it stopped part-way: the
   // segment `invoked` names on a stop, and its 1-based step (compile.ts
   // CompileInput.stoppedAt; fwsi7-n3 02-create).
-  const stoppedAt = input.recovery && sk?.invoked && !sk.refused && sk.stepsReplayed < sk.stepsTotal && sk.failedAt !== undefined ? { skill: sk.invoked, step: sk.failedAt } : undefined;
+  const stoppedAt = !asserting && input.recovery && sk?.invoked && !sk.refused && sk.stepsReplayed < sk.stepsTotal && sk.failedAt !== undefined ? { skill: sk.invoked, step: sk.failedAt } : undefined;
   // SITE FACTS stage 4 (consumer 3): the origin's facts, so a slot whose report
   // label carries a reliable state/count role is never an identity marker.
   let compileFacts: ReturnType<ReturnType<typeof factStoreFor>['read']> | undefined;
@@ -277,6 +286,11 @@ function keep(store: SkillStore, skills: Skill[], variantOf: string | undefined)
     existing.find(
       (s) =>
         s.status !== 'demoted' &&
+        // An assertion merges only into an assertion (and never the reverse):
+        // the same sentence issued with `do` and with `assert` share a
+        // template and nothing else — one may be recovered, the other is the
+        // run's answer (Skill.assert).
+        Boolean(s.assert) === Boolean(sk.assert) &&
         (!variantOf || s.variantOf === variantOf) &&
         (s.seq?.index ?? 0) === (sk.seq?.index ?? 0) &&
         (s.seq?.of ?? 1) === (sk.seq?.of ?? 1) &&
@@ -322,8 +336,16 @@ export function matchTemplate(
   instruction: string,
   url: string,
   known: Record<string, string> = {},
+  /**
+   * `assert`: match assertion procedures (Skill.assert) and ONLY those — the
+   * `sitelooper assert` command's direct replay. Without it they are never
+   * matched: an instruction issued with `do` that happens to read like a
+   * stored assertion is asking for work, and a procedure of checks does none.
+   */
+  opts: { assert?: boolean } = {},
 ): { skill: Skill; params: Record<string, string> } | null {
   for (const skill of skills) {
+    if (Boolean(skill.assert) !== Boolean(opts.assert)) continue;
     if (!isVerified(skill)) continue;
     if (skill.seq && skill.seq.index > 0) continue; // chains start at their head
     if (!urlMatches(skill.preconditions.urlPattern, url)) continue;
@@ -467,6 +489,11 @@ export function selectCandidates(
   for (const s of skills) {
     if (s.status === 'demoted') continue;
     if (s.seq && s.seq.index > 0) continue; // chains start at their head
+    // An assertion procedure serves only a step pinned to one, and no other
+    // procedure serves that step (Skill.assert): by template or by shape the
+    // two can look alike, and one does the step's work where the other only
+    // checks it. With no pin in the store, an assertion is no candidate.
+    if (Boolean(s.assert) !== Boolean(hint?.assert)) continue;
     // Does this candidate's OWN recorded instruction read over the instruction
     // being served? Asked of every candidate, the PIN included — the pin used
     // to skip the question, because its params were already in hand and the
@@ -1128,6 +1155,8 @@ export async function replayReport(
  * orphan {{v2}}).
  */
 export function publishedOutputs(skill: Skill, chain: readonly Skill[] = [skill]): string[] {
+  // An assertion has no outputs: it answers yes or stops the run.
+  if (skill.assert) return [];
   const out = new Set<string>();
   const walk = (steps: Skill['steps']): void => {
     for (const s of steps) {
@@ -1173,6 +1202,8 @@ export const MAX_STRAY_GESTURES_FOR_PIN = 2;
 export function mutates(store: SkillStore, id: string | undefined): boolean {
   const skill = id ? store.get(id) : null;
   if (!skill) return false;
+  // An assertion checks and never acts, whatever its steps are (Skill.assert).
+  if (skill.assert) return false;
   if (mutatesSteps(skill.steps)) return true;
   // A procedure is its CHAIN from this segment on: a pin names a chain's
   // head, and replay runs every segment after it. fwen2-luna's adopted
@@ -1220,6 +1251,9 @@ export function canAdoptPin(
    */
   intent: 'mutating' | 'read-only' | null = null,
 ): boolean {
+  // An assertion procedure is never a step's work: it is pinned only where
+  // the export pinned it, to a step of kind 'assert', which is never re-pinned.
+  if (store.get(next)?.assert) return false;
   const nextMutates = mutates(store, next);
   // Rule 1, narrowed: a MUTATING procedure is one step's work and one step's
   // only. A read-only procedure is a way of looking at a page, and two steps

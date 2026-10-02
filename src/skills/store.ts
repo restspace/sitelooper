@@ -12,6 +12,13 @@ import { rootDir } from '../shared/paths.js';
  * benefits from run N.
  */
 export interface Skill {
+  /**
+   * This procedure is an ASSERTION (`sitelooper assert`): every step is a
+   * check, none acts. Both runners stop the run when one misses and never
+   * recover, skip or satisfy it (execution/assert.ts). Absent on every other
+   * skill, so no SKILL_CONTRACT bump.
+   */
+  assert?: true;
   id: string;
   origin: string;
   /** The instruction with its literal values replaced by {{vN}} slots. */
@@ -333,6 +340,12 @@ export interface SkillParam {
 }
 
 export interface SkillStep {
+  /**
+   * This step is an assertion's check: a wait_for whose miss is the run's
+   * answer, not drift (execution/assert.ts). `message` is the caller's
+   * sentence, slots as "{{vN}}", raised through assertFailure when it misses.
+   */
+  assert?: { message: string };
   tool: string;
   /** Tool arguments with slot values substituted as "{{vN}}" in string fields. */
   args: Record<string, unknown>;

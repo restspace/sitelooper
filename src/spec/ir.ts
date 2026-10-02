@@ -85,6 +85,13 @@ export interface SpecStep {
   segments: SpecSegment[];
   /** FlowStep.urlRoutes: url outputs minted from a url the step visited but did not end on, with their routes (fwgh14). */
   urlRoutes?: Record<string, string>;
+  /**
+   * FlowStep.kind: this step is an assertion (`sitelooper assert`). Its
+   * segments hold only checks, and the emitter gives none of them a way to be
+   * skipped, satisfied or passed over: a miss throws the shared assertFailure
+   * (src/execution/assert.ts). Absent on every other step.
+   */
+  kind?: 'assert';
 }
 
 /** A Skill minus what the spec does not need to carry: stats, status, provenance.model. */
@@ -150,6 +157,13 @@ export interface SpecSegment {
    * chain walk asks it (replay.ts pastDetours).
    */
   detour?: { asked: string };
+  /**
+   * `Skill.assert`, verbatim: every step of this segment is a check
+   * (a `wait_for` carrying `assert: { message }`), none acts. It never
+   * carries a `goal` or a `detour` — an assertion cannot be already done,
+   * and it is not a way back to anywhere.
+   */
+  assert?: true;
 }
 
 /**
@@ -196,10 +210,14 @@ function toSegment(skill: Skill, goalBearing = false, last = false): SpecSegment
   if (skill.preconditions.requireText?.length) seg.preconditions.requireText = skill.preconditions.requireText;
   if (isFingerprintVector(skill.preconditions.fingerprint)) seg.preconditions.fingerprint = skill.preconditions.fingerprint;
   if (skill.derived) seg.derived = skill.derived;
+  // An assertion carries its flag and nothing that could excuse it: no detour
+  // (a segment the walk may pass over) and no goal (a state it could already
+  // be in). See SpecSegment.assert.
+  if (skill.assert) seg.assert = true;
   // A detour is passed over only between other segments, as the daemon's walk does.
-  if (skill.detour && !last) seg.detour = { asked: skill.detour.asked };
+  if (skill.detour && !last && !skill.assert) seg.detour = { asked: skill.detour.asked };
   // The goal travels only where it can be acted on: see SpecSegment.goal.
-  if (goalBearing && skill.goal?.requireText?.length) {
+  if (goalBearing && !skill.assert && skill.goal?.requireText?.length) {
     seg.goal = { requireText: [...skill.goal.requireText] };
     if (skill.reportTemplate) seg.report = skill.reportTemplate;
   }
@@ -311,8 +329,12 @@ function demotionWhy(skill: Skill): string {
  */
 function noopDiagnostics(flow: Flow, flowFile: string | undefined): Diagnostic[] {
   const ids = new Set(flow.steps.map((s) => s.id));
+  // An assertion changes nothing BY DESIGN: "changed nothing when it was
+  // recorded" is its contract, never a finding against its recording.
+  const asserts = new Set(flow.steps.filter((s) => s.kind === 'assert').map((s) => s.id));
   const out: Diagnostic[] = [];
   for (const warning of flow.warnings ?? []) {
+    if (warning.startsWith('noop-step:') && asserts.has(warning.slice('noop-step:'.length).trim().split(' ')[0] ?? '')) continue;
     if (warning.startsWith('noop-step:')) {
       const text = warning.slice('noop-step:'.length).trim();
       const first = text.split(/\s+/)[0] ?? '';
@@ -447,7 +469,14 @@ export function flowToSpec(
     // A pin the flow gave no bindings runs whatever replay can bind from the
     // instruction (replayBinding) — the pin itself, a sibling, or nothing.
     if (pinned && !Object.keys(params).length && Object.keys(pinned.params).length) {
-      const bound = replayBinding(pinned, store.list(pinned.origin), step.instruction);
+      const candidate = replayBinding(pinned, store.list(pinned.origin), step.instruction);
+      // An assertion is never re-pinned (notes/CONTRACT-assert.md): a sibling
+      // that reads over the instruction is another procedure, and compiling it
+      // in the pin's place would turn "this must hold" into whatever that one
+      // does. The same the other way round: an assertion never stands in for
+      // a step that was recorded doing work.
+      const assertStep = step.kind === 'assert' || pinned.assert === true;
+      const bound = candidate && candidate.skill.id !== pinned.id && (assertStep || candidate.skill.assert === true) ? null : candidate;
       if (!bound) {
         diagnostics.push({
           code: 'unbound-pin',
@@ -481,7 +510,26 @@ export function flowToSpec(
     // read-only skill covering a mutating pin — and only on the last segment,
     // the one that finishes the work.
     const chain = skill ? chainOf(skill, store) : [];
-    const changes = chain.some((member) => mutates(store, member.id));
+    const changes = step.kind !== 'assert' && chain.some((member) => mutates(store, member.id));
+    // An assertion step whose pinned procedure is not an assertion (or the
+    // reverse) would be emitted under the wrong failure policy: said here, as
+    // an error, because the fix is a recording.
+    if (chain.length && (step.kind === 'assert') !== chain.every((member) => member.assert === true)) {
+      const stray = chain.filter((member) => (member.assert === true) !== (step.kind === 'assert')).map((member) => member.id);
+      diagnostics.push({
+        code: 'assert-procedure',
+        step: step.id,
+        what:
+          step.kind === 'assert'
+            ? `it is an assertion step, but its procedure (${stray.join(', ')}) was not recorded as one`
+            : `its procedure (${stray.join(', ')}) is an assertion, but the flow does not mark the step as one`,
+        why: 'an assertion is compiled under a strict policy — a miss stops the run, and nothing skips, satisfies or recovers it — which is decided by the step kind and the skill flag together. With only one of them set the compiled step would either soften a check or stop the run over ordinary work.',
+        fix: rerecordFix(fixFile, step.id),
+        action: rerecordAction(fixFile, step.id),
+        severity: 'error',
+        line: `step ${step.id} and its procedure disagree about being an assertion (${stray.join(', ')})`,
+      });
+    }
     const segments = chain.map((member, i) => toSegment(member, changes && i === chain.length - 1, i === chain.length - 1));
     if (!segments.length) {
       diagnostics.push({
@@ -546,6 +594,7 @@ export function flowToSpec(
       outputs: step.outputs ?? [],
       segments,
       ...(step.urlRoutes && Object.keys(step.urlRoutes).length ? { urlRoutes: step.urlRoutes } : {}),
+      ...(step.kind ? { kind: step.kind } : {}),
     });
   }
 
@@ -847,4 +896,24 @@ function recipeSnapshot(components: ComponentStore, diagnostics: Diagnostic[]): 
     });
   }
   return recipes;
+}
+
+/**
+ * How many assertions a compiled flow carries: the flow steps that are
+ * assertions (`SpecStep.kind`, or a segment flagged `assert`), and the
+ * individual checks inside them (each a `wait_for` that throws the shared
+ * assertFailure on a miss). Readiness reports it as evidence of what a green
+ * run of the artifact actually verified.
+ */
+export function assertionCounts(spec: SpecFlow): { steps: number; checks: number } {
+  let steps = 0;
+  let checks = 0;
+  const count = (list: readonly SkillStep[], within: boolean): number =>
+    list.reduce((n, s) => n + (s.tool === 'wait_for' && (within || s.assert) ? 1 : 0) + (Array.isArray(s.body) ? count(s.body, within) : 0), 0);
+  for (const step of spec.steps) {
+    const within = step.kind === 'assert';
+    if (within || step.segments.some((seg) => seg.assert)) steps++;
+    checks += step.segments.reduce((n, seg) => n + count(seg.steps, within || seg.assert === true), 0);
+  }
+  return { steps, checks };
 }

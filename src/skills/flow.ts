@@ -91,6 +91,12 @@ export interface FlowStep {
    */
   adopted?: boolean;
   /**
+   * An assertion step (`sitelooper assert`): replays its pinned skill with no
+   * model on any path. A miss stops the flow with status 'assert-failed'; it
+   * is never recovered, adopted, re-pinned or satisfied.
+   */
+  kind?: 'assert';
+  /**
    * Cross-run evidence about this step's outputs: for each output name, how
    * often a later run produced the SAME value here and how often it differed.
    *
@@ -488,18 +494,24 @@ export function buildFlow(
   /** Which flow step each kept instruction became, by its ledger index. */
   const byLedger = new Map<string, string>();
   groups.forEach((g, i) => {
-    const id = stepId(g.instruction.text, i);
-    // Read the RAW instruction, before references go in: a substituted
-    // {{02-create.quotation_ref}} shifts every later word and can push the
-    // ask outside the scan window.
-    const noop = noopStepWarning(id, g);
-    if (noop) warnings.push(noop);
-    if (prevId && prevGroup) {
-      const contradiction = contradictionWarning(prevId, prevGroup, id, g);
-      if (contradiction) warnings.push(contradiction);
+    // An assertion is not expected to change anything or to report a value,
+    // so neither lint is asked of it — and it does not stand between the two
+    // steps the contradiction lint compares: it looked, and moved nothing.
+    const asserting = g.instruction.assert === true;
+    const id = stepId(g.instruction.text, i, asserting);
+    if (!asserting) {
+      // Read the RAW instruction, before references go in: a substituted
+      // {{02-create.quotation_ref}} shifts every later word and can push the
+      // ask outside the scan window.
+      const noop = noopStepWarning(id, g);
+      if (noop) warnings.push(noop);
+      if (prevId && prevGroup) {
+        const contradiction = contradictionWarning(prevId, prevGroup, id, g);
+        if (contradiction) warnings.push(contradiction);
+      }
+      prevId = id;
+      prevGroup = g;
     }
-    prevId = id;
-    prevGroup = g;
     // A merged continuation's instruction finishes the step (resolveGroups):
     // referenced with it, as one text.
     let text = [g.instruction.text, ...(g.continuations ?? []).map((c) => `Then, to finish: ${c}`)].join('\n\n');
@@ -513,7 +525,9 @@ export function buildFlow(
       if (p.value.length >= 2) text = threadOutsideQuotes(text, p.value, `{{${p.stepId}.${p.output}}}`, threadsAnywhere(p.value));
       else if (p.path) text = replaceAtPath(text, p.path, `{{${p.stepId}.${p.output}}}`);
     }
-    const outputs = Object.keys(g.report?.values ?? {});
+    // An assertion has no outputs: it answers yes or stops the run, and
+    // nothing later may reference what its report happened to say.
+    const outputs = asserting ? [] : Object.keys(g.report?.values ?? {});
     // Capture the skill's slot bindings, referencized like the instruction, so
     // replay binds params from the flow rather than re-parsing the wording.
     let params: Record<string, string> | undefined;
@@ -574,9 +588,17 @@ export function buildFlow(
       ...(g.report?.skill ? { skill: g.report.skill } : {}),
       ...(params ? { params } : {}),
       outputs,
-      recorded: g.report?.values ?? {},
+      recorded: asserting ? {} : (g.report?.values ?? {}),
       ...(g.adopted ? { adopted: true } : {}),
+      ...(asserting ? { kind: 'assert' as const } : {}),
     });
+    // ...and mints nothing: a check produces no url part and no value for a
+    // later step to be threaded through. Its route is kept (it is where the
+    // check was made), its ledger index is already banked above.
+    if (asserting) {
+      if (g.endUrl) steps[steps.length - 1].route = urlPattern(g.endUrl, new Map(), { query: false });
+      return;
+    }
     // Provenance (PLAN-replay-v2): url parts this step MINTED (absent from
     // every earlier url) are outputs too — a later step's recorded literal
     // equal to one becomes {{stepId.url.<part>}}, re-bound each run from
@@ -1628,7 +1650,9 @@ function groupByInstruction(entries: RecordedEntry[]): Group[] {
       // continuation's report/endUrl land on it. A resume with no same-text
       // predecessor (truncated recording) stands alone.
       const prev = groups[groups.length - 1];
-      if (e.resume && prev?.instruction.text === e.text) continue;
+      // Never across an assertion: it is its own step whatever its wording,
+      // so it neither continues the instruction before it nor is continued.
+      if (e.resume && !e.assert && !prev?.instruction.assert && prev?.instruction.text === e.text) continue;
       groups.push({ instruction: e, mutations: 0, mutationsDiffed: 0, mutationsEffective: 0, diffs: [], acts: [], steps: [], ledgerIndex: Math.max(1, ledgerIndex) });
     } else if (e.k === 'report' && groups.length) groups[groups.length - 1].report = e;
     else if (e.k === 'step' && groups.length) {
@@ -1696,7 +1720,18 @@ function samePage(a?: string, b?: string): boolean {
  * Marks `adopted` (or `undoneBy`) on the group (unbankedMutations reads both)
  * and returns the kept groups.
  */
-function resolveGroups(groups: Group[]): Group[] {
+function resolveGroups(recorded: Group[]): Group[] {
+  // ASSERTIONS STAND APART (`sitelooper assert`). An assertion that held is a
+  // step of the flow; one that did not is not part of it, and is never
+  // adopted — adoption replays model-first and lets a non-success pass, both
+  // of which an assertion forbids. And it is no neighbour's continuation: it
+  // changed nothing, so it is neither the group that "picked up where a failed
+  // one left off" nor work a merged step can absorb. The adoption rules below
+  // are therefore asked of the other groups alone, in their own order, as if
+  // the assertions were not there; `standsBetween` is the one place they are
+  // seen, where a merge would otherwise move work across a check.
+  const groups = recorded.filter((g) => !g.instruction.assert);
+  const standsBetween = (a: Group, b: Group): boolean => recorded.slice(recorded.indexOf(a) + 1, recorded.indexOf(b)).some((g) => g.instruction.assert === true);
   const kept = groups.map((g) => g.report?.status === 'success');
   for (let i = groups.length - 2; i >= 0; i--) {
     if (kept[i]) continue;
@@ -1751,6 +1786,11 @@ function resolveGroups(groups: Group[]): Group[] {
     while (i < groups.length - 1) {
       const next = groups[i + 1];
       if (!kept[i + 1] || next.firstTool === 'goto') break;
+      // An assertion recorded between this group and its continuation checked
+      // the page as it stood THEN: a merge would run the continuation's work
+      // ahead of the check. (Merged continuations leave `recorded` below, so
+      // only assertions can stand between the two.)
+      if (standsBetween(g, next)) break;
       // Reached ANYWHERE in its own steps, not only where it ended: ghost
       // fwgh1-n1's blocked create went list → #/editor/post/<id> (the post
       // saved, id minted) → back to the list, and the next instruction — a
@@ -1797,9 +1837,13 @@ function resolveGroups(groups: Group[]): Group[] {
       // continuation of THAT is judged against the merged group.
       groups.splice(i + 1, 1);
       kept.splice(i + 1, 1);
+      // ...and out of the caller's list, which it reads after this call
+      // (liveReadsFor's `next` group), as when the two were one array.
+      recorded.splice(recorded.indexOf(next), 1);
     }
   }
-  return groups.filter((_, i) => kept[i]);
+  const resolved = new Set(groups.filter((_, i) => kept[i]));
+  return recorded.filter((g) => (g.instruction.assert ? g.report?.status === 'success' : resolved.has(g)));
 }
 
 /**
@@ -2424,10 +2468,12 @@ export function unbankedMutations(entries: RecordedEntry[]): string[] {
   return out;
 }
 
-function stepId(text: string, i: number): string {
-  const verb = (/\b(sign in|log ?in|create|add|edit|change|set|delete|remove|archive|open|verify|find|report)\b/i.exec(text)?.[1] ?? 'step')
-    .toLowerCase()
-    .replace(/\s+/g, '');
+function stepId(text: string, i: number, assert = false): string {
+  // An assertion is named for what it is: its sentence states a condition
+  // ("the order was created"), and a verb found in it is not what the step does.
+  const verb = assert
+    ? 'assert'
+    : (/\b(sign in|log ?in|create|add|edit|change|set|delete|remove|archive|open|verify|find|report)\b/i.exec(text)?.[1] ?? 'step').toLowerCase().replace(/\s+/g, '');
   return `${String(i + 1).padStart(2, '0')}-${verb}`;
 }
 
@@ -2877,7 +2923,7 @@ export function liveReadsFor(
     const index = byId.get(sid);
     const producer = index === undefined ? undefined : flow.steps[index];
     const g = index === undefined ? undefined : kept[index];
-    if (!producer?.skill || !g || stepId(g.instruction.text, index!) !== sid) continue;
+    if (!producer?.skill || !g || stepId(g.instruction.text, index!, g.instruction.assert === true) !== sid) continue;
     const pubs = publishes(producer.skill);
     if (pubs === null || pubs.includes(output)) continue;
     const raw = producer.recorded?.[output];

@@ -100,6 +100,44 @@ sitelooper check tests/sitelooper/ticket.flow.ts --ready --fixture-isolation \
 The negative spec must pass and contain no skipped tests. Readiness reports failure detection
 separately as `verified`, `not-configured`, or `failed`.
 
+## Recorded assertions and hand-written ones
+
+There are two places to put a business check. `sitelooper assert "<sentence>"` records it into
+the flow while you author. An `expect` in your `.spec.ts` is written by hand, after `runFlow`.
+
+Record an assert when the condition is something a page can show and a sentence can state:
+visible, hidden, text equals or contains, a count, a field's value, or the url. It then runs at
+its place in the flow, in the daemon and in the compiled spec, and it stops the run at that step
+with `assertion failed: <sentence> — <detail>`. It is never recovered, retried by a model or
+skipped as already satisfied. Its expected value must be written in the sentence (a literal, a
+declared var or a value an earlier step reported), so you cannot record "equals whatever the page
+shows".
+
+Write an `expect` in the spec when the check needs code: arithmetic or comparison on outputs, a
+call to the app's API or database, a condition on several outputs at once, or a check that runs
+after `runFlow` returns. The spec is yours and is never regenerated. Recorded asserts and
+hand-written ones can sit side by side; use asserts for what belongs inside the flow, between its
+steps, and `expect` for what needs the whole result.
+
+A failed assert is reported separately from a drifted locator. When the page was read and the
+condition is false, the message starts `assertion failed:`. When no recorded locator found the
+element, it starts `assertion could not be checked:`. Both are test failures. The second may be
+drift in the locator and not a fault in the app, so look at the drift report before you suspect
+the app.
+
+### Readiness and failure detection
+
+The readiness evidence reports `assertions: { steps, checks }`: how many steps of the compiled
+flow are assertions, and how many individual checks they hold between them. It is evidence only.
+No readiness outcome depends on it, and a flow with none still verifies. It tells a reviewer
+whether three green runs checked conditions you stated, or only that the procedure ran.
+
+An assert also helps the negative check above. A fault you inject can be caught by a recorded
+assert as well as by your own `expect`. Match the assert's specific message in
+`.rejects.toThrow(...)`, since a locator timeout or an unrelated error must not satisfy the check.
+`failureDetection` is still `verified`, `not-configured` or `failed` as before, and having asserts
+does not make it `verified`: only a passing negative spec does.
+
 ## Reviewing repair proposals
 
 A proposal includes the original source hash, candidate source and hash, user spec hash, changes,

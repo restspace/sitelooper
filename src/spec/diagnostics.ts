@@ -40,6 +40,7 @@ export type DiagnosticCode =
   | 'unfilled-slot' // a step that ACTS names a slot the artifact can never fill by the time it acts: no caller param, and nothing running before it mints it — neither an earlier SEGMENT of its chain nor an earlier step of its own (fwod57) — so it would type or locate by the literal `{{vN}}` text
   | 'recipe-snapshot' // flow-level: the component store holds state the artifact's compile-time recipe snapshot cannot express (a demoted recipe, a family with none usable, a learned variant travelling as data)
   | 'literal-credential' // the procedure carries the value of a credential-named environment variable in the clear (fwrd83: `v2: 'bench-pass-1234'`, requiredEnvNames [])
+  | 'assert-procedure' // an assertion step and its pinned procedure disagree about being one (FlowStep.kind vs Skill.assert), so it would compile under the wrong failure policy
   | 'no-procedure'; // step has no converged procedure
 
 export interface Diagnostic {

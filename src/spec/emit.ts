@@ -811,6 +811,87 @@ const HELPERS: { token: string; source: string[] }[] = [
     ],
   },
   {
+    token: 'assertMissed(',
+    source: [
+      '/**',
+      ' * An assertion that missed (`sitelooper assert`): the run stops here with the',
+      ' * one message both runners raise — the shared assertFailure',
+      " * (src/execution/assert.ts, embedded). `kind` is 'unlocatable' when no",
+      ' * recorded way of finding the target resolved, so the condition could not be',
+      " * read at all, and 'failed' when the page was read and the condition does not",
+      " * hold. `message` is the caller's own sentence with this run's values filled",
+      " * in; the detail is the underlying error's own text. Nothing downstream",
+      ' * catches it: an assertion is never skipped, satisfied or recovered.',
+      ' */',
+      'function assertMissed(kind: AssertFailureKind, message: string, err: unknown): never {',
+      '  const detail = err instanceof Error ? err.message : String(err);',
+      '  // Already an assertion failure (a miss raised further in): it stands as it was raised.',
+      '  if (err instanceof Error && assertFailureKind(detail) !== null) throw err;',
+      '  throw new Error(assertFailure(kind, message, detail));',
+      '}',
+    ],
+  },
+  {
+    token: 'expectValue(',
+    source: [
+      '/**',
+      " * `wait_for value_equals` (an assertion's state): the field's CURRENT value,",
+      ' * polled and compared through the shared valueHolds (src/execution/assert.ts,',
+      " * embedded) — whitespace runs collapsed, as the daemon's wait compares it",
+      ' * (tools.ts waitFor). Not `toHaveValue`, which compares the raw string. An',
+      ' * element with no value — not an input, textarea or select, or not there —',
+      " * holds nothing, whatever was asked for. The miss is said in the daemon's",
+      ' * own words.',
+      ' */',
+      'async function expectValue(loc: Locator, want: string, timeout: number): Promise<void> {',
+      "  let last = '';",
+      '  try {',
+      '    await expect',
+      '      .poll(',
+      '        async () => {',
+      '          const value = await loc.inputValue({ timeout: 1_000 }).catch(() => null);',
+      "          last = value === null ? 'value=(no field value)' : `value=${JSON.stringify(value.slice(0, 200))}`;",
+      '          return value !== null && valueHolds(value, want);',
+      '        },',
+      '        { timeout },',
+      '      )',
+      '      .toBe(true);',
+      '  } catch {',
+      '    throw new Error(`wait_for value_equals timed out after ${timeout}ms (last: ${last})`);',
+      '  }',
+      '}',
+    ],
+  },
+  {
+    token: 'expectUrl(',
+    source: [
+      '/**',
+      " * `wait_for url_contains` (an assertion's state): a fact about the page, not",
+      ' * about an element, so it resolves nothing. The url is polled — a client-side',
+      ' * route may still be settling — and compared through the shared urlHolds',
+      ' * (src/execution/assert.ts, embedded): plain containment, neither side',
+      " * normalised. The miss is said in the daemon's own words (tools.ts waitForUrl).",
+      ' */',
+      'async function expectUrl(page: Page, want: string, timeout: number): Promise<void> {',
+      "  let last = '';",
+      '  try {',
+      '    await expect',
+      '      .poll(',
+      '        () => {',
+      '          const url = page.url();',
+      '          last = `url=${JSON.stringify(url.slice(0, 300))}`;',
+      '          return urlHolds(url, want);',
+      '        },',
+      '        { timeout },',
+      '      )',
+      '      .toBe(true);',
+      '  } catch {',
+      '    throw new Error(`wait_for url_contains timed out after ${timeout}ms (last: ${last})`);',
+      '  }',
+      '}',
+    ],
+  },
+  {
     token: 'skippedReads',
     source: [
       '/**',
@@ -1533,6 +1614,13 @@ interface Ctx {
    * when the step emitting is a state-changing action.
    */
   obs?: string;
+  /**
+   * The flow step being emitted is an assertion (SpecStep.kind, or a segment
+   * flagged `assert`): every wait in it is a check whose miss throws the
+   * shared assertFailure, and none of the skip, satisfied or detour paths is
+   * emitted for it. See assertedBy.
+   */
+  assertStep?: boolean;
 }
 
 const src = (text: string) => stringSource(text, { slot: slotAsParam });
@@ -1731,6 +1819,42 @@ function effectLines(step: SkillStep, ctx: Ctx, out: string[], observed?: string
  */
 function dialectArg(step: SkillStep): string {
   return step.expect?.lineDialect === 2 ? ', 2' : '';
+}
+
+/** Whether a flow step is an assertion: the flow says so (SpecStep.kind), or its procedure does (SpecSegment.assert). */
+function isAssertStep(step: SpecStep): boolean {
+  return step.kind === 'assert' || step.segments.some((segment) => segment.assert === true);
+}
+
+/**
+ * The assertion a recorded step is a check of, or undefined for every other
+ * step (which then emits exactly as it always has).
+ *
+ * WHAT CHANGES FOR SUCH A STEP (notes/CONTRACT-assert.md, "Failure policy").
+ * Nothing about how it resolves or waits: the same chain through the same
+ * shared policy, the same first-match dispatch, the same timeout, the same
+ * drift line when a fallback candidate covers for the primary. What changes
+ * is what a miss MEANS. A chain that resolves nothing throws
+ * assertFailure('unlocatable', …); a wait that does not hold throws
+ * assertFailure('failed', …); and none of the paths that let an ordinary step
+ * off — an absent dialog's skip, an already-in-effect guard, the step-level
+ * satisfied guard, a detour passed over — is emitted around it.
+ *
+ * The message is `SkillStep.assert.message`. A wait inside an assertion that
+ * carries none (a store written by hand) is still a check, and reports the
+ * segment's template — the caller's sentence — rather than passing as an
+ * ordinary wait.
+ */
+function assertedBy(step: SkillStep, segment: SpecSegment, ctx: Ctx): { message: string } | undefined {
+  if (step.tool !== 'wait_for') return undefined;
+  if (step.assert) return step.assert;
+  return segment.assert || ctx.assertStep ? { message: segment.template } : undefined;
+}
+
+/** `lines` inside a try whose catch raises `onMiss` (an assertMissed call over `err`); unchanged when there is none. */
+function missGuard(lines: string[], onMiss: string | null): string[] {
+  if (!onMiss) return lines;
+  return ['try {', ...lines.flatMap((l) => l.split('\n')).map((l) => (l ? `  ${l}` : l)), '} catch (err) {', `  ${onMiss};`, '}'];
 }
 
 /** Collect the slots a piece of recorded text needs from `p`. */
@@ -2006,10 +2130,23 @@ function positionalClickLines(
   };
 }
 
-function actionTarget(step: SkillStep, key: 'target' | 'source', ctx: Ctx, out: string[], hoist?: string): string | null {
+function actionTarget(
+  step: SkillStep,
+  key: 'target' | 'source',
+  ctx: Ctx,
+  out: string[],
+  hoist?: string,
+  /**
+   * An assertion's check only: the `.catch(…)` appended to the frame lookup and
+   * to the pick, so a target that cannot be found is the assertion's
+   * 'unlocatable' failure. Its presence also keeps every already-in-effect
+   * guard out of the resolution — an assertion is never skipped.
+   */
+  unlocatable = '',
+): string | null {
   const chain = step.locators?.[key] ?? [];
   if (!chain.length) return null;
-  const root = frameRootLines(step, key, ctx, out);
+  const root = frameRootLines(step, key, ctx, out, unlocatable);
   const name = `hit${++ctx.picks}`;
   // The same rule replay applies at its own allowMultiple: a step whose
   // dispatch spans every match, or acts on the first of them, has not failed
@@ -2032,7 +2169,7 @@ function actionTarget(step: SkillStep, key: 'target' | 'source', ctx: Ctx, out: 
   if (hoist) out.push(`const ${hoist}: CandidateObservation[] = [`, ...open, '];');
   const list = (head: string) => (candidates ? [`${head}${candidates}, ${where}, `] : [`${head}[`, ...open, `], ${where}, `]);
   const note = ctx.note ? `, ${q(ctx.note)}` : '';
-  if (key === 'target' && root === 'page' && !ctx.loopSink) out.push(...dismissalLines(step, chain, ctx), ...hideGoneLines(step, chain, ctx));
+  if (key === 'target' && root === 'page' && !ctx.loopSink && !unlocatable) out.push(...dismissalLines(step, chain, ctx), ...hideGoneLines(step, chain, ctx));
   const destPattern = step.expect?.urlPattern;
   if (key === 'target' && destPattern && (step.tool === 'click' || step.tool === 'dblclick') && !ctx.loopSink) {
     // Replay's navigation fallback (the shared recover.ts): a missed
@@ -2048,7 +2185,7 @@ function actionTarget(step: SkillStep, key: 'target' | 'source', ctx: Ctx, out: 
   } else {
     const head = list(`const ${name} = await pick(page, `);
     const guard = positionalClickLines(step, chain, key, root, ctx);
-    head[head.length - 1] += `${policy}, ${opts}${note})${guard ? guard.miss : ''};`;
+    head[head.length - 1] += `${policy}, ${opts}${note})${guard ? guard.miss : ''}${unlocatable};`;
     out.push(...head);
     if (guard?.miss) out.push(`if (!${name}) return { status: 'skipped' };`);
     if (guard) out.push(guard.hit(name));
@@ -2111,13 +2248,13 @@ function warnUnprovenTarget(step: SkillStep, key: 'target' | 'source', chain: re
  * (frameRoot, over the shared rootFor), which throws when the frame is not
  * there — replay's stop, never a search of the page.
  */
-function frameRootLines(step: SkillStep, key: 'target' | 'source', ctx: Ctx, out: string[]): string {
+function frameRootLines(step: SkillStep, key: 'target' | 'source', ctx: Ctx, out: string[], unlocatable = ''): string {
   const frame = step.contexts?.[key]?.frame;
   if (!frame?.length) return 'page';
   const root = `root${(ctx.roots = (ctx.roots ?? 0) + 1)}`;
   out.push(
     `// The recorded ${key} lives inside ${commentSafe(describeFramePath(frame))}; its chain is resolved there and nowhere else.`,
-    `const ${root} = await frameRoot(page, ${JSON.stringify(frame)}, ${q(`${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex} ${key}`)});`,
+    `const ${root} = await frameRoot(page, ${JSON.stringify(frame)}, ${q(`${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex} ${key}`)})${unlocatable};`,
   );
   return root;
 }
@@ -2484,6 +2621,14 @@ function emitSkillStep(recorded: SkillStep, segment: SpecSegment, index: number,
   // Only a failure of the VERIFICATION: the action's own failure throws as before.
   const refill = step.tool === 'fill' && checks.length > 1 ? { doc: `docBefore${ctx.urls}`, verifying: `verifying${ctx.urls}` } : undefined;
   const indent = (lines: string[]) => lines.flatMap((line) => line.split('\n').map((part) => part ? `    ${part}` : part));
+  // AN ASSERTION'S CHECK EITHER HELD OR IS A MISS, whatever stopped the step:
+  // replay's own backstop (runOneStep, after the body). The wait and the pick
+  // raise their own kinds inside `act`; anything else the lifecycle throws — a
+  // step recorded on another tab, an error page, an alert the recording never
+  // saw — means the check could not be made, which is 'unlocatable'. A miss
+  // already raised passes through assertMissed as it stands.
+  const checkOf = assertedBy(step, segment, ctx);
+  const backstop = checkOf ? `assertMissed('unlocatable', ${src(checkOf.message)}, err)` : null;
   const head = [
     `// @step ${where}`,
     `let ${urlBefore} = '';`,
@@ -2565,7 +2710,9 @@ function emitSkillStep(recorded: SkillStep, segment: SpecSegment, index: number,
           '  }',
           '}',
         ]
-      : lifecycle;
+      : backstop
+        ? missGuard(lifecycle, backstop)
+        : lifecycle;
   return [
     ...head,
     ...body,
@@ -2602,7 +2749,7 @@ const PAGE_LEVEL_TOOLS = new Set(['goto', 'back', 'set_viewport', 'set_offline',
  * wait is satisfied by the miss itself. Emitted ahead of the already-in-effect
  * guard and the pick, as replay's ordering has it.
  */
-function absentDialogLines(step: SkillStep, args: Record<string, unknown>, ctx: Ctx): string[] {
+function absentDialogLines(step: SkillStep, args: Record<string, unknown>, ctx: Ctx, asserted = false): string[] {
   if (!ctx.dialogAbsence) return [];
   const out: string[] = [];
   const pageLevel = PAGE_LEVEL_TOOLS.has(step.tool) || (step.tool === 'press' && !args.target);
@@ -2612,7 +2759,9 @@ function absentDialogLines(step: SkillStep, args: Record<string, unknown>, ctx: 
   // controls were looked for on the page, and replay does not consult the
   // absent dialog for a step whose frame is missing either.
   const framed = Boolean(step.contexts?.target?.frame?.length || step.contexts?.source?.frame?.length);
-  if (!pageLevel && !framed && !isReadAction(step.tool) && !waitsForAbsence(step, args) && !step.mints && sources.length) {
+  // An assertion's check is never skipped as belonging to a dialog that did
+  // not open: its target missing is the assertion's own failure.
+  if (!asserted && !pageLevel && !framed && !isReadAction(step.tool) && !waitsForAbsence(step, args) && !step.mints && sources.length) {
     const locators = Object.fromEntries(
       Object.entries(step.locators ?? {}).map(([key, cands]) => [
         key,
@@ -2656,7 +2805,13 @@ function emitSkillAction(step: SkillStep, segment: SpecSegment, index: number, c
   // A filled value or typed text is something the step put on the page, noted
   // ahead of any skip, as replay notes it before it asks about a miss.
   if (setsSomething(step.tool)) out.push(...echoNoteLines([args.value, args.text], ctx));
-  out.push(...absentDialogLines(step, args, ctx));
+  // An assertion's check (see assertedBy): the wait is emitted as it always
+  // is, and each way it can miss raises the shared assertFailure instead.
+  const asserted = assertedBy(step, segment, ctx);
+  if (asserted) noteSlots(asserted.message, ctx);
+  const missed = (kind: 'failed' | 'unlocatable'): string | null => (asserted ? `assertMissed(${q(kind)}, ${src(asserted.message)}, err)` : null);
+  const unlocatable = asserted ? `.catch((err: unknown) => ${missed('unlocatable')})` : '';
+  out.push(...absentDialogLines(step, args, ctx, Boolean(asserted)));
 
   // Steps that act on the page itself, before any locator is needed.
   switch (step.tool) {
@@ -2725,6 +2880,15 @@ function emitSkillAction(step: SkillStep, segment: SpecSegment, index: number, c
       break;
   }
 
+  // `url_contains` (an assertion's state) is a fact about the page, not about
+  // an element: no target, no chain, nothing to resolve — tools.ts waitFor's
+  // own first branch. So it never reaches the locator paths below, where a
+  // step with no chain is a step the artifact cannot run.
+  if (step.tool === 'wait_for' && args.state === 'url_contains') {
+    out.push(...missGuard([waitForLine('page', args, num('timeout_ms'), ctx, index)], missed('failed')));
+    return out;
+  }
+
   const isRead = isReadAction(step.tool);
   if (isRead && str('what') === 'url') {
     if (step.label) out.push(`outputs[${q(`${ctx.stepId}.${step.label}`)}] = page.url();`, ...echoReadLines(step, ctx));
@@ -2752,7 +2916,11 @@ function emitSkillAction(step: SkillStep, segment: SpecSegment, index: number, c
   if (waitsForAbsence(step, args)) {
     const chain = step.locators?.target ?? [];
     if (!chain.length) {
-      out.push(`// TODO: no locator this compiler can express for ${step.tool} — fill it in by hand.`);
+      // An assertion with nothing to resolve would pass on every page (an
+      // empty chain "resolves nothing", which is what absence means): a
+      // blocker with a diagnostic, and a throw, never a silent pass.
+      if (asserted) out.push(...unlocatableAssertion(ctx, index, String(args.state)));
+      else out.push(`// TODO: no locator this compiler can express for ${step.tool} — fill it in by hand.`);
       return out;
     }
     const name = `hit${++ctx.picks}`;
@@ -2766,7 +2934,10 @@ function emitSkillAction(step: SkillStep, segment: SpecSegment, index: number, c
       root = `${framed}.root`;
       out.push(
         `const ${framed} = await rootFor(page, ${JSON.stringify(frame)}, 0);`,
-        `if ('error' in ${framed} && !${framed}.missing) throw new Error(${q(`${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex} target: `)} + ${framed}.error);`,
+        asserted
+          ? // …and for an assertion that stop is 'unlocatable': the frame could not be told apart, so nothing was read.
+            `if ('error' in ${framed} && !${framed}.missing) throw new Error(assertFailure('unlocatable', ${src(asserted.message)}, ${q(`${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex} target: `)} + ${framed}.error));`
+          : `if ('error' in ${framed} && !${framed}.missing) throw new Error(${q(`${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex} target: `)} + ${framed}.error);`,
       );
     }
     // Several matches resolve too (allowMultiple): two visible elements have
@@ -2785,8 +2956,12 @@ function emitSkillAction(step: SkillStep, segment: SpecSegment, index: number, c
       '// with no wait, and only a target that is still there is waited on to go.',
       root === 'page' ? `const ${name} = await resolveTarget(page, [` : `const ${name} = 'root' in ${root.slice(0, -'.root'.length)} ? await resolveTarget(page, [`,
       ...open,
-      root === 'page' ? `], ${where}, ${policy}, ${opts});` : `], ${where}, ${policy}, ${opts}) : null;`,
-      `if (${name}) ${waitForLine(target, args, num('timeout_ms'), ctx, index)}`,
+      root === 'page' ? `], ${where}, ${policy}, ${opts})${unlocatable};` : `], ${where}, ${policy}, ${opts})${unlocatable} : null;`,
+      // An assertion of absence: nothing resolving IS the condition holding, as
+      // above; a target that is still there when the wait gives up has failed it.
+      ...(asserted
+        ? [`if (${name}) {`, ...missGuard([waitForLine(target, args, num('timeout_ms'), ctx, index)], missed('failed')).map((l) => `  ${l}`), '}']
+        : [`if (${name}) ${waitForLine(target, args, num('timeout_ms'), ctx, index)}`]),
     );
     return out;
   }
@@ -2806,7 +2981,7 @@ function emitSkillAction(step: SkillStep, segment: SpecSegment, index: number, c
   const observations = heldText ? `observations${ctx.picks + 1}` : undefined;
   // A popup item this run already applied (the shared pickAlreadyApplied,
   // gitea fwgt12 s_f54a5a step 9): asked before the pick, as replay asks it.
-  const appliedPick = ctx.appliedPicks?.get(index - 1);
+  const appliedPick = asserted ? undefined : ctx.appliedPicks?.get(index - 1);
   if (appliedPick && ctx.pickStart) {
     out.push(
       `if (await pickAlreadyApplied(page, ${q(appliedPick.role)}, ${src(appliedPick.name)}, ${ctx.pickStart})) {`,
@@ -2815,8 +2990,12 @@ function emitSkillAction(step: SkillStep, segment: SpecSegment, index: number, c
       '}',
     );
   }
-  const target = actionTarget(step, 'target', ctx, out, observations);
+  const target = actionTarget(step, 'target', ctx, out, observations, unlocatable);
   const actionAt = out.length;
+  if (!target && asserted) {
+    out.push(...unlocatableAssertion(ctx, index, String(args.state)));
+    return out;
+  }
   if (!target) {
     out.push(
       ...unsupportedCapability(ctx, index, {
@@ -2927,17 +3106,25 @@ function emitSkillAction(step: SkillStep, segment: SpecSegment, index: number, c
       // refuse the several matches the resolution now allows. A count wait is
       // plural by nature and keeps the whole locator.
       const waited = dispatchesFirstMatch(step.tool, args) ? `${target}.first()` : target;
+      // An assertion's wait is this same wait — the held-elsewhere rung too,
+      // which is another candidate of the SAME recorded chain showing the text —
+      // and whatever it still throws after that is the assertion's 'failed'.
       if (observations) {
         const where = `${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex}`;
         out.push(
-          'try {',
-          `  ${waitForLine(waited, args, num('timeout_ms'), ctx, index)}`,
-          '} catch (err) {',
-          `  await textHeldOrThrow(err, ${observations}, ${q(String(args.state))}, ${src(str('text'))}, ${q(where)}, run.drift);`,
-          '}',
+          ...missGuard(
+            [
+              'try {',
+              `  ${waitForLine(waited, args, num('timeout_ms'), ctx, index)}`,
+              '} catch (err) {',
+              `  await textHeldOrThrow(err, ${observations}, ${q(String(args.state))}, ${src(str('text'))}, ${q(where)}, run.drift);`,
+              '}',
+            ],
+            missed('failed'),
+          ),
         );
       } else {
-        out.push(waitForLine(waited, args, num('timeout_ms'), ctx, index));
+        out.push(...missGuard([waitForLine(waited, args, num('timeout_ms'), ctx, index)], missed('failed')));
       }
       break;
     }
@@ -2985,7 +3172,8 @@ function emitSkillAction(step: SkillStep, segment: SpecSegment, index: number, c
   if (ctx.landing) {
     out.splice(actionAt, 0, `${ctx.landing} = await armPageEffect(page, ${JSON.stringify(stepEffect(step))}, ${q(`${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex}`)});`);
   }
-  wrapAlreadyInEffect(step, ctx, out, actionAt, target);
+  // Never around an assertion's check: it has no effect to be "already in".
+  if (!asserted) wrapAlreadyInEffect(step, ctx, out, actionAt, target);
   // A flagged step's `pick` carries the note in its own throw (actionTarget),
   // but the ACTION after it can fail too — a click that timed out on what
   // resolved says only that Playwright waited — and that failure must say
@@ -3078,6 +3266,46 @@ function unsupportedCapability(
   return [`// TODO: ${o.todo}`, `throw new Error(${q(o.throws)});`];
 }
 
+/**
+ * An assertion's check with no locator the artifact can express: the same
+ * four-way report as any other inexpressible step (unsupportedCapability) —
+ * diagnostic, warning, the `// TODO:` that keeps the flow from being called
+ * ready, and a throw. Never a comment alone: for a wait on absence, an empty
+ * chain is one that "resolves nothing", and would read as the condition
+ * holding on every page.
+ */
+function unlocatableAssertion(ctx: Ctx, index: number, state: string): string[] {
+  return unsupportedCapability(ctx, index, {
+    what: `(assertion: wait_for ${state}) has no locator a spec can express`,
+    why: 'The recording kept no candidate for the element this assertion checks, so the artifact has nothing to resolve: it could never read the condition, on any run.',
+    fix: 're-record the assertion so its target is named (sitelooper rerecord)',
+    todo: `no locator this compiler can express for the assertion's wait_for ${commentSafe(state)} — re-record the assertion.`,
+    throws: `Unsupported recorded locator: the assertion's wait_for ${state} has no locator a standalone spec can express`,
+  });
+}
+
+/**
+ * A step that is not a check, inside an assertion's procedure. An assertion
+ * may only look (notes/CONTRACT-assert.md: its skill holds its `wait_for`
+ * steps and nothing else), so anything else there is refused the way an
+ * inexpressible step is, rather than run under a policy it was never recorded
+ * for.
+ */
+function notACheck(step: SkillStep, segment: SpecSegment, index: number, ctx: Ctx): string[] {
+  ctx.segmentId = segment.id;
+  ctx.stepIndex = index;
+  return [
+    `// @step ${ctx.stepId} ${segment.id}/${index}`,
+    ...unsupportedCapability(ctx, index, {
+      what: `(${step.tool}) sits inside an assertion, which may only check`,
+      why: `${segment.id} is an assertion's procedure: every step of it must be a wait_for check. A ${step.tool} step there would run with no gate, recovery or skip rule of its own.`,
+      fix: 're-record the assertion (sitelooper rerecord)',
+      todo: `an assertion's procedure holds a ${commentSafe(step.tool)} step — an assertion may only check.`,
+      throws: `Unsupported assertion step: ${step.tool} is not a check`,
+    }),
+  ];
+}
+
 function waitForLine(target: string, args: Record<string, unknown>, timeout: number | undefined, ctx: Ctx, index: number): string {
   const only = timeout && timeout !== DEFAULT_WAIT_MS ? `{ timeout: ${timeout} }` : '';
   const opt = only ? `, ${only}` : '';
@@ -3095,6 +3323,14 @@ function waitForLine(target: string, args: Record<string, unknown>, timeout: num
       return `await expect(${target}).toContainText(${src(String(args.text ?? ''))}, ${rendered});`;
     case 'count':
       return `await expect(${target}).toHaveCount(${Number(args.count ?? 0)}${opt});`;
+    // The two states only an assertion records (execution/assert.ts
+    // ASSERT_ONLY_STATES). Both through the embedded shared verdicts and with
+    // the daemon's own default timeout said out loud (tools.ts waitFor: 10s),
+    // because Playwright's `toHaveValue`/`toHaveURL` compare differently.
+    case 'value_equals':
+      return `await expectValue(${target}, ${src(String(args.text ?? ''))}, ${timeout ?? DEFAULT_WAIT_MS});`;
+    case 'url_contains':
+      return `await expectUrl(page, ${src(String(args.text ?? ''))}, ${timeout ?? DEFAULT_WAIT_MS});`;
     default:
       // A wait the spec cannot express is a step it cannot run: the diagnostic
       // reaches the compile caller, the TODO keeps the file from being called
@@ -3592,7 +3828,12 @@ function emitSegment(segment: SpecSegment, ctx: Ctx): string[] {
     }
     if (i + 1 === gate.at) out.push('', ...segmentGateLines(segment, ctx, gate.afterNavigation));
     out.push('');
-    const lines = step.tool === 'loop' ? emitLoop(step, segment, i + 1, ctx) : emitSkillStep(step, segment, i + 1, ctx);
+    const lines =
+      (segment.assert || ctx.assertStep) && step.tool !== 'wait_for'
+        ? notACheck(step, segment, i + 1, ctx)
+        : step.tool === 'loop'
+          ? emitLoop(step, segment, i + 1, ctx)
+          : emitSkillStep(step, segment, i + 1, ctx);
     out.push(...lines);
   }
   // A read-only segment that skipped every read it could take did not replay
@@ -3853,6 +4094,14 @@ function unsourcedRef(spec: SpecFlow, ref: string): { sid: string; output: strin
 /** The `{ v1: …, d1: '' }` argument one step is called with. */
 function callArgs(step: SpecStep, slots: string[], vars: Set<string>, warnings: string[], spec: SpecFlow, diagnostics: Diagnostic[]): string {
   const derived = new Set(step.segments.flatMap((s) => Object.keys(s.derived ?? {})));
+  // An assertion's slots are its EXPECTED values, and every one of them is
+  // acted by: a blank bound in one's place would turn `text_contains {{v1}}`
+  // into "contains nothing", which every element satisfies — a miss turned
+  // into a pass. So each is resolved through `need` (which stops), never
+  // through a blank; and never through the recorded stand-in either, which is
+  // the page agreeing with what the recording saw rather than with what this
+  // run's caller stated (execution/assert.ts, the stated-source rule).
+  const strict = isAssertStep(step);
   const fields = slots.map((slot) => {
     // A minted value has no caller binding by construction: the body reads it
     // off the live url after the step that creates it.
@@ -3866,13 +4115,13 @@ function callArgs(step: SpecStep, slots: string[], vars: Set<string>, warnings: 
     // requiring every one of them would turn values nobody authored into
     // failure points.
     if (bound !== undefined) {
-      const used = usedSlot(step, slot);
+      const used = strict || usedSlot(step, slot);
       // A used slot bound to exactly one `{{step.output}}` whose recorded value
       // is safe to stand in (recordedStandIn, the daemon runFlow's own rule):
       // resolved from the page when this run did not publish it — fwrd54's
       // 07-edit clicking `{{06-change.mark_ready_button}}`.
       const exact = /^\s*\{\{([\w-]+\.[\w.-]+)\}\}\s*$/.exec(bound)?.[1];
-      const standIn = exact ? recordedStandIn(exact, step.params, step.segments) : undefined;
+      const standIn = exact && !strict ? recordedStandIn(exact, step.params, step.segments) : undefined;
       if (exact && standIn !== undefined) {
         // An UNUSED slot may not throw — nothing resolves by it, and this
         // artifact has always carried such a slot as a blank. It may still be
@@ -3941,6 +4190,19 @@ function callArgs(step: SpecStep, slots: string[], vars: Set<string>, warnings: 
       return `${slot}: ${paramExpr(bound, vars, used ? step.id : undefined)}`;
     }
     const example = step.segments.map((s) => s.params[slot]?.example).find((e) => typeof e === 'string');
+    if (example === undefined && strict) {
+      diagnostics.push({
+        code: 'unbound-slot',
+        step: step.id,
+        what: `slot ${slot} of the assertion has no flow binding and no recorded value`,
+        why: `${step.id} is an assertion and names {{${slot}}} in what it checks or reports, but neither the flow nor its procedure gives the slot a value. Bound to a blank, a text check would hold on any element; the compiled spec must not carry an assertion that cannot miss.`,
+        fix: `re-record ${step.id} (\`sitelooper rerecord <flow file> ${step.id}\`)`,
+        action: { command: 'rerecord', args: [step.id], step: step.id },
+        severity: 'error',
+        line: `step ${step.id} slot ${slot} has no flow binding and no recorded value, and the assertion checks by it`,
+      });
+      return null;
+    }
     if (example === undefined) return `${slot}: ''`;
     // A slot with a recorded ORIGIN came from another step or a var: its
     // recorded example is run 1's value of something every run makes afresh,
@@ -3955,7 +4217,7 @@ function callArgs(step: SpecStep, slots: string[], vars: Set<string>, warnings: 
     // artifact passed while both replays refused.
     const origin = step.segments.map((s) => s.params[slot]?.binding).find((b) => typeof b === 'string' && b);
     if (origin) {
-      if (usedSlot(step, slot)) {
+      if (strict || usedSlot(step, slot)) {
         diagnostics.push({
           code: 'unbound-slot',
           step: step.id,
@@ -4093,6 +4355,7 @@ export function emitFlowFile(spec: SpecFlow, o: EmitOptions): { source: string; 
   const knownOutputs = outputKeys(spec, urlRefs);
   const envInputs = requiredEnvNames(spec);
   const flagged = flaggedByStep(o.diagnostics);
+  const assertIds = spec.steps.filter(isAssertStep).map((step) => step.id);
 
   // A flow with a step that moves the procedure to another page (a popup, a
   // close, a tab switch) carries that page between flow steps on `run.page`;
@@ -4100,7 +4363,7 @@ export function emitFlowFile(spec: SpecFlow, o: EmitOptions): { source: string; 
   const followsPages = spec.steps.some((step) => step.segments.some((seg) => carriesEffect(seg.steps)));
   // Bodies first: which helpers the file needs is decided by what they use.
   const bodies = spec.steps.map((step) => {
-    const ctx: Ctx = { stepId: step.id, slots: new Set(), warnings, diagnostics, downloads: 0, loops: 0, picks: 0, urls: 0, binds: 0, segmentId: '', stepIndex: 0, note: stepNote(flagged.get(step.id)), known: new Set(), minted: new Set() };
+    const ctx: Ctx = { stepId: step.id, slots: new Set(), warnings, diagnostics, downloads: 0, loops: 0, picks: 0, urls: 0, binds: 0, segmentId: '', stepIndex: 0, note: stepNote(flagged.get(step.id)), known: new Set(), minted: new Set(), assertStep: isAssertStep(step) };
     const lines: string[] = [];
     if (!step.segments.length) {
       lines.push(`// TODO: no converged procedure for ${JSON.stringify(commentSafe(step.instruction))}`);
@@ -4110,7 +4373,9 @@ export function emitFlowFile(spec: SpecFlow, o: EmitOptions): { source: string; 
       // still gives them its one slot (referenceValue), as the daemon's flow
       // runner banks it — the same set, the same function.
       const consumed = new Set(consumedReportedOutputs(spec.steps, step.id));
-      const guard = satisfiedGuard(step, ctx, consumed);
+      // Never for an assertion: "the page already shows it" is the question
+      // the assertion itself asks, with a failure when the answer is no.
+      const guard = ctx.assertStep ? [] : satisfiedGuard(step, ctx, consumed);
       if (guard.length) lines.push(...guard, '');
       // Where the step's echo ledger goes, if a segment names it: after the guard, before the first segment.
       const ledgerAt = lines.length;
@@ -4123,7 +4388,8 @@ export function emitFlowFile(spec: SpecFlow, o: EmitOptions): { source: string; 
         // pastDetours). Never the first or the last segment — the daemon
         // reaches a detour only by walking on from an earlier one, and the
         // last one ends the chain.
-        if (segment.detour && i > 0 && i < step.segments.length - 1) {
+        // An assertion's segment is never passed over, whatever it carries.
+        if (segment.detour && !segment.assert && !ctx.assertStep && i > 0 && i < step.segments.length - 1) {
           noteSlots(segment.detour.asked, ctx);
           noteSlots(segment.preconditions.urlPattern, ctx);
           lines.push(
@@ -4207,6 +4473,13 @@ export function emitFlowFile(spec: SpecFlow, o: EmitOptions): { source: string; 
     `export const flowStepIds = ${JSON.stringify(spec.steps.map((step) => step.id))} as const;`,
     `export const requiredInputNames = ${JSON.stringify(spec.vars)} as const;`,
     `export const requiredEnvNames = ${JSON.stringify(envInputs)} as const;`,
+    // Only a flow that carries assertions names them, so every other flow's file is unchanged.
+    ...(assertIds.length
+      ? [
+          '/** The steps that are assertions (`sitelooper assert`): each throws an "assertion failed: …" or "assertion could not be checked: …" error when it misses. */',
+          `export const assertStepIds = ${JSON.stringify(assertIds)} as const;`,
+        ]
+      : []),
     '',
     `export type Vars = ${spec.vars.length ? `{ ${spec.vars.map((v) => `${key(v)}: string`).join('; ')} }` : 'Record<string, never>'};`,
     `export type OutputKey = ${knownOutputs.length ? knownOutputs.map(q).join(' | ') : 'never'};`,
@@ -4308,7 +4581,15 @@ export function emitFlowFile(spec: SpecFlow, o: EmitOptions): { source: string; 
     for (const d of flagged.get(b.step.id) ?? []) {
       for (const line of formatDiagnostic(d).split('\n')) out.push(`  // ${commentSafe(line)}`);
     }
-    out.push(`  /** ${commentSafe(b.step.instruction)} */`);
+    if (assertIds.includes(b.step.id)) {
+      out.push(
+        '  // ASSERTION. Each check below resolves and waits as any recorded wait does; a miss throws',
+        '  // the shared assertFailure — "assertion could not be checked" when no recorded locator',
+        '  // resolved, "assertion failed" when the condition did not hold. Nothing skips, satisfies',
+        '  // or recovers it.',
+        `  /** assert: ${commentSafe(b.step.instruction)} */`,
+      );
+    } else out.push(`  /** ${commentSafe(b.step.instruction)} */`);
     // Derived slots are not declared: they are set on `p` only once minted
     // (bindPart), so the index signature carries them.
     const derivedSlots = new Set(b.step.segments.flatMap((s) => Object.keys(s.derived ?? {})));
@@ -4373,7 +4654,7 @@ export function emitFlowFile(spec: SpecFlow, o: EmitOptions): { source: string; 
   // shared startPageSettled, exactly as the daemon's runFlow waits.
   out.push('    await startPageSettled(page).catch(() => {});');
   for (const [i, b] of bodies.entries()) {
-    out.push(`    await test.step(${q(`${b.step.id}: ${b.step.instruction}`)}, async () => {`);
+    out.push(`    await test.step(${q(`${b.step.id}: ${assertIds.includes(b.step.id) ? 'assert: ' : ''}${b.step.instruction}`)}, async () => {`);
     // The arguments are built INSIDE test.step and before `steps[id]` is
     // called, so a `need` that throws is this step's failure with nothing of
     // this step run — which is the guarantee the check is worth having for.

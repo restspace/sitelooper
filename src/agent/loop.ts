@@ -18,6 +18,8 @@ import { captureReadBack, captureReadBackAt, coreReadBack, savedSelectionReadBac
 import { describeOutcome, pinPart, sightValues, sourceReadBacks, type ReadBackDecider, type ReadBackTarget } from './readback.js';
 import { SOURCING_HOLD_MIN_MS, applyCommentaryPrePass, decideSourcingHold, sourcingAskMessage, sourcingHoldOn, splitCommentary, type SourcingFacts, type TierVerdict } from './sourcing.js';
 import { roleVerdict, shapeKeyOf, valueVerdict } from '../skills/facts-value.js';
+import { isRefTarget, refHint } from '../daemon/refs.js';
+import { ASSERT_TEXT_STATES } from '../execution/assert.js';
 
 /** Tools that change the page URL, staleing every existing snapshot's refs. */
 const NAVIGATION_TOOLS = new Set(['goto', 'back', 'tabs']);
@@ -161,6 +163,29 @@ export interface LoopOptions {
    * as they always did.
    */
   locateReadBack?: ReadBackDecider;
+  /**
+   * Assert mode (`sitelooper assert`): the instruction is a condition to
+   * check, not work to do. Only observing tools are offered, wait_for gains
+   * the assert-only states, and a text expectation must be stated in the
+   * instruction (execution/assert.ts statedIn).
+   */
+  assert?: true;
+}
+
+/**
+ * One check an assertion made (`sitelooper assert`): a wait_for that ran, and
+ * whether it held. What the CLI prints under the verdict. `target` is the
+ * element as a person can read it — a snapshot ref is shown as its role and
+ * name, since `@e12` means nothing outside the turn that minted it — and is
+ * absent for `url_contains`. A refused call (tools.ts assertRefusal) is not
+ * a check and is not listed.
+ */
+export interface AssertionCheck {
+  state: string;
+  target?: string;
+  text?: string;
+  count?: number;
+  held: boolean;
 }
 
 /** One tool call the instruction made, for the resume-safety actions log. */
@@ -242,6 +267,19 @@ export interface InstructionResult {
    * costs (src/daemon/step-verdict.ts).
    */
   unfinishedGesture?: { tool: string; args: string };
+  /**
+   * Assert mode only (LoopOptions.assert): every wait_for this instruction
+   * ran, in order, with whether it held. A success report rests on at least
+   * one that did; with none, the loop files a failure instead.
+   */
+  assertions?: AssertionCheck[];
+  /**
+   * Set by the daemon when a stored assertion's direct replay missed (server.ts
+   * missedAssertion): which way it missed (execution/assert.ts AssertFailureKind)
+   * and the message the replay raised. Never set by the loop — a model's
+   * failure report is prose, not a raised assertion.
+   */
+  assertFailed?: { kind: 'failed' | 'unlocatable'; message: string };
   /**
    * Learning-mode accounting: which stored skills were offered, which one
    * (if any) the agent replayed and how far it got, and what fraction of the
@@ -406,6 +444,29 @@ export async function runInstruction(
     if (GESTURE_TOOLS.has(tool)) lastGesture = { tool, args, ok: !execution.isError };
   };
   const screenshots: string[] = [];
+  /** Assert mode: the wait_for calls that ran, in order (InstructionResult.assertions). */
+  const assertions: AssertionCheck[] = [];
+  const assertionOf = async (args: Record<string, unknown>, held: boolean): Promise<AssertionCheck> => {
+    const state = String(args.state);
+    let target = state !== 'url_contains' && typeof args.target === 'string' && args.target.trim() ? args.target.trim() : undefined;
+    if (target && isRefTarget(target)) {
+      try {
+        const hint = refHint(await browser.getPage(), target);
+        if (hint) target = `${hint.role}${hint.name ? ` ${JSON.stringify(hint.name)}` : ''}`;
+      } catch {
+        /* the ref itself is still a truthful, if terse, answer */
+      }
+    }
+    return {
+      state,
+      ...(target ? { target } : {}),
+      ...((ASSERT_TEXT_STATES as readonly string[]).includes(state) && typeof args.text === 'string' ? { text: args.text } : {}),
+      ...(state === 'count' && typeof args.count === 'number' ? { count: args.count } : {}),
+      held,
+    };
+  };
+  /** The caller's own sentence: what is recorded, and the only source an assertion's expected text may have (never the resume scaffold, which quotes the failed attempt's report). */
+  const callerText = opts.recordAs?.text ?? instruction;
   let reportRetried = false;
   /** evidence.values from the report held for naming, so the retry cannot lose them. */
   let heldValues: Record<string, string | number | boolean | null> | undefined;
@@ -418,6 +479,22 @@ export async function runInstruction(
    * says — so is the first report, if the model simply repeats it.
    */
   const holds: ReportHold[] = [
+    {
+      // Assert mode: a success that rests on no wait_for is a verdict nothing
+      // can re-check — the model looked (a read, a snapshot) and said yes.
+      // Asked once to state the condition as a wait_for; a success that still
+      // has none is filed as a failure where the report is accepted.
+      name: 'unchecked',
+      check: (report) => {
+        if (!opts.assert || report.status !== 'success' || assertions.some((a) => a.held)) return null;
+        return {
+          message:
+            'report held — this is an assertion, and no wait_for has held in it, so nothing was checked that a later run can check again. Express the condition as a wait_for on exactly the element that shows it (expected text as the assertion states it), then call report again: success if it held, failure if it did not. If the condition cannot be put as a wait_for, report failure and say why.',
+          transcript: 'report held: success with no wait_for that held',
+          progress: 'holding success report: no wait_for held in this assertion',
+        };
+      },
+    },
     {
       // A success whose own summary says the work was not finished: the
       // status and the prose must agree before a flow marks the step done on
@@ -440,6 +517,9 @@ export async function runInstruction(
       // later replay.
       name: 'naming',
       check: (report) => {
+        // An assertion publishes nothing (its flow step has no outputs): a
+        // value it read while finding the element needs no name.
+        if (opts.assert) return null;
         const unnamed = unnamedReadValues(report, browser.script?.readsThisInstruction() ?? []);
         if (!unnamed.length) return null;
         heldValues = report.evidence?.values;
@@ -460,7 +540,7 @@ export async function runInstruction(
       // deadline, never when the page cannot be asked.
       name: 'sourcing',
       check: async (report) => {
-        if (!sourcingHoldOn() || report.status !== 'success' || !browser.script || !browser.isOpen) return null;
+        if (opts.assert || !sourcingHoldOn() || report.status !== 'success' || !browser.script || !browser.isOpen) return null;
         if (holdsAsked.has('naming') || Date.now() + SOURCING_HOLD_MIN_MS > deadline) return null;
         const script = browser.script;
         const page = await browser.getPage().catch(() => null);
@@ -580,7 +660,9 @@ export async function runInstruction(
   };
   state.messages.push({
     role: 'user',
-    content: [instruction, location, site, offered.text].filter(Boolean).join('\n\n'),
+    // Assert mode offers no run_skill (tools.ts ASSERT_TOOLS), so the [skills]
+    // list would name procedures the model cannot call.
+    content: [instruction, location, site, opts.assert ? '' : offered.text].filter(Boolean).join('\n\n'),
   });
   // Script recording (opt-in) groups this instruction's actions under one
   // test.step, so a generated spec reads as the plan that produced it.
@@ -588,13 +670,16 @@ export async function runInstruction(
   // variables (the runid every record of this run is named after). Typed
   // values join them as the instruction runs — see ScriptRecorder.prepare.
   setIdentityHints(Object.values(state.vars ?? {}));
-  browser.script?.beginInstruction(
-    opts.recordAs?.text ?? instruction,
-    opts.recordAs ? { ...offered.context, resume: true } : offered.context,
-  );
+  browser.script?.beginInstruction(callerText, {
+    ...offered.context,
+    ...(opts.recordAs ? { resume: true as const } : {}),
+    // The group's waits are assertions (RecordedInstruction.assert): what
+    // compile reads to build an assert skill, and export an assert step.
+    ...(opts.assert ? { assert: true as const } : {}),
+  });
 
-  const system: ChatMessage = { role: 'system', content: buildSystemPrompt(state) };
-  const toolDefs = toolDefsFor(browser, visionSettings());
+  const system: ChatMessage = { role: 'system', content: buildSystemPrompt(state, { assert: opts.assert }) };
+  const toolDefs = toolDefsFor(browser, visionSettings(), { assert: opts.assert });
 
   /** Resume advice differs sharply depending on whether anything actually ran. */
   const resumeHint = () =>
@@ -628,7 +713,10 @@ export async function runInstruction(
     // but left out of evidence.values would drop the read at compile time and
     // leave the step with no skill. Runs before the facts line and before
     // read-back synthesis so both see the promoted values.
-    if (report.status === 'success' && browser.script) {
+    // Not for an assertion: it publishes no values, compile keeps only its
+    // waits, and a read-back pinned here would be a step the page was never
+    // asked about.
+    if (report.status === 'success' && browser.script && !opts.assert) {
       // A value the model composed out of several page values (a JSON blob per
       // order line) is unpinnable and unrepublishable as one string. Split it
       // first, so everything below — backfill, read-back synthesis, compile —
@@ -699,7 +787,7 @@ export async function runInstruction(
       // durable read of the live element showing it, so a replay re-reads the
       // value rather than dropping it as stale. Record-time only, best-effort,
       // never blocks the report. Skip values already backed by a real read.
-      if (report.status === 'success' && Object.keys(values).length) {
+      if (report.status === 'success' && Object.keys(values).length && !opts.assert) {
         try {
           const page = await browser.getPage();
           const alreadyRead = browser.script.readResultsThisInstruction();
@@ -911,6 +999,7 @@ export async function runInstruction(
       ...(bailReason ? { bailReason } : {}),
       ...(report.status === 'success' && lastGesture && !lastGesture.ok ? { unfinishedGesture: { tool: lastGesture.tool, args: lastGesture.args } } : {}),
       ...(browser.learn ? { skill } : {}),
+      ...(opts.assert ? { assertions } : {}),
     };
   };
 
@@ -967,7 +1056,7 @@ export async function runInstruction(
     opts.signal?.addEventListener('abort', abortTool, { once: true });
     try {
       return await Promise.race([
-        executeTool(browser, name, args, opts.screenshotDir, abort.signal),
+        executeTool(browser, name, args, opts.screenshotDir, abort.signal, opts.assert ? { assert: { instruction: callerText } } : {}),
         new Promise<ToolExecution>((resolve) => {
           abort.signal.addEventListener(
             'abort',
@@ -1090,7 +1179,8 @@ export async function runInstruction(
    * call that had barely begun.
    */
   const askActor = async (ctx: ShadowTurn, turnTiming: InstructionTiming['turns'][number]): Promise<ToolCall | null> => {
-    const actor = opts.actor;
+    // An actor ACTS (a click, a fill): an assertion has no turn for it to take.
+    const actor = opts.assert ? undefined : opts.actor;
     if (!actor) return null;
     const askedAt = Date.now();
     const next = await actor.next(ctx).catch(() => null);
@@ -1326,6 +1416,20 @@ export async function runInstruction(
           }
           state.messages.push({ role: 'tool', tool_call_id: call.id, content: 'report accepted' });
           stubFrom(ci + 1, 'the report closed the instruction');
+          // Assert mode: a success with no wait_for that held asserted nothing
+          // a later run can check (the `unchecked` hold has already asked
+          // for one, where there was room to ask). Filed as the failure it is,
+          // so nothing compiles an assert step out of a model's say-so.
+          if (opts.assert && validation.report.status === 'success' && !assertions.some((a) => a.held)) {
+            transcript.push('assert: success reported with no wait_for that held — filed as a failure');
+            return finish(
+              {
+                status: 'failure',
+                summary: `no checkable condition was recorded: the assertion was reported as holding, but no wait_for held in this instruction, so there is nothing a later run could check. The report said: ${validation.report.summary}`,
+              },
+              turn,
+            );
+          }
           // A non-success report filed after the cap warning answers "Call
           // report NOW", not the instruction: the model ran out of road, it
           // did not check a negative. It is a turn-cap bail — blocked, so it
@@ -1380,6 +1484,10 @@ export async function runInstruction(
       if (execution.stepMs) (turnTiming.steps ??= []).push(...execution.stepMs);
       actions.push({ tool: call.name, args: summary, ok: !execution.isError });
       noteGesture(call.name, summary, execution);
+      // A wait_for that RAN is a check the assertion made, held or not. One
+      // refused before it ran (not stated in the assertion, no target) or cut
+      // off by a stop checked nothing.
+      if (opts.assert && call.name === 'wait_for' && !execution.refused && !opts.signal?.aborted) assertions.push(await assertionOf(call.args, !execution.isError));
       if (sourcingHold.held) {
         // The one way the sourcing hold can make a recording worse: the model
         // re-does work instead of reading. Named in the transcript and the
@@ -1552,6 +1660,9 @@ export async function runEscalatingInstruction(
       ...(first.timing.actorActs || second.timing.actorActs ? { actorActs: (first.timing.actorActs ?? 0) + (second.timing.actorActs ?? 0) } : {}),
     },
     screenshots: [...first.screenshots, ...second.screenshots],
+    // Both attempts' checks are shown; the retry's verdict still rests on a
+    // wait_for that held in ITS OWN run (runInstruction counts only its own).
+    ...(first.assertions || second.assertions ? { assertions: [...(first.assertions ?? []), ...(second.assertions ?? [])] } : {}),
     escalation: {
       from: primary.model,
       to: fallback.model,

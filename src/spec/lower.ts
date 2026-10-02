@@ -63,6 +63,9 @@ function toSkill(spec: SpecFlow, step: SpecStep, seg: SpecSegment, index: number
     status: 'validated',
     provenance: { session: `spec:${spec.name}`, instruction: step.instruction, created: now },
   };
+  // An assertion stays one: the flag is what makes a repair's replay of the
+  // staged store stop on a miss instead of recovering around it.
+  if (seg.assert) skill.assert = true;
   if (seg.derived) skill.derived = seg.derived;
   if (seg.detour) skill.detour = { asked: seg.detour.asked };
   // The goal and the report template it needs travel together, and both are
@@ -99,6 +102,7 @@ function toFlowStep(spec: SpecFlow, step: SpecStep, now: string, skills: Skill[]
     outputs: step.outputs,
     recorded: {},
     ...(step.urlRoutes ? { urlRoutes: step.urlRoutes } : {}),
+    ...(step.kind ? { kind: step.kind } : {}),
   };
   if (segSkills.length) flowStep.skill = segSkills[0].id;
   return flowStep;

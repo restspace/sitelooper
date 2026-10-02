@@ -83,6 +83,10 @@ describe('standalone execution source', () => {
             { tool: 'click', args: { target: '@e1' }, locators: { target }, toggle: true, expect: { addedContains: ['- link "More details"'] } },
             // A click that names its button and could fall back by position: the shared positional rule (R2, fwgr73).
             { tool: 'click', args: { target: '@e2' }, locators: { target: [{ kind: 'role' as const, role: 'button', name: 'Edit' }, { kind: 'css' as const, selector: '#bar > button:nth-of-type(1)' }] }, expect: { addedContains: ['- button "Exit edit"'] } },
+            // An assertion's checks (`sitelooper assert`): the shared assert module — a field's value and the page url
+            // through valueHolds/urlHolds, a miss raised through assertFailure. Last, so the locals above keep their numbers.
+            { tool: 'wait_for', args: { target: '@e1', state: 'value_equals', text: '{{v1}}' }, locators: { target }, assert: { message: 'the name field holds {{v1}}' } },
+            { tool: 'wait_for', args: { state: 'url_contains', text: '/record/' }, locators: {}, assert: { message: 'the record page is open' } },
           ],
         }],
       }],
@@ -172,7 +176,12 @@ describe('standalone execution source', () => {
     expect(source).toContain(`landing15 = await armPageEffect(page, {"kind":"popup","urlPattern":"http://app.test/popup"}, '01-actions s_runtime/15');`);
     expect(source).toContain('if (moved15) page = run.page = moved15;');
     expect(source).toMatch(/outputs\['01-actions\.framed'\] = 'root' in framed\d+ \? await readOptional\(page, \[/);
-    for (const name of ['text', 'url', 'gates', 'observe', 'browser', 'action', 'lifecycle', 'loop', 'snapshot', 'expect', 'point', 'resolve', 'recipes', 'fingerprint', 'echo', 'recover', 'context']) {
+    // ...and an assertion's checks, a miss raised through the shared assert module.
+    expect(source).toMatch(/await expectValue\(hit\d+\.locator\.first\(\), `\$\{p\.v1\}`, 10000\);/);
+    expect(source).toContain("await expectUrl(page, '/record/', 10000);");
+    expect(source).toContain("assertMissed('failed', 'the record page is open', err);");
+    expect(source).toContain('throw new Error(assertFailure(kind, message, detail));');
+    for (const name of ['text', 'url', 'gates', 'observe', 'browser', 'action', 'lifecycle', 'loop', 'snapshot', 'expect', 'point', 'resolve', 'recipes', 'fingerprint', 'echo', 'recover', 'context', 'assert']) {
       expect(source.split(`// Shared execution source: ${name}.ts.`).length, name).toBe(2);
     }
     const options: ts.CompilerOptions = {
