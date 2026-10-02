@@ -1539,11 +1539,20 @@ export function compileSkills(input: CompileInput): Skill[] {
   // what both runners raise, with this run's values filled in, when the check
   // misses. A wait has no recorded effect to verify and publishes nothing, so
   // neither an expectation nor a label rides along.
+  //
+  // Nor does the wait's own `timeout_ms`. That number was the recording
+  // model's patience for a page it was looking at, and frozen into a check it
+  // becomes how long every later run gives the app before calling the
+  // condition false: the r87 verify box, under a full browser suite, missed a
+  // `value_equals` recorded with 1500 ms on a field that held the value from
+  // page load. A slow page is not a wrong page, so a check waits the runners'
+  // default; a condition that holds still returns at once.
   if (asserting) {
     for (const b of built) {
       b.folded = b.folded.map((step) => {
         const { expect: _expect, label: _label, ...check } = step;
-        return { assert: { message: finalTemplate }, ...check };
+        const { timeout_ms: _patience, ...args } = check.args;
+        return { assert: { message: finalTemplate }, ...check, args };
       });
     }
   }
