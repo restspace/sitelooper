@@ -1,0 +1,61 @@
+
+ RUN  e2e v0.16.0 /home/user/sitelooper/bench/e2e-arm
+      run 01a0feb3-521c-79c0-80b8-fe333e96611a · targets: web
+      model openrouter/openai/gpt-6-luna
+
+   ✓ kanboard flow > agent.act "Sign in with username {username} and password {password}" 2.57s
+   ✓ kanboard flow > agent.assert "The app shows a signed-in page, not a sign-in form" 1.84s · 1 model call
+   ✓ kanboard flow > agent.act "Objective 1 of the goal, for run id {runid}, asks only for a report: On…" 901ms
+   ✓ kanboard flow > agent.extract "For run id e2kb1-n3: On the board of the project named `Bench Board`, r…" 1.76s · 1 model call
+   ✓ kanboard flow > agent.act "Achieve objective 2 of the goal, for run id {runid}: A task titled `{ru…" 1.04s
+   × kanboard flow > agent.assert "For run id e2kb1-n3, this now holds in the app: A task titled `e2kb1-n3…" 2.81s · 1 model call failed
+   ✓ kanboard flow > agent.act "Achieve objective 3 of the goal, for run id {runid}: That task has been…" 604ms
+   ✓ kanboard flow > agent.assert "For run id e2kb1-n3, this now holds in the app: That task has been move…" 2.49s · 1 model call
+   ✓ kanboard flow > agent.act "Achieve objective 4 of the goal, for run id {runid}: The task has a com…" 1.13s
+   ✓ kanboard flow > agent.assert "For run id e2kb1-n3, this now holds in the app: The task has a comment …" 1.36s · 1 model call
+   ✓ kanboard flow > agent.act "Achieve objective 5 of the goal, for run id {runid}: The task's due dat…" 1.17s
+   ✓ kanboard flow > agent.assert "For run id e2kb1-n3, this now holds in the app: The task's due date is …" 1.57s · 1 model call
+   ✓ kanboard flow > agent.act "Objective 6 of the goal, for run id {runid}, asks only for a report: Re…" 2.95s · 1 model call
+   ✓ kanboard flow > agent.extract "For run id e2kb1-n3: Report the task's numeric ID exactly as the app di…" 2.83s · 1 model call
+ ✓ |web| tests/flow.e2e.ts (1 test) 26.49s ai 22.9k tokens · 17% cached · $0.0027
+   ✓ kanboard flow 26.49s ai 22.9k tokens · 17% cached · $0.0027
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+         AI  22.9k tokens · 17% cached · $0.0027 · 8 model calls · openrouter/openai/gpt-6-luna
+      Cache  6 replayed · 1 missed
+   Start at  22:19:20
+   Duration  27.48s
+     Report  .e2e/report.json
+
+
+--- stderr ---
+[e2e debug] phase timings (wall 28.2s)
+  phase           count   total     avg     max
+  scheduler           1   27.5s   27.5s   27.5s
+  test.body           1   25.3s   25.3s   25.3s
+  agent.model         8   16.1s  2009ms  2746ms
+  agent.observe      33  6650ms   202ms  2090ms
+  agent.action       18  1561ms    87ms   176ms
+  config.load         1   679ms   679ms   679ms
+  engine.init         1    75ms    75ms    75ms
+  session.close       1    64ms    64ms    64ms
+  session.launch      1    15ms    15ms    15ms
+  collect             1    12ms    12ms    12ms
+  engine.prepare      1     1ms     1ms     1ms
+[e2e debug] agent steps (execution order, model openrouter/openai/gpt-6-luna, total $0.002691+)
+  step                                                               total   model  observe  action  calls  tokens in/out      cached       cost
+  agent.act "Sign in with username {username} and password {passw…  2572ms     0ms   2373ms   187ms      0            0/0           -          -
+  agent.assert "The app shows a signed-in page, not a sign-in for…  1843ms  1695ms     58ms     0ms      1        1172/49      0% (0)  $0.000171
+  agent.act "Objective 1 of the goal, for run id {runid}, asks on…   901ms     0ms    492ms   402ms      0            0/0           -          -
+  agent.extract "For run id e2kb1-n3: On the board of the project…  1756ms  1663ms     89ms     0ms      1        2089/58      0% (0)   $0.00029
+  agent.act "Achieve objective 2 of the goal, for run id {runid}:…  1043ms     0ms    814ms   216ms      0            0/0           -          -
+  agent.assert "For run id e2kb1-n3, this now holds in the app: A…  2813ms  2622ms     98ms     0ms      1       2140/112      0% (0)  $0.000323
+  agent.act "Achieve objective 3 of the goal, for run id {runid}:…   604ms     0ms    323ms   176ms      0            0/0           -          -
+  agent.assert "For run id e2kb1-n3, this now holds in the app: T…  2491ms  2367ms     74ms     0ms      1       2296/161      0% (0)  $0.000367
+  agent.act "Achieve objective 4 of the goal, for run id {runid}:…  1131ms     0ms    850ms   275ms      0            0/0           -          -
+  agent.assert "For run id e2kb1-n3, this now holds in the app: T…  1364ms  1082ms    147ms     0ms      1        2540/56      0% (0)  $0.000345
+  agent.act "Achieve objective 5 of the goal, for run id {runid}:…  1172ms     0ms    860ms   305ms      0            0/0           -          -
+  agent.assert "For run id e2kb1-n3, this now holds in the app: T…  1571ms  1241ms    177ms     0ms      1        2595/60      0% (0)  $0.000354
+  agent.act "Objective 6 of the goal, for run id {runid}, asks on…  2954ms  2653ms    214ms     0ms      1        6668/97  56% (3761)  $0.000446
+  agent.extract "For run id e2kb1-n3: Report the task's numeric I…  2828ms  2746ms     81ms     0ms      1       2705/111      0% (0)  $0.000394
