@@ -334,13 +334,17 @@ if (own.assertNegative && own.flow) {
     if (!target) {
       assertNegative = { verdict: 'skipped', assertSteps: assertSteps.length, why: assertSteps.length ? 'no assertion step binds a value to corrupt' : 'the flow has no assertion step' };
     } else {
-      const before = { ...target.params };
-      // A value the sentence states outright is the one to corrupt: a bound
-      // reference ({{runid}}, an earlier step's output) may also address the
-      // page the assertion starts on, and a miss there says less. References
-      // are corrupted only when the step binds nothing else.
-      const stated = Object.keys(target.params).filter((k) => !String(target.params[k]).includes('{{'));
-      for (const k of stated.length ? stated : Object.keys(target.params)) target.params[k] = `${target.params[k]} ~neg`;
+      // A value with text of its own is the one to corrupt: a param that is
+      // nothing but a reference ({{runid}}, an earlier step's url id) may also
+      // address the page the assertion starts on, and a miss at that gate says
+      // less than a check that read the page and found it wrong (fwen6-luna-neg
+      // corrupted the order id and stopped at the start gate, 'unlocatable').
+      // Bare references are corrupted only when the step binds nothing else.
+      const ownText = (v) => String(v).replace(/\{\{[^{}]*\}\}/g, '').trim() !== '';
+      const stated = Object.keys(target.params).filter((k) => ownText(target.params[k]));
+      const chosen = stated.length ? stated : Object.keys(target.params);
+      const before = Object.fromEntries(chosen.map((k) => [k, target.params[k]]));
+      for (const k of chosen) target.params[k] = `${target.params[k]} ~neg`;
       flow.name = negFlow;
       fs.writeFileSync(path.join(flowsDir, `${negFlow.replace(/[^A-Za-z0-9._-]+/g, '_')}.json`), JSON.stringify(flow, null, 2));
       console.error(`\n[sweep] assert-negative: ${negRunid} replays ${own.flow} with ${target.id}'s expected values corrupted (${Object.keys(before).join(', ')})`);
@@ -380,7 +384,8 @@ if (own.assertNegative && own.flow) {
           stepStatus: hit?.status ?? 'not reached',
           kind: hit?.assert?.kind ?? null,
           message: hit?.assert?.message ?? hit?.summary ?? null,
-          turns: run.steps.reduce((a, s) => a + (s.turns ?? 0), 0),
+          turns: hit?.turns ?? 0,
+          runTurns: run.steps.reduce((a, s) => a + (s.turns ?? 0), 0),
           earlierOk,
           flowStatus: run.status,
         };
@@ -389,7 +394,7 @@ if (own.assertNegative && own.flow) {
   } catch (err) {
     assertNegative = { verdict: 'skipped', why: `could not run it: ${err.message}` };
   }
-  console.log(`assert-negative: ${assertNegative.verdict}${assertNegative.step ? ` at ${assertNegative.step}` : ''}${assertNegative.stepStatus ? ` (${assertNegative.stepStatus}${assertNegative.kind ? `, ${assertNegative.kind}` : ''}, ${assertNegative.turns} model turn(s))` : ''}${assertNegative.why ? ` — ${assertNegative.why}` : ''}`);
+  console.log(`assert-negative: ${assertNegative.verdict}${assertNegative.step ? ` at ${assertNegative.step}` : ''}${assertNegative.stepStatus ? ` (${assertNegative.stepStatus}${assertNegative.kind ? `, ${assertNegative.kind}` : ''}, ${assertNegative.turns} model turn(s) at the step, ${assertNegative.runTurns} in the run)` : ''}${assertNegative.why ? ` — ${assertNegative.why}` : ''}`);
   if (assertNegative.message) console.log(`  ${assertNegative.message}`);
 }
 const summary = path.join(outDir, `${own.base}-sweep.json`);
