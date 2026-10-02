@@ -93,10 +93,22 @@ const cli = fs.existsSync(e2eBin) ? [process.execPath, [e2eBin]] : ['npx', ['e2e
 async function one(tag, { strict = false } = {}) {
   const runid = `${base}-${tag}`;
   console.log(`\n=== ${runid}${strict ? ' (strict cache, read-only)' : ''} ===`);
-  try {
-    await resetTarget(target);
-  } catch (e) {
-    console.log(`reset-failed: ${e.message}`);
+  // The reset is ours, not the tool's: one transient failure (e2kb1-n2, "fetch
+  // failed") must not cost the tool a run, so it is tried three times.
+  let resetError = null;
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      await resetTarget(target);
+      resetError = null;
+      break;
+    } catch (e) {
+      resetError = e;
+      console.log(`reset attempt ${attempt} failed: ${e.message}${e.cause ? ` (${e.cause.code ?? e.cause.message})` : ''}`);
+      await new Promise((r) => setTimeout(r, 10_000));
+    }
+  }
+  if (resetError) {
+    console.log(`reset-failed: ${resetError.message}`);
     return { runid, verdict: 'reset-failed' };
   }
   const steplog = path.join(outDir, `${runid}-e2e-steps.json`);
