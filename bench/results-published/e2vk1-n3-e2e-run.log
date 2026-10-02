@@ -1,0 +1,65 @@
+
+ RUN  e2e v0.16.0 /home/user/sitelooper/bench/e2e-arm
+      run 01a0feb7-fe62-7b5f-8b77-c8136d821497 · targets: web
+      model openrouter/openai/gpt-6-luna
+
+   ✓ vikunja flow > agent.act "Sign in with username {username} and password {password}" 2.85s
+   ✓ vikunja flow > agent.assert "The app shows a signed-in page, not a sign-in form" 1.83s · 1 model call
+   ✓ vikunja flow > agent.act "Objective 1 of the goal, for run id {runid}, asks only for a report: In…" 295ms
+   ✓ vikunja flow > agent.extract "For run id e2vk1-n3: In the project named `Bench Project`, report the t…" 1.11s · 1 model call
+   ✓ vikunja flow > agent.act "Achieve objective 2 of the goal, for run id {runid}: A task titled `{ru…" 19.18s · 1 model call
+   ✓ vikunja flow > agent.assert "For run id e2vk1-n3, this now holds in the app: A task titled `e2vk1-n3…" 2.56s · 1 model call
+   ✓ vikunja flow > agent.act "Achieve objective 3 of the goal, for run id {runid}: Its due date is 20…" 2.76s
+   ✓ vikunja flow > agent.assert "For run id e2vk1-n3, this now holds in the app: Its due date is 2026-12…" 2.64s · 1 model call
+   ✓ vikunja flow > agent.act "Achieve objective 4 of the goal, for run id {runid}: Its priority is `H…" 614ms
+   ✓ vikunja flow > agent.assert "For run id e2vk1-n3, this now holds in the app: Its priority is `High`." 1.31s · 1 model call
+   × vikunja flow > agent.act "Achieve objective 5 of the goal, for run id {runid}: It carries the exi…" 200.11s · 26 model calls failed
+   × vikunja flow > agent.assert "For run id e2vk1-n3, this now holds in the app: It carries the existing…" 3.21s · 1 model call failed
+   ✓ vikunja flow > agent.act "Achieve objective 6 of the goal, for run id {runid}: It has a comment w…" 798ms
+   ✓ vikunja flow > agent.assert "For run id e2vk1-n3, this now holds in the app: It has a comment whose …" 1.37s · 1 model call
+   ✓ vikunja flow > agent.act "Objective 7 of the goal, for run id {runid}, asks only for a report: Re…" 1.94s · 1 model call
+   ✓ vikunja flow > agent.extract "For run id e2vk1-n3: Report the task's identifier exactly as the app di…" 1.14s · 1 model call
+ ✓ |web| tests/flow.e2e.ts (1 test) 247.02s ai 428.0k tokens · 71% cached · $0.0216
+   ✓ vikunja flow 247.02s ai 428.0k tokens · 71% cached · $0.0216
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+         AI  428.0k tokens · 71% cached · $0.0216 · 36 model calls · openrouter/openai/gpt-6-luna
+      Cache  5 replayed · 2 handed off · 1 missed
+   Start at  22:24:27
+   Duration  248.30s (4m 8s)
+     Report  .e2e/report.json
+
+
+--- stderr ---
+[e2e debug] phase timings (wall 249.1s)
+  phase           count   total     avg     max
+  scheduler           1  248.2s  248.2s  248.2s
+  test.body           1  244.1s  244.1s  244.1s
+  agent.model        36  202.2s  5618ms   19.1s
+  agent.observe      87   20.5s   235ms  2274ms
+  agent.action       48  3809ms    79ms   944ms
+  config.load         1   753ms   753ms   753ms
+  engine.init         1   216ms   216ms   216ms
+  session.close       1    88ms    88ms    88ms
+  session.launch      1    12ms    12ms    12ms
+  collect             1    11ms    11ms    11ms
+  engine.prepare      1     0ms     0ms     0ms
+[e2e debug] agent steps (execution order, model openrouter/openai/gpt-6-luna, total $0.021613+)
+  step                                                               total   model  observe  action  calls  tokens in/out        cached       cost
+  agent.act "Sign in with username {username} and password {passw…  2849ms     0ms   2597ms   116ms      0            0/0             -          -
+  agent.assert "The app shows a signed-in page, not a sign-in for…  1833ms  1694ms     41ms     0ms      1        1430/55        0% (0)  $0.000206
+  agent.act "Objective 1 of the goal, for run id {runid}, asks on…   295ms     0ms    201ms    90ms      0            0/0             -          -
+  agent.extract "For run id e2vk1-n3: In the project named `Bench…  1113ms  1061ms     49ms     0ms      1        1601/60        0% (0)   $0.00023
+  agent.act "Achieve objective 2 of the goal, for run id {runid}:…   19.2s  2751ms   2074ms   239ms      1        5400/94    70% (3756)  $0.000287
+  agent.assert "For run id e2vk1-n3, this now holds in the app: A…  2559ms  2395ms     77ms     0ms      1        1843/93        0% (0)  $0.000277
+  agent.act "Achieve objective 3 of the goal, for run id {runid}:…  2759ms     0ms   1206ms  1144ms      0            0/0             -          -
+  agent.assert "For run id e2vk1-n3, this now holds in the app: I…  2638ms  2507ms     74ms     0ms      1        1884/64        0% (0)  $0.000267
+  agent.act "Achieve objective 4 of the goal, for run id {runid}:…   614ms     0ms    436ms   174ms      0            0/0             -          -
+  agent.assert "For run id e2vk1-n3, this now holds in the app: I…  1310ms  1191ms     58ms     0ms      1        1980/44        0% (0)  $0.000269
+  agent.act "Achieve objective 5 of the goal, for run id {runid}:…  200.1s  183.6s    12.7s  1875ms     26    394026/6698  74% (293181)  $0.018805
+  agent.assert "For run id e2vk1-n3, this now holds in the app: I…  3213ms  3021ms     87ms     0ms      1       1976/149        0% (0)  $0.000321
+  agent.act "Achieve objective 6 of the goal, for run id {runid}:…   798ms     0ms    524ms   162ms      0            0/0             -          -
+  agent.assert "For run id e2vk1-n3, this now holds in the app: I…  1370ms  1237ms     74ms     0ms      1        2059/53        0% (0)  $0.000284
+  agent.act "Objective 7 of the goal, for run id {runid}, asks on…  1943ms  1773ms    161ms     0ms      1        6222/74    60% (3756)   $0.00038
+  agent.extract "For run id e2vk1-n3: Report the task's identifie…  1142ms  1023ms    116ms     0ms      1        2177/30        0% (0)  $0.000287

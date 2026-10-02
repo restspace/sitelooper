@@ -1,0 +1,175 @@
+{
+  "target": "vikunja",
+  "runid": "e2vk1-n3",
+  "steps": [
+    {
+      "kind": "act",
+      "id": "signin",
+      "ok": true,
+      "ms": 2850,
+      "summary": "replayed 3 recorded action(s) zero-turn from the trace cache; recorded verdict: Signed in as admin; the Vikunja dashboard is open and shows “Good Evening admin!”.",
+      "cache": {
+        "mode": "self-finalized",
+        "replayedActions": 3,
+        "totalActions": 3
+      },
+      "modelCalls": 0,
+      "actions": 3
+    },
+    {
+      "kind": "assert",
+      "id": "signin",
+      "ok": true,
+      "ms": 1834
+    },
+    {
+      "kind": "act",
+      "id": "obj1",
+      "ok": true,
+      "ms": 295,
+      "summary": "replayed 1 recorded action(s) zero-turn from the trace cache; recorded verdict: Opened Bench Project without changing data. The task titles beginning with `Seed:` are: `Seed: triage inbox`, `Seed: order missing parts`, and `Seed: ship repaired device`.",
+      "cache": {
+        "mode": "self-finalized",
+        "replayedActions": 1,
+        "totalActions": 1
+      },
+      "modelCalls": 0,
+      "actions": 1
+    },
+    {
+      "kind": "extract",
+      "id": "obj1",
+      "ok": true,
+      "ms": 1114,
+      "values": [
+        "Seed: triage inbox",
+        "Seed: order missing parts",
+        "Seed: ship repaired device"
+      ]
+    },
+    {
+      "kind": "act",
+      "id": "obj2",
+      "ok": true,
+      "ms": 19182,
+      "summary": "Verified task `e2vk1-n3 Bench Task` exists in Bench Project and its displayed description is `Task created for run e2vk1-n3`, which includes the run id.",
+      "cache": {
+        "mode": "agent-concluded",
+        "reason": "end-mismatch",
+        "replayedActions": 5,
+        "totalActions": 5
+      },
+      "modelCalls": 1,
+      "actions": 5
+    },
+    {
+      "kind": "assert",
+      "id": "obj2",
+      "ok": true,
+      "ms": 2560
+    },
+    {
+      "kind": "act",
+      "id": "obj3",
+      "ok": true,
+      "ms": 2759,
+      "summary": "replayed 5 recorded action(s) zero-turn from the trace cache; recorded verdict: Set the task due date and confirmed it. The task page now displays “31 Dec 2026, 12:00:00” and a success message that the task was saved.",
+      "cache": {
+        "mode": "self-finalized",
+        "replayedActions": 5,
+        "totalActions": 5
+      },
+      "modelCalls": 0,
+      "actions": 5
+    },
+    {
+      "kind": "assert",
+      "id": "obj3",
+      "ok": true,
+      "ms": 2639
+    },
+    {
+      "kind": "act",
+      "id": "obj4",
+      "ok": true,
+      "ms": 615,
+      "summary": "replayed 2 recorded action(s) zero-turn from the trace cache; recorded verdict: Set the task’s priority to High. The priority control now shows High selected, and the app confirmed “The task was saved successfully.”",
+      "cache": {
+        "mode": "self-finalized",
+        "replayedActions": 2,
+        "totalActions": 2
+      },
+      "modelCalls": 0,
+      "actions": 2
+    },
+    {
+      "kind": "assert",
+      "id": "obj4",
+      "ok": true,
+      "ms": 1310
+    },
+    {
+      "kind": "act",
+      "id": "obj5",
+      "ok": false,
+      "code": "ASSERTION_FAILED",
+      "blocked": false,
+      "error": "agent.act failed: On task e2vk1-n3 Bench Task (BENCH-6), no Backend label is attached. The task label picker offers only “Add this as new label” for the query, rather than an existing-label choice; I did not leave that newly created label attached.",
+      "ms": 200107
+    },
+    {
+      "kind": "assert",
+      "id": "obj5",
+      "ok": false,
+      "code": "ASSERTION_FAILED",
+      "blocked": false,
+      "error": "The Labels section shows only an input containing “B” and an option to add it as a new label; no existing Backend label is shown on the task.",
+      "ms": 3215
+    },
+    {
+      "kind": "act",
+      "id": "obj6",
+      "ok": true,
+      "ms": 802,
+      "summary": "replayed 2 recorded action(s) zero-turn from the trace cache; recorded verdict: Added a comment containing `e2vk1-n1` to task BENCH-4. The task page displays the comment and confirms “The comment was added successfully.”",
+      "cache": {
+        "mode": "self-finalized",
+        "replayedActions": 2,
+        "totalActions": 2
+      },
+      "modelCalls": 0,
+      "actions": 2
+    },
+    {
+      "kind": "assert",
+      "id": "obj6",
+      "ok": true,
+      "ms": 1370
+    },
+    {
+      "kind": "act",
+      "id": "obj7",
+      "ok": true,
+      "ms": 1945,
+      "summary": "The task page displays the identifier `BENCH-6`.",
+      "cache": {
+        "mode": "missed",
+        "reason": "no-entry",
+        "replayedActions": 0,
+        "totalActions": 0
+      },
+      "modelCalls": 1,
+      "actions": 0
+    },
+    {
+      "kind": "extract",
+      "id": "obj7",
+      "ok": true,
+      "ms": 1143,
+      "values": [
+        "BENCH-6"
+      ]
+    }
+  ],
+  "finalText": "1. DONE Seed: triage inbox | Seed: order missing parts | Seed: ship repaired device\n2. DONE\n3. DONE\n4. DONE\n5. FAILED\n6. DONE\n7. DONE BENCH-6"
+}

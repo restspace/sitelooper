@@ -1,0 +1,199 @@
+{
+  "arm": "e2e",
+  "e2eVersion": "0.16.0",
+  "target": "vikunja",
+  "runid": "e2vk1-strict",
+  "model": "openai/gpt-6-luna",
+  "strict": true,
+  "reset": true,
+  "exitCode": 0,
+  "wallMs": 169943,
+  "cache": {
+    "acts": 8,
+    "replayed": 4,
+    "handedOff": 0,
+    "missed": 1,
+    "failed": 3,
+    "stale": 2,
+    "actModelCalls": 3,
+    "reasons": [
+      "obj7:missed:no-entry"
+    ]
+  },
+  "usage": {
+    "modelTokens": 207936,
+    "modelCachedTokens": 150290,
+    "usd": 0.01008355,
+    "usdAtRatesFloor": null
+  },
+  "steps": [
+    {
+      "kind": "act",
+      "id": "signin",
+      "ok": true,
+      "ms": 3162,
+      "summary": "replayed 3 recorded action(s) zero-turn from the trace cache; recorded verdict: Signed in as admin; the Vikunja dashboard is open and shows “Good Evening admin!”.",
+      "cache": {
+        "mode": "self-finalized",
+        "replayedActions": 3,
+        "totalActions": 3
+      },
+      "modelCalls": 0,
+      "actions": 3
+    },
+    {
+      "kind": "assert",
+      "id": "signin",
+      "ok": true,
+      "ms": 2392
+    },
+    {
+      "kind": "act",
+      "id": "obj1",
+      "ok": true,
+      "ms": 297,
+      "summary": "replayed 1 recorded action(s) zero-turn from the trace cache; recorded verdict: Opened Bench Project without changing data. The task titles beginning with `Seed:` are: `Seed: triage inbox`, `Seed: order missing parts`, and `Seed: ship repaired device`.",
+      "cache": {
+        "mode": "self-finalized",
+        "replayedActions": 1,
+        "totalActions": 1
+      },
+      "modelCalls": 0,
+      "actions": 1
+    },
+    {
+      "kind": "extract",
+      "id": "obj1",
+      "ok": true,
+      "ms": 1524,
+      "values": [
+        "Seed: triage inbox",
+        "Seed: order missing parts",
+        "Seed: ship repaired device"
+      ]
+    },
+    {
+      "kind": "act",
+      "id": "obj2",
+      "ok": false,
+      "code": "REPLAY_STALE",
+      "blocked": false,
+      "error": "the recording of this step no longer replays (end-mismatch), and cache.strict hands no step to the agent; re-record it with a read-write run without --strict-cache and commit the changed entry under .e2e/cache",
+      "ms": 29335
+    },
+    {
+      "kind": "assert",
+      "id": "obj2",
+      "ok": true,
+      "ms": 2497
+    },
+    {
+      "kind": "act",
+      "id": "obj3",
+      "ok": true,
+      "ms": 2184,
+      "summary": "replayed 5 recorded action(s) zero-turn from the trace cache; recorded verdict: Set the task due date and confirmed it. The task page now displays “31 Dec 2026, 12:00:00” and a success message that the task was saved.",
+      "cache": {
+        "mode": "self-finalized",
+        "replayedActions": 5,
+        "totalActions": 5
+      },
+      "modelCalls": 0,
+      "actions": 5
+    },
+    {
+      "kind": "assert",
+      "id": "obj3",
+      "ok": true,
+      "ms": 1183
+    },
+    {
+      "kind": "act",
+      "id": "obj4",
+      "ok": true,
+      "ms": 489,
+      "summary": "replayed 2 recorded action(s) zero-turn from the trace cache; recorded verdict: Set the task’s priority to High. The priority control now shows High selected, and the app confirmed “The task was saved successfully.”",
+      "cache": {
+        "mode": "self-finalized",
+        "replayedActions": 2,
+        "totalActions": 2
+      },
+      "modelCalls": 0,
+      "actions": 2
+    },
+    {
+      "kind": "assert",
+      "id": "obj4",
+      "ok": true,
+      "ms": 1443
+    },
+    {
+      "kind": "act",
+      "id": "obj5",
+      "ok": false,
+      "code": "ACTION_FAILED",
+      "blocked": false,
+      "error": "agent.act failed: The task does not carry the existing Backend label. Typing Backend in the task’s Add Labels control only created a new label; I removed that accidental duplicate. The Labels page still shows the original Backend label, but it was not attached to the task.",
+      "ms": 107919
+    },
+    {
+      "kind": "assert",
+      "id": "obj5",
+      "ok": false,
+      "code": "ASSERTION_INCONCLUSIVE",
+      "blocked": false,
+      "error": "The observation shows a Backend label exists, but it does not show whether the specified task carries that label.; the judge saw the semantic tree only; pass vision: true when the answer is in pixels",
+      "ms": 2152
+    },
+    {
+      "kind": "act",
+      "id": "obj6",
+      "ok": false,
+      "code": "REPLAY_STALE",
+      "blocked": false,
+      "error": "the recording of this step no longer replays (wrong-context), and cache.strict hands no step to the agent; re-record it with a read-write run without --strict-cache and commit the changed entry under .e2e/cache",
+      "ms": 132
+    },
+    {
+      "kind": "assert",
+      "id": "obj6",
+      "ok": false,
+      "code": "ASSERTION_INCONCLUSIVE",
+      "blocked": false,
+      "error": "The observation shows the Labels page, not the task or its comments, so there is no evidence whether a comment includes the run id.; the judge saw the semantic tree only; pass vision: true when the answer is in pixels",
+      "ms": 1764
+    },
+    {
+      "kind": "act",
+      "id": "obj7",
+      "ok": true,
+      "ms": 6271,
+      "summary": "Opened the e2vk1-strict Bench Task page in Bench Project. Its displayed identifier is BENCH-7.",
+      "cache": {
+        "mode": "missed",
+        "reason": "no-entry",
+        "replayedActions": 0,
+        "totalActions": 0
+      },
+      "modelCalls": 3,
+      "actions": 2
+    },
+    {
+      "kind": "extract",
+      "id": "obj7",
+      "ok": true,
+      "ms": 1800,
+      "values": [
+        "BENCH-7"
+      ]
+    }
+  ],
+  "finalText": "1. DONE Seed: triage inbox | Seed: order missing parts | Seed: ship repaired device\n2. FAILED\n3. DONE\n4. DONE\n5. FAILED\n6. FAILED\n7. DONE BENCH-7",
+  "machine": {
+    "platform": "linux",
+    "arch": "x64",
+    "node": "v22.22.0",
+    "cpus": 4,
+    "memGb": 16
+  }
+}
