@@ -1,0 +1,102 @@
+{
+  "schemaVersion": "trace-1",
+  "createdAt": "2026-10-02T22:20:11.099Z",
+  "payload": {
+    "actions": [
+      {
+        "name": "tap",
+        "summary": "tap button \"Add part\" in \"Parts\"",
+        "target": {
+          "role": "button",
+          "name": "Add part",
+          "testId": "add-part",
+          "within": "Parts"
+        }
+      },
+      {
+        "name": "type",
+        "summary": "type \"{{param:/runid}} RD Part B\" into textbox \"Part name\" in \"Add part\"",
+        "target": {
+          "role": "textbox",
+          "name": "Part name",
+          "testId": "field-name",
+          "within": "Add part"
+        },
+        "value": "{{param:/runid}} RD Part B"
+      },
+      {
+        "name": "type",
+        "summary": "type \"200\" into spinbutton \"Cost\" in \"Add part\"",
+        "target": {
+          "role": "spinbutton",
+          "name": "Cost",
+          "testId": "field-cost",
+          "within": "Add part"
+        },
+        "value": "200"
+      },
+      {
+        "name": "type",
+        "summary": "type \"25\" into spinbutton \"Markup %\" in \"Add part\"",
+        "target": {
+          "role": "spinbutton",
+          "name": "Markup %",
+          "testId": "field-markup",
+          "within": "Add part"
+        },
+        "value": "25"
+      },
+      {
+        "name": "tap",
+        "summary": "tap button \"Add part\"",
+        "target": {
+          "role": "button",
+          "name": "Add part",
+          "testId": "modal-save"
+        }
+      }
+    ],
+    "executor": {
+      "name": "e2e-default-agent",
+      "version": "2"
+    },
+    "recordedFor": {
+      "testId": "tests/flow.e2e.ts::repairdesk%20flow",
+      "targetId": "web",
+      "instructionDigest": "581586a99a973566eba6c8384559de8b71f25710e612c38c913e8e6c51700773"
+    },
+    "summary": "Added e2rd1-n1 RD Part B to ticket RD-1015 with cost $200.00 and markup 25%. The saved part row shows the computed price as $250.00 (Parts total: $375.00).",
+    "startPath": "/#/tickets/t15",
+    "endPath": "/#/tickets/t15",
+    "endAnchors": [
+      {
+        "role": "cell",
+        "name": "{{param:/runid}} RD Part B"
+      },
+      {
+        "role": "cell",
+        "name": "$200.00"
+      },
+      {
+        "role": "cell",
+        "name": "$250.00",
+        "testId": "part-price-p19"
+      },
+      {
+        "role": "cell",
+        "name": "$375.00",
+        "testId": "parts-total"
+      },
+      {
+        "role": "row",
+        "name": "{{param:/runid}} RD Part B $200.00 25% 1 No supplier $250.00 Edit Delete",
+        "testId": "part-row-p19"
+      },
+      {
+        "role": "row",
+        "name": "Total (price × quantity) $375.00"
+      }
+    ],
+    "endWaitMs": 13771
+  }
+}

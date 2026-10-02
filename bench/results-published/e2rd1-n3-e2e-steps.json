@@ -1,0 +1,190 @@
+{
+  "target": "repairdesk",
+  "runid": "e2rd1-n3",
+  "steps": [
+    {
+      "kind": "act",
+      "id": "signin",
+      "ok": true,
+      "ms": 2594,
+      "summary": "replayed 3 recorded action(s) zero-turn from the trace cache; recorded verdict: Signed in successfully as bench@example.com. The Repair Desk tickets page is open and shows Bench User as the current user.",
+      "cache": {
+        "mode": "self-finalized",
+        "replayedActions": 3,
+        "totalActions": 3
+      },
+      "modelCalls": 0,
+      "actions": 3
+    },
+    {
+      "kind": "assert",
+      "id": "signin",
+      "ok": true,
+      "ms": 2336
+    },
+    {
+      "kind": "act",
+      "id": "obj1",
+      "ok": true,
+      "ms": 30603,
+      "summary": "Verified ticket RD-1017 titled “e2rd1-n3 RD Bench Ticket” appears in the tickets list with Draft status and 0 parts.",
+      "cache": {
+        "mode": "agent-concluded",
+        "reason": "end-mismatch",
+        "replayedActions": 3,
+        "totalActions": 3
+      },
+      "modelCalls": 1,
+      "actions": 3
+    },
+    {
+      "kind": "assert",
+      "id": "obj1",
+      "ok": true,
+      "ms": 1649
+    },
+    {
+      "kind": "act",
+      "id": "obj2",
+      "ok": true,
+      "ms": 26052,
+      "summary": "Added e2rd1-n3 RD Part A to ticket RD-1017 with cost $100.00 and 25% markup. The part row shows the computed price as $125.00 (quantity 1), and the total is $125.00.",
+      "cache": {
+        "mode": "missed",
+        "reason": "target-not-found",
+        "replayedActions": 0,
+        "totalActions": 6
+      },
+      "modelCalls": 6,
+      "actions": 6
+    },
+    {
+      "kind": "assert",
+      "id": "obj2",
+      "ok": true,
+      "ms": 3406
+    },
+    {
+      "kind": "extract",
+      "id": "obj2",
+      "ok": true,
+      "ms": 3512,
+      "values": [
+        "$125.00"
+      ]
+    },
+    {
+      "kind": "act",
+      "id": "obj3",
+      "ok": true,
+      "ms": 2125,
+      "summary": "replayed 5 recorded action(s) zero-turn from the trace cache; recorded verdict: Added e2rd1-n1 RD Part B to ticket RD-1015 with cost $200.00 and markup 25%. The saved part row shows the computed price as $250.00 (Parts total: $375.00).",
+      "cache": {
+        "mode": "self-finalized",
+        "replayedActions": 5,
+        "totalActions": 5
+      },
+      "modelCalls": 0,
+      "actions": 5
+    },
+    {
+      "kind": "assert",
+      "id": "obj3",
+      "ok": true,
+      "ms": 2586
+    },
+    {
+      "kind": "extract",
+      "id": "obj3",
+      "ok": true,
+      "ms": 2719,
+      "values": [
+        "$250.00"
+      ]
+    },
+    {
+      "kind": "act",
+      "id": "obj4",
+      "ok": true,
+      "ms": 718,
+      "summary": "replayed 3 recorded action(s) zero-turn from the trace cache; recorded verdict: Changed e2rd1-n1 RD Part A cost to $150.00. The ticket screen now shows its computed price as $187.50 (and Parts total $437.50).",
+      "cache": {
+        "mode": "self-finalized",
+        "replayedActions": 3,
+        "totalActions": 3
+      },
+      "modelCalls": 0,
+      "actions": 3
+    },
+    {
+      "kind": "assert",
+      "id": "obj4",
+      "ok": true,
+      "ms": 2372
+    },
+    {
+      "kind": "extract",
+      "id": "obj4",
+      "ok": true,
+      "ms": 3438,
+      "values": [
+        "$187.50"
+      ]
+    },
+    {
+      "kind": "act",
+      "id": "obj5",
+      "ok": true,
+      "ms": 16864,
+      "summary": "Ticket RD-1017 is now Ready. The required precondition was that each part have a supplier: I set Supplier to “Acme Parts” for both Part A and Part B, then Mark Ready succeeded. The screen shows Ready and both supplier values.",
+      "cache": {
+        "mode": "agent-concluded",
+        "reason": "gap",
+        "derived": "whole-node",
+        "replayedActions": 7,
+        "totalActions": 10
+      },
+      "modelCalls": 5,
+      "actions": 11
+    },
+    {
+      "kind": "assert",
+      "id": "obj5",
+      "ok": true,
+      "ms": 1745
+    },
+    {
+      "kind": "extract",
+      "id": "obj5",
+      "ok": false,
+      "code": "ASSERTION_INCONCLUSIVE",
+      "blocked": false,
+      "error": "nothing to extract: The screen shows the ticket is Ready, but does not show which preconditions were required to set that status.; the judge saw the semantic tree only; if the engine captures pixels, pass vision: true when the answer is in pixels",
+      "ms": 2921
+    },
+    {
+      "kind": "act",
+      "id": "obj6",
+      "ok": true,
+      "ms": 1301,
+      "summary": "replayed 5 recorded action(s) zero-turn from the trace cache; recorded verdict: Deleted both parts from ticket RD-1015 and verified the Parts table says “No parts on this ticket yet.” Archived the ticket; the detail now shows “Archived” and an “Unarchive ticket” control.",
+      "cache": {
+        "mode": "self-finalized",
+        "replayedActions": 5,
+        "totalActions": 5
+      },
+      "modelCalls": 0,
+      "actions": 5
+    },
+    {
+      "kind": "assert",
+      "id": "obj6",
+      "ok": false,
+      "code": "ASSERTION_INCONCLUSIVE",
+      "blocked": false,
+      "error": "The ticket is shown as archived with no parts, but the page is still refreshing, so the final state cannot be confirmed.; the judge saw the semantic tree only; if the engine captures pixels, pass vision: true when the answer is in pixels",
+      "ms": 3858
+    }
+  ],
+  "finalText": "1. DONE\n2. DONE $125.00\n3. DONE $250.00\n4. DONE $187.50\n5. FAILED \n6. DONE"
+}

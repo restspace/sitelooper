@@ -1,0 +1,203 @@
+{
+  "arm": "e2e",
+  "e2eVersion": "0.16.0",
+  "target": "repairdesk",
+  "runid": "e2rd1-strict",
+  "model": "openai/gpt-6-luna",
+  "strict": true,
+  "reset": true,
+  "exitCode": 0,
+  "wallMs": 98028,
+  "cache": {
+    "acts": 7,
+    "replayed": 1,
+    "handedOff": 0,
+    "missed": 1,
+    "failed": 5,
+    "stale": 5,
+    "actModelCalls": 3,
+    "reasons": [
+      "obj6:missed:no-entry"
+    ]
+  },
+  "usage": {
+    "modelTokens": 53831,
+    "modelCachedTokens": 20958,
+    "usd": 0.004694305,
+    "usdAtRatesFloor": null
+  },
+  "steps": [
+    {
+      "kind": "act",
+      "id": "signin",
+      "ok": true,
+      "ms": 2703,
+      "summary": "replayed 3 recorded action(s) zero-turn from the trace cache; recorded verdict: Signed in successfully as bench@example.com. The Repair Desk tickets page is open and shows Bench User as the current user.",
+      "cache": {
+        "mode": "self-finalized",
+        "replayedActions": 3,
+        "totalActions": 3
+      },
+      "modelCalls": 0,
+      "actions": 3
+    },
+    {
+      "kind": "assert",
+      "id": "signin",
+      "ok": true,
+      "ms": 2035
+    },
+    {
+      "kind": "act",
+      "id": "obj1",
+      "ok": false,
+      "code": "REPLAY_STALE",
+      "blocked": false,
+      "error": "the recording of this step no longer replays (end-mismatch), and cache.strict hands no step to the agent; re-record it with a read-write run without --strict-cache and commit the changed entry under .e2e/cache",
+      "ms": 40792
+    },
+    {
+      "kind": "assert",
+      "id": "obj1",
+      "ok": true,
+      "ms": 1562
+    },
+    {
+      "kind": "act",
+      "id": "obj2",
+      "ok": false,
+      "code": "REPLAY_STALE",
+      "blocked": false,
+      "error": "the recording of this step no longer replays (target-not-found), and cache.strict hands no step to the agent; re-record it with a read-write run without --strict-cache and commit the changed entry under .e2e/cache",
+      "ms": 15025
+    },
+    {
+      "kind": "assert",
+      "id": "obj2",
+      "ok": false,
+      "code": "ASSERTION_FAILED",
+      "blocked": false,
+      "error": "The ticket is listed with 0 parts, so it does not have the specified Part A.",
+      "ms": 2036
+    },
+    {
+      "kind": "extract",
+      "id": "obj2",
+      "ok": false,
+      "code": "ASSERTION_INCONCLUSIVE",
+      "blocked": false,
+      "error": "nothing to extract: The ticket is listed with 0 parts; the price for `e2rd1-strict RD Part A` is not shown.; the judge saw the semantic tree only; if the engine captures pixels, pass vision: true when the answer is in pixels",
+      "ms": 2369
+    },
+    {
+      "kind": "act",
+      "id": "obj3",
+      "ok": false,
+      "code": "REPLAY_STALE",
+      "blocked": false,
+      "error": "the recording of this step no longer replays (wrong-context), and cache.strict hands no step to the agent; re-record it with a read-write run without --strict-cache and commit the changed entry under .e2e/cache",
+      "ms": 350
+    },
+    {
+      "kind": "assert",
+      "id": "obj3",
+      "ok": false,
+      "code": "ASSERTION_FAILED",
+      "blocked": false,
+      "error": "The ticket row is visible with 0 parts, so the required second part is not present in the observed state.",
+      "ms": 2372
+    },
+    {
+      "kind": "extract",
+      "id": "obj3",
+      "ok": false,
+      "code": "ASSERTION_INCONCLUSIVE",
+      "blocked": false,
+      "error": "nothing to extract: The ticket is listed with 0 parts; the price for e2rd1-strict RD Part B is not shown.; the judge saw the semantic tree only; if the engine captures pixels, pass vision: true when the answer is in pixels",
+      "ms": 3020
+    },
+    {
+      "kind": "act",
+      "id": "obj4",
+      "ok": false,
+      "code": "REPLAY_STALE",
+      "blocked": false,
+      "error": "the recording of this step no longer replays (wrong-context), and cache.strict hands no step to the agent; re-record it with a read-write run without --strict-cache and commit the changed entry under .e2e/cache",
+      "ms": 288
+    },
+    {
+      "kind": "assert",
+      "id": "obj4",
+      "ok": false,
+      "code": "ASSERTION_INCONCLUSIVE",
+      "blocked": false,
+      "error": "The ticket is listed with 0 parts, and the observation does not show Part A or its cost, so the change to 150 cannot be verified.; the judge saw the semantic tree only; if the engine captures pixels, pass vision: true when the answer is in pixels",
+      "ms": 2493
+    },
+    {
+      "kind": "extract",
+      "id": "obj4",
+      "ok": false,
+      "code": "ASSERTION_INCONCLUSIVE",
+      "blocked": false,
+      "error": "nothing to extract: The computed price after changing Part A's cost is not shown; the ticket list shows 0 parts.; the judge saw the semantic tree only; if the engine captures pixels, pass vision: true when the answer is in pixels",
+      "ms": 2088
+    },
+    {
+      "kind": "act",
+      "id": "obj5",
+      "ok": false,
+      "code": "REPLAY_STALE",
+      "blocked": false,
+      "error": "the recording of this step no longer replays (wrong-context), and cache.strict hands no step to the agent; re-record it with a read-write run without --strict-cache and commit the changed entry under .e2e/cache",
+      "ms": 341
+    },
+    {
+      "kind": "assert",
+      "id": "obj5",
+      "ok": false,
+      "code": "ASSERTION_FAILED",
+      "blocked": false,
+      "error": "The ticket for e2rd1-strict is visible in the list and its status is Draft, not Ready.",
+      "ms": 1743
+    },
+    {
+      "kind": "extract",
+      "id": "obj5",
+      "ok": false,
+      "code": "ASSERTION_INCONCLUSIVE",
+      "blocked": false,
+      "error": "nothing to extract: The observation shows the ticket is still in Draft with 0 parts; it does not show the Ready-status preconditions or what was required.; the judge saw the semantic tree only; if the engine captures pixels, pass vision: true when the answer is in pixels",
+      "ms": 3143
+    },
+    {
+      "kind": "act",
+      "id": "obj6",
+      "ok": true,
+      "ms": 7511,
+      "summary": "The e2rd1-strict RD Bench Ticket (RD-1018) shows Archived, and its Parts section says “No parts on this ticket yet.” No parts remain on the ticket, and the ticket is no longer active.",
+      "cache": {
+        "mode": "missed",
+        "reason": "no-entry",
+        "replayedActions": 0,
+        "totalActions": 0
+      },
+      "modelCalls": 3,
+      "actions": 2
+    },
+    {
+      "kind": "assert",
+      "id": "obj6",
+      "ok": true,
+      "ms": 4227
+    }
+  ],
+  "finalText": "1. FAILED\n2. FAILED \n3. FAILED \n4. FAILED \n5. FAILED \n6. DONE",
+  "machine": {
+    "platform": "linux",
+    "arch": "x64",
+    "node": "v22.22.0",
+    "cpus": 4,
+    "memGb": 16
+  }
+}

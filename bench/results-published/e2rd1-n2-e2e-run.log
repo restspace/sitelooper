@@ -1,0 +1,69 @@
+
+ RUN  e2e v0.16.0 /home/user/sitelooper/bench/e2e-arm
+      run 01a0feb4-1da4-7143-9494-c8abe02c173b · targets: web
+      model openrouter/openai/gpt-6-luna
+
+   ✓ repairdesk flow > agent.act "Sign in with username {username} and password {password}" 2.57s
+   ✓ repairdesk flow > agent.assert "The app shows a signed-in page, not a sign-in form" 2.16s · 1 model call
+   ✓ repairdesk flow > agent.act "Achieve objective 1 of the goal, for run id {runid}: A ticket titled `{…" 18.19s · 1 model call
+   ✓ repairdesk flow > agent.assert "For run id e2rd1-n2, this now holds in the app: A ticket titled `e2rd1-…" 1.65s · 1 model call
+   ✓ repairdesk flow > agent.act "Achieve objective 2 of the goal, for run id {runid}: That ticket has a …" 26.03s · 7 model calls
+   ✓ repairdesk flow > agent.assert "For run id e2rd1-n2, this now holds in the app: That ticket has a part …" 1.45s · 1 model call
+   ✓ repairdesk flow > agent.extract "For run id e2rd1-n2: That ticket has a part named `e2rd1-n2 RD Part A` …" 2.84s · 1 model call
+   ✓ repairdesk flow > agent.act "Achieve objective 3 of the goal, for run id {runid}: That ticket has a …" 2.12s
+   ✓ repairdesk flow > agent.assert "For run id e2rd1-n2, this now holds in the app: That ticket has a secon…" 1.58s · 1 model call
+   ✓ repairdesk flow > agent.extract "For run id e2rd1-n2: That ticket has a second part named `e2rd1-n2 RD P…" 2.88s · 1 model call
+   ✓ repairdesk flow > agent.act "Achieve objective 4 of the goal, for run id {runid}: Part A's cost is c…" 786ms
+   ✓ repairdesk flow > agent.assert "For run id e2rd1-n2, this now holds in the app: Part A's cost is change…" 2.59s · 1 model call
+   ✓ repairdesk flow > agent.extract "For run id e2rd1-n2: Part A's cost is changed from 100 to 150. Report t…" 1.11s · 1 model call
+   ✓ repairdesk flow > agent.act "Achieve objective 5 of the goal, for run id {runid}: The ticket ends in…" 18.39s · 8 model calls
+   ✓ repairdesk flow > agent.assert "For run id e2rd1-n2, this now holds in the app: The ticket ends in stat…" 1.49s · 1 model call
+   × repairdesk flow > agent.extract "For run id e2rd1-n2: The ticket ends in status `Ready`. The app enforce…" 2.96s · 1 model call failed
+   ✓ repairdesk flow > agent.act "Achieve objective 6 of the goal, for run id {runid}: Both parts are the…" 1.39s
+   ✓ repairdesk flow > agent.assert "For run id e2rd1-n2, this now holds in the app: Both parts are then rem…" 2.26s · 1 model call
+ ✓ |web| tests/flow.e2e.ts (1 test) 93.67s ai 145.6k tokens · 75% cached · $0.0064
+   ✓ repairdesk flow 93.67s ai 145.6k tokens · 75% cached · $0.0064
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+         AI  145.6k tokens · 75% cached · $0.0064 · 27 model calls · openrouter/openai/gpt-6-luna
+      Cache  4 replayed · 2 handed off · 1 missed
+   Start at  22:20:13
+   Duration  95.21s (1m 35s)
+     Report  .e2e/report.json
+
+
+--- stderr ---
+[e2e debug] phase timings (wall 96.2s)
+  phase           count   total     avg     max
+  scheduler           1   95.2s   95.2s   95.2s
+  test.body           1   92.6s   92.6s   92.6s
+  agent.model        27   50.7s  1876ms  4160ms
+  agent.observe      77   13.7s   178ms  2058ms
+  agent.action       35  1804ms    52ms   112ms
+  config.load         1   922ms   922ms   922ms
+  engine.init         1   124ms   124ms   124ms
+  session.close       1    49ms    49ms    49ms
+  collect             1    19ms    19ms    19ms
+  session.launch      1    18ms    18ms    18ms
+  engine.prepare      1     0ms     0ms     0ms
+[e2e debug] agent steps (execution order, model openrouter/openai/gpt-6-luna, total $0.006419+)
+  step                                                               total   model  observe  action  calls  tokens in/out       cached       cost
+  agent.act "Sign in with username {username} and password {passw…  2573ms     0ms   2412ms   141ms      0            0/0            -          -
+  agent.assert "The app shows a signed-in page, not a sign-in for…  2162ms  1947ms    118ms     0ms      1        2757/61       0% (0)  $0.000375
+  agent.act "Achieve objective 1 of the goal, for run id {runid}:…   18.2s  1623ms   2165ms   230ms      1        6171/77   61% (3740)  $0.000377
+  agent.assert "For run id e2rd1-n2, this now holds in the app: A…  1654ms  1425ms    141ms     0ms      1        2801/61       0% (0)  $0.000381
+  agent.act "Achieve objective 2 of the goal, for run id {runid}:…   26.0s   10.7s   2775ms   234ms      7      52081/245  89% (46238)  $0.001293
+  agent.assert "For run id e2rd1-n2, this now holds in the app: T…  1454ms  1294ms     93ms     0ms      1        1557/58       0% (0)  $0.000224
+  agent.extract "For run id e2rd1-n2: That ticket has a part name…  2843ms  2748ms     92ms     0ms      1        1661/59       0% (0)  $0.000237
+  agent.act "Achieve objective 3 of the goal, for run id {runid}:…  2120ms     0ms    879ms   222ms      0            0/0            -          -
+  agent.assert "For run id e2rd1-n2, this now holds in the app: T…  1577ms  1423ms     81ms     0ms      1        1729/58       0% (0)  $0.000245
+  agent.extract "For run id e2rd1-n2: That ticket has a second pa…  2879ms  2796ms     82ms     0ms      1        1833/59       0% (0)  $0.000259
+  agent.act "Achieve objective 4 of the goal, for run id {runid}:…   786ms     0ms    608ms   173ms      0            0/0            -          -
+  agent.assert "For run id e2rd1-n2, this now holds in the app: P…  2586ms  2383ms    131ms     0ms      1        1715/74       0% (0)  $0.000251
+  agent.extract "For run id e2rd1-n2: Part A's cost is changed fr…  1115ms  1027ms     84ms     0ms      1        1818/30       0% (0)  $0.000242
+  agent.act "Achieve objective 5 of the goal, for run id {runid}:…   18.4s   17.0s   2701ms   505ms      8      64922/553  88% (57329)  $0.001774
+  agent.assert "For run id e2rd1-n2, this now holds in the app: T…  1486ms  1309ms    108ms     0ms      1        1712/53       0% (0)   $0.00024
+  agent.extract "For run id e2rd1-n2: The ticket ends in status `…  2956ms  2873ms     82ms     0ms      1       1835/100       0% (0)  $0.000279
+  agent.act "Achieve objective 6 of the goal, for run id {runid}:…  1393ms     0ms   1084ms   299ms      0            0/0            -          -
+  agent.assert "For run id e2rd1-n2, this now holds in the app: B…  2262ms  2112ms     69ms     0ms      1       1404/134       0% (0)  $0.000242

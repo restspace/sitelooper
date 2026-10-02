@@ -1,0 +1,255 @@
+
+=== e2rd1-n1 ===
+[reset] repairdesk: reloaded seed via http://127.0.0.1:4180/__reset
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+         AI  327.4k tokens · 81% cached · $0.0118 · 53 model calls · openrouter/openai/gpt-6-luna
+      Cache  7 missed
+   Start at  22:18:04
+   Duration  127.01s (2m 7s)
+     Report  .e2e/report.json
+
+
+--- stderr ---
+[e2e debug] phase timings (wall 145.9s)
+  phase           count   total     avg     max
+  scheduler           1  127.0s  127.0s  127.0s
+  test.body           1  122.9s  122.9s  122.9s
+  agent.model        53  117.1s  2210ms  5679ms
+  engine.prepare      1   17.3s   17.3s   17.3s
+  agent.observe      65   16.7s   256ms  2187ms
+  config.load         1  1571ms  1571ms  1571ms
+  agent.action       34  1513ms    45ms    73ms
+  engine.init         1  1327ms  1327ms  1327ms
+  collect             1    38ms    38ms    38ms
+  session.close       1    38ms    38ms    38ms
+  session.launch      1    24ms    24ms    24ms
+[e2e debug] agent steps (execution order, model openrouter/openai/gpt-6-luna, total $0.011794)
+  step                                                               total   model  observe  action  calls  tokens in/out       cached       cost
+  agent.act "Sign in with username {username} and password {passw…   10.1s  9198ms   3139ms   182ms      3      14933/187  82% (12253)  $0.000542
+  agent.assert "The app shows a signed-in page, not a sign-in for…  1584ms  1342ms    147ms     0ms      1        2757/56       0% (0)  $0.000373
+  agent.act "Achieve objective 1 of the goal, for run id {runid}:…   10.2s  9603ms   1680ms    93ms      5      34173/195  84% (28651)  $0.001059
+  agent.assert "For run id e2rd1-n1, this now holds in the app: A…  2311ms  2020ms    193ms     0ms      1        2801/57       0% (0)  $0.000379
+  agent.act "Achieve objective 2 of the goal, for run id {runid}:…   10.1s  9532ms   2054ms   276ms      6      44629/247  87% (38932)  $0.001206
+  agent.assert "For run id e2rd1-n1, this now holds in the app: T…  1533ms  1352ms     89ms     0ms      1        1557/58       0% (0)  $0.000224
+  agent.extract "For run id e2rd1-n1: That ticket has a part name…  1619ms  1541ms     75ms     0ms      1        1661/59       0% (0)  $0.000237
+  agent.act "Achieve objective 3 of the goal, for run id {runid}:…  9632ms  9205ms   1734ms   184ms      5      30774/302  86% (26570)  $0.000926
+  agent.assert "For run id e2rd1-n1, this now holds in the app: T…  2623ms  2457ms     94ms     0ms      1        1729/74       0% (0)  $0.000253
+  agent.extract "For run id e2rd1-n1: That ticket has a second pa…  1952ms  1879ms     71ms     0ms      1        1833/50       0% (0)  $0.000254
+  agent.act "Achieve objective 4 of the goal, for run id {runid}:…  6645ms  6211ms   1331ms   153ms      4      25272/180  85% (21369)  $0.000779
+  agent.assert "For run id e2rd1-n1, this now holds in the app: P…  2039ms  1849ms    116ms     0ms      1        1715/73       0% (0)  $0.000251
+  agent.extract "For run id e2rd1-n1: Part A's cost is changed fr…  3069ms  2972ms     96ms     0ms      1        1818/67       0% (0)  $0.000261
+  agent.act "Achieve objective 5 of the goal, for run id {runid}:…   37.9s   37.4s   3782ms   374ms     11      95203/760  85% (81289)  $0.002897
+  agent.assert "For run id e2rd1-n1, this now holds in the app: T…  2063ms  1905ms     90ms     0ms      1        1708/53       0% (0)   $0.00024
+  agent.extract "For run id e2rd1-n1: The ticket ends in status `…  3027ms  2940ms     86ms     0ms      1       1831/105       0% (0)  $0.000281
+  agent.act "Achieve objective 6 of the goal, for run id {runid}:…   13.5s   13.1s   1789ms   248ms      8      58729/279  90% (52612)  $0.001405
+  agent.assert "For run id e2rd1-n1, this now holds in the app: B…  2844ms  2691ms     92ms     0ms      1       1389/109       0% (0)  $0.000228
+
+=== e2rd1-n1 === (run self-reported: no result file)
+  obj 1  PASS  seq 1: ticket t15 (RD-1015) "e2rd1-n1 RD Bench Ticket"
+  obj 2  PASS  seq 2 p18 cost=100 markup=25 price=125.00
+  obj 3  PASS  seq 3 p19 cost=200 markup=25 price=250.00
+  obj 4  PASS  seq 4: cost 100 -> 150, price 125.00 -> 187.50 (want 187.50), after the create at seq 2
+  obj 5  PASS  seq 7: status Draft -> Ready
+  obj 6  PASS  part A deleted, part B deleted, archive entry at seq 10; state: 0 part(s) surviving, ticket t15 archived=true
+  claim 2  ok — run reported 125.00, app recorded 125.00
+  claim 3  ok — run reported 250.00, app recorded 250.00
+  claim 4  ok — run reported 187.50, app recorded 187.50
+  summary: 6/6 objectives PASS, 0 price claim mismatch(es), 0 duplicate ticket(s)
+
+App state: 15 tickets total, 1 left by benchmark runs (0 still active), 17 parts total, 10 mutation log entries.
+
+=== e2rd1-n2 ===
+[reset] repairdesk: reloaded seed via http://127.0.0.1:4180/__reset
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+         AI  145.6k tokens · 75% cached · $0.0064 · 27 model calls · openrouter/openai/gpt-6-luna
+      Cache  4 replayed · 2 handed off · 1 missed
+   Start at  22:20:13
+   Duration  95.21s (1m 35s)
+     Report  .e2e/report.json
+
+
+--- stderr ---
+[e2e debug] phase timings (wall 96.2s)
+  phase           count   total     avg     max
+  scheduler           1   95.2s   95.2s   95.2s
+  test.body           1   92.6s   92.6s   92.6s
+  agent.model        27   50.7s  1876ms  4160ms
+  agent.observe      77   13.7s   178ms  2058ms
+  agent.action       35  1804ms    52ms   112ms
+  config.load         1   922ms   922ms   922ms
+  engine.init         1   124ms   124ms   124ms
+  session.close       1    49ms    49ms    49ms
+  collect             1    19ms    19ms    19ms
+  session.launch      1    18ms    18ms    18ms
+  engine.prepare      1     0ms     0ms     0ms
+[e2e debug] agent steps (execution order, model openrouter/openai/gpt-6-luna, total $0.006419+)
+  step                                                               total   model  observe  action  calls  tokens in/out       cached       cost
+  agent.act "Sign in with username {username} and password {passw…  2573ms     0ms   2412ms   141ms      0            0/0            -          -
+  agent.assert "The app shows a signed-in page, not a sign-in for…  2162ms  1947ms    118ms     0ms      1        2757/61       0% (0)  $0.000375
+  agent.act "Achieve objective 1 of the goal, for run id {runid}:…   18.2s  1623ms   2165ms   230ms      1        6171/77   61% (3740)  $0.000377
+  agent.assert "For run id e2rd1-n2, this now holds in the app: A…  1654ms  1425ms    141ms     0ms      1        2801/61       0% (0)  $0.000381
+  agent.act "Achieve objective 2 of the goal, for run id {runid}:…   26.0s   10.7s   2775ms   234ms      7      52081/245  89% (46238)  $0.001293
+  agent.assert "For run id e2rd1-n2, this now holds in the app: T…  1454ms  1294ms     93ms     0ms      1        1557/58       0% (0)  $0.000224
+  agent.extract "For run id e2rd1-n2: That ticket has a part name…  2843ms  2748ms     92ms     0ms      1        1661/59       0% (0)  $0.000237
+  agent.act "Achieve objective 3 of the goal, for run id {runid}:…  2120ms     0ms    879ms   222ms      0            0/0            -          -
+  agent.assert "For run id e2rd1-n2, this now holds in the app: T…  1577ms  1423ms     81ms     0ms      1        1729/58       0% (0)  $0.000245
+  agent.extract "For run id e2rd1-n2: That ticket has a second pa…  2879ms  2796ms     82ms     0ms      1        1833/59       0% (0)  $0.000259
+  agent.act "Achieve objective 4 of the goal, for run id {runid}:…   786ms     0ms    608ms   173ms      0            0/0            -          -
+  agent.assert "For run id e2rd1-n2, this now holds in the app: P…  2586ms  2383ms    131ms     0ms      1        1715/74       0% (0)  $0.000251
+  agent.extract "For run id e2rd1-n2: Part A's cost is changed fr…  1115ms  1027ms     84ms     0ms      1        1818/30       0% (0)  $0.000242
+  agent.act "Achieve objective 5 of the goal, for run id {runid}:…   18.4s   17.0s   2701ms   505ms      8      64922/553  88% (57329)  $0.001774
+  agent.assert "For run id e2rd1-n2, this now holds in the app: T…  1486ms  1309ms    108ms     0ms      1        1712/53       0% (0)   $0.00024
+  agent.extract "For run id e2rd1-n2: The ticket ends in status `…  2956ms  2873ms     82ms     0ms      1       1835/100       0% (0)  $0.000279
+  agent.act "Achieve objective 6 of the goal, for run id {runid}:…  1393ms     0ms   1084ms   299ms      0            0/0            -          -
+  agent.assert "For run id e2rd1-n2, this now holds in the app: B…  2262ms  2112ms     69ms     0ms      1       1404/134       0% (0)  $0.000242
+
+=== e2rd1-n2 === (run self-reported: no result file)
+  obj 1  PASS  seq 1: ticket t15 (RD-1016) "e2rd1-n2 RD Bench Ticket"
+  obj 2  PASS  seq 2 p18 cost=100 markup=25 price=125.00
+  obj 3  PASS  seq 3 p19 cost=200 markup=25 price=250.00
+  obj 4  PASS  seq 4: cost 100 -> 150, price 125.00 -> 187.50 (want 187.50), after the create at seq 2
+  obj 5  PASS  seq 7: status Draft -> Ready
+  obj 6  PASS  part A deleted, part B deleted, archive entry at seq 10; state: 0 part(s) surviving, ticket t15 archived=true
+  claim 2  ok — run reported 125.00, app recorded 125.00
+  claim 3  ok — run reported 250.00, app recorded 250.00
+  claim 4  ok — run reported 187.50, app recorded 187.50
+  summary: 6/6 objectives PASS, 0 price claim mismatch(es), 0 duplicate ticket(s)
+
+App state: 15 tickets total, 1 left by benchmark runs (0 still active), 17 parts total, 10 mutation log entries.
+
+=== e2rd1-n3 ===
+[reset] repairdesk: reloaded seed via http://127.0.0.1:4180/__reset
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+         AI  110.9k tokens · 71% cached · $0.0057 · 23 model calls · openrouter/openai/gpt-6-luna
+      Cache  4 replayed · 2 handed off · 1 missed
+   Start at  22:21:50
+   Duration  113.56s (1m 54s)
+     Report  .e2e/report.json
+
+
+--- stderr ---
+[e2e debug] phase timings (wall 114.7s)
+  phase           count   total     avg     max
+  scheduler           1  113.5s  113.5s  113.5s
+  test.body           1  111.0s  111.0s  111.0s
+  agent.model        23   55.9s  2430ms  4456ms
+  agent.observe      90   14.7s   163ms  2069ms
+  agent.action       36  1844ms    51ms    84ms
+  config.load         1  1086ms  1086ms  1086ms
+  engine.init         1   105ms   105ms   105ms
+  session.launch      1    29ms    29ms    29ms
+  session.close       1    28ms    28ms    28ms
+  collect             1    20ms    20ms    20ms
+  engine.prepare      1     1ms     1ms     1ms
+[e2e debug] agent steps (execution order, model openrouter/openai/gpt-6-luna, total $0.005734+)
+  step                                                               total   model  observe  action  calls  tokens in/out       cached       cost
+  agent.act "Sign in with username {username} and password {passw…  2592ms     0ms   2406ms   166ms      0            0/0            -          -
+  agent.assert "The app shows a signed-in page, not a sign-in for…  2335ms  2096ms    129ms     0ms      1        2757/56  100% (2754)  $0.000056
+  agent.act "Achieve objective 1 of the goal, for run id {runid}:…   30.6s  1582ms   3341ms   205ms      1        6166/80   61% (3740)  $0.000378
+  agent.assert "For run id e2rd1-n3, this now holds in the app: A…  1647ms  1403ms    155ms     0ms      1        2801/62       0% (0)  $0.000381
+  agent.act "Achieve objective 2 of the goal, for run id {runid}:…   26.1s   10.7s   2874ms   252ms      6      44792/303  87% (39050)  $0.001241
+  agent.assert "For run id e2rd1-n3, this now holds in the app: T…  3406ms  3262ms     71ms     0ms      1        1557/77       0% (0)  $0.000233
+  agent.extract "For run id e2rd1-n3: That ticket has a part name…  3511ms  3419ms     88ms     0ms      1        1661/58       0% (0)  $0.000237
+  agent.act "Achieve objective 3 of the goal, for run id {runid}:…  2124ms     0ms    842ms   271ms      0            0/0            -          -
+  agent.assert "For run id e2rd1-n3, this now holds in the app: T…  2585ms  2451ms     71ms     0ms      1        1729/56       0% (0)  $0.000244
+  agent.extract "For run id e2rd1-n3: That ticket has a second pa…  2718ms  2647ms     70ms     0ms      1        1833/60       0% (0)  $0.000259
+  agent.act "Achieve objective 4 of the goal, for run id {runid}:…   717ms     0ms    555ms   154ms      0            0/0            -          -
+  agent.assert "For run id e2rd1-n3, this now holds in the app: P…  2372ms  2204ms     85ms     0ms      1        1715/77       0% (0)  $0.000253
+  agent.extract "For run id e2rd1-n3: Part A's cost is changed fr…  3437ms  3368ms     68ms     0ms      1        1818/74       0% (0)  $0.000264
+  agent.act "Achieve objective 5 of the goal, for run id {runid}:…   16.9s   14.6s   2696ms   531ms      5      37127/758  85% (31400)  $0.001393
+  agent.assert "For run id e2rd1-n3, this now holds in the app: T…  1745ms  1567ms     80ms     0ms      1        1712/55       0% (0)  $0.000241
+  agent.extract "For run id e2rd1-n3: The ticket ends in status `…  2919ms  2847ms     71ms     0ms      1       1835/109       0% (0)  $0.000284
+  agent.act "Achieve objective 6 of the goal, for run id {runid}:…  1301ms     0ms   1028ms   263ms      0            0/0            -          -
+  agent.assert "For run id e2rd1-n3, this now holds in the app: B…  3856ms  3724ms     71ms     0ms      1       1404/191       0% (0)  $0.000271
+
+=== e2rd1-n3 === (run self-reported: no result file)
+  obj 1  PASS  seq 1: ticket t15 (RD-1017) "e2rd1-n3 RD Bench Ticket"
+  obj 2  PASS  seq 2 p18 cost=100 markup=25 price=125.00
+  obj 3  PASS  seq 3 p19 cost=200 markup=25 price=250.00
+  obj 4  PASS  seq 4: cost 100 -> 150, price 125.00 -> 187.50 (want 187.50), after the create at seq 2
+  obj 5  PASS  seq 7: status Draft -> Ready
+  obj 6  PASS  part A deleted, part B deleted, archive entry at seq 10; state: 0 part(s) surviving, ticket t15 archived=true
+  claim 2  ok — run reported 125.00, app recorded 125.00
+  claim 3  ok — run reported 250.00, app recorded 250.00
+  claim 4  ok — run reported 187.50, app recorded 187.50
+  summary: 6/6 objectives PASS, 0 price claim mismatch(es), 0 duplicate ticket(s)
+
+App state: 15 tickets total, 1 left by benchmark runs (0 still active), 17 parts total, 10 mutation log entries.
+
+=== e2rd1-strict (strict cache, read-only) ===
+[reset] repairdesk: reloaded seed via http://127.0.0.1:4180/__reset
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+         AI  53.8k tokens · 40% cached · $0.0047 · 14 model calls · openrouter/openai/gpt-6-luna
+      Cache  1 replayed · 1 handed off · 5 missed
+   Start at  22:23:45
+   Duration  96.38s (1m 36s)
+     Report  .e2e/report.json
+
+
+--- stderr ---
+[e2e debug] phase timings (wall 97.4s)
+  phase           count  total     avg     max
+  scheduler           1  96.3s   96.3s   96.3s
+  test.body           1  94.2s   94.2s   94.2s
+  agent.model        14  32.1s  2293ms  4055ms
+  agent.observe      65  10.4s   160ms  2079ms
+  config.load         1  952ms   952ms   952ms
+  agent.action        8  501ms    63ms    93ms
+  engine.init         1  109ms   109ms   109ms
+  session.close       1   60ms    60ms    60ms
+  collect             1   31ms    31ms    31ms
+  session.launch      1   20ms    20ms    20ms
+  engine.prepare      1    1ms     1ms     1ms
+[e2e debug] agent steps (execution order, model openrouter/openai/gpt-6-luna, total $0.004694+)
+  step                                                               total   model  observe  action  calls  tokens in/out       cached       cost
+  agent.act "Sign in with username {username} and password {passw…  2702ms     0ms   2480ms   203ms      0            0/0            -          -
+  agent.assert "The app shows a signed-in page, not a sign-in for…  2034ms  1746ms    158ms     0ms      1        2757/61  100% (2754)  $0.000058
+  agent.act "Achieve objective 1 of the goal, for run id {runid}:…   40.8s     0ms   3950ms   213ms      0            0/0            -          -
+  agent.assert "For run id e2rd1-strict, this now holds in the ap…  1561ms  1322ms    144ms     0ms      1        2801/55       0% (0)  $0.000378
+  agent.act "Achieve objective 2 of the goal, for run id {runid}:…   15.0s     0ms   1009ms     0ms      0            0/0            -          -
+  agent.assert "For run id e2rd1-strict, this now holds in the ap…  2034ms  1804ms    136ms     0ms      1        2808/76       0% (0)  $0.000389
+  agent.extract "For run id e2rd1-strict: That ticket has a part …  2366ms  2227ms    134ms     0ms      1        2912/82       0% (0)  $0.000405
+  agent.act "Achieve objective 3 of the goal, for run id {runid}:…   348ms     0ms    346ms     0ms      0            0/0            -          -
+  agent.assert "For run id e2rd1-strict, this now holds in the ap…  2371ms  2111ms    157ms     0ms      1        2809/54       0% (0)  $0.000378
+  agent.extract "For run id e2rd1-strict: That ticket has a secon…  3019ms  2901ms    116ms     0ms      1        2913/78       0% (0)  $0.000403
+  agent.act "Achieve objective 4 of the goal, for run id {runid}:…   286ms     0ms    283ms     0ms      0            0/0            -          -
+  agent.assert "For run id e2rd1-strict, this now holds in the ap…  2491ms  2253ms    150ms     0ms      1        2795/64       0% (0)  $0.000381
+  agent.extract "For run id e2rd1-strict: Part A's cost is change…  2087ms  1934ms    151ms     0ms      1        2898/71       0% (0)  $0.000398
+  agent.act "Achieve objective 5 of the goal, for run id {runid}:…   341ms     0ms    337ms     0ms      0            0/0            -          -
+  agent.assert "For run id e2rd1-strict, this now holds in the ap…  1741ms  1521ms    139ms     0ms      1        2790/54       0% (0)  $0.000376
+  agent.extract "For run id e2rd1-strict: The ticket ends in stat…  3142ms  3032ms    108ms     0ms      1        2913/92       0% (0)   $0.00041
+  agent.act "Achieve objective 6 of the goal, for run id {runid}:…  7510ms  7198ms    505ms    85ms      3      23035/229  79% (18204)  $0.000891
+  agent.assert "For run id e2rd1-strict, this now holds in the ap…  4226ms  4055ms    101ms     0ms      1       1371/113       0% (0)  $0.000228
+
+=== e2rd1-strict === (run self-reported: no result file)
+  obj 1  PASS  seq 1: ticket t15 (RD-1018) "e2rd1-strict RD Bench Ticket"
+  obj 2  FAIL  no create entry for "e2rd1-strict RD Part A"
+  obj 3  FAIL  no create entry for "e2rd1-strict RD Part B"
+  obj 4  FAIL  part A was never created, so nothing could be updated
+  obj 5  FAIL  no update entry ever set ticket t15 to Ready
+  obj 6  FAIL  part A NOT deleted, part B NOT deleted, archive entry at seq 2; state: 0 part(s) surviving, ticket t15 archived=true
+  claim 2  run reported 2.00, app recorded nothing to compare
+  claim 3  run reported 3.00, app recorded nothing to compare
+  claim 4  run reported 4.00, app recorded nothing to compare
+  summary: 1/6 objectives PASS, 0 price claim mismatch(es), 0 duplicate ticket(s) — RUN NOT CLEAN
+
+App state: 15 tickets total, 1 left by benchmark runs (0 still active), 17 parts total, 2 mutation log entries.
+
+=== e2e sweep summary ===
+run | objectives | verifier clean | e2e exit | wall s | acts replayed/handed-off/missed/failed | act model calls | usd
+e2rd1-n1 | 6/6 | true | 0 | 147 | 0/0/7/0 of 7 | 42 | 0.0118
+    signin:missed:no-entry  obj1:missed:no-entry  obj2:missed:no-entry  obj3:missed:no-entry  obj4:missed:no-entry  obj5:missed:no-entry  obj6:missed:no-entry
+e2rd1-n2 | 6/6 | true | 0 | 97 | 4/2/1/0 of 7 | 16 | 0.0064
+    obj1:agent-concluded:end-mismatch  obj2:missed:target-not-found  obj5:agent-concluded:gap(pixels)
+e2rd1-n3 | 6/6 | true | 0 | 115 | 4/2/1/0 of 7 | 12 | 0.0057
+    obj1:agent-concluded:end-mismatch  obj2:missed:target-not-found  obj5:agent-concluded:gap(whole-node)
+e2rd1-strict | 1/6 | false | 0 | 98 | 1/0/1/5 of 7 | 3 | 0.0047
+    obj6:missed:no-entry

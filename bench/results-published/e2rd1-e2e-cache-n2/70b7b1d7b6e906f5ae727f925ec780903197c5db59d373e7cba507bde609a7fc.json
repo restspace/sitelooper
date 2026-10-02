@@ -1,0 +1,77 @@
+{
+  "schemaVersion": "trace-1",
+  "createdAt": "2026-10-02T22:20:11.100Z",
+  "payload": {
+    "actions": [
+      {
+        "name": "tap",
+        "summary": "tap button \"Edit\" in \"{{param:/runid}} RD Part A\"",
+        "target": {
+          "role": "button",
+          "name": "Edit",
+          "testId": "part-edit-p18",
+          "within": "{{param:/runid}} RD Part A"
+        }
+      },
+      {
+        "name": "type",
+        "summary": "type \"150\" into spinbutton \"Cost\" in \"Edit part\"",
+        "target": {
+          "role": "spinbutton",
+          "name": "Cost",
+          "testId": "field-cost",
+          "within": "Edit part"
+        },
+        "value": "150"
+      },
+      {
+        "name": "tap",
+        "summary": "tap button \"Save part\" in \"Edit part\"",
+        "target": {
+          "role": "button",
+          "name": "Save part",
+          "testId": "modal-save",
+          "within": "Edit part"
+        }
+      }
+    ],
+    "executor": {
+      "name": "e2e-default-agent",
+      "version": "2"
+    },
+    "recordedFor": {
+      "testId": "tests/flow.e2e.ts::repairdesk%20flow",
+      "targetId": "web",
+      "instructionDigest": "f5f0ef5af46734f5eb5c2be54453cf3152adf5b40f4bfcded830313bd6181240"
+    },
+    "summary": "Changed e2rd1-n1 RD Part A cost to $150.00. The ticket screen now shows its computed price as $187.50 (and Parts total $437.50).",
+    "startPath": "/#/tickets/t15",
+    "endPath": "/#/tickets/t15",
+    "endAnchors": [
+      {
+        "role": "cell",
+        "name": "$150.00"
+      },
+      {
+        "role": "cell",
+        "name": "$187.50",
+        "testId": "part-price-p18"
+      },
+      {
+        "role": "cell",
+        "name": "$437.50",
+        "testId": "parts-total"
+      },
+      {
+        "role": "row",
+        "name": "{{param:/runid}} RD Part A $150.00 25% 1 No supplier $187.50 Edit Delete",
+        "testId": "part-row-p18"
+      },
+      {
+        "role": "row",
+        "name": "Total (price × quantity) $437.50"
+      }
+    ],
+    "endWaitMs": 12095
+  }
+}

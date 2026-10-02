@@ -1,0 +1,228 @@
+{
+  "arm": "e2e",
+  "e2eVersion": "0.16.0",
+  "target": "repairdesk",
+  "runid": "e2rd1-n1",
+  "model": "openai/gpt-6-luna",
+  "strict": false,
+  "reset": true,
+  "exitCode": 0,
+  "wallMs": 146710,
+  "cache": {
+    "acts": 7,
+    "replayed": 0,
+    "handedOff": 0,
+    "missed": 7,
+    "failed": 0,
+    "stale": 0,
+    "actModelCalls": 42,
+    "reasons": [
+      "signin:missed:no-entry",
+      "obj1:missed:no-entry",
+      "obj2:missed:no-entry",
+      "obj3:missed:no-entry",
+      "obj4:missed:no-entry",
+      "obj5:missed:no-entry",
+      "obj6:missed:no-entry"
+    ]
+  },
+  "usage": {
+    "modelTokens": 327423,
+    "modelCachedTokens": 261676,
+    "usd": 0.011793635,
+    "usdAtRatesFloor": null
+  },
+  "steps": [
+    {
+      "kind": "act",
+      "id": "signin",
+      "ok": true,
+      "ms": 10123,
+      "summary": "Signed in successfully as bench@example.com. The Repair Desk tickets page is open and shows Bench User as the current user.",
+      "cache": {
+        "mode": "missed",
+        "reason": "no-entry",
+        "replayedActions": 0,
+        "totalActions": 0
+      },
+      "modelCalls": 3,
+      "actions": 3
+    },
+    {
+      "kind": "assert",
+      "id": "signin",
+      "ok": true,
+      "ms": 1585
+    },
+    {
+      "kind": "act",
+      "id": "obj1",
+      "ok": true,
+      "ms": 10218,
+      "summary": "Created and verified ticket titled “e2rd1-n1 RD Bench Ticket” in the ticket list (reference RD-1015).",
+      "cache": {
+        "mode": "missed",
+        "reason": "no-entry",
+        "replayedActions": 0,
+        "totalActions": 0
+      },
+      "modelCalls": 5,
+      "actions": 3
+    },
+    {
+      "kind": "assert",
+      "id": "obj1",
+      "ok": true,
+      "ms": 2312
+    },
+    {
+      "kind": "act",
+      "id": "obj2",
+      "ok": true,
+      "ms": 10059,
+      "summary": "Added e2rd1-n1 RD Part A to ticket RD-1015 with cost $100.00 and 25% markup. The saved part row shows the computed price as $125.00, and the Parts total is $125.00.",
+      "cache": {
+        "mode": "missed",
+        "reason": "no-entry",
+        "replayedActions": 0,
+        "totalActions": 0
+      },
+      "modelCalls": 6,
+      "actions": 6
+    },
+    {
+      "kind": "assert",
+      "id": "obj2",
+      "ok": true,
+      "ms": 1533
+    },
+    {
+      "kind": "extract",
+      "id": "obj2",
+      "ok": true,
+      "ms": 1620,
+      "values": [
+        "$125.00"
+      ]
+    },
+    {
+      "kind": "act",
+      "id": "obj3",
+      "ok": true,
+      "ms": 9632,
+      "summary": "Added e2rd1-n1 RD Part B to ticket RD-1015 with cost $200.00 and markup 25%. The saved part row shows the computed price as $250.00 (Parts total: $375.00).",
+      "cache": {
+        "mode": "missed",
+        "reason": "no-entry",
+        "replayedActions": 0,
+        "totalActions": 0
+      },
+      "modelCalls": 5,
+      "actions": 5
+    },
+    {
+      "kind": "assert",
+      "id": "obj3",
+      "ok": true,
+      "ms": 2623
+    },
+    {
+      "kind": "extract",
+      "id": "obj3",
+      "ok": true,
+      "ms": 1953,
+      "values": [
+        "$250.00"
+      ]
+    },
+    {
+      "kind": "act",
+      "id": "obj4",
+      "ok": true,
+      "ms": 6646,
+      "summary": "Changed e2rd1-n1 RD Part A cost to $150.00. The ticket screen now shows its computed price as $187.50 (and Parts total $437.50).",
+      "cache": {
+        "mode": "missed",
+        "reason": "no-entry",
+        "replayedActions": 0,
+        "totalActions": 0
+      },
+      "modelCalls": 4,
+      "actions": 3
+    },
+    {
+      "kind": "assert",
+      "id": "obj4",
+      "ok": true,
+      "ms": 2040
+    },
+    {
+      "kind": "extract",
+      "id": "obj4",
+      "ok": true,
+      "ms": 3070,
+      "values": [
+        "$187.50"
+      ]
+    },
+    {
+      "kind": "act",
+      "id": "obj5",
+      "ok": true,
+      "ms": 37872,
+      "summary": "Ticket RD-1015 is now Ready. Mark Ready initially failed because both “e2rd1-n1 RD Part A” and “e2rd1-n1 RD Part B” had no supplier; I set each supplier to “Local Supplier” and retried successfully. The screen shows Ready and both supplier values.",
+      "cache": {
+        "mode": "missed",
+        "reason": "no-entry",
+        "replayedActions": 0,
+        "totalActions": 0
+      },
+      "modelCalls": 11,
+      "actions": 9
+    },
+    {
+      "kind": "assert",
+      "id": "obj5",
+      "ok": true,
+      "ms": 2064
+    },
+    {
+      "kind": "extract",
+      "id": "obj5",
+      "ok": false,
+      "code": "ASSERTION_INCONCLUSIVE",
+      "blocked": false,
+      "error": "nothing to extract: The ticket's Ready status is shown, but the observation does not show which preconditions were required.; the judge saw the semantic tree only; pass vision: true when the answer is in pixels",
+      "ms": 3030
+    },
+    {
+      "kind": "act",
+      "id": "obj6",
+      "ok": true,
+      "ms": 13463,
+      "summary": "Deleted both parts from ticket RD-1015 and verified the Parts table says “No parts on this ticket yet.” Archived the ticket; the detail now shows “Archived” and an “Unarchive ticket” control.",
+      "cache": {
+        "mode": "missed",
+        "reason": "no-entry",
+        "replayedActions": 0,
+        "totalActions": 0
+      },
+      "modelCalls": 8,
+      "actions": 5
+    },
+    {
+      "kind": "assert",
+      "id": "obj6",
+      "ok": true,
+      "ms": 2845
+    }
+  ],
+  "finalText": "1. DONE\n2. DONE $125.00\n3. DONE $250.00\n4. DONE $187.50\n5. FAILED \n6. DONE",
+  "machine": {
+    "platform": "linux",
+    "arch": "x64",
+    "node": "v22.22.0",
+    "cpus": 4,
+    "memGb": 16
+  }
+}

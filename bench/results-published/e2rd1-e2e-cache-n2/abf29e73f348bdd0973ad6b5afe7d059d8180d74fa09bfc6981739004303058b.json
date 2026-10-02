@@ -1,0 +1,118 @@
+{
+  "schemaVersion": "trace-1",
+  "createdAt": "2026-10-02T22:21:48.116Z",
+  "payload": {
+    "actions": [
+      {
+        "name": "tap",
+        "summary": "tap link \"RD-1016\"",
+        "target": {
+          "role": "link",
+          "name": "RD-1016",
+          "testId": "ticket-link-t15"
+        }
+      },
+      {
+        "name": "tap",
+        "summary": "tap button \"Add part\" in \"Parts\"",
+        "target": {
+          "role": "button",
+          "name": "Add part",
+          "testId": "add-part",
+          "within": "Parts"
+        }
+      },
+      {
+        "name": "type",
+        "summary": "type \"{{param:/runid}} RD Part A\" into textbox \"Part name\" in \"Add part\"",
+        "target": {
+          "role": "textbox",
+          "name": "Part name",
+          "testId": "field-name",
+          "within": "Add part"
+        },
+        "value": "{{param:/runid}} RD Part A"
+      },
+      {
+        "name": "type",
+        "summary": "type \"100\" into spinbutton \"Cost\" in \"Add part\"",
+        "target": {
+          "role": "spinbutton",
+          "name": "Cost",
+          "testId": "field-cost",
+          "within": "Add part"
+        },
+        "value": "100"
+      },
+      {
+        "name": "type",
+        "summary": "type \"25\" into spinbutton \"Markup %\" in \"Add part\"",
+        "target": {
+          "role": "spinbutton",
+          "name": "Markup %",
+          "testId": "field-markup",
+          "within": "Add part"
+        },
+        "value": "25"
+      },
+      {
+        "name": "tap",
+        "summary": "tap button \"Add part\"",
+        "target": {
+          "role": "button",
+          "name": "Add part",
+          "testId": "modal-save"
+        }
+      }
+    ],
+    "executor": {
+      "name": "e2e-default-agent",
+      "version": "2"
+    },
+    "recordedFor": {
+      "testId": "tests/flow.e2e.ts::repairdesk%20flow",
+      "targetId": "web",
+      "instructionDigest": "c29c808ce9a67a03006164635ce8715c23bd4b70d218d66f631d71f28b653ed7"
+    },
+    "summary": "Added e2rd1-n2 RD Part A to ticket RD-1016 with cost $100.00 and markup 25%. The current ticket screen shows the computed price as $125.00 (total $125.00).",
+    "startPath": "/#/tickets",
+    "endPath": "/#/tickets/t15",
+    "endAnchors": [
+      {
+        "text": "RD-1016"
+      },
+      {
+        "role": "heading",
+        "name": "{{param:/runid}} RD Bench Ticket",
+        "testId": "ticket-title"
+      },
+      {
+        "role": "button",
+        "name": "Mark Ready",
+        "testId": "status-to-Ready"
+      },
+      {
+        "role": "button",
+        "name": "Archive ticket",
+        "testId": "archive"
+      },
+      {
+        "role": "heading",
+        "name": "Parts"
+      },
+      {
+        "text": "Price is calculated from cost and markup when the part is saved."
+      },
+      {
+        "role": "button",
+        "name": "Add part",
+        "testId": "add-part"
+      },
+      {
+        "role": "columnheader",
+        "name": "Name"
+      }
+    ],
+    "endWaitMs": 13794
+  }
+}
