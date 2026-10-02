@@ -91,6 +91,12 @@ export interface FlowStep {
    */
   adopted?: boolean;
   /**
+   * An assertion step (`sitelooper assert`): replays its pinned skill with no
+   * model on any path. A miss stops the flow with status 'assert-failed'; it
+   * is never recovered, adopted, re-pinned or satisfied.
+   */
+  kind?: 'assert';
+  /**
    * Cross-run evidence about this step's outputs: for each output name, how
    * often a later run produced the SAME value here and how often it differed.
    *

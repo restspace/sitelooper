@@ -161,6 +161,13 @@ export interface LoopOptions {
    * as they always did.
    */
   locateReadBack?: ReadBackDecider;
+  /**
+   * Assert mode (`sitelooper assert`): the instruction is a condition to
+   * check, not work to do. Only observing tools are offered, wait_for gains
+   * the assert-only states, and a text expectation must be stated in the
+   * instruction (execution/assert.ts statedIn).
+   */
+  assert?: true;
 }
 
 /** One tool call the instruction made, for the resume-safety actions log. */

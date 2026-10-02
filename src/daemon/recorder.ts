@@ -389,6 +389,8 @@ export interface RecordedInstruction {
    * usable precondition). Flow building merges it into its predecessor.
    */
   resume?: true;
+  /** The instruction was issued with `sitelooper assert`: its waits are assertions (execution/assert.ts). */
+  assert?: true;
   /** Running entry number and write time (stage 0 evidence). Absent on older stores. */
   seq?: number;
   t?: number;

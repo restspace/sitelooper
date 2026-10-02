@@ -9,6 +9,8 @@ import type { DriftTicket } from '../skills/repair.js';
 export type CommandName =
   | 'ping'
   | 'do'
+  /** A condition to check, recorded as assertion steps — see server.ts's case and execution/assert.ts. */
+  | 'assert'
   | 'open'
   | 'brief'
   | 'note'
@@ -149,6 +151,8 @@ export interface FlowStepResult {
   /** Declared outputs a successful step did not report (a zero-model replay drops what it could not re-read). */
   unreported?: string[];
   reason?: string;
+  /** An assertion step that missed (status 'assert-failed'): which way, and the message raised (execution/assert.ts). */
+  assert?: { kind: 'failed' | 'unlocatable'; message: string };
 }
 
 /** The `run` command's result payload. */
