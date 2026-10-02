@@ -908,6 +908,9 @@ export function compileSkills(input: CompileInput): Skill[] {
   // Page changes the app took back before the next gesture are not a step's
   // lasting effect (erpnext fwen4-luna 02-find): see takenBackLines.
   const takenBack = takenBackLines(steps);
+  // ...and a gesture the page was still moving after is replayed with that long
+  // to finish (erpnext fwen6-luna 02-find): see movedAfterCapture.
+  const movedAfter = movedAfterCapture(steps);
   const sameTemplate = (a: string, b: string) => generaliseAppMinted(urlPattern(a, slots, { query: false }), appMinted) === generaliseAppMinted(urlPattern(b, slots, { query: false }), appMinted);
   // A url id this span minted is its OUTPUT: derived ({{dN}}, discoverMinted),
   // never a param — even when the ledger, which banked it before this compile,
@@ -1166,6 +1169,10 @@ export function compileSkills(input: CompileInput): Skill[] {
         if (typeof typed === 'string' && recordedDoubled(step.diff?.added ?? [], step.locators.target?.chain ?? [], typed)) out.doubledAsRecorded = true;
       }
       if (pressedAgain.has(step)) out.repeatIfNoEffect = true;
+      // The page moved by itself this long after the recorded capture, before
+      // the next step went out (movedAfterCapture, erpnext fwen6-luna #22).
+      const moved = step.obs ? movedAfter.get(step.obs) : undefined;
+      if (moved !== undefined) out.movedAfterMs = moved;
       // The landing the app gave this goto where it rewrote a key the goto
       // asked for (SkillStep.landedAs): the recording's own evidence of what
       // "the page it asked for" looks like on this app.
@@ -4354,6 +4361,60 @@ export function takenBackLines(steps: readonly RecordedStep[]): Map<StepDiff, Se
       if (lines.size) out.set(step.diff!, lines);
       return;
     }
+  });
+  return out;
+}
+
+/**
+ * THE PAGE WAS STILL MOVING (round 87, erpnext fwen6-luna 02-find).
+ *
+ * n1 #22 filled the list's Customer Name filter with "Seed" and #23 clicked
+ * the Filter button 1850 ms later, the model's own turn. In that gap the
+ * journal dates, with no gesture: the fill's refresh (a request 26 ms after
+ * #22's capture, the url written `?customer_name=["like","%Seed%"]` at 67 ms)
+ * and the url written ONCE MORE at 1025 ms — Frappe runs a filter's list
+ * refresh again a second after the first. #23 opened the filter popover after
+ * both, nothing refreshed again, and the three "Seed: ..." rows stood for the
+ * reads eleven seconds later. A replay has no turn to wait through: n2 clicked
+ * 410 ms after the fill's capture and n3 260 ms after it, the second refresh
+ * ran with the popover's blank `ID =` row in it, the url became
+ * `?name=undefined&customer_name=...` and the list was EMPTY ("0 of 0"; six
+ * reads skipped on n2, "what the step set did not land" on n3 and the negative
+ * run). The recording's own first take, #14 and #15 536 ms apart, emptied the
+ * list the same way, which is why the model cleared the filters and typed again.
+ *
+ * So a gesture the recording watched the page move after, by itself, before
+ * its next step went out, is replayed with that long to finish (SkillStep.
+ * movedAfterMs; both runners hold the next step for it, execution/lifecycle.ts
+ * recordedMoveHold). Recorded facts only:
+ *  - the step is a gesture (isMutatingAction): a navigation's own landing is
+ *    waited on where it lands, and an observation moves nothing;
+ *  - the NEXT recorded step's journal gap (what happened between this step's
+ *    capture and that step's dispatch) dates a navigation after the capture,
+ *    within DEBOUNCE_MS of it and before that dispatch. Only the next step:
+ *    the recording itself stayed off the page at least that long, so the
+ *    held step meets the page the recording's own next step met, and an
+ *    observation is never moved past a change the recording read it before.
+ * The value is the last such navigation, in ms after the capture. Over the 24
+ * journalled recordings at hand it names 28 of 635 gestures, every one on
+ * ERPNext but one (snipeit fwsi14's search box, 327 ms). A recording
+ * without a journal gives nothing, and replays as before. Keyed by the step's
+ * evidence (`obs`), which a kept copy of the step still carries.
+ */
+export function movedAfterCapture(steps: readonly RecordedStep[]): Map<NonNullable<RecordedStep['obs']>, number> {
+  const out = new Map<NonNullable<RecordedStep['obs']>, number>();
+  steps.forEach((step, i) => {
+    const next = steps[i + 1];
+    const captured = step.obs?.at?.c ?? step.obs?.at?.s;
+    if (!next || !step.obs || captured === undefined || !isMutatingAction(step.tool)) return;
+    const dispatched = next.obs?.at?.d;
+    let last = 0;
+    for (const e of next.journal?.gap?.ev ?? []) {
+      if (e.k !== 'nav' || e.t < captured || e.t - captured > DEBOUNCE_MS) continue;
+      if (dispatched !== undefined && e.t > dispatched) continue;
+      last = Math.max(last, e.t - captured);
+    }
+    if (last > 0) out.set(step.obs, last);
   });
   return out;
 }

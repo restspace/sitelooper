@@ -39,6 +39,43 @@ export async function runStepLifecycle<T, V>(phases: StepLifecycle<T, V>): Promi
   return { action, verification };
 }
 
+/**
+ * What follows a recorded late move by a moment is still its consequence: the
+ * journal's own lineage window (daemon/journal-attribute.ts LINEAGE_MS), kept
+ * here because this module is embedded in the artifact and may not import it.
+ */
+export const RECORDED_MOVE_SLACK_MS = 300;
+/** The longest a recorded move is waited out: the journal's debounce window (DEBOUNCE_MS) and the slack. */
+export const RECORDED_MOVE_MAX_MS = 1_800;
+
+/**
+ * How long the NEXT step is held after a step the recording watched the page
+ * move after (SkillStep.movedAfterMs, compile.ts movedAfterCapture): that
+ * long from the moment the step's action settled, plus the slack, less what
+ * has passed since (`settledAt`, epoch ms; the step's own checks ran in
+ * between). Zero for a step that recorded no such move, or a value that is
+ * not a time.
+ *
+ * erpnext fwen6-luna 02-find: the recording's fill of a list filter was
+ * followed by the app's second list refresh 1025 ms after its capture, and the
+ * next click, which opens a popover whose blank row that refresh would have
+ * applied, came after it. n2's click came 410 ms after the fill and n3's
+ * 260 ms: both lists were emptied, "0 of 0". Both runners sleep this long
+ * after the step's verification, before anything of the next step.
+ */
+export function recordedMoveHold(movedAfterMs: unknown, settledAt: number, now: number = Date.now()): number {
+  if (typeof movedAfterMs !== 'number' || !Number.isFinite(movedAfterMs) || movedAfterMs <= 0) return 0;
+  const wait = Math.min(movedAfterMs + RECORDED_MOVE_SLACK_MS, RECORDED_MOVE_MAX_MS) - Math.max(0, now - settledAt);
+  return wait > 0 ? Math.ceil(wait) : 0;
+}
+
+/** recordedMoveHold, waited: resolves with the ms it slept. */
+export async function holdForRecordedMove(movedAfterMs: unknown, settledAt: number): Promise<number> {
+  const wait = recordedMoveHold(movedAfterMs, settledAt);
+  if (wait > 0) await new Promise((resolve) => setTimeout(resolve, wait));
+  return wait;
+}
+
 /** Reads are optional observations in both execution targets. */
 export function isReadAction(tool: string): boolean {
   return tool === 'read' || tool === 'read_all';

@@ -433,6 +433,19 @@ export interface SkillStep {
    * other value as before. Optional: a build that ignores it stops there.
    */
   landedAs?: Record<string, string>;
+  /**
+   * How long after this step's recorded capture the page was still MOVING by
+   * itself, before the recording's next step went out: the last navigation the
+   * journal dates in that gap, in ms (compile.ts movedAfterCapture). ERPNext
+   * fwen6-luna 02-find: the list's filter fill was followed by a second list
+   * refresh a second later; the recording's next click came after it, both
+   * replays' clicks came before it, and the list they then read was empty.
+   * Both runners hold the next step until that long has passed since this
+   * step's action settled, and a short slack (execution/lifecycle.ts
+   * recordedMoveHold) — the recording's own next step came later still.
+   * Optional: a build that ignores it goes on at once, as before.
+   */
+  movedAfterMs?: number;
   expect?: StepExpectation;
   /** For read/read_all steps: which report value this read supplied, if any. */
   label?: string;

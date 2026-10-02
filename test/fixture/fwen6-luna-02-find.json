@@ -1,0 +1,74 @@
+{
+  "about": "fwen6-luna 02-find: the exported flow step (bench/results-published/fwen6-luna.json, outputEvidence dropped) and what replay n2 returned for it (fwen6-luna-n2-flowrun.json)",
+  "step": {
+    "id": "02-find",
+    "instruction": "Find existing ERPNext Sales Orders whose customer name starts with 'Seed:' and report the customer names exactly as shown. Do not modify any orders.",
+    "skill": "s_304a08",
+    "params": {
+      "v1": "Seed:"
+    },
+    "outputs": [
+      "matching_sales_order_count",
+      "seed_customer_1",
+      "sales_order_id_1",
+      "seed_customer_2",
+      "sales_order_id_2",
+      "seed_customer_3",
+      "sales_order_id_3",
+      "filter_used",
+      "url_with_seed_filter",
+      "sales_order_seed_like_filter_url"
+    ],
+    "recorded": {
+      "matching_sales_order_count": "3 of 3",
+      "seed_customer_1": "Seed: Cobalt Retail",
+      "sales_order_id_1": "SAL-ORD-2026-00003",
+      "seed_customer_2": "Seed: Beacon Supplies",
+      "sales_order_id_2": "SAL-ORD-2026-00002",
+      "seed_customer_3": "Seed: Alpha Traders",
+      "sales_order_id_3": "SAL-ORD-2026-00001",
+      "filter_used": "customer_name like %Seed% (Sales Order list view)",
+      "list_url_unfiltered": "http://127.0.0.1:8100/app/sales-order",
+      "list_page_size_options": "20, 100, 500, 2500",
+      "url_with_seed_filter": "http://127.0.0.1:8100/app/sales-order?name=undefined&customer_name=%5B%22like%22%2C%22%25Seed%3A%25%22%5D",
+      "sales_order_seed_like_filter_url": "http://127.0.0.1:8100/app/sales-order?customer_name=%5B%22like%22%2C%22%25Seed%25%22%5D",
+      "url": "http://127.0.0.1:8100/app/sales-order?customer_name=%5B%22like%22%2C%22%25Seed%25%22%5D"
+    },
+    "route": "http://127.0.0.1:8100/app/sales-order"
+  },
+  "pruned": [
+    "list_url_unfiltered",
+    "list_page_size_options"
+  ],
+  "n2": {
+    "id": "02-find",
+    "status": "success",
+    "summary": "Replayed stored procedure s_19d614; observed url_with_seed_filter=http://127.0.0.1:8100/app/sales-order?customer_name=%5B%22like%22%2C%22%25Seed%3A%25%22%5D, sales_order_seed_like_filter_url=http://127.0.0.1:8100/app/sales-order?customer_name=%5B%22like%22%2C%22%25Seed%25%22%5D, matching_sales_order_count=0 of 0.",
+    "values": {
+      "url_with_seed_filter": "http://127.0.0.1:8100/app/sales-order?customer_name=%5B%22like%22%2C%22%25Seed%3A%25%22%5D",
+      "sales_order_seed_like_filter_url": "http://127.0.0.1:8100/app/sales-order?customer_name=%5B%22like%22%2C%22%25Seed%25%22%5D",
+      "matching_sales_order_count": "0 of 0"
+    },
+    "tier": "A",
+    "recovered": false,
+    "replayed": "16/16",
+    "repaired": false,
+    "turns": 0,
+    "warnings": [
+      "s_19d614: step 8: skipped read — no element matched any known locator for target (tried 3: page.getByRole('link', { name: 'Seed: Cobalt Retail', exact: true }), page.locator('div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > span:nth-of-type(2) > a'), elementAt(341, 267) /* link */)",
+      "s_19d614: step 9: skipped read — no element matched any known locator for target (tried 3: page.getByRole('link', { name: 'Seed: Beacon Supplies', exact: true }), page.locator('div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > span:nth-of-type(2) > a'), elementAt(355, 308) /* link */)",
+      "s_19d614: step 10: skipped read — no element matched any known locator for target (tried 3: page.getByRole('link', { name: 'Seed: Alpha Traders', exact: true }), page.locator('div:nth-of-type(4) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > span:nth-of-type(2) > a'), elementAt(345, 349) /* link */)",
+      "s_19d614: step 11: skipped read — no element matched any known locator for target (tried 2: page.locator('div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(5) > span > a'), elementAt(943, 267) /* a */)",
+      "s_19d614: step 12: skipped read — no element matched any known locator for target (tried 2: page.locator('div:nth-of-type(3) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(5) > span > a'), elementAt(943, 308) /* a */)",
+      "s_19d614: step 13: skipped read — no element matched any known locator for target (tried 2: page.locator('div:nth-of-type(4) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(5) > span > a'), elementAt(941, 349) /* a */)"
+    ],
+    "unreported": [
+      "seed_customer_1",
+      "sales_order_id_1",
+      "seed_customer_2",
+      "sales_order_id_2",
+      "seed_customer_3",
+      "sales_order_id_3"
+    ]
+  }
+}

@@ -4452,6 +4452,56 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
   });
 
   /**
+   * Round 87, ERPNext fwen6-luna 02-find (s_19d614 steps 5–10): the recording
+   * filled the list's Customer Name filter and clicked Filter 1850 ms later,
+   * after the app's second list refresh (the url written again 1025 ms after
+   * the fill's capture); n2 clicked 410 ms after it and n3 260 ms, the second
+   * refresh applied the popover's blank row, and the list both then read was
+   * empty ("0 of 0", the "Seed: …" reads skipped). The fixture's list
+   * refreshes the same way (/filter-list). A step that carries the recorded
+   * move (SkillStep.movedAfterMs) holds the next one for it in both runners
+   * (the shared holdForRecordedMove); one that does not goes on at once, into
+   * the same empty list.
+   */
+  describe('a gesture the recording saw the page move after holds the next step (fwen6-luna)', () => {
+    const steps = (movedAfterMs?: number): SkillStep[] => [
+      { tool: 'goto', args: { url: `${origin}/filter-list` }, locators: {} },
+      {
+        tool: 'fill',
+        args: { target: '@e1', value: 'Seed' },
+        locators: { target: [{ kind: 'role', role: 'textbox', name: 'Customer Name' }] },
+        ...(movedAfterMs !== undefined ? { movedAfterMs } : {}),
+      },
+      { tool: 'click', args: { target: '@e2' }, locators: { target: [{ kind: 'role', role: 'button', name: 'Filter' }] } },
+      // The page's own first refresh, and the two the fill asked for.
+      { tool: 'wait_for', args: { target: '@e3', state: 'text_contains', text: '3 refreshes', timeout_ms: 5_000 }, locators: { target: [{ kind: 'css', selector: '#refreshes' }] } },
+      { tool: 'read', args: { target: '(read-back)', what: 'text' }, label: 'matching_count', locators: { target: [{ kind: 'css', selector: '#count' }] } },
+      { tool: 'read', args: { target: '(read-back)', what: 'text' }, label: 'seed_customer_1', locators: { target: [{ kind: 'role', role: 'link', name: 'Seed: Cobalt Retail' }] } },
+    ];
+
+    it('held as recorded, both runners open the popover after the second refresh and read the rows', async () => {
+      const { replay, emitted } = await both(steps(1025), 0);
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      expect(replay.outputs.matching_count).toBe('3 of 3');
+      expect(emitted.outputs['01-clear.matching_count']).toBe('3 of 3');
+      expect(replay.outputs.seed_customer_1).toBe('Seed: Cobalt Retail');
+      expect(emitted.outputs['01-clear.seed_customer_1']).toBe('Seed: Cobalt Retail');
+    }, 120_000);
+
+    it('with no recorded move, both go on at once and meet the list the app emptied, as n2 did', async () => {
+      const { replay, emitted } = await both(steps(), 0);
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      expect(replay.outputs.matching_count).toBe('0 of 0');
+      expect(emitted.outputs['01-clear.matching_count']).toBe('0 of 0');
+      expect(replay.outputs.seed_customer_1).toBeUndefined();
+      // The artifact leaves a skipped read empty ("read target not found — value left empty").
+      expect(emitted.outputs['01-clear.seed_customer_1'] ?? '').toBe('');
+    }, 120_000);
+  });
+
+  /**
    * Round 59, EspoCRM fwec11 01-signin (s_6e8936): the procedure typed
    * "admin" into Username, logged in, opened the user menu and read the
    * signed-in user's DISPLAY name, "Admin". The echo ledger compared text only

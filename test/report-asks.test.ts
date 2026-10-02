@@ -147,6 +147,10 @@ describe('the whole of rounds 54, 56 and 57', () => {
       'fwsi7 n3 05-open: checked_out_to_user, model, status',
       'fwsi8 n2 01-signin: asset_1, asset_2, asset_3',
       'fwsi8 n3 01-signin: asset_1, asset_2, asset_3',
+      // Round 87 (askedAsRecorded): asked by what the recording read into them —
+      // seed_asset_name_1 = "Seed: Reception Laptop", seed_asset_tag_1 = "SEED-0001" for
+      // "report its name and asset tag" — and n3 published them only as asset_1_1 … asset_3_2.
+      'fwsi9 n3 02-find: seed_asset_name_1, seed_asset_name_2, seed_asset_name_3, seed_asset_tag_1, seed_asset_tag_2, seed_asset_tag_3',
       'fwsi9 n3 04-report: confirmation_message, note_text_shown, status_label_displayed',
       'fwsi9 n3 05-open: purchase_date, status_label',
     ]);

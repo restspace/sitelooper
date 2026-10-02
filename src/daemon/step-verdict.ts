@@ -38,6 +38,16 @@
  * asked for stays what it is — a warning on the step and a drift ticket —
  * while fwsi7 05-open's `checked_out_to_user`, which "the user it is checked
  * out to" asks for, is still partial.
+ *
+ * And asked BY WHAT THE RECORDING READ (round 87, askedAsRecorded). ERPNext
+ * fwen6-luna-n2 02-find, "Find … Sales Orders whose customer name starts with
+ * 'Seed:' and report the customer names exactly as shown", replayed 16/16 at
+ * tier A on a list the app had emptied ("0 of 0"): the reads of
+ * seed_customer_1 … 3 were skipped, the step reported success with no name in
+ * it, and the verifier's objective 1 failed behind a step that passed. The
+ * outputs are named after the VALUES they held ("Seed: Cobalt Retail"), so
+ * "seed" is no word of "report the customer names" and round 56's rule called
+ * none of them asked. Partial now, as fwsi7's is.
  */
 
 import { givenPartialReason } from '../execution/report.js';
@@ -69,6 +79,12 @@ export interface StepVerdictInput {
    * instruction asked for.
    */
   given?: readonly string[];
+  /**
+   * FlowStep.recorded: what the recording reported for each output. With it, a
+   * skipped read also counts for an output named after the value it held
+   * (askedAsRecorded, fwen6-luna-n2 02-find's seed_customer_1).
+   */
+  recorded?: Readonly<Record<string, unknown>>;
 }
 
 /**
@@ -85,7 +101,7 @@ export function partialReasons(input: StepVerdictInput): string[] {
     );
   }
   if (!input.recovered && input.skippedReads?.length) {
-    const declared = new Set(input.instruction === undefined ? input.declaredOutputs : askedOutputs(input.instruction, input.declaredOutputs));
+    const declared = new Set(input.instruction === undefined ? input.declaredOutputs : askedAsRecorded(input.instruction, input.declaredOutputs, input.recorded ?? {}));
     const missed = [...new Set(input.skippedReads)].filter((label) => declared.has(label) && !(label in input.values));
     for (const label of missed) {
       reasons.push(`the procedure's read of ${label}, an output this step reports, was skipped (nothing matched on the page), so ${label} went unreported`);
@@ -164,6 +180,40 @@ export function askedOutputs(instruction: string, outputs: readonly string[]): s
 }
 
 /**
+ * askedOutputs, and the outputs the recording NAMED AFTER WHAT THEY HELD
+ * (round 87, erpnext fwen6-luna 02-find). The recording model answered "report
+ * the customer names exactly as shown" with seed_customer_1 = "Seed: Cobalt
+ * Retail", … _2 = "Seed: Beacon Supplies", … _3 = "Seed: Alpha Traders": "seed"
+ * is the value's word, not the ask's, so askedOutputs called none of them
+ * asked, n2's skipped reads of all three cost the step nothing and its
+ * `unanswered` was empty. Such an output is judged on its name's words OTHER
+ * than its recorded value's own — the rule flow.ts askedFor already applies
+ * when it threads a value (kanboard fwkb34's board_column_work_in_progress =
+ * "Work in progress") — so seed_customer_1 is asked as `customer`.
+ *
+ * By the RECORDING's value (FlowStep.recorded), never this run's: the name
+ * was given to that value. A name made of nothing but its value's words says
+ * nothing about the ask and is not asked here (askedFor threads it; a verdict
+ * needs the ask), and a name none of whose words the value holds is judged as
+ * before: sales_order_id_1 = "SAL-ORD-2026-00003" and page_title = "EspoCRM,
+ * Inc." (fwec11) stay unasked.
+ */
+export function askedAsRecorded(instruction: string, outputs: readonly string[], recorded: Readonly<Record<string, unknown>>): string[] {
+  const plain = new Set(askedOutputs(instruction, outputs));
+  const asked = new Set([...reportWords(instruction)].map(singular));
+  return outputs.filter((o) => {
+    if (plain.has(o)) return true;
+    if (o === 'url' || o.startsWith('url.') || o.includes('#')) return false;
+    const value = recorded[o];
+    if (typeof value !== 'string') return false;
+    const own = new Set(nameWords(value));
+    const words = nameWords(o);
+    const rest = words.filter((w) => !own.has(w));
+    return rest.length > 0 && rest.length < words.length && rest.every((w) => asked.has(w));
+  });
+}
+
+/**
  * The asked outputs this replay published no value for: of `candidates` (the
  * step's declared outputs and those export pruned), the ones
  * askedOutputs names that `published` (reported values and echo-reads) does
@@ -177,7 +227,8 @@ export function unansweredAsks(
   recorded: Readonly<Record<string, unknown>> = {},
 ): string[] {
   const answers = published.map((p) => new Set(nameWords(p)));
-  return askedOutputs(instruction, [...new Set(candidates)]).filter((o) => {
+  // …asked by name, or named after the value the recording read (askedAsRecorded, fwen6-luna-n2 02-find).
+  return askedAsRecorded(instruction, [...new Set(candidates)], recorded).filter((o) => {
     if (published.includes(o)) return false;
     const words = nameWords(o);
     if (answers.some((a) => words.every((w) => a.has(w)))) return false;
