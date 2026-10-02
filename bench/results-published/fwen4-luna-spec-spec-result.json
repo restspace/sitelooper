@@ -1,0 +1,38 @@
+{
+  "arm": "spec",
+  "runid": "fwen4-luna-spec",
+  "target": "erpnext",
+  "flow": "fwen4-luna.json",
+  "flowName": "fwen4-luna",
+  "skillsDir": "/home/user/sitelooper/bench/results/fwen4-luna-skills",
+  "compiled": true,
+  "flowFile": "bench/results/fwen4-luna-spec-spec-tmp/fwen4-luna.flow.ts",
+  "specFile": "bench/results/fwen4-luna-spec-spec-tmp/fwen4-luna.spec.ts",
+  "wallMs": 35490,
+  "exitCode": 1,
+  "timedOut": false,
+  "costUsd": 0,
+  "stats": {
+    "total": 1,
+    "passed": 0,
+    "failed": 1,
+    "skipped": 0
+  },
+  "tests": [
+    {
+      "title": "fwen4-luna",
+      "status": "unexpected",
+      "ok": false,
+      "durationMs": 24771,
+      "error": "Error: 02-find s_1e98e5/4: the recorded page change did not appear\n\n02-find s_1e98e5/4: the recorded page change did not appear\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeNull\u001b[2m()\u001b[22m\n\nReceived: \u001b[31m\"after step 02-find s_1e98e5/4 the page did not show \\\"- link \\\\\\\"Seed: Cobalt Retail\\\\\\\"\\\" / \\\"- link \\\\\\\"Seed: Beacon Supplies\\\\\\\"\\\" / \\\"- link \\\\\\\"Seed: Alpha Traders\\\\\\\"\\\" as it did when recorded — the step ran but probably acted on the wrong element\"\u001b[39m\n\nCall Log:\n- Timeout 5000ms exceeded while waiting on the predicate",
+      "drift": []
+    }
+  ],
+  "drift": [],
+  "driftCount": 0,
+  "evidence": [
+    "fwen4-luna-spec-spec-failure.png",
+    "fwen4-luna-spec-spec-error-context.md"
+  ],
+  "logTail": "\nRunning 1 test using 1 worker\n\n[sitelooper warn] 01-signin: report value logged_in_user is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)\n[sitelooper step] 01-signin\n[sitelooper recipe] filled via recipe aria-combobox/set-value (r_f83afb); value verified on the component\n  ✘  1 fwen4-luna.spec.ts:9:1 › fwen4-luna (24.8s)\n\n\n  1) fwen4-luna.spec.ts:9:1 › fwen4-luna › 02-find: Find the existing Sales Orders whose customer name starts with 'Seed:' without changing any records. Report each matching customer name exactly as shown on the page; verify the full set. \n\n    Error: 02-find s_1e98e5/4: the recorded page change did not appear\n\n    02-find s_1e98e5/4: the recorded page change did not appear\n\n    expect(received).toBeNull()\n\n    Received: \"after step 02-find s_1e98e5/4 the page did not show \\\"- link \\\\\\\"Seed: Cobalt Retail\\\\\\\"\\\" / \\\"- link \\\\\\\"Seed: Beacon Supplies\\\\\\\"\\\" / \\\"- link \\\\\\\"Seed: Alpha Traders\\\\\\\"\\\" as it did when recorded — the step ran but probably acted on the wrong element\"\n\n    Call Log:\n    - Timeout 5000ms exceeded while waiting on the predicate\n\n       at fwen4-luna.flow.ts:16840\n\n      16838 |       { timeout: EXPECT_WAIT_MS, message: `${ctx.tag}: the recorded page change did not appear` },\n      16839 |     )\n    > 16840 |     .toBeNull();\n            |      ^\n      16841 |   for (const warning of last.warnings) console.log(`[sitelooper warn] ${warning}`);\n      16842 |   if (last.unobserved) console.log(`[sitelooper unobserved] ${ctx.tag}: the page could not be captured, or observed in full, after the action`);\n      16843 |   return last;\n        at expectChanges (/home/user/sitelooper/bench/results/fwen4-luna-spec-spec-tmp/fwen4-luna.flow.ts:16840:6)\n        at Object.verify (/home/user/sitelooper/bench/results/fwen4-luna-spec-spec-tmp/fwen4-luna.flow.ts:17628:36)\n        at runStepLifecycle (/home/user/sitelooper/bench/results/fwen4-luna-spec-spec-tmp/fwen4-luna.flow.ts:12772:24)\n        at Object.02-find (/home/user/sitelooper/bench/results/fwen4-luna-spec-spec-tmp/fwen4-luna.flow.ts:17591:9)\n        at /home/user/sitelooper/bench/results/fwen4-luna-spec-spec-tmp/fwen4-luna.flow.ts:22452:7\n        at runFlow (/home/user/sitelooper/bench/results/fwen4-luna-spec-spec-tmp/fwen4-luna.flow.ts:22451:5)\n        at /home/user/sitelooper/bench/results/fwen4-luna-spec-spec-tmp/fwen4-luna.spec.ts:14:21\n\n    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────\n    \n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────\n    test-results/fwen4-luna-fwen4-luna/test-failed-1.png\n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    Error Context: test-results/fwen4-luna-fwen4-luna/error-context.md\n\n  1 failed\n    fwen4-luna.spec.ts:9:1 › fwen4-luna ────────────────────────────────────────────────────────────\n"
+}

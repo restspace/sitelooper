@@ -1,0 +1,51 @@
+
+Running 1 test using 1 worker
+
+[sitelooper warn] 01-signin: report value logged_in_user is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)
+[sitelooper step] 01-signin
+[sitelooper recipe] filled via recipe aria-combobox/set-value (r_f83afb); value verified on the component
+  ✘  1 fwen4-luna.spec.ts:9:1 › fwen4-luna (24.8s)
+
+
+  1) fwen4-luna.spec.ts:9:1 › fwen4-luna › 02-find: Find the existing Sales Orders whose customer name starts with 'Seed:' without changing any records. Report each matching customer name exactly as shown on the page; verify the full set. 
+
+    Error: 02-find s_1e98e5/4: the recorded page change did not appear
+
+    02-find s_1e98e5/4: the recorded page change did not appear
+
+    expect(received).toBeNull()
+
+    Received: "after step 02-find s_1e98e5/4 the page did not show \"- link \\\"Seed: Cobalt Retail\\\"\" / \"- link \\\"Seed: Beacon Supplies\\\"\" / \"- link \\\"Seed: Alpha Traders\\\"\" as it did when recorded — the step ran but probably acted on the wrong element"
+
+    Call Log:
+    - Timeout 5000ms exceeded while waiting on the predicate
+
+       at fwen4-luna.flow.ts:16840
+
+      16838 |       { timeout: EXPECT_WAIT_MS, message: `${ctx.tag}: the recorded page change did not appear` },
+      16839 |     )
+    > 16840 |     .toBeNull();
+            |      ^
+      16841 |   for (const warning of last.warnings) console.log(`[sitelooper warn] ${warning}`);
+      16842 |   if (last.unobserved) console.log(`[sitelooper unobserved] ${ctx.tag}: the page could not be captured, or observed in full, after the action`);
+      16843 |   return last;
+        at expectChanges (/home/user/sitelooper/bench/results/fwen4-luna-spec-spec-tmp/fwen4-luna.flow.ts:16840:6)
+        at Object.verify (/home/user/sitelooper/bench/results/fwen4-luna-spec-spec-tmp/fwen4-luna.flow.ts:17628:36)
+        at runStepLifecycle (/home/user/sitelooper/bench/results/fwen4-luna-spec-spec-tmp/fwen4-luna.flow.ts:12772:24)
+        at Object.02-find (/home/user/sitelooper/bench/results/fwen4-luna-spec-spec-tmp/fwen4-luna.flow.ts:17591:9)
+        at /home/user/sitelooper/bench/results/fwen4-luna-spec-spec-tmp/fwen4-luna.flow.ts:22452:7
+        at runFlow (/home/user/sitelooper/bench/results/fwen4-luna-spec-spec-tmp/fwen4-luna.flow.ts:22451:5)
+        at /home/user/sitelooper/bench/results/fwen4-luna-spec-spec-tmp/fwen4-luna.spec.ts:14:21
+
+    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/fwen4-luna-fwen4-luna/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/fwen4-luna-fwen4-luna/error-context.md
+
+  1 failed
+    fwen4-luna.spec.ts:9:1 › fwen4-luna ────────────────────────────────────────────────────────────

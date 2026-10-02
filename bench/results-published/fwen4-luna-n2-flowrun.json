@@ -1,0 +1,383 @@
+{
+  "flow": "fwen4-luna",
+  "status": "partial",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_f2f2d4; observed page_heading=Home.",
+      "values": {
+        "page_heading": "Home"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "5/5",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_f2f2d4: report value logged_in_user is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)"
+      ],
+      "unreported": [
+        "logged_in_user"
+      ]
+    },
+    {
+      "id": "02-find",
+      "status": "partial",
+      "summary": "Replayed stored procedure s_1e98e5; observed matching_customer_names_1=Seed: Alpha Traders, list_subject_a_ellipsis=Seed: Cobalt Retail, list_subject_a_ellipsis_2=Seed: Beacon Supplies, list_subject_a_ellipsis_3=Seed: Alpha Traders, match_count=3, sales_order_list_url=http://127.0.0.1:8100/app/sales-order, list_row_a_data_filter_n=SAL-ORD-2026-00003, list_row_a_data_filter_n_2=SAL-ORD-2026-00002, list_row_a_data_filter_n_3=SAL-ORD-2026-00001, current_page_size=20.",
+      "partial": [
+        "the procedure's read of matching_customer_names_2, an output this step reports, was skipped (nothing matched on the page), so matching_customer_names_2 went unreported",
+        "the procedure's read of matching_customer_names_3, an output this step reports, was skipped (nothing matched on the page), so matching_customer_names_3 went unreported"
+      ],
+      "values": {
+        "matching_customer_names_1": "Seed: Alpha Traders",
+        "list_subject_a_ellipsis": "Seed: Cobalt Retail",
+        "list_subject_a_ellipsis_2": "Seed: Beacon Supplies",
+        "list_subject_a_ellipsis_3": "Seed: Alpha Traders",
+        "match_count": "3",
+        "sales_order_list_url": "http://127.0.0.1:8100/app/sales-order",
+        "list_row_a_data_filter_n": "SAL-ORD-2026-00003",
+        "list_row_a_data_filter_n_2": "SAL-ORD-2026-00002",
+        "list_row_a_data_filter_n_3": "SAL-ORD-2026-00001",
+        "current_page_size": "20"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "49/49",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_1e98e5: step 6: skipped read — no element matched any known locator for target (tried 1: page.getByRole('link', { name: 'Seed: Beacon Supplies', exact: true }))",
+        "s_1e98e5: step 7: skipped read — no element matched any known locator for target (tried 1: page.getByRole('link', { name: 'Seed: Cobalt Retail', exact: true }))",
+        "s_1e98e5: step 42: skipped read — no element matched any known locator for target (tried 1: page.locator('.list-subject a.ellipsis').nth(0))",
+        "s_1e98e5: step 43: skipped read — no element matched any known locator for target (tried 1: page.locator('.list-subject a.ellipsis').nth(1))",
+        "s_1e98e5: step 44: skipped read — no element matched any known locator for target (tried 1: page.locator('.list-subject a.ellipsis').nth(2))"
+      ],
+      "unreported": [
+        "row_details",
+        "matching_customer_names_2",
+        "matching_customer_names_3"
+      ]
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_a4fb75; observed ref=fwen4-luna-n2, customer_group_default=Commercial, territory_default=United States, created_customer_name=fwen4-luna-n2 Bench Customer, customer_list_total=7 of 7, customer_name_list_row=Bench Customer.",
+      "values": {
+        "ref": "fwen4-luna-n2",
+        "customer_group_default": "Commercial",
+        "territory_default": "United States",
+        "created_customer_name": "fwen4-luna-n2 Bench Customer",
+        "customer_list_total": "7 of 7",
+        "customer_name_list_row": "Bench Customer"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "12/12",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_75bd2b: step 4: resolved positionally and its only recorded effect is the fill's own echo — the effect gate cannot tell right element from wrong here"
+      ],
+      "unreported": [
+        "customer_record_url"
+      ]
+    },
+    {
+      "id": "04-create",
+      "status": "success",
+      "summary": "Saved the Sales Order as a draft. The saved order page shows the customer and draft status; the delivery date field includes the requested 2026-12-31 value. Sales Order ID is SAL-ORD-2026-00004.",
+      "values": {
+        "status": "Draft",
+        "sales_order_id": "SAL-ORD-2026-00004",
+        "customer_name": "fwen4-luna-n2 Bench Customer",
+        "delivery_date": "2026-12-31"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_bdb054 stopped at step 3 — after step 3 expected url http://127.0.0.1:8100/app/sales-order/new-sales-order-uzdrpbgnbt but browser is at http://127.0.0.1:8100/app/sales-order/new-sales-order-hjgezxdvos",
+      "replayed": "2/3",
+      "repaired": false,
+      "turns": 35,
+      "unreported": [
+        "sales_order_customer",
+        "sales_order_url",
+        "saved_confirmation",
+        "so_customer_value",
+        "so_delivery_date_value",
+        "saved_so_customer",
+        "saved_so_delivery_date",
+        "ref"
+      ]
+    },
+    {
+      "id": "05-verify",
+      "status": "success",
+      "summary": "Replayed stored procedure s_e46672; observed total_quantity=5, grand_total=$ 392.20, sales_order_id=SAL-ORD-2026-00004, status=Draft.",
+      "values": {
+        "total_quantity": "5",
+        "grand_total": "$ 392.20",
+        "sales_order_id": "SAL-ORD-2026-00004",
+        "status": "Draft"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "15/15",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_e46672: step 1: primary locator did not resolve; used fallback #2 page.getByText('1', { exact: true }).nth(1)",
+        "s_e46672: step 10: read 'item_line_count' returned a value the skill itself set/selected ('2') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_e46672: step 15: the target chain is dead and was not healed inline — the step is a synthesized read no run has ever resolved, so nothing about it has drifted",
+        "s_e46672: step 15: skipped read — no element matched any known locator for target (tried 1: page.getByRole('alert', { name: 'Saved', exact: true }))"
+      ],
+      "unreported": [
+        "item_line_count",
+        "item_rows",
+        "save_confirmation"
+      ]
+    },
+    {
+      "id": "06-verify",
+      "status": "success",
+      "summary": "Submitted Sales Order SAL-ORD-2026-00004.",
+      "values": {
+        "status_after_submit": "To Deliver and Bill",
+        "sales_order_id": "SAL-ORD-2026-00004"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "4/4",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "07-add",
+      "status": "success",
+      "summary": "Replayed stored procedure s_a5112b; observed comment_author=Administrator, sales_order_id=SAL-ORD-2026-00004, timeline_entry_rendered_1=commented, timeline_entry_rendered_2=Edit.",
+      "values": {
+        "comment_author": "Administrator",
+        "sales_order_id": "SAL-ORD-2026-00004",
+        "timeline_entry_rendered_1": "commented",
+        "timeline_entry_rendered_2": "Edit"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "8/8",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_a5112b: step 5: primary locator did not resolve; used fallback #2 elementAt(383, 1795) /* span */",
+        "s_a5112b: step 6: primary locator did not resolve; used fallback #2 elementAt(897, 1792) /* button */",
+        "s_a5112b: step 7: primary locator did not resolve; used fallback #2 elementAt(637, 1834) /* p */",
+        "s_a5112b: step 7: read 'timeline_entry_rendered_3' returned a value the skill itself set/selected ('Run fwen4-luna-n2: Sales Order SAL-ORD-2026-00004 verified.') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_a5112b: step 8: primary locator did not resolve; used fallback #2 elementAt(637, 1834) /* p */",
+        "s_a5112b: step 8: read 'comment_text' returned a value the skill itself set/selected ('Run fwen4-luna-n2: Sales Order SAL-ORD-2026-00004 verified.') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_a5112b: report value runid_included_exactly is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)"
+      ],
+      "unreported": [
+        "runid_included_exactly"
+      ]
+    }
+  ],
+  "passed": 6,
+  "total": 7,
+  "repinned": 0,
+  "drift": 12,
+  "driftTickets": [
+    {
+      "flow": "fwen4-luna",
+      "step": "02-find",
+      "skill": "s_1e98e5",
+      "atStep": "6",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.getByRole('link', { name: 'Seed: Beacon Supplies', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8100/app/sales-order?customer_name=[\"like\",\"%Seed:%\"]&name=undefined",
+      "pageUrl": "http://127.0.0.1:8100/app/sales-order?name=undefined&customer_name=%5B%22like%22%2C%22%25Seed%3A%25%22%5D"
+    },
+    {
+      "flow": "fwen4-luna",
+      "step": "02-find",
+      "skill": "s_1e98e5",
+      "atStep": "7",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.getByRole('link', { name: 'Seed: Cobalt Retail', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8100/app/sales-order?customer_name=[\"like\",\"%Seed:%\"]&name=undefined",
+      "pageUrl": "http://127.0.0.1:8100/app/sales-order?name=undefined&customer_name=%5B%22like%22%2C%22%25Seed%3A%25%22%5D"
+    },
+    {
+      "flow": "fwen4-luna",
+      "step": "02-find",
+      "skill": "s_1e98e5",
+      "atStep": "42",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.locator('.list-subject a.ellipsis').nth(0)",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8100/app/sales-order?customer_name=[\"like\",\"%Seed:%\"]&name=undefined",
+      "pageUrl": "http://127.0.0.1:8100/app/sales-order?name=undefined&customer_name=%5B%22like%22%2C%22%25Seed%3A%25%22%5D"
+    },
+    {
+      "flow": "fwen4-luna",
+      "step": "02-find",
+      "skill": "s_1e98e5",
+      "atStep": "43",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.locator('.list-subject a.ellipsis').nth(1)",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8100/app/sales-order?customer_name=[\"like\",\"%Seed:%\"]&name=undefined",
+      "pageUrl": "http://127.0.0.1:8100/app/sales-order?name=undefined&customer_name=%5B%22like%22%2C%22%25Seed%3A%25%22%5D"
+    },
+    {
+      "flow": "fwen4-luna",
+      "step": "02-find",
+      "skill": "s_1e98e5",
+      "atStep": "44",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.locator('.list-subject a.ellipsis').nth(2)",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8100/app/sales-order?customer_name=[\"like\",\"%Seed:%\"]&name=undefined",
+      "pageUrl": "http://127.0.0.1:8100/app/sales-order?name=undefined&customer_name=%5B%22like%22%2C%22%25Seed%3A%25%22%5D"
+    },
+    {
+      "flow": "fwen4-luna",
+      "step": "04-create",
+      "skill": "s_bdb054",
+      "similarity": 1.003,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_bdb054 stopped at step 3 — after step 3 expected url http://127.0.0.1:8100/app/sales-order/new-sales-order-uzdrpbgnbt but browser is at http://127.0.0.1:8100/app/sales-order/new-sales-order-hjgezxdvos",
+      "reason": "after step 3 expected url http://127.0.0.1:8100/app/sales-order/new-sales-order-uzdrpbgnbt but browser is at http://127.0.0.1:8100/app/sales-order/new-sales-order-hjgezxdvos",
+      "pageUrlPattern": "http://127.0.0.1:8100/app/sales-order/new-sales-order-hjgezxdvos",
+      "pageUrl": "http://127.0.0.1:8100/app/sales-order/new-sales-order-hjgezxdvos"
+    },
+    {
+      "flow": "fwen4-luna",
+      "step": "05-verify",
+      "skill": "s_e46672",
+      "atStep": "1",
+      "key": "target",
+      "similarity": 1.002,
+      "missedLocator": "page.locator('div:nth-of-type(1) > div > div > div:nth-of-type(5) > div:nth-of-type(2) > div')",
+      "fallbackUsed": "page.getByText('1', { exact: true }).nth(1)",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8100/app/sales-order/:id",
+      "pageUrl": "http://127.0.0.1:8100/app/sales-order/SAL-ORD-2026-00004"
+    },
+    {
+      "flow": "fwen4-luna",
+      "step": "05-verify",
+      "skill": "s_e46672",
+      "atStep": "15",
+      "key": "target",
+      "similarity": 1.002,
+      "missedLocator": "page.getByRole('alert', { name: 'Saved', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8100/app/sales-order/:id",
+      "pageUrl": "http://127.0.0.1:8100/app/sales-order/SAL-ORD-2026-00004"
+    },
+    {
+      "flow": "fwen4-luna",
+      "step": "07-add",
+      "skill": "s_a5112b",
+      "atStep": "5",
+      "key": "target",
+      "similarity": 1.002,
+      "missedLocator": "page.locator('#comment-1id6r5ufi4 > div > span > span:nth-of-type(1) > span')",
+      "fallbackUsed": "elementAt(383, 1795) /* span */",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8100/app/sales-order/:id",
+      "pageUrl": "http://127.0.0.1:8100/app/sales-order/SAL-ORD-2026-00004"
+    },
+    {
+      "flow": "fwen4-luna",
+      "step": "07-add",
+      "skill": "s_a5112b",
+      "atStep": "6",
+      "key": "target",
+      "similarity": 1.002,
+      "missedLocator": "page.locator('#comment-1id6r5ufi4 > div > span > span:nth-of-type(2) > div:nth-of-type(1) > button:nth-of-type(1)')",
+      "fallbackUsed": "elementAt(897, 1792) /* button */",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8100/app/sales-order/:id",
+      "pageUrl": "http://127.0.0.1:8100/app/sales-order/SAL-ORD-2026-00004"
+    },
+    {
+      "flow": "fwen4-luna",
+      "step": "07-add",
+      "skill": "s_a5112b",
+      "atStep": "7",
+      "key": "target",
+      "similarity": 1.002,
+      "missedLocator": "page.locator('#comment-1id6r5ufi4 > div > div:nth-of-type(1) > div > p')",
+      "fallbackUsed": "elementAt(637, 1834) /* p */",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8100/app/sales-order/:id",
+      "pageUrl": "http://127.0.0.1:8100/app/sales-order/SAL-ORD-2026-00004"
+    },
+    {
+      "flow": "fwen4-luna",
+      "step": "07-add",
+      "skill": "s_a5112b",
+      "atStep": "8",
+      "key": "target",
+      "similarity": 1.002,
+      "missedLocator": "page.locator('#comment-1id6r5ufi4 > div > div:nth-of-type(1) > div > p')",
+      "fallbackUsed": "elementAt(637, 1834) /* p */",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8100/app/sales-order/:id",
+      "pageUrl": "http://127.0.0.1:8100/app/sales-order/SAL-ORD-2026-00004"
+    }
+  ],
+  "wallMs": 226846,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 494843,
+    "completionTokens": 7854,
+    "cachedTokens": 432332
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 414130,
+      "completionTokens": 7351,
+      "cachedTokens": 388096
+    },
+    "openai/gpt-6-luna": {
+      "promptTokens": 80713,
+      "completionTokens": 503,
+      "cachedTokens": 44236
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ],
+    "openai/gpt-6-luna": [
+      "OpenAI"
+    ]
+  },
+  "recoveryModel": "openai/gpt-6-luna",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "partial",
+  "nextActions": []
+}
