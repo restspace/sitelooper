@@ -112,7 +112,7 @@ async function getJson(pathname) {
  * verify.
  */
 function resultFile(runid) {
-  for (const arm of ['sitelooper', 'sleep-walker', 'agent-browser', 'playwright-mcp', 'browser-use', 'authored']) {
+  for (const arm of ['sitelooper', 'sleep-walker', 'agent-browser', 'playwright-mcp', 'browser-use', 'authored', 'e2e']) {
     const p = path.join(OUT, `${runid}-${arm}-result.json`)
     if (fs.existsSync(p)) return p
   }
