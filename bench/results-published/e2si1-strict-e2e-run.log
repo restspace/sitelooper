@@ -1,0 +1,65 @@
+
+ RUN  e2e v0.16.0 /home/user/sitelooper/bench/e2e-arm
+      run 01a100a6-f922-787b-8634-79c6c6d261b1 · targets: web
+      model openrouter/openai/gpt-6-luna
+
+   ✓ snipeit flow > agent.act "Sign in with username {username} and password {password}" 3.47s
+   ✓ snipeit flow > agent.assert "The app shows a signed-in page, not a sign-in form" 2.08s · 1 model call
+   ✓ snipeit flow > agent.act "Objective 1 of the goal, for run id {runid}, asks only for a report: Re…" 5.39s · 1 model call
+   ✓ snipeit flow > agent.extract "For run id e2si1-strict: Report the asset tags of the assets whose name…" 2.78s · 1 model call
+   ✓ snipeit flow > agent.act "Achieve objective 2 of the goal, for run id {runid}: An asset named `{r…" 11.49s
+   ✓ snipeit flow > agent.assert "For run id e2si1-strict, this now holds in the app: An asset named `e2s…" 2.44s · 1 model call
+   × snipeit flow > agent.act "Achieve objective 3 of the goal, for run id {runid}: Its default locati…" 15.24s failed
+   × snipeit flow > agent.assert "For run id e2si1-strict, this now holds in the app: Its default locatio…" 2.23s · 1 model call failed
+   × snipeit flow > agent.act "Achieve objective 4 of the goal, for run id {runid}: Its purchase date …" 15.21s failed
+   × snipeit flow > agent.assert "For run id e2si1-strict, this now holds in the app: Its purchase date i…" 2.77s · 1 model call failed
+   × snipeit flow > agent.act "Achieve objective 5 of the goal, for run id {runid}: It is checked out …" 312ms failed
+   × snipeit flow > agent.assert "For run id e2si1-strict, this now holds in the app: It is checked out t…" 2.79s · 1 model call failed
+   × snipeit flow > agent.act "Achieve objective 6 of the goal, for run id {runid}: That checkout carr…" 15.22s failed
+   × snipeit flow > agent.assert "For run id e2si1-strict, this now holds in the app: That checkout carri…" 4.23s · 1 model call failed
+   ✓ snipeit flow > agent.act "Objective 7 of the goal, for run id {runid}, asks only for a report: Re…" 15.53s · 1 model call
+   ✓ snipeit flow > agent.extract "For run id e2si1-strict: Report the asset's asset tag exactly as the ap…" 2.50s · 1 model call
+ ✓ |web| tests/flow.e2e.ts (1 test) 105.09s ai 59.2k tokens · 13% cached · $0.0069
+   ✓ snipeit flow 105.09s ai 59.2k tokens · 13% cached · $0.0069
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+         AI  59.2k tokens · 13% cached · $0.0069 · 10 model calls · openrouter/openai/gpt-6-luna
+      Cache  2 replayed · 6 missed
+   Start at  07:25:05
+   Duration  106.07s (1m 46s)
+     Report  .e2e/report.json
+
+
+--- stderr ---
+[e2e debug] phase timings (wall 106.8s)
+  phase           count   total     avg     max
+  scheduler           1  106.0s  106.0s  106.0s
+  test.body           1  104.1s  104.1s  104.1s
+  agent.model        10   40.1s  4014ms   15.4s
+  agent.observe      55   19.0s   345ms  2329ms
+  agent.action       15  1825ms   122ms   480ms
+  config.load         1   673ms   673ms   673ms
+  session.close       1    87ms    87ms    87ms
+  engine.init         1    81ms    81ms    81ms
+  collect             1    27ms    27ms    27ms
+  session.launch      1    15ms    15ms    15ms
+  engine.prepare      1     1ms     1ms     1ms
+[e2e debug] agent steps (execution order, model openrouter/openai/gpt-6-luna, total $0.006946+)
+  step                                                               total   model  observe  action  calls  tokens in/out      cached       cost
+  agent.act "Sign in with username {username} and password {passw…  3471ms     0ms   3165ms   294ms      0            0/0           -          -
+  agent.assert "The app shows a signed-in page, not a sign-in for…  2075ms  1674ms    280ms     0ms      1        7600/57      0% (0)  $0.000978
+  agent.act "Objective 1 of the goal, for run id {runid}, asks on…  5395ms  5026ms    223ms     0ms      1      10891/136  35% (3758)  $0.000994
+  agent.extract "For run id e2si1-strict: Report the asset tags o…  2783ms  2580ms    201ms     0ms      1       7722/187      0% (0)  $0.001059
+  agent.act "Achieve objective 2 of the goal, for run id {runid}:…   11.5s     0ms   9946ms  1531ms      0            0/0           -          -
+  agent.assert "For run id e2si1-strict, this now holds in the ap…  2441ms  2157ms    186ms     0ms      1        3987/60      0% (0)  $0.000528
+  agent.act "Achieve objective 3 of the goal, for run id {runid}:…   15.2s     0ms   1227ms     0ms      0            0/0           -          -
+  agent.assert "For run id e2si1-strict, this now holds in the ap…  2229ms  1987ms    178ms     0ms      1        3964/89      0% (0)   $0.00054
+  agent.act "Achieve objective 4 of the goal, for run id {runid}:…   15.2s     0ms   1191ms     0ms      0            0/0           -          -
+  agent.assert "For run id e2si1-strict, this now holds in the ap…  2774ms  2537ms    162ms     0ms      1        3968/90      0% (0)  $0.000541
+  agent.act "Achieve objective 5 of the goal, for run id {runid}:…   312ms     0ms    310ms     0ms      0            0/0           -          -
+  agent.assert "For run id e2si1-strict, this now holds in the ap…  2795ms  2525ms    204ms     0ms      1       3968/112      0% (0)  $0.000552
+  agent.act "Achieve objective 6 of the goal, for run id {runid}:…   15.2s     0ms   1206ms     0ms      0            0/0           -          -
+  agent.assert "For run id e2si1-strict, this now holds in the ap…  4232ms  3956ms    201ms     0ms      1       3968/150      0% (0)  $0.000571
+  agent.act "Objective 7 of the goal, for run id {runid}, asks on…   15.5s   15.4s    111ms     0ms      1       7990/161  47% (3758)  $0.000644
+  agent.extract "For run id e2si1-strict: Report the asset's asse…  2502ms  2297ms    200ms     0ms      1        4078/58      0% (0)  $0.000539

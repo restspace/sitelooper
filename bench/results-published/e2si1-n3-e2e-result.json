@@ -1,0 +1,218 @@
+{
+  "arm": "e2e",
+  "e2eVersion": "0.16.0",
+  "target": "snipeit",
+  "runid": "e2si1-n3",
+  "model": "openai/gpt-6-luna",
+  "strict": false,
+  "reset": true,
+  "exitCode": 0,
+  "wallMs": 176572,
+  "cache": {
+    "acts": 8,
+    "replayed": 2,
+    "handedOff": 0,
+    "missed": 6,
+    "failed": 0,
+    "stale": 0,
+    "actModelCalls": 34,
+    "reasons": [
+      "obj1:missed:no-entry",
+      "obj3:missed:target-not-found",
+      "obj4:missed:no-entry",
+      "obj5:missed:wrong-context",
+      "obj6:missed:no-entry",
+      "obj7:missed:no-entry"
+    ]
+  },
+  "usage": {
+    "modelTokens": 419984,
+    "modelCachedTokens": 286359,
+    "usd": 0.02100064,
+    "usdAtRatesFloor": null
+  },
+  "steps": [
+    {
+      "kind": "act",
+      "id": "signin",
+      "ok": true,
+      "ms": 3325,
+      "summary": "replayed 3 recorded action(s) zero-turn from the trace cache; recorded verdict: Signed in as admin. The dashboard is open and shows the confirmation “You have successfully logged in.”.",
+      "cache": {
+        "mode": "self-finalized",
+        "replayedActions": 3,
+        "totalActions": 3
+      },
+      "modelCalls": 0,
+      "actions": 3
+    },
+    {
+      "kind": "assert",
+      "id": "signin",
+      "ok": true,
+      "ms": 1826
+    },
+    {
+      "kind": "act",
+      "id": "obj1",
+      "ok": true,
+      "ms": 5907,
+      "summary": "The dashboard’s Recent Activity shows the requested seed assets and tags: Seed: Spare Laptop — SEED-0003; Seed: Training Laptop — SEED-0002; Seed: Reception Laptop — SEED-0001. No data was changed.",
+      "cache": {
+        "mode": "missed",
+        "reason": "no-entry",
+        "replayedActions": 0,
+        "totalActions": 0
+      },
+      "modelCalls": 1,
+      "actions": 0
+    },
+    {
+      "kind": "extract",
+      "id": "obj1",
+      "ok": true,
+      "ms": 4481,
+      "values": [
+        "Seed: Spare Laptop #SEED-0003 - Bench Laptop Model",
+        "Seed: Training Laptop #SEED-0002 - Bench Laptop Model",
+        "Seed: Reception Laptop #SEED-0001 - Bench Laptop Model"
+      ]
+    },
+    {
+      "kind": "act",
+      "id": "obj2",
+      "ok": true,
+      "ms": 11640,
+      "summary": "replayed 12 recorded action(s) zero-turn from the trace cache; recorded verdict: Created asset `e2si1-n2 Bench Asset`. The asset list confirms it has model `Bench Laptop Model` and status `Ready to Deploy` (asset tag BA-00005).",
+      "cache": {
+        "mode": "self-finalized",
+        "replayedActions": 12,
+        "totalActions": 12
+      },
+      "modelCalls": 0,
+      "actions": 12
+    },
+    {
+      "kind": "assert",
+      "id": "obj2",
+      "ok": true,
+      "ms": 1577
+    },
+    {
+      "kind": "act",
+      "id": "obj3",
+      "ok": true,
+      "ms": 27607,
+      "summary": "Updated `e2si1-n3 Bench Asset` (BA-00006) and verified the asset list now shows its default location as `Bench Office`.",
+      "cache": {
+        "mode": "missed",
+        "reason": "target-not-found",
+        "replayedActions": 0,
+        "totalActions": 4
+      },
+      "modelCalls": 5,
+      "actions": 4
+    },
+    {
+      "kind": "assert",
+      "id": "obj3",
+      "ok": true,
+      "ms": 1515
+    },
+    {
+      "kind": "act",
+      "id": "obj4",
+      "ok": true,
+      "ms": 42900,
+      "summary": "Updated e2si1-n3 Bench Asset (BA-00006) with purchase date 2026-03-15. The asset details screen confirms “Purchased 2026-03-15.”",
+      "cache": {
+        "mode": "missed",
+        "reason": "no-entry",
+        "replayedActions": 0,
+        "totalActions": 0
+      },
+      "modelCalls": 10,
+      "actions": 8
+    },
+    {
+      "kind": "assert",
+      "id": "obj4",
+      "ok": true,
+      "ms": 1495
+    },
+    {
+      "kind": "act",
+      "id": "obj5",
+      "ok": true,
+      "ms": 11736,
+      "summary": "Checked out e2si1-n3 Bench Asset (BA-00006) to Bench Assignee. The assets list confirms Bench Assignee (bench-assignee) in the Checked Out To column and displays “Asset checked out successfully.”",
+      "cache": {
+        "mode": "missed",
+        "reason": "wrong-context",
+        "replayedActions": 0,
+        "totalActions": 5
+      },
+      "modelCalls": 5,
+      "actions": 4
+    },
+    {
+      "kind": "assert",
+      "id": "obj5",
+      "ok": true,
+      "ms": 1452
+    },
+    {
+      "kind": "act",
+      "id": "obj6",
+      "ok": true,
+      "ms": 46918,
+      "summary": "Checked out e2si1-n3 Bench Asset (BA-00006) to Bench Assignee with checkout note “e2si1-n3”. The History tab confirms the latest checkout row carries that note.",
+      "cache": {
+        "mode": "missed",
+        "reason": "no-entry",
+        "replayedActions": 0,
+        "totalActions": 0
+      },
+      "modelCalls": 12,
+      "actions": 12
+    },
+    {
+      "kind": "assert",
+      "id": "obj6",
+      "ok": true,
+      "ms": 1613
+    },
+    {
+      "kind": "act",
+      "id": "obj7",
+      "ok": true,
+      "ms": 4230,
+      "summary": "The asset details heading displays `e2si1-n3 Bench Asset #BA-00006 - Bench Laptop Model`. Its asset tag is BA-00006.",
+      "cache": {
+        "mode": "missed",
+        "reason": "no-entry",
+        "replayedActions": 0,
+        "totalActions": 0
+      },
+      "modelCalls": 1,
+      "actions": 0
+    },
+    {
+      "kind": "extract",
+      "id": "obj7",
+      "ok": true,
+      "ms": 3431,
+      "values": [
+        "BA-00006"
+      ]
+    }
+  ],
+  "finalText": "1. DONE Seed: Spare Laptop #SEED-0003 - Bench Laptop Model | Seed: Training Laptop #SEED-0002 - Bench Laptop Model | Seed: Reception Laptop #SEED-0001 - Bench Laptop Model\n2. DONE\n3. DONE\n4. DONE\n5. DONE\n6. DONE\n7. DONE BA-00006",
+  "machine": {
+    "platform": "linux",
+    "arch": "x64",
+    "node": "v22.22.0",
+    "cpus": 4,
+    "memGb": 16
+  }
+}
