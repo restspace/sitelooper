@@ -1052,6 +1052,554 @@ async function resetErpnext() {
   }
 }
 
+/**
+ * Directus reset doubles as the SEED, and as the DATA MODEL: Directus ships
+ * with no collections, so the first reset builds them through the REST API —
+ * "customers" (name) and "tickets" (uuid id, title, status dropdown, customer
+ * many-to-one with the drawer picker, due date, estimated hours, preset tags,
+ * WYSIWYG description, hidden date_created) — and every later reset finds them
+ * and adds only what is missing. Then: customers "Bench Customer" plus the
+ * look-alikes "Bench Customer Ltd" and "Bench Customers Group"; three "Seed:"
+ * tickets, open, on Bench Customer Ltd, nothing else set, no comments. Every
+ * other ticket (earlier runs' "<runid> Bench Ticket"s, a copy a run made) and
+ * every other customer (the m2o drawer can CREATE one) is DELETED, and so is
+ * every comment on either collection (comments are keyed by collection + item,
+ * so a deleted ticket's comments outlive it). Ticket ids are random uuids, so a
+ * stored id can never pass by coincidence. The admin's remembered list views
+ * (directus_presets: search, filters, sort persist per user) and last visited
+ * page (where the Studio lands after sign-in) are cleared, so every run opens
+ * on the same Studio.
+ *
+ * Auth: the admin's static token (ADMIN_TOKEN in the compose file, set at
+ * bootstrap). If it is refused — a volume bootstrapped without it — sign in
+ * with the password once and put the token back on the admin.
+ */
+async function resetDirectus() {
+  const base = (process.env.APP_URL || 'http://127.0.0.1:8101/').replace(/\/$/, '');
+  const email = process.env.DIRECTUS_EMAIL || 'admin@bench.local';
+  const password = process.env.DIRECTUS_PASSWORD || 'bench-admin-pass';
+  const staticToken = process.env.DIRECTUS_TOKEN || 'bench-admin-token';
+  let bearer = staticToken;
+  const call = async (method, route, body) => {
+    const res = await fetch(`${base}${route}`, {
+      method,
+      headers: {
+        accept: 'application/json', authorization: `Bearer ${bearer}`,
+        ...(body !== undefined ? { 'content-type': 'application/json' } : {}),
+      },
+      ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
+    });
+    const text = await res.text();
+    let json = null;
+    try { json = text ? JSON.parse(text) : null; } catch { /* not JSON */ }
+    return { res, text, json };
+  };
+  const api = async (method, route, body) => {
+    const r = await call(method, route, body);
+    if (!r.res.ok) throw new Error(`directus ${method} ${route}: HTTP ${r.res.status} ${r.text.slice(0, 300)}`);
+    return r.json?.data ?? null;
+  };
+
+  // Sign in: the static token, else the password (and restore the token).
+  let me = await call('GET', '/users/me?fields=id,email,token');
+  if (me.res.status === 401 || me.res.status === 403) {
+    const login = await fetch(`${base}/auth/login`, {
+      method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ email, password }),
+    });
+    const body = await login.json().catch(() => null);
+    if (!login.ok || !body?.data?.access_token) {
+      throw new Error(`directus: neither the static token nor ${email}'s password signs in: HTTP ${login.status} ${JSON.stringify(body).slice(0, 200)}`);
+    }
+    bearer = body.data.access_token;
+    await api('PATCH', '/users/me', { token: staticToken });
+    log('directus: the static token was refused; restored it on the admin');
+    bearer = staticToken;
+    me = await call('GET', '/users/me?fields=id,email,token');
+  }
+  if (!me.res.ok) throw new Error(`directus GET /users/me: HTTP ${me.res.status} ${me.text.slice(0, 300)}`);
+
+  // The licence-owner dialog an admin meets while no project owner is set.
+  const settings = await api('GET', '/settings?fields=project_owner');
+  if (!settings?.project_owner) {
+    await api('POST', '/settings/owner', { project_owner: email, project_usage: 'personal', org_name: null, product_updates: false });
+    log('directus: set the project owner');
+  }
+
+  // ---- data model -------------------------------------------------------
+  const STATUS_CHOICES = [
+    { text: 'Open', value: 'open' },
+    { text: 'In progress', value: 'in_progress' },
+    { text: 'Waiting on customer', value: 'waiting' },
+    { text: 'Resolved', value: 'resolved' },
+  ];
+  const TAG_PRESETS = ['hardware', 'hardware-return', 'software', 'network', 'billing'];
+  const MODEL = {
+    customers: {
+      meta: { icon: 'business', display_template: '{{name}}', sort_field: null, archive_field: null, singleton: false },
+      fields: [
+        { field: 'id', type: 'integer', meta: { hidden: true, interface: 'input', readonly: true }, schema: { is_primary_key: true, has_auto_increment: true } },
+        { field: 'name', type: 'string', meta: { interface: 'input', required: true, width: 'full', sort: 1 }, schema: {} },
+      ],
+    },
+    tickets: {
+      meta: { icon: 'confirmation_number', display_template: '{{title}}', sort_field: null, archive_field: null, singleton: false },
+      fields: [
+        { field: 'id', type: 'uuid', meta: { hidden: true, readonly: true, interface: 'input', special: ['uuid'] }, schema: { is_primary_key: true, length: 36, has_auto_increment: false } },
+        { field: 'title', type: 'string', meta: { interface: 'input', required: true, width: 'full', sort: 1 }, schema: {} },
+        {
+          field: 'status', type: 'string',
+          meta: { interface: 'select-dropdown', options: { choices: STATUS_CHOICES }, display: 'labels', display_options: { choices: STATUS_CHOICES }, width: 'half', sort: 2 },
+          schema: { default_value: 'open', is_nullable: false },
+        },
+        {
+          field: 'customer', type: 'integer',
+          meta: { interface: 'select-dropdown-m2o', special: ['m2o'], options: { template: '{{name}}' }, display: 'related-values', display_options: { template: '{{name}}' }, width: 'half', sort: 3 },
+          schema: {},
+        },
+        { field: 'due_date', type: 'date', meta: { interface: 'datetime', display: 'datetime', width: 'half', sort: 4 }, schema: {} },
+        { field: 'estimated_hours', type: 'integer', meta: { interface: 'input', options: { min: 0 }, width: 'half', sort: 5 }, schema: {} },
+        {
+          field: 'tags', type: 'json',
+          meta: { interface: 'tags', special: ['cast-json'], options: { presets: TAG_PRESETS, allowCustom: true }, display: 'labels', width: 'full', sort: 6 },
+          schema: {},
+        },
+        { field: 'description', type: 'text', meta: { interface: 'input-rich-text-html', display: 'formatted-value', width: 'full', sort: 7 }, schema: {} },
+        {
+          field: 'date_created', type: 'timestamp',
+          meta: { special: ['date-created'], interface: 'datetime', readonly: true, hidden: true, width: 'half', display: 'datetime', display_options: { relative: true } },
+          schema: {},
+        },
+      ],
+    },
+  };
+  const collections = (await api('GET', '/collections')).map((c) => c.collection);
+  for (const [collection, def] of Object.entries(MODEL)) {
+    if (!collections.includes(collection)) {
+      await api('POST', '/collections', { collection, meta: def.meta, schema: {}, fields: def.fields });
+      log(`directus: created collection "${collection}"`);
+      continue;
+    }
+    const have = (await api('GET', `/fields/${collection}`)).map((f) => f.field);
+    for (const f of def.fields) {
+      if (have.includes(f.field)) continue;
+      await api('POST', `/fields/${collection}`, f);
+      log(`directus: created field ${collection}.${f.field}`);
+    }
+  }
+  const relations = await api('GET', '/relations/tickets');
+  if (!relations.some((r) => r.field === 'customer')) {
+    await api('POST', '/relations', {
+      collection: 'tickets', field: 'customer', related_collection: 'customers',
+      meta: { sort_field: null }, schema: { on_delete: 'SET NULL' },
+    });
+    log('directus: created relation tickets.customer -> customers');
+  }
+
+  // ---- records ------------------------------------------------------------
+  const inBoth = `filter=${encodeURIComponent(JSON.stringify({ collection: { _in: ['tickets', 'customers'] } }))}`;
+  const all = (collection, fields = '*') => api('GET', `/items/${collection}?limit=-1&fields=${encodeURIComponent(fields)}`);
+
+  // Comments first: they are keyed by collection + item and outlive the item.
+  const comments = await api('GET', `/comments?limit=-1&fields=id&${inBoth}`);
+  if (comments.length) {
+    await api('DELETE', '/comments', comments.map((c) => c.id));
+    log(`directus: deleted ${comments.length} comment(s)`);
+  }
+
+  // Customers: the first of each kept name stays.
+  const KEEP_CUSTOMERS = ['Bench Customer', 'Bench Customer Ltd', 'Bench Customers Group'];
+  const customers = (await all('customers', 'id,name')).sort((a, b) => a.id - b.id);
+  const customerIds = {};
+  const extraCustomers = [];
+  for (const c of customers) {
+    if (KEEP_CUSTOMERS.includes(c.name) && !customerIds[c.name]) customerIds[c.name] = c.id;
+    else extraCustomers.push(c);
+  }
+  for (const name of KEEP_CUSTOMERS) {
+    if (customerIds[name]) continue;
+    customerIds[name] = (await api('POST', '/items/customers', { name })).id;
+    log(`directus: seeded customer "${name}"`);
+  }
+
+  // Tickets: exactly the seed set, each as seeded.
+  const SEED = [
+    { title: 'Seed: Printer jams on tray 2', body: 'The office printer jams whenever tray 2 is used.' },
+    { title: 'Seed: VPN drops every hour', body: 'Remote staff lose the VPN connection about once an hour.' },
+    { title: 'Seed: Laptop battery swelling', body: 'A laptop battery has started to swell; the laptop is out of use.' },
+  ];
+  const tickets = (await all('tickets')).sort((a, b) => String(a.date_created).localeCompare(String(b.date_created)));
+  const doomed = [];
+  for (const t of tickets) {
+    const s = SEED.find((x) => x.title === t.title);
+    const pristine = s && !s.kept && t.status === 'open' && t.customer === customerIds['Bench Customer Ltd'] &&
+      !t.due_date && t.estimated_hours === null && !(Array.isArray(t.tags) && t.tags.length) &&
+      t.description === `<p>${s.body}</p>`;
+    if (pristine) { s.kept = true; continue; }
+    doomed.push(t.id);
+  }
+  if (doomed.length) {
+    await api('DELETE', '/items/tickets', doomed);
+    log(`directus: deleted ${doomed.length} ticket(s) (earlier runs' and non-seed)`);
+  } else {
+    log('directus: no tickets to delete');
+  }
+  for (const s of SEED) {
+    if (s.kept) continue;
+    await api('POST', '/items/tickets', {
+      title: s.title, status: 'open', customer: customerIds['Bench Customer Ltd'],
+      due_date: null, estimated_hours: null, tags: null, description: `<p>${s.body}</p>`,
+    });
+    log(`directus: seeded ticket "${s.title}"`);
+  }
+  // Customers a run created (after the tickets, which may have pointed at them).
+  if (extraCustomers.length) {
+    await api('DELETE', '/items/customers', extraCustomers.map((c) => c.id));
+    log(`directus: deleted customer(s) ${extraCustomers.map((c) => `"${c.name}"`).join(', ')}`);
+  }
+
+  // The admin's remembered list state and landing page.
+  const presets = await api('GET', `/presets?limit=-1&fields=id&${inBoth}`);
+  if (presets.length) {
+    await api('DELETE', '/presets', presets.map((p) => p.id));
+    log(`directus: deleted ${presets.length} saved list view(s)`);
+  }
+  await api('PATCH', '/users/me/track/page', { last_page: '/content' });
+}
+
+/**
+ * Mealie reset doubles as the SEED, as kanboard's does. On a fresh install the
+ * image has made the default admin changeme@example.com / MyPassword (not
+ * settable through env); the first reset signs in as that, changes the email,
+ * username and name through PUT /api/users/{id} (what the /admin/setup wizard
+ * sends — and a user with the default email is what makes that wizard show),
+ * then the password through PUT /api/users/password, and signs in again as
+ * admin@bench.local / bench-admin-pass. Then, every time:
+ *
+ * - categories "Bench Dinner", look-alike "Bench Dinner Party" and "Bench
+ *   Lunch"; tags "Bench Quick", look-alike "Bench Quickfire" and "Bench
+ *   Classic"; foods "Bench Flour", look-alike "Bench Flour Blend" and "Bench
+ *   Butter"; units "Bench Cup" and "Bench Spoon". Every OTHER category, tag,
+ *   tool, food and unit is DELETED (the autocompletes create one from typed
+ *   text on Enter, so a run can leave "Bench Dinne" behind), as is a second
+ *   entry of a seed name.
+ * - exactly three "Seed: ..." recipes (category Bench Lunch, tag Bench
+ *   Classic, note-only ingredients, two steps, set servings, no comments).
+ *   Every other recipe (earlier runs' "<runid> Bench Recipe"s, a "New Recipe"
+ *   left by an abandoned create) is DELETED with its comments; a seed recipe a
+ *   wayward run touched is deleted and re-created rather than patched.
+ * - household preference "disable comments on new recipes" off.
+ *
+ * Everything goes through /api with a bearer token from POST /api/auth/token.
+ */
+async function resetMealie() {
+  const base = (process.env.APP_URL || 'http://127.0.0.1:8102/').replace(/\/$/, '');
+  const email = process.env.MEALIE_EMAIL || 'admin@bench.local';
+  const password = process.env.MEALIE_PASSWORD || 'bench-admin-pass';
+  let token = '';
+  const call = async (method, route, body) => {
+    const res = await fetch(`${base}/api${route}`, {
+      method,
+      headers: {
+        accept: 'application/json',
+        ...(token ? { authorization: `Bearer ${token}` } : {}),
+        ...(body ? { 'content-type': 'application/json' } : {}),
+      },
+      ...(body ? { body: JSON.stringify(body) } : {}),
+    });
+    const text = await res.text();
+    if (!res.ok) throw new Error(`mealie ${method} ${route}: HTTP ${res.status} ${text.slice(0, 300)}`);
+    return text && /json/.test(res.headers.get('content-type') ?? '') ? JSON.parse(text) : null;
+  };
+  const all = async (route) => {
+    const items = [];
+    for (let page = 1; ; page++) {
+      const r = await call('GET', `${route}${route.includes('?') ? '&' : '?'}page=${page}&perPage=100`);
+      items.push(...(r.items ?? []));
+      if (!r.items?.length || page >= (r.total_pages ?? 1)) return items;
+    }
+  };
+  const signIn = async (username, pass) => {
+    const res = await fetch(`${base}/api/auth/token`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/x-www-form-urlencoded', accept: 'application/json' },
+      body: new URLSearchParams({ username, password: pass }),
+    });
+    if (res.status === 401) return null;
+    if (!res.ok) throw new Error(`mealie: sign-in as ${username} failed: HTTP ${res.status} ${(await res.text()).slice(0, 200)}`);
+    return (await res.json()).access_token;
+  };
+
+  // The admin. Try the bench account first, so a set-up box never sends the
+  // default password (each wrong one counts towards the lockout).
+  token = await signIn(email, password);
+  if (!token) {
+    token = await signIn('changeme@example.com', 'MyPassword');
+    if (!token) throw new Error(`mealie: neither ${email} nor the default admin can sign in — is the stack up, or was the admin changed by hand?`);
+    const self = await call('GET', '/users/self');
+    await call('PUT', `/users/${self.id}`, { ...self, email, username: 'admin', fullName: 'Bench Admin' });
+    await call('PUT', '/users/password', { currentPassword: 'MyPassword', newPassword: password });
+    token = await signIn(email, password);
+    if (!token) throw new Error(`mealie: changed the default admin to ${email} but cannot sign in with the new password`);
+    log(`mealie: set up the admin "${email}" (was changeme@example.com)`);
+  }
+  // A run that mistyped the password must not leave the next one locked out.
+  await call('POST', '/admin/users/unlock?force=true');
+
+  // Comments must be on for new recipes (the household default; a run could change it).
+  try {
+    const prefs = await call('GET', '/households/preferences');
+    if (prefs.recipeDisableComments) {
+      await call('PUT', '/households/preferences', { ...prefs, recipeDisableComments: false });
+      log('mealie: turned comments back on for new recipes');
+    }
+  } catch (e) {
+    log(`mealie: WARNING could not check household preferences: ${e.message}`);
+  }
+
+  // Organizers, foods and units: keep the first entry of each seed name, create
+  // the missing ones now (seed recipes below need their ids), delete the rest
+  // AFTER the recipes that may still use them are gone.
+  const POOLS = [
+    { kind: 'category', route: '/organizers/categories', names: ['Bench Dinner', 'Bench Dinner Party', 'Bench Lunch'] },
+    { kind: 'tag', route: '/organizers/tags', names: ['Bench Quick', 'Bench Quickfire', 'Bench Classic'] },
+    { kind: 'tool', route: '/organizers/tools', names: [] },
+    { kind: 'food', route: '/foods', names: ['Bench Flour', 'Bench Flour Blend', 'Bench Butter'] },
+    { kind: 'unit', route: '/units', names: ['Bench Cup', 'Bench Spoon'] },
+  ];
+  const kept = {};
+  for (const p of POOLS) {
+    p.doomed = [];
+    kept[p.kind] = {};
+    for (const x of await all(p.route)) {
+      if (p.names.includes(x.name) && !kept[p.kind][x.name]) kept[p.kind][x.name] = x;
+      else p.doomed.push(x);
+    }
+    const missing = p.names.filter((name) => !kept[p.kind][name]);
+    for (const name of missing) {
+      await call('POST', p.route, { name });
+      log(`mealie: seeded ${p.kind} "${name}"`);
+    }
+    // Read the created ones back from the list, so each kept entry has the
+    // same shape (id, name, slug, ...) whatever the POST answered.
+    if (missing.length) {
+      const fresh = await all(p.route);
+      for (const name of missing) {
+        kept[p.kind][name] = fresh.find((x) => x.name === name);
+        if (!kept[p.kind][name]) throw new Error(`mealie: seeded ${p.kind} "${name}" is not in ${p.route}`);
+      }
+    }
+  }
+
+  // Recipes: exactly the seed set, each as seeded.
+  const SEED = [
+    { name: 'Seed: Bench Pancakes', description: 'Weekend pancakes for the bench.', ingredients: ['2 eggs', '1 cup milk'], steps: ['Whisk everything together.', 'Fry in a hot pan.'], servings: 2 },
+    { name: 'Seed: Tomato Soup', description: 'A simple soup.', ingredients: ['6 tomatoes', '1 onion'], steps: ['Simmer the tomatoes and onion.', 'Blend until smooth.'], servings: 4 },
+    { name: 'Seed: Garden Salad', description: 'Leaves and dressing.', ingredients: ['1 lettuce', '2 tbsp dressing'], steps: ['Wash the leaves.', 'Toss with the dressing.'], servings: 2 },
+  ];
+  const seedCategory = kept.category['Bench Lunch'];
+  const seedTag = kept.tag['Bench Classic'];
+  const norm = (t) => String(t ?? '').replace(/\s+/g, ' ').trim();
+  const recipes = (await all('/recipes')).sort((a, b) => String(a.createdAt ?? '').localeCompare(String(b.createdAt ?? '')));
+  let removed = 0;
+  for (const summary of recipes) {
+    const s = SEED.find((x) => x.name === summary.name && !x.kept);
+    const comments = await call('GET', `/recipes/${encodeURIComponent(summary.slug)}/comments`);
+    let pristine = false;
+    if (s && !comments.length) {
+      const r = await call('GET', `/recipes/${encodeURIComponent(summary.slug)}`);
+      const ing = r.recipeIngredient ?? [];
+      const steps = r.recipeInstructions ?? [];
+      pristine = norm(r.description) === s.description && Number(r.recipeServings) === s.servings &&
+        (r.recipeCategory ?? []).map((c) => c.id).join() === seedCategory.id &&
+        (r.tags ?? []).map((t) => t.id).join() === seedTag.id && !(r.tools ?? []).length &&
+        ing.length === s.ingredients.length &&
+        ing.every((i, k) => norm(i.note) === s.ingredients[k] && !i.food && !i.unit && !Number(i.quantity || 0)) &&
+        steps.length === s.steps.length && steps.every((st, k) => norm(st.text) === s.steps[k]);
+    }
+    if (pristine) { s.kept = true; continue; }
+    for (const c of comments) await call('DELETE', `/comments/${c.id}`);
+    await call('DELETE', `/recipes/${encodeURIComponent(summary.slug)}`);
+    removed++;
+  }
+  log(removed ? `mealie: deleted ${removed} recipe(s) (earlier runs' and non-seed)` : 'mealie: no recipes to delete');
+
+  for (const p of POOLS) {
+    for (const x of p.doomed) {
+      await call('DELETE', `${p.route}/${x.id}`);
+      log(`mealie: deleted ${p.kind} "${x.name}"`);
+    }
+  }
+
+  for (const s of SEED) {
+    if (s.kept) continue;
+    const slug = await call('POST', '/recipes', { name: s.name });
+    const r = await call('GET', `/recipes/${encodeURIComponent(slug)}`);
+    delete r.comments;
+    await call('PUT', `/recipes/${encodeURIComponent(slug)}`, {
+      ...r,
+      description: s.description,
+      recipeServings: s.servings,
+      recipeCategory: [seedCategory],
+      tags: [seedTag],
+      tools: [],
+      recipeIngredient: s.ingredients.map((note) => ({ quantity: 0, unit: null, food: null, note, display: '', referencedRecipe: null })),
+      recipeInstructions: s.steps.map((text) => ({ title: '', summary: '', text, ingredientReferences: [] })),
+    });
+    log(`mealie: seeded recipe "${s.name}" (${slug})`);
+  }
+}
+
+/**
+ * BookStack reset doubles as the SEED, as kanboard's does. It needs
+ * bench/thirdparty/bookstack/seed.sh first (the bench admin and its FIXED API
+ * token; refuses loudly without them). Then, every time, through /api with
+ * "Authorization: Token <token_id>:<secret>":
+ *
+ * - no shelves.
+ * - books "Bench Handbook" and its look-alike "Bench Handbooks", untagged.
+ * - chapters "Release Notes" and "Release Notes Archive" in Bench Handbook,
+ *   and a look-alike "Release Notes" in Bench Handbooks, untagged.
+ * - three "Seed:" pages directly in Bench Handbook, each saved once with one
+ *   tag (Review Status=Approved, Review Status=Draft, Review State=Approved;
+ *   tags are free text, so these seed the suggestions the task's tag must
+ *   match) and no comments.
+ *
+ * Any other book, chapter or page (earlier runs' "<runid> Bench Page"s, the
+ * unsaved draft pages a page editor leaves when it is opened and abandoned —
+ * the API lists them because the token is the same user who drafted them —
+ * a copy, a renamed seed) is DELETED; a seed record a wayward run touched is
+ * deleted and re-created rather than patched. Remaining comments are deleted,
+ * and the recycle bin is emptied, so nothing deleted lingers in tag
+ * suggestions or slug checks.
+ */
+async function resetBookstack() {
+  const base = (process.env.APP_URL || 'http://127.0.0.1:8103/').replace(/\/$/, '');
+  const token = process.env.BOOKSTACK_API_TOKEN || 'benchbookstacktokenid00000000001:benchbookstacktokensecret0000001';
+  const api = async (method, route, body) => {
+    const res = await fetch(`${base}/api${route}`, {
+      method,
+      headers: {
+        authorization: `Token ${token}`, accept: 'application/json',
+        ...(body ? { 'content-type': 'application/json' } : {}),
+      },
+      ...(body ? { body: JSON.stringify(body) } : {}),
+    });
+    const text = await res.text();
+    if (!res.ok) throw new Error(`bookstack ${method} ${route}: HTTP ${res.status} ${text.slice(0, 300)}`);
+    return text ? JSON.parse(text) : null;
+  };
+  /** Every row of a listing endpoint (count is capped at 500 per request). */
+  const all = async (route) => {
+    const out = [];
+    for (let offset = 0; ; offset += 500) {
+      const page = await api('GET', `${route}?count=500&offset=${offset}&sort=+id`);
+      out.push(...page.data);
+      if (page.data.length < 500 || out.length >= page.total) return out;
+    }
+  };
+  const text = (html) => String(html ?? '')
+    .replace(/<(br|\/p|\/h[1-6]|\/li|\/div)\b[^>]*>/gi, '\n').replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;|&#160;/g, ' ').replace(/&amp;/g, '&')
+    .split(/\n+/).map((s) => s.trim()).filter(Boolean).join('\n');
+
+  try {
+    await api('GET', '/books?count=1');
+  } catch (e) {
+    throw new Error(`bookstack: the API token is refused (${e.message}) — run bash bench/thirdparty/bookstack/seed.sh first`);
+  }
+
+  for (const s of await all('/shelves')) {
+    await api('DELETE', `/shelves/${s.id}`);
+    log(`bookstack: deleted shelf "${s.name}"`);
+  }
+
+  // Books: exactly the seed set, untagged. Deleting a book takes its contents with it.
+  const BOOKS = [
+    { name: 'Bench Handbook', description: 'How the bench team works.' },
+    { name: 'Bench Handbooks', description: 'An older copy of the handbook, kept for reference.' },
+  ];
+  const bookIds = {};
+  for (const b of await all('/books')) {
+    const keep = BOOKS.some((x) => x.name === b.name) && !bookIds[b.name] &&
+      !((await api('GET', `/books/${b.id}`)).tags ?? []).length;
+    if (keep) { bookIds[b.name] = b.id; continue; }
+    await api('DELETE', `/books/${b.id}`);
+    log(`bookstack: deleted book "${b.name}" (and its contents)`);
+  }
+  for (const b of BOOKS) {
+    if (bookIds[b.name]) continue;
+    bookIds[b.name] = (await api('POST', '/books', b)).id;
+    log(`bookstack: seeded book "${b.name}"`);
+  }
+
+  // Chapters: exactly the seed set, untagged. Deleting a chapter takes its pages with it.
+  const CHAPTERS = [
+    ['Bench Handbook', 'Release Notes'],
+    ['Bench Handbook', 'Release Notes Archive'],
+    ['Bench Handbooks', 'Release Notes'],
+  ];
+  const keptChapters = new Set();
+  for (const c of await all('/chapters')) {
+    const key = CHAPTERS.find(([bn, cn]) => bookIds[bn] === c.book_id && cn === c.name);
+    const keep = key && !keptChapters.has(key.join('/')) && !((await api('GET', `/chapters/${c.id}`)).tags ?? []).length;
+    if (keep) { keptChapters.add(key.join('/')); continue; }
+    await api('DELETE', `/chapters/${c.id}`);
+    log(`bookstack: deleted chapter "${c.name}" (and its pages)`);
+  }
+  for (const [bn, cn] of CHAPTERS) {
+    if (keptChapters.has(`${bn}/${cn}`)) continue;
+    await api('POST', '/chapters', { book_id: bookIds[bn], name: cn });
+    log(`bookstack: seeded chapter "${cn}" in "${bn}"`);
+  }
+
+  // Pages (drafts included): exactly the seed set, each as seeded.
+  const SEED = [
+    { name: 'Seed: Getting started', body: 'How a new member finds their way around.', tag: ['Review Status', 'Approved'] },
+    { name: 'Seed: Release checklist', body: 'The steps every release goes through.', tag: ['Review Status', 'Draft'] },
+    { name: 'Seed: House style', body: 'How we write here.', tag: ['Review State', 'Approved'] },
+  ];
+  let removed = 0;
+  for (const row of await all('/pages')) {
+    const s = SEED.find((x) => x.name === row.name && !x.kept);
+    let pristine = false;
+    if (s && !row.draft && row.book_id === bookIds['Bench Handbook'] && !row.chapter_id && !row.template) {
+      const p = await api('GET', `/pages/${row.id}`);
+      const comments = [...(p.comments?.active ?? []), ...(p.comments?.archived ?? [])];
+      pristine = p.revision_count === 1 && text(p.html) === s.body && !comments.length &&
+        (p.tags ?? []).map((t) => `${t.name}=${t.value}`).join(',') === s.tag.join('=');
+    }
+    if (pristine) { s.kept = true; continue; }
+    try {
+      await api('DELETE', `/pages/${row.id}`);
+      removed++;
+    } catch (e) {
+      if (!row.draft) throw e;
+      log(`bookstack: WARNING could not delete draft page ${row.id}: ${e.message}`);
+    }
+  }
+  log(removed ? `bookstack: deleted ${removed} page(s) (earlier runs', drafts and non-seed)` : 'bookstack: no pages to delete');
+  for (const s of SEED) {
+    if (s.kept) continue;
+    await api('POST', '/pages', {
+      book_id: bookIds['Bench Handbook'], name: s.name, html: `<p>${s.body}</p>`,
+      tags: [{ name: s.tag[0], value: s.tag[1] }],
+    });
+    log(`bookstack: seeded page "${s.name}"`);
+  }
+
+  // Comments: none anywhere (pages deleted above took theirs into the recycle bin).
+  for (const c of await all('/comments')) {
+    await api('DELETE', `/comments/${c.id}`);
+    log(`bookstack: deleted comment #${c.id}`);
+  }
+
+  // Recycle bin: emptied, so a deleted page's tags stop being suggested and
+  // nothing deleted can be restored into the next run.
+  const deletions = await all('/recycle-bin');
+  for (const d of deletions) await api('DELETE', `/recycle-bin/${d.id}`);
+  if (deletions.length) log(`bookstack: emptied the recycle bin (${deletions.length} deletion(s))`);
+}
+
 function resetAtelyr() {
   log('atelyr: restoring datastore baseline');
   execFileSync(process.execPath, [path.join(here, 'reset.mjs'), '--restore'], { stdio: 'inherit' });
@@ -1070,6 +1618,9 @@ const RESETS = {
   snipeit: resetSnipeit,
   ghost: resetGhost,
   erpnext: resetErpnext,
+  bookstack: resetBookstack,
+  mealie: resetMealie,
+  directus: resetDirectus,
 };
 
 export const RESET_TARGETS = Object.keys(RESETS);

@@ -9,13 +9,20 @@ LOG=/tmp/setup.log
 [ -f "$LOG" ] || exit 0
 cd "${CLAUDE_PROJECT_DIR:-/home/user/sitelooper}" || exit 0
 # say() wraps headings in bold escapes, so the line never starts with ==>
-target=$(grep -o '==> Starting target: [a-z]*' "$LOG" | tail -1 | awk '{print $4}')
-if [ -n "$target" ]; then
-  docker ps --format '{{.Names}}' 2>/dev/null | grep -q "$target" && exit 0
+# An environment may bring up several targets (the held-out env starts three);
+# restore every one the setup log started, not only the last.
+targets=$(grep -o '==> Starting target: [a-z]*' "$LOG" | awk '{print $4}' | sort -u)
+if [ -n "$targets" ]; then
+  up=1
+  for t in $targets; do
+    docker ps --format '{{.Names}}' 2>/dev/null | grep -q "$t" || up=0
+  done
+  [ "$up" = 1 ] && exit 0
   # the cached snapshot keeps the first run's pid file and socket; a stale
   # pid file makes a new dockerd exit at once
   rm -f /var/run/docker.pid /var/run/docker.sock /var/run/docker/containerd/containerd.pid
-  args=(--with-arm-b --with-target "$target")
+  args=(--with-arm-b)
+  for t in $targets; do args+=(--with-target "$t"); done
 else
   # repairdesk: the app is a node server, not a container
   pgrep -f bench/app/server.mjs >/dev/null && exit 0

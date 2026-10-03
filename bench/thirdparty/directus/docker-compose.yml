@@ -1,0 +1,50 @@
+# Third-party benchmark target: Directus Data Studio (real production app we did not write).
+#
+# HELD OUT (notes/HELDOUT-PROTOCOL.md): neither tool under test had met it when
+# this target was written. Widens the matrix by CLIENT TECHNOLOGY: the Data
+# Studio is a Vue 3 SPA on history routes (/admin/content/<collection>/<id>)
+# built from Directus's own component library, with a TinyMCE WYSIWYG field,
+# a many-to-one field whose picker is a side drawer listing the related
+# collection, a date picker, a select dropdown, a tags input and an item
+# sidebar with comments.
+#
+# One container, SQLite in a named volume. `node cli.js bootstrap` (the
+# image's CMD) installs the system tables on first start and creates the
+# first admin from ADMIN_EMAIL / ADMIN_PASSWORD with ADMIN_TOKEN as its static
+# API token; PROJECT_OWNER fills in the licence owner so the admin is not met
+# by the owner dialog. The data model (tickets, customers) and every record are
+# made by the reset, through the REST API.
+#
+#   up:    docker compose -f bench/thirdparty/directus/docker-compose.yml up -d
+#   reset: node bench/reset-app.mjs --target directus   (idempotent: builds the data model and seeds too)
+#   web:   http://127.0.0.1:8101/admin/   (admin@bench.local / bench-admin-pass)
+#   api:   http://127.0.0.1:8101/, Authorization: Bearer bench-admin-token
+services:
+  directus:
+    image: directus/directus:11.17.4
+    ports:
+      - "127.0.0.1:8101:8055"
+    environment:
+      SECRET: bench-directus-secret-not-for-production
+      PUBLIC_URL: http://127.0.0.1:8101/
+      DB_CLIENT: sqlite3
+      DB_FILENAME: /directus/database/data.db
+      ADMIN_EMAIL: admin@bench.local
+      ADMIN_PASSWORD: bench-admin-pass
+      ADMIN_TOKEN: bench-admin-token
+      PROJECT_OWNER: admin@bench.local
+      PROJECT_NAME: Bench Desk
+      # A bench box has no network to report to and no mail to send.
+      TELEMETRY: "false"
+      EMAIL_VERIFY_SETUP: "false"
+      # Every sign-in from 127.0.0.1 (the reset's fallback, each run's browser)
+      # shares one IP; the limiter is off by default, kept off explicitly.
+      RATE_LIMITER_ENABLED: "false"
+      LOG_LEVEL: warn
+    volumes:
+      - directus-database:/directus/database
+      - directus-uploads:/directus/uploads
+
+volumes:
+  directus-database:
+  directus-uploads:

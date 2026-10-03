@@ -373,6 +373,53 @@ for WITH_TARGET in $WITH_TARGETS; do
       echo "    erpnext login page: HTTP ${code:-unreachable}"
       [ "$code" = "200" ] || die "erpnext /login is not 200"
       ;;
+    bookstack)
+      # nginx + php-fpm + MariaDB; the image migrates on start (~30-60s warm),
+      # allow five minutes on a cold box. /login answers 200 once it serves.
+      for _ in $(seq 1 150); do
+        code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 http://127.0.0.1:8103/login || true)"
+        [ "$code" = "200" ] && break; sleep 2
+      done
+      echo "    bookstack login page: HTTP ${code:-unreachable}"
+      [ "$code" = "200" ] || { docker compose -f bench/thirdparty/bookstack/docker-compose.yml logs --tail 40 app || true; die "bookstack /login is not 200"; }
+      # seed.sh turns the default admin into admin@bench.local and installs the
+      # fixed API token (skips both when done); the reset is the idempotent
+      # seed for everything else, as for kanboard.
+      bash bench/thirdparty/bookstack/seed.sh
+      node bench/reset-app.mjs --target bookstack
+      ;;
+    mealie)
+      # One container (FastAPI + the built Nuxt frontend, SQLite); first boot
+      # migrates in ~20-40s warm, allow five minutes on a cold box.
+      # /api/app/about answers 200 unauthenticated once the API is up.
+      for _ in $(seq 1 150); do
+        code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 http://127.0.0.1:8102/api/app/about || true)"
+        [ "$code" = "200" ] && break; sleep 2
+      done
+      echo "    mealie api about: HTTP ${code:-unreachable}"
+      [ "$code" = "200" ] || { docker compose -f bench/thirdparty/mealie/docker-compose.yml logs --tail 40 || true; die "mealie does not answer /api/app/about"; }
+      # No seed.sh: the reset changes the default admin to admin@bench.local on
+      # first use, and is the idempotent seed for everything else, as for kanboard.
+      node bench/reset-app.mjs --target mealie
+      # Readiness probe: the frontend's sign-in page.
+      code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 http://127.0.0.1:8102/login || true)"
+      echo "    mealie login page: HTTP ${code:-unreachable}"
+      ;;
+    directus)
+      # Node + SQLite; the image's CMD runs `cli.js bootstrap` (system tables,
+      # migrations, the admin with its static token) before the server, ~10-30s
+      # warm; allow five minutes on a cold box. /server/ping answers "pong"
+      # unauthenticated once the API is up.
+      for _ in $(seq 1 150); do
+        code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 http://127.0.0.1:8101/server/ping || true)"
+        [ "$code" = "200" ] && break; sleep 2
+      done
+      echo "    directus server ping: HTTP ${code:-unreachable}"
+      [ "$code" = "200" ] || { docker compose -f bench/thirdparty/directus/docker-compose.yml logs --tail 40 || true; die "directus does not answer /server/ping"; }
+      # No seed.sh: the reset builds the data model (tickets, customers) on
+      # first use and is the idempotent seed for everything else, as for kanboard.
+      node bench/reset-app.mjs --target directus
+      ;;
   esac
 done
 

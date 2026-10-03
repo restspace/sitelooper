@@ -26,11 +26,12 @@ any tool touched them:
 
 | target | app | stresses |
 |---|---|---|
-| directus (dx) | Directus 11 Data Studio | Vue 3 with its own component library, relational pickers in side drawers, WYSIWYG field, datetime picker |
-| mealie (ml) | Mealie 2 | Nuxt + Vuetify, combobox chips that create on type, recipe editor with ingredient and step lists |
-| bookstack (bs) | BookStack 25 | Laravel Blade, TinyMCE WYSIWYG page editor, tag inputs, book/chapter/page hierarchy and move |
+| directus (dx) | Directus 11.17.4 Data Studio | Vue 3 with its own component library, relational pickers in side drawers, WYSIWYG field, datetime picker |
+| mealie (ml) | Mealie 3.28.0 | Nuxt + Vuetify, combobox chips that create on type, recipe editor with ingredient and step lists |
+| bookstack (bs) | BookStack 25.12.9 | Laravel Blade, TinyMCE WYSIWYG page editor, tag inputs, book/chapter/page hierarchy and move |
 
-Each task follows the same template as the existing ten (a report-only read of `Seed:`
+Versions were pinned when the targets were written (2026-10-03, before any run; the table first said
+Mealie 2, but the current release is 3.28.0). Each task follows the same template as the existing ten (a report-only read of `Seed:`
 records, a created record named after the runid, three or four attribute objectives
 through the app's own widgets including one existing-choice picker with a decoy, one
 secondary record, a report-only minted id). Tasks and verifiers are written from the

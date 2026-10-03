@@ -1,0 +1,46 @@
+# Third-party benchmark target: Mealie (real production app we did not write).
+#
+# HELD OUT (notes/HELDOUT-PROTOCOL.md): no tool under test has been run against
+# it before the protocol's runs. Widens the matrix by CLIENT TECHNOLOGY: a Nuxt 3
+# + Vuetify 3 SPA over a FastAPI backend. The recipe page switches into an edit
+# mode whose changes persist only when its Save button is pressed; categories,
+# tags, ingredient units and foods are Vuetify autocompletes that CREATE a new
+# entry from the typed text on Enter unless an existing one is chosen; the
+# ingredient and instruction lists are add/remove/drag lists; comments are
+# posted from the recipe page on their own, outside the editor's Save.
+#
+# One container (frontend and API on port 9000, SQLite under /app/data). The
+# image creates the default admin changeme@example.com / MyPassword on first
+# boot (not settable through env); the reset changes it, through the API, to
+# admin@bench.local / bench-admin-pass. Changing that email is also what retires
+# the first-login setup wizard (it shows while a user with the default email
+# exists). Sign-up stays closed; no mail is configured.
+#
+#   up:    docker compose -f bench/thirdparty/mealie/docker-compose.yml up -d
+#   reset: node bench/reset-app.mjs --target mealie   (idempotent: sets up the admin and seeds too)
+#   web:   http://127.0.0.1:8102/   (admin@bench.local / bench-admin-pass)
+#   api:   /api, bearer token from POST /api/auth/token (form: username, password)
+services:
+  mealie:
+    image: ghcr.io/mealie-recipes/mealie:v3.28.0
+    ports:
+      - "127.0.0.1:8102:9000"
+    environment:
+      BASE_URL: http://127.0.0.1:8102
+      TZ: Etc/UTC
+      ALLOW_SIGNUP: "false"
+      ALLOW_PASSWORD_LOGIN: "true"
+      DB_ENGINE: sqlite
+      # Five wrong passwords otherwise lock the account for 24 hours, and every
+      # sign-in on a bench box (the reset's, the verifier's, each run's browser)
+      # uses the one admin account.
+      SECURITY_MAX_LOGIN_ATTEMPTS: "1000"
+      SECURITY_USER_LOCKOUT_TIME: "1"
+      # A session long enough for any run (hours).
+      TOKEN_TIME: "48"
+      LOG_LEVEL: warning
+    volumes:
+      - mealie-data:/app/data
+
+volumes:
+  mealie-data:

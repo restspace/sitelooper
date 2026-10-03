@@ -184,6 +184,28 @@ const TARGETS = {
     notReadyHint:
       'Start it with: docker compose -f bench/thirdparty/erpnext/docker-compose.yml up -d (then seed.sh once; site creation takes minutes)',
   },
+  directus: {
+    task: 'tasks/directus-ticket-flow.md',
+    defaults: APP_DEFAULTS.directus,
+    // Reset is also the idempotent seed (and builds the data model) — see resetDirectus.
+    reset: () => resetTarget('directus'),
+    notReadyHint: 'Start it with: docker compose -f bench/thirdparty/directus/docker-compose.yml up -d',
+  },
+  mealie: {
+    task: 'tasks/mealie-recipe-flow.md',
+    defaults: APP_DEFAULTS.mealie,
+    // Reset is also the idempotent seed (and the admin setup) — see resetMealie.
+    reset: () => resetTarget('mealie'),
+    notReadyHint: 'Start it with: docker compose -f bench/thirdparty/mealie/docker-compose.yml up -d',
+  },
+  bookstack: {
+    task: 'tasks/bookstack-page-flow.md',
+    defaults: APP_DEFAULTS.bookstack,
+    // Reset is also the idempotent seed (after seed.sh's admin and API token) — see resetBookstack.
+    reset: () => resetTarget('bookstack'),
+    notReadyHint:
+      'Start it with: docker compose -f bench/thirdparty/bookstack/docker-compose.yml up -d (then seed.sh once)',
+  },
   grafana: {
     task: 'tasks/grafana-dashboard-flow.md',
     defaults: APP_DEFAULTS.grafana,

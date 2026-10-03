@@ -88,4 +88,27 @@ export const APP_DEFAULTS = {
     APP_EMAIL: 'Administrator',
     APP_PASSWORD: 'bench-admin-pass',
   },
+  // Bootstrap creates this admin from ADMIN_EMAIL / ADMIN_PASSWORD in the
+  // compose file (PROJECT_OWNER set, so no licence-owner dialog). The Data
+  // Studio signs in by email.
+  directus: {
+    APP_URL: 'http://127.0.0.1:8101/',
+    APP_EMAIL: 'admin@bench.local',
+    APP_PASSWORD: 'bench-admin-pass',
+  },
+  // resetMealie changes the image's default admin (changeme@example.com /
+  // MyPassword) to this one through the API, which also retires the first-login
+  // setup wizard. Mealie signs in by email or username.
+  mealie: {
+    APP_URL: 'http://127.0.0.1:8102/',
+    APP_EMAIL: 'admin@bench.local',
+    APP_PASSWORD: 'bench-admin-pass',
+  },
+  // bench/thirdparty/bookstack/seed.sh turns the install's default admin
+  // (admin@admin.com / password) into this one. BookStack signs in by email.
+  bookstack: {
+    APP_URL: 'http://127.0.0.1:8103/',
+    APP_EMAIL: 'admin@bench.local',
+    APP_PASSWORD: 'bench-admin-pass',
+  },
 };

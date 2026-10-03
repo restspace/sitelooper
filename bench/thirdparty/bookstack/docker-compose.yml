@@ -1,0 +1,77 @@
+# Third-party benchmark target: BookStack (real production app we did not write).
+#
+# HELD OUT (notes/HELDOUT-PROTOCOL.md): neither tool under test had run against
+# it when this target was written; the task and verifier come from BookStack's
+# docs and REST API only.
+#
+# Widens the matrix by CLIENT TECHNOLOGY: Laravel Blade server-rendered pages,
+# a TinyMCE WYSIWYG page editor with draft autosave (only Save Page publishes
+# the page), a tag panel of name/value inputs with suggestions, a
+# shelf/book/chapter/page hierarchy with a separate Move page, and page
+# comments. Page slugs are derived from the page name.
+#
+# Two containers: the linuxserver image (nginx + php-fpm, runs migrations on
+# start) and a MariaDB kept small. APP_KEY is fixed so sessions survive a
+# recreate; public on purpose, a bench box is thrown away. seed.sh turns the
+# install's default admin (admin@admin.com / password) into the bench admin
+# and installs a FIXED API token for it.
+#
+#   up:    docker compose -f bench/thirdparty/bookstack/docker-compose.yml up -d
+#   seed:  bash bench/thirdparty/bookstack/seed.sh   (admin + API token; idempotent)
+#   reset: node bench/reset-app.mjs --target bookstack   (idempotent: seeds the content too)
+#   web:   http://127.0.0.1:8103   (admin@bench.local / bench-admin-pass)
+#   api:   /api, header "Authorization: Token benchbookstacktokenid00000000001:benchbookstacktokensecret0000001"
+services:
+  db:
+    image: mariadb:11.4.13
+    environment:
+      MARIADB_DATABASE: bookstack
+      MARIADB_USER: bookstack
+      MARIADB_PASSWORD: bench-db-pass
+      MARIADB_ROOT_PASSWORD: bench-db-root-pass
+    command:
+      - --innodb-buffer-pool-size=64M
+      - --performance-schema=OFF
+      - --max-connections=40
+    volumes:
+      - bookstack-db:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  app:
+    image: linuxserver/bookstack:v25.12.9-ls251
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:8103:80"
+    environment:
+      PUID: "1000"
+      PGID: "1000"
+      TZ: Etc/UTC
+      APP_URL: http://127.0.0.1:8103
+      # base64 of "bench-bookstack-app-key-01234567" (32 bytes).
+      APP_KEY: base64:YmVuY2gtYm9va3N0YWNrLWFwcC1rZXktMDEyMzQ1Njc=
+      APP_TIMEZONE: UTC
+      APP_LANG: en
+      DB_HOST: db
+      DB_PORT: "3306"
+      DB_DATABASE: bookstack
+      DB_USERNAME: bookstack
+      DB_PASSWORD: bench-db-pass
+      # The reset, the verifier and the oracle all use one API token; the
+      # default limit is 180 requests a minute per user.
+      API_REQUESTS_PER_MIN: "100000"
+      # Nothing is ever sent from a bench box.
+      MAIL_DRIVER: log
+      MAIL_FROM: bench@example.com
+    volumes:
+      - bookstack-config:/config
+
+volumes:
+  bookstack-db:
+  bookstack-config:
