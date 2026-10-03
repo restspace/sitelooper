@@ -1,0 +1,65 @@
+
+ RUN  e2e v0.16.0 /home/user/sitelooper/bench/e2e-arm
+      run 01a100db-8008-7c16-905b-5c48649720b7 · targets: web
+      model openrouter/openai/gpt-6-luna
+
+   ✓ ghost flow > agent.act "Sign in with username {username} and password {password}" 3.67s
+   ✓ ghost flow > agent.assert "The app shows a signed-in page, not a sign-in form" 2.18s · 1 model call
+   ✓ ghost flow > agent.act "Objective 1 of the goal, for run id {runid}, asks only for a report: Re…" 1.02s
+   ✓ ghost flow > agent.extract "For run id e2gh2-n2: Report the titles of the published posts whose tit…" 1.13s · 1 model call
+   ✓ ghost flow > agent.act "Achieve objective 2 of the goal, for run id {runid}: A post titled `{ru…" 5.96s
+   ✓ ghost flow > agent.assert "For run id e2gh2-n2, this now holds in the app: A post titled `e2gh2-n2…" 2.45s · 1 model call
+   ✓ ghost flow > agent.act "Achieve objective 3 of the goal, for run id {runid}: Its only tag is th…" 875ms
+   ✓ ghost flow > agent.assert "For run id e2gh2-n2, this now holds in the app: Its only tag is the exi…" 1.43s · 1 model call
+   ✓ ghost flow > agent.act "Achieve objective 4 of the goal, for run id {runid}: Its custom excerpt…" 371ms
+   ✓ ghost flow > agent.assert "For run id e2gh2-n2, this now holds in the app: Its custom excerpt incl…" 1.25s · 1 model call
+   ✓ ghost flow > agent.act "Achieve objective 5 of the goal, for run id {runid}: It is published (n…" 1.51s
+   ✓ ghost flow > agent.assert "For run id e2gh2-n2, this now holds in the app: It is published (not a …" 1.74s · 1 model call
+   ✓ ghost flow > agent.act "Achieve objective 6 of the goal, for run id {runid}: Its publish date i…" 21.70s · 1 model call
+   ✓ ghost flow > agent.assert "For run id e2gh2-n2, this now holds in the app: Its publish date is 202…" 1.47s · 1 model call
+   ✓ ghost flow > agent.act "Objective 7 of the goal, for run id {runid}, asks only for a report: Re…" 5.59s · 3 model calls
+   ✓ ghost flow > agent.extract "For run id e2gh2-n2: Report the post's URL slug exactly as the app show…" 2.08s · 1 model call
+ ✓ |web| tests/flow.e2e.ts (1 test) 56.13s ai 49.8k tokens · 45% cached · $0.0040
+   ✓ ghost flow 56.13s ai 49.8k tokens · 45% cached · $0.0040
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+         AI  49.8k tokens · 45% cached · $0.0040 · 12 model calls · openrouter/openai/gpt-6-luna
+      Cache  6 replayed · 1 handed off · 1 missed
+   Start at  08:22:28
+   Duration  57.11s
+     Report  .e2e/report.json
+
+
+--- stderr ---
+[e2e debug] phase timings (wall 57.8s)
+  phase           count   total     avg     max
+  scheduler           1   57.1s   57.1s   57.1s
+  test.body           1   55.3s   55.3s   55.3s
+  agent.model        12   20.2s  1681ms  2541ms
+  agent.observe      67   12.9s   193ms  2074ms
+  agent.action       30  1719ms    57ms   100ms
+  config.load         1   624ms   624ms   624ms
+  engine.init         1    95ms    95ms    95ms
+  session.close       1    32ms    32ms    32ms
+  collect             1    11ms    11ms    11ms
+  session.launch      1    11ms    11ms    11ms
+  engine.prepare      1     1ms     1ms     1ms
+[e2e debug] agent steps (execution order, model openrouter/openai/gpt-6-luna, total $0.003977+)
+  step                                                               total   model  observe  action  calls  tokens in/out       cached       cost
+  agent.act "Sign in with username {username} and password {passw…  3667ms     0ms   3148ms   106ms      0            0/0            -          -
+  agent.assert "The app shows a signed-in page, not a sign-in for…  2180ms  1858ms    255ms     0ms      1        2131/59       0% (0)  $0.000296
+  agent.act "Objective 1 of the goal, for run id {runid}, asks on…  1019ms     0ms    881ms   131ms      0            0/0            -          -
+  agent.extract "For run id e2gh2-n2: Report the titles of the pu…  1125ms  1029ms     94ms     0ms      1        2774/45       0% (0)  $0.000369
+  agent.act "Achieve objective 2 of the goal, for run id {runid}:…  5960ms     0ms    747ms   103ms      0            0/0            -          -
+  agent.assert "For run id e2gh2-n2, this now holds in the app: A…  2451ms  2374ms     32ms     0ms      1       1156/116       0% (0)  $0.000202
+  agent.act "Achieve objective 3 of the goal, for run id {runid}:…   875ms     0ms    618ms   252ms      0            0/0            -          -
+  agent.assert "For run id e2gh2-n2, this now holds in the app: I…  1434ms  1284ms     87ms     0ms      1        1953/62       0% (0)  $0.000275
+  agent.act "Achieve objective 4 of the goal, for run id {runid}:…   371ms     0ms    295ms    71ms      0            0/0            -          -
+  agent.assert "For run id e2gh2-n2, this now holds in the app: I…  1254ms  1062ms    125ms     0ms      1        1965/58       0% (0)  $0.000275
+  agent.act "Achieve objective 5 of the goal, for run id {runid}:…  1511ms     0ms   1071ms   231ms      0            0/0            -          -
+  agent.assert "For run id e2gh2-n2, this now holds in the app: I…  1742ms  1530ms    118ms     0ms      1        3337/60       0% (0)  $0.000447
+  agent.act "Achieve objective 6 of the goal, for run id {runid}:…   21.7s  2541ms   4347ms   695ms      1       7193/109   53% (3801)  $0.000513
+  agent.assert "For run id e2gh2-n2, this now holds in the app: I…  1474ms  1329ms    104ms     0ms      1        2989/83       0% (0)  $0.000415
+  agent.act "Objective 7 of the goal, for run id {runid}, asks on…  5595ms  5161ms    916ms   130ms      3      23455/123  78% (18237)  $0.000887
+  agent.extract "For run id e2gh2-n2: Report the post's URL slug …  2078ms  2000ms     77ms     0ms      1        2101/70       0% (0)  $0.000298
