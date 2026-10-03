@@ -1,0 +1,167 @@
+{
+  "target": "grafana",
+  "runid": "e2gr1-n3",
+  "steps": [
+    {
+      "kind": "act",
+      "id": "signin",
+      "ok": true,
+      "ms": 3602,
+      "summary": "replayed 4 recorded action(s) zero-turn from the trace cache; recorded verdict: Signed in as admin. Grafana confirmed “Logged in”; I skipped the default-password update prompt and arrived at the Grafana home page.",
+      "cache": {
+        "mode": "self-finalized",
+        "replayedActions": 4,
+        "totalActions": 4
+      },
+      "modelCalls": 0,
+      "actions": 4
+    },
+    {
+      "kind": "assert",
+      "id": "signin",
+      "ok": true,
+      "ms": 2979
+    },
+    {
+      "kind": "act",
+      "id": "obj1",
+      "ok": true,
+      "ms": 1838,
+      "summary": "replayed 4 recorded action(s) zero-turn from the trace cache; recorded verdict: Opened the provisioned Service Health dashboard. Its panel titles are exactly: Request rate, Error count, and Latency by endpoint.",
+      "cache": {
+        "mode": "self-finalized",
+        "replayedActions": 4,
+        "totalActions": 4
+      },
+      "modelCalls": 0,
+      "actions": 4
+    },
+    {
+      "kind": "extract",
+      "id": "obj1",
+      "ok": true,
+      "ms": 2911,
+      "values": [
+        "Request rate",
+        "Error count",
+        "Latency by endpoint"
+      ]
+    },
+    {
+      "kind": "act",
+      "id": "obj2",
+      "ok": true,
+      "ms": 29538,
+      "summary": "Created and saved the new dashboard `e2gr1-n3 Bench Dashboard` at `/d/bg03az00qddkwf/e2gr1-n3-bench-dashboard`. It contains the `e2gr1-n3 Availability` Stat panel with the TestData data source, and Grafana confirmed “Dashboard saved.”",
+      "cache": {
+        "mode": "missed",
+        "reason": "no-entry",
+        "replayedActions": 0,
+        "totalActions": 0
+      },
+      "modelCalls": 13,
+      "actions": 12
+    },
+    {
+      "kind": "assert",
+      "id": "obj2",
+      "ok": false,
+      "code": "ASSERTION_INCONCLUSIVE",
+      "blocked": false,
+      "error": "The dashboard title and panel title are shown, and a “Dashboard saved” alert is visible. The observation does not show the panel type or its data source, so it cannot establish the full assertion.; the judge saw the semantic tree only; if the engine captures pixels, pass vision: true when the answer is in pixels",
+      "ms": 3653
+    },
+    {
+      "kind": "act",
+      "id": "obj3",
+      "ok": true,
+      "ms": 59978,
+      "summary": "Added a Text panel titled `e2gr1-n3 Notes` with content `e2gr1-n3` and saved the dashboard. The dashboard shows the Notes panel and Grafana confirmed “Dashboard saved.”.",
+      "cache": {
+        "mode": "missed",
+        "reason": "target-not-found",
+        "replayedActions": 0,
+        "totalActions": 10
+      },
+      "modelCalls": 15,
+      "actions": 13
+    },
+    {
+      "kind": "assert",
+      "id": "obj3",
+      "ok": false,
+      "code": "ASSERTION_INCONCLUSIVE",
+      "blocked": false,
+      "error": "The Text panel titled “e2gr1-n3 Notes” is visible and its content includes “e2gr1-n3,” but the observation does not establish that the dashboard was saved.; the judge saw the semantic tree only; pass vision: true when the answer is in pixels",
+      "ms": 4957
+    },
+    {
+      "kind": "act",
+      "id": "obj4",
+      "ok": true,
+      "ms": 1997,
+      "summary": "replayed 6 recorded action(s) zero-turn from the trace cache; recorded verdict: Added the `bench` tag in dashboard settings and saved. The save dialog’s “Update default time range” option was checked while the dashboard was set to Last 6 hours; Grafana confirmed “Dashboard saved.” The dashboard remains `e2gr1-n1 Bench Dashboard`.",
+      "cache": {
+        "mode": "self-finalized",
+        "replayedActions": 6,
+        "totalActions": 6
+      },
+      "modelCalls": 0,
+      "actions": 6
+    },
+    {
+      "kind": "assert",
+      "id": "obj4",
+      "ok": false,
+      "code": "ASSERTION_INCONCLUSIVE",
+      "blocked": false,
+      "error": "The `bench` tag is shown and the page reports “Dashboard saved,” but the observation does not show the dashboard’s time range, so it cannot establish that the saved range is the last 6 hours.; the judge saw the semantic tree only; pass vision: true when the answer is in pixels",
+      "ms": 3059
+    },
+    {
+      "kind": "act",
+      "id": "obj5",
+      "ok": true,
+      "ms": 2150,
+      "summary": "replayed 6 recorded action(s) zero-turn from the trace cache; recorded verdict: Selected the dashboard auto-refresh interval of 1 minute (1m), checked “Update default refresh value,” and saved. Grafana confirmed “Dashboard saved,” and the dashboard control shows the current interval as 1 minute.",
+      "cache": {
+        "mode": "self-finalized",
+        "replayedActions": 6,
+        "totalActions": 6
+      },
+      "modelCalls": 0,
+      "actions": 6
+    },
+    {
+      "kind": "assert",
+      "id": "obj5",
+      "ok": true,
+      "ms": 1823
+    },
+    {
+      "kind": "act",
+      "id": "obj6",
+      "ok": true,
+      "ms": 7179,
+      "summary": "Read the dashboard page URL: /d/bg03az00qddkwf/e2gr1-n3-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m. Dashboard UID: bg03az00qddkwf.",
+      "cache": {
+        "mode": "missed",
+        "reason": "no-entry",
+        "replayedActions": 0,
+        "totalActions": 0
+      },
+      "modelCalls": 2,
+      "actions": 0
+    },
+    {
+      "kind": "extract",
+      "id": "obj6",
+      "ok": false,
+      "code": "ASSERTION_INCONCLUSIVE",
+      "blocked": false,
+      "error": "nothing to extract: The browser page URL or dashboard UID is not shown in the observation.; the judge saw the semantic tree only; pass vision: true when the answer is in pixels",
+      "ms": 1622
+    }
+  ],
+  "finalText": "1. DONE Request rate | Error count | Latency by endpoint\n2. DONE\n3. DONE\n4. DONE\n5. DONE\n6. FAILED "
+}

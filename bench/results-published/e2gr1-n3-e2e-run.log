@@ -1,0 +1,61 @@
+
+ RUN  e2e v0.16.0 /home/user/sitelooper/bench/e2e-arm
+      run 01a100a0-ece7-7cc7-9919-076b3f6ee7ba · targets: web
+      model openrouter/openai/gpt-6-luna
+
+   ✓ grafana flow > agent.act "Sign in with username {username} and password {password}" 3.60s
+   ✓ grafana flow > agent.assert "The app shows a signed-in page, not a sign-in form" 2.98s · 1 model call
+   ✓ grafana flow > agent.act "Objective 1 of the goal, for run id {runid}, asks only for a report: Re…" 1.84s
+   ✓ grafana flow > agent.extract "For run id e2gr1-n3: Report the titles of the panels on the provisioned…" 2.91s · 1 model call
+   ✓ grafana flow > agent.act "Achieve objective 2 of the goal, for run id {runid}: A NEW dashboard ex…" 29.54s · 13 model calls
+   × grafana flow > agent.assert "For run id e2gr1-n3, this now holds in the app: A NEW dashboard exists,…" 3.65s · 1 model call failed
+   ✓ grafana flow > agent.act "Achieve objective 3 of the goal, for run id {runid}: That dashboard als…" 59.98s · 15 model calls
+   × grafana flow > agent.assert "For run id e2gr1-n3, this now holds in the app: That dashboard also con…" 4.96s · 1 model call failed
+   ✓ grafana flow > agent.act "Achieve objective 4 of the goal, for run id {runid}: The dashboard has …" 2.00s
+   × grafana flow > agent.assert "For run id e2gr1-n3, this now holds in the app: The dashboard has the t…" 3.06s · 1 model call failed
+   ✓ grafana flow > agent.act "Achieve objective 5 of the goal, for run id {runid}: The dashboard's au…" 2.15s
+   ✓ grafana flow > agent.assert "For run id e2gr1-n3, this now holds in the app: The dashboard's auto-re…" 1.82s · 1 model call
+   ✓ grafana flow > agent.act "Objective 6 of the goal, for run id {runid}, asks only for a report: Re…" 7.18s · 2 model calls
+   × grafana flow > agent.extract "For run id e2gr1-n3: Report the dashboard's URL (or UID) so it can be f…" 1.62s · 1 model call failed
+ ✓ |web| tests/flow.e2e.ts (1 test) 129.98s ai 311.0k tokens · 80% cached · $0.0116
+   ✓ grafana flow 129.98s ai 311.0k tokens · 80% cached · $0.0116
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+         AI  311.0k tokens · 80% cached · $0.0116 · 37 model calls · openrouter/openai/gpt-6-luna
+      Cache  4 replayed · 3 missed
+   Start at  07:18:29
+   Duration  131.11s (2m 11s)
+     Report  .e2e/report.json
+
+
+--- stderr ---
+[e2e debug] phase timings (wall 131.8s)
+  phase           count   total     avg     max
+  scheduler           1  131.1s  131.1s  131.1s
+  test.body           1  128.3s  128.3s  128.3s
+  agent.model        37  101.7s  2748ms  5493ms
+  agent.observe      82   19.0s   231ms  2005ms
+  agent.action       45  6171ms   137ms  1408ms
+  config.load         1   634ms   634ms   634ms
+  engine.init         1    91ms    91ms    91ms
+  session.close       1    25ms    25ms    25ms
+  collect             1    18ms    18ms    18ms
+  session.launch      1    14ms    14ms    14ms
+  engine.prepare      1     1ms     1ms     1ms
+[e2e debug] agent steps (execution order, model openrouter/openai/gpt-6-luna, total $0.011573+)
+  step                                                               total   model  observe  action  calls  tokens in/out        cached       cost
+  agent.act "Sign in with username {username} and password {passw…  3601ms     0ms   2871ms   612ms      0            0/0             -          -
+  agent.assert "The app shows a signed-in page, not a sign-in for…  2979ms  2823ms     52ms     0ms      1        1773/87        0% (0)  $0.000265
+  agent.act "Objective 1 of the goal, for run id {runid}, asks on…  1838ms     0ms   1330ms   401ms      0            0/0             -          -
+  agent.extract "For run id e2gr1-n3: Report the titles of the pa…  2910ms  2841ms     67ms     0ms      1        2902/78        0% (0)  $0.000402
+  agent.act "Achieve objective 2 of the goal, for run id {runid}:…   29.5s   29.1s   4809ms  1173ms     13     149565/570  84% (125756)  $0.004478
+  agent.assert "For run id e2gr1-n3, this now holds in the app: A…  3652ms  3551ms     53ms     0ms      1       1580/138        0% (0)  $0.000266
+  agent.act "Achieve objective 3 of the goal, for run id {runid}:…   60.0s   45.3s   6705ms  2497ms     15    131814/1014  83% (110047)  $0.004281
+  agent.assert "For run id e2gr1-n3, this now holds in the app: T…  4957ms  4857ms     50ms     0ms      1       1677/217        0% (0)  $0.000318
+  agent.act "Achieve objective 4 of the goal, for run id {runid}:…  1997ms     0ms   1191ms   698ms      0            0/0             -          -
+  agent.assert "For run id e2gr1-n3, this now holds in the app: T…  3059ms  2922ms     83ms     0ms      1       2769/154        0% (0)  $0.000423
+  agent.act "Achieve objective 5 of the goal, for run id {runid}:…  2149ms     0ms   1251ms   789ms      0            0/0             -          -
+  agent.assert "For run id e2gr1-n3, this now holds in the app: T…  1822ms  1721ms     51ms     0ms      1        1719/57        0% (0)  $0.000243
+  agent.act "Objective 6 of the goal, for run id {runid}, asks on…  7178ms  7014ms    413ms     0ms      2      12684/335    76% (9644)  $0.000638
+  agent.extract "For run id e2gr1-n3: Report the dashboard's URL …  1621ms  1568ms     51ms     0ms      1        1787/71        0% (0)  $0.000259

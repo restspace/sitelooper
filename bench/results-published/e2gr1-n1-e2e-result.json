@@ -1,0 +1,206 @@
+{
+  "arm": "e2e",
+  "e2eVersion": "0.16.0",
+  "target": "grafana",
+  "runid": "e2gr1-n1",
+  "model": "openai/gpt-6-luna",
+  "strict": false,
+  "reset": true,
+  "exitCode": 0,
+  "wallMs": 174717,
+  "cache": {
+    "acts": 7,
+    "replayed": 0,
+    "handedOff": 0,
+    "missed": 7,
+    "failed": 0,
+    "stale": 0,
+    "actModelCalls": 49,
+    "reasons": [
+      "signin:missed:no-entry",
+      "obj1:missed:no-entry",
+      "obj2:missed:no-entry",
+      "obj3:missed:no-entry",
+      "obj4:missed:no-entry",
+      "obj5:missed:no-entry",
+      "obj6:missed:no-entry"
+    ]
+  },
+  "usage": {
+    "modelTokens": 439683,
+    "modelCachedTokens": 350874,
+    "usd": 0.01579374,
+    "usdAtRatesFloor": null
+  },
+  "steps": [
+    {
+      "kind": "act",
+      "id": "signin",
+      "ok": true,
+      "ms": 12326,
+      "summary": "Signed in as admin. Grafana confirmed “Logged in”; I skipped the default-password update prompt and arrived at the Grafana home page.",
+      "cache": {
+        "mode": "missed",
+        "reason": "no-entry",
+        "replayedActions": 0,
+        "totalActions": 0
+      },
+      "modelCalls": 4,
+      "actions": 4
+    },
+    {
+      "kind": "assert",
+      "id": "signin",
+      "ok": true,
+      "ms": 1631
+    },
+    {
+      "kind": "act",
+      "id": "obj1",
+      "ok": true,
+      "ms": 18525,
+      "summary": "Opened the provisioned Service Health dashboard. Its panel titles are exactly: Request rate, Error count, and Latency by endpoint.",
+      "cache": {
+        "mode": "missed",
+        "reason": "no-entry",
+        "replayedActions": 0,
+        "totalActions": 0
+      },
+      "modelCalls": 6,
+      "actions": 5
+    },
+    {
+      "kind": "extract",
+      "id": "obj1",
+      "ok": true,
+      "ms": 2736,
+      "values": [
+        "Request rate",
+        "Error count",
+        "Latency by endpoint"
+      ]
+    },
+    {
+      "kind": "act",
+      "id": "obj2",
+      "ok": true,
+      "ms": 29555,
+      "summary": "Created and saved the new dashboard `e2gr1-n1 Bench Dashboard`. It contains the Stat panel `e2gr1-n1 Availability`; its query editor showed the TestData data source, and Grafana confirmed “Dashboard saved.”",
+      "cache": {
+        "mode": "missed",
+        "reason": "no-entry",
+        "replayedActions": 0,
+        "totalActions": 0
+      },
+      "modelCalls": 13,
+      "actions": 12
+    },
+    {
+      "kind": "assert",
+      "id": "obj2",
+      "ok": false,
+      "code": "ASSERTION_INCONCLUSIVE",
+      "blocked": false,
+      "error": "The dashboard title and panel title are visible, and a “Dashboard saved” status is shown. The observation does not show the panel type or its query data source, so the full assertion cannot be verified.; the judge saw the semantic tree only; if the engine captures pixels, pass vision: true when the answer is in pixels",
+      "ms": 3509
+    },
+    {
+      "kind": "act",
+      "id": "obj3",
+      "ok": true,
+      "ms": 26716,
+      "summary": "Added a Text panel titled `e2gr1-n1 Notes` with content containing `e2gr1-n1`, then saved the dashboard. Grafana confirms “Dashboard saved,” and the panel is visible alongside the Availability panel.",
+      "cache": {
+        "mode": "missed",
+        "reason": "no-entry",
+        "replayedActions": 0,
+        "totalActions": 0
+      },
+      "modelCalls": 10,
+      "actions": 10
+    },
+    {
+      "kind": "assert",
+      "id": "obj3",
+      "ok": true,
+      "ms": 3422
+    },
+    {
+      "kind": "act",
+      "id": "obj4",
+      "ok": true,
+      "ms": 22124,
+      "summary": "Added the `bench` tag in dashboard settings and saved. The save dialog’s “Update default time range” option was checked while the dashboard was set to Last 6 hours; Grafana confirmed “Dashboard saved.” The dashboard remains `e2gr1-n1 Bench Dashboard`.",
+      "cache": {
+        "mode": "missed",
+        "reason": "no-entry",
+        "replayedActions": 0,
+        "totalActions": 0
+      },
+      "modelCalls": 7,
+      "actions": 6
+    },
+    {
+      "kind": "assert",
+      "id": "obj4",
+      "ok": false,
+      "code": "ASSERTION_INCONCLUSIVE",
+      "blocked": false,
+      "error": "The settings show the `bench` tag, but the last-6-hours time range and whether it was saved are not shown.; the judge saw the semantic tree only; if the engine captures pixels, pass vision: true when the answer is in pixels",
+      "ms": 4514
+    },
+    {
+      "kind": "act",
+      "id": "obj5",
+      "ok": true,
+      "ms": 18521,
+      "summary": "Selected the dashboard auto-refresh interval of 1 minute (1m), checked “Update default refresh value,” and saved. Grafana confirmed “Dashboard saved,” and the dashboard control shows the current interval as 1 minute.",
+      "cache": {
+        "mode": "missed",
+        "reason": "no-entry",
+        "replayedActions": 0,
+        "totalActions": 0
+      },
+      "modelCalls": 7,
+      "actions": 6
+    },
+    {
+      "kind": "assert",
+      "id": "obj5",
+      "ok": true,
+      "ms": 2735
+    },
+    {
+      "kind": "act",
+      "id": "obj6",
+      "ok": true,
+      "ms": 6749,
+      "summary": "The browser page URL is `/d/bg03al5siyubkb/e2gr1-n1-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m`. Dashboard UID: `bg03al5siyubkb`.",
+      "cache": {
+        "mode": "missed",
+        "reason": "no-entry",
+        "replayedActions": 0,
+        "totalActions": 0
+      },
+      "modelCalls": 2,
+      "actions": 0
+    },
+    {
+      "kind": "extract",
+      "id": "obj6",
+      "ok": false,
+      "code": "ASSERTION_INCONCLUSIVE",
+      "blocked": false,
+      "error": "nothing to extract: The browser page URL and dashboard UID are not shown in the observation.; the judge saw the semantic tree only; pass vision: true when the answer is in pixels",
+      "ms": 3252
+    }
+  ],
+  "finalText": "1. DONE Request rate | Error count | Latency by endpoint\n2. DONE\n3. DONE\n4. DONE\n5. DONE\n6. FAILED ",
+  "machine": {
+    "platform": "linux",
+    "arch": "x64",
+    "node": "v22.22.0",
+    "cpus": 4,
+    "memGb": 16
+  }
+}

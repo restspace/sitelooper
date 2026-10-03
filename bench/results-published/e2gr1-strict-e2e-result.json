@@ -1,0 +1,189 @@
+{
+  "arm": "e2e",
+  "e2eVersion": "0.16.0",
+  "target": "grafana",
+  "runid": "e2gr1-strict",
+  "model": "openai/gpt-6-luna",
+  "strict": true,
+  "reset": true,
+  "exitCode": 0,
+  "wallMs": 66146,
+  "cache": {
+    "acts": 7,
+    "replayed": 5,
+    "handedOff": 0,
+    "missed": 1,
+    "failed": 1,
+    "stale": 1,
+    "actModelCalls": 1,
+    "reasons": [
+      "obj6:missed:no-entry"
+    ]
+  },
+  "usage": {
+    "modelTokens": 20994,
+    "modelCachedTokens": 3809,
+    "usd": 0.002540665,
+    "usdAtRatesFloor": null
+  },
+  "steps": [
+    {
+      "kind": "act",
+      "id": "signin",
+      "ok": true,
+      "ms": 3613,
+      "summary": "replayed 4 recorded action(s) zero-turn from the trace cache; recorded verdict: Signed in as admin. Grafana confirmed “Logged in”; I skipped the default-password update prompt and arrived at the Grafana home page.",
+      "cache": {
+        "mode": "self-finalized",
+        "replayedActions": 4,
+        "totalActions": 4
+      },
+      "modelCalls": 0,
+      "actions": 4
+    },
+    {
+      "kind": "assert",
+      "id": "signin",
+      "ok": true,
+      "ms": 3061
+    },
+    {
+      "kind": "act",
+      "id": "obj1",
+      "ok": true,
+      "ms": 1854,
+      "summary": "replayed 4 recorded action(s) zero-turn from the trace cache; recorded verdict: Opened the provisioned Service Health dashboard. Its panel titles are exactly: Request rate, Error count, and Latency by endpoint.",
+      "cache": {
+        "mode": "self-finalized",
+        "replayedActions": 4,
+        "totalActions": 4
+      },
+      "modelCalls": 0,
+      "actions": 4
+    },
+    {
+      "kind": "extract",
+      "id": "obj1",
+      "ok": true,
+      "ms": 4462,
+      "values": [
+        "Request rate",
+        "Error count",
+        "Latency by endpoint"
+      ]
+    },
+    {
+      "kind": "act",
+      "id": "obj2",
+      "ok": false,
+      "code": "REPLAY_STALE",
+      "blocked": false,
+      "error": "the recording of this step no longer replays (end-mismatch), and cache.strict hands no step to the agent; re-record it with a read-write run without --strict-cache and commit the changed entry under .e2e/cache",
+      "ms": 19666
+    },
+    {
+      "kind": "assert",
+      "id": "obj2",
+      "ok": false,
+      "code": "ASSERTION_INCONCLUSIVE",
+      "blocked": false,
+      "error": "The dashboard title and panel title are visible, but the observation does not show the panel type, its data source, or whether the dashboard has been saved.; the judge saw the semantic tree only; if the engine captures pixels, pass vision: true when the answer is in pixels",
+      "ms": 3127
+    },
+    {
+      "kind": "act",
+      "id": "obj3",
+      "ok": true,
+      "ms": 4841,
+      "summary": "replayed 12 recorded action(s) zero-turn from the trace cache; recorded verdict: Added a Text panel titled `e2gr1-n3 Notes` with content `e2gr1-n3` and saved the dashboard. The dashboard shows the Notes panel and Grafana confirmed “Dashboard saved.”.",
+      "cache": {
+        "mode": "self-finalized",
+        "replayedActions": 12,
+        "totalActions": 12
+      },
+      "modelCalls": 0,
+      "actions": 12
+    },
+    {
+      "kind": "assert",
+      "id": "obj3",
+      "ok": true,
+      "ms": 2713
+    },
+    {
+      "kind": "act",
+      "id": "obj4",
+      "ok": true,
+      "ms": 2026,
+      "summary": "replayed 6 recorded action(s) zero-turn from the trace cache; recorded verdict: Added the `bench` tag in dashboard settings and saved. The save dialog’s “Update default time range” option was checked while the dashboard was set to Last 6 hours; Grafana confirmed “Dashboard saved.” The dashboard remains `e2gr1-n1 Bench Dashboard`.",
+      "cache": {
+        "mode": "self-finalized",
+        "replayedActions": 6,
+        "totalActions": 6
+      },
+      "modelCalls": 0,
+      "actions": 6
+    },
+    {
+      "kind": "assert",
+      "id": "obj4",
+      "ok": false,
+      "code": "ASSERTION_INCONCLUSIVE",
+      "blocked": false,
+      "error": "The settings show the `bench` tag and a “Dashboard saved” alert, but do not show the dashboard’s saved time range.; the judge saw the semantic tree only; if the engine captures pixels, pass vision: true when the answer is in pixels",
+      "ms": 3653
+    },
+    {
+      "kind": "act",
+      "id": "obj5",
+      "ok": true,
+      "ms": 2147,
+      "summary": "replayed 6 recorded action(s) zero-turn from the trace cache; recorded verdict: Selected the dashboard auto-refresh interval of 1 minute (1m), checked “Update default refresh value,” and saved. Grafana confirmed “Dashboard saved,” and the dashboard control shows the current interval as 1 minute.",
+      "cache": {
+        "mode": "self-finalized",
+        "replayedActions": 6,
+        "totalActions": 6
+      },
+      "modelCalls": 0,
+      "actions": 6
+    },
+    {
+      "kind": "assert",
+      "id": "obj5",
+      "ok": true,
+      "ms": 3372
+    },
+    {
+      "kind": "act",
+      "id": "obj6",
+      "ok": true,
+      "ms": 4530,
+      "summary": "The browser page URL is `/d/fg03b50rioxz4c/e2gr1-strict-bench-dashboard?from=now-6h&to=now&timezone=browser&refresh=1m` (UID: `fg03b50rioxz4c`). The dashboard remains open.",
+      "cache": {
+        "mode": "missed",
+        "reason": "no-entry",
+        "replayedActions": 0,
+        "totalActions": 0
+      },
+      "modelCalls": 1,
+      "actions": 0
+    },
+    {
+      "kind": "extract",
+      "id": "obj6",
+      "ok": false,
+      "code": "ASSERTION_INCONCLUSIVE",
+      "blocked": false,
+      "error": "nothing to extract: The browser’s page URL is not shown in the observation.; the judge saw the semantic tree only; if the engine captures pixels, pass vision: true when the answer is in pixels",
+      "ms": 2398
+    }
+  ],
+  "finalText": "1. DONE Request rate | Error count | Latency by endpoint\n2. FAILED\n3. DONE\n4. DONE\n5. DONE\n6. FAILED ",
+  "machine": {
+    "platform": "linux",
+    "arch": "x64",
+    "node": "v22.22.0",
+    "cpus": 4,
+    "memGb": 16
+  }
+}
