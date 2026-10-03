@@ -1,0 +1,203 @@
+{
+  "arm": "e2e",
+  "e2eVersion": "0.16.0",
+  "target": "gitea",
+  "runid": "e2gt2-strict",
+  "model": "openai/gpt-6-luna",
+  "strict": true,
+  "reset": true,
+  "exitCode": 0,
+  "wallMs": 80348,
+  "cache": {
+    "acts": 8,
+    "replayed": 6,
+    "handedOff": 0,
+    "missed": 1,
+    "failed": 1,
+    "stale": 1,
+    "actModelCalls": 1,
+    "reasons": [
+      "obj7:missed:no-entry"
+    ]
+  },
+  "usage": {
+    "modelTokens": 30930,
+    "modelCachedTokens": 3746,
+    "usd": 0.0036495850000000003,
+    "usdAtRatesFloor": null
+  },
+  "steps": [
+    {
+      "kind": "act",
+      "id": "signin",
+      "ok": true,
+      "ms": 3024,
+      "summary": "replayed 4 recorded action(s) zero-turn from the trace cache; recorded verdict: Signed in as admin successfully; the Gitea dashboard is displayed with admin shown in the navigation and account activity.",
+      "cache": {
+        "mode": "self-finalized",
+        "replayedActions": 4,
+        "totalActions": 4
+      },
+      "modelCalls": 0,
+      "actions": 4
+    },
+    {
+      "kind": "assert",
+      "id": "signin",
+      "ok": true,
+      "ms": 2036
+    },
+    {
+      "kind": "act",
+      "id": "obj1",
+      "ok": true,
+      "ms": 860,
+      "summary": "replayed 2 recorded action(s) zero-turn from the trace cache; recorded verdict: The open issues list in bench/bench-repo shows these titles beginning with Seed:, exactly as displayed: “Seed: ship repaired device”, “Seed: order missing parts”, and “Seed: triage inbox”. No data was changed.",
+      "cache": {
+        "mode": "self-finalized",
+        "replayedActions": 2,
+        "totalActions": 2
+      },
+      "modelCalls": 0,
+      "actions": 2
+    },
+    {
+      "kind": "extract",
+      "id": "obj1",
+      "ok": true,
+      "ms": 2470,
+      "values": [
+        "Seed: ship repaired device",
+        "Seed: order missing parts",
+        "Seed: triage inbox"
+      ]
+    },
+    {
+      "kind": "act",
+      "id": "obj2",
+      "ok": false,
+      "code": "REPLAY_STALE",
+      "blocked": false,
+      "error": "the recording of this step no longer replays (end-mismatch), and cache.strict hands no step to the agent; re-record it with a read-write run without --strict-cache and commit the changed entry under .e2e/cache",
+      "ms": 42036
+    },
+    {
+      "kind": "assert",
+      "id": "obj2",
+      "ok": true,
+      "ms": 2918
+    },
+    {
+      "kind": "act",
+      "id": "obj3",
+      "ok": true,
+      "ms": 5666,
+      "summary": "replayed 4 recorded action(s) zero-turn from the trace cache; recorded verdict: Applied labels to issue #4, “e2gt2-n1 Bench Issue,” in bench/bench-repo. The issue page now displays exactly bug and priority-high in its Labels section.",
+      "cache": {
+        "mode": "self-finalized",
+        "replayedActions": 4,
+        "totalActions": 4
+      },
+      "modelCalls": 0,
+      "actions": 4
+    },
+    {
+      "kind": "assert",
+      "id": "obj3",
+      "ok": true,
+      "ms": 3555
+    },
+    {
+      "kind": "act",
+      "id": "obj4",
+      "ok": true,
+      "ms": 2473,
+      "summary": "replayed 3 recorded action(s) zero-turn from the trace cache; recorded verdict: Assigned issue #4, “e2gt2-n1 Bench Issue,” to bench-assignee. The issue activity says bench-assignee was assigned by admin, and the Assignees sidebar shows bench-assignee (Bench Assignee).",
+      "cache": {
+        "mode": "self-finalized",
+        "replayedActions": 3,
+        "totalActions": 3
+      },
+      "modelCalls": 0,
+      "actions": 3
+    },
+    {
+      "kind": "assert",
+      "id": "obj4",
+      "ok": true,
+      "ms": 1483
+    },
+    {
+      "kind": "act",
+      "id": "obj5",
+      "ok": true,
+      "ms": 926,
+      "summary": "replayed 2 recorded action(s) zero-turn from the trace cache; recorded verdict: Applied Bench Milestone to issue #4, “e2gt2-n1 Bench Issue.” The issue activity confirms it was added to the milestone, and the sidebar shows Bench Milestone.",
+      "cache": {
+        "mode": "self-finalized",
+        "replayedActions": 2,
+        "totalActions": 2
+      },
+      "modelCalls": 0,
+      "actions": 2
+    },
+    {
+      "kind": "assert",
+      "id": "obj5",
+      "ok": true,
+      "ms": 1373
+    },
+    {
+      "kind": "act",
+      "id": "obj6",
+      "ok": true,
+      "ms": 805,
+      "summary": "replayed 2 recorded action(s) zero-turn from the trace cache; recorded verdict: Posted the comment “Comment for run e2gt2-n1” on issue #4. The issue page now shows 1 comment, including the posted text with the run ID.",
+      "cache": {
+        "mode": "self-finalized",
+        "replayedActions": 2,
+        "totalActions": 2
+      },
+      "modelCalls": 0,
+      "actions": 2
+    },
+    {
+      "kind": "assert",
+      "id": "obj6",
+      "ok": true,
+      "ms": 1412
+    },
+    {
+      "kind": "act",
+      "id": "obj7",
+      "ok": true,
+      "ms": 3100,
+      "summary": "The issue page for “e2gt2-strict Bench Issue” displays the requested issue number exactly as #7.",
+      "cache": {
+        "mode": "missed",
+        "reason": "no-entry",
+        "replayedActions": 0,
+        "totalActions": 0
+      },
+      "modelCalls": 1,
+      "actions": 0
+    },
+    {
+      "kind": "extract",
+      "id": "obj7",
+      "ok": true,
+      "ms": 2631,
+      "values": [
+        "#7"
+      ]
+    }
+  ],
+  "finalText": "1. DONE Seed: ship repaired device | Seed: order missing parts | Seed: triage inbox (replayed 2 recorded action(s) zero-turn from the trace cache; recorded verdict: The open issues list in bench/bench-repo shows these titles beginning with Seed:, exactly as displayed: “Seed: ship repaired device”, “Seed: order missing parts”, and “Seed: triage inbox”. No data was changed.)\n2. FAILED\n3. DONE\n4. DONE\n5. DONE\n6. DONE\n7. DONE #7 (The issue page for “e2gt2-strict Bench Issue” displays the requested issue number exactly as #7.)",
+  "machine": {
+    "platform": "linux",
+    "arch": "x64",
+    "node": "v22.22.0",
+    "cpus": 4,
+    "memGb": 16
+  }
+}

@@ -1,0 +1,65 @@
+
+ RUN  e2e v0.16.0 /home/user/sitelooper/bench/e2e-arm
+      run 01a100da-16b5-7feb-b267-14b6fa7668e3 · targets: web
+      model openrouter/openai/gpt-6-luna
+
+   ✓ gitea flow > agent.act "Sign in with username {username} and password {password}" 3.02s
+   ✓ gitea flow > agent.assert "The app shows a signed-in page, not a sign-in form" 2.04s · 1 model call
+   ✓ gitea flow > agent.act "Objective 1 of the goal, for run id {runid}, asks only for a report: In…" 860ms
+   ✓ gitea flow > agent.extract "For run id e2gt2-strict: In the repository `bench/bench-repo`, report t…" 2.47s · 1 model call
+   × gitea flow > agent.act "Achieve objective 2 of the goal, for run id {runid}: An issue titled `{…" 42.04s failed
+   ✓ gitea flow > agent.assert "For run id e2gt2-strict, this now holds in the app: An issue titled `e2…" 2.92s · 1 model call
+   ✓ gitea flow > agent.act "Achieve objective 3 of the goal, for run id {runid}: That issue has exa…" 5.67s
+   ✓ gitea flow > agent.assert "For run id e2gt2-strict, this now holds in the app: That issue has exac…" 3.55s · 1 model call
+   ✓ gitea flow > agent.act "Achieve objective 4 of the goal, for run id {runid}: It is assigned to …" 2.47s
+   ✓ gitea flow > agent.assert "For run id e2gt2-strict, this now holds in the app: It is assigned to t…" 1.48s · 1 model call
+   ✓ gitea flow > agent.act "Achieve objective 5 of the goal, for run id {runid}: Its milestone is `…" 925ms
+   ✓ gitea flow > agent.assert "For run id e2gt2-strict, this now holds in the app: Its milestone is `B…" 1.37s · 1 model call
+   ✓ gitea flow > agent.act "Achieve objective 6 of the goal, for run id {runid}: It has a comment w…" 805ms
+   ✓ gitea flow > agent.assert "For run id e2gt2-strict, this now holds in the app: It has a comment wh…" 1.41s · 1 model call
+   ✓ gitea flow > agent.act "Objective 7 of the goal, for run id {runid}, asks only for a report: Re…" 3.10s · 1 model call
+   ✓ gitea flow > agent.extract "For run id e2gt2-strict: Report the issue's number exactly as the app d…" 2.63s · 1 model call
+ ✓ |web| tests/flow.e2e.ts (1 test) 78.06s ai 30.9k tokens · 12% cached · $0.0036
+   ✓ gitea flow 78.06s ai 30.9k tokens · 12% cached · $0.0036
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+         AI  30.9k tokens · 12% cached · $0.0036 · 9 model calls · openrouter/openai/gpt-6-luna
+      Cache  6 replayed · 1 handed off · 1 missed
+   Start at  08:20:55
+   Duration  79.12s (1m 19s)
+     Report  .e2e/report.json
+
+
+--- stderr ---
+[e2e debug] phase timings (wall 79.9s)
+  phase           count   total     avg     max
+  scheduler           1   79.1s   79.1s   79.1s
+  test.body           1   77.0s   77.0s   77.0s
+  agent.model         9   19.4s  2151ms  3386ms
+  agent.observe      73   16.8s   230ms  2368ms
+  agent.action       21  1578ms    75ms   201ms
+  config.load         1   701ms   701ms   701ms
+  engine.init         1    84ms    84ms    84ms
+  session.close       1    82ms    82ms    82ms
+  session.launch      1    14ms    14ms    14ms
+  collect             1    12ms    12ms    12ms
+  engine.prepare      1     0ms     0ms     0ms
+[e2e debug] agent steps (execution order, model openrouter/openai/gpt-6-luna, total $0.00365+)
+  step                                                               total   model  observe  action  calls  tokens in/out      cached       cost
+  agent.act "Sign in with username {username} and password {passw…  3023ms     0ms   2743ms   271ms      0            0/0           -          -
+  agent.assert "The app shows a signed-in page, not a sign-in for…  2035ms  1834ms     97ms     0ms      1        1858/56      0% (0)   $0.00026
+  agent.act "Objective 1 of the goal, for run id {runid}, asks on…   860ms     0ms    595ms   258ms      0            0/0           -          -
+  agent.extract "For run id e2gt2-strict: In the repository `benc…  2469ms  2366ms    100ms     0ms      1        2353/64      0% (0)  $0.000326
+  agent.act "Achieve objective 2 of the goal, for run id {runid}:…   42.0s     0ms   3628ms   348ms      0            0/0           -          -
+  agent.assert "For run id e2gt2-strict, this now holds in the ap…  2917ms  2700ms    116ms     0ms      1        2670/97      0% (0)  $0.000382
+  agent.act "Achieve objective 3 of the goal, for run id {runid}:…  5665ms     0ms   5301ms   256ms      0            0/0           -          -
+  agent.assert "For run id e2gt2-strict, this now holds in the ap…  3554ms  3386ms    102ms     0ms      1        2857/79      0% (0)  $0.000397
+  agent.act "Achieve objective 4 of the goal, for run id {runid}:…  2472ms     0ms   2177ms   190ms      0            0/0           -          -
+  agent.assert "For run id e2gt2-strict, this now holds in the ap…  1482ms  1309ms    104ms     0ms      1        3022/50      0% (0)  $0.000403
+  agent.act "Achieve objective 5 of the goal, for run id {runid}:…   925ms     0ms    700ms   121ms      0            0/0           -          -
+  agent.assert "For run id e2gt2-strict, this now holds in the ap…  1372ms  1189ms    115ms     0ms      1        3150/45      0% (0)  $0.000416
+  agent.act "Achieve objective 6 of the goal, for run id {runid}:…   805ms     0ms    668ms   134ms      0            0/0           -          -
+  agent.assert "For run id e2gt2-strict, this now holds in the ap…  1412ms  1160ms    166ms     0ms      1        3396/54      0% (0)  $0.000451
+  agent.act "Objective 7 of the goal, for run id {runid}, asks on…  3098ms  2912ms     87ms     0ms      1        7539/78  50% (3746)  $0.000547
+  agent.extract "For run id e2gt2-strict: Report the issue's numb…  2630ms  2506ms    122ms     0ms      1        3504/58      0% (0)  $0.000467

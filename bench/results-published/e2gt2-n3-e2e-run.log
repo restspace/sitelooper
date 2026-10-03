@@ -1,0 +1,65 @@
+
+ RUN  e2e v0.16.0 /home/user/sitelooper/bench/e2e-arm
+      run 01a100d9-0e72-7462-a282-cb0a8d09da68 · targets: web
+      model openrouter/openai/gpt-6-luna
+
+   ✓ gitea flow > agent.act "Sign in with username {username} and password {password}" 3.03s
+   ✓ gitea flow > agent.assert "The app shows a signed-in page, not a sign-in form" 2.12s · 1 model call
+   ✓ gitea flow > agent.act "Objective 1 of the goal, for run id {runid}, asks only for a report: In…" 845ms
+   ✓ gitea flow > agent.extract "For run id e2gt2-n3: In the repository `bench/bench-repo`, report the t…" 1.06s · 1 model call
+   ✓ gitea flow > agent.act "Achieve objective 2 of the goal, for run id {runid}: An issue titled `{…" 31.68s · 1 model call
+   ✓ gitea flow > agent.assert "For run id e2gt2-n3, this now holds in the app: An issue titled `e2gt2-…" 3.49s · 1 model call
+   ✓ gitea flow > agent.act "Achieve objective 3 of the goal, for run id {runid}: That issue has exa…" 5.45s
+   ✓ gitea flow > agent.assert "For run id e2gt2-n3, this now holds in the app: That issue has exactly …" 3.23s · 1 model call
+   ✓ gitea flow > agent.act "Achieve objective 4 of the goal, for run id {runid}: It is assigned to …" 3.24s
+   ✓ gitea flow > agent.assert "For run id e2gt2-n3, this now holds in the app: It is assigned to the u…" 1.56s · 1 model call
+   ✓ gitea flow > agent.act "Achieve objective 5 of the goal, for run id {runid}: Its milestone is `…" 986ms
+   ✓ gitea flow > agent.assert "For run id e2gt2-n3, this now holds in the app: Its milestone is `Bench…" 1.47s · 1 model call
+   ✓ gitea flow > agent.act "Achieve objective 6 of the goal, for run id {runid}: It has a comment w…" 888ms
+   ✓ gitea flow > agent.assert "For run id e2gt2-n3, this now holds in the app: It has a comment whose …" 1.52s · 1 model call
+   ✓ gitea flow > agent.act "Objective 7 of the goal, for run id {runid}, asks only for a report: Re…" 1.76s · 1 model call
+   ✓ gitea flow > agent.extract "For run id e2gt2-n3: Report the issue's number exactly as the app displ…" 1.37s · 1 model call
+ ✓ |web| tests/flow.e2e.ts (1 test) 64.89s ai 37.3k tokens · 20% cached · $0.0041
+   ✓ gitea flow 64.89s ai 37.3k tokens · 20% cached · $0.0041
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+         AI  37.3k tokens · 20% cached · $0.0041 · 10 model calls · openrouter/openai/gpt-6-luna
+      Cache  6 replayed · 1 handed off · 1 missed
+   Start at  08:19:48
+   Duration  65.97s (1m 6s)
+     Report  .e2e/report.json
+
+
+--- stderr ---
+[e2e debug] phase timings (wall 66.7s)
+  phase           count   total     avg     max
+  scheduler           1   66.0s   66.0s   66.0s
+  test.body           1   63.9s   63.9s   63.9s
+  agent.model        10   17.7s  1770ms  3275ms
+  agent.observe      63   17.3s   275ms  2289ms
+  agent.action       21  1437ms    68ms   132ms
+  config.load         1   665ms   665ms   665ms
+  engine.init         1    90ms    90ms    90ms
+  session.close       1    59ms    59ms    59ms
+  collect             1    14ms    14ms    14ms
+  session.launch      1    14ms    14ms    14ms
+  engine.prepare      1     0ms     0ms     0ms
+[e2e debug] agent steps (execution order, model openrouter/openai/gpt-6-luna, total $0.004059+)
+  step                                                               total   model  observe  action  calls  tokens in/out      cached       cost
+  agent.act "Sign in with username {username} and password {passw…  3026ms     0ms   2771ms   240ms      0            0/0           -          -
+  agent.assert "The app shows a signed-in page, not a sign-in for…  2120ms  1940ms     87ms     0ms      1        1858/85      0% (0)  $0.000275
+  agent.act "Objective 1 of the goal, for run id {runid}, asks on…   845ms     0ms    599ms   241ms      0            0/0           -          -
+  agent.extract "For run id e2gt2-n3: In the repository `bench/be…  1062ms   952ms    105ms     0ms      1        2353/43      0% (0)  $0.000316
+  agent.act "Achieve objective 2 of the goal, for run id {runid}:…   31.7s  1871ms   3205ms   261ms      1        6227/89  60% (3746)  $0.000389
+  agent.assert "For run id e2gt2-n3, this now holds in the app: A…  3486ms  3275ms    120ms     0ms      1        2670/99      0% (0)  $0.000383
+  agent.act "Achieve objective 3 of the goal, for run id {runid}:…  5448ms     0ms   5093ms   250ms      0            0/0           -          -
+  agent.assert "For run id e2gt2-n3, this now holds in the app: T…  3228ms  3057ms    104ms     0ms      1       2857/107      0% (0)  $0.000411
+  agent.act "Achieve objective 4 of the goal, for run id {runid}:…  3243ms     0ms   2947ms   191ms      0            0/0           -          -
+  agent.assert "For run id e2gt2-n3, this now holds in the app: I…  1560ms  1367ms    132ms     0ms      1        3018/48      0% (0)  $0.000401
+  agent.act "Achieve objective 5 of the goal, for run id {runid}:…   986ms     0ms    741ms   138ms      0            0/0           -          -
+  agent.assert "For run id e2gt2-n3, this now holds in the app: I…  1465ms  1249ms    125ms     0ms      1        3146/45      0% (0)  $0.000416
+  agent.act "Achieve objective 6 of the goal, for run id {runid}:…   888ms     0ms    763ms   116ms      0            0/0           -          -
+  agent.assert "For run id e2gt2-n3, this now holds in the app: I…  1525ms  1239ms    177ms     0ms      1        3392/54      0% (0)  $0.000451
+  agent.act "Objective 7 of the goal, for run id {runid}, asks on…  1756ms  1486ms    261ms     0ms      1        7571/78  49% (3746)  $0.000551
+  agent.extract "For run id e2gt2-n3: Report the issue's number e…  1370ms  1263ms    105ms     0ms      1        3500/58      0% (0)  $0.000466
