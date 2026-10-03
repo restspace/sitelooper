@@ -1,0 +1,186 @@
+{
+  "target": "odoo",
+  "runid": "e2od1-strict",
+  "steps": [
+    {
+      "kind": "act",
+      "id": "signin",
+      "ok": true,
+      "ms": 3751,
+      "summary": "replayed 3 recorded action(s) zero-turn from the trace cache; recorded verdict: Signed in successfully with username admin; Odoo opened the Discuss inbox.",
+      "cache": {
+        "mode": "self-finalized",
+        "replayedActions": 3,
+        "totalActions": 3
+      },
+      "modelCalls": 0,
+      "actions": 3
+    },
+    {
+      "kind": "assert",
+      "id": "signin",
+      "ok": true,
+      "ms": 1713
+    },
+    {
+      "kind": "act",
+      "id": "obj1",
+      "ok": true,
+      "ms": 2925,
+      "summary": "replayed 6 recorded action(s) zero-turn from the trace cache; recorded verdict: Created contact e2od1-n1 Bench Customer (record id 44). The saved contact form shows City set to Benchville and a “Contact created” notification.",
+      "cache": {
+        "mode": "self-finalized",
+        "replayedActions": 6,
+        "totalActions": 6
+      },
+      "modelCalls": 0,
+      "actions": 6
+    },
+    {
+      "kind": "assert",
+      "id": "obj1",
+      "ok": true,
+      "ms": 6530
+    },
+    {
+      "kind": "act",
+      "id": "obj2",
+      "ok": true,
+      "ms": 60800,
+      "summary": "Saved quotation S00024 for e2od1-strict Bench Customer with one order line: Customizable Desk, quantity 3, unit price £750.00, and untaxed amount £2,250.00. The current screen shows the quotation, its line, and the untaxed amount.",
+      "cache": {
+        "mode": "agent-concluded",
+        "reason": "gap",
+        "derived": "whole-node",
+        "replayedActions": 3,
+        "totalActions": 15
+      },
+      "modelCalls": 14,
+      "actions": 15
+    },
+    {
+      "kind": "assert",
+      "id": "obj2",
+      "ok": true,
+      "ms": 3283
+    },
+    {
+      "kind": "extract",
+      "id": "obj2",
+      "ok": true,
+      "ms": 3119,
+      "values": [
+        "Customizable Desk",
+        "750.00",
+        "£ 2,250.00"
+      ]
+    },
+    {
+      "kind": "act",
+      "id": "obj3",
+      "ok": false,
+      "code": "REPLAY_STALE",
+      "blocked": false,
+      "error": "the recording of this step no longer replays (end-mismatch), and cache.strict hands no step to the agent; re-record it with a read-write run without --strict-cache and commit the changed entry under .e2e/cache",
+      "ms": 31499
+    },
+    {
+      "kind": "assert",
+      "id": "obj3",
+      "ok": true,
+      "ms": 3312
+    },
+    {
+      "kind": "extract",
+      "id": "obj3",
+      "ok": true,
+      "ms": 2969,
+      "values": [
+        "[FURN_8855] Drawer",
+        "£ 2,471.00"
+      ]
+    },
+    {
+      "kind": "act",
+      "id": "obj4",
+      "ok": false,
+      "code": "REPLAY_STALE",
+      "blocked": false,
+      "error": "the recording of this step no longer replays (target-not-found), and cache.strict hands no step to the agent; re-record it with a read-write run without --strict-cache and commit the changed entry under .e2e/cache",
+      "ms": 14975
+    },
+    {
+      "kind": "assert",
+      "id": "obj4",
+      "ok": false,
+      "code": "ASSERTION_FAILED",
+      "blocked": false,
+      "error": "The first order line is shown with quantity 3.00, not 5, so the requested change is not reflected.",
+      "ms": 3008
+    },
+    {
+      "kind": "extract",
+      "id": "obj4",
+      "ok": true,
+      "ms": 3338,
+      "values": [
+        "£ 2,471.00"
+      ]
+    },
+    {
+      "kind": "act",
+      "id": "obj5",
+      "ok": true,
+      "ms": 715,
+      "summary": "replayed 1 recorded action(s) zero-turn from the trace cache; recorded verdict: The quotation was confirmed. The current screen shows order reference S00022 and status Sales Order.",
+      "cache": {
+        "mode": "self-finalized",
+        "replayedActions": 1,
+        "totalActions": 1
+      },
+      "modelCalls": 0,
+      "actions": 1
+    },
+    {
+      "kind": "assert",
+      "id": "obj5",
+      "ok": true,
+      "ms": 2113
+    },
+    {
+      "kind": "extract",
+      "id": "obj5",
+      "ok": true,
+      "ms": 1663,
+      "values": [
+        "S00024",
+        "Sales Order"
+      ]
+    },
+    {
+      "kind": "act",
+      "id": "obj6",
+      "ok": false,
+      "code": "REPLAY_STALE",
+      "blocked": false,
+      "error": "the recording of this step no longer replays (end-mismatch), and cache.strict hands no step to the agent; re-record it with a read-write run without --strict-cache and commit the changed entry under .e2e/cache",
+      "ms": 42926
+    },
+    {
+      "kind": "assert",
+      "id": "obj6",
+      "ok": true,
+      "ms": 2861
+    },
+    {
+      "kind": "extract",
+      "id": "obj6",
+      "ok": true,
+      "ms": 2469,
+      "values": [
+        "Cancelled"
+      ]
+    }
+  ],
+  "finalText": "1. DONE\n2. DONE Customizable Desk | 750.00 | £ 2,250.00\n3. FAILED [FURN_8855] Drawer | £ 2,471.00\n4. FAILED £ 2,471.00\n5. DONE S00024 | Sales Order\n6. FAILED Cancelled"
+}

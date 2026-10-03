@@ -1,0 +1,71 @@
+
+ RUN  e2e v0.16.0 /home/user/sitelooper/bench/e2e-arm
+      run 01a100a0-e0fb-7ecc-ac32-6da0a4a77ca1 · targets: web
+      model openrouter/openai/gpt-6-luna
+
+   ✓ odoo flow > agent.act "Sign in with username {username} and password {password}" 3.79s
+   ✓ odoo flow > agent.assert "The app shows a signed-in page, not a sign-in form" 1.56s · 1 model call
+   ✓ odoo flow > agent.act "Achieve objective 1 of the goal, for run id {runid}: A customer named `…" 2.87s
+   ✓ odoo flow > agent.assert "For run id e2od1-n2, this now holds in the app: A customer named `e2od1…" 3.44s · 1 model call
+   ✓ odoo flow > agent.act "Achieve objective 2 of the goal, for run id {runid}: A quotation exists…" 42.62s · 14 model calls
+   ✓ odoo flow > agent.assert "For run id e2od1-n2, this now holds in the app: A quotation exists for …" 2.86s · 1 model call
+   ✓ odoo flow > agent.extract "For run id e2od1-n2: A quotation exists for that customer with ONE orde…" 4.80s · 1 model call
+   ✓ odoo flow > agent.act "Achieve objective 3 of the goal, for run id {runid}: The same quotation…" 33.86s · 5 model calls
+   ✓ odoo flow > agent.assert "For run id e2od1-n2, this now holds in the app: The same quotation gain…" 1.33s · 1 model call
+   ✓ odoo flow > agent.extract "For run id e2od1-n2: The same quotation gains a SECOND order line: a di…" 2.70s · 1 model call
+   ✓ odoo flow > agent.act "Achieve objective 4 of the goal, for run id {runid}: The first line's q…" 22.54s · 2 model calls
+   ✓ odoo flow > agent.assert "For run id e2od1-n2, this now holds in the app: The first line's quanti…" 3.66s · 1 model call
+   ✓ odoo flow > agent.extract "For run id e2od1-n2: The first line's quantity is changed from 3 to 5. …" 2.91s · 1 model call
+   ✓ odoo flow > agent.act "Achieve objective 5 of the goal, for run id {runid}: The quotation is c…" 18.66s · 1 model call
+   ✓ odoo flow > agent.assert "For run id e2od1-n2, this now holds in the app: The quotation is confir…" 1.92s · 1 model call
+   ✓ odoo flow > agent.extract "For run id e2od1-n2: The quotation is confirmed so it becomes a sales o…" 3.63s · 1 model call
+   ✓ odoo flow > agent.act "Achieve objective 6 of the goal, for run id {runid}: The sales order is…" 18.94s · 1 model call
+   ✓ odoo flow > agent.assert "For run id e2od1-n2, this now holds in the app: The sales order is then…" 2.11s · 1 model call
+   ✓ odoo flow > agent.extract "For run id e2od1-n2: The sales order is then cancelled so nothing creat…" 1.78s · 1 model call
+ ✓ |web| tests/flow.e2e.ts (1 test) 177.91s ai 239.6k tokens · 72% cached · $0.0112
+   ✓ odoo flow 177.91s ai 239.6k tokens · 72% cached · $0.0112
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+         AI  239.6k tokens · 72% cached · $0.0112 · 35 model calls · openrouter/openai/gpt-6-luna
+      Cache  2 replayed · 5 handed off
+   Start at  07:18:26
+   Duration  178.93s (2m 59s)
+     Report  .e2e/report.json
+
+
+--- stderr ---
+[e2e debug] phase timings (wall 179.6s)
+  phase           count   total     avg     max
+  scheduler           1  178.9s  178.9s  178.9s
+  test.body           1  176.3s  176.3s  176.3s
+  agent.model        35  100.9s  2883ms  4735ms
+  agent.observe     101   22.5s   223ms  2081ms
+  agent.action       38  2501ms    66ms   527ms
+  config.load         1   635ms   635ms   635ms
+  session.close       1    81ms    81ms    81ms
+  engine.init         1    76ms    76ms    76ms
+  session.launch      1    11ms    11ms    11ms
+  collect             1    10ms    10ms    10ms
+  engine.prepare      1     0ms     0ms     0ms
+[e2e debug] agent steps (execution order, model openrouter/openai/gpt-6-luna, total $0.011219+)
+  step                                                               total   model  observe  action  calls  tokens in/out        cached       cost
+  agent.act "Sign in with username {username} and password {passw…  3795ms     0ms   3089ms   594ms      0            0/0             -          -
+  agent.assert "The app shows a signed-in page, not a sign-in for…  1562ms  1448ms     37ms     0ms      1        1211/57        0% (0)   $0.00018
+  agent.act "Achieve objective 1 of the goal, for run id {runid}:…  2865ms     0ms   2452ms   300ms      0            0/0             -          -
+  agent.assert "For run id e2od1-n2, this now holds in the app: A…  3439ms  3316ms     67ms     0ms      1       1860/253        0% (0)  $0.000359
+  agent.act "Achieve objective 2 of the goal, for run id {runid}:…   42.6s   40.7s   5727ms   614ms     14     132510/861  90% (119137)  $0.003249
+  agent.assert "For run id e2od1-n2, this now holds in the app: A…  2856ms  2688ms    113ms     0ms      1       2573/132        0% (0)  $0.000388
+  agent.extract "For run id e2od1-n2: A quotation exists for that…  4798ms  4713ms     83ms     0ms      1       2691/111        0% (0)  $0.000392
+  agent.act "Achieve objective 3 of the goal, for run id {runid}:…   33.9s   17.8s   3543ms   270ms      5      41570/391   82% (34239)  $0.001439
+  agent.assert "For run id e2od1-n2, this now holds in the app: T…  1332ms  1138ms    130ms     0ms      1        2738/65        0% (0)  $0.000375
+  agent.extract "For run id e2od1-n2: The same quotation gains a …  2702ms  2611ms     90ms     0ms      1        2843/90        0% (0)    $0.0004
+  agent.act "Achieve objective 4 of the goal, for run id {runid}:…   22.5s  6545ms   2252ms   232ms      2      15975/256   66% (10543)  $0.000906
+  agent.assert "For run id e2od1-n2, this now holds in the app: T…  3661ms  3520ms     83ms     0ms      1       2738/116        0% (0)    $0.0004
+  agent.extract "For run id e2od1-n2: The first line's quantity i…  2911ms  2831ms     80ms     0ms      1        2840/68        0% (0)  $0.000389
+  agent.act "Achieve objective 5 of the goal, for run id {runid}:…   18.7s  2858ms   1657ms   116ms      1        7253/83    52% (3761)  $0.000512
+  agent.assert "For run id e2od1-n2, this now holds in the app: T…  1916ms  1732ms    132ms     0ms      1        2972/56        0% (0)  $0.000399
+  agent.extract "For run id e2od1-n2: The quotation is confirmed …  3634ms  3536ms     96ms     0ms      1        3091/62        0% (0)  $0.000417
+  agent.act "Achieve objective 6 of the goal, for run id {runid}:…   18.9s  1956ms   2590ms   374ms      1        7601/76    49% (3761)  $0.000552
+  agent.assert "For run id e2od1-n2, this now holds in the app: T…  2113ms  1909ms    141ms     0ms      1        3082/97        0% (0)  $0.000434
+  agent.extract "For run id e2od1-n2: The sales order is then can…  1783ms  1652ms    129ms     0ms      1        3186/58        0% (0)  $0.000427

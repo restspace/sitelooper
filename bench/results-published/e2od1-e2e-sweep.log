@@ -1,0 +1,234 @@
+
+=== e2od1-n1 ===
+[reset] odoo: no leftover bench customers
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+         AI  556.8k tokens · 76% cached · $0.0225 · 62 model calls · openrouter/openai/gpt-6-luna
+      Cache  7 missed
+   Start at  07:14:43
+   Duration  220.42s (3m 40s)
+     Report  .e2e/report.json
+
+
+--- stderr ---
+[e2e debug] phase timings (wall 231.2s)
+  phase           count   total     avg     max
+  scheduler           1  220.4s  220.4s  220.4s
+  test.body           1  217.2s  217.2s  217.2s
+  agent.model        62  211.1s  3405ms   18.0s
+  agent.observe      72   29.1s   404ms  3095ms
+  agent.action       42   17.8s   423ms   15.0s
+  engine.prepare      1  9833ms  9833ms  9833ms
+  config.load         1   914ms   914ms   914ms
+  engine.init         1   267ms   267ms   267ms
+  session.close       1    62ms    62ms    62ms
+  collect             1    17ms    17ms    17ms
+  session.launch      1    13ms    13ms    13ms
+[e2e debug] agent steps (execution order, model openrouter/openai/gpt-6-luna, total $0.022496)
+  step                                                               total   model  observe  action  calls  tokens in/out        cached       cost
+  agent.act "Sign in with username {username} and password {passw…   11.6s   11.1s   5639ms   824ms      3      13262/147    62% (8183)  $0.000781
+  agent.assert "The app shows a signed-in page, not a sign-in for…  3052ms  2920ms     45ms     0ms      1        1211/82        0% (0)  $0.000192
+  agent.act "Achieve objective 1 of the goal, for run id {runid}:…   17.5s   17.2s   3417ms   215ms      7      74020/354   84% (62488)  $0.002221
+  agent.assert "For run id e2od1-n1, this now holds in the app: A…  2144ms  2020ms     64ms     0ms      1        1816/78        0% (0)  $0.000266
+  agent.act "Achieve objective 2 of the goal, for run id {runid}:…   73.9s   73.5s   9939ms   719ms     18    247653/1300  79% (195384)  $0.009081
+  agent.assert "For run id e2od1-n1, this now holds in the app: A…  1837ms  1663ms    119ms     0ms      1        2573/70        0% (0)  $0.000357
+  agent.extract "For run id e2od1-n1: A quotation exists for that…  3313ms  3214ms     97ms     0ms      1       2691/132        0% (0)  $0.000402
+  agent.act "Achieve objective 3 of the goal, for run id {runid}:…   35.8s   35.2s   3526ms   446ms     10      84807/760   88% (74865)   $0.00234
+  agent.assert "For run id e2od1-n1, this now holds in the app: T…  2781ms  2607ms    115ms     0ms      1       2744/139        0% (0)  $0.000412
+  agent.extract "For run id e2od1-n1: The same quotation gains a …  3053ms  2964ms     88ms     0ms      1        2849/93        0% (0)  $0.000403
+  agent.act "Achieve objective 4 of the goal, for run id {runid}:…   11.6s   11.1s   1406ms   116ms      4      30125/258   82% (24820)  $0.001028
+  agent.assert "For run id e2od1-n1, this now holds in the app: T…  1889ms  1704ms    121ms     0ms      1        2820/54        0% (0)  $0.000379
+  agent.extract "For run id e2od1-n1: The first line's quantity i…  2304ms  2198ms    105ms     0ms      1        2922/63        0% (0)  $0.000397
+  agent.act "Achieve objective 5 of the goal, for run id {runid}:…  5479ms  4950ms   1163ms    70ms      2      16307/116   65% (10650)  $0.000865
+  agent.assert "For run id e2od1-n1, this now holds in the app: T…  1535ms  1345ms    116ms     0ms      1        2984/66        0% (0)  $0.000406
+  agent.extract "For run id e2od1-n1: The quotation is confirmed …  1698ms  1592ms    105ms     0ms      1        3103/32        0% (0)  $0.000404
+  agent.act "Achieve objective 6 of the goal, for run id {runid}:…   33.6s   33.1s   2835ms   15.4s      6      54502/254   83% (45214)  $0.001721
+  agent.assert "For run id e2od1-n1, this now holds in the app: T…  1499ms  1325ms    112ms     0ms      1        3094/64        0% (0)  $0.000419
+  agent.extract "For run id e2od1-n1: The sales order is then can…  1486ms  1385ms    100ms     0ms      1        3198/46        0% (0)  $0.000423
+
+e2od1-n1: objectives passed 6/6
+  obj 1: PASS — city="Benchville"
+  obj 2: PASS — orders for customer: 1, lines: 2
+  obj 3: PASS — 2 lines, 2 distinct products
+  obj 4: PASS — quantities: 5, 2
+  obj 5: PASS — state tracking shows confirmation
+  obj 6: PASS — final state=cancel, ref=S00021
+
+=== e2od1-n2 ===
+[reset] odoo: deleted 1 leftover bench order(s)
+[reset] odoo: deleted 1 leftover bench customer(s)
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+         AI  239.6k tokens · 72% cached · $0.0112 · 35 model calls · openrouter/openai/gpt-6-luna
+      Cache  2 replayed · 5 handed off
+   Start at  07:18:26
+   Duration  178.93s (2m 59s)
+     Report  .e2e/report.json
+
+
+--- stderr ---
+[e2e debug] phase timings (wall 179.6s)
+  phase           count   total     avg     max
+  scheduler           1  178.9s  178.9s  178.9s
+  test.body           1  176.3s  176.3s  176.3s
+  agent.model        35  100.9s  2883ms  4735ms
+  agent.observe     101   22.5s   223ms  2081ms
+  agent.action       38  2501ms    66ms   527ms
+  config.load         1   635ms   635ms   635ms
+  session.close       1    81ms    81ms    81ms
+  engine.init         1    76ms    76ms    76ms
+  session.launch      1    11ms    11ms    11ms
+  collect             1    10ms    10ms    10ms
+  engine.prepare      1     0ms     0ms     0ms
+[e2e debug] agent steps (execution order, model openrouter/openai/gpt-6-luna, total $0.011219+)
+  step                                                               total   model  observe  action  calls  tokens in/out        cached       cost
+  agent.act "Sign in with username {username} and password {passw…  3795ms     0ms   3089ms   594ms      0            0/0             -          -
+  agent.assert "The app shows a signed-in page, not a sign-in for…  1562ms  1448ms     37ms     0ms      1        1211/57        0% (0)   $0.00018
+  agent.act "Achieve objective 1 of the goal, for run id {runid}:…  2865ms     0ms   2452ms   300ms      0            0/0             -          -
+  agent.assert "For run id e2od1-n2, this now holds in the app: A…  3439ms  3316ms     67ms     0ms      1       1860/253        0% (0)  $0.000359
+  agent.act "Achieve objective 2 of the goal, for run id {runid}:…   42.6s   40.7s   5727ms   614ms     14     132510/861  90% (119137)  $0.003249
+  agent.assert "For run id e2od1-n2, this now holds in the app: A…  2856ms  2688ms    113ms     0ms      1       2573/132        0% (0)  $0.000388
+  agent.extract "For run id e2od1-n2: A quotation exists for that…  4798ms  4713ms     83ms     0ms      1       2691/111        0% (0)  $0.000392
+  agent.act "Achieve objective 3 of the goal, for run id {runid}:…   33.9s   17.8s   3543ms   270ms      5      41570/391   82% (34239)  $0.001439
+  agent.assert "For run id e2od1-n2, this now holds in the app: T…  1332ms  1138ms    130ms     0ms      1        2738/65        0% (0)  $0.000375
+  agent.extract "For run id e2od1-n2: The same quotation gains a …  2702ms  2611ms     90ms     0ms      1        2843/90        0% (0)    $0.0004
+  agent.act "Achieve objective 4 of the goal, for run id {runid}:…   22.5s  6545ms   2252ms   232ms      2      15975/256   66% (10543)  $0.000906
+  agent.assert "For run id e2od1-n2, this now holds in the app: T…  3661ms  3520ms     83ms     0ms      1       2738/116        0% (0)    $0.0004
+  agent.extract "For run id e2od1-n2: The first line's quantity i…  2911ms  2831ms     80ms     0ms      1        2840/68        0% (0)  $0.000389
+  agent.act "Achieve objective 5 of the goal, for run id {runid}:…   18.7s  2858ms   1657ms   116ms      1        7253/83    52% (3761)  $0.000512
+  agent.assert "For run id e2od1-n2, this now holds in the app: T…  1916ms  1732ms    132ms     0ms      1        2972/56        0% (0)  $0.000399
+  agent.extract "For run id e2od1-n2: The quotation is confirmed …  3634ms  3536ms     96ms     0ms      1        3091/62        0% (0)  $0.000417
+  agent.act "Achieve objective 6 of the goal, for run id {runid}:…   18.9s  1956ms   2590ms   374ms      1        7601/76    49% (3761)  $0.000552
+  agent.assert "For run id e2od1-n2, this now holds in the app: T…  2113ms  1909ms    141ms     0ms      1        3082/97        0% (0)  $0.000434
+  agent.extract "For run id e2od1-n2: The sales order is then can…  1783ms  1652ms    129ms     0ms      1        3186/58        0% (0)  $0.000427
+
+e2od1-n2: objectives passed 6/6
+  obj 1: PASS — city="Benchville"
+  obj 2: PASS — orders for customer: 1, lines: 2
+  obj 3: PASS — 2 lines, 2 distinct products
+  obj 4: PASS — quantities: 5, 2
+  obj 5: PASS — state tracking shows confirmation
+  obj 6: PASS — final state=cancel, ref=S00022
+
+=== e2od1-n3 ===
+[reset] odoo: deleted 1 leftover bench order(s)
+[reset] odoo: deleted 1 leftover bench customer(s)
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+         AI  221.0k tokens · 67% cached · $0.0116 · 33 model calls · openrouter/openai/gpt-6-luna
+      Cache  3 replayed · 3 handed off · 1 missed
+   Start at  07:21:27
+   Duration  165.23s (2m 45s)
+     Report  .e2e/report.json
+
+
+--- stderr ---
+[e2e debug] phase timings (wall 165.9s)
+  phase           count   total     avg     max
+  scheduler           1  165.2s  165.2s  165.2s
+  test.body           1  162.6s  162.6s  162.6s
+  agent.model        33  103.1s  3124ms  5771ms
+  agent.observe      99   25.3s   256ms  2185ms
+  agent.action       39  2768ms    71ms   542ms
+  config.load         1   605ms   605ms   605ms
+  engine.init         1    83ms    83ms    83ms
+  session.close       1    66ms    66ms    66ms
+  session.launch      1    12ms    12ms    12ms
+  collect             1    10ms    10ms    10ms
+  engine.prepare      1     1ms     1ms     1ms
+[e2e debug] agent steps (execution order, model openrouter/openai/gpt-6-luna, total $0.011604+)
+  step                                                               total   model  observe  action  calls  tokens in/out        cached       cost
+  agent.act "Sign in with username {username} and password {passw…  3748ms     0ms   3030ms   607ms      0            0/0             -          -
+  agent.assert "The app shows a signed-in page, not a sign-in for…  1751ms  1626ms     46ms     0ms      1        1211/51        0% (0)  $0.000177
+  agent.act "Achieve objective 1 of the goal, for run id {runid}:…  2836ms     0ms   2421ms   307ms      0            0/0             -          -
+  agent.assert "For run id e2od1-n3, this now holds in the app: A…  2293ms  2175ms     67ms     0ms      1       1860/167        0% (0)  $0.000316
+  agent.act "Achieve objective 2 of the goal, for run id {runid}:…   61.3s   59.3s   9823ms   788ms     15    141697/1050  81% (114417)  $0.005032
+  agent.assert "For run id e2od1-n3, this now holds in the app: A…  3667ms  3490ms    123ms     0ms      1       2567/104        0% (0)  $0.000373
+  agent.extract "For run id e2od1-n3: A quotation exists for that…  2605ms  2500ms    102ms     0ms      1        2685/92        0% (0)  $0.000382
+  agent.act "Achieve objective 3 of the goal, for run id {runid}:…   21.1s  3172ms   3146ms   375ms      1       6644/103    57% (3761)  $0.000446
+  agent.assert "For run id e2od1-n3, this now holds in the app: T…  1659ms  1478ms    124ms     0ms      1        2732/93        0% (0)  $0.000388
+  agent.extract "For run id e2od1-n3: The same quotation gains a …  3686ms  3589ms     96ms     0ms      1        2837/88        0% (0)  $0.000399
+  agent.act "Achieve objective 4 of the goal, for run id {runid}:…   12.6s   12.1s   1409ms   162ms      4      30891/245   80% (24731)  $0.001127
+  agent.assert "For run id e2od1-n3, this now holds in the app: T…  1445ms  1303ms     96ms     0ms      1        2735/63        0% (0)  $0.000373
+  agent.extract "For run id e2od1-n3: The first line's quantity i…  2675ms  2591ms     83ms     0ms      1        2837/68        0% (0)  $0.000389
+  agent.act "Achieve objective 5 of the goal, for run id {runid}:…   643ms     0ms    459ms    78ms      0            0/0             -          -
+  agent.assert "For run id e2od1-n3, this now holds in the app: T…  1447ms  1277ms    109ms     0ms      1        2969/60        0% (0)  $0.000401
+  agent.extract "For run id e2od1-n3: The quotation is confirmed …  2742ms  2639ms    102ms     0ms      1        3088/65        0% (0)  $0.000418
+  agent.act "Achieve objective 6 of the goal, for run id {runid}:…   32.7s  2796ms   3803ms   450ms      1        7605/76    49% (3761)  $0.000553
+  agent.assert "For run id e2od1-n3, this now holds in the app: T…  2085ms  1887ms    133ms     0ms      1        3081/68        0% (0)  $0.000419
+  agent.extract "For run id e2od1-n3: The sales order is then can…  1356ms  1222ms    134ms     0ms      1        3185/27        0% (0)  $0.000412
+
+e2od1-n3: objectives passed 6/6
+  obj 1: PASS — city="Benchville"
+  obj 2: PASS — orders for customer: 1, lines: 2
+  obj 3: PASS — 2 lines, 2 distinct products
+  obj 4: PASS — quantities: 5, 2
+  obj 5: PASS — state tracking shows confirmation
+  obj 6: PASS — final state=cancel, ref=S00023
+
+=== e2od1-strict (strict cache, read-only) ===
+[reset] odoo: deleted 1 leftover bench order(s)
+[reset] odoo: deleted 1 leftover bench customer(s)
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+         AI  190.4k tokens · 64% cached · $0.0110 · 26 model calls · openrouter/openai/gpt-6-luna
+      Cache  3 replayed · 3 handed off · 1 missed
+   Start at  07:24:15
+   Duration  197.02s (3m 17s)
+     Report  .e2e/report.json
+
+
+--- stderr ---
+[e2e debug] phase timings (wall 197.7s)
+  phase           count   total     avg     max
+  scheduler           1  197.0s  197.0s  197.0s
+  test.body           1  194.2s  194.2s  194.2s
+  agent.model        26   93.8s  3606ms  8615ms
+  agent.observe     121   23.8s   196ms  2062ms
+  agent.action       35  2530ms    72ms   492ms
+  config.load         1   626ms   626ms   626ms
+  engine.init         1    75ms    75ms    75ms
+  session.close       1    52ms    52ms    52ms
+  collect             1    12ms    12ms    12ms
+  session.launch      1    11ms    11ms    11ms
+  engine.prepare      1     1ms     1ms     1ms
+[e2e debug] agent steps (execution order, model openrouter/openai/gpt-6-luna, total $0.011001+)
+  step                                                               total   model  observe  action  calls  tokens in/out        cached       cost
+  agent.act "Sign in with username {username} and password {passw…  3750ms     0ms   3097ms   544ms      0            0/0             -          -
+  agent.assert "The app shows a signed-in page, not a sign-in for…  1713ms  1596ms     40ms     0ms      1        1211/53        0% (0)  $0.000178
+  agent.act "Achieve objective 1 of the goal, for run id {runid}:…  2924ms     0ms   2505ms   312ms      0            0/0             -          -
+  agent.assert "For run id e2od1-strict, this now holds in the ap…  6529ms  6383ms     79ms     0ms      1       1860/451        0% (0)  $0.000458
+  agent.act "Achieve objective 2 of the goal, for run id {runid}:…   60.8s   59.1s   6993ms   723ms     14    155557/1221  77% (119662)   $0.00625
+  agent.assert "For run id e2od1-strict, this now holds in the ap…  3282ms  3141ms     89ms     0ms      1       2608/128        0% (0)   $0.00039
+  agent.extract "For run id e2od1-strict: A quotation exists for …  3118ms  3037ms     79ms     0ms      1       2726/104        0% (0)  $0.000393
+  agent.act "Achieve objective 3 of the goal, for run id {runid}:…   31.5s     0ms   3932ms   421ms      0            0/0             -          -
+  agent.assert "For run id e2od1-strict, this now holds in the ap…  3312ms  3133ms    122ms     0ms      1       2773/102        0% (0)  $0.000398
+  agent.extract "For run id e2od1-strict: The same quotation gain…  2969ms  2864ms    103ms     0ms      1        2878/94        0% (0)  $0.000407
+  agent.act "Achieve objective 4 of the goal, for run id {runid}:…   15.0s     0ms    953ms     0ms      0            0/0             -          -
+  agent.assert "For run id e2od1-strict, this now holds in the ap…  3008ms  2834ms    105ms     0ms      1       2773/113        0% (0)  $0.000403
+  agent.extract "For run id e2od1-strict: The first line's quanti…  3337ms  3237ms    100ms     0ms      1        2875/95        0% (0)  $0.000407
+  agent.act "Achieve objective 5 of the goal, for run id {runid}:…   715ms     0ms    519ms    89ms      0            0/0             -          -
+  agent.assert "For run id e2od1-strict, this now holds in the ap…  2112ms  1907ms    130ms     0ms      1        3007/96        0% (0)  $0.000424
+  agent.extract "For run id e2od1-strict: The quotation is confir…  1663ms  1558ms    104ms     0ms      1        3126/64        0% (0)  $0.000423
+  agent.act "Achieve objective 6 of the goal, for run id {runid}:…   42.9s     0ms   4516ms   440ms      0            0/0             -          -
+  agent.assert "For run id e2od1-strict, this now holds in the ap…  2860ms  2640ms    160ms     0ms      1       3110/108        0% (0)  $0.000443
+  agent.extract "For run id e2od1-strict: The sales order is then…  2468ms  2315ms    150ms     0ms      1        3214/56        0% (0)   $0.00043
+
+e2od1-strict: objectives passed 5/6
+  obj 1: PASS — city="Benchville"
+  obj 2: PASS — orders for customer: 1, lines: 2
+  obj 3: PASS — 2 lines, 2 distinct products
+  obj 4: FAIL — quantities: 3, 2
+  obj 5: PASS — state tracking shows confirmation
+  obj 6: PASS — final state=cancel, ref=S00024
+
+=== e2e sweep summary ===
+run | objectives | verifier clean | e2e exit | wall s | acts replayed/handed-off/missed/failed | act model calls | usd
+e2od1-n1 | 6/6 | true | 0 | 232 | 0/0/7/0 of 7 | 50 | 0.0225
+    signin:missed:no-entry  obj1:missed:no-entry  obj2:missed:no-entry  obj3:missed:no-entry  obj4:missed:no-entry  obj5:missed:no-entry  obj6:missed:no-entry
+e2od1-n2 | 6/6 | true | 0 | 180 | 2/5/0/0 of 7 | 23 | 0.0112
+    obj2:agent-concluded:gap(pixels)  obj3:agent-concluded:target-not-found  obj4:agent-concluded:end-mismatch  obj5:agent-concluded:end-mismatch  obj6:agent-concluded:end-mismatch
+e2od1-n3 | 6/6 | true | 0 | 166 | 3/3/1/0 of 7 | 21 | 0.0116
+    obj2:agent-concluded:gap(whole-node)  obj3:agent-concluded:end-mismatch  obj4:missed:no-entry  obj6:agent-concluded:end-mismatch
+e2od1-strict | 5/6 | false | 0 | 198 | 3/1/0/3 of 7 | 14 | 0.0110
+    obj2:agent-concluded:gap(whole-node)

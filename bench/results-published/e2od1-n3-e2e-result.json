@@ -1,0 +1,236 @@
+{
+  "arm": "e2e",
+  "e2eVersion": "0.16.0",
+  "target": "odoo",
+  "runid": "e2od1-n3",
+  "model": "openai/gpt-6-luna",
+  "strict": false,
+  "reset": true,
+  "exitCode": 0,
+  "wallMs": 166257,
+  "cache": {
+    "acts": 7,
+    "replayed": 3,
+    "handedOff": 3,
+    "missed": 1,
+    "failed": 0,
+    "stale": 0,
+    "actModelCalls": 21,
+    "reasons": [
+      "obj2:agent-concluded:gap(whole-node)",
+      "obj3:agent-concluded:end-mismatch",
+      "obj4:missed:no-entry",
+      "obj6:agent-concluded:end-mismatch"
+    ]
+  },
+  "usage": {
+    "modelTokens": 221044,
+    "modelCachedTokens": 146670,
+    "usd": 0.0116039,
+    "usdAtRatesFloor": null
+  },
+  "steps": [
+    {
+      "kind": "act",
+      "id": "signin",
+      "ok": true,
+      "ms": 3749,
+      "summary": "replayed 3 recorded action(s) zero-turn from the trace cache; recorded verdict: Signed in successfully with username admin; Odoo opened the Discuss inbox.",
+      "cache": {
+        "mode": "self-finalized",
+        "replayedActions": 3,
+        "totalActions": 3
+      },
+      "modelCalls": 0,
+      "actions": 3
+    },
+    {
+      "kind": "assert",
+      "id": "signin",
+      "ok": true,
+      "ms": 1752
+    },
+    {
+      "kind": "act",
+      "id": "obj1",
+      "ok": true,
+      "ms": 2837,
+      "summary": "replayed 6 recorded action(s) zero-turn from the trace cache; recorded verdict: Created contact e2od1-n1 Bench Customer (record id 44). The saved contact form shows City set to Benchville and a “Contact created” notification.",
+      "cache": {
+        "mode": "self-finalized",
+        "replayedActions": 6,
+        "totalActions": 6
+      },
+      "modelCalls": 0,
+      "actions": 6
+    },
+    {
+      "kind": "assert",
+      "id": "obj1",
+      "ok": true,
+      "ms": 2294
+    },
+    {
+      "kind": "act",
+      "id": "obj2",
+      "ok": true,
+      "ms": 61251,
+      "summary": "Created quotation S00023 for e2od1-n3 Bench Customer with one line: [E-COM06] Corner Desk Right Sit, quantity 3.00, unit price £147.00, and untaxed amount £441.00; the quotation remains open on screen showing these values.",
+      "cache": {
+        "mode": "agent-concluded",
+        "reason": "gap",
+        "derived": "whole-node",
+        "replayedActions": 3,
+        "totalActions": 14
+      },
+      "modelCalls": 15,
+      "actions": 16
+    },
+    {
+      "kind": "assert",
+      "id": "obj2",
+      "ok": true,
+      "ms": 3667
+    },
+    {
+      "kind": "extract",
+      "id": "obj2",
+      "ok": true,
+      "ms": 2606,
+      "values": [
+        "[E-COM06] Corner Desk Right Sit",
+        "147.00",
+        "£ 441.00"
+      ]
+    },
+    {
+      "kind": "act",
+      "id": "obj3",
+      "ok": true,
+      "ms": 21124,
+      "summary": "The quotation now has a second line for [FURN_8855] Drawer, quantity 2.00 at £110.50; the new untaxed amount is £662.00, shown on screen.",
+      "cache": {
+        "mode": "agent-concluded",
+        "reason": "end-mismatch",
+        "replayedActions": 7,
+        "totalActions": 7
+      },
+      "modelCalls": 1,
+      "actions": 7
+    },
+    {
+      "kind": "assert",
+      "id": "obj3",
+      "ok": true,
+      "ms": 1660
+    },
+    {
+      "kind": "extract",
+      "id": "obj3",
+      "ok": true,
+      "ms": 3687,
+      "values": [
+        "[FURN_8855] Drawer",
+        "£ 662.00"
+      ]
+    },
+    {
+      "kind": "act",
+      "id": "obj4",
+      "ok": true,
+      "ms": 12576,
+      "summary": "Changed the first line, [E-COM06] Corner Desk Right Sit, from quantity 3.00 to 5.00. The quotation now shows an untaxed amount of £956.00.",
+      "cache": {
+        "mode": "missed",
+        "reason": "no-entry",
+        "replayedActions": 0,
+        "totalActions": 0
+      },
+      "modelCalls": 4,
+      "actions": 3
+    },
+    {
+      "kind": "assert",
+      "id": "obj4",
+      "ok": true,
+      "ms": 1445
+    },
+    {
+      "kind": "extract",
+      "id": "obj4",
+      "ok": true,
+      "ms": 2675,
+      "values": [
+        "£ 956.00"
+      ]
+    },
+    {
+      "kind": "act",
+      "id": "obj5",
+      "ok": true,
+      "ms": 644,
+      "summary": "replayed 1 recorded action(s) zero-turn from the trace cache; recorded verdict: The quotation was confirmed. The current screen shows order reference S00022 and status Sales Order.",
+      "cache": {
+        "mode": "self-finalized",
+        "replayedActions": 1,
+        "totalActions": 1
+      },
+      "modelCalls": 0,
+      "actions": 1
+    },
+    {
+      "kind": "assert",
+      "id": "obj5",
+      "ok": true,
+      "ms": 1447
+    },
+    {
+      "kind": "extract",
+      "id": "obj5",
+      "ok": true,
+      "ms": 2742,
+      "values": [
+        "S00023",
+        "Sales Order"
+      ]
+    },
+    {
+      "kind": "act",
+      "id": "obj6",
+      "ok": true,
+      "ms": 32726,
+      "summary": "Sales order S00023 is cancelled. The current screen shows the status “Cancelled” and the cancellation message for the order.",
+      "cache": {
+        "mode": "agent-concluded",
+        "reason": "end-mismatch",
+        "replayedActions": 3,
+        "totalActions": 3
+      },
+      "modelCalls": 1,
+      "actions": 3
+    },
+    {
+      "kind": "assert",
+      "id": "obj6",
+      "ok": true,
+      "ms": 2086
+    },
+    {
+      "kind": "extract",
+      "id": "obj6",
+      "ok": true,
+      "ms": 1357,
+      "values": [
+        "Cancelled"
+      ]
+    }
+  ],
+  "finalText": "1. DONE\n2. DONE [E-COM06] Corner Desk Right Sit | 147.00 | £ 441.00\n3. DONE [FURN_8855] Drawer | £ 662.00\n4. DONE £ 956.00\n5. DONE S00023 | Sales Order\n6. DONE Cancelled",
+  "machine": {
+    "platform": "linux",
+    "arch": "x64",
+    "node": "v22.22.0",
+    "cpus": 4,
+    "memGb": 16
+  }
+}
