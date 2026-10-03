@@ -81,7 +81,9 @@ test(`${TARGET} flow`, { timeout: 2_700_000, agentContext: task.context }, async
           `For run id ${RUNID}: ${literal(o.report)} Return each requested value exactly as the screen shows it.`,
           { schema: z.object({ values: z.array(z.string()) }) },
         ));
-      report.push(`${o.n}. ${acted && got ? 'DONE' : 'FAILED'} ${(got?.values ?? []).join(' | ')}`);
+      // The act's own summary goes in too: a value only the agent can see (the
+      // page URL, e2gr1 obj 6) is in no observation `extract` judges.
+      report.push(`${o.n}. ${acted && got ? 'DONE' : 'FAILED'} ${(got?.values ?? []).join(' | ')}${acted?.summary ? ` (${acted.summary})` : ''}`);
     } else {
       report.push(`${o.n}. ${acted ? 'DONE' : 'FAILED'}`);
     }

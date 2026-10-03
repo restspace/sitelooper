@@ -1,3 +1,17 @@
+# Building sitelooper
+
+The original idea for sitelooper came from working with the very good agent-browser tool which just wraps Playwright and wondering how you could get even better at reducing the cost of tokens being pushed into the context than its already significant improvement over just using Playwright. I thought if you could use a subagent for connected groups of actions, this would reduce the cost further.
+
+Then I entered a competition run by @swyx to build a clone of a SaaS in a week. As part of it, competitors were given an assessment tool which was incredibly flexible as it had to deal with analysing whatever app different people built, but consequently had to use Sonnet, run for hours and cost about $20 per run.
+
+I tried hacking it to make it cheaper and didn't get far without breaking it. The one thing that kind of worked was getting it to record the actions it took and replay them. But that was incredibly brittle and only about 50% of the tests worked.
+
+So going back to sitelooper I had taken advantage of the relatively limited work it needed to do to get it to run with a small cheap fast agent and it was now cheaper than agent-browser, but slower. I saw that I needed to add recording, but with fallback to an agent where the recording broke.
+
+
+
+
+
 # The test you record on Monday should still pass on Thursday
 
 If you look after end-to-end tests for a SaaS product, you already know the shape of the week. A deploy goes out. Twelve specs go red. Nine of them are selectors: a class name with a build hash in it, a button whose label changed from "Save" to "Save changes", a table row that used to be third and is now fourth. Two are timing. One is real, and it took you until Wednesday afternoon to find it because you had to clear the other eleven first.
