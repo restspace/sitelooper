@@ -1,0 +1,238 @@
+
+=== e2op1-n1 ===
+[reset] openproject: no leftover bench work packages
+ ✓ |web| tests/flow.e2e.ts (1 test) 153.35s ai 452.8k tokens · 67% cached · $0.0226
+   ✓ openproject flow 153.35s ai 452.8k tokens · 67% cached · $0.0226
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+         AI  452.8k tokens · 67% cached · $0.0226 · 45 model calls · openrouter/openai/gpt-6-luna
+      Cache  8 missed
+   Start at  07:16:27
+   Duration  154.62s (2m 35s)
+     Report  .e2e/report.json
+
+
+--- stderr ---
+[e2e debug] phase timings (wall 168.9s)
+  phase           count   total     avg     max
+  scheduler           1  154.6s  154.6s  154.6s
+  test.body           1  151.1s  151.1s  151.1s
+  agent.model        45  137.2s  3049ms   16.4s
+  agent.observe      54   36.2s   670ms  2488ms
+  agent.action       27   19.6s   728ms   15.0s
+  engine.prepare      1   13.0s   13.0s   13.0s
+  config.load         1  1282ms  1282ms  1282ms
+  engine.init         1   342ms   342ms   342ms
+  session.close       1   110ms   110ms   110ms
+  collect             1    25ms    25ms    25ms
+  session.launch      1    16ms    16ms    16ms
+[e2e debug] agent steps (execution order, model openrouter/openai/gpt-6-luna, total $0.022568)
+  step                                                               total   model  observe  action  calls  tokens in/out       cached       cost
+  agent.act "Sign in with username {username} and password {passw…   14.7s   13.5s   5682ms  1613ms      3      17040/214   49% (8393)  $0.001262
+  agent.assert "The app shows a signed-in page, not a sign-in for…  2794ms  2404ms    243ms     0ms      1        4680/80       0% (0)  $0.000625
+  agent.act "Objective 1 of the goal, for run id {runid}, asks on…   42.9s   42.2s   8131ms   16.2s      8      90962/358  84% (76831)  $0.002688
+  agent.extract "For run id e2op1-n1: In the project named `Bench…  1553ms  1404ms    145ms     0ms      1        3701/64       0% (0)  $0.000495
+  agent.act "Achieve objective 2 of the goal, for run id {runid}:…   14.3s   13.5s   4794ms   400ms      7      75368/227  83% (62343)  $0.002343
+  agent.assert "For run id e2op1-n1, this now holds in the app: A…  1549ms  1241ms    224ms     0ms      1        5236/75       0% (0)  $0.000692
+  agent.act "Achieve objective 3 of the goal, for run id {runid}:…  6468ms  5654ms   2519ms   207ms      3      31120/115  52% (16171)  $0.002078
+  agent.assert "For run id e2op1-n1, this now holds in the app: T…  1469ms  1150ms    219ms     0ms      1        5214/61       0% (0)  $0.000682
+  agent.act "Achieve objective 4 of the goal, for run id {runid}:…  6594ms  5721ms   2333ms   163ms      3      31678/130  52% (16338)  $0.002136
+  agent.assert "For run id e2op1-n1, this now holds in the app: I…  1543ms  1194ms    249ms     0ms      1        5212/55       0% (0)  $0.000679
+  agent.act "Achieve objective 5 of the goal, for run id {runid}:…   15.9s   15.0s   4569ms   354ms      5      59755/310  69% (41274)  $0.002862
+  agent.assert "For run id e2op1-n1, this now holds in the app: I…  3363ms  3048ms    234ms     0ms      1        5220/94       0% (0)  $0.000699
+  agent.act "Achieve objective 6 of the goal, for run id {runid}:…   20.7s   19.8s   5137ms   511ms      6      82523/265  84% (69115)  $0.002481
+  agent.assert "For run id e2op1-n1, this now holds in the app: I…  1485ms  1206ms    198ms     0ms      1        4721/56       0% (0)  $0.000618
+  agent.act "Objective 7 of the goal, for run id {runid}, asks on…  8165ms  7314ms   1256ms   192ms      2      22544/320  56% (12547)  $0.001529
+  agent.extract "For run id e2op1-n1: Report the work package's n…  3059ms  2822ms    236ms     0ms      1        5300/71       0% (0)  $0.000698
+
+e2op1-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed subjects reported
+  obj 2: PASS — type=Task, description includes runid=true
+  obj 3: PASS — assignee=Bench Assignee
+  obj 4: PASS — status=In progress
+  obj 5: PASS — finish date=2026-12-31, want 2026-12-31
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — work package id 41 reported
+
+=== e2op1-n2 ===
+reset attempt 1 failed: fetch failed (UND_ERR_SOCKET)
+[reset] openproject: deleted 1 leftover bench work package(s)
+ ✓ |web| tests/flow.e2e.ts (1 test) 292.63s ai 219.5k tokens · 57% cached · $0.0137
+   ✓ openproject flow 292.63s ai 219.5k tokens · 57% cached · $0.0137
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+         AI  219.5k tokens · 57% cached · $0.0137 · 26 model calls · openrouter/openai/gpt-6-luna
+      Cache  1 replayed · 5 handed off · 2 missed
+   Start at  07:19:13
+   Duration  293.85s (4m 54s)
+     Report  .e2e/report.json
+
+
+--- stderr ---
+[e2e debug] phase timings (wall 294.6s)
+  phase           count   total     avg     max
+  scheduler           1  293.8s  293.8s  293.8s
+  test.body           1  290.7s  290.7s  290.7s
+  agent.model        26  206.7s  7949ms  123.3s
+  agent.observe      86   35.2s   410ms  2081ms
+  agent.action       25   19.0s   758ms   15.0s
+  config.load         1   747ms   747ms   747ms
+  engine.init         1    90ms    90ms    90ms
+  session.close       1    86ms    86ms    86ms
+  session.launch      1    19ms    19ms    19ms
+  collect             1    13ms    13ms    13ms
+  engine.prepare      1     0ms     0ms     0ms
+[e2e debug] agent steps (execution order, model openrouter/openai/gpt-6-luna, total $0.013694+)
+  step                                                               total   model  observe  action  calls  tokens in/out       cached       cost
+  agent.act "Sign in with username {username} and password {passw…  150.9s  128.3s   6352ms  1041ms      2      15507/165  75% (11576)  $0.000683
+  agent.assert "The app shows a signed-in page, not a sign-in for…  1548ms  1241ms    213ms     0ms      1        4527/61       0% (0)  $0.000596
+  agent.act "Objective 1 of the goal, for run id {runid}, asks on…   55.5s   39.7s   8286ms   15.7s      7      75599/380  75% (57073)  $0.003054
+  agent.extract "For run id e2op1-n2: In the project named `Bench…  3019ms  2801ms    214ms     0ms      1        3701/66       0% (0)  $0.000496
+  agent.act "Achieve objective 2 of the goal, for run id {runid}:…  4353ms     0ms   3700ms   541ms      0            0/0            -          -
+  agent.assert "For run id e2op1-n2, this now holds in the app: A…  3635ms  3286ms    265ms     0ms      1       4880/107       0% (0)  $0.000663
+  agent.act "Achieve objective 3 of the goal, for run id {runid}:…   17.6s  1847ms   3956ms   336ms      1        8912/92   42% (3749)  $0.000726
+  agent.assert "For run id e2op1-n2, this now holds in the app: T…  1559ms  1228ms    224ms     0ms      1        5185/47       0% (0)  $0.000672
+  agent.act "Achieve objective 4 of the goal, for run id {runid}:…   17.6s  1871ms   3969ms   307ms      1        9031/82   42% (3749)  $0.000736
+  agent.assert "For run id e2op1-n2, this now holds in the app: I…  2053ms  1724ms    230ms     0ms      1        5183/59       0% (0)  $0.000677
+  agent.act "Achieve objective 5 of the goal, for run id {runid}:…  8541ms  6561ms   3235ms   363ms      3      33360/146  68% (22694)  $0.001624
+  agent.assert "For run id e2op1-n2, this now holds in the app: I…  1578ms  1179ms    277ms     0ms      1        5220/64       0% (0)  $0.000684
+  agent.act "Achieve objective 6 of the goal, for run id {runid}:…  8223ms  5523ms   3516ms   636ms      3      28270/127  77% (21795)  $0.001081
+  agent.assert "For run id e2op1-n2, this now holds in the app: I…  1594ms  1253ms    236ms     0ms      1        4721/59       0% (0)   $0.00062
+  agent.act "Objective 7 of the goal, for run id {runid}, asks on…  4017ms  3605ms    404ms     0ms      1       8914/143   42% (3749)  $0.000751
+  agent.extract "For run id e2op1-n2: Report the work package's n…  6710ms  6547ms    161ms     0ms      1        4830/53       0% (0)   $0.00063
+
+e2op1-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed subjects reported
+  obj 2: PASS — type=Task, description includes runid=true
+  obj 3: PASS — assignee=Bench Assignee
+  obj 4: PASS — status=In progress
+  obj 5: PASS — finish date=2026-12-31, want 2026-12-31
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — work package id 42 reported
+
+=== e2op1-n3 ===
+reset attempt 1 failed: fetch failed (UND_ERR_SOCKET)
+[reset] openproject: deleted 1 leftover bench work package(s)
+ ✓ |web| tests/flow.e2e.ts (1 test) 142.94s ai 138.6k tokens · 46% cached · $0.0105
+   ✓ openproject flow 142.94s ai 138.6k tokens · 46% cached · $0.0105
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+         AI  138.6k tokens · 46% cached · $0.0105 · 19 model calls · openrouter/openai/gpt-6-luna
+      Cache  3 replayed · 2 handed off · 3 missed
+   Start at  07:24:20
+   Duration  144.22s (2m 24s)
+     Report  .e2e/report.json
+
+
+--- stderr ---
+[e2e debug] phase timings (wall 145.0s)
+  phase           count   total     avg     max
+  scheduler           1  144.2s  144.2s  144.2s
+  test.body           1  141.3s  141.3s  141.3s
+  agent.model        19   50.8s  2672ms  6701ms
+  agent.observe      95   35.0s   368ms  2140ms
+  agent.action       23  3753ms   163ms   632ms
+  config.load         1   765ms   765ms   765ms
+  engine.init         1   111ms   111ms   111ms
+  session.close       1   100ms   100ms   100ms
+  session.launch      1    13ms    13ms    13ms
+  collect             1    12ms    12ms    12ms
+  engine.prepare      1     1ms     1ms     1ms
+[e2e debug] agent steps (execution order, model openrouter/openai/gpt-6-luna, total $0.010471+)
+  step                                                               total   model  observe  action  calls  tokens in/out       cached       cost
+  agent.act "Sign in with username {username} and password {passw…   10.2s  9145ms   4818ms   729ms      3      16648/147  73% (12142)  $0.000749
+  agent.assert "The app shows a signed-in page, not a sign-in for…  1685ms  1356ms    187ms     0ms      1        4289/59       0% (0)  $0.000566
+  agent.act "Objective 1 of the goal, for run id {runid}, asks on…   31.9s   16.0s   5945ms   590ms      4      41760/189  75% (31341)  $0.001698
+  agent.extract "For run id e2op1-n3: In the project named `Bench…  2100ms  1850ms    247ms     0ms      1        3701/58       0% (0)  $0.000492
+  agent.act "Achieve objective 2 of the goal, for run id {runid}:…  4186ms     0ms   3514ms   558ms      0            0/0            -          -
+  agent.assert "For run id e2op1-n3, this now holds in the app: A…  3251ms  2911ms    249ms     0ms      1        4880/97       0% (0)  $0.000658
+  agent.act "Achieve objective 3 of the goal, for run id {runid}:…   31.0s  1700ms   6599ms   348ms      1        8909/84   42% (3749)  $0.000721
+  agent.assert "For run id e2op1-n3, this now holds in the app: T…  1745ms  1338ms    295ms     0ms      1        5185/57       0% (0)  $0.000677
+  agent.act "Achieve objective 4 of the goal, for run id {runid}:…   30.6s  1777ms   6066ms   276ms      1        9033/88   42% (3749)  $0.000739
+  agent.assert "For run id e2op1-n3, this now holds in the app: I…  1528ms  1192ms    244ms     0ms      1        5183/51       0% (0)  $0.000673
+  agent.act "Achieve objective 5 of the goal, for run id {runid}:…  2778ms     0ms   2236ms   427ms      0            0/0            -          -
+  agent.assert "For run id e2op1-n3, this now holds in the app: I…  3776ms  3330ms    367ms     0ms      1       5226/102       0% (0)  $0.000704
+  agent.act "Achieve objective 6 of the goal, for run id {runid}:…  3165ms     0ms   2412ms   639ms      0            0/0            -          -
+  agent.assert "For run id e2op1-n3, this now holds in the app: I…  2289ms  1952ms    248ms     0ms      1        4721/57       0% (0)  $0.000619
+  agent.act "Objective 7 of the goal, for run id {runid}, asks on…  6400ms  5523ms   1353ms   184ms      2      22419/258  56% (12523)  $0.001485
+  agent.extract "For run id e2op1-n3: Report the work package's n…  2864ms  2639ms    223ms     0ms      1        5300/58       0% (0)  $0.000691
+
+e2op1-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed subjects reported
+  obj 2: PASS — type=Task, description includes runid=true
+  obj 3: PASS — assignee=Bench Assignee
+  obj 4: PASS — status=In progress
+  obj 5: PASS — finish date=2026-12-31, want 2026-12-31
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — work package id 43 reported
+
+=== e2op1-strict (strict cache, read-only) ===
+reset attempt 1 failed: fetch failed (UND_ERR_SOCKET)
+[reset] openproject: deleted 1 leftover bench work package(s)
+ ✓ |web| tests/flow.e2e.ts (1 test) 130.07s ai 61.6k tokens · 21% cached · $0.0066
+   ✓ openproject flow 130.07s ai 61.6k tokens · 21% cached · $0.0066
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+         AI  61.6k tokens · 21% cached · $0.0066 · 10 model calls · openrouter/openai/gpt-6-luna
+      Cache  5 replayed · 2 handed off · 1 missed
+   Start at  07:26:56
+   Duration  131.37s (2m 11s)
+     Report  .e2e/report.json
+
+
+--- stderr ---
+[e2e debug] phase timings (wall 132.2s)
+  phase           count   total     avg     max
+  scheduler           1  131.4s  131.4s  131.4s
+  test.body           1  128.5s  128.5s  128.5s
+  agent.observe     104   31.4s   301ms  2020ms
+  agent.model        10   22.9s  2293ms  4140ms
+  agent.action       23  4186ms   182ms   967ms
+  config.load         1   777ms   777ms   777ms
+  session.close       1   120ms   120ms   120ms
+  engine.init         1    98ms    98ms    98ms
+  collect             1    16ms    16ms    16ms
+  session.launch      1    14ms    14ms    14ms
+  engine.prepare      1     1ms     1ms     1ms
+[e2e debug] agent steps (execution order, model openrouter/openai/gpt-6-luna, total $0.006563+)
+  step                                                               total   model  observe  action  calls  tokens in/out       cached       cost
+  agent.act "Sign in with username {username} and password {passw…  4671ms     0ms   3937ms   709ms      0            0/0            -          -
+  agent.assert "The app shows a signed-in page, not a sign-in for…  2429ms  2121ms    185ms     0ms      1        4296/57       0% (0)  $0.000565
+  agent.act "Objective 1 of the goal, for run id {runid}, asks on…  4452ms     0ms   3061ms  1175ms      0            0/0            -          -
+  agent.extract "For run id e2op1-strict: In the project named `B…  1774ms  1502ms    269ms     0ms      1        3701/63       0% (0)  $0.000494
+  agent.act "Achieve objective 2 of the goal, for run id {runid}:…  4036ms     0ms   3372ms   549ms      0            0/0            -          -
+  agent.assert "For run id e2op1-strict, this now holds in the ap…  4344ms  3993ms    248ms     0ms      1       4880/114       0% (0)  $0.000667
+  agent.act "Achieve objective 3 of the goal, for run id {runid}:…   41.1s     0ms   7253ms   292ms      0            0/0            -          -
+  agent.assert "For run id e2op1-strict, this now holds in the ap…  2754ms  2424ms    241ms     0ms      1        5185/64       0% (0)   $0.00068
+  agent.act "Achieve objective 4 of the goal, for run id {runid}:…   40.9s     0ms   6784ms   237ms      0            0/0            -          -
+  agent.assert "For run id e2op1-strict, this now holds in the ap…  2220ms  1920ms    221ms     0ms      1        5183/57       0% (0)  $0.000676
+  agent.act "Achieve objective 5 of the goal, for run id {runid}:…  2672ms     0ms   2080ms   481ms      0            0/0            -          -
+  agent.assert "For run id e2op1-strict, this now holds in the ap…  2548ms  2116ms    345ms     0ms      1       5220/157       0% (0)  $0.000731
+  agent.act "Achieve objective 6 of the goal, for run id {runid}:…  2963ms     0ms   2279ms   574ms      0            0/0            -          -
+  agent.assert "For run id e2op1-strict, this now holds in the ap…  1985ms  1699ms    199ms     0ms      1        4721/54       0% (0)  $0.000617
+  agent.act "Objective 7 of the goal, for run id {runid}, asks on…  6081ms  5713ms    657ms   168ms      2      22259/200  56% (12465)  $0.001443
+  agent.extract "For run id e2op1-strict: Report the work package…  1661ms  1439ms    218ms     0ms      1        5300/55       0% (0)   $0.00069
+
+e2op1-strict: objectives passed 7/7
+  obj 1: PASS — all 3 seed subjects reported
+  obj 2: PASS — type=Task, description includes runid=true
+  obj 3: PASS — assignee=Bench Assignee
+  obj 4: PASS — status=In progress
+  obj 5: PASS — finish date=2026-12-31, want 2026-12-31
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — work package id 44 reported
+
+=== e2e sweep summary ===
+run | objectives | verifier clean | e2e exit | wall s | acts replayed/handed-off/missed/failed | act model calls | usd
+e2op1-n1 | 7/7 | true | 0 | 170 | 0/0/8/0 of 8 | 37 | 0.0226
+    signin:missed:no-entry  obj1:missed:no-entry  obj2:missed:no-entry  obj3:missed:no-entry  obj4:missed:no-entry  obj5:missed:no-entry  obj6:missed:no-entry  obj7:missed:no-entry
+e2op1-n2 | 7/7 | true | 0 | 295 | 1/5/2/0 of 8 | 18 | 0.0137
+    signin:agent-concluded:end-mismatch  obj1:missed:target-not-found  obj3:agent-concluded:end-mismatch  obj4:agent-concluded:end-mismatch  obj5:agent-concluded:gap(date)  obj6:agent-concluded:gap(pixels)  obj7:missed:no-entry
+e2op1-n3 | 7/7 | true | 0 | 146 | 3/2/3/0 of 8 | 11 | 0.0105
+    signin:missed:no-entry  obj1:missed:target-not-found  obj3:agent-concluded:end-mismatch  obj4:agent-concluded:end-mismatch  obj7:missed:no-entry
+e2op1-strict | 7/7 | true | 0 | 133 | 5/0/1/2 of 8 | 2 | 0.0066
+    obj7:missed:no-entry

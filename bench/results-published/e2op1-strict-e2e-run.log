@@ -1,0 +1,65 @@
+
+ RUN  e2e v0.16.0 /home/user/sitelooper/bench/e2e-arm
+      run 01a100a8-a8b0-7250-8a89-5c08569495ba · targets: web
+      model openrouter/openai/gpt-6-luna
+
+   ✓ openproject flow > agent.act "Sign in with username {username} and password {password}" 4.67s
+   ✓ openproject flow > agent.assert "The app shows a signed-in page, not a sign-in form" 2.43s · 1 model call
+   ✓ openproject flow > agent.act "Objective 1 of the goal, for run id {runid}, asks only for a report: In…" 4.45s
+   ✓ openproject flow > agent.extract "For run id e2op1-strict: In the project named `Bench Project`, report t…" 1.77s · 1 model call
+   ✓ openproject flow > agent.act "Achieve objective 2 of the goal, for run id {runid}: A work package of …" 4.04s
+   ✓ openproject flow > agent.assert "For run id e2op1-strict, this now holds in the app: A work package of t…" 4.34s · 1 model call
+   × openproject flow > agent.act "Achieve objective 3 of the goal, for run id {runid}: That work package …" 41.09s failed
+   ✓ openproject flow > agent.assert "For run id e2op1-strict, this now holds in the app: That work package i…" 2.75s · 1 model call
+   × openproject flow > agent.act "Achieve objective 4 of the goal, for run id {runid}: Its status is `In …" 40.89s failed
+   ✓ openproject flow > agent.assert "For run id e2op1-strict, this now holds in the app: Its status is `In p…" 2.22s · 1 model call
+   ✓ openproject flow > agent.act "Achieve objective 5 of the goal, for run id {runid}: Its finish date is…" 2.67s
+   ✓ openproject flow > agent.assert "For run id e2op1-strict, this now holds in the app: Its finish date is …" 2.55s · 1 model call
+   ✓ openproject flow > agent.act "Achieve objective 6 of the goal, for run id {runid}: It has a comment w…" 2.96s
+   ✓ openproject flow > agent.assert "For run id e2op1-strict, this now holds in the app: It has a comment wh…" 1.99s · 1 model call
+   ✓ openproject flow > agent.act "Objective 7 of the goal, for run id {runid}, asks only for a report: Re…" 6.08s · 2 model calls
+   ✓ openproject flow > agent.extract "For run id e2op1-strict: Report the work package's numeric ID exactly a…" 1.66s · 1 model call
+ ✓ |web| tests/flow.e2e.ts (1 test) 130.07s ai 61.6k tokens · 21% cached · $0.0066
+   ✓ openproject flow 130.07s ai 61.6k tokens · 21% cached · $0.0066
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+         AI  61.6k tokens · 21% cached · $0.0066 · 10 model calls · openrouter/openai/gpt-6-luna
+      Cache  5 replayed · 2 handed off · 1 missed
+   Start at  07:26:56
+   Duration  131.37s (2m 11s)
+     Report  .e2e/report.json
+
+
+--- stderr ---
+[e2e debug] phase timings (wall 132.2s)
+  phase           count   total     avg     max
+  scheduler           1  131.4s  131.4s  131.4s
+  test.body           1  128.5s  128.5s  128.5s
+  agent.observe     104   31.4s   301ms  2020ms
+  agent.model        10   22.9s  2293ms  4140ms
+  agent.action       23  4186ms   182ms   967ms
+  config.load         1   777ms   777ms   777ms
+  session.close       1   120ms   120ms   120ms
+  engine.init         1    98ms    98ms    98ms
+  collect             1    16ms    16ms    16ms
+  session.launch      1    14ms    14ms    14ms
+  engine.prepare      1     1ms     1ms     1ms
+[e2e debug] agent steps (execution order, model openrouter/openai/gpt-6-luna, total $0.006563+)
+  step                                                               total   model  observe  action  calls  tokens in/out       cached       cost
+  agent.act "Sign in with username {username} and password {passw…  4671ms     0ms   3937ms   709ms      0            0/0            -          -
+  agent.assert "The app shows a signed-in page, not a sign-in for…  2429ms  2121ms    185ms     0ms      1        4296/57       0% (0)  $0.000565
+  agent.act "Objective 1 of the goal, for run id {runid}, asks on…  4452ms     0ms   3061ms  1175ms      0            0/0            -          -
+  agent.extract "For run id e2op1-strict: In the project named `B…  1774ms  1502ms    269ms     0ms      1        3701/63       0% (0)  $0.000494
+  agent.act "Achieve objective 2 of the goal, for run id {runid}:…  4036ms     0ms   3372ms   549ms      0            0/0            -          -
+  agent.assert "For run id e2op1-strict, this now holds in the ap…  4344ms  3993ms    248ms     0ms      1       4880/114       0% (0)  $0.000667
+  agent.act "Achieve objective 3 of the goal, for run id {runid}:…   41.1s     0ms   7253ms   292ms      0            0/0            -          -
+  agent.assert "For run id e2op1-strict, this now holds in the ap…  2754ms  2424ms    241ms     0ms      1        5185/64       0% (0)   $0.00068
+  agent.act "Achieve objective 4 of the goal, for run id {runid}:…   40.9s     0ms   6784ms   237ms      0            0/0            -          -
+  agent.assert "For run id e2op1-strict, this now holds in the ap…  2220ms  1920ms    221ms     0ms      1        5183/57       0% (0)  $0.000676
+  agent.act "Achieve objective 5 of the goal, for run id {runid}:…  2672ms     0ms   2080ms   481ms      0            0/0            -          -
+  agent.assert "For run id e2op1-strict, this now holds in the ap…  2548ms  2116ms    345ms     0ms      1       5220/157       0% (0)  $0.000731
+  agent.act "Achieve objective 6 of the goal, for run id {runid}:…  2963ms     0ms   2279ms   574ms      0            0/0            -          -
+  agent.assert "For run id e2op1-strict, this now holds in the ap…  1985ms  1699ms    199ms     0ms      1        4721/54       0% (0)  $0.000617
+  agent.act "Objective 7 of the goal, for run id {runid}, asks on…  6081ms  5713ms    657ms   168ms      2      22259/200  56% (12465)  $0.001443
+  agent.extract "For run id e2op1-strict: Report the work package…  1661ms  1439ms    218ms     0ms      1        5300/55       0% (0)   $0.00069

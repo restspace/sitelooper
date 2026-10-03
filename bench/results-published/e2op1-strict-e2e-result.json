@@ -1,0 +1,198 @@
+{
+  "arm": "e2e",
+  "e2eVersion": "0.16.0",
+  "target": "openproject",
+  "runid": "e2op1-strict",
+  "model": "openai/gpt-6-luna",
+  "strict": true,
+  "reset": true,
+  "exitCode": 0,
+  "wallMs": 132687,
+  "cache": {
+    "acts": 8,
+    "replayed": 5,
+    "handedOff": 0,
+    "missed": 1,
+    "failed": 2,
+    "stale": 2,
+    "actModelCalls": 2,
+    "reasons": [
+      "obj7:missed:no-entry"
+    ]
+  },
+  "usage": {
+    "modelTokens": 61566,
+    "modelCachedTokens": 12465,
+    "usd": 0.0065632500000000005,
+    "usdAtRatesFloor": null
+  },
+  "steps": [
+    {
+      "kind": "act",
+      "id": "signin",
+      "ok": true,
+      "ms": 4673,
+      "summary": "replayed 3 recorded action(s) zero-turn from the trace cache; recorded verdict: Signed in as admin with the provided credentials; the OpenProject home page is displayed with the User menu available.",
+      "cache": {
+        "mode": "self-finalized",
+        "replayedActions": 3,
+        "totalActions": 3
+      },
+      "modelCalls": 0,
+      "actions": 3
+    },
+    {
+      "kind": "assert",
+      "id": "signin",
+      "ok": true,
+      "ms": 2430
+    },
+    {
+      "kind": "act",
+      "id": "obj1",
+      "ok": true,
+      "ms": 4452,
+      "summary": "replayed 3 recorded action(s) zero-turn from the trace cache; recorded verdict: Bench Project’s work package list shows these Seed: subjects exactly: “Seed: triage inbox”, “Seed: order missing parts”, and “Seed: ship repaired device”. No data was changed.",
+      "cache": {
+        "mode": "self-finalized",
+        "replayedActions": 3,
+        "totalActions": 3
+      },
+      "modelCalls": 0,
+      "actions": 3
+    },
+    {
+      "kind": "extract",
+      "id": "obj1",
+      "ok": true,
+      "ms": 1775,
+      "values": [
+        "Seed: triage inbox",
+        "Seed: order missing parts",
+        "Seed: ship repaired device"
+      ]
+    },
+    {
+      "kind": "act",
+      "id": "obj2",
+      "ok": true,
+      "ms": 4036,
+      "summary": "replayed 5 recorded action(s) zero-turn from the trace cache; recorded verdict: Created Task “e2op1-n1 Bench Work Package” in Bench Project with description “Created for run e2op1-n1.” The work package appears on the page as #41.",
+      "cache": {
+        "mode": "self-finalized",
+        "replayedActions": 5,
+        "totalActions": 5
+      },
+      "modelCalls": 0,
+      "actions": 5
+    },
+    {
+      "kind": "assert",
+      "id": "obj2",
+      "ok": true,
+      "ms": 4344
+    },
+    {
+      "kind": "act",
+      "id": "obj3",
+      "ok": false,
+      "code": "REPLAY_STALE",
+      "blocked": false,
+      "error": "the recording of this step no longer replays (end-mismatch), and cache.strict hands no step to the agent; re-record it with a read-write run without --strict-cache and commit the changed entry under .e2e/cache",
+      "ms": 41095
+    },
+    {
+      "kind": "assert",
+      "id": "obj3",
+      "ok": true,
+      "ms": 2754
+    },
+    {
+      "kind": "act",
+      "id": "obj4",
+      "ok": false,
+      "code": "REPLAY_STALE",
+      "blocked": false,
+      "error": "the recording of this step no longer replays (end-mismatch), and cache.strict hands no step to the agent; re-record it with a read-write run without --strict-cache and commit the changed entry under .e2e/cache",
+      "ms": 40891
+    },
+    {
+      "kind": "assert",
+      "id": "obj4",
+      "ok": true,
+      "ms": 2220
+    },
+    {
+      "kind": "act",
+      "id": "obj5",
+      "ok": true,
+      "ms": 2672,
+      "summary": "replayed 3 recorded action(s) zero-turn from the trace cache; recorded verdict: Set the finish date on work package #42 (e2op1-n2 Bench Work Package) to 2026-12-31. The successful update alert appeared, and the Date field now shows 12/31/2026.",
+      "cache": {
+        "mode": "self-finalized",
+        "replayedActions": 3,
+        "totalActions": 3
+      },
+      "modelCalls": 0,
+      "actions": 3
+    },
+    {
+      "kind": "assert",
+      "id": "obj5",
+      "ok": true,
+      "ms": 2549
+    },
+    {
+      "kind": "act",
+      "id": "obj6",
+      "ok": true,
+      "ms": 2964,
+      "summary": "replayed 4 recorded action(s) zero-turn from the trace cache; recorded verdict: Posted the comment “Comment for run e2op1-n2” on work package #42. The Activity tab now displays that comment.",
+      "cache": {
+        "mode": "self-finalized",
+        "replayedActions": 4,
+        "totalActions": 4
+      },
+      "modelCalls": 0,
+      "actions": 4
+    },
+    {
+      "kind": "assert",
+      "id": "obj6",
+      "ok": true,
+      "ms": 1986
+    },
+    {
+      "kind": "act",
+      "id": "obj7",
+      "ok": true,
+      "ms": 6082,
+      "summary": "The work package overview is open and displays its numeric ID as #44.",
+      "cache": {
+        "mode": "missed",
+        "reason": "no-entry",
+        "replayedActions": 0,
+        "totalActions": 0
+      },
+      "modelCalls": 2,
+      "actions": 1
+    },
+    {
+      "kind": "extract",
+      "id": "obj7",
+      "ok": true,
+      "ms": 1662,
+      "values": [
+        "#44"
+      ]
+    }
+  ],
+  "finalText": "1. DONE Seed: triage inbox | Seed: order missing parts | Seed: ship repaired device\n2. DONE\n3. FAILED\n4. FAILED\n5. DONE\n6. DONE\n7. DONE #44",
+  "machine": {
+    "platform": "linux",
+    "arch": "x64",
+    "node": "v22.22.0",
+    "cpus": 4,
+    "memGb": 16
+  }
+}
