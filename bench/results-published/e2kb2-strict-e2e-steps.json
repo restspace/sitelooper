@@ -1,0 +1,158 @@
+{
+  "target": "kanboard",
+  "runid": "e2kb2-strict",
+  "steps": [
+    {
+      "kind": "act",
+      "id": "signin",
+      "ok": true,
+      "ms": 2550,
+      "summary": "replayed 3 recorded action(s) zero-turn from the trace cache; recorded verdict: Signed in with username admin; the Dashboard for admin is displayed.",
+      "cache": {
+        "mode": "self-finalized",
+        "replayedActions": 3,
+        "totalActions": 3
+      },
+      "modelCalls": 0,
+      "actions": 3
+    },
+    {
+      "kind": "assert",
+      "id": "signin",
+      "ok": true,
+      "ms": 1617
+    },
+    {
+      "kind": "act",
+      "id": "obj1",
+      "ok": true,
+      "ms": 2910,
+      "summary": "replayed 3 recorded action(s) zero-turn from the trace cache; recorded verdict: Opened the Bench Board board. Its columns from left to right are: Backlog, Ready, Work in progress, Done.",
+      "cache": {
+        "mode": "self-finalized",
+        "replayedActions": 3,
+        "totalActions": 3
+      },
+      "modelCalls": 0,
+      "actions": 3
+    },
+    {
+      "kind": "extract",
+      "id": "obj1",
+      "ok": true,
+      "ms": 1540,
+      "values": [
+        "Backlog",
+        "Ready",
+        "Work in progress",
+        "Done"
+      ]
+    },
+    {
+      "kind": "act",
+      "id": "obj2",
+      "ok": true,
+      "ms": 1549,
+      "summary": "replayed 5 recorded action(s) zero-turn from the trace cache; recorded verdict: Created task “e2kb2-n1 Bench Task” on Bench Board. Its task page confirms the description is “e2kb2-n1” (including the run id). The task is #4.",
+      "cache": {
+        "mode": "self-finalized",
+        "replayedActions": 5,
+        "totalActions": 5
+      },
+      "modelCalls": 0,
+      "actions": 5
+    },
+    {
+      "kind": "assert",
+      "id": "obj2",
+      "ok": true,
+      "ms": 1708
+    },
+    {
+      "kind": "act",
+      "id": "obj3",
+      "ok": true,
+      "ms": 1313,
+      "summary": "replayed 3 recorded action(s) zero-turn from the trace cache; recorded verdict: Moved task “e2kb2-n1 Bench Task” (#4) from Backlog into the Work in progress column. The board now shows it in that column with a task count of 1.",
+      "cache": {
+        "mode": "self-finalized",
+        "replayedActions": 3,
+        "totalActions": 3
+      },
+      "modelCalls": 0,
+      "actions": 3
+    },
+    {
+      "kind": "assert",
+      "id": "obj3",
+      "ok": true,
+      "ms": 3047
+    },
+    {
+      "kind": "act",
+      "id": "obj4",
+      "ok": true,
+      "ms": 1118,
+      "summary": "replayed 4 recorded action(s) zero-turn from the trace cache; recorded verdict: Added a comment containing “e2kb2-n1” to task #4, “e2kb2-n1 Bench Task.” The app confirmed “Comment added successfully,” and the task card now shows 1 comment.",
+      "cache": {
+        "mode": "self-finalized",
+        "replayedActions": 4,
+        "totalActions": 4
+      },
+      "modelCalls": 0,
+      "actions": 4
+    },
+    {
+      "kind": "assert",
+      "id": "obj4",
+      "ok": false,
+      "code": "ASSERTION_INCONCLUSIVE",
+      "blocked": false,
+      "error": "The board shows one comment and a successful comment-added notice, but the comment text is not visible, so whether it includes the run ID cannot be determined.; the judge saw the semantic tree only; if the engine captures pixels, pass vision: true when the answer is in pixels",
+      "ms": 2864
+    },
+    {
+      "kind": "act",
+      "id": "obj5",
+      "ok": false,
+      "code": "REPLAY_STALE",
+      "blocked": false,
+      "error": "the recording of this step no longer replays (target-not-found), and cache.strict hands no step to the agent; re-record it with a read-write run without --strict-cache and commit the changed entry under .e2e/cache",
+      "ms": 15652
+    },
+    {
+      "kind": "assert",
+      "id": "obj5",
+      "ok": false,
+      "code": "ASSERTION_FAILED",
+      "blocked": false,
+      "error": "The task’s edit form shows the Due Date field blank, so the observation does not show it set to 2026-12-31.",
+      "ms": 4656
+    },
+    {
+      "kind": "act",
+      "id": "obj6",
+      "ok": true,
+      "ms": 3439,
+      "summary": "The task page displays the requested task ID as #4 for “e2kb2-strict Bench Task.”",
+      "cache": {
+        "mode": "missed",
+        "reason": "no-entry",
+        "replayedActions": 0,
+        "totalActions": 0
+      },
+      "modelCalls": 1,
+      "actions": 0
+    },
+    {
+      "kind": "extract",
+      "id": "obj6",
+      "ok": true,
+      "ms": 3604,
+      "values": [
+        "#4"
+      ]
+    }
+  ],
+  "finalText": "1. DONE Backlog | Ready | Work in progress | Done (replayed 3 recorded action(s) zero-turn from the trace cache; recorded verdict: Opened the Bench Board board. Its columns from left to right are: Backlog, Ready, Work in progress, Done.)\n2. DONE\n3. DONE\n4. DONE\n5. FAILED\n6. DONE #4 (The task page displays the requested task ID as #4 for “e2kb2-strict Bench Task.”)"
+}

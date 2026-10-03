@@ -1,0 +1,204 @@
+{
+  "arm": "e2e",
+  "e2eVersion": "0.16.0",
+  "target": "kanboard",
+  "runid": "e2kb2-n1",
+  "model": "openai/gpt-6-luna",
+  "strict": false,
+  "reset": true,
+  "exitCode": 0,
+  "wallMs": 104357,
+  "cache": {
+    "acts": 7,
+    "replayed": 0,
+    "handedOff": 0,
+    "missed": 7,
+    "failed": 0,
+    "stale": 0,
+    "actModelCalls": 29,
+    "reasons": [
+      "signin:missed:no-entry",
+      "obj1:missed:no-entry",
+      "obj2:missed:no-entry",
+      "obj3:missed:no-entry",
+      "obj4:missed:no-entry",
+      "obj5:missed:no-entry",
+      "obj6:missed:no-entry"
+    ]
+  },
+  "usage": {
+    "modelTokens": 228230,
+    "modelCachedTokens": 166508,
+    "usd": 0.010126204999999997,
+    "usdAtRatesFloor": null
+  },
+  "steps": [
+    {
+      "kind": "act",
+      "id": "signin",
+      "ok": true,
+      "ms": 9436,
+      "summary": "Signed in with username admin; the Dashboard for admin is displayed.",
+      "cache": {
+        "mode": "missed",
+        "reason": "no-entry",
+        "replayedActions": 0,
+        "totalActions": 0
+      },
+      "modelCalls": 4,
+      "actions": 3
+    },
+    {
+      "kind": "assert",
+      "id": "signin",
+      "ok": true,
+      "ms": 1436
+    },
+    {
+      "kind": "act",
+      "id": "obj1",
+      "ok": true,
+      "ms": 13239,
+      "summary": "Opened the Bench Board board. Its columns from left to right are: Backlog, Ready, Work in progress, Done.",
+      "cache": {
+        "mode": "missed",
+        "reason": "no-entry",
+        "replayedActions": 0,
+        "totalActions": 0
+      },
+      "modelCalls": 5,
+      "actions": 3
+    },
+    {
+      "kind": "extract",
+      "id": "obj1",
+      "ok": true,
+      "ms": 1814,
+      "values": [
+        "Backlog",
+        "Ready",
+        "Work in progress",
+        "Done"
+      ]
+    },
+    {
+      "kind": "act",
+      "id": "obj2",
+      "ok": true,
+      "ms": 12875,
+      "summary": "Created task “e2kb2-n1 Bench Task” on Bench Board. Its task page confirms the description is “e2kb2-n1” (including the run id). The task is #4.",
+      "cache": {
+        "mode": "missed",
+        "reason": "no-entry",
+        "replayedActions": 0,
+        "totalActions": 0
+      },
+      "modelCalls": 5,
+      "actions": 5
+    },
+    {
+      "kind": "assert",
+      "id": "obj2",
+      "ok": true,
+      "ms": 2973
+    },
+    {
+      "kind": "act",
+      "id": "obj3",
+      "ok": true,
+      "ms": 11321,
+      "summary": "Moved task “e2kb2-n1 Bench Task” (#4) from Backlog into the Work in progress column. The board now shows it in that column with a task count of 1.",
+      "cache": {
+        "mode": "missed",
+        "reason": "no-entry",
+        "replayedActions": 0,
+        "totalActions": 0
+      },
+      "modelCalls": 4,
+      "actions": 3
+    },
+    {
+      "kind": "assert",
+      "id": "obj3",
+      "ok": true,
+      "ms": 3596
+    },
+    {
+      "kind": "act",
+      "id": "obj4",
+      "ok": true,
+      "ms": 9212,
+      "summary": "Added a comment containing “e2kb2-n1” to task #4, “e2kb2-n1 Bench Task.” The app confirmed “Comment added successfully,” and the task card now shows 1 comment.",
+      "cache": {
+        "mode": "missed",
+        "reason": "no-entry",
+        "replayedActions": 0,
+        "totalActions": 0
+      },
+      "modelCalls": 5,
+      "actions": 4
+    },
+    {
+      "kind": "assert",
+      "id": "obj4",
+      "ok": false,
+      "code": "ASSERTION_INCONCLUSIVE",
+      "blocked": false,
+      "error": "The board shows the task “e2kb2-n1 Bench Task” has one comment, and the page reports “Comment added successfully,” but the comment text itself is not visible to confirm it includes the run ID.; the judge saw the semantic tree only; pass vision: true when the answer is in pixels",
+      "ms": 1649
+    },
+    {
+      "kind": "act",
+      "id": "obj5",
+      "ok": true,
+      "ms": 12650,
+      "summary": "Set the due date for task #4, “e2kb2-n1 Bench Task,” and verified the task page displays Due date: 12/31/2026 08:18 (2026-12-31).",
+      "cache": {
+        "mode": "missed",
+        "reason": "no-entry",
+        "replayedActions": 0,
+        "totalActions": 0
+      },
+      "modelCalls": 5,
+      "actions": 4
+    },
+    {
+      "kind": "assert",
+      "id": "obj5",
+      "ok": true,
+      "ms": 1596
+    },
+    {
+      "kind": "act",
+      "id": "obj6",
+      "ok": true,
+      "ms": 3051,
+      "summary": "The task page for “e2kb2-n1 Bench Task” is open and displays “Task #4.” The task’s numeric ID is #4.",
+      "cache": {
+        "mode": "missed",
+        "reason": "no-entry",
+        "replayedActions": 0,
+        "totalActions": 0
+      },
+      "modelCalls": 1,
+      "actions": 0
+    },
+    {
+      "kind": "extract",
+      "id": "obj6",
+      "ok": true,
+      "ms": 2882,
+      "values": [
+        "#4"
+      ]
+    }
+  ],
+  "finalText": "1. DONE Backlog | Ready | Work in progress | Done (Opened the Bench Board board. Its columns from left to right are: Backlog, Ready, Work in progress, Done.)\n2. DONE\n3. DONE\n4. DONE\n5. DONE\n6. DONE #4 (The task page for “e2kb2-n1 Bench Task” is open and displays “Task #4.” The task’s numeric ID is #4.)",
+  "machine": {
+    "platform": "linux",
+    "arch": "x64",
+    "node": "v22.22.0",
+    "cpus": 4,
+    "memGb": 16
+  }
+}
