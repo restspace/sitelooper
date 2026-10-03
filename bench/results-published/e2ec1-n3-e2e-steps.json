@@ -1,0 +1,161 @@
+{
+  "target": "espocrm",
+  "runid": "e2ec1-n3",
+  "steps": [
+    {
+      "kind": "act",
+      "id": "signin",
+      "ok": true,
+      "ms": 3241,
+      "summary": "replayed 3 recorded action(s) zero-turn from the trace cache; recorded verdict: Signed in successfully as admin; the EspoCRM home dashboard is now visible.",
+      "cache": {
+        "mode": "self-finalized",
+        "replayedActions": 3,
+        "totalActions": 3
+      },
+      "modelCalls": 0,
+      "actions": 3
+    },
+    {
+      "kind": "assert",
+      "id": "signin",
+      "ok": true,
+      "ms": 3138
+    },
+    {
+      "kind": "act",
+      "id": "obj1",
+      "ok": true,
+      "ms": 6372,
+      "summary": "The Opportunities list shows these names starting with `Seed:` exactly as displayed: Seed: training package; Seed: pilot expansion; Seed: annual support renewal. No data was changed.",
+      "cache": {
+        "mode": "missed",
+        "reason": "no-entry",
+        "replayedActions": 0,
+        "totalActions": 0
+      },
+      "modelCalls": 2,
+      "actions": 1
+    },
+    {
+      "kind": "extract",
+      "id": "obj1",
+      "ok": true,
+      "ms": 1474,
+      "values": [
+        "Seed: training package",
+        "Seed: pilot expansion",
+        "Seed: annual support renewal"
+      ]
+    },
+    {
+      "kind": "act",
+      "id": "obj2",
+      "ok": false,
+      "code": "ACTION_FAILED",
+      "blocked": false,
+      "error": "agent.act failed: Entered the requested opportunity name, selected the exact Bench Account suggestion, and added a description containing e2ec1-n3. The form would not save: every entered amount was cleared and validation reported “Amount is required,” so no opportunity was created.",
+      "ms": 167355
+    },
+    {
+      "kind": "assert",
+      "id": "obj2",
+      "ok": false,
+      "code": "ASSERTION_INCONCLUSIVE",
+      "blocked": false,
+      "error": "The screen shows an unsaved create form with the requested name and description. It does not show that the opportunity exists, and the account field’s displayed value does not confirm that Bench Account was selected.; the judge saw the semantic tree only; pass vision: true when the answer is in pixels",
+      "ms": 3936
+    },
+    {
+      "kind": "act",
+      "id": "obj3",
+      "ok": false,
+      "code": "ACTION_FAILED",
+      "blocked": false,
+      "error": "agent.act failed: The create form has the requested opportunity name and shows Stage = Negotiation, but the opportunity is still unsaved. Attempts to save are blocked by “Amount is required”; entering 12500 clears when the field loses focus, so I could not verify a saved record at Negotiation.",
+      "ms": 46221
+    },
+    {
+      "kind": "assert",
+      "id": "obj3",
+      "ok": false,
+      "code": "ASSERTION_INCONCLUSIVE",
+      "blocked": false,
+      "error": "The create form shows Negotiation as the selected stage, but it does not show that the opportunity has been saved, so the stage in the app cannot be confirmed.; the judge saw the semantic tree only; pass vision: true when the answer is in pixels",
+      "ms": 2532
+    },
+    {
+      "kind": "act",
+      "id": "obj4",
+      "ok": false,
+      "code": "ACTION_FAILED",
+      "blocked": false,
+      "error": "agent.act failed: The create form shows Close Date 2026-12-31, but every attempt to enter Amount 12500 clears the value on blur/save. Saving is blocked by “Amount is required” and “Not valid,” so the requested amount and close date are not verified on a saved opportunity.",
+      "ms": 56092
+    },
+    {
+      "kind": "assert",
+      "id": "obj4",
+      "ok": false,
+      "code": "ASSERTION_FAILED",
+      "blocked": false,
+      "error": "The form shows the close date as 2026-12-31, but the Amount field is blank rather than 12500.",
+      "ms": 2565
+    },
+    {
+      "kind": "act",
+      "id": "obj5",
+      "ok": false,
+      "code": "ACTION_FAILED",
+      "blocked": false,
+      "error": "agent.act failed: Selected the exact Bench Assignee suggestion in the Assigned User field, but saving the opportunity still fails with “Amount is required” and “Not valid.” The opportunity remains unsaved, so the assignment cannot be verified on a saved record.",
+      "ms": 12947
+    },
+    {
+      "kind": "assert",
+      "id": "obj5",
+      "ok": false,
+      "code": "ASSERTION_FAILED",
+      "blocked": false,
+      "error": "The screen is an unsaved Create Opportunity form. Although “Bench Assignee” is shown in the Assigned User field, the assignment has not been saved in the app.",
+      "ms": 5521
+    },
+    {
+      "kind": "act",
+      "id": "obj6",
+      "ok": false,
+      "code": "ACTION_FAILED",
+      "blocked": false,
+      "error": "agent.act failed: The opportunity remains unsaved on the Create Opportunity form. Saving cleared the Amount field and showed “Amount is required” and “Not valid,” so there is no saved record whose Stream can receive the requested post.",
+      "ms": 13273
+    },
+    {
+      "kind": "assert",
+      "id": "obj6",
+      "ok": false,
+      "code": "ASSERTION_INCONCLUSIVE",
+      "blocked": false,
+      "error": "The observation shows the opportunity creation form, not its Stream or any post text, so the post cannot be verified.; the judge saw the semantic tree only; pass vision: true when the answer is in pixels",
+      "ms": 2629
+    },
+    {
+      "kind": "act",
+      "id": "obj7",
+      "ok": false,
+      "code": "ASSERTION_FAILED",
+      "blocked": false,
+      "error": "agent.act failed: Searched Opportunities for “e2ec1-n3 Bench Opportunity”; the list shows No Data (0 / 0). No saved opportunity page or #Opportunity/view/<id> address is available, so I cannot report a record ID. No data was changed.",
+      "ms": 17105
+    },
+    {
+      "kind": "extract",
+      "id": "obj7",
+      "ok": false,
+      "code": "ASSERTION_INCONCLUSIVE",
+      "blocked": false,
+      "error": "nothing to extract: The opportunity record page address and its record ID are not shown.; the judge saw the semantic tree only; pass vision: true when the answer is in pixels",
+      "ms": 2507
+    }
+  ],
+  "finalText": "1. DONE Seed: training package | Seed: pilot expansion | Seed: annual support renewal\n2. FAILED\n3. FAILED\n4. FAILED\n5. FAILED\n6. FAILED\n7. FAILED "
+}

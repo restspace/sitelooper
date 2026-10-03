@@ -1,0 +1,65 @@
+
+ RUN  e2e v0.16.0 /home/user/sitelooper/bench/e2e-arm
+      run 01a100a8-a03b-743b-8eed-39f9c7b83de4 · targets: web
+      model openrouter/openai/gpt-6-luna
+
+   ✓ espocrm flow > agent.act "Sign in with username {username} and password {password}" 3.24s
+   ✓ espocrm flow > agent.assert "The app shows a signed-in page, not a sign-in form" 3.14s · 1 model call
+   ✓ espocrm flow > agent.act "Objective 1 of the goal, for run id {runid}, asks only for a report: Re…" 6.37s · 2 model calls
+   ✓ espocrm flow > agent.extract "For run id e2ec1-n3: Report the names of the opportunities whose name s…" 1.47s · 1 model call
+   × espocrm flow > agent.act "Achieve objective 2 of the goal, for run id {runid}: An opportunity nam…" 167.35s · 31 model calls failed
+   × espocrm flow > agent.assert "For run id e2ec1-n3, this now holds in the app: An opportunity named `e…" 3.94s · 1 model call failed
+   × espocrm flow > agent.act "Achieve objective 3 of the goal, for run id {runid}: Its stage is `Nego…" 46.22s · 9 model calls failed
+   × espocrm flow > agent.assert "For run id e2ec1-n3, this now holds in the app: Its stage is `Negotiati…" 2.53s · 1 model call failed
+   × espocrm flow > agent.act "Achieve objective 4 of the goal, for run id {runid}: Its amount is 1250…" 56.09s · 11 model calls failed
+   × espocrm flow > agent.assert "For run id e2ec1-n3, this now holds in the app: Its amount is 12500 (in…" 2.56s · 1 model call failed
+   × espocrm flow > agent.act "Achieve objective 5 of the goal, for run id {runid}: It is assigned to …" 12.95s · 4 model calls failed
+   × espocrm flow > agent.assert "For run id e2ec1-n3, this now holds in the app: It is assigned to the u…" 5.52s · 1 model call failed
+   × espocrm flow > agent.act "Achieve objective 6 of the goal, for run id {runid}: Its Stream has a p…" 13.27s · 3 model calls failed
+   × espocrm flow > agent.assert "For run id e2ec1-n3, this now holds in the app: Its Stream has a post w…" 2.63s · 1 model call failed
+   × espocrm flow > agent.act "Objective 7 of the goal, for run id {runid}, asks only for a report: Re…" 17.10s · 5 model calls failed
+   × espocrm flow > agent.extract "For run id e2ec1-n3: Report the opportunity's record ID exactly as it a…" 2.51s · 1 model call failed
+ ✓ |web| tests/flow.e2e.ts (1 test) 350.90s ai 662.7k tokens · 86% cached · $0.0218
+   ✓ espocrm flow 350.90s ai 662.7k tokens · 86% cached · $0.0218
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+         AI  662.7k tokens · 86% cached · $0.0218 · 73 model calls · openrouter/openai/gpt-6-luna
+      Cache  1 replayed · 7 missed
+   Start at  07:26:54
+   Duration  352.49s (5m 52s)
+     Report  .e2e/report.json
+
+
+--- stderr ---
+[e2e debug] phase timings (wall 353.6s)
+  phase           count   total     avg     max
+  scheduler           1  352.4s  352.4s  352.4s
+  test.body           1  347.8s  347.8s  347.8s
+  agent.model        73  339.6s  4651ms   18.8s
+  agent.observe      84   40.7s   484ms  2445ms
+  agent.action       62   18.1s   292ms   15.0s
+  config.load         1  1024ms  1024ms  1024ms
+  engine.init         1   116ms   116ms   116ms
+  session.close       1    44ms    44ms    44ms
+  collect             1    31ms    31ms    31ms
+  session.launch      1    16ms    16ms    16ms
+  engine.prepare      1     1ms     1ms     1ms
+[e2e debug] agent steps (execution order, model openrouter/openai/gpt-6-luna, total $0.021828+)
+  step                                                               total   model  observe  action  calls  tokens in/out        cached       cost
+  agent.act "Sign in with username {username} and password {passw…  3238ms     0ms   2648ms   167ms      0            0/0             -          -
+  agent.assert "The app shows a signed-in page, not a sign-in for…  3137ms  2940ms    104ms     0ms      1        1456/81        0% (0)  $0.000222
+  agent.act "Objective 1 of the goal, for run id {runid}, asks on…  6371ms  5650ms   1072ms    79ms      2      11054/142    76% (8381)  $0.000483
+  agent.extract "For run id e2ec1-n3: Report the names of the opp…  1473ms  1301ms    169ms     0ms      1        2443/60        0% (0)  $0.000335
+  agent.act "Achieve objective 2 of the goal, for run id {runid}:…  167.4s  166.9s    21.7s   16.5s     31    401000/3996  90% (359807)  $0.010648
+  agent.assert "For run id e2ec1-n3, this now holds in the app: A…  3935ms  3731ms    108ms     0ms      1       1780/242        0% (0)  $0.000343
+  agent.act "Achieve objective 3 of the goal, for run id {runid}:…   46.2s   45.9s   4141ms   425ms      9     63004/1524   87% (54765)  $0.002311
+  agent.assert "For run id e2ec1-n3, this now holds in the app: I…  2530ms  2344ms     90ms     0ms      1       1759/188        0% (0)  $0.000314
+  agent.act "Achieve objective 4 of the goal, for run id {runid}:…   56.1s   55.8s   6484ms   391ms     11     83758/1564   84% (70629)  $0.003095
+  agent.assert "For run id e2ec1-n3, this now holds in the app: I…  2564ms  2349ms    119ms     0ms      1       1777/157        0% (0)  $0.000301
+  agent.act "Achieve objective 5 of the goal, for run id {runid}:…   12.9s   12.7s   1270ms   180ms      4      24181/525   87% (21100)  $0.000846
+  agent.assert "For run id e2ec1-n3, this now holds in the app: I…  5521ms  5331ms    104ms     0ms      1       1803/361        0% (0)  $0.000406
+  agent.act "Achieve objective 6 of the goal, for run id {runid}:…   13.3s   13.0s    776ms    91ms      3      18134/628   85% (15431)  $0.000797
+  agent.assert "For run id e2ec1-n3, this now holds in the app: I…  2628ms  2402ms    132ms     0ms      1        1774/85        0% (0)  $0.000264
+  agent.act "Objective 7 of the goal, for run id {runid}, asks on…   17.1s   16.8s   1631ms   272ms      5      37049/455   85% (31484)  $0.001222
+  agent.extract "For run id e2ec1-n3: Report the opportunity's re…  2506ms  2421ms     81ms     0ms      1        1675/65        0% (0)  $0.000242

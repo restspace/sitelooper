@@ -1,0 +1,195 @@
+{
+  "arm": "e2e",
+  "e2eVersion": "0.16.0",
+  "target": "espocrm",
+  "runid": "e2ec1-n1",
+  "model": "openai/gpt-6-luna",
+  "strict": false,
+  "reset": true,
+  "exitCode": 0,
+  "wallMs": 355931,
+  "cache": {
+    "acts": 8,
+    "replayed": 0,
+    "handedOff": 0,
+    "missed": 2,
+    "failed": 6,
+    "stale": 0,
+    "actModelCalls": 6,
+    "reasons": [
+      "signin:missed:no-entry",
+      "obj1:missed:no-entry"
+    ]
+  },
+  "usage": {
+    "modelTokens": 701707,
+    "modelCachedTokens": 598134,
+    "usd": 0.022453040000000004,
+    "usdAtRatesFloor": null
+  },
+  "steps": [
+    {
+      "kind": "act",
+      "id": "signin",
+      "ok": true,
+      "ms": 11367,
+      "summary": "Signed in successfully as admin; the EspoCRM home dashboard is now visible.",
+      "cache": {
+        "mode": "missed",
+        "reason": "no-entry",
+        "replayedActions": 0,
+        "totalActions": 0
+      },
+      "modelCalls": 4,
+      "actions": 3
+    },
+    {
+      "kind": "assert",
+      "id": "signin",
+      "ok": true,
+      "ms": 1381
+    },
+    {
+      "kind": "act",
+      "id": "obj1",
+      "ok": true,
+      "ms": 5050,
+      "summary": "The Opportunities list shows these names beginning with `Seed:` exactly as displayed: Seed: training package; Seed: pilot expansion; Seed: annual support renewal.",
+      "cache": {
+        "mode": "missed",
+        "reason": "no-entry",
+        "replayedActions": 0,
+        "totalActions": 0
+      },
+      "modelCalls": 2,
+      "actions": 1
+    },
+    {
+      "kind": "extract",
+      "id": "obj1",
+      "ok": true,
+      "ms": 1268,
+      "values": [
+        "Seed: training package",
+        "Seed: pilot expansion",
+        "Seed: annual support renewal"
+      ]
+    },
+    {
+      "kind": "act",
+      "id": "obj2",
+      "ok": false,
+      "code": "ACTION_FAILED",
+      "blocked": false,
+      "error": "agent.act failed: Entered the requested name, selected the exact Bench Account suggestion, and added a description containing e2ec1-n1. Save was blocked by validation: the form reported “Amount is required” and cleared the entered amount, so the opportunity was not created.",
+      "ms": 133100
+    },
+    {
+      "kind": "assert",
+      "id": "obj2",
+      "ok": false,
+      "code": "ASSERTION_FAILED",
+      "blocked": false,
+      "error": "The opportunity is still on the Create Opportunity form, and no saved record is shown, so its existence with the stated details is not established.",
+      "ms": 2663
+    },
+    {
+      "kind": "act",
+      "id": "obj3",
+      "ok": false,
+      "code": "ACTION_FAILED",
+      "blocked": false,
+      "error": "agent.act failed: Set the Stage field to Negotiation on the unsaved opportunity form. Saving remains blocked because the required Amount field clears on blur/submit and triggers “Amount is required”; no saved opportunity record with this stage is shown.",
+      "ms": 38244
+    },
+    {
+      "kind": "assert",
+      "id": "obj3",
+      "ok": false,
+      "code": "ASSERTION_INCONCLUSIVE",
+      "blocked": false,
+      "error": "The create form for “e2ec1-n1 Bench Opportunity” displays Stage as Negotiation, but it is still an unsaved form, so the observation does not establish the stage of a saved opportunity.; the judge saw the semantic tree only; pass vision: true when the answer is in pixels",
+      "ms": 3586
+    },
+    {
+      "kind": "act",
+      "id": "obj4",
+      "ok": false,
+      "code": "ACTION_FAILED",
+      "blocked": false,
+      "error": "agent.act failed: The create form shows Close Date 2026-12-31 and Stage Negotiation, but every attempt to enter 12500 (including 12500.00 and 12,500) clears the Amount field on save and reports “Amount is required” and “Not valid.” The opportunity remains unsaved, so objective 4 is not achieved.",
+      "ms": 72265
+    },
+    {
+      "kind": "assert",
+      "id": "obj4",
+      "ok": false,
+      "code": "ASSERTION_FAILED",
+      "blocked": false,
+      "error": "The create form shows the close date as 2026-12-31, but the Amount field is blank, so the amount-and-date assertion is false.",
+      "ms": 2251
+    },
+    {
+      "kind": "act",
+      "id": "obj5",
+      "ok": false,
+      "code": "ASSERTION_FAILED",
+      "blocked": false,
+      "error": "agent.act failed: Selected the exact Bench Assignee suggestion in the Assigned User field. The opportunity remains unsaved on the Create form, and Amount is blank after prior required-field validation failures, so the assignment is not established on a saved opportunity.",
+      "ms": 11805
+    },
+    {
+      "kind": "assert",
+      "id": "obj5",
+      "ok": false,
+      "code": "ASSERTION_INCONCLUSIVE",
+      "blocked": false,
+      "error": "The create form shows “Bench Assignee” in the Assigned User field, but does not show that a user record was chosen and saved.; the judge saw the semantic tree only; pass vision: true when the answer is in pixels",
+      "ms": 2652
+    },
+    {
+      "kind": "act",
+      "id": "obj6",
+      "ok": false,
+      "code": "ACTION_FAILED",
+      "blocked": false,
+      "error": "agent.act failed: The opportunity remains unsaved on the Create Opportunity form. Entering 12500 is cleared on Save and the form reports “Amount is required” and “Not valid,” so there is no record Stream to post to for run id e2ec1-n1.",
+      "ms": 9380
+    },
+    {
+      "kind": "assert",
+      "id": "obj6",
+      "ok": false,
+      "code": "ASSERTION_INCONCLUSIVE",
+      "blocked": false,
+      "error": "The screen shows an unsaved opportunity creation form, not its Stream, so it does not show whether a post includes e2ec1-n1.; the judge saw the semantic tree only; pass vision: true when the answer is in pixels",
+      "ms": 3345
+    },
+    {
+      "kind": "act",
+      "id": "obj7",
+      "ok": false,
+      "code": "ASSERTION_FAILED",
+      "blocked": false,
+      "error": "agent.act failed: Searched Opportunities for “e2ec1-n1 Bench Opportunity”; the results show “No Data” (0 / 0). The earlier create form was unsaved, so no record page or #Opportunity/view/<id> value exists to report.",
+      "ms": 32159
+    },
+    {
+      "kind": "extract",
+      "id": "obj7",
+      "ok": false,
+      "code": "ASSERTION_INCONCLUSIVE",
+      "blocked": false,
+      "error": "nothing to extract: The opportunity record page and its address/record ID are not shown; the opportunities list displays “No Data”.; the judge saw the semantic tree only; pass vision: true when the answer is in pixels",
+      "ms": 2566
+    }
+  ],
+  "finalText": "1. DONE Seed: training package | Seed: pilot expansion | Seed: annual support renewal\n2. FAILED\n3. FAILED\n4. FAILED\n5. FAILED\n6. FAILED\n7. FAILED ",
+  "machine": {
+    "platform": "linux",
+    "arch": "x64",
+    "node": "v22.22.0",
+    "cpus": 4,
+    "memGb": 16
+  }
+}
