@@ -1,0 +1,93 @@
+{
+ "id": "s_a3c5d7",
+ "origin": "http://127.0.0.1:8101",
+ "template": "On the saved ticket page for '{{v1}}', add a comment from the item's sidebar whose text includes exactly the runid {{v2}}. Submit the comment and verify it appears on the ticket.",
+ "params": {
+  "v1": {
+   "example": "hsdx3-n2 Bench Ticket",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i3:ticket_title"
+  },
+  "v2": {
+   "example": "hsdx3-n2",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8101/admin/content/tickets"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e590"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr:nth-of-type(2) > td:nth-of-type(5) > div"
+     },
+     {
+      "kind": "point",
+      "x": 837,
+      "y": 166,
+      "w": 122,
+      "h": 20,
+      "role": null,
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "mints": {
+    "at": "p3"
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8101/admin/content/tickets/{{d1}}",
+    "addedContains": [
+     "- heading \"{{v1}}\"",
+     "- textbox \"Select an item...\": {{*}}",
+     "- button \"Bench Customer\"",
+     "- button \"December 31st, 2026\"",
+     "- button \"Estimated Hours\""
+    ],
+    "lineDialect": 2
+   }
+  }
+ ],
+ "derived": {
+  "d1": {
+   "step": 1,
+   "at": "p3",
+   "example": "779eabba-b08d-4d8d-bb2c-bad8e37c5018"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-10-05T21:21:34.737Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_e8070d",
+  "index": 0,
+  "of": 2
+ },
+ "provenance": {
+  "session": "hsdx3-n2",
+  "instruction": "On the saved ticket page for 'hsdx3-n2 Bench Ticket', add a comment from the item's sidebar whose text includes exactly the runid hsdx3-n2. Submit the comment and verify it appears on the ticket.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-10-05T21:21:34.737Z"
+ },
+ "revision": 1
+}

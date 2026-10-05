@@ -1,0 +1,46 @@
+
+Running 1 test using 1 worker
+
+[sitelooper step] 01-signin
+[sitelooper step] 02-open
+[sitelooper warn] step 03-create s_8c3a92/1: resolved positionally and its only recorded effect is the fill's own echo — the effect gate cannot tell right element from wrong here
+[sitelooper recipe] filled via recipe contenteditable/set-value (r_7b1e49); value verified on the component
+[sitelooper warn] 03-create s_8c3a92/12: read 'description_paragraph_te' returned a value the skill itself set/selected ('hsdx3-spec') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper drift] 03-create s_8c3a92/17 target: primary locator('button[data-tooltip="vhlI7ti6zMjazeMpvFiwY"]') missed; used #3 locator('div:nth-of-type(1) > div:nth-of-type(3) > header > div:nth-of-type(2) > div:nth-of-type(2) > button') (#1 absent, #2 ambiguous)
+[sitelooper warn] 03-create s_07047e/6: read 'estimated_hours' returned a value the skill itself set/selected ('6') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper warn] 03-create s_07047e/7: read 'tags' returned a value the skill itself set/selected ('hardware') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper step] 03-create
+  ✘  1 hsdx3.spec.ts:9:1 › hsdx3 (53.7s)
+
+
+  1) hsdx3.spec.ts:9:1 › hsdx3 › 04-open: Complete the currently open unsaved ticket form for '{{runid}} Bench Ticket' and save it. Preserve its verified title, customer Bench Customer, status In progress, hardware-only tag and estimated hours 6. Enter a single rich-text paragraph containing {{runid}} and set due date to 2026-12-31. Find the proper save action in the Directus create-item form (do not treat the editor's Done as item save). Verify persisted fields after save and report page address/ID. If controls are hidden, use the visible app UI to reveal them and continue. 
+
+    Error: 04-open s_121712: not on the page this procedure starts from (expects http://127.0.0.1:8101/admin/content/tickets/+, browser is at http://127.0.0.1:8101/admin/content/tickets/36b99f27-cc0d-4e5e-b6c8-ab095511f736) — nothing of this segment has run
+
+       at hsdx3.flow.ts:16490
+
+      16488 |   const verdict = preconditionVerdictWithFacts(siteFactsAt(url), pattern, url, p, similarity, mints);
+      16489 |   for (const line of verdict.warnings) logWarning(`${where}: ${line}`);
+    > 16490 |   if (verdict.refuse) throw new Error(`${where}: ${verdict.refuse} — nothing of this segment has run`);
+            |                             ^
+      16491 | }
+      16492 |
+      16493 | /**
+        at preconditionGate (/home/user/sitelooper/bench/results/hsdx3-spec-spec-tmp/hsdx3.flow.ts:16490:29)
+        at Object.04-open (/home/user/sitelooper/bench/results/hsdx3-spec-spec-tmp/hsdx3.flow.ts:19306:11)
+        at /home/user/sitelooper/bench/results/hsdx3-spec-spec-tmp/hsdx3.flow.ts:20695:7
+        at runFlow (/home/user/sitelooper/bench/results/hsdx3-spec-spec-tmp/hsdx3.flow.ts:20694:5)
+        at /home/user/sitelooper/bench/results/hsdx3-spec-spec-tmp/hsdx3.spec.ts:14:21
+
+    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    [sitelooper drift] 03-create s_8c3a92/17 target: primary locator('button[data-tooltip="vhlI7ti6zMjazeMpvFiwY"]') missed; used #3 locator('div:nth-of-type(1) > div:nth-of-type(3) > header > div:nth-of-type(2) > div:nth-of-type(2) > button') (#1 absent, #2 ambiguous)
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/hsdx3-hsdx3/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/hsdx3-hsdx3/error-context.md
+
+  1 failed
+    hsdx3.spec.ts:9:1 › hsdx3 ──────────────────────────────────────────────────────────────────────

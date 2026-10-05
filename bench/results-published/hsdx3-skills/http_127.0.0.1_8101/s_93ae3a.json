@@ -1,0 +1,109 @@
+{
+ "id": "s_93ae3a",
+ "origin": "http://127.0.0.1:8101",
+ "template": "Complete the currently open unsaved ticket form for '{{v1}}' and save it. Preserve its verified title, customer Bench Customer, status {{v3}}, hardware-only tag and estimated hours 6. Enter a single rich-text paragraph containing {{v2}} and set due date to 2026-12-31. Find the proper save action in the Directus create-item form (do not treat the editor's Done as item save). Verify persisted fields after save and report page address/ID. If controls are hidden, use the visible app UI to reveal them and continue.",
+ "params": {
+  "v1": {
+   "example": "hsdx3-n2 Bench Ticket",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i3:ticket_title"
+  },
+  "v2": {
+   "example": "hsdx3-n2",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v3": {
+   "example": "In progress",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i3:status"
+  },
+  "v4": {
+   "example": "779eabba-b08d-4d8d-bb2c-bad8e37c5018",
+   "usedIn": [
+    1
+   ],
+   "known": true,
+   "binding": "03-create.url.p3"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8101/admin/content/tickets/{{v4}}"
+ },
+ "steps": [
+  {
+   "tool": "goto",
+   "args": {
+    "url": "http://127.0.0.1:8101/admin/content/tickets/{{v4}}"
+   },
+   "locators": {}
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e114"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"start\"] a"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(1) > div > span > span > a"
+     },
+     {
+      "kind": "point",
+      "x": 364,
+      "y": 17,
+      "w": 39.1,
+      "h": 11,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8101/admin/content/tickets",
+    "addedContains": [
+     "- link \"Content\"",
+     "- heading \"Tickets\"",
+     "- searchbox \"Search Items...\"",
+     "- row \"Customer Due Date Status Title\"",
+     "- cell \"Customer\""
+    ],
+    "lineDialect": 2
+   }
+  }
+ ],
+ "contract": 4,
+ "stats": {
+  "uses": 2,
+  "successes": 2,
+  "partial": 0,
+  "created": "2026-10-05T21:20:57.247Z",
+  "failedAtStep": {},
+  "fallthroughs": 1,
+  "verifiedContract": 4,
+  "lastUsed": "2026-10-05T21:25:07.009Z"
+ },
+ "status": "validated",
+ "seq": {
+  "chain": "s_3310f8",
+  "index": 0,
+  "of": 2
+ },
+ "provenance": {
+  "session": "hsdx3-n2",
+  "instruction": "Complete the currently open unsaved ticket form for 'hsdx3-n2 Bench Ticket' and save it. Preserve its verified title, customer Bench Customer, status In progress, hardware-only tag and estimated hours 6. Enter a single rich-text paragraph containing hsdx3-n2 and set due date to 2026-12-31. Find the proper save action in the Directus create-item form (do not treat the editor's Done as item save). Verify persisted fields after save and report page address/ID. If controls are hidden, use the visible app UI to reveal them and continue.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-10-05T21:20:57.247Z"
+ },
+ "revision": 2
+}

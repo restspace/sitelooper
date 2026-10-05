@@ -1,0 +1,276 @@
+{
+  "flow": "hsdx3",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_757e44; observed user_id=54b4789b-dbba-41f8-aaa8-0c69846d2927, content_page_url=http://127.0.0.1:8101/admin/content/customers, signed_in_user=Admin User, signed_in_email=admin@example.com, project_name=Bench Desk, signed_in_role=Administrator.",
+      "values": {
+        "user_id": "54b4789b-dbba-41f8-aaa8-0c69846d2927",
+        "content_page_url": "http://127.0.0.1:8101/admin/content/customers",
+        "signed_in_user": "Admin User",
+        "signed_in_email": "admin@example.com",
+        "project_name": "Bench Desk",
+        "signed_in_role": "Administrator"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "10/10",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_fe0a55; observed ticket_1_title=Seed: Printer jams on tray 2, ticket_2_title=Seed: VPN drops every hour, ticket_3_title=Seed: Laptop battery swelling, collection_name=Tickets, item_count=3 Items, seed_titles_1=Seed: Printer jams on tray 2, seed_titles_2=Seed: VPN drops every hour, seed_titles_3=Seed: Laptop battery swelling.",
+      "values": {
+        "ticket_1_title": "Seed: Printer jams on tray 2",
+        "ticket_2_title": "Seed: VPN drops every hour",
+        "ticket_3_title": "Seed: Laptop battery swelling",
+        "collection_name": "Tickets",
+        "item_count": "3 Items",
+        "seed_titles_1": "Seed: Printer jams on tray 2",
+        "seed_titles_2": "Seed: VPN drops every hour",
+        "seed_titles_3": "Seed: Laptop battery swelling"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "15/15",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_07047e; observed ticket_id=6c7d3e24-4902-415a-a3f2-3e440597d692, ticket_page_url=http://127.0.0.1:8101/admin/content/tickets/6c7d3e24-4902-415a-a3f2-3e440597d692, page_url=http://127.0.0.1:8101/admin/content/tickets/6c7d3e24-4902-415a-a3f2-3e440597d692, ticket_title=hsdx3-n3 Bench Ticket, status=In progress, customer=Bench Customer, due_date=December 31st, 2026.",
+      "values": {
+        "ticket_id": "6c7d3e24-4902-415a-a3f2-3e440597d692",
+        "ticket_page_url": "http://127.0.0.1:8101/admin/content/tickets/6c7d3e24-4902-415a-a3f2-3e440597d692",
+        "page_url": "http://127.0.0.1:8101/admin/content/tickets/6c7d3e24-4902-415a-a3f2-3e440597d692",
+        "ticket_title": "hsdx3-n3 Bench Ticket",
+        "status": "In progress",
+        "customer": "Bench Customer",
+        "due_date": "December 31st, 2026"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "26/26",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_8c3a92: step 1: resolved positionally and its only recorded effect is the fill's own echo — the effect gate cannot tell right element from wrong here",
+        "s_8c3a92: step 12: read 'description_paragraph_te' returned a value the skill itself set/selected ('hsdx3-n3') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_8c3a92: step 17: primary locator did not resolve; used fallback #3 page.locator('div:nth-of-type(1) > div:nth-of-type(3) > header > div:nth-of-type(2) > div:nth-of-type(2) > button')",
+        "s_07047e: step 6: read 'estimated_hours' returned a value the skill itself set/selected ('6') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_07047e: step 7: read 'tags' returned a value the skill itself set/selected ('hardware') — confirms the control, not persistence; dropped from the report's confident values"
+      ],
+      "unreported": [
+        "ticket_saved",
+        "title_unsaved",
+        "status_unsaved",
+        "customer_unsaved",
+        "hardware_tag_active",
+        "hardware_return_tag_active",
+        "estimated_hours_unsaved",
+        "due_date_display",
+        "description_verified"
+      ]
+    },
+    {
+      "id": "04-open",
+      "status": "success",
+      "summary": "The ticket for 'hsdx3-n3 Bench Ticket' already existed in a fully saved state on this record page (the earlier skill replay, s_93ae3a, did not leave an unsaved create form), so no re-save was needed — and I pressed no Save myself, to avoid double-writing. I verified every required value on a FRESH SERVER RELOAD of http://127.0.0.1:8101/admin/content/tickets/6c7d3e24-4902-415a-a3f2-3e440597d692: title input \"hsdx3-n3 Bench Ticket\", status \"In progress\", customer chip \"Bench Customer\" (not \"Bench Customer Ltd\"), due date \"December 31st, 2026\", numeric input 6 for Estimated Hours, the tag chip \"hardware\" is the only active tag (hardware-return/software/network/billing all carry the \"inactive\" class), and the rich-text editor's live DOM contains exactly one paragraph \"hsdx3-n3\". The Tickets list also shows the row as \"Bench Customer / December 31st, 2026 / In progress / hsdx3-n3 Bench Ticket\".",
+      "values": {
+        "ticket_id": "6c7d3e24-4902-415a-a3f2-3e440597d692",
+        "ticket_page_url": "http://127.0.0.1:8101/admin/content/tickets/6c7d3e24-4902-415a-a3f2-3e440597d692",
+        "ticket_title": "hsdx3-n3 Bench Ticket",
+        "status": "In progress",
+        "customer": "Bench Customer",
+        "due_date": "December 31st, 2026",
+        "estimated_hours": "6",
+        "active_tag": "hardware",
+        "description_text": "hsdx3-n3 (single paragraph in rich-text editor)",
+        "disabled_header_button_class": "button small align-center icon normal",
+        "customer_value": "Bench Customer",
+        "due_date_value": "December 31st, 2026",
+        "description_text_2": "Rich Text Area",
+        "main_button_aria_pressed": "hardware-return",
+        "main_button_aria_pressed_2": "software",
+        "main_button_aria_pressed_3": "network",
+        "main_button_aria_pressed_4": "billing",
+        "ref": "hsdx3-n3",
+        "inactive_tags_1": "hardware-return",
+        "inactive_tags_2": "software",
+        "inactive_tags_3": "network",
+        "inactive_tags_4": "billing"
+      },
+      "tier": "B",
+      "recovered": true,
+      "fellBack": "every candidate refused — s_121712: not on the page this procedure starts from (expects http://127.0.0.1:8101/admin/content/tickets/+, browser is at http://127.0.0.1:8101/admin/content/tickets/6c7d3e24-4902-415a-a3f2-3e440597d692) — nothing was run",
+      "replayed": "2/2",
+      "repaired": false,
+      "turns": 30,
+      "warnings": [
+        "s_93ae3a: step 2: primary locator did not resolve; used fallback #2 page.locator('div:nth-of-type(2) > div:nth-of-type(1) > div > span > span > a')"
+      ],
+      "unreported": [
+        "title",
+        "tags_active",
+        "description_html",
+        "description_paragraph_count",
+        "run_id",
+        "tags_inactive_1",
+        "tags_inactive_2",
+        "tags_inactive_3",
+        "tags_inactive_4"
+      ]
+    },
+    {
+      "id": "05-add",
+      "status": "success",
+      "summary": "Replayed stored procedure s_65eaa3; observed run_id=hsdx3-n3, ticket_title=hsdx3-n3 Bench Ticket, sidebar_panel=Comments, comment_author=Admin User, comment_timestamp_1=Today, comment_timestamp_2=9:25 pm, comments_heading_after=1\nComments.",
+      "values": {
+        "run_id": "hsdx3-n3",
+        "ticket_title": "hsdx3-n3 Bench Ticket",
+        "sidebar_panel": "Comments",
+        "comment_author": "Admin User",
+        "comment_timestamp_1": "Today",
+        "comment_timestamp_2": "9:25 pm",
+        "comments_heading_after": "1\nComments"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "13/13",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_65eaa3: step 1: primary locator did not resolve; used fallback #4 elementAt(1114, 81) /* button */",
+        "s_65eaa3: step 6: read 'comments_panel_text' returned 'Cancel\nSubmit\nToday\nAdmin User\n9:25 pm\n\nComment for runid hs…' from a control this step set, and nothing committed it since — it shows the control, however the app formats it, not what the app stored; dropped from the report's confident values",
+        "s_65eaa3: step 8: primary locator did not resolve; used fallback #2 elementAt(1123, 81) /* span */",
+        "s_65eaa3: step 9: read 'comment_text_posted' returned a value the skill itself set/selected ('Comment for runid hsdx3-n3.') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_65eaa3: step 11: primary locator did not resolve; used fallback #2 elementAt(980, 324) /* span */",
+        "s_65eaa3: step 13: primary locator did not resolve; used fallback #3 elementAt(1114, 81) /* button */"
+      ],
+      "unreported": [
+        "comment_text_posted",
+        "comments_panel_text"
+      ]
+    }
+  ],
+  "passed": 5,
+  "total": 5,
+  "repinned": 0,
+  "drift": 6,
+  "driftTickets": [
+    {
+      "flow": "hsdx3",
+      "step": "03-create",
+      "skill": "s_8c3a92",
+      "atStep": "17",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.locator('button[data-tooltip=\"vhlI7ti6zMjazeMpvFiwY\"]')",
+      "fallbackUsed": "page.locator('div:nth-of-type(1) > div:nth-of-type(3) > header > div:nth-of-type(2) > div:nth-of-type(2) > button')",
+      "fallbackIndex": 2,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8101/admin/content/tickets/:id",
+      "pageUrl": "http://127.0.0.1:8101/admin/content/tickets/6c7d3e24-4902-415a-a3f2-3e440597d692"
+    },
+    {
+      "flow": "hsdx3",
+      "step": "04-open",
+      "skill": "s_93ae3a",
+      "atStep": "2",
+      "key": "target",
+      "similarity": null,
+      "missedLocator": "page.locator('[data-testid=\"start\"] a')",
+      "fallbackUsed": "page.locator('div:nth-of-type(2) > div:nth-of-type(1) > div > span > span > a')",
+      "fallbackIndex": 1,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:8101/admin/content/tickets",
+      "pageUrl": "http://127.0.0.1:8101/admin/content/tickets"
+    },
+    {
+      "flow": "hsdx3",
+      "step": "05-add",
+      "skill": "s_65eaa3",
+      "atStep": "1",
+      "key": "target",
+      "similarity": 0.999,
+      "missedLocator": "page.locator('[data-testid=\"end\"] button')",
+      "fallbackUsed": "elementAt(1114, 81) /* button */",
+      "fallbackIndex": 3,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8101/admin/content/tickets/:id",
+      "pageUrl": "http://127.0.0.1:8101/admin/content/tickets/6c7d3e24-4902-415a-a3f2-3e440597d692"
+    },
+    {
+      "flow": "hsdx3",
+      "step": "05-add",
+      "skill": "s_65eaa3",
+      "atStep": "8",
+      "key": "target",
+      "similarity": 0.999,
+      "missedLocator": "page.locator('#reka-accordion-trigger-v-36 > span:nth-of-type(1)')",
+      "fallbackUsed": "elementAt(1123, 81) /* span */",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8101/admin/content/tickets/:id",
+      "pageUrl": "http://127.0.0.1:8101/admin/content/tickets/6c7d3e24-4902-415a-a3f2-3e440597d692"
+    },
+    {
+      "flow": "hsdx3",
+      "step": "05-add",
+      "skill": "s_65eaa3",
+      "atStep": "11",
+      "key": "target",
+      "similarity": 0.999,
+      "missedLocator": "page.locator('#reka-collapsible-content-v-37 > div > div:nth-of-type(2) > span > span')",
+      "fallbackUsed": "elementAt(980, 324) /* span */",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8101/admin/content/tickets/:id",
+      "pageUrl": "http://127.0.0.1:8101/admin/content/tickets/6c7d3e24-4902-415a-a3f2-3e440597d692"
+    },
+    {
+      "flow": "hsdx3",
+      "step": "05-add",
+      "skill": "s_65eaa3",
+      "atStep": "13",
+      "key": "target",
+      "similarity": 0.999,
+      "missedLocator": "page.locator('#reka-accordion-trigger-v-36')",
+      "fallbackUsed": "elementAt(1114, 81) /* button */",
+      "fallbackIndex": 2,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8101/admin/content/tickets/:id",
+      "pageUrl": "http://127.0.0.1:8101/admin/content/tickets/6c7d3e24-4902-415a-a3f2-3e440597d692"
+    }
+  ],
+  "wallMs": 223218,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 605610,
+    "completionTokens": 22456,
+    "cachedTokens": 559744
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 605610,
+      "completionTokens": 22456,
+      "cachedTokens": 559744
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "openai/gpt-6-luna",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}
