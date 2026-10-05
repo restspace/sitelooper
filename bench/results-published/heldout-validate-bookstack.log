@@ -1,0 +1,57 @@
+$ node bench/reset-app.mjs --target bookstack
+[reset] bookstack: seeded book "Bench Handbook"
+[reset] bookstack: seeded book "Bench Handbooks"
+[reset] bookstack: seeded chapter "Release Notes" in "Bench Handbook"
+[reset] bookstack: seeded chapter "Release Notes Archive" in "Bench Handbook"
+[reset] bookstack: seeded chapter "Release Notes" in "Bench Handbooks"
+[reset] bookstack: no pages to delete
+[reset] bookstack: seeded page "Seed: Getting started"
+[reset] bookstack: seeded page "Seed: Release checklist"
+[reset] bookstack: seeded page "Seed: House style"
+[exit 0]
+$ node bench/oracle-bookstack.mjs heldout-validate-bsor1
+created page 9 "heldout-validate-bsor1 Bench Page" in Bench Handbook
+moved page 9 into chapter 3 "Release Notes"
+commented #1
+wrote bench/results/heldout-validate-bsor1-oracle-result.json
+1 DONE: Seed: Getting started, Seed: Release checklist, Seed: House style
+2 DONE: page "heldout-validate-bsor1 Bench Page" with a paragraph carrying heldout-validate-bsor1
+3 DONE: tag Review Status = Approved
+4 DONE: heading Overview
+5 DONE: chapter Release Notes of Bench Handbook
+6 DONE: one comment "Reviewed in run heldout-validate-bsor1."
+7 DONE: slug heldout-validate-bsor1-bench-page
+[exit 0]
+$ node bench/verify-bookstack.mjs heldout-validate-bsor1
+
+heldout-validate-bsor1: objectives passed 7/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: PASS — heldout-validate-bsor1-bench-page, body includes runid=true
+  obj 3: PASS — tags="Review Status"="Approved", want only "Review Status"="Approved"
+  obj 4: PASS — headings="Overview", want "Overview"
+  obj 5: PASS — in book "Bench Handbook" (id 1), chapter "Release Notes" (id 3); want "Release Notes" (id 3) of "Bench Handbook" (id 1)
+  obj 6: PASS — 1 comment(s): "Reviewed in run heldout-validate-bsor1."
+  obj 7: PASS — slug heldout-validate-bsor1-bench-page reported
+[exit 0]
+$ node bench/reset-app.mjs --target bookstack
+[reset] bookstack: deleted 1 page(s) (earlier runs', drafts and non-seed)
+[reset] bookstack: deleted comment #1
+[reset] bookstack: emptied the recycle bin (1 deletion(s))
+[exit 0]
+$ node bench/verify-bookstack.mjs heldout-validate-bsnone1
+
+heldout-validate-bsnone1: objectives passed 0/7
+  obj 1: FAIL — not in report: Seed: Getting started, Seed: Release checklist, Seed: House style
+  obj 2: FAIL — page not found
+  obj 3: FAIL — no page
+  obj 4: FAIL — no page
+  obj 5: FAIL — no page
+  obj 6: FAIL — no page
+  obj 7: FAIL — no page to report
+[exit 1]
+$ node bench/reset-app.mjs --target bookstack
+[reset] bookstack: no pages to delete
+[exit 0]
+$ node bench/reset-app.mjs --target bookstack
+[reset] bookstack: no pages to delete
+[exit 0]

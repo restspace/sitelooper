@@ -1,0 +1,59 @@
+$ node bench/reset-app.mjs --target mealie
+[reset] mealie: set up the admin "admin@bench.local" (was changeme@example.com)
+[reset] mealie: seeded category "Bench Dinner"
+[reset] mealie: seeded category "Bench Dinner Party"
+[reset] mealie: seeded category "Bench Lunch"
+[reset] mealie: seeded tag "Bench Quick"
+[reset] mealie: seeded tag "Bench Quickfire"
+[reset] mealie: seeded tag "Bench Classic"
+[reset] mealie: seeded food "Bench Flour"
+[reset] mealie: seeded food "Bench Flour Blend"
+[reset] mealie: seeded food "Bench Butter"
+[reset] mealie: seeded unit "Bench Cup"
+[reset] mealie: seeded unit "Bench Spoon"
+[reset] mealie: no recipes to delete
+[reset] mealie: seeded recipe "Seed: Bench Pancakes" (seed-bench-pancakes)
+[reset] mealie: seeded recipe "Seed: Tomato Soup" (seed-tomato-soup)
+[reset] mealie: seeded recipe "Seed: Garden Salad" (seed-garden-salad)
+[exit 0]
+$ node bench/oracle-mealie.mjs heldout-validate-mlor1
+1 DONE seed recipes: Seed: Bench Pancakes; Seed: Garden Salad; Seed: Tomato Soup
+2 DONE created "heldout-validate-mlor1 Bench Recipe", description: Oracle recipe for run heldout-validate-mlor1.
+3 DONE category Bench Dinner; tag Bench Quick
+4 DONE ingredients 2 Bench Cup Bench Flour; 3 Bench Spoon Bench Butter; steps Whisk the flour and butter. / Bake until golden (heldout-validate-mlor1).
+5 DONE servings 4
+6 DONE comment posted
+7 DONE slug heldout-validate-mlor1-bench-recipe (http://127.0.0.1:8102/g/home/r/heldout-validate-mlor1-bench-recipe)
+[oracle-mealie] wrote bench/results/heldout-validate-mlor1-oracle-result.json
+[exit 0]
+$ node bench/verify-mealie.mjs heldout-validate-mlor1
+
+heldout-validate-mlor1: objectives passed 7/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: PASS — heldout-validate-mlor1-bench-recipe, description="Oracle recipe for run heldout-validate-mlor1."
+  obj 3: PASS — categories=Bench Dinner (bench-dinner); tags=Bench Quick (bench-quick); want only the seeded Bench Dinner (bench-dinner) and Bench Quick (bench-quick)
+  obj 4: PASS — ingredients=[2 Bench Cup Bench Flour | 3 Bench Spoon Bench Butter]; steps=["Whisk the flour and butter.","Bake until golden (heldout-validate-mlor1)."]
+  obj 5: PASS — servings=4, want 4
+  obj 6: PASS — 1 comment(s): "Oracle comment for heldout-validate-mlor1."
+  obj 7: PASS — slug heldout-validate-mlor1-bench-recipe reported
+[exit 0]
+$ node bench/reset-app.mjs --target mealie
+[reset] mealie: deleted 1 recipe(s) (earlier runs' and non-seed)
+[exit 0]
+$ node bench/verify-mealie.mjs heldout-validate-mlnone1
+
+heldout-validate-mlnone1: objectives passed 0/7
+  obj 1: FAIL — not in report: Seed: Garden Salad, Seed: Tomato Soup, Seed: Bench Pancakes
+  obj 2: FAIL — recipe not found
+  obj 3: FAIL — no recipe
+  obj 4: FAIL — no recipe
+  obj 5: FAIL — no recipe
+  obj 6: FAIL — no recipe
+  obj 7: FAIL — no recipe to report
+[exit 1]
+$ node bench/reset-app.mjs --target mealie
+[reset] mealie: no recipes to delete
+[exit 0]
+$ node bench/reset-app.mjs --target mealie
+[reset] mealie: no recipes to delete
+[exit 0]

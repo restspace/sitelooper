@@ -1,0 +1,78 @@
+diff --git a/bench/app-reset.mjs b/bench/app-reset.mjs
+index 93028eca..2df15db1 100644
+--- a/bench/app-reset.mjs
++++ b/bench/app-reset.mjs
+@@ -1076,7 +1076,7 @@ async function resetErpnext() {
+  */
+ async function resetDirectus() {
+   const base = (process.env.APP_URL || 'http://127.0.0.1:8101/').replace(/\/$/, '');
+-  const email = process.env.DIRECTUS_EMAIL || 'admin@bench.local';
++  const email = process.env.DIRECTUS_EMAIL || 'admin@example.com';
+   const password = process.env.DIRECTUS_PASSWORD || 'bench-admin-pass';
+   const staticToken = process.env.DIRECTUS_TOKEN || 'bench-admin-token';
+   let bearer = staticToken;
+diff --git a/bench/thirdparty/bookstack/docker-compose.yml b/bench/thirdparty/bookstack/docker-compose.yml
+index ae89f905..71159be3 100644
+--- a/bench/thirdparty/bookstack/docker-compose.yml
++++ b/bench/thirdparty/bookstack/docker-compose.yml
+@@ -71,6 +71,7 @@ services:
+       MAIL_FROM: bench@example.com
+     volumes:
+       - bookstack-config:/config
++      - ./no-ipv6.sh:/custom-cont-init.d/10-no-ipv6.sh:ro
+ 
+ volumes:
+   bookstack-db:
+diff --git a/bench/thirdparty/bookstack/no-ipv6.sh b/bench/thirdparty/bookstack/no-ipv6.sh
+new file mode 100755
+index 00000000..e1e86568
+--- /dev/null
++++ b/bench/thirdparty/bookstack/no-ipv6.sh
+@@ -0,0 +1,3 @@
++#!/bin/sh
++# Boxes without IPv6 (docker daemon ipv6 off) make nginx die on "listen [::]:80".
++sed -i '/listen \[::\]/d' /config/nginx/site-confs/default.conf 2>/dev/null || true
+diff --git a/bench/thirdparty/bookstack/seed.sh b/bench/thirdparty/bookstack/seed.sh
+index 4509dca3..8cbb68f1 100644
+--- a/bench/thirdparty/bookstack/seed.sh
++++ b/bench/thirdparty/bookstack/seed.sh
+@@ -44,7 +44,7 @@ done
+ [ "$code" = "200" ] || { echo "bookstack: $URL/login never answered 200 (last: ${code:-none})" >&2; exit 1; }
+ 
+ # As the image's own app user (abc), so nothing under storage/ becomes root-owned.
+-docker exec -u abc "$CONTAINER" php /app/www/artisan tinker --execute='
++docker exec -u abc -e HOME=/tmp "$CONTAINER" php /app/www/artisan tinker --execute='
+   $User = "BookStack\\Users\\Models\\User";
+   $u = $User::where("email", "admin@bench.local")->first() ?? $User::where("email", "admin@admin.com")->first();
+   if (!$u) {
+diff --git a/bench/thirdparty/directus/docker-compose.yml b/bench/thirdparty/directus/docker-compose.yml
+index a5dd5f68..5abe4b2c 100644
+--- a/bench/thirdparty/directus/docker-compose.yml
++++ b/bench/thirdparty/directus/docker-compose.yml
+@@ -17,7 +17,7 @@
+ #
+ #   up:    docker compose -f bench/thirdparty/directus/docker-compose.yml up -d
+ #   reset: node bench/reset-app.mjs --target directus   (idempotent: builds the data model and seeds too)
+-#   web:   http://127.0.0.1:8101/admin/   (admin@bench.local / bench-admin-pass)
++#   web:   http://127.0.0.1:8101/admin/   (admin@example.com / bench-admin-pass)
+ #   api:   http://127.0.0.1:8101/, Authorization: Bearer bench-admin-token
+ services:
+   directus:
+@@ -29,10 +29,10 @@ services:
+       PUBLIC_URL: http://127.0.0.1:8101/
+       DB_CLIENT: sqlite3
+       DB_FILENAME: /directus/database/data.db
+-      ADMIN_EMAIL: admin@bench.local
++      ADMIN_EMAIL: admin@example.com
+       ADMIN_PASSWORD: bench-admin-pass
+       ADMIN_TOKEN: bench-admin-token
+-      PROJECT_OWNER: admin@bench.local
++      PROJECT_OWNER: admin@example.com
+       PROJECT_NAME: Bench Desk
+       # A bench box has no network to report to and no mail to send.
+       TELEMETRY: "false"
+ M bench/app-reset.mjs
+ M bench/thirdparty/bookstack/docker-compose.yml
+ A bench/thirdparty/bookstack/no-ipv6.sh
+ M bench/thirdparty/bookstack/seed.sh
+ M bench/thirdparty/directus/docker-compose.yml
