@@ -1,0 +1,182 @@
+{
+  "target": "directus",
+  "runid": "hedx2-strict",
+  "steps": [
+    {
+      "kind": "act",
+      "id": "signin",
+      "ok": true,
+      "ms": 3723,
+      "summary": "replayed 3 recorded action(s) zero-turn from the trace cache; recorded verdict: Signed in as admin@example.com. The authenticated Directus interface is open on the Customers collection at /admin/content/customers.",
+      "cache": {
+        "mode": "self-finalized",
+        "replayedActions": 3,
+        "totalActions": 3
+      },
+      "modelCalls": 0,
+      "actions": 3
+    },
+    {
+      "kind": "assert",
+      "id": "signin",
+      "ok": true,
+      "ms": 2903
+    },
+    {
+      "kind": "act",
+      "id": "obj1",
+      "ok": true,
+      "ms": 458,
+      "summary": "replayed 1 recorded action(s) zero-turn from the trace cache; recorded verdict: Opened Tickets and read the three titles beginning with `Seed:`: Seed: VPN drops every hour; Seed: Printer jams on tray 2; Seed: Laptop battery swelling. No data was changed.",
+      "cache": {
+        "mode": "self-finalized",
+        "replayedActions": 1,
+        "totalActions": 1
+      },
+      "modelCalls": 0,
+      "actions": 1
+    },
+    {
+      "kind": "extract",
+      "id": "obj1",
+      "ok": true,
+      "ms": 1487,
+      "values": [
+        "Seed: VPN drops every hour",
+        "Seed: Printer jams on tray 2",
+        "Seed: Laptop battery swelling"
+      ]
+    },
+    {
+      "kind": "act",
+      "id": "obj2",
+      "ok": true,
+      "ms": 2458,
+      "summary": "replayed 5 recorded action(s) zero-turn from the trace cache; recorded verdict: Created and saved the ticket titled “hedx2-n1 Bench Ticket.” Reopened it and verified the Description rich-text area contains “hedx2-n1.” Its page is /admin/content/tickets/eed9df03-6fb4-4190-98be-847d6c9d29ce.",
+      "cache": {
+        "mode": "self-finalized",
+        "replayedActions": 5,
+        "totalActions": 5
+      },
+      "modelCalls": 0,
+      "actions": 5
+    },
+    {
+      "kind": "assert",
+      "id": "obj2",
+      "ok": true,
+      "ms": 5006
+    },
+    {
+      "kind": "act",
+      "id": "obj3",
+      "ok": true,
+      "ms": 2354,
+      "summary": "replayed 4 recorded action(s) zero-turn from the trace cache; recorded verdict: Selected the existing customer “Bench Customer” (not similarly named records) for hedx2-n1 Bench Ticket and saved it. The Tickets list now shows that ticket with customer “Bench Customer,” and an “Item Updated” confirmation appeared.",
+      "cache": {
+        "mode": "self-finalized",
+        "replayedActions": 4,
+        "totalActions": 4
+      },
+      "modelCalls": 0,
+      "actions": 4
+    },
+    {
+      "kind": "assert",
+      "id": "obj3",
+      "ok": true,
+      "ms": 2697
+    },
+    {
+      "kind": "act",
+      "id": "obj4",
+      "ok": true,
+      "ms": 7472,
+      "summary": "replayed 10 recorded action(s) zero-turn from the trace cache; recorded verdict: Set the ticket status to “In progress” and selected only the “hardware” tag; the other preset tags remained unselected. Saved successfully, and the Tickets list shows “hedx2-n2 Bench Ticket” with status “In progress.”",
+      "cache": {
+        "mode": "self-finalized",
+        "replayedActions": 10,
+        "totalActions": 10
+      },
+      "modelCalls": 0,
+      "actions": 10
+    },
+    {
+      "kind": "assert",
+      "id": "obj4",
+      "ok": false,
+      "code": "ASSERTION_INCONCLUSIVE",
+      "blocked": false,
+      "error": "The ticket for hedx2-strict is listed with status In progress, but its tags are not shown, so the only-tag requirement cannot be verified.; the judge saw the semantic tree only; if the engine captures pixels, pass vision: true when the answer is in pixels",
+      "ms": 2856
+    },
+    {
+      "kind": "act",
+      "id": "obj5",
+      "ok": true,
+      "ms": 3810,
+      "summary": "replayed 7 recorded action(s) zero-turn from the trace cache; recorded verdict: Set estimated hours to 6 and due date to December 31st, 2026, then saved the ticket. The Tickets list shows hedx2-n2 Bench Ticket with due date December 31st, 2026 and an “Item Updated” confirmation.",
+      "cache": {
+        "mode": "self-finalized",
+        "replayedActions": 7,
+        "totalActions": 7
+      },
+      "modelCalls": 0,
+      "actions": 7
+    },
+    {
+      "kind": "assert",
+      "id": "obj5",
+      "ok": false,
+      "code": "ASSERTION_INCONCLUSIVE",
+      "blocked": false,
+      "error": "The ticket row shows a due date of December 31st, 2026, but the estimated hours are not visible in this observation.; the judge saw the semantic tree only; if the engine captures pixels, pass vision: true when the answer is in pixels",
+      "ms": 3012
+    },
+    {
+      "kind": "act",
+      "id": "obj6",
+      "ok": true,
+      "ms": 1925,
+      "summary": "replayed 4 recorded action(s) zero-turn from the trace cache; recorded verdict: Posted a comment on hedx2-n2 Bench Ticket. The sidebar confirms “Comment posted” and displays the comment text “hedx2-n2.”",
+      "cache": {
+        "mode": "self-finalized",
+        "replayedActions": 4,
+        "totalActions": 4
+      },
+      "modelCalls": 0,
+      "actions": 4
+    },
+    {
+      "kind": "assert",
+      "id": "obj6",
+      "ok": true,
+      "ms": 2864
+    },
+    {
+      "kind": "act",
+      "id": "obj7",
+      "ok": true,
+      "ms": 4582,
+      "summary": "The ticket page is open at /admin/content/tickets/a7e1ffd6-f1e5-47cb-90e5-a114cb6560e9. Ticket ID: a7e1ffd6-f1e5-47cb-90e5-a114cb6560e9.",
+      "cache": {
+        "mode": "missed",
+        "reason": "no-entry",
+        "replayedActions": 0,
+        "totalActions": 0
+      },
+      "modelCalls": 1,
+      "actions": 0
+    },
+    {
+      "kind": "extract",
+      "id": "obj7",
+      "ok": true,
+      "ms": 2818,
+      "values": [
+        "a7e1ffd6-f1e5-47cb-90e5-a114cb6560e9"
+      ]
+    }
+  ],
+  "finalText": "1. DONE Seed: VPN drops every hour | Seed: Printer jams on tray 2 | Seed: Laptop battery swelling (replayed 1 recorded action(s) zero-turn from the trace cache; recorded verdict: Opened Tickets and read the three titles beginning with `Seed:`: Seed: VPN drops every hour; Seed: Printer jams on tray 2; Seed: Laptop battery swelling. No data was changed.)\n2. DONE\n3. DONE\n4. DONE\n5. DONE\n6. DONE\n7. DONE a7e1ffd6-f1e5-47cb-90e5-a114cb6560e9 (The ticket page is open at /admin/content/tickets/a7e1ffd6-f1e5-47cb-90e5-a114cb6560e9. Ticket ID: a7e1ffd6-f1e5-47cb-90e5-a114cb6560e9.)"
+}

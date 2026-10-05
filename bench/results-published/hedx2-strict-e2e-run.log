@@ -1,0 +1,65 @@
+
+ RUN  e2e v0.16.0 /home/user/sitelooper/bench/e2e-arm
+      run 01a10d33-08e5-758f-baac-c351b4821fc6 · targets: web
+      model openrouter/openai/gpt-6-luna
+
+   ✓ directus flow > agent.act "Sign in with username {username} and password {password}" 3.72s
+   ✓ directus flow > agent.assert "The app shows a signed-in page, not a sign-in form" 2.90s · 1 model call
+   ✓ directus flow > agent.act "Objective 1 of the goal, for run id {runid}, asks only for a report: Re…" 457ms
+   ✓ directus flow > agent.extract "For run id hedx2-strict: Report the titles of the items in the Tickets …" 1.49s · 1 model call
+   ✓ directus flow > agent.act "Achieve objective 2 of the goal, for run id {runid}: A ticket titled `{…" 2.46s
+   ✓ directus flow > agent.assert "For run id hedx2-strict, this now holds in the app: A ticket titled `he…" 5.01s · 1 model call
+   ✓ directus flow > agent.act "Achieve objective 3 of the goal, for run id {runid}: Its customer is th…" 2.35s
+   ✓ directus flow > agent.assert "For run id hedx2-strict, this now holds in the app: Its customer is the…" 2.70s · 1 model call
+   ✓ directus flow > agent.act "Achieve objective 4 of the goal, for run id {runid}: Its status is `In …" 7.47s
+   × directus flow > agent.assert "For run id hedx2-strict, this now holds in the app: Its status is `In p…" 2.85s · 1 model call failed
+   ✓ directus flow > agent.act "Achieve objective 5 of the goal, for run id {runid}: Its due date is 20…" 3.81s
+   × directus flow > agent.assert "For run id hedx2-strict, this now holds in the app: Its due date is 202…" 3.01s · 1 model call failed
+   ✓ directus flow > agent.act "Achieve objective 6 of the goal, for run id {runid}: It has a comment w…" 1.92s
+   ✓ directus flow > agent.assert "For run id hedx2-strict, this now holds in the app: It has a comment wh…" 2.86s · 1 model call
+   ✓ directus flow > agent.act "Objective 7 of the goal, for run id {runid}, asks only for a report: Re…" 4.58s · 1 model call
+   ✓ directus flow > agent.extract "For run id hedx2-strict: Report the ticket's ID exactly as it appears i…" 2.82s · 1 model call
+ ✓ |web| tests/flow.e2e.ts (1 test) 53.29s ai 29.8k tokens · 13% cached · $0.0037
+   ✓ directus flow 53.29s ai 29.8k tokens · 13% cached · $0.0037
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+         AI  29.8k tokens · 13% cached · $0.0037 · 9 model calls · openrouter/openai/gpt-6-luna
+      Cache  7 replayed · 1 missed
+   Start at  17:53:31
+   Duration  54.34s
+     Report  .e2e/report.json
+
+
+--- stderr ---
+[e2e debug] phase timings (wall 55.0s)
+  phase           count   total     avg     max
+  scheduler           1   54.3s   54.3s   54.3s
+  test.body           1   51.7s   51.7s   51.7s
+  agent.model         9   26.4s  2937ms  4718ms
+  agent.observe      56   18.6s   332ms  2284ms
+  agent.action       34  3447ms   101ms   277ms
+  config.load         1   654ms   654ms   654ms
+  engine.init         1    85ms    85ms    85ms
+  session.close       1    53ms    53ms    53ms
+  session.launch      1    16ms    16ms    16ms
+  collect             1    13ms    13ms    13ms
+  engine.prepare      1     0ms     0ms     0ms
+[e2e debug] agent steps (execution order, model openrouter/openai/gpt-6-luna, total $0.003697+)
+  step                                                               total   model  observe  action  calls  tokens in/out      cached       cost
+  agent.act "Sign in with username {username} and password {passw…  3721ms     0ms   2453ms   251ms      0            0/0           -          -
+  agent.assert "The app shows a signed-in page, not a sign-in for…  2902ms  2754ms     78ms     0ms      1        2085/95      0% (0)  $0.000308
+  agent.act "Objective 1 of the goal, for run id {runid}, asks on…   457ms     0ms    342ms   102ms      0            0/0           -          -
+  agent.extract "For run id hedx2-strict: Report the titles of th…  1486ms  1396ms     87ms     0ms      1        2536/66      0% (0)   $0.00035
+  agent.act "Achieve objective 2 of the goal, for run id {runid}:…  2457ms     0ms   1794ms   654ms      0            0/0           -          -
+  agent.assert "For run id hedx2-strict, this now holds in the ap…  5006ms  4718ms    208ms     0ms      1       2836/314      0% (0)  $0.000511
+  agent.act "Achieve objective 3 of the goal, for run id {runid}:…  2354ms     0ms   1829ms   415ms      0            0/0           -          -
+  agent.assert "For run id hedx2-strict, this now holds in the ap…  2696ms  2505ms    133ms     0ms      1       2575/104      0% (0)  $0.000374
+  agent.act "Achieve objective 4 of the goal, for run id {runid}:…  7472ms     0ms   6565ms   794ms      0            0/0           -          -
+  agent.assert "For run id hedx2-strict, this now holds in the ap…  2855ms  2683ms    118ms     0ms      1       2583/104      0% (0)  $0.000375
+  agent.act "Achieve objective 5 of the goal, for run id {runid}:…  3809ms     0ms   2976ms   722ms      0            0/0           -          -
+  agent.assert "For run id hedx2-strict, this now holds in the ap…  3011ms  2857ms    105ms     0ms      1       2609/118      0% (0)  $0.000385
+  agent.act "Achieve objective 6 of the goal, for run id {runid}:…  1924ms     0ms   1405ms   509ms      0            0/0           -          -
+  agent.assert "For run id hedx2-strict, this now holds in the ap…  2863ms  2551ms    190ms     0ms      1        3012/80      0% (0)  $0.000416
+  agent.act "Objective 7 of the goal, for run id {runid}, asks on…  4581ms  4316ms    164ms     0ms      1       7265/148  53% (3853)  $0.000536
+  agent.extract "For run id hedx2-strict: Report the ticket's ID …  2817ms  2654ms    163ms     0ms      1       3118/103      0% (0)  $0.000441
