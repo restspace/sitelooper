@@ -44,7 +44,7 @@ done
 [ "$code" = "200" ] || { echo "bookstack: $URL/login never answered 200 (last: ${code:-none})" >&2; exit 1; }
 
 # As the image's own app user (abc), so nothing under storage/ becomes root-owned.
-docker exec -u abc "$CONTAINER" php /app/www/artisan tinker --execute='
+docker exec -u abc -e HOME=/tmp "$CONTAINER" php /app/www/artisan tinker --execute='
   $User = "BookStack\\Users\\Models\\User";
   $u = $User::where("email", "admin@bench.local")->first() ?? $User::where("email", "admin@admin.com")->first();
   if (!$u) {

@@ -93,7 +93,7 @@ export const APP_DEFAULTS = {
   // Studio signs in by email.
   directus: {
     APP_URL: 'http://127.0.0.1:8101/',
-    APP_EMAIL: 'admin@bench.local',
+    APP_EMAIL: 'admin@example.com',
     APP_PASSWORD: 'bench-admin-pass',
   },
   // resetMealie changes the image's default admin (changeme@example.com /

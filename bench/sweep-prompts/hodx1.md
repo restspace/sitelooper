@@ -3,7 +3,9 @@ Run ONE held-out comparison box: BOTH arms (sitelooper and e2e) on the same app,
 TARGET: directus   SITELOOPER RUNID BASE: hsdx1   E2E RUNID BASE: hedx1   MODEL: openai/gpt-6-luna   TASK: bench/tasks/directus-ticket-flow.md   ORDER: sitelooper first, then e2e
 
 1. Code: git fetch origin && git checkout -B bench/heldout origin/bench/heldout && npm run build   (never push main or bench/heldout). Record `git log --oneline -1` and `git diff --stat e34fd2d7 HEAD -- src test package.json`, which MUST print nothing (sitelooper's code is frozen at main e34fd2d7); if it prints anything, STOP and report.
-2. Setup ALREADY RAN: this environment's setup script ran bench/cloud-setup.sh (--with-arm-b --with-target directus --with-target mealie --with-target bookstack) and logged to /tmp/setup.log. Do NOT run cloud-setup.sh. Check: `tail -5 /tmp/setup.log` ends with `EXIT 0` and `docker ps --format "{{.Names}}"` lists a container whose name contains "directus"; if not, paste `tail -40 /tmp/setup.log` and STOP. Record `node --version`.
+2. Setup ALREADY RAN (node, build, browser; see /tmp/setup.log), but the app stacks were started from the environment's cached files, which may predate fixes on this branch. Do NOT run cloud-setup.sh. Recreate THIS box's app from the checked-out files, on a fresh volume (1-5 minutes; it ends with `directus: up, seeded and reset`):
+   mkdir -p bench/results && bash bench/heldout/bring-up.sh directus 2>&1 | tee bench/results/hsdx1-bring-up.log
+   If it exits non-zero, paste its output verbatim and STOP. Record `node --version`.
    OPENROUTER_API_KEY is already in this environment. NEVER print it, write it to a file, or put it on a command line. Do not edit shell startup files.
 3. Long commands: start each sweep with the Bash tool's run_in_background: true and wait for its completion notification. Do NOT use the Monitor tool and do not chain sleep. Check progress only with short calls such as `tail -5 <log>`.
 4. SITELOOPER ARM (base hsdx1). Exports (put them at the start of the command, or in a script under /tmp that the command sources; never in a shell startup file):

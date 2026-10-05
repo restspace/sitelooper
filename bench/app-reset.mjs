@@ -1076,7 +1076,7 @@ async function resetErpnext() {
  */
 async function resetDirectus() {
   const base = (process.env.APP_URL || 'http://127.0.0.1:8101/').replace(/\/$/, '');
-  const email = process.env.DIRECTUS_EMAIL || 'admin@bench.local';
+  const email = process.env.DIRECTUS_EMAIL || 'admin@example.com';
   const password = process.env.DIRECTUS_PASSWORD || 'bench-admin-pass';
   const staticToken = process.env.DIRECTUS_TOKEN || 'bench-admin-token';
   let bearer = staticToken;

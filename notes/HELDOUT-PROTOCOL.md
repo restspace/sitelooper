@@ -81,3 +81,12 @@ a result, not a bug to fix.
 
 Every run, including failed and retried ones, is listed with its results branch. A
 retried box (classifier refusal, box died) is reported as such.
+
+## Log
+
+- 2026-10-05: infrastructure validated on the holdout environment (results/heldout-validate,
+  no tool run): every target's oracle run scored 7/7, an untouched run 0/7, resets idempotent.
+  Infra fixes found by that box and applied before any tool run: BookStack's nginx needs its
+  IPv6 listens removed on these boxes; Directus rejects a `.local` admin email, so its admin is
+  admin@example.com; seed.sh's tinker needs HOME set. Run boxes recreate their app from the
+  checked-out files (bench/heldout/bring-up.sh) because the environment snapshot is cached.
