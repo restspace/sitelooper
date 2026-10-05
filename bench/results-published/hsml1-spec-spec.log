@@ -1,0 +1,41 @@
+
+Running 1 test using 1 worker
+
+[sitelooper warn] 01-signin: report value login_email is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)
+[sitelooper step] 01-signin
+  ✘  1 hsml1.spec.ts:9:1 › hsml1 (18.9s)
+
+
+  1) hsml1.spec.ts:9:1 › hsml1 › 02-find: Find and report the names of all recipes whose name starts with 'Seed:', exactly as shown in Mealie. Do not edit any recipe. 
+
+    Error: after 02-find s_8c410d/4 expected url http://127.0.0.1:8102/g/home?search=Seed: but browser is at http://127.0.0.1:8102/g/home
+
+       at hsml1.flow.ts:14791
+
+      14789 |   // (navigationTarget), whether or not the step goes on to stop.
+      14790 |   if (verdict.diffs) volatile.push(...verdict.diffs);
+    > 14791 |   if (verdict.stop) throw new Error(verdict.stop);
+            |                           ^
+      14792 | }
+      14793 |
+      14794 | /**
+        at urlEffect (/home/user/sitelooper/bench/results/hsml1-spec-spec-tmp/hsml1.flow.ts:14791:27)
+        at Object.verify (/home/user/sitelooper/bench/results/hsml1-spec-spec-tmp/hsml1.flow.ts:15960:19)
+        at runStepLifecycle (/home/user/sitelooper/bench/results/hsml1-spec-spec-tmp/hsml1.flow.ts:11611:24)
+        at Object.02-find (/home/user/sitelooper/bench/results/hsml1-spec-spec-tmp/hsml1.flow.ts:15926:9)
+        at /home/user/sitelooper/bench/results/hsml1-spec-spec-tmp/hsml1.flow.ts:19069:7
+        at runFlow (/home/user/sitelooper/bench/results/hsml1-spec-spec-tmp/hsml1.flow.ts:19068:5)
+        at /home/user/sitelooper/bench/results/hsml1-spec-spec-tmp/hsml1.spec.ts:14:21
+
+    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/hsml1-hsml1/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/hsml1-hsml1/error-context.md
+
+  1 failed
+    hsml1.spec.ts:9:1 › hsml1 ──────────────────────────────────────────────────────────────────────

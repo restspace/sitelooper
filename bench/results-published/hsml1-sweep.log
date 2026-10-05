@@ -1,0 +1,89 @@
+
+[sweep] run 1/3: hsml1-n1 (store: /home/user/sitelooper/bench/results/hsml1-skills)
+[harness] mealie: defaulting APP_URL
+[harness] mealie: defaulting APP_EMAIL
+[harness] mealie: defaulting APP_PASSWORD
+[reset] mealie: no recipes to delete
+[harness] mealie responded 200 at http://127.0.0.1:8102/
+stopped: hsml1-n1
+  flow "hsml1" saved: 4 step(s), vars runid → /home/user/sitelooper/bench/results/flows/hsml1.json
+  warning: note: 01-signin no longer publishes visible_navigation_items, logout_button_present — no replay reads them from the page and the recording showed no line to read
+  warning: note: 02-find no longer publishes seed_recipe_count, total_recipe_links_on_page — no replay reads them from the page and the recording showed no line to read
+  warning: note: 03-create no longer publishes servings_verified_on_saved_recipe, ingredient_1, ingredient_2 — no replay reads them from the page and the recording showed no line to read
+  warning: note: 04-verify no longer publishes comment_input_placeholder, delete_comment_button_count — no replay reads them from the page and the recording showed no line to read
+  warning: warning: 148 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[0].instruction: "admin@bench.local" (output) in "Sign in to Mealie at http://127.0.0.1:8102/ using email admin@bench.local and password exactly {{env:APP_PASSWORD}}. Verify the signed-in app is accessible and "
+  flow.steps[0].params.v2: "admin@bench.local" (output) in "admin@bench.local"
+  flow.steps[0].route: "http://127.0.0.1:8102/g/home" (output) in "http://127.0.0.1:8102/g/home"
+  flow.steps[1].route: "http://127.0.0.1:8102/g/home" (output) in "http://127.0.0.1:8102/g/home"
+  flow.steps[2].instruction: "Whisk the flour and butter." (output) in "Create and save a new recipe named '{{runid}} Bench Recipe' with a description that includes exactly the runid text '{{runid}}'; set its only category to the ex"
+arm=sitelooper model=openai/gpt-6-luna runid=hsml1-n1 stop=completed
+turns=5 wall=252.2s
+commands=4 cmdTime=231.1s cmdBytes=5468 timeouts=0
+orchestrator in=4644 cw=0 cr=12859 out=701
+inner prompt=1196936 cached=1100928 completion=14681
+spend=$0.0275 maxUsd=3
+learn: A_n=0 replayed=0/4 full=0 repaired=0 compiled=4 variants=0
+-> /home/user/sitelooper/bench/results/hsml1-n1-sitelooper-result.json
+
+hsml1-n1: objectives passed 6/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: PASS — hsml1-n1-bench-recipe, description="Bench test recipe for run hsml1-n1 with flour and butter."
+  obj 3: PASS — categories=Bench Dinner (bench-dinner); tags=Bench Quick (bench-quick); want only the seeded Bench Dinner (bench-dinner) and Bench Quick (bench-quick)
+  obj 4: FAIL — ingredients=[2 Bench Cup Bench Flour | 3 Bench Spoon Bench Butter]; steps=["Recipe steps as well as other fields in the recipe page support markdown syntax. **Add a link** [My Link](https://demo.mealie.io)",""] (WRONG)
+  obj 5: PASS — servings=4, want 4
+  obj 6: PASS — 1 comment(s): "Comment for hsml1-n1"
+  obj 7: PASS — slug hsml1-n1-bench-recipe reported
+
+[sweep] run 2/3: hsml1-n2 (replay flow hsml1, no orchestrator)
+[reset] mealie: deleted 1 recipe(s) (earlier runs' and non-seed)
+
+hsml1-n2: objectives passed 6/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: PASS — hsml1-n2-bench-recipe, description="Bench test recipe for run hsml1-n2 with flour and butter."
+  obj 3: PASS — categories=Bench Dinner (bench-dinner); tags=Bench Quick (bench-quick); want only the seeded Bench Dinner (bench-dinner) and Bench Quick (bench-quick)
+  obj 4: FAIL — ingredients=[2 Bench Cup Bench Flour | 3 Bench Spoon Bench Butter]; steps=["Recipe steps as well as other fields in the recipe page support markdown syntax. **Add a link** [My Link](https://demo.mealie.io)",""] (WRONG)
+  obj 5: PASS — servings=4, want 4
+  obj 6: PASS — 1 comment(s): "Comment for hsml1-n2"
+  obj 7: PASS — slug hsml1-n2-bench-recipe reported
+
+[sweep] run 3/3: hsml1-n3 (replay flow hsml1, no orchestrator)
+[reset] mealie: deleted 1 recipe(s) (earlier runs' and non-seed)
+
+hsml1-n3: objectives passed 6/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: PASS — hsml1-n3-bench-recipe, description="Bench test recipe for run hsml1-n3 with flour and butter."
+  obj 3: PASS — categories=Bench Dinner (bench-dinner); tags=Bench Quick (bench-quick); want only the seeded Bench Dinner (bench-dinner) and Bench Quick (bench-quick)
+  obj 4: FAIL — ingredients=[2 Bench Cup Bench Flour | 3 Bench Spoon Bench Butter]; steps=["Recipe steps as well as other fields in the recipe page support markdown syntax. **Add a link** [My Link](https://demo.mealie.io)",""] (WRONG)
+  obj 5: PASS — servings=4, want 4
+  obj 6: PASS — 1 comment(s): "Comment for hsml1-n3"
+  obj 7: PASS — slug hsml1-n3-bench-recipe reported
+
+Learning sweep hsml1 (K=3)
+┌─────────┬───┬────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid      │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'hsml1-n1' │ '6/7'    │ 'completed' │ 5     │ 4    │ 0.0275    │ 0   │ '0/4'        │ 252    │
+│ 1       │ 2 │ 'hsml1-n2' │ '6/7'    │ 'success'   │ 0     │ 4    │ 0         │ 1   │ '4/4 (flow)' │ 82     │
+│ 2       │ 3 │ 'hsml1-n3' │ '6/7'    │ 'success'   │ 0     │ 4    │ 0         │ 1   │ '4/4 (flow)' │ 82     │
+└─────────┴───┴────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:8102
+  s_57ca17  validated    2 steps  3/3 (100%)
+           Sign in to Mealie at {{v1}} using email {{v2}} and password exactly {{v3}}. Verify the signed-in app is access…
+  s_60fd2c  validated    5 steps  3/3 (100%)
+           Sign in to Mealie at {{v1}} using email {{v2}} and password exactly {{v3}}. Verify the signed-in app is access…
+  s_716e8c  validated    2 steps  3/3 (100%)
+           Create and save a new recipe named '{{v2}}' with a description that includes exactly the runid text '{{v1}}'; …
+  s_8c410d  validated    8 steps  3/3 (100%)
+           Find and report the names of all recipes whose name starts with '{{v1}}', exactly as shown in Mealie. Do not e…
+  s_8ea9a3  validated    2 steps  3/3 (100%)
+           Create and save a new recipe named '{{v2}}' with a description that includes exactly the runid text '{{v1}}'; …
+  s_9393c4  validated    2 steps  3/3 (100%)
+           Sign in to Mealie at {{v1}} using email {{v2}} and password exactly {{v3}}. Verify the signed-in app is access…
+  s_a199ac  validated   30 steps  3/3 (100%)
+           On the saved recipe {{v1}} page, post exactly one comment whose text includes the runid '{{v2}}' (for example …
+  s_da1e78  validated   34 steps  3/3 (100%)
+           Create and save a new recipe named '{{v2}}' with a description that includes exactly the runid text '{{v1}}'; …
+store: /home/user/sitelooper/bench/results/hsml1-skills
+
+summary: /home/user/sitelooper/bench/results/hsml1-sweep.json
