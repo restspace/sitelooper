@@ -1,0 +1,106 @@
+
+[sweep] run 1/3: hsbs3-n1 (store: /home/user/sitelooper/bench/results/hsbs3-skills)
+[harness] bookstack: defaulting APP_URL
+[harness] bookstack: defaulting APP_EMAIL
+[harness] bookstack: defaulting APP_PASSWORD
+[reset] bookstack: no pages to delete
+[harness] bookstack responded 302 at http://127.0.0.1:8103/
+stopped: hsbs3-n1
+  flow "hsbs3" saved: 5 step(s), vars runid → /home/user/sitelooper/bench/results/flows/hsbs3.json
+  warning: note: dropped 2 locator candidate(s) carrying a value this run minted (known only by export time)
+  warning: warning: 02-report's instruction asks to report seed_page_names, and no replay can publish it: nothing in its procedure reads it from the page, so export dropped it — re-record the step so the value is read, not only reported
+  warning: note: 02-report no longer publishes seed_page_count, other_book_entries, pages_urls — no replay reads them from the page and the recording showed no line to read
+  warning: note: 03-create no longer publishes saved_body_html, tag_count — no replay reads them from the page and the recording showed no line to read
+  warning: note: 04-archive no longer publishes selected_move_target_hre — no replay reads it from the page and the recording showed no line to read
+  warning: note: 05-verify no longer publishes comment_permalink, comment_author — no replay reads them from the page and the recording showed no line to read
+  warning: note: 03-create: added a read for book to s_6bf580 (page.getByRole('heading', { name: 'Bench Handbook', exact: true }); seen on the next instruction's start page)
+  warning: warning: 135 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.startUrl: "http://127.0.0.1:8103/" (output) in "http://127.0.0.1:8103/"
+  flow.steps[0].instruction: "http://127.0.0.1:8103/" (output) in "Sign in to BookStack at http://127.0.0.1:8103/ using email admin@bench.local and password exactly {{env:APP_PASSWORD}}. Confirm that the authenticated interface"
+  flow.steps[0].params.v1: "http://127.0.0.1:8103/" (output) in "http://127.0.0.1:8103/"
+  flow.steps[0].route: "http://127.0.0.1:8103/" (output) in "http://127.0.0.1:8103/"
+  flow.steps[2].instruction: "Review Status" (output) in "Create a BookStack page named exactly '{{runid}} Bench Page' whose rich-text body has one paragraph containing the literal runid {{runid}} and also a real headi"
+arm=sitelooper model=openai/gpt-6-luna runid=hsbs3-n1 stop=completed
+turns=6 wall=253.5s
+commands=5 cmdTime=228.6s cmdBytes=8832 timeouts=0
+orchestrator in=5563 cw=0 cr=18622 out=629
+inner prompt=1391544 cached=1292800 completion=19331
+spend=$0.0313 maxUsd=3
+learn: A_n=0 replayed=0/5 full=0 repaired=0 compiled=5 variants=0
+-> /home/user/sitelooper/bench/results/hsbs3-n1-sitelooper-result.json
+
+hsbs3-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: PASS — hsbs3-n1-bench-page, body includes runid=true
+  obj 3: PASS — tags="Review Status"="Approved", want only "Review Status"="Approved"
+  obj 4: PASS — headings="Overview", want "Overview"
+  obj 5: PASS — in book "Bench Handbook" (id 1), chapter "Release Notes" (id 3); want "Release Notes" (id 3) of "Bench Handbook" (id 1)
+  obj 6: PASS — 1 comment(s): "Comment for runid hsbs3-n1"
+  obj 7: PASS — slug hsbs3-n1-bench-page reported
+
+[sweep] run 2/3: hsbs3-n2 (replay flow hsbs3, no orchestrator)
+[reset] bookstack: deleted 1 page(s) (earlier runs', drafts and non-seed)
+[reset] bookstack: deleted comment #1
+[reset] bookstack: emptied the recycle bin (1 deletion(s))
+[sweep] hsbs3-n2: 4 drift ticket(s) → hsbs3-n2-drift.json
+
+hsbs3-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: PASS — hsbs3-n2-bench-page, body includes runid=true
+  obj 3: PASS — tags="Review Status"="Approved", want only "Review Status"="Approved"
+  obj 4: PASS — headings="Overview", want "Overview"
+  obj 5: PASS — in book "Bench Handbook" (id 1), chapter "Release Notes" (id 3); want "Release Notes" (id 3) of "Bench Handbook" (id 1)
+  obj 6: PASS — 1 comment(s): "Comment for runid hsbs3-n2"
+  obj 7: PASS — slug hsbs3-n2-bench-page reported
+
+[sweep] run 3/3: hsbs3-n3 (replay flow hsbs3, no orchestrator)
+[reset] bookstack: deleted 1 page(s) (earlier runs', drafts and non-seed)
+[reset] bookstack: deleted comment #2
+[reset] bookstack: emptied the recycle bin (1 deletion(s))
+[sweep] hsbs3-n3: 4 drift ticket(s) → hsbs3-n3-drift.json
+
+hsbs3-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: PASS — hsbs3-n3-bench-page, body includes runid=true
+  obj 3: PASS — tags="Review Status"="Approved", want only "Review Status"="Approved"
+  obj 4: PASS — headings="Overview", want "Overview"
+  obj 5: PASS — in book "Bench Handbook" (id 1), chapter "Release Notes" (id 3); want "Release Notes" (id 3) of "Bench Handbook" (id 1)
+  obj 6: PASS — 1 comment(s): "Comment for runid hsbs3-n3"
+  obj 7: PASS — slug hsbs3-n3-bench-page reported
+
+Learning sweep hsbs3 (K=3)
+┌─────────┬───┬────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid      │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'hsbs3-n1' │ '7/7'    │ 'completed' │ 6     │ 5    │ 0.0313    │ 0   │ '0/5'        │ 253    │
+│ 1       │ 2 │ 'hsbs3-n2' │ '7/7'    │ 'success'   │ 0     │ 5    │ 0         │ 1   │ '5/5 (flow)' │ 79     │
+│ 2       │ 3 │ 'hsbs3-n3' │ '7/7'    │ 'success'   │ 0     │ 5    │ 0         │ 1   │ '5/5 (flow)' │ 80     │
+└─────────┴───┴────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:8103
+  s_088d65  validated    3 steps  3/3 (100%)
+           Sign in to BookStack at {{v1}} using email {{v2}} and password exactly {{v3}}. Confirm that the authenticated …
+  s_0eb98b  validated    8 steps  3/3 (100%)
+           Sign in to BookStack at {{v1}} using email {{v2}} and password exactly {{v3}}. Confirm that the authenticated …
+  s_18b6eb  validated    4 steps  3/3 (100%)
+           Move the saved page '{{v1}}' into the chapter '{{v4}}' in the book '{{v5}}' (not the similarly named book or a…
+  s_2d940f  validated    3 steps  3/3 (100%)
+           Move the saved page '{{v1}}' into the chapter '{{v4}}' in the book '{{v5}}' (not the similarly named book or a…
+  s_5f31e5  validated    1 steps  3/3 (100%)
+           Create a BookStack page named exactly '{{v3}}' whose rich-text body has one paragraph containing the literal {…
+  s_6bf580  validated   13 steps  3/3 (100%)
+           Create a BookStack page named exactly '{{v3}}' whose rich-text body has one paragraph containing the literal {…
+  s_a55323  validated   22 steps  3/3 (100%)
+           Create a BookStack page named exactly '{{v3}}' whose rich-text body has one paragraph containing the literal {…
+  s_aa78af  validated    1 steps  3/3 (100%)
+           Move the saved page '{{v1}}' into the chapter '{{v4}}' in the book '{{v5}}' (not the similarly named book or a…
+  s_c15bc1  validated    1 steps  3/3 (100%)
+           Sign in to BookStack at {{v1}} using email {{v2}} and password exactly {{v3}}. Confirm that the authenticated …
+  s_c5e2cf  validated    8 steps  3/3 (100%)
+           On the saved page '{{v1}}', post exactly one comment that includes the literal {{v4}}. Verify the comment is v…
+  s_d0f2ad  validated    1 steps  3/3 (100%)
+           In the book {{v1}} Handbook, identify and report the exact names of every page whose name starts with Seed:. D…
+  s_e2d986  validated   30 steps  3/3 (100%)
+           In the book {{v1}} Handbook, identify and report the exact names of every page whose name starts with Seed:. D…
+store: /home/user/sitelooper/bench/results/hsbs3-skills
+
+summary: /home/user/sitelooper/bench/results/hsbs3-sweep.json

@@ -1,0 +1,615 @@
+{
+  "name": "hsbs3",
+  "origin": "http://127.0.0.1:8103",
+  "startUrl": "http://127.0.0.1:8103/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-signin",
+      "instruction": "Sign in to BookStack at http://127.0.0.1:8103/ using email admin@bench.local and password exactly {{env:APP_PASSWORD}}. Confirm that the authenticated interface is visible.",
+      "skill": "s_c15bc1",
+      "params": {
+        "v1": "http://127.0.0.1:8103/",
+        "v2": "admin@bench.local",
+        "v3": "{{env:APP_PASSWORD}}"
+      },
+      "outputs": [
+        "bookstack_home_url",
+        "signed_in_account",
+        "signed_in_user",
+        "nav_shelves_link",
+        "navigation_link_shelves",
+        "navigation_link_books",
+        "navigation_link_settings",
+        "recently_viewed_heading",
+        "recently_updated_pages_heading"
+      ],
+      "recorded": {
+        "bookstack_home_url": "http://127.0.0.1:8103/",
+        "signed_in_account": "Bench Admin (Profile Menu shows \"Bench\")",
+        "signed_in_user": "Bench",
+        "nav_shelves_link": "Shelves",
+        "navigation_link_shelves": "Shelves",
+        "navigation_link_books": "Books",
+        "navigation_link_settings": "Settings",
+        "recently_viewed_heading": "My Recently Viewed",
+        "recently_updated_pages_heading": "Recently Updated Pages",
+        "url": "http://127.0.0.1:8103/"
+      },
+      "route": "http://127.0.0.1:8103/",
+      "outputEvidence": {
+        "bookstack_home_url": {
+          "same": 1,
+          "differed": 0
+        },
+        "signed_in_account": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "signed_in_user": {
+          "same": 1,
+          "differed": 0
+        },
+        "nav_shelves_link": {
+          "same": 1,
+          "differed": 0
+        },
+        "navigation_link_shelves": {
+          "same": 1,
+          "differed": 0
+        },
+        "navigation_link_books": {
+          "same": 1,
+          "differed": 0
+        },
+        "navigation_link_settings": {
+          "same": 1,
+          "differed": 0
+        },
+        "recently_viewed_heading": {
+          "same": 1,
+          "differed": 0
+        },
+        "recently_updated_pages_heading": {
+          "same": 1,
+          "differed": 0
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "02-report",
+      "instruction": "In the book {{01-signin.signed_in_user}} Handbook, identify and report the exact names of every page whose name starts with Seed:. Do not edit anything.",
+      "skill": "s_d0f2ad",
+      "params": {
+        "v1": "{{01-signin.signed_in_user}}"
+      },
+      "outputs": [
+        "book",
+        "seed_page_name_1",
+        "seed_page_name_2",
+        "seed_page_name_3",
+        "verification_method",
+        "seed_getting_started_desc",
+        "seed_release_checklist_desc",
+        "seed_house_style_desc",
+        "seed_page_name_1_2",
+        "seed_page_name_2_2",
+        "seed_page_name_3_2",
+        "chapter_name_release_notes",
+        "book_contents_a_book_pag_2"
+      ],
+      "recorded": {
+        "book": "Bench Handbook",
+        "seed_page_count": "3",
+        "seed_page_name_1": "Seed: Getting started",
+        "seed_page_name_2": "Seed: Release checklist",
+        "seed_page_name_3": "Seed: House style",
+        "other_book_entries": "Release Notes (chapter, no child pages), Release Notes Archive (chapter, no child pages)",
+        "verification_method": "live DOM: book contents listing (.book-contents) plus both chapter pages inspected for child page links",
+        "seed_page_names": "Seed: Getting started, Seed: Release checklist, Seed: House style",
+        "pages_urls": "http://127.0.0.1:8103/books/bench-handbook/page/seed-getting-started, http://127.0.0.1:8103/books/bench-handbook/page/seed-release-checklist, http://127.0.0.1:8103/books/bench-handbook/page/seed-house-style",
+        "seed_getting_started_desc": "How a new member finds their way around.",
+        "seed_release_checklist_desc": "The steps every release goes through.",
+        "seed_house_style_desc": "How we write here.",
+        "seed_page_name_1_2": "Seed: Getting started\n\nHow a new member finds their way around.",
+        "seed_page_name_2_2": "Seed: Release checklist\n\nThe steps every release goes through.",
+        "seed_page_name_3_2": "Seed: House style\n\nHow we write here.",
+        "chapter_name_release_notes": "Release Notes",
+        "book_contents_a_book_pag_2": "Release Notes Archive",
+        "url": "http://127.0.0.1:8103/books/bench-handbook"
+      },
+      "route": "http://127.0.0.1:8103/books/bench-handbook",
+      "outputEvidence": {
+        "book": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_page_count": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "seed_page_name_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_page_name_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_page_name_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "other_book_entries": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "verification_method": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "seed_page_names": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "pages_urls": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "seed_getting_started_desc": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_release_checklist_desc": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_house_style_desc": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_page_name_1_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_page_name_2_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_page_name_3_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "chapter_name_release_notes": {
+          "same": 1,
+          "differed": 0
+        },
+        "book_contents_a_book_pag_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "03-create",
+      "instruction": "Create a BookStack page named exactly '{{runid}} Bench Page' whose rich-text body has one paragraph containing the literal runid {{runid}} and also a real heading titled Overview (not bold or paragraph text), and whose only tag is the existing tag name Review Status with value Approved. Save the page, then verify its saved content and tag; do not add a comment yet.",
+      "skill": "s_5f31e5",
+      "params": {
+        "v3": "{{runid}} Bench Page",
+        "v4": "runid {{runid}}",
+        "v5": "Overview",
+        "v6": "Review Status",
+        "v7": "Approved",
+        "v1": "{{runid}}"
+      },
+      "outputs": [
+        "page_title",
+        "saved_page_url",
+        "book",
+        "saved_heading",
+        "tag_name_chip",
+        "tag_value_chip",
+        "tag_name_href",
+        "comment_state",
+        "revision",
+        "source_dialog_content",
+        "saved_body_text_2",
+        "saved_heading_text",
+        "editor_format_menu_item_callouts",
+        "ref",
+        "saved_body_text_1",
+        "saved_body_text_2_2",
+        "editor_format_menu_items_seen_1",
+        "editor_format_menu_items_seen_2",
+        "editor_format_menu_items_seen_3",
+        "editor_format_menu_items_seen_4",
+        "editor_format_menu_items_seen_5"
+      ],
+      "recorded": {
+        "page_title": "hsbs3-n1 Bench Page",
+        "saved_page_url": "http://127.0.0.1:8103/books/bench-handbook/page/hsbs3-n1-bench-page",
+        "book": "Bench Handbook",
+        "saved_body_html": "<p>runid hsbs3-n1</p><h2>Overview</h2>",
+        "saved_heading": "Overview",
+        "tag_name_chip": "Review Status",
+        "tag_value_chip": "Approved",
+        "tag_name_href": "http://127.0.0.1:8103/search?term=%5BReview+Status%5D",
+        "tag_count": "1",
+        "comment_state": "0 Comment Threads",
+        "revision": "Revision #1",
+        "source_dialog_content": "<p>runid hsbs3-n1</p>\n<h2>Overview</h2>",
+        "saved_body_text_2": "hsbs3-n1 Bench Page\n\nrunid hsbs3-n1\n\nOverview",
+        "saved_heading_text": "Overview",
+        "editor_format_menu_item_callouts": "Callouts",
+        "ref": "hsbs3-n1",
+        "saved_body_text_1": "runid hsbs3-n1",
+        "saved_body_text_2_2": "Overview",
+        "editor_format_menu_items_seen_1": "Large Header",
+        "editor_format_menu_items_seen_2": "Medium Header",
+        "editor_format_menu_items_seen_3": "Small Header",
+        "editor_format_menu_items_seen_4": "Tiny Header",
+        "editor_format_menu_items_seen_5": "Callouts",
+        "url": "http://127.0.0.1:8103/books/bench-handbook/page/hsbs3-n1-bench-page",
+        "url.p3": "hsbs3-n1-bench-page"
+      },
+      "route": "http://127.0.0.1:8103/books/bench-handbook/page/:id",
+      "outputEvidence": {
+        "page_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "saved_page_url": {
+          "same": 0,
+          "differed": 1
+        },
+        "book": {
+          "same": 1,
+          "differed": 0
+        },
+        "saved_body_html": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "saved_heading": {
+          "same": 1,
+          "differed": 0
+        },
+        "tag_name_chip": {
+          "same": 1,
+          "differed": 0
+        },
+        "tag_value_chip": {
+          "same": 1,
+          "differed": 0
+        },
+        "tag_name_href": {
+          "same": 1,
+          "differed": 0
+        },
+        "tag_count": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "comment_state": {
+          "same": 1,
+          "differed": 0
+        },
+        "revision": {
+          "same": 1,
+          "differed": 0
+        },
+        "source_dialog_content": {
+          "same": 0,
+          "differed": 1
+        },
+        "saved_body_text_2": {
+          "same": 0,
+          "differed": 1
+        },
+        "saved_heading_text": {
+          "same": 1,
+          "differed": 0
+        },
+        "editor_format_menu_item_callouts": {
+          "same": 1,
+          "differed": 0
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "saved_body_text_1": {
+          "same": 0,
+          "differed": 1
+        },
+        "saved_body_text_2_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "editor_format_menu_items_seen_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "editor_format_menu_items_seen_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "editor_format_menu_items_seen_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "editor_format_menu_items_seen_4": {
+          "same": 1,
+          "differed": 0
+        },
+        "editor_format_menu_items_seen_5": {
+          "same": 1,
+          "differed": 0
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        },
+        "url.p3": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "04-archive",
+      "instruction": "Move the saved page '{{runid}} Bench Page' into the chapter '{{02-report.chapter_name_release_notes}}' in the book '{{03-create.book}}' (not the similarly named book or archive chapter). Verify the page's displayed book/chapter location after the move and report its URL slug.",
+      "skill": "s_aa78af",
+      "params": {
+        "v1": "{{runid}} Bench Page",
+        "v4": "{{02-report.chapter_name_release_notes}}",
+        "v5": "{{03-create.book}}",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "page_title",
+        "url_slug",
+        "page_url_after_move",
+        "breadcrumb_after_move",
+        "displayed_book",
+        "displayed_chapter",
+        "move_destination_selected_href",
+        "book_navigation_after_move",
+        "not_chosen",
+        "breadcrumb_text",
+        "chapter_sibling_button",
+        "ref"
+      ],
+      "recorded": {
+        "page_title": "hsbs3-n1 Bench Page",
+        "url_slug": "hsbs3-n1-bench-page",
+        "page_url_after_move": "http://127.0.0.1:8103/books/bench-handbook/page/hsbs3-n1-bench-page",
+        "breadcrumb_after_move": "Books > Bench Handbook > Release Notes > hsbs3-n1 Bench Page",
+        "displayed_book": "Bench Handbook",
+        "displayed_chapter": "Release Notes",
+        "move_destination_selected_href": "http://127.0.0.1:8103/books/bench-handbook/chapter/release-notes",
+        "book_navigation_after_move": "Release Notes (1 Page) > hsbs3-n1 Bench Page; Release Notes Archive still 0 pages",
+        "not_chosen": "Release Notes Archive chapter and the similarly named book were not selected",
+        "selected_move_target_hre": "http://127.0.0.1:8103/books/bench-handbook/chapter/release-notes",
+        "breadcrumb_text": "Books\nBench Handbook\nRelease Notes\nhsbs3-n1 Bench Page",
+        "chapter_sibling_button": "Navigate siblings for chapter",
+        "ref": "hsbs3-n1"
+      },
+      "route": "http://127.0.0.1:8103/books/bench-handbook/page/:id",
+      "outputEvidence": {
+        "page_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "url_slug": {
+          "same": 0,
+          "differed": 1
+        },
+        "page_url_after_move": {
+          "same": 0,
+          "differed": 1
+        },
+        "breadcrumb_after_move": {
+          "same": 0,
+          "differed": 1
+        },
+        "displayed_book": {
+          "same": 1,
+          "differed": 0
+        },
+        "displayed_chapter": {
+          "same": 1,
+          "differed": 0
+        },
+        "move_destination_selected_href": {
+          "same": 1,
+          "differed": 0
+        },
+        "book_navigation_after_move": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "not_chosen": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "selected_move_target_hre": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "breadcrumb_text": {
+          "same": 0,
+          "differed": 1
+        },
+        "chapter_sibling_button": {
+          "same": 1,
+          "differed": 0
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "05-verify",
+      "instruction": "On the saved page '{{runid}} Bench Page', post exactly one comment that includes the literal runid {{runid}}. Verify the comment is visible and the page has exactly one comment.",
+      "skill": "s_c5e2cf",
+      "params": {
+        "v1": "{{runid}} Bench Page",
+        "v4": "runid {{runid}}",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "page_title",
+        "comment_tab_label",
+        "comment_id",
+        "comment_text",
+        "comment_count",
+        "posting_time_shown",
+        "url_slug",
+        "location",
+        "comment_editor_text",
+        "ref"
+      ],
+      "recorded": {
+        "page_title": "hsbs3-n1 Bench Page",
+        "comment_tab_label": "1 Comment Thread",
+        "comment_id": "#1",
+        "comment_permalink": "#comment1",
+        "comment_text": "Comment for runid hsbs3-n1",
+        "comment_author": "Bench Admin",
+        "comment_count": "1 comment (single comment block in the tab panel)",
+        "posting_time_shown": "commented 0 seconds ago",
+        "url_slug": "hsbs3-n1-bench-page",
+        "location": "book Bench Handbook > chapter Release Notes",
+        "comment_editor_text": "Comment for runid hsbs3-n1",
+        "ref": "hsbs3-n1",
+        "url.p3": "hsbs3-n1-bench-page"
+      },
+      "route": "http://127.0.0.1:8103/books/bench-handbook/page/:id",
+      "outputEvidence": {
+        "page_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "comment_tab_label": {
+          "same": 1,
+          "differed": 0
+        },
+        "comment_id": {
+          "same": 1,
+          "differed": 0
+        },
+        "comment_permalink": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "comment_text": {
+          "same": 0,
+          "differed": 1
+        },
+        "comment_author": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "comment_count": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "posting_time_shown": {
+          "same": 1,
+          "differed": 0
+        },
+        "url_slug": {
+          "same": 0,
+          "differed": 1
+        },
+        "location": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "comment_editor_text": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "url.p3": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "session": "hsbs3-n1",
+    "created": "2026-10-05T21:07:37.947Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "02-report",
+      "outputs": [
+        "seed_page_count",
+        "other_book_entries",
+        "seed_page_names",
+        "pages_urls"
+      ]
+    },
+    {
+      "stepId": "03-create",
+      "outputs": [
+        "saved_body_html",
+        "tag_count"
+      ]
+    },
+    {
+      "stepId": "04-archive",
+      "outputs": [
+        "selected_move_target_hre"
+      ]
+    },
+    {
+      "stepId": "05-verify",
+      "outputs": [
+        "comment_permalink",
+        "comment_author"
+      ]
+    }
+  ]
+}
