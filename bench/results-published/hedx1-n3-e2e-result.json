@@ -1,0 +1,214 @@
+{
+  "arm": "e2e",
+  "e2eVersion": "0.16.0",
+  "target": "directus",
+  "runid": "hedx1-n3",
+  "model": "openai/gpt-6-luna",
+  "strict": false,
+  "reset": true,
+  "exitCode": 0,
+  "wallMs": 63748,
+  "cache": {
+    "acts": 8,
+    "replayed": 7,
+    "handedOff": 0,
+    "missed": 1,
+    "failed": 0,
+    "stale": 0,
+    "actModelCalls": 1,
+    "reasons": [
+      "obj7:missed:no-entry"
+    ]
+  },
+  "usage": {
+    "modelTokens": 29588,
+    "modelCachedTokens": 3853,
+    "usd": 0.00357753,
+    "usdAtRatesFloor": null
+  },
+  "steps": [
+    {
+      "kind": "act",
+      "id": "signin",
+      "ok": true,
+      "ms": 3730,
+      "summary": "replayed 3 recorded action(s) zero-turn from the trace cache; recorded verdict: Signed in with admin@example.com and the provided password. The Directus application loaded successfully at /admin/content/customers.",
+      "cache": {
+        "mode": "self-finalized",
+        "replayedActions": 3,
+        "totalActions": 3
+      },
+      "modelCalls": 0,
+      "actions": 3
+    },
+    {
+      "kind": "assert",
+      "id": "signin",
+      "ok": true,
+      "ms": 2429
+    },
+    {
+      "kind": "act",
+      "id": "obj1",
+      "ok": true,
+      "ms": 411,
+      "summary": "replayed 1 recorded action(s) zero-turn from the trace cache; recorded verdict: The Tickets collection shows these titles starting with Seed:, exactly as displayed: Seed: Printer jams on tray 2; Seed: VPN drops every hour; Seed: Laptop battery swelling. No data was changed.",
+      "cache": {
+        "mode": "self-finalized",
+        "replayedActions": 1,
+        "totalActions": 1
+      },
+      "modelCalls": 0,
+      "actions": 1
+    },
+    {
+      "kind": "extract",
+      "id": "obj1",
+      "ok": true,
+      "ms": 2784,
+      "values": [
+        "Seed: Printer jams on tray 2",
+        "Seed: VPN drops every hour",
+        "Seed: Laptop battery swelling"
+      ]
+    },
+    {
+      "kind": "act",
+      "id": "obj2",
+      "ok": true,
+      "ms": 2539,
+      "summary": "replayed 5 recorded action(s) zero-turn from the trace cache; recorded verdict: Created and saved the ticket “hedx1-n1 Bench Ticket.” Its Description rich-text area shows “hedx1-n1” as a paragraph, and the ticket is open at /admin/content/tickets/28e111b1-74d9-49a3-8773-18460eb29b7b.",
+      "cache": {
+        "mode": "self-finalized",
+        "replayedActions": 5,
+        "totalActions": 5
+      },
+      "modelCalls": 0,
+      "actions": 5
+    },
+    {
+      "kind": "assert",
+      "id": "obj2",
+      "ok": false,
+      "code": "ASSERTION_INCONCLUSIVE",
+      "blocked": false,
+      "error": "The ticket titled “hedx1-n3 Bench Ticket” is shown, and its description editor contains “hedx1-n3,” but the observation does not establish that this text is in a paragraph or that the ticket was saved with that description.; the judge saw the semantic tree only; if the engine captures pixels, pass vision: true when the answer is in pixels",
+      "ms": 1983
+    },
+    {
+      "kind": "act",
+      "id": "obj3",
+      "ok": true,
+      "ms": 2376,
+      "summary": "replayed 4 recorded action(s) zero-turn from the trace cache; recorded verdict: Selected the existing customer “Bench Customer” for “hedx1-n1 Bench Ticket” and saved the ticket. The Tickets list now shows the ticket with customer Bench Customer and an “Item Updated” confirmation.",
+      "cache": {
+        "mode": "self-finalized",
+        "replayedActions": 4,
+        "totalActions": 4
+      },
+      "modelCalls": 0,
+      "actions": 4
+    },
+    {
+      "kind": "assert",
+      "id": "obj3",
+      "ok": true,
+      "ms": 2943
+    },
+    {
+      "kind": "act",
+      "id": "obj4",
+      "ok": true,
+      "ms": 16369,
+      "summary": "replayed 14 recorded action(s) zero-turn from the trace cache; recorded verdict: Set the ticket status to In progress and selected hardware as its only tag; the form showed the other tag presets unselected. Saved successfully, and the Tickets list confirms hedx1-n2 Bench Ticket is In progress with an Item Updated confirmation.",
+      "cache": {
+        "mode": "self-finalized",
+        "replayedActions": 14,
+        "totalActions": 14
+      },
+      "modelCalls": 0,
+      "actions": 17
+    },
+    {
+      "kind": "assert",
+      "id": "obj4",
+      "ok": false,
+      "code": "ASSERTION_INCONCLUSIVE",
+      "blocked": false,
+      "error": "The ticket hedx1-n3 Bench Ticket is listed as In progress, but the observation does not show its tags, so whether hardware is its only tag cannot be determined.; the judge saw the semantic tree only; if the engine captures pixels, pass vision: true when the answer is in pixels",
+      "ms": 4147
+    },
+    {
+      "kind": "act",
+      "id": "obj5",
+      "ok": true,
+      "ms": 4415,
+      "summary": "replayed 8 recorded action(s) zero-turn from the trace cache; recorded verdict: Set due date to December 31st, 2026 and estimated hours to 6, saved the ticket, and reopened it to verify both values persisted.",
+      "cache": {
+        "mode": "self-finalized",
+        "replayedActions": 8,
+        "totalActions": 8
+      },
+      "modelCalls": 0,
+      "actions": 8
+    },
+    {
+      "kind": "assert",
+      "id": "obj5",
+      "ok": true,
+      "ms": 3346
+    },
+    {
+      "kind": "act",
+      "id": "obj6",
+      "ok": true,
+      "ms": 1726,
+      "summary": "replayed 3 recorded action(s) zero-turn from the trace cache; recorded verdict: Posted a comment on “hedx1-n1 Bench Ticket.” The Comments sidebar now shows one comment with the text “hedx1-n1,” confirming it includes the run ID.",
+      "cache": {
+        "mode": "self-finalized",
+        "replayedActions": 3,
+        "totalActions": 3
+      },
+      "modelCalls": 0,
+      "actions": 3
+    },
+    {
+      "kind": "assert",
+      "id": "obj6",
+      "ok": true,
+      "ms": 1924
+    },
+    {
+      "kind": "act",
+      "id": "obj7",
+      "ok": true,
+      "ms": 3339,
+      "summary": "The ticket page address is `/admin/content/tickets/eff6a209-172f-4540-9047-6687f3857800`; its ticket ID is `eff6a209-172f-4540-9047-6687f3857800`. No data was changed.",
+      "cache": {
+        "mode": "missed",
+        "reason": "no-entry",
+        "replayedActions": 0,
+        "totalActions": 0
+      },
+      "modelCalls": 1,
+      "actions": 0
+    },
+    {
+      "kind": "extract",
+      "id": "obj7",
+      "ok": true,
+      "ms": 3362,
+      "values": [
+        "eff6a209-172f-4540-9047-6687f3857800"
+      ]
+    }
+  ],
+  "finalText": "1. DONE Seed: Printer jams on tray 2 | Seed: VPN drops every hour | Seed: Laptop battery swelling (replayed 1 recorded action(s) zero-turn from the trace cache; recorded verdict: The Tickets collection shows these titles starting with Seed:, exactly as displayed: Seed: Printer jams on tray 2; Seed: VPN drops every hour; Seed: Laptop battery swelling. No data was changed.)\n2. DONE\n3. DONE\n4. DONE\n5. DONE\n6. DONE\n7. DONE eff6a209-172f-4540-9047-6687f3857800 (The ticket page address is `/admin/content/tickets/eff6a209-172f-4540-9047-6687f3857800`; its ticket ID is `eff6a209-172f-4540-9047-6687f3857800`. No data was changed.)",
+  "machine": {
+    "platform": "linux",
+    "arch": "x64",
+    "node": "v22.22.0",
+    "cpus": 4,
+    "memGb": 16
+  }
+}
