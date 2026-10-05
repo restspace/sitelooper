@@ -1,0 +1,105 @@
+
+[sweep] run 1/3: hsml3-n1 (store: /home/user/sitelooper/bench/results/hsml3-skills)
+[harness] mealie: defaulting APP_URL
+[harness] mealie: defaulting APP_EMAIL
+[harness] mealie: defaulting APP_PASSWORD
+[reset] mealie: no recipes to delete
+[harness] mealie responded 200 at http://127.0.0.1:8102/
+stopped: hsml3-n1
+  flow "hsml3" saved: 7 step(s), vars runid → /home/user/sitelooper/bench/results/flows/hsml3.json
+  warning: note: dropped 1 locator candidate(s) carrying a value this run minted (known only by export time)
+  warning: note: 01-signin no longer publishes user_id, final_url — no replay reads them from the page and the recording showed no line to read
+  warning: note: 02-report no longer publishes seed_recipe_count, recipe_slugs, recipe_category, recipe_rating — no replay reads them from the page and the recording showed no line to read
+  warning: note: 03-create no longer publishes verification — no replay reads it from the page and the recording showed no line to read
+  warning: note: 04-edit no longer publishes tags_chip_count — no replay reads it from the page and the recording showed no line to read
+  warning: note: 05-edit no longer publishes ingredient_notes, instruction_step_count — no replay reads them from the page and the recording showed no line to read
+  warning: note: 06-set no longer publishes servings_value — no replay reads it from the page and the recording showed no line to read
+  warning: note: 07-verify no longer publishes comment_container_selector — no replay reads it from the page and the recording showed no line to read
+  warning: warning: 165 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[0].instruction: "admin@bench.local" (output) in "Sign in to Mealie at http://127.0.0.1:8102/ using email admin@bench.local and password exactly {{env:APP_PASSWORD}}. Verify signed-in state and report what conf"
+  flow.steps[0].params.v2: "admin@bench.local" (output) in "admin@bench.local"
+  flow.steps[0].route: "http://127.0.0.1:8102/g/home" (output) in "http://127.0.0.1:8102/g/home"
+  flow.steps[1].route: "http://127.0.0.1:8102/g/home" (output) in "http://127.0.0.1:8102/g/home"
+  flow.steps[2].route: "http://127.0.0.1:8102/g/home" (output) in "http://127.0.0.1:8102/g/home"
+arm=sitelooper model=openai/gpt-6-luna runid=hsml3-n1 stop=completed
+turns=8 wall=382.6s
+commands=7 cmdTime=349.1s cmdBytes=9959 timeouts=0
+orchestrator in=6094 cw=0 cr=28313 out=1115
+inner prompt=2486905 cached=2325760 completion=27666
+spend=$0.0492 maxUsd=3
+learn: A_n=0 replayed=0/7 full=0 repaired=0 compiled=7 variants=0
+-> /home/user/sitelooper/bench/results/hsml3-n1-sitelooper-result.json
+
+hsml3-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: PASS — hsml3-n1-bench-recipe, description="Bench verification recipe created by runid hsml3-n1."
+  obj 3: PASS — categories=Bench Dinner (bench-dinner); tags=Bench Quick (bench-quick); want only the seeded Bench Dinner (bench-dinner) and Bench Quick (bench-quick)
+  obj 4: PASS — ingredients=[2 Bench Cup Bench Flour | 3 Bench Spoon Bench Butter]; steps=["Whisk the flour and butter.","Bake until golden (hsml3-n1)."]
+  obj 5: PASS — servings=4, want 4
+  obj 6: PASS — 1 comment(s): "Comment from runid hsml3-n1 verification."
+  obj 7: PASS — slug hsml3-n1-bench-recipe reported
+
+[sweep] run 2/3: hsml3-n2 (replay flow hsml3, no orchestrator)
+[reset] mealie: deleted 1 recipe(s) (earlier runs' and non-seed)
+[sweep] hsml3-n2: 1 drift ticket(s) → hsml3-n2-drift.json
+
+hsml3-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: PASS — hsml3-n2-bench-recipe, description="Bench verification recipe created by runid hsml3-n2."
+  obj 3: PASS — categories=Bench Dinner (bench-dinner); tags=Bench Quick (bench-quick); want only the seeded Bench Dinner (bench-dinner) and Bench Quick (bench-quick)
+  obj 4: PASS — ingredients=[2 Bench Cup Bench Flour | 3 Bench Spoon Bench Butter]; steps=["Whisk the flour and butter.","Bake until golden (hsml3-n2)."]
+  obj 5: PASS — servings=4, want 4
+  obj 6: PASS — 1 comment(s): "Comment from runid hsml3-n2 verification."
+  obj 7: PASS — slug hsml3-n2-bench-recipe reported
+
+[sweep] run 3/3: hsml3-n3 (replay flow hsml3, no orchestrator)
+[reset] mealie: deleted 1 recipe(s) (earlier runs' and non-seed)
+[sweep] hsml3-n3: 1 drift ticket(s) → hsml3-n3-drift.json
+
+hsml3-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: PASS — hsml3-n3-bench-recipe, description="Bench verification recipe created by runid hsml3-n3."
+  obj 3: PASS — categories=Bench Dinner (bench-dinner); tags=Bench Quick (bench-quick); want only the seeded Bench Dinner (bench-dinner) and Bench Quick (bench-quick)
+  obj 4: PASS — ingredients=[2 Bench Cup Bench Flour | 3 Bench Spoon Bench Butter]; steps=["Whisk the flour and butter.","Bake until golden (hsml3-n3)."]
+  obj 5: PASS — servings=4, want 4
+  obj 6: PASS — 1 comment(s): "Comment from runid hsml3-n3 verification."
+  obj 7: PASS — slug hsml3-n3-bench-recipe reported
+
+Learning sweep hsml3 (K=3)
+┌─────────┬───┬────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid      │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'hsml3-n1' │ '7/7'    │ 'completed' │ 8     │ 7    │ 0.0492    │ 0   │ '0/7'        │ 383    │
+│ 1       │ 2 │ 'hsml3-n2' │ '7/7'    │ 'success'   │ 0     │ 7    │ 0         │ 1   │ '7/7 (flow)' │ 128    │
+│ 2       │ 3 │ 'hsml3-n3' │ '7/7'    │ 'success'   │ 0     │ 7    │ 0         │ 1   │ '7/7 (flow)' │ 129    │
+└─────────┴───┴────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:8102
+  s_00b130  validated   17 steps  3/3 (100%)
+           Set the servings for '{{v1}}' to exactly 4 in the recipe editor, save, and verify the saved recipe page displa…
+  s_246069  validated    2 steps  3/3 (100%)
+           Create and save a new Mealie recipe named '{{v2}}' with a description that includes the exact runid {{v1}}. Do…
+  s_282b5c  validated    4 steps  3/3 (100%)
+           Create and save a new Mealie recipe named '{{v2}}' with a description that includes the exact runid {{v1}}. Do…
+  s_327aab  validated   11 steps  3/3 (100%)
+           Post exactly one comment on the page for '{{v1}}'. The comment text must include the exact runid {{v2}}. Use t…
+  s_37742f  validated    1 steps  3/3 (100%)
+           Edit the existing recipe '{{v1}}' so its only category is the existing category '{{v3}}' and its only tag is t…
+  s_56ae0b  validated    8 steps  3/3 (100%)
+           Report the exact names of all recipes whose names start with {{v1}} as shown in Mealie, without modifying any …
+  s_65e8dc  validated    2 steps  3/3 (100%)
+           Sign in to Mealie at {{v1}} using email {{v2}} and password exactly {{v3}}. Verify signed-in state and report …
+  s_8dcd85  validated    3 steps  3/3 (100%)
+           Create and save a new Mealie recipe named '{{v2}}' with a description that includes the exact runid {{v1}}. Do…
+  s_a21bcb  validated    2 steps  3/3 (100%)
+           Sign in to Mealie at {{v1}} using email {{v2}} and password exactly {{v3}}. Verify signed-in state and report …
+  s_a8f049  validated    2 steps  3/3 (100%)
+           Sign in to Mealie at {{v1}} using email {{v2}} and password exactly {{v3}}. Verify signed-in state and report …
+  s_e1b301  validated    2 steps  3/3 (100%)
+           Create and save a new Mealie recipe named '{{v2}}' with a description that includes the exact runid {{v1}}. Do…
+  s_e41f6c  validated   21 steps  3/3 (100%)
+           Edit the existing recipe '{{v1}}' so its only category is the existing category '{{v3}}' and its only tag is t…
+  s_f9b588  validated   31 steps  3/3 (100%)
+           Edit and save '{{v1}}' with exactly two ingredients in order, both with no note: amount 2, existing unit {{v3}…
+store: /home/user/sitelooper/bench/results/hsml3-skills
+
+summary: /home/user/sitelooper/bench/results/hsml3-sweep.json

@@ -1,0 +1,145 @@
+{
+ "id": "s_a8f049",
+ "origin": "http://127.0.0.1:8102",
+ "template": "Sign in to Mealie at {{v1}} using email {{v2}} and password exactly {{v3}}. Verify signed-in state and report what confirms it.",
+ "params": {
+  "v1": {
+   "example": "http://127.0.0.1:8102/",
+   "usedIn": []
+  },
+  "v2": {
+   "example": "admin@bench.local",
+   "usedIn": []
+  },
+  "v3": {
+   "example": "{{env:APP_PASSWORD}}",
+   "usedIn": [
+    1
+   ]
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8102/login"
+ },
+ "steps": [
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e40",
+    "value": "{{v3}}"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Password"
+     },
+     {
+      "kind": "label",
+      "label": "Password"
+     },
+     {
+      "kind": "id",
+      "selector": "#password"
+     },
+     {
+      "kind": "css",
+      "selector": "#password"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 464,
+      "w": 496,
+      "h": 56,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8102/login",
+    "addedContains": [
+     "- textbox \"Password\": {{v3}}"
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e61"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Login"
+     },
+     {
+      "kind": "css",
+      "selector": "section > div:nth-of-type(4) > form > div:nth-of-type(4) > div > button"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 606,
+      "w": 300,
+      "h": 44,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8102/g/home",
+    "alertContains": "1",
+    "addedContains": [
+     "- textbox \"Press '/'\"",
+     "- button \"Logout\"",
+     "- link \"{{*}} Favorite Recipes\"",
+     "- link \"Favorite Recipes\"",
+     "- button \"Create\""
+    ],
+    "lineDialect": 2
+   }
+  }
+ ],
+ "contract": 2,
+ "stats": {
+  "uses": 3,
+  "successes": 3,
+  "partial": 0,
+  "created": "2026-10-05T21:03:00.485Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2,
+  "lastUsed": "2026-10-05T21:11:14.136Z"
+ },
+ "status": "validated",
+ "seq": {
+  "chain": "s_ecf759",
+  "index": 1,
+  "of": 3
+ },
+ "provenance": {
+  "session": "hsml3-n1",
+  "instruction": "Sign in to Mealie at http://127.0.0.1:8102/ using email admin@bench.local and password exactly {{env:APP_PASSWORD}}. Verify signed-in state and report what confirms it.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-10-05T21:03:00.485Z",
+  "transforms": [
+   {
+    "name": "unfreezeExpectations",
+    "at": 2,
+    "reason": "recorded page change(s) only the recording run could produce: [\"- textbox \\\"Press '/'\\\"\",\"- button \\\"Logout\\\"\",\"- link \\\"Bench Admin Favorite Recipes\\\"\",\"- link \\\"Favorite Recipes\\\"\",\"- button \\\"Create\\\"\"] → [\"- textbox \\\"Press '/'\\\"\",\"- button \\\"Logout\\\"\",\"- link \\\"{{*}} Favorite Recipes\\\"\",\"- link \\\"Favorite Recipes\\\"\",\"- button \\\"Create\\\"\"]"
+   }
+  ]
+ },
+ "revision": 3
+}

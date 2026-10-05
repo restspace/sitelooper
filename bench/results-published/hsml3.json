@@ -1,0 +1,692 @@
+{
+  "name": "hsml3",
+  "origin": "http://127.0.0.1:8102",
+  "startUrl": "http://127.0.0.1:8102/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-signin",
+      "instruction": "Sign in to Mealie at http://127.0.0.1:8102/ using email admin@bench.local and password exactly {{env:APP_PASSWORD}}. Verify signed-in state and report what confirms it.",
+      "skill": "s_a21bcb",
+      "params": {
+        "v1": "http://127.0.0.1:8102/",
+        "v2": "admin@bench.local",
+        "v3": "{{env:APP_PASSWORD}}"
+      },
+      "outputs": [
+        "login_email",
+        "signed_in_user",
+        "post_login_url",
+        "confirmation_signals",
+        "screenshots"
+      ],
+      "recorded": {
+        "login_email": "admin@bench.local",
+        "signed_in_user": "Bench Admin",
+        "user_id": "abecb43a-0849-4636-baca-db7da37da973",
+        "post_login_url": "http://127.0.0.1:8102/g/home",
+        "confirmation_signals": "Logout button + Bench Admin avatar/profile link + authenticated sidebar nav + seed recipes rendered on home",
+        "screenshots": "login-filled.png, signed-in-home.png",
+        "final_url": "http://127.0.0.1:8102/g/home",
+        "url": "http://127.0.0.1:8102/g/home"
+      },
+      "route": "http://127.0.0.1:8102/g/home",
+      "outputEvidence": {
+        "login_email": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "signed_in_user": {
+          "same": 1,
+          "differed": 0
+        },
+        "user_id": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "post_login_url": {
+          "same": 1,
+          "differed": 0
+        },
+        "confirmation_signals": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "screenshots": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "final_url": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "02-report",
+      "instruction": "Report the exact names of all recipes whose names start with Seed: as shown in Mealie, without modifying any recipes.",
+      "skill": "s_56ae0b",
+      "params": {
+        "v1": "Seed:"
+      },
+      "outputs": [
+        "recipe_page_url",
+        "verification",
+        "recipes_href",
+        "seed_recipe_names_1",
+        "seed_recipe_names_2",
+        "seed_recipe_names_3"
+      ],
+      "recorded": {
+        "seed_recipe_count": "3",
+        "recipe_page_url": "http://127.0.0.1:8102/g/home",
+        "recipe_slugs": "/g/home/r/seed-garden-salad, /g/home/r/seed-tomato-soup, /g/home/r/seed-bench-pancakes",
+        "recipe_category": "Bench Classic",
+        "verification": "search box filtered on 'Seed:' returned the same 3 recipes; no recipes modified",
+        "recipes_href": "/g/home",
+        "recipe_rating": "0-star",
+        "seed_recipe_names_1": "Seed: Garden Salad",
+        "seed_recipe_names_2": "Seed: Tomato Soup",
+        "seed_recipe_names_3": "Seed: Bench Pancakes"
+      },
+      "route": "http://127.0.0.1:8102/g/home",
+      "outputEvidence": {
+        "seed_recipe_count": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "recipe_page_url": {
+          "same": 1,
+          "differed": 0
+        },
+        "recipe_slugs": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "recipe_category": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "verification": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "recipes_href": {
+          "same": 1,
+          "differed": 0
+        },
+        "recipe_rating": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "seed_recipe_names_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_recipe_names_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_recipe_names_3": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "03-create",
+      "instruction": "Create and save a new Mealie recipe named '{{runid}} Bench Recipe' with a description that includes the exact runid {{runid}}. Do not alter any Seed recipes. Verify the saved recipe exists with its name and description.",
+      "skill": "s_246069",
+      "params": {
+        "v2": "{{runid}} Bench Recipe",
+        "v1": "{{runid}}"
+      },
+      "outputs": [
+        "new_recipe_name",
+        "new_recipe_description",
+        "new_recipe_url",
+        "new_recipe_slug",
+        "screenshots",
+        "recipe_edit_url",
+        "recipe_runid",
+        "seed_recipes_unchanged_1",
+        "seed_recipes_unchanged_2",
+        "seed_recipes_unchanged_3"
+      ],
+      "recorded": {
+        "new_recipe_name": "hsml3-n1 Bench Recipe",
+        "new_recipe_description": "Bench verification recipe created by runid hsml3-n1.",
+        "new_recipe_url": "http://127.0.0.1:8102/g/home/r/hsml3-n1-bench-recipe",
+        "new_recipe_slug": "hsml3-n1-bench-recipe",
+        "verification": "Fresh page load of /g/home/r/hsml3-n1-bench-recipe (no ?edit) renders h1 'hsml3-n1 Bench Recipe' and the description paragraph containing runid hsml3-n1",
+        "screenshots": "create-recipe-filled.png, recipe-description-filled.png, new-recipe-saved.png",
+        "recipe_edit_url": "http://127.0.0.1:8102/g/home/r/hsml3-n1-bench-recipe?edit=true",
+        "recipe_runid": "hsml3-n1",
+        "seed_recipes_unchanged_1": "Seed: Garden Salad",
+        "seed_recipes_unchanged_2": "Seed: Tomato Soup",
+        "seed_recipes_unchanged_3": "Seed: Bench Pancakes",
+        "url": "http://127.0.0.1:8102/g/home?search=Seed:",
+        "url.p3": "hsml3-n1-bench-recipe"
+      },
+      "route": "http://127.0.0.1:8102/g/home",
+      "urlRoutes": {
+        "url.p3": "http://127.0.0.1:8102 p0=g p1=home p2=r"
+      },
+      "outputEvidence": {
+        "new_recipe_name": {
+          "same": 0,
+          "differed": 1
+        },
+        "new_recipe_description": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "new_recipe_url": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "new_recipe_slug": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "verification": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "screenshots": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "recipe_edit_url": {
+          "same": 0,
+          "differed": 1
+        },
+        "recipe_runid": {
+          "same": 0,
+          "differed": 1
+        },
+        "seed_recipes_unchanged_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_recipes_unchanged_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_recipes_unchanged_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        },
+        "url.p3": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "04-edit",
+      "instruction": "Edit the existing recipe '{{runid}} Bench Recipe' so its only category is the existing category 'Bench Dinner' and its only tag is the existing tag 'Bench Quick'. Choose the existing suggestions rather than creating similar entries. Save the editor, then verify the recipe page shows exactly that category and tag with no others.",
+      "skill": "s_37742f",
+      "params": {
+        "v1": "{{runid}} Bench Recipe",
+        "v3": "Bench Dinner",
+        "v4": "Bench Quick",
+        "v2": "{{runid}}",
+        "v5": "{{03-create.url.p3}}"
+      },
+      "outputs": [
+        "recipe_name",
+        "categories_chips_after_save",
+        "tags_chips_after_save",
+        "categories_chip_count",
+        "recipe_description",
+        "suggestion_chosen_for_category",
+        "suggestion_chosen_for_tag",
+        "verification",
+        "screenshots",
+        "current_url",
+        "recipe_runid"
+      ],
+      "recorded": {
+        "recipe_name": "hsml3-n1 Bench Recipe",
+        "categories_chips_after_save": "Bench Dinner",
+        "tags_chips_after_save": "Bench Quick",
+        "categories_chip_count": "1",
+        "tags_chip_count": "1",
+        "recipe_description": "Bench verification recipe created by runid hsml3-n1.",
+        "suggestion_chosen_for_category": "existing option 'Bench Dinner' (not the 'Create Bench Dinner' entry)",
+        "suggestion_chosen_for_tag": "existing option 'Bench Quick' (not the 'Create Bench Quick' entry)",
+        "verification": "Fresh reload of the saved recipe page shows exactly one Categories chip 'Bench Dinner' and one Tags chip 'Bench Quick'; no other chips exist in main",
+        "screenshots": "recipe-editor-category-tag.png, recipe-page-verified.png",
+        "current_url": "http://127.0.0.1:8102/g/home/r/hsml3-n1-bench-recipe",
+        "recipe_runid": "hsml3-n1"
+      },
+      "route": "http://127.0.0.1:8102/g/home/r/:id",
+      "outputEvidence": {
+        "recipe_name": {
+          "same": 0,
+          "differed": 1
+        },
+        "categories_chips_after_save": {
+          "same": 1,
+          "differed": 0
+        },
+        "tags_chips_after_save": {
+          "same": 1,
+          "differed": 0
+        },
+        "categories_chip_count": {
+          "same": 1,
+          "differed": 0
+        },
+        "tags_chip_count": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "recipe_description": {
+          "same": 0,
+          "differed": 1
+        },
+        "suggestion_chosen_for_category": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "suggestion_chosen_for_tag": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "verification": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "screenshots": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "current_url": {
+          "same": 0,
+          "differed": 1
+        },
+        "recipe_runid": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "05-edit",
+      "instruction": "Edit and save '{{runid}} Bench Recipe' with exactly two ingredients in order, both with no note: amount 2, existing unit Bench Cup, existing food Bench Flour; then amount 3, existing unit Bench Spoon, existing food Bench Butter. Remove any placeholder or extra ingredients. Its instructions must be exactly two steps in order: 'Whisk the flour and butter.' and 'Bake until golden ({{runid}}).' Remove any placeholder or extra steps. Choose existing unit and food suggestions rather than creating new entries. Verify the saved recipe shows precisely these ingredients and steps.",
+      "skill": "s_f9b588",
+      "params": {
+        "v1": "{{runid}} Bench Recipe",
+        "v3": "Bench Cup",
+        "v4": "Bench Flour",
+        "v5": "Bench Spoon",
+        "v6": "Bench Butter",
+        "v7": "Whisk the flour and butter.",
+        "v8": "Bake until golden ({{runid}}).",
+        "v2": "{{runid}}",
+        "v9": "{{03-create.url.p3}}"
+      },
+      "outputs": [
+        "recipe_name",
+        "ingredient_row_count",
+        "ingredient_units_used",
+        "ingredient_foods_used",
+        "categories",
+        "tags",
+        "screenshots",
+        "recipe_runid",
+        "ingredients_after_reload_1",
+        "ingredients_after_reload_2",
+        "instructions_after_reload_1",
+        "instructions_after_reload_2"
+      ],
+      "recorded": {
+        "recipe_name": "hsml3-n1 Bench Recipe",
+        "ingredient_row_count": "2",
+        "ingredient_notes": "none (both Notes fields empty)",
+        "ingredient_units_used": "existing Bench Cup, existing Bench Spoon",
+        "ingredient_foods_used": "existing Bench Flour, existing Bench Butter",
+        "instruction_step_count": "2",
+        "categories": "Bench Dinner",
+        "tags": "Bench Quick",
+        "screenshots": "editor-ingredients-steps.png, recipe-ingredients-steps-verified.png",
+        "recipe_runid": "hsml3-n1",
+        "ingredients_after_reload_1": "2 Bench Cup Bench Flour",
+        "ingredients_after_reload_2": "3 Bench Spoon Bench Butter",
+        "instructions_after_reload_1": "Step: 1 Whisk the flour and butter.",
+        "instructions_after_reload_2": "Step: 2 Bake until golden (hsml3-n1)."
+      },
+      "route": "http://127.0.0.1:8102/g/home/r/:id",
+      "outputEvidence": {
+        "recipe_name": {
+          "same": 0,
+          "differed": 1
+        },
+        "ingredient_row_count": {
+          "same": 1,
+          "differed": 0
+        },
+        "ingredient_notes": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "ingredient_units_used": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "ingredient_foods_used": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "instruction_step_count": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "categories": {
+          "same": 1,
+          "differed": 0
+        },
+        "tags": {
+          "same": 1,
+          "differed": 0
+        },
+        "screenshots": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "recipe_runid": {
+          "same": 0,
+          "differed": 1
+        },
+        "ingredients_after_reload_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "ingredients_after_reload_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "instructions_after_reload_1": {
+          "same": 0,
+          "differed": 1
+        },
+        "instructions_after_reload_2": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "06-set",
+      "instruction": "Set the servings for '{{runid}} Bench Recipe' to exactly 4 in the recipe editor, save, and verify the saved recipe page displays 4 servings.",
+      "skill": "s_00b130",
+      "params": {
+        "v1": "{{runid}} Bench Recipe",
+        "v2": "{{runid}}",
+        "v3": "{{03-create.url.p3}}"
+      },
+      "outputs": [
+        "categories",
+        "editor_servings_field_value_after_reload",
+        "ingredient_1_row",
+        "ingredient_2_row",
+        "ingredients_section_heading",
+        "instruction_step_1",
+        "instruction_step_2",
+        "instructions_section_heading",
+        "recipe_name",
+        "servings_displayed",
+        "tags",
+        "recipe_other_state_unchanged",
+        "screenshots",
+        "recipe_runid"
+      ],
+      "recorded": {
+        "categories": "Bench Dinner",
+        "editor_servings_field_value_after_reload": "4",
+        "ingredient_1_row": "2 Bench Cup Bench Flour",
+        "ingredient_2_row": "3 Bench Spoon Bench Butter",
+        "ingredients_section_heading": "Ingredients",
+        "instruction_step_1": "Whisk the flour and butter.",
+        "instruction_step_2": "Bake until golden (hsml3-n1).",
+        "instructions_section_heading": "Instructions",
+        "recipe_name": "hsml3-n1 Bench Recipe",
+        "servings_displayed": "Serves 4",
+        "servings_value": "4",
+        "tags": "Bench Quick",
+        "recipe_other_state_unchanged": "Ingredients: 2 -> Bench Cup -> Bench Flour, 3 -> Bench Spoon -> Bench Butter; Instructions: Step 1 'Whisk the flour and butter.', Step 2 'Bake until golden (hsml3-n1).'; Categories: Bench Dinner; Tags: Bench Quick",
+        "screenshots": "servings-filled.png, recipe-serves-4-verified.png",
+        "recipe_runid": "hsml3-n1"
+      },
+      "route": "http://127.0.0.1:8102/g/home/r/:id",
+      "outputEvidence": {
+        "categories": {
+          "same": 1,
+          "differed": 0
+        },
+        "editor_servings_field_value_after_reload": {
+          "same": 1,
+          "differed": 0
+        },
+        "ingredient_1_row": {
+          "same": 1,
+          "differed": 0
+        },
+        "ingredient_2_row": {
+          "same": 1,
+          "differed": 0
+        },
+        "ingredients_section_heading": {
+          "same": 1,
+          "differed": 0
+        },
+        "instruction_step_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "instruction_step_2": {
+          "same": 0,
+          "differed": 1
+        },
+        "instructions_section_heading": {
+          "same": 1,
+          "differed": 0
+        },
+        "recipe_name": {
+          "same": 0,
+          "differed": 1
+        },
+        "servings_displayed": {
+          "same": 1,
+          "differed": 0
+        },
+        "servings_value": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "tags": {
+          "same": 1,
+          "differed": 0
+        },
+        "recipe_other_state_unchanged": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "screenshots": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "recipe_runid": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "07-verify",
+      "instruction": "Post exactly one comment on the page for '{{runid}} Bench Recipe'. The comment text must include the exact runid {{runid}}. Use the comment's own submit button (not the recipe editor Save), then verify the page shows exactly one comment and report its exact text.",
+      "skill": "s_327aab",
+      "params": {
+        "v1": "{{runid}} Bench Recipe",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "comment_author_line",
+        "comment_count",
+        "comment_text",
+        "recipe_name",
+        "screenshots",
+        "submit_control_used",
+        "recipe_runid"
+      ],
+      "recorded": {
+        "comment_author_line": "Bench Admin • Monday, October 5, 2026",
+        "comment_count": "1",
+        "comment_text": "Comment from runid hsml3-n1 verification.",
+        "recipe_name": "hsml3-n1 Bench Recipe",
+        "screenshots": "comment-filled.png, comment-posted.png",
+        "submit_control_used": "the comment box's own 'Submit' button in the 'Join the Conversation' section (not the editor Save)",
+        "recipe_runid": "hsml3-n1",
+        "comment_container_selector": "v-card-text.pa-3.pb-0"
+      },
+      "route": "http://127.0.0.1:8102/g/home/r/:id",
+      "outputEvidence": {
+        "comment_author_line": {
+          "same": 1,
+          "differed": 0
+        },
+        "comment_count": {
+          "same": 1,
+          "differed": 0
+        },
+        "comment_text": {
+          "same": 0,
+          "differed": 1
+        },
+        "recipe_name": {
+          "same": 0,
+          "differed": 1
+        },
+        "screenshots": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "submit_control_used": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "recipe_runid": {
+          "same": 0,
+          "differed": 1
+        },
+        "comment_container_selector": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "session": "hsml3-n1",
+    "created": "2026-10-05T21:08:49.546Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "01-signin",
+      "outputs": [
+        "user_id",
+        "final_url"
+      ]
+    },
+    {
+      "stepId": "02-report",
+      "outputs": [
+        "seed_recipe_count",
+        "recipe_slugs",
+        "recipe_category",
+        "recipe_rating"
+      ]
+    },
+    {
+      "stepId": "03-create",
+      "outputs": [
+        "verification"
+      ]
+    },
+    {
+      "stepId": "04-edit",
+      "outputs": [
+        "tags_chip_count"
+      ]
+    },
+    {
+      "stepId": "05-edit",
+      "outputs": [
+        "ingredient_notes",
+        "instruction_step_count"
+      ]
+    },
+    {
+      "stepId": "06-set",
+      "outputs": [
+        "servings_value"
+      ]
+    },
+    {
+      "stepId": "07-verify",
+      "outputs": [
+        "comment_container_selector"
+      ]
+    }
+  ]
+}
