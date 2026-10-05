@@ -1,0 +1,172 @@
+{
+  "target": "mealie",
+  "runid": "heml1-strict",
+  "steps": [
+    {
+      "kind": "act",
+      "id": "signin",
+      "ok": true,
+      "ms": 2314,
+      "summary": "replayed 3 recorded action(s) zero-turn from the trace cache; recorded verdict: Signed in successfully with admin@bench.local. The authenticated Mealie recipe home is displayed as Bench Admin.",
+      "cache": {
+        "mode": "self-finalized",
+        "replayedActions": 3,
+        "totalActions": 3
+      },
+      "modelCalls": 0,
+      "actions": 3
+    },
+    {
+      "kind": "assert",
+      "id": "signin",
+      "ok": true,
+      "ms": 2393
+    },
+    {
+      "kind": "act",
+      "id": "obj1",
+      "ok": true,
+      "ms": 1190,
+      "summary": "replayed 1 recorded action(s) zero-turn from the trace cache; recorded verdict: The recipe list shows the names starting with `Seed:`: `Seed: Garden Salad` and `Seed: Bench Pancakes`. `Seed: Tomato Soup` is shown as descriptive text on the A simple soup card, not as the recipe name.",
+      "cache": {
+        "mode": "self-finalized",
+        "replayedActions": 1,
+        "totalActions": 1
+      },
+      "modelCalls": 0,
+      "actions": 2
+    },
+    {
+      "kind": "extract",
+      "id": "obj1",
+      "ok": true,
+      "ms": 2896,
+      "values": [
+        "Seed: Garden Salad",
+        "Seed: Tomato Soup",
+        "Seed: Bench Pancakes"
+      ]
+    },
+    {
+      "kind": "act",
+      "id": "obj2",
+      "ok": true,
+      "ms": 2972,
+      "summary": "replayed 6 recorded action(s) zero-turn from the trace cache; recorded verdict: Created and saved `heml1-n1 Bench Recipe` with description `heml1-n1`. The recipe page now shows that name and description.",
+      "cache": {
+        "mode": "self-finalized",
+        "replayedActions": 6,
+        "totalActions": 6
+      },
+      "modelCalls": 0,
+      "actions": 6
+    },
+    {
+      "kind": "assert",
+      "id": "obj2",
+      "ok": true,
+      "ms": 2053
+    },
+    {
+      "kind": "act",
+      "id": "obj3",
+      "ok": true,
+      "ms": 3921,
+      "summary": "replayed 8 recorded action(s) zero-turn from the trace cache; recorded verdict: Selected the existing Bench Dinner category and Bench Quick tag in the recipe editor and saved. The recipe page now displays Bench Dinner under Categories and Bench Quick under Tags.",
+      "cache": {
+        "mode": "self-finalized",
+        "replayedActions": 8,
+        "totalActions": 8
+      },
+      "modelCalls": 0,
+      "actions": 8
+    },
+    {
+      "kind": "assert",
+      "id": "obj3",
+      "ok": true,
+      "ms": 6464
+    },
+    {
+      "kind": "act",
+      "id": "obj4",
+      "ok": false,
+      "code": "REPLAY_STALE",
+      "blocked": false,
+      "error": "the recording of this step no longer replays (invalid-entry), and cache.strict hands no step to the agent; re-record it with a read-write run without --strict-cache and commit the changed entry under .e2e/cache",
+      "ms": 89
+    },
+    {
+      "kind": "assert",
+      "id": "obj4",
+      "ok": false,
+      "code": "ASSERTION_FAILED",
+      "blocked": false,
+      "error": "The page shows one ingredient, “1 Cup Flour,” rather than the two specified ingredient lines, so the assertion is false.",
+      "ms": 3337
+    },
+    {
+      "kind": "act",
+      "id": "obj5",
+      "ok": false,
+      "code": "REPLAY_STALE",
+      "blocked": false,
+      "error": "the recording of this step no longer replays (target-ambiguous), and cache.strict hands no step to the agent; re-record it with a read-write run without --strict-cache and commit the changed entry under .e2e/cache",
+      "ms": 14905
+    },
+    {
+      "kind": "assert",
+      "id": "obj5",
+      "ok": false,
+      "code": "ASSERTION_FAILED",
+      "blocked": false,
+      "error": "The recipe page shows “Serves 1,” not 4.",
+      "ms": 3113
+    },
+    {
+      "kind": "act",
+      "id": "obj6",
+      "ok": true,
+      "ms": 777,
+      "summary": "replayed 2 recorded action(s) zero-turn from the trace cache; recorded verdict: Posted the comment `heml1-n1` on the recipe page. The page now shows exactly one comment, containing the run ID.",
+      "cache": {
+        "mode": "self-finalized",
+        "replayedActions": 2,
+        "totalActions": 2
+      },
+      "modelCalls": 0,
+      "actions": 2
+    },
+    {
+      "kind": "assert",
+      "id": "obj6",
+      "ok": true,
+      "ms": 1552
+    },
+    {
+      "kind": "act",
+      "id": "obj7",
+      "ok": true,
+      "ms": 13723,
+      "summary": "Opened the recipe’s normal page (without edit mode). Its address path is `/g/home/r/heml1-strict-bench-recipe`, so the slug is `heml1-strict-bench-recipe`. No data was changed.",
+      "cache": {
+        "mode": "missed",
+        "reason": "no-entry",
+        "replayedActions": 0,
+        "totalActions": 0
+      },
+      "modelCalls": 3,
+      "actions": 1
+    },
+    {
+      "kind": "extract",
+      "id": "obj7",
+      "ok": false,
+      "code": "ASSERTION_INCONCLUSIVE",
+      "blocked": false,
+      "error": "nothing to extract: The recipe page address/URL, which would show the slug, is not present in the observation.; the judge saw the semantic tree only; pass vision: true when the answer is in pixels",
+      "ms": 3549
+    }
+  ],
+  "finalText": "1. DONE Seed: Garden Salad | Seed: Tomato Soup | Seed: Bench Pancakes (replayed 1 recorded action(s) zero-turn from the trace cache; recorded verdict: The recipe list shows the names starting with `Seed:`: `Seed: Garden Salad` and `Seed: Bench Pancakes`. `Seed: Tomato Soup` is shown as descriptive text on the A simple soup card, not as the recipe name.)\n2. DONE\n3. DONE\n4. FAILED\n5. FAILED\n6. DONE\n7. FAILED  (Opened the recipe’s normal page (without edit mode). Its address path is `/g/home/r/heml1-strict-bench-recipe`, so the slug is `heml1-strict-bench-recipe`. No data was changed.)"
+}

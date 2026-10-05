@@ -1,0 +1,65 @@
+
+ RUN  e2e v0.16.0 /home/user/sitelooper/bench/e2e-arm
+      run 01a10d3c-4abc-752f-82e8-75f92aaea6ce · targets: web
+      model openrouter/openai/gpt-6-luna
+
+   ✓ mealie flow > agent.act "Sign in with username {username} and password {password}" 1.98s
+   ✓ mealie flow > agent.assert "The app shows a signed-in page, not a sign-in form" 2.13s · 1 model call
+   ✓ mealie flow > agent.act "Objective 1 of the goal, for run id {runid}, asks only for a report: Re…" 1.21s
+   ✓ mealie flow > agent.extract "For run id heml1-n3: Report the names of the recipes whose name starts …" 3.52s · 1 model call
+   ✓ mealie flow > agent.act "Achieve objective 2 of the goal, for run id {runid}: A recipe named `{r…" 2.84s
+   ✓ mealie flow > agent.assert "For run id heml1-n3, this now holds in the app: A recipe named `heml1-n…" 3.16s · 1 model call
+   ✓ mealie flow > agent.act "Achieve objective 3 of the goal, for run id {runid}: Its only category …" 4.24s
+   × mealie flow > agent.assert "For run id heml1-n3, this now holds in the app: Its only category is th…" 4.67s · 1 model call failed
+   ✓ mealie flow > agent.act "Achieve objective 4 of the goal, for run id {runid}: Its ingredients ar…" 106.02s · 22 model calls
+   ✓ mealie flow > agent.assert "For run id heml1-n3, this now holds in the app: Its ingredients are exa…" 4.51s · 1 model call
+   ✓ mealie flow > agent.act "Achieve objective 5 of the goal, for run id {runid}: Its servings is 4." 2.02s
+   ✓ mealie flow > agent.assert "For run id heml1-n3, this now holds in the app: Its servings is 4." 1.56s · 1 model call
+   ✓ mealie flow > agent.act "Achieve objective 6 of the goal, for run id {runid}: It has exactly one…" 539ms
+   ✓ mealie flow > agent.assert "For run id heml1-n3, this now holds in the app: It has exactly one comm…" 3.56s · 1 model call
+   ✓ mealie flow > agent.act "Objective 7 of the goal, for run id {runid}, asks only for a report: Re…" 8.49s · 2 model calls
+   × mealie flow > agent.extract "For run id heml1-n3: Report the recipe's slug exactly as the app shows …" 5.15s · 1 model call failed
+ ✓ |web| tests/flow.e2e.ts (1 test) 159.79s ai 314.5k tokens · 70% cached · $0.0153
+   ✓ mealie flow 159.79s ai 314.5k tokens · 70% cached · $0.0153
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+         AI  314.5k tokens · 70% cached · $0.0153 · 32 model calls · openrouter/openai/gpt-6-luna
+      Cache  6 replayed · 2 missed
+   Start at  18:03:38
+   Duration  161.01s (2m 41s)
+     Report  .e2e/report.json
+
+
+--- stderr ---
+[e2e debug] phase timings (wall 161.8s)
+  phase           count   total     avg     max
+  scheduler           1  161.0s  161.0s  161.0s
+  test.body           1  155.8s  155.8s  155.8s
+  agent.model        32  140.2s  4382ms   10.7s
+  agent.observe      89   36.2s   407ms  1188ms
+  agent.action       47   13.7s   292ms  6998ms
+  config.load         1   734ms   734ms   734ms
+  engine.init         1    88ms    88ms    88ms
+  session.close       1    50ms    50ms    50ms
+  session.launch      1    17ms    17ms    17ms
+  collect             1    13ms    13ms    13ms
+  engine.prepare      1     1ms     1ms     1ms
+[e2e debug] agent steps (execution order, model openrouter/openai/gpt-6-luna, total $0.015279+)
+  step                                                               total   model  observe  action  calls  tokens in/out        cached       cost
+  agent.act "Sign in with username {username} and password {passw…  1984ms     0ms    941ms   219ms      0            0/0             -          -
+  agent.assert "The app shows a signed-in page, not a sign-in for…  2135ms  1906ms    157ms     0ms      1        2282/51        0% (0)  $0.000311
+  agent.act "Objective 1 of the goal, for run id {runid}, asks on…  1205ms     0ms   1016ms   184ms      0            0/0             -          -
+  agent.extract "For run id heml1-n3: Report the names of the rec…  3517ms  3402ms    112ms     0ms      1       2372/143        0% (0)  $0.000368
+  agent.act "Achieve objective 2 of the goal, for run id {runid}:…  2837ms     0ms   2230ms   498ms      0            0/0             -          -
+  agent.assert "For run id heml1-n3, this now holds in the app: A…  3160ms  2960ms    137ms     0ms      1       2202/131        0% (0)  $0.000341
+  agent.act "Achieve objective 3 of the goal, for run id {runid}:…  4235ms     0ms   3274ms   948ms      0            0/0             -          -
+  agent.assert "For run id heml1-n3, this now holds in the app: I…  4666ms  4475ms    127ms     0ms      1       2271/217        0% (0)  $0.000392
+  agent.act "Achieve objective 4 of the goal, for run id {runid}:…  106.0s  105.4s    24.5s   10.9s     22    277080/1756  75% (207382)  $0.011595
+  agent.assert "For run id heml1-n3, this now holds in the app: I…  4506ms  4338ms    107ms     0ms      1       2457/144        0% (0)  $0.000379
+  agent.act "Achieve objective 5 of the goal, for run id {runid}:…  2017ms     0ms   1399ms   504ms      0            0/0             -          -
+  agent.assert "For run id heml1-n3, this now holds in the app: I…  1562ms  1391ms    107ms     0ms      1        2382/48        0% (0)  $0.000322
+  agent.act "Achieve objective 6 of the goal, for run id {runid}:…   539ms     0ms    416ms   120ms      0            0/0             -          -
+  agent.assert "For run id heml1-n3, this now holds in the app: I…  3559ms  3378ms    128ms     0ms      1        2569/54        0% (0)  $0.000348
+  agent.act "Objective 7 of the goal, for run id {runid}, asks on…  8495ms  7937ms   1477ms   352ms      2      15394/298   68% (10534)  $0.000856
+  agent.extract "For run id heml1-n3: Report the recipe's slug ex…  5153ms  5038ms    113ms     0ms      1        2591/89        0% (0)  $0.000368
