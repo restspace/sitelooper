@@ -1,0 +1,271 @@
+{
+  "flow": "hsbs1",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Sign-in succeeded. The browser is at http://127.0.0.1:8103/ (the app home, not /login) and the page shows the authenticated header: a \"Profile Menu\" button labelled \"Bench\" with the \"Bench Admin\" avatar, plus a Recent Activity feed whose entries are all authored by \"Bench Admin\" — none of which appear on the login page. No error alerts are present in the DOM.",
+      "values": {
+        "final_url": "http://127.0.0.1:8103/",
+        "signed_in_user": "Bench Admin",
+        "profile_menu_label": "Bench",
+        "page_title": "BookStack",
+        "alerts_present": "none (3 empty alert containers)"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_ffda14 stopped at step 1 — every read of this read-only procedure was skipped (1) — the page is not the one it was recorded reading",
+      "replayed": "2/2",
+      "repaired": false,
+      "turns": 3,
+      "warnings": [
+        "s_ffda14: step 2: the target chain is dead and was not healed inline — the step is a synthesized read no run has ever resolved, so nothing about it has drifted",
+        "s_ffda14: step 2: skipped read — no element matched any known locator for target (tried 1: page.getByRole('link', { name: 'Bench Admin', exact: true }))"
+      ],
+      "unreported": [
+        "signed_in_account",
+        "login_email"
+      ]
+    },
+    {
+      "id": "02-find",
+      "status": "success",
+      "summary": "Replayed stored procedure s_abf5d2; observed sort_url=http://127.0.0.1:8103/books/bench-handbook/sort, book=Bench Handbook, a_href_books_bench_handb=Release Notes Archive, a_href_books_bench_handb_2=Release Notes.",
+      "unanswered": [
+        "seed_page_1",
+        "seed_page_2",
+        "seed_page_3"
+      ],
+      "values": {
+        "sort_url": "http://127.0.0.1:8103/books/bench-handbook/sort",
+        "book": "Bench Handbook",
+        "a_href_books_bench_handb": "Release Notes Archive",
+        "a_href_books_bench_handb_2": "Release Notes"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "10/10",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_43c7f2: step 1: primary locator did not resolve; used fallback #2 page.locator('#recent-activity > div > div > div:nth-of-type(8) > div:nth-of-type(2) > a:nth-of-type(2)')",
+        "s_abf5d2: report value seed_page_1 is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)",
+        "s_abf5d2: report value seed_page_2 is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)",
+        "s_abf5d2: report value seed_page_3 is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)"
+      ],
+      "unreported": [
+        "seed_page_1",
+        "seed_page_2",
+        "seed_page_3"
+      ]
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_5b7e4f; observed saved_page_url=http://127.0.0.1:8103/books/bench-handbook/page/hsbs1-n2-bench-page, paragraph_text=Run id: hsbs1-n2 — created by the sitelooper bench check., paragraph_count_in_main=1, saved_page_name=hsbs1-n2 Bench Page, ref=hsbs1-n2, book=Bench Handbook.",
+      "values": {
+        "saved_page_url": "http://127.0.0.1:8103/books/bench-handbook/page/hsbs1-n2-bench-page",
+        "paragraph_text": "Run id: hsbs1-n2 — created by the sitelooper bench check.",
+        "paragraph_count_in_main": "1",
+        "saved_page_name": "hsbs1-n2 Bench Page",
+        "ref": "hsbs1-n2",
+        "book": "Bench Handbook"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "11/11",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "04-edit",
+      "status": "success",
+      "summary": "Replayed stored procedure s_14b878; observed ref=hsbs1-n2, page_name=hsbs1-n2 Bench Page, revision_after_save=Revision #2, button=Bench.",
+      "values": {
+        "ref": "hsbs1-n2",
+        "page_name": "hsbs1-n2 Bench Page",
+        "revision_after_save": "Revision #2",
+        "button": "Bench"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "13/13",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_32c12a: step 5: read 'tag_name' returned a value the skill itself set/selected ('Review Status') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_32c12a: step 6: read 'tag_value' returned a value the skill itself set/selected ('Approved') — confirms the control, not persistence; dropped from the report's confident values"
+      ],
+      "unreported": [
+        "tag_name",
+        "tag_value"
+      ]
+    },
+    {
+      "id": "05-edit",
+      "status": "success",
+      "summary": "Replayed stored procedure s_1a7fbd; observed ref=hsbs1-n2, body_heading=Overview, body_paragraph=Run id: hsbs1-n2 — created by the sitelooper bench check., page_name=hsbs1-n2 Bench Page, body_heading_id=bkmrk-overview, paragraph_count=1, revision_after_save=Revision #3, body_heading_text=Overview.",
+      "values": {
+        "ref": "hsbs1-n2",
+        "body_heading": "Overview",
+        "body_paragraph": "Run id: hsbs1-n2 — created by the sitelooper bench check.",
+        "page_name": "hsbs1-n2 Bench Page",
+        "body_heading_id": "bkmrk-overview",
+        "paragraph_count": "1",
+        "revision_after_save": "Revision #3",
+        "body_heading_text": "Overview"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "17/17",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "06-archive",
+      "status": "success",
+      "summary": "Replayed stored procedure s_644668; observed book=Bench Handbook, move_search_value=Release Notes, breadcrumb_text=Books\nBench Handbook\nRelease Notes\nhsbs1-n2 Bench Page, ref=hsbs1-n2, breadcrumb_after_move=Books\nBench Handbook\nRelease Notes\nhsbs1-n2 Bench Page, page_name=hsbs1-n2 Bench Page.",
+      "values": {
+        "book": "Bench Handbook",
+        "move_search_value": "Release Notes",
+        "breadcrumb_text": "Books\nBench Handbook\nRelease Notes\nhsbs1-n2 Bench Page",
+        "ref": "hsbs1-n2",
+        "breadcrumb_after_move": "Books\nBench Handbook\nRelease Notes\nhsbs1-n2 Bench Page",
+        "page_name": "hsbs1-n2 Bench Page"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "12/12",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_ca7686: step 4: read 'chapter' returned a value the skill itself set/selected ('Release Notes') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_ca7686: step 5: read 'chapter_url' returned 'http://127.0.0.1:8103/books/bench-handbook/chapter/release-n…' from a control this step set, and nothing committed it since — it shows the control, however the app formats it, not what the app stored; dropped from the report's confident values",
+        "s_ca7686: step 7: read 'entity_selection_submitted' returned 'chapter:3' from a control this step set, and nothing committed it since — it shows the control, however the app formats it, not what the app stored; dropped from the report's confident values",
+        "s_644668: step 3: primary locator did not resolve; used fallback #2 page.locator('#bkmrk-page-title')"
+      ],
+      "unreported": [
+        "chapter",
+        "chapter_url",
+        "entity_selection_submitted"
+      ]
+    },
+    {
+      "id": "07-verify",
+      "status": "success",
+      "summary": "Replayed stored procedure s_ce807e; observed comment_draft_text=Comment for run hsbs1-n2: page comment added by the sitelooper bench check., ref=hsbs1-n2, page_name=hsbs1-n2 Bench Page, comment_link=#1, comment_thread_tab=1 Comment Thread.",
+      "values": {
+        "comment_draft_text": "Comment for run hsbs1-n2: page comment added by the sitelooper bench check.",
+        "ref": "hsbs1-n2",
+        "page_name": "hsbs1-n2 Bench Page",
+        "comment_link": "#1",
+        "comment_thread_tab": "1 Comment Thread"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "9/9",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_ce807e: step 4: read 'comment_full_text' returned a value the skill itself set/selected ('Comment for run hsbs1-n2: page comment added by the siteloop…') — confirms the control, not persistence; dropped from the report's confident values"
+      ]
+    },
+    {
+      "id": "08-verify",
+      "status": "success",
+      "summary": "Replayed stored procedure s_ae4841; observed final_url_slug=hsbs1-n2-bench-page, final_page_url=http://127.0.0.1:8103/books/bench-handbook/page/hsbs1-n2-bench-page, full_url=http://127.0.0.1:8103/books/bench-handbook/page/hsbs1-n2-bench-page, page_title=hsbs1-n2 Bench Page, comment_text=Comment for run hsbs1-n2: page comment added by the sitelooper bench check., revision=Revision #3, heading=Overview, paragraph=Run id: hsbs1-n2 — created by the sitelooper bench check., comment_threads_1=1 Comment Thread, comment_threads_2=0 Archived, comment_count=1, ref=hsbs1-n2.",
+      "values": {
+        "final_url_slug": "hsbs1-n2-bench-page",
+        "final_page_url": "http://127.0.0.1:8103/books/bench-handbook/page/hsbs1-n2-bench-page",
+        "full_url": "http://127.0.0.1:8103/books/bench-handbook/page/hsbs1-n2-bench-page",
+        "page_title": "hsbs1-n2 Bench Page",
+        "comment_text": "Comment for run hsbs1-n2: page comment added by the sitelooper bench check.",
+        "revision": "Revision #3",
+        "heading": "Overview",
+        "paragraph": "Run id: hsbs1-n2 — created by the sitelooper bench check.",
+        "comment_threads_1": "1 Comment Thread",
+        "comment_threads_2": "0 Archived",
+        "comment_count": "1",
+        "ref": "hsbs1-n2"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "10/10",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 8,
+  "total": 8,
+  "repinned": 0,
+  "drift": 3,
+  "driftTickets": [
+    {
+      "flow": "hsbs1",
+      "step": "01-signin",
+      "skill": "s_ffda14",
+      "atStep": "2",
+      "key": "target",
+      "similarity": 0.997,
+      "missedLocator": "page.getByRole('link', { name: 'Bench Admin', exact: true })",
+      "fallbackUsed": null,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:8103/",
+      "pageUrl": "http://127.0.0.1:8103/"
+    },
+    {
+      "flow": "hsbs1",
+      "step": "02-find",
+      "skill": "s_43c7f2",
+      "atStep": "1",
+      "key": "target",
+      "similarity": 0.998,
+      "missedLocator": "page.getByRole('link', { name: 'Bench Handbook', exact: true })",
+      "fallbackUsed": "page.locator('#recent-activity > div > div > div:nth-of-type(8) > div:nth-of-type(2) > a:nth-of-type(2)')",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8103/books/bench-handbook",
+      "pageUrl": "http://127.0.0.1:8103/books/bench-handbook"
+    },
+    {
+      "flow": "hsbs1",
+      "step": "06-archive",
+      "skill": "s_644668",
+      "atStep": "3",
+      "key": "target",
+      "similarity": 0.999,
+      "missedLocator": "page.getByText('hsbs1-n2 Bench Page', { exact: true })",
+      "fallbackUsed": "page.locator('#bkmrk-page-title')",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8103/books/bench-handbook/page/:id",
+      "pageUrl": "http://127.0.0.1:8103/books/bench-handbook/page/hsbs1-n2-bench-page"
+    }
+  ],
+  "wallMs": 95533,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 36148,
+    "completionTokens": 1041,
+    "cachedTokens": 30336
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 36148,
+      "completionTokens": 1041,
+      "cachedTokens": 30336
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "openai/gpt-6-luna",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

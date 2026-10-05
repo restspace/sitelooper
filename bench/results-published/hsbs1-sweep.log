@@ -1,0 +1,132 @@
+
+[sweep] run 1/3: hsbs1-n1 (store: /home/user/sitelooper/bench/results/hsbs1-skills)
+[harness] bookstack: defaulting APP_URL
+[harness] bookstack: defaulting APP_EMAIL
+[harness] bookstack: defaulting APP_PASSWORD
+[reset] bookstack: no pages to delete
+[harness] bookstack responded 302 at http://127.0.0.1:8103/
+stopped: hsbs1-n1
+  flow "hsbs1" saved: 8 step(s), vars runid → /home/user/sitelooper/bench/results/flows/hsbs1.json
+  warning: note: dropped 2 locator candidate(s) carrying a value this run minted (known only by export time)
+  warning: note: 01-signin no longer publishes verified_by — no replay reads it from the page and the recording showed no line to read
+  warning: note: 02-find no longer publishes matching_page_count — no replay reads it from the page and the recording showed no line to read
+  warning: note: 04-edit no longer publishes tag_count, tag_inputs_before_save, button_2, button_3 — no replay reads them from the page and the recording showed no line to read
+  warning: note: 05-edit no longer publishes body_heading_tag, runid_occurrences_in_body — no replay reads them from the page and the recording showed no line to read
+  warning: note: 06-archive no longer publishes move_result_href, entity_selection_value, breadcrumb_text — no replay reads them from the page and the recording showed no line to read
+  warning: note: 07-verify no longer publishes comment_count, comment_author, comment_element_id — no replay reads them from the page and the recording showed no line to read
+  warning: note: 08-verify no longer publishes tags, edited_anything — no replay reads them from the page and the recording showed no line to read
+  warning: note: 01-signin: added a read for signed_in_account to s_ffda14 (page.getByRole('link', { name: 'Bench Admin', exact: true }); seen on the instruction's own page)
+  warning: note: 02-find: added a read for a_href_books_bench_handb to s_abf5d2 (page.getByRole('heading', { name: 'Release Notes Archive', exact: true }); seen on the next instruction's start page)
+  warning: note: 02-find: added a read for a_href_books_bench_handb_2 to s_abf5d2 (page.getByRole('heading', { name: 'Release Notes', exact: true }); seen on the next instruction's start page)
+  warning: note: 03-create: added a read for book to s_5b7e4f (page.getByRole('heading', { name: 'Bench Handbook', exact: true }); seen on the next instruction's start page)
+  warning: note: 05-edit: added a read for body_heading_text to s_1a7fbd (page.getByRole('heading', { name: 'Overview', exact: true }), page.getByRole('link', { name: 'Overview', exact: true }); seen on the next instruction's start page)
+  warning: warning: 179 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.startUrl: "http://127.0.0.1:8103/" (output) in "http://127.0.0.1:8103/"
+  flow.steps[0].instruction: "http://127.0.0.1:8103/" (output) in "Sign in to BookStack at http://127.0.0.1:8103/ using email admin@bench.local and password exactly the literal text {{env:APP_PASSWORD}} (the browser fills it wh"
+  flow.steps[0].instruction: "admin@bench.local" (output) in "Sign in to BookStack at http://127.0.0.1:8103/ using email admin@bench.local and password exactly the literal text {{env:APP_PASSWORD}} (the browser fills it wh"
+  flow.steps[0].params.v1: "http://127.0.0.1:8103/" (output) in "http://127.0.0.1:8103/"
+  flow.steps[0].params.v2: "admin@bench.local" (output) in "admin@bench.local"
+arm=sitelooper model=openai/gpt-6-luna runid=hsbs1-n1 stop=completed
+turns=9 wall=326.8s
+commands=8 cmdTime=294.9s cmdBytes=10186 timeouts=0
+orchestrator in=6224 cw=0 cr=32544 out=1096
+inner prompt=1832136 cached=1687424 completion=23833
+spend=$0.0426 maxUsd=3
+learn: A_n=0 replayed=0/8 full=0 repaired=0 compiled=8 variants=0
+-> /home/user/sitelooper/bench/results/hsbs1-n1-sitelooper-result.json
+
+hsbs1-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: PASS — hsbs1-n1-bench-page, body includes runid=true
+  obj 3: PASS — tags="Review Status"="Approved", want only "Review Status"="Approved"
+  obj 4: PASS — headings="Overview", want "Overview"
+  obj 5: PASS — in book "Bench Handbook" (id 1), chapter "Release Notes" (id 3); want "Release Notes" (id 3) of "Bench Handbook" (id 1)
+  obj 6: PASS — 1 comment(s): "Comment for run hsbs1-n1: page comment added by the sitelooper bench check."
+  obj 7: PASS — slug hsbs1-n1-bench-page reported
+
+[sweep] run 2/3: hsbs1-n2 (replay flow hsbs1, no orchestrator)
+[reset] bookstack: deleted 1 page(s) (earlier runs', drafts and non-seed)
+[reset] bookstack: deleted comment #1
+[reset] bookstack: emptied the recycle bin (1 deletion(s))
+[sweep] hsbs1-n2: 3 drift ticket(s) → hsbs1-n2-drift.json
+
+hsbs1-n2: objectives passed 6/7
+  obj 1: FAIL — not in report: Seed: Getting started, Seed: Release checklist, Seed: House style
+  obj 2: PASS — hsbs1-n2-bench-page, body includes runid=true
+  obj 3: PASS — tags="Review Status"="Approved", want only "Review Status"="Approved"
+  obj 4: PASS — headings="Overview", want "Overview"
+  obj 5: PASS — in book "Bench Handbook" (id 1), chapter "Release Notes" (id 3); want "Release Notes" (id 3) of "Bench Handbook" (id 1)
+  obj 6: PASS — 1 comment(s): "Comment for run hsbs1-n2: page comment added by the sitelooper bench check."
+  obj 7: PASS — slug hsbs1-n2-bench-page reported
+
+[sweep] run 3/3: hsbs1-n3 (replay flow hsbs1, no orchestrator)
+[reset] bookstack: deleted 1 page(s) (earlier runs', drafts and non-seed)
+[reset] bookstack: deleted comment #2
+[reset] bookstack: emptied the recycle bin (1 deletion(s))
+[sweep] hsbs1-n3: 3 drift ticket(s) → hsbs1-n3-drift.json
+
+hsbs1-n3: objectives passed 6/7
+  obj 1: FAIL — not in report: Seed: Getting started, Seed: Release checklist, Seed: House style
+  obj 2: PASS — hsbs1-n3-bench-page, body includes runid=true
+  obj 3: PASS — tags="Review Status"="Approved", want only "Review Status"="Approved"
+  obj 4: PASS — headings="Overview", want "Overview"
+  obj 5: PASS — in book "Bench Handbook" (id 1), chapter "Release Notes" (id 3); want "Release Notes" (id 3) of "Bench Handbook" (id 1)
+  obj 6: PASS — 1 comment(s): "Comment for run hsbs1-n3: page comment added by the sitelooper bench check."
+  obj 7: PASS — slug hsbs1-n3-bench-page reported
+
+Learning sweep hsbs1 (K=3)
+┌─────────┬───┬────────────┬──────────┬─────────────┬───────┬──────┬───────────┬──────┬──────────────┬────────┐
+│ (index) │ n │ runid      │ verified │ stop        │ turns │ cmds │ total_usd │ A_n  │ replayed     │ wall_s │
+├─────────┼───┼────────────┼──────────┼─────────────┼───────┼──────┼───────────┼──────┼──────────────┼────────┤
+│ 0       │ 1 │ 'hsbs1-n1' │ '7/7'    │ 'completed' │ 9     │ 8    │ 0.0426    │ 0    │ '0/8'        │ 327    │
+│ 1       │ 2 │ 'hsbs1-n2' │ '6/7'    │ 'success'   │ 3     │ 8    │ 0.0016    │ 0.88 │ '8/8 (flow)' │ 96     │
+│ 2       │ 3 │ 'hsbs1-n3' │ '6/7'    │ 'success'   │ 2     │ 8    │ 0.0013    │ 0.88 │ '8/8 (flow)' │ 95     │
+└─────────┴───┴────────────┴──────────┴─────────────┴───────┴──────┴───────────┴──────┴──────────────┴────────┘
+http://127.0.0.1:8103
+  s_14b878  validated    5 steps  3/3 (100%)
+           Edit the saved page '{{v1}}' so its only tag is the existing tag name '{{v3}}' with existing value '{{v4}}'. M…
+  s_1a7fbd  validated   12 steps  3/3 (100%)
+           Edit the saved page '{{v1}}' and add a real heading labeled exactly 'Overview' to its body, preserving the exi…
+  s_32c12a  validated    7 steps  3/3 (100%)
+           Edit the saved page '{{v1}}' so its only tag is the existing tag name '{{v3}}' with existing value '{{v4}}'. M…
+  s_341ab8  validated    3 steps  3/3 (100%)
+           Sign in to BookStack at {{v1}} using email {{v2}} and password exactly the literal text {{v3}} (the browser fi…
+  s_43c7f2  validated    1 steps  3/3 (100%)
+           In the book named Bench Handbook, find and report the exact displayed names of all pages whose names start wit…
+  s_59700d  validated    3 steps  3/3 (100%)
+           Create and save a page named '{{v2}}' with a single body paragraph that includes the exact runid '{{v1}}'. Ens…
+  s_5b7e4f  validated    7 steps  3/3 (100%)
+           Create and save a page named '{{v2}}' with a single body paragraph that includes the exact runid '{{v1}}'. Ens…
+  s_644668  validated    3 steps  3/3 (100%)
+           Move the saved page '{{v1}}' into the chapter '{{v4}}' of the book '{{v5}}' (not the similarly named {{v3}} Ha…
+  s_6a7d45  validated    1 steps  3/3 (100%)
+           In the book named Bench Handbook, find and report the exact displayed names of all pages whose names start wit…
+  s_6a9b19  validated    1 steps  3/3 (100%)
+           Edit the saved page '{{v1}}' so its only tag is the existing tag name '{{v3}}' with existing value '{{v4}}'. M…
+  s_979f9c  validated    1 steps  3/3 (100%)
+           Move the saved page '{{v1}}' into the chapter '{{v4}}' of the book '{{v5}}' (not the similarly named {{v3}} Ha…
+  s_9c28e7  validated    4 steps  3/3 (100%)
+           Edit the saved page '{{v1}}' and add a real heading labeled exactly 'Overview' to its body, preserving the exi…
+  s_a3c355  validated    3 steps  3/3 (100%)
+           In the book named Bench Handbook, find and report the exact displayed names of all pages whose names start wit…
+  s_a66dc7  validated    1 steps  3/3 (100%)
+           Edit the saved page '{{v1}}' and add a real heading labeled exactly 'Overview' to its body, preserving the exi…
+  s_abf5d2  validated    3 steps  3/3 (100%)
+           In the book named Bench Handbook, find and report the exact displayed names of all pages whose names start wit…
+  s_ae4841  validated   10 steps  3/3 (100%)
+           On the saved page '{{v1}}', verify the page URL shown by the app and report its final URL slug (the last path …
+  s_bb2cfc  validated    2 steps  3/3 (100%)
+           In the book named Bench Handbook, find and report the exact displayed names of all pages whose names start wit…
+  s_ca7686  validated    8 steps  3/3 (100%)
+           Move the saved page '{{v1}}' into the chapter '{{v4}}' of the book '{{v5}}' (not the similarly named {{v3}} Ha…
+  s_cde51b  validated    1 steps  3/3 (100%)
+           Create and save a page named '{{v2}}' with a single body paragraph that includes the exact runid '{{v1}}'. Ens…
+  s_ce807e  validated    9 steps  3/3 (100%)
+           On the page '{{v1}}', post exactly one page comment whose text includes the exact runid '{{v2}}'. Verify the s…
+  s_e00e4b  validated    1 steps  3/3 (100%)
+           Sign in to BookStack at {{v1}} using email {{v2}} and password exactly the literal text {{v3}} (the browser fi…
+  s_ffda14  validated    2 steps  3/3 (100%)
+           Sign in to BookStack at {{v1}} using email {{v2}} and password exactly the literal text {{v3}} (the browser fi…
+store: /home/user/sitelooper/bench/results/hsbs1-skills
+
+summary: /home/user/sitelooper/bench/results/hsbs1-sweep.json
