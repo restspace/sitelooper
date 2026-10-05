@@ -1,0 +1,583 @@
+{
+  "name": "hsdx2",
+  "origin": "http://127.0.0.1:8101",
+  "startUrl": "http://127.0.0.1:8101/admin/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-signin",
+      "instruction": "Sign in to the Directus Data Studio at http://127.0.0.1:8101/admin/ using email admin@example.com and the password exactly as the text {{env:APP_PASSWORD}}. Verify the signed-in page is visible.",
+      "skill": "s_62cc7e",
+      "params": {
+        "v1": "http://127.0.0.1:8101/admin/",
+        "v2": "admin@example.com",
+        "v3": "{{env:APP_PASSWORD}}"
+      },
+      "outputs": [
+        "project_name",
+        "page_title",
+        "visible_heading",
+        "collection_item_count",
+        "modules_visible_1",
+        "modules_visible_2"
+      ],
+      "recorded": {
+        "signed_in_url": "http://127.0.0.1:8101/admin/content/customers",
+        "project_name": "Bench Desk",
+        "page_title": "Directus · Bench Desk",
+        "visible_heading": "Customers",
+        "collection_item_count": "3 Items",
+        "modules_visible_1": "Customers",
+        "modules_visible_2": "Tickets",
+        "url": "http://127.0.0.1:8101/admin/content/customers"
+      },
+      "route": "http://127.0.0.1:8101/admin/content/customers",
+      "outputEvidence": {
+        "signed_in_url": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "project_name": {
+          "same": 1,
+          "differed": 0
+        },
+        "page_title": {
+          "same": 1,
+          "differed": 0
+        },
+        "visible_heading": {
+          "same": 1,
+          "differed": 0
+        },
+        "collection_item_count": {
+          "same": 1,
+          "differed": 0
+        },
+        "modules_visible_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "modules_visible_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "02-report",
+      "instruction": "In Directus, read the Tickets collection and report exactly the titles of every item whose title starts with 'Seed:'. Do not edit any ticket.",
+      "skill": "s_469ebd",
+      "params": {
+        "v1": "Tickets"
+      },
+      "outputs": [
+        "item_count",
+        "title_1",
+        "title_2",
+        "title_3"
+      ],
+      "recorded": {
+        "item_count": "3 Items",
+        "matching_titles_count": "3",
+        "title_1": "Seed: VPN drops every hour",
+        "title_2": "Seed: Printer jams on tray 2",
+        "title_3": "Seed: Laptop battery swelling",
+        "url": "http://127.0.0.1:8101/admin/content/tickets"
+      },
+      "route": "http://127.0.0.1:8101/admin/content/tickets",
+      "outputEvidence": {
+        "item_count": {
+          "same": 1,
+          "differed": 0
+        },
+        "matching_titles_count": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "title_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "title_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "title_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "03-create",
+      "instruction": "Create and save a new ticket titled '{{runid}} Bench Ticket'. Its description must contain exactly one paragraph that includes the text '{{runid}}'. Verify the saved ticket title and paragraph in the ticket page, and report its address.",
+      "skill": "s_1b9283",
+      "params": {
+        "v2": "{{runid}} Bench Ticket",
+        "v1": "{{runid}}"
+      },
+      "outputs": [
+        "ticket_url",
+        "ticket_id",
+        "saved_title",
+        "saved_description",
+        "paragraph_count_in_description",
+        "status_field_value",
+        "ref"
+      ],
+      "recorded": {
+        "ticket_url": "http://127.0.0.1:8101/admin/content/tickets/2358be9f-b471-4b31-b7ff-107dd7e4e811",
+        "ticket_id": "2358be9f-b471-4b31-b7ff-107dd7e4e811",
+        "saved_title": "hsdx2-n1 Bench Ticket",
+        "saved_description": "This ticket was created by hsdx2-n1 to verify the ticket creation and save flow in the Directus Data Studio.",
+        "paragraph_count_in_description": "1",
+        "tickets_collection_item_count_after_save": "4 Items",
+        "status_field_value": "Open",
+        "ref": "hsdx2-n1",
+        "url": "http://127.0.0.1:8101/admin/content/tickets/2358be9f-b471-4b31-b7ff-107dd7e4e811",
+        "url.p3": "2358be9f-b471-4b31-b7ff-107dd7e4e811"
+      },
+      "route": "http://127.0.0.1:8101/admin/content/tickets/:id",
+      "outputEvidence": {
+        "ticket_url": {
+          "same": 0,
+          "differed": 1
+        },
+        "ticket_id": {
+          "same": 0,
+          "differed": 1
+        },
+        "saved_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "saved_description": {
+          "same": 0,
+          "differed": 1
+        },
+        "paragraph_count_in_description": {
+          "same": 1,
+          "differed": 0
+        },
+        "tickets_collection_item_count_after_save": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "status_field_value": {
+          "same": 1,
+          "differed": 0
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        },
+        "url.p3": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "04-set",
+      "instruction": "On the saved ticket '{{runid}} Bench Ticket', set Customer to the existing exact customer 'Bench Customer' (not similarly named records and do not create a customer), save the ticket, and verify the selected customer.",
+      "skill": "s_bfb533",
+      "params": {
+        "v1": "{{runid}} Bench Ticket",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "customer_name_1",
+        "customer_name_2",
+        "customer_name_3",
+        "option_chosen",
+        "saved_customer_field",
+        "ticket_customer_in_list",
+        "ticket_title",
+        "ticket_url",
+        "ref"
+      ],
+      "recorded": {
+        "customer_options_in_drawer": "Customers, Select Item, 3 Items, Name, Bench Customer, Bench Customer Ltd, Bench Customers Group",
+        "customer_name_1": "Bench Customer",
+        "customer_name_2": "Bench Customer Ltd",
+        "customer_name_3": "Bench Customers Group",
+        "option_chosen": "Bench Customer",
+        "saved_customer_field": "Bench Customer",
+        "ticket_customer_in_list": "Bench Customer",
+        "ticket_title": "hsdx2-n1 Bench Ticket",
+        "ticket_url": "http://127.0.0.1:8101/admin/content/tickets/2358be9f-b471-4b31-b7ff-107dd7e4e811",
+        "customer_record_created": "no",
+        "ref": "hsdx2-n1"
+      },
+      "route": "http://127.0.0.1:8101/admin/content/tickets/:id",
+      "outputEvidence": {
+        "customer_options_in_drawer": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "customer_name_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "customer_name_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "customer_name_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "option_chosen": {
+          "same": 1,
+          "differed": 0
+        },
+        "saved_customer_field": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "ticket_customer_in_list": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "ticket_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "ticket_url": {
+          "same": 0,
+          "differed": 1
+        },
+        "customer_record_created": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "05-set",
+      "instruction": "On the saved ticket '{{runid}} Bench Ticket', set Status to 'In progress' and set Tags to exactly one tag 'hardware' (not 'hardware-return' and no other tags). Save the ticket and verify the saved status and only tag.",
+      "skill": "s_135653",
+      "params": {
+        "v1": "{{runid}} Bench Ticket",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "saved_status",
+        "ticket_customer",
+        "revisions_after_save",
+        "ticket_url",
+        "saved_status_field",
+        "ref",
+        "list_row_display"
+      ],
+      "recorded": {
+        "saved_status": "In progress",
+        "saved_tags": "hardware",
+        "tag_chip_states_after_reload": "hardware=active(selected); hardware-return/software/network/billing=inactive(unselected)",
+        "tag_preset_options_seen": "hardware, hardware-return, software, network, billing",
+        "ticket_form_fields_read_from_page": "Title\\nStatus\\nCustomer\\nBench Customer\\nDue Date\\nEstimated Hours\\nTags\\nhardware\\nhardware-return\\nsoftware\\nnetwork\\nbilling\\nDescription\\nH1\\nH2\\nH3",
+        "ticket_customer": "Bench Customer",
+        "revisions_after_save": "3",
+        "ticket_url": "http://127.0.0.1:8101/admin/content/tickets/2358be9f-b471-4b31-b7ff-107dd7e4e811",
+        "page_url": "http://127.0.0.1:8101/admin/content/tickets/2358be9f-b471-4b31-b7ff-107dd7e4e811",
+        "saved_status_field": "In progress",
+        "ref": "hsdx2-n1",
+        "list_row_display": "Bench Customer"
+      },
+      "route": "http://127.0.0.1:8101/admin/content/tickets/:id",
+      "outputEvidence": {
+        "saved_status": {
+          "same": 1,
+          "differed": 0
+        },
+        "saved_tags": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "tag_chip_states_after_reload": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "tag_preset_options_seen": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "ticket_form_fields_read_from_page": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "ticket_customer": {
+          "same": 1,
+          "differed": 0
+        },
+        "revisions_after_save": {
+          "same": 1,
+          "differed": 0
+        },
+        "ticket_url": {
+          "same": 0,
+          "differed": 1
+        },
+        "page_url": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "saved_status_field": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "list_row_display": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "06-set",
+      "instruction": "On the saved ticket '{{runid}} Bench Ticket', set Due Date to 2026-12-31 and Estimated Hours to 6, save, then reload/reopen and verify both saved values.",
+      "skill": "s_acfbfa",
+      "params": {
+        "v1": "{{runid}} Bench Ticket",
+        "v2": "{{runid}}",
+        "v3": "{{03-create.url.p3}}"
+      },
+      "outputs": [
+        "due_date_after_reload",
+        "estimated_hours_after_reload",
+        "ticket_title",
+        "ticket_url",
+        "calendar_heading",
+        "due_date_field_text",
+        "ref"
+      ],
+      "recorded": {
+        "due_date_after_reload": "December 31st, 2026",
+        "estimated_hours_after_reload": "6",
+        "ticket_title": "hsdx2-n1 Bench Ticket",
+        "ticket_url": "http://127.0.0.1:8101/admin/content/tickets/2358be9f-b471-4b31-b7ff-107dd7e4e811",
+        "other_fields_unchanged": "Status=In progress, Customer=Bench Customer, Tags=hardware only",
+        "calendar_heading": "Event Date, December 2026",
+        "due_date_field_text": "Due Date\nDecember 31st, 2026",
+        "estimated_hours_field_text": "6",
+        "due_date_after_reload_2": "Due Date\nDecember 31st, 2026",
+        "ref": "hsdx2-n1"
+      },
+      "route": "http://127.0.0.1:8101/admin/content/tickets/:id",
+      "outputEvidence": {
+        "due_date_after_reload": {
+          "same": 1,
+          "differed": 0
+        },
+        "estimated_hours_after_reload": {
+          "same": 1,
+          "differed": 0
+        },
+        "ticket_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "ticket_url": {
+          "same": 0,
+          "differed": 1
+        },
+        "other_fields_unchanged": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "calendar_heading": {
+          "same": 1,
+          "differed": 0
+        },
+        "due_date_field_text": {
+          "same": 1,
+          "differed": 0
+        },
+        "estimated_hours_field_text": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "due_date_after_reload_2": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "07-add",
+      "instruction": "On ticket '{{runid}} Bench Ticket', use the item's sidebar to add a comment whose text includes '{{runid}}'. Verify the comment is saved and visible on the ticket.",
+      "skill": "s_ccb7d6",
+      "params": {
+        "v1": "{{runid}} Bench Ticket",
+        "v2": "{{runid}}",
+        "v3": "{{03-create.url.p3}}"
+      },
+      "outputs": [
+        "comment_posted",
+        "comments_count_after_post",
+        "comments_count_after_reload",
+        "comment_visible_after_reload",
+        "ticket_title",
+        "ticket_url",
+        "ref",
+        "comment_author_and_time_1",
+        "comment_author_and_time_2",
+        "comment_author_and_time_3"
+      ],
+      "recorded": {
+        "comment_posted": "Comment added by hsdx2-n1 to verify the comments sidebar saves and displays on the ticket.",
+        "comments_count_after_post": "1 Comments",
+        "comments_count_after_reload": "1 Comments",
+        "comment_visible_after_reload": "yes — sidebar Comments accordion shows the full comment text after a fresh page load",
+        "ticket_title": "hsdx2-n1 Bench Ticket",
+        "ticket_url": "http://127.0.0.1:8101/admin/content/tickets/2358be9f-b471-4b31-b7ff-107dd7e4e811",
+        "ref": "hsdx2-n1",
+        "comment_author_and_time_1": "Admin User",
+        "comment_author_and_time_2": "6:02 pm",
+        "comment_author_and_time_3": "Today"
+      },
+      "route": "http://127.0.0.1:8101/admin/content/tickets/:id",
+      "outputEvidence": {
+        "comment_posted": {
+          "same": 0,
+          "differed": 1
+        },
+        "comments_count_after_post": {
+          "same": 0,
+          "differed": 1
+        },
+        "comments_count_after_reload": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "comment_visible_after_reload": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "ticket_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "ticket_url": {
+          "same": 0,
+          "differed": 1
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "comment_author_and_time_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "comment_author_and_time_2": {
+          "same": 0,
+          "differed": 1
+        },
+        "comment_author_and_time_3": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "session": "hsdx2-n1",
+    "created": "2026-10-05T18:03:05.388Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "01-signin",
+      "outputs": [
+        "signed_in_url"
+      ]
+    },
+    {
+      "stepId": "02-report",
+      "outputs": [
+        "matching_titles_count"
+      ]
+    },
+    {
+      "stepId": "03-create",
+      "outputs": [
+        "tickets_collection_item_count_after_save"
+      ]
+    },
+    {
+      "stepId": "04-set",
+      "outputs": [
+        "customer_options_in_drawer",
+        "customer_record_created"
+      ]
+    },
+    {
+      "stepId": "05-set",
+      "outputs": [
+        "saved_tags",
+        "tag_chip_states_after_reload",
+        "tag_preset_options_seen",
+        "ticket_form_fields_read_from_page",
+        "page_url"
+      ]
+    },
+    {
+      "stepId": "06-set",
+      "outputs": [
+        "other_fields_unchanged",
+        "estimated_hours_field_text",
+        "due_date_after_reload_2"
+      ]
+    }
+  ]
+}

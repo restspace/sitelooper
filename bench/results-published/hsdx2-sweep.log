@@ -1,0 +1,122 @@
+
+[sweep] run 1/3: hsdx2-n1 (store: /home/user/sitelooper/bench/results/hsdx2-skills)
+[harness] directus: defaulting APP_URL
+[harness] directus: defaulting APP_EMAIL
+[harness] directus: defaulting APP_PASSWORD
+[reset] directus: deleted 1 comment(s)
+[reset] directus: deleted 1 ticket(s) (earlier runs' and non-seed)
+[harness] directus responded 302 at http://127.0.0.1:8101/
+stopped: hsdx2-n1
+  flow "hsdx2" saved: 7 step(s), vars runid → /home/user/sitelooper/bench/results/flows/hsdx2.json
+  warning: note: 01-signin no longer publishes signed_in_url — no replay reads it from the page and the recording showed no line to read
+  warning: note: 02-report no longer publishes matching_titles_count — no replay reads it from the page and the recording showed no line to read
+  warning: note: 03-create no longer publishes tickets_collection_item_count_after_save — no replay reads it from the page and the recording showed no line to read
+  warning: note: 04-set no longer publishes customer_options_in_drawer, customer_record_created — no replay reads them from the page and the recording showed no line to read
+  warning: note: 05-set no longer publishes saved_tags, tag_chip_states_after_reload, tag_preset_options_seen, ticket_form_fields_read_from_page, page_url — no replay reads them from the page and the recording showed no line to read
+  warning: note: 06-set no longer publishes other_fields_unchanged, estimated_hours_field_text, due_date_after_reload_2 — no replay reads them from the page and the recording showed no line to read
+  warning: note: 04-set: added a read for saved_customer_field to s_80e3a7 (page.getByRole('button', { name: 'Bench Customer', exact: true }); seen on the next instruction's start page)
+  warning: note: 04-set: added a read for ticket_customer_in_list to s_80e3a7 (page.getByRole('button', { name: 'Bench Customer', exact: true }); seen on the next instruction's start page)
+  warning: note: 05-set: added a read for saved_status_field to s_38bbb6 (page.getByRole('button', { name: 'In progress', exact: true }); seen on the instruction's own page)
+  warning: note: 07-add: added a read for comments_count_after_reload to s_ccb7d6 (page.getByRole('heading', { name: '1 Comments', exact: true }), page.getByRole('button', { name: '1 Comments', exact: true }); seen on the instruction's own page)
+  warning: warning: 120 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[0].route: "http://127.0.0.1:8101/admin/content/customers" (output) in "http://127.0.0.1:8101/admin/content/customers"
+  flow.steps[1].instruction: "Tickets" (output) in "In Directus, read the Tickets collection and report exactly the titles of every item whose title starts with 'Seed:'. Do not edit any ticket."
+  flow.steps[1].params.v1: "Tickets" (output) in "Tickets"
+  flow.steps[3].instruction: "Bench Customer" (output) in "On the saved ticket '{{runid}} Bench Ticket', set Customer to the existing exact customer 'Bench Customer' (not similarly named records and do not create a cust"
+  flow.steps[4].instruction: "In progress" (output) in "On the saved ticket '{{runid}} Bench Ticket', set Status to 'In progress' and set Tags to exactly one tag 'hardware' (not 'hardware-return' and no other tags). "
+arm=sitelooper model=openai/gpt-6-luna runid=hsdx2-n1 stop=completed
+turns=8 wall=403.7s
+commands=7 cmdTime=376.4s cmdBytes=8921 timeouts=0
+orchestrator in=5844 cw=0 cr=27099 out=978
+inner prompt=2678722 cached=2533376 completion=30088
+spend=$0.0488 maxUsd=3
+learn: A_n=0 replayed=0/7 full=0 repaired=0 compiled=7 variants=0
+-> /home/user/sitelooper/bench/results/hsdx2-n1-sitelooper-result.json
+
+hsdx2-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — 2358be9f-b471-4b31-b7ff-107dd7e4e811, description includes runid=true
+  obj 3: PASS — customer=Bench Customer (#1), want the seeded Bench Customer (#1)
+  obj 4: PASS — status=in_progress, tags=["hardware"]; want in_progress and ["hardware"]
+  obj 5: PASS — due_date=2026-12-31, estimated_hours=6; want 2026-12-31 and 6
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — ticket id 2358be9f-b471-4b31-b7ff-107dd7e4e811 reported
+
+[sweep] run 2/3: hsdx2-n2 (replay flow hsdx2, no orchestrator)
+[reset] directus: deleted 1 comment(s)
+[reset] directus: deleted 1 ticket(s) (earlier runs' and non-seed)
+[sweep] hsdx2-n2: 7 drift ticket(s) → hsdx2-n2-drift.json
+
+hsdx2-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — e05d5280-d253-4936-a2a5-da509a506317, description includes runid=true
+  obj 3: PASS — customer=Bench Customer (#1), want the seeded Bench Customer (#1)
+  obj 4: PASS — status=in_progress, tags=["hardware"]; want in_progress and ["hardware"]
+  obj 5: PASS — due_date=2026-12-31, estimated_hours=6; want 2026-12-31 and 6
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — ticket id e05d5280-d253-4936-a2a5-da509a506317 reported
+
+[sweep] run 3/3: hsdx2-n3 (replay flow hsdx2, no orchestrator)
+[reset] directus: deleted 1 comment(s)
+[reset] directus: deleted 1 ticket(s) (earlier runs' and non-seed)
+[sweep] hsdx2-n3: 7 drift ticket(s) → hsdx2-n3-drift.json
+
+hsdx2-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — 824e99ad-1968-4bf5-ba60-51983509f1bc, description includes runid=true
+  obj 3: PASS — customer=Bench Customer (#1), want the seeded Bench Customer (#1)
+  obj 4: PASS — status=in_progress, tags=["hardware"]; want in_progress and ["hardware"]
+  obj 5: PASS — due_date=2026-12-31, estimated_hours=6; want 2026-12-31 and 6
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — ticket id 824e99ad-1968-4bf5-ba60-51983509f1bc reported
+
+Learning sweep hsdx2 (K=3)
+┌─────────┬───┬────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid      │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'hsdx2-n1' │ '7/7'    │ 'completed' │ 8     │ 7    │ 0.0488    │ 0   │ '0/7'        │ 404    │
+│ 1       │ 2 │ 'hsdx2-n2' │ '7/7'    │ 'success'   │ 0     │ 7    │ 0         │ 1   │ '7/7 (flow)' │ 117    │
+│ 2       │ 3 │ 'hsdx2-n3' │ '7/7'    │ 'success'   │ 0     │ 7    │ 0         │ 1   │ '7/7 (flow)' │ 116    │
+└─────────┴───┴────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:8101
+  s_122655  validated    3 steps  3/3 (100%)
+           Sign in to the Directus Data Studio at {{v1}} using email {{v2}} and the password exactly as the text {{v3}}. …
+  s_135653  validated   15 steps  3/3 (100%)
+           On the saved ticket '{{v1}}', set Status to 'In progress' and set Tags to exactly one tag 'hardware' (not 'har…
+  s_1b9283  validated    1 steps  3/3 (100%)
+           Create and save a new ticket titled '{{v2}}'. Its description must contain exactly one paragraph that includes…
+  s_27e798  validated    5 steps  3/3 (100%)
+           Create and save a new ticket titled '{{v2}}'. Its description must contain exactly one paragraph that includes…
+  s_28462a  validated    1 steps  3/3 (100%)
+           On the saved ticket '{{v1}}', set Customer to the existing exact customer 'Bench Customer' (not similarly name…
+  s_38bbb6  validated    9 steps  3/3 (100%)
+           On the saved ticket '{{v1}}', set Status to 'In progress' and set Tags to exactly one tag 'hardware' (not 'har…
+  s_469ebd  validated    1 steps  3/3 (100%)
+           In Directus, read the {{v1}} collection and report exactly the titles of every item whose title starts with 'S…
+  s_51337b  validated    1 steps  3/3 (100%)
+           On the saved ticket '{{v1}}', set Due Date to 2026-12-31 and Estimated Hours to 6, save, then reload/reopen an…
+  s_531661  validated    4 steps  3/3 (100%)
+           In Directus, read the {{v1}} collection and report exactly the titles of every item whose title starts with 'S…
+  s_55d19d  validated    5 steps  3/3 (100%)
+           On the saved ticket '{{v1}}', set Due Date to 2026-12-31 and Estimated Hours to 6, save, then reload/reopen an…
+  s_60a907  validated    1 steps  3/3 (100%)
+           Create and save a new ticket titled '{{v2}}'. Its description must contain exactly one paragraph that includes…
+  s_62cc7e  validated    1 steps  3/3 (100%)
+           Sign in to the Directus Data Studio at {{v1}} using email {{v2}} and the password exactly as the text {{v3}}. …
+  s_80e3a7  validated    7 steps  3/3 (100%)
+           On the saved ticket '{{v1}}', set Customer to the existing exact customer 'Bench Customer' (not similarly name…
+  s_a30bcc  validated    5 steps  3/3 (100%)
+           Create and save a new ticket titled '{{v2}}'. Its description must contain exactly one paragraph that includes…
+  s_acfbfa  validated   11 steps  3/3 (100%)
+           On the saved ticket '{{v1}}', set Due Date to 2026-12-31 and Estimated Hours to 6, save, then reload/reopen an…
+  s_bfb533  validated    9 steps  3/3 (100%)
+           On the saved ticket '{{v1}}', set Customer to the existing exact customer 'Bench Customer' (not similarly name…
+  s_c41680  validated    1 steps  3/3 (100%)
+           On the saved ticket '{{v1}}', set Status to 'In progress' and set Tags to exactly one tag 'hardware' (not 'har…
+  s_ccb7d6  validated   13 steps  3/3 (100%)
+           On ticket '{{v1}}', use the item's sidebar to add a comment whose text includes '{{v2}}'. Verify the comment i…
+  s_f30c87  validated    6 steps  3/3 (100%)
+           Sign in to the Directus Data Studio at {{v1}} using email {{v2}} and the password exactly as the text {{v3}}. …
+store: /home/user/sitelooper/bench/results/hsdx2-skills
+
+summary: /home/user/sitelooper/bench/results/hsdx2-sweep.json
