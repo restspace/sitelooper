@@ -1,0 +1,225 @@
+{
+  "arm": "e2e",
+  "e2eVersion": "0.16.0",
+  "target": "mealie",
+  "runid": "heml3-n1",
+  "model": "openai/gpt-6-luna",
+  "strict": false,
+  "reset": true,
+  "exitCode": 0,
+  "wallMs": 260270,
+  "cache": {
+    "acts": 8,
+    "replayed": 0,
+    "handedOff": 0,
+    "missed": 8,
+    "failed": 0,
+    "stale": 0,
+    "actModelCalls": 55,
+    "reasons": [
+      "signin:missed:no-entry",
+      "obj1:missed:no-entry",
+      "obj2:missed:no-entry",
+      "obj3:missed:no-entry",
+      "obj4:missed:no-entry",
+      "obj5:missed:no-entry",
+      "obj6:missed:no-entry",
+      "obj7:missed:no-entry"
+    ]
+  },
+  "usage": {
+    "modelTokens": 557885,
+    "modelCachedTokens": 424665,
+    "usd": 0.023082925,
+    "usdAtRatesFloor": null
+  },
+  "steps": [
+    {
+      "kind": "act",
+      "id": "signin",
+      "ok": true,
+      "ms": 10843,
+      "summary": "Signed in successfully with admin@bench.local; the Mealie home page is open and shows Bench Admin as the logged-in user.",
+      "cache": {
+        "mode": "missed",
+        "reason": "no-entry",
+        "replayedActions": 0,
+        "totalActions": 0
+      },
+      "modelCalls": 3,
+      "actions": 3
+    },
+    {
+      "kind": "assert",
+      "id": "signin",
+      "ok": true,
+      "ms": 2226
+    },
+    {
+      "kind": "act",
+      "id": "obj1",
+      "ok": true,
+      "ms": 8174,
+      "summary": "The recipe list shows the names starting with `Seed:` as `Seed: Garden Salad`, `Seed: Tomato Soup`, and `Seed: Bench Pancakes`. No data was changed.",
+      "cache": {
+        "mode": "missed",
+        "reason": "no-entry",
+        "replayedActions": 0,
+        "totalActions": 0
+      },
+      "modelCalls": 2,
+      "actions": 1
+    },
+    {
+      "kind": "extract",
+      "id": "obj1",
+      "ok": true,
+      "ms": 2235,
+      "values": [
+        "Seed: Garden Salad",
+        "Seed: Tomato Soup",
+        "Seed: Bench Pancakes"
+      ]
+    },
+    {
+      "kind": "act",
+      "id": "obj2",
+      "ok": true,
+      "ms": 25466,
+      "summary": "Created and saved `heml3-n1 Bench Recipe` with description `Recipe heml3-n1`. The recipe page now shows the requested name and description.",
+      "cache": {
+        "mode": "missed",
+        "reason": "no-entry",
+        "replayedActions": 0,
+        "totalActions": 0
+      },
+      "modelCalls": 8,
+      "actions": 6
+    },
+    {
+      "kind": "assert",
+      "id": "obj2",
+      "ok": true,
+      "ms": 3259
+    },
+    {
+      "kind": "act",
+      "id": "obj3",
+      "ok": true,
+      "ms": 34254,
+      "summary": "Selected the existing category `Bench Dinner` and existing tag `Bench Quick`, then saved the recipe. Its page now shows Bench Dinner under Categories and Bench Quick under Tags, with one entry in each.",
+      "cache": {
+        "mode": "missed",
+        "reason": "no-entry",
+        "replayedActions": 0,
+        "totalActions": 0
+      },
+      "modelCalls": 8,
+      "actions": 6
+    },
+    {
+      "kind": "assert",
+      "id": "obj3",
+      "ok": false,
+      "code": "ASSERTION_INCONCLUSIVE",
+      "blocked": false,
+      "error": "The recipe page shows one category, “Bench Dinner,” and one tag, “Bench Quick,” but it does not show whether they are the existing entries or newly created ones.; the judge saw the semantic tree only; pass vision: true when the answer is in pixels",
+      "ms": 6076
+    },
+    {
+      "kind": "act",
+      "id": "obj4",
+      "ok": true,
+      "ms": 67479,
+      "summary": "Updated and saved the recipe. Its page shows exactly two ingredients in order—2 Bench Cup Bench Flour, then 3 Bench Spoon Bench Butter—with no notes, and exactly the two requested instruction steps.",
+      "cache": {
+        "mode": "missed",
+        "reason": "no-entry",
+        "replayedActions": 0,
+        "totalActions": 0
+      },
+      "modelCalls": 17,
+      "actions": 17
+    },
+    {
+      "kind": "assert",
+      "id": "obj4",
+      "ok": true,
+      "ms": 2475
+    },
+    {
+      "kind": "act",
+      "id": "obj5",
+      "ok": true,
+      "ms": 47553,
+      "summary": "Set the recipe’s Servings field to 4 and saved it. Reopening the editor confirms the saved Servings value is 4.",
+      "cache": {
+        "mode": "missed",
+        "reason": "no-entry",
+        "replayedActions": 0,
+        "totalActions": 0
+      },
+      "modelCalls": 10,
+      "actions": 8
+    },
+    {
+      "kind": "assert",
+      "id": "obj5",
+      "ok": true,
+      "ms": 1564
+    },
+    {
+      "kind": "act",
+      "id": "obj6",
+      "ok": true,
+      "ms": 14229,
+      "summary": "Posted the comment `heml3-n1` on `heml3-n1 Bench Recipe`. The recipe page now shows exactly one comment, containing the run id.",
+      "cache": {
+        "mode": "missed",
+        "reason": "no-entry",
+        "replayedActions": 0,
+        "totalActions": 0
+      },
+      "modelCalls": 5,
+      "actions": 4
+    },
+    {
+      "kind": "assert",
+      "id": "obj6",
+      "ok": true,
+      "ms": 3540
+    },
+    {
+      "kind": "act",
+      "id": "obj7",
+      "ok": true,
+      "ms": 8540,
+      "summary": "Opened the recipe page without edit mode. Its address path is `/g/home/r/heml3-n1-bench-recipe`, so the slug shown in the address is `heml3-n1-bench-recipe`. No data was changed.",
+      "cache": {
+        "mode": "missed",
+        "reason": "no-entry",
+        "replayedActions": 0,
+        "totalActions": 0
+      },
+      "modelCalls": 2,
+      "actions": 1
+    },
+    {
+      "kind": "extract",
+      "id": "obj7",
+      "ok": false,
+      "code": "ASSERTION_INCONCLUSIVE",
+      "blocked": false,
+      "error": "nothing to extract: The recipe page address and its slug are not shown in the observation.; the judge saw the semantic tree only; pass vision: true when the answer is in pixels",
+      "ms": 2583
+    }
+  ],
+  "finalText": "1. DONE Seed: Garden Salad | Seed: Tomato Soup | Seed: Bench Pancakes (The recipe list shows the names starting with `Seed:` as `Seed: Garden Salad`, `Seed: Tomato Soup`, and `Seed: Bench Pancakes`. No data was changed.)\n2. DONE\n3. DONE\n4. DONE\n5. DONE\n6. DONE\n7. FAILED  (Opened the recipe page without edit mode. Its address path is `/g/home/r/heml3-n1-bench-recipe`, so the slug shown in the address is `heml3-n1-bench-recipe`. No data was changed.)",
+  "machine": {
+    "platform": "linux",
+    "arch": "x64",
+    "node": "v22.22.0",
+    "cpus": 4,
+    "memGb": 16
+  }
+}
