@@ -1,0 +1,245 @@
+
+=== hebs1-n1 ===
+[reset] bookstack: deleted 1 page(s) (earlier runs', drafts and non-seed)
+[reset] bookstack: deleted comment #4
+[reset] bookstack: emptied the recycle bin (1 deletion(s))
+ ✓ |web| tests/flow.e2e.ts (1 test) 203.35s ai 408.1k tokens · 79% cached · $0.0161
+   ✓ bookstack flow 203.35s ai 408.1k tokens · 79% cached · $0.0161
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+         AI  408.1k tokens · 79% cached · $0.0161 · 56 model calls · openrouter/openai/gpt-6-luna
+      Cache  8 missed
+   Start at  17:56:18
+   Duration  204.55s (3m 25s)
+     Report  .e2e/report.json
+
+
+--- stderr ---
+[e2e debug] phase timings (wall 216.5s)
+  phase           count   total     avg     max
+  scheduler           1  204.5s  204.5s  204.5s
+  test.body           1  200.9s  200.9s  200.9s
+  agent.model        56  195.7s  3494ms   10.9s
+  agent.observe      66   36.2s   548ms  2513ms
+  engine.prepare      1   11.2s   11.2s   11.2s
+  agent.action       41  3552ms    87ms   482ms
+  config.load         1   743ms   743ms   743ms
+  session.close       1    80ms    80ms    80ms
+  engine.init         1    78ms    78ms    78ms
+  collect             1    18ms    18ms    18ms
+  session.launch      1    15ms    15ms    15ms
+[e2e debug] agent steps (execution order, model openrouter/openai/gpt-6-luna, total $0.01611)
+  step                                                               total   model  observe  action  calls  tokens in/out        cached       cost
+  agent.act "Sign in with username {username} and password {passw…  9512ms  8949ms   2931ms   557ms      3      14387/176    59% (8462)  $0.000904
+  agent.assert "The app shows a signed-in page, not a sign-in for…  2115ms  1951ms     73ms     0ms      1        2036/87        0% (0)  $0.000298
+  agent.act "Objective 1 of the goal, for run id {runid}, asks on…  4517ms  4080ms    642ms   169ms      2      12264/139    74% (9078)  $0.000552
+  agent.extract "For run id hebs1-n1: Report the names of the pag…  2215ms  2118ms     94ms     0ms      1        2565/76        0% (0)  $0.000359
+  agent.act "Achieve objective 2 of the goal, for run id {runid}:…   11.2s   10.8s   2309ms   544ms      4      28464/271   82% (23361)  $0.000994
+  agent.assert "For run id hebs1-n1, this now holds in the app: A…  4045ms  3850ms     88ms     0ms      1       2270/202        0% (0)  $0.000385
+  agent.act "Achieve objective 3 of the goal, for run id {runid}:…   27.6s   27.1s   4526ms   829ms      9      75201/668   89% (66938)  $0.002008
+  agent.assert "For run id hebs1-n1, this now holds in the app: I…  5751ms  5514ms    122ms     0ms      1       1879/310        0% (0)   $0.00039
+  agent.act "Achieve objective 4 of the goal, for run id {runid}:…   80.3s   79.7s    14.6s   853ms     17    154162/2303  84% (129582)  $0.005466
+  agent.assert "For run id hebs1-n1, this now holds in the app: I…  1338ms  1187ms     87ms     0ms      1        2363/49        0% (0)   $0.00032
+  agent.act "Achieve objective 5 of the goal, for run id {runid}:…   32.2s   31.7s   8795ms   478ms      8      64807/516   84% (54710)  $0.002042
+  agent.assert "For run id hebs1-n1, this now holds in the app: I…  2334ms  2182ms     93ms     0ms      1        2474/83        0% (0)  $0.000351
+  agent.act "Achieve objective 6 of the goal, for run id {runid}:…  9810ms  9340ms   1332ms   121ms      4      27651/240   86% (23738)  $0.000834
+  agent.assert "For run id hebs1-n1, this now holds in the app: I…  1452ms  1285ms    102ms     0ms      1        2600/56        0% (0)  $0.000353
+  agent.act "Objective 7 of the goal, for run id {runid}, asks on…  3858ms  3597ms    255ms     0ms      1       6836/150    57% (3878)   $0.00048
+  agent.extract "For run id hebs1-n1: Report the page's URL slug …  2520ms  2417ms    102ms     0ms      1        2705/74        0% (0)  $0.000375
+
+hebs1-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: PASS — hebs1-n1-bench-page, body includes runid=true
+  obj 3: PASS — tags="Review Status"="Approved", want only "Review Status"="Approved"
+  obj 4: PASS — headings="Overview", want "Overview"
+  obj 5: PASS — in book "Bench Handbook" (id 1), chapter "Release Notes" (id 3); want "Release Notes" (id 3) of "Bench Handbook" (id 1)
+  obj 6: PASS — 1 comment(s): "hebs1-n1"
+  obj 7: PASS — slug hebs1-n1-bench-page reported
+
+=== hebs1-n2 ===
+reset attempt 1 failed: bookstack: the API token is refused (fetch failed) — run bash bench/thirdparty/bookstack/seed.sh first
+[reset] bookstack: deleted 1 page(s) (earlier runs', drafts and non-seed)
+[reset] bookstack: deleted comment #5
+[reset] bookstack: emptied the recycle bin (1 deletion(s))
+ ✓ |web| tests/flow.e2e.ts (1 test) 73.25s ai 54.2k tokens · 49% cached · $0.0044
+   ✓ bookstack flow 73.25s ai 54.2k tokens · 49% cached · $0.0044
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+         AI  54.2k tokens · 49% cached · $0.0044 · 13 model calls · openrouter/openai/gpt-6-luna
+      Cache  6 replayed · 1 handed off · 1 missed
+   Start at  18:00:05
+   Duration  74.38s (1m 14s)
+     Report  .e2e/report.json
+
+
+--- stderr ---
+[e2e debug] phase timings (wall 75.1s)
+  phase           count   total     avg     max
+  scheduler           1   74.4s   74.4s   74.4s
+  test.body           1   71.8s   71.8s   71.8s
+  agent.model        13   42.3s  3250ms  6279ms
+  agent.observe      58   25.8s   445ms  2319ms
+  agent.action       38  3432ms    90ms   417ms
+  config.load         1   723ms   723ms   723ms
+  engine.init         1    78ms    78ms    78ms
+  session.close       1    51ms    51ms    51ms
+  session.launch      1    14ms    14ms    14ms
+  collect             1    13ms    13ms    13ms
+  engine.prepare      1     0ms     0ms     0ms
+[e2e debug] agent steps (execution order, model openrouter/openai/gpt-6-luna, total $0.004441+)
+  step                                                               total   model  observe  action  calls  tokens in/out       cached       cost
+  agent.act "Sign in with username {username} and password {passw…  2882ms     0ms   2379ms   490ms      0            0/0            -          -
+  agent.assert "The app shows a signed-in page, not a sign-in for…  2025ms  1816ms     96ms     0ms      1        2036/54       0% (0)  $0.000281
+  agent.act "Objective 1 of the goal, for run id {runid}, asks on…   452ms     0ms    275ms   170ms      0            0/0            -          -
+  agent.extract "For run id hebs1-n2: Report the names of the pag…  3277ms  3152ms    121ms     0ms      1        2565/96       0% (0)  $0.000369
+  agent.act "Achieve objective 2 of the goal, for run id {runid}:…  2037ms     0ms   1498ms   531ms      0            0/0            -          -
+  agent.assert "For run id hebs1-n2, this now holds in the app: A…  5470ms  5266ms    121ms     0ms      1       2291/326       0% (0)  $0.000449
+  agent.act "Achieve objective 3 of the goal, for run id {runid}:…  3947ms     0ms   3048ms   888ms      0            0/0            -          -
+  agent.assert "For run id hebs1-n2, this now holds in the app: I…  6491ms  6279ms    119ms     0ms      1       1879/491       0% (0)   $0.00048
+  agent.act "Achieve objective 4 of the goal, for run id {runid}:…   22.9s   13.5s   9610ms   747ms      4      26666/305  83% (22049)  $0.000938
+  agent.assert "For run id hebs1-n2, this now holds in the app: I…  1577ms  1396ms     91ms     0ms      1        2350/70       0% (0)  $0.000329
+  agent.act "Achieve objective 5 of the goal, for run id {runid}:…  8161ms     0ms   7297ms   459ms      0            0/0            -          -
+  agent.assert "For run id hebs1-n2, this now holds in the app: I…  1729ms  1518ms    116ms     0ms      1        2482/61       0% (0)  $0.000341
+  agent.act "Achieve objective 6 of the goal, for run id {runid}:…   907ms     0ms    652ms   146ms      0            0/0            -          -
+  agent.assert "For run id hebs1-n2, this now holds in the app: I…  1399ms  1232ms    107ms     0ms      1        2606/56       0% (0)  $0.000354
+  agent.act "Objective 7 of the goal, for run id {runid}, asks on…  5507ms  5290ms    209ms     0ms      1       6819/249   57% (3878)  $0.000528
+  agent.extract "For run id hebs1-n2: Report the page's URL slug …  2837ms  2757ms     79ms     0ms      1        2692/74       0% (0)  $0.000373
+
+hebs1-n2: objectives passed 6/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: FAIL — hebs1-n2-bench-page, body includes runid=false
+  obj 3: PASS — tags="Review Status"="Approved", want only "Review Status"="Approved"
+  obj 4: PASS — headings="Overview", want "Overview"
+  obj 5: PASS — in book "Bench Handbook" (id 1), chapter "Release Notes" (id 3); want "Release Notes" (id 3) of "Bench Handbook" (id 1)
+  obj 6: PASS — 1 comment(s): "hebs1-n2"
+  obj 7: PASS — slug hebs1-n2-bench-page reported
+
+=== hebs1-n3 ===
+reset attempt 1 failed: bookstack: the API token is refused (fetch failed) — run bash bench/thirdparty/bookstack/seed.sh first
+[reset] bookstack: deleted 1 page(s) (earlier runs', drafts and non-seed)
+[reset] bookstack: deleted comment #6
+[reset] bookstack: emptied the recycle bin (1 deletion(s))
+ ✓ |web| tests/flow.e2e.ts (1 test) 56.28s ai 26.9k tokens · 15% cached · $0.0033
+   ✓ bookstack flow 56.28s ai 26.9k tokens · 15% cached · $0.0033
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+         AI  26.9k tokens · 15% cached · $0.0033 · 9 model calls · openrouter/openai/gpt-6-luna
+      Cache  7 replayed · 1 missed
+   Start at  18:01:41
+   Duration  57.41s
+     Report  .e2e/report.json
+
+
+--- stderr ---
+[e2e debug] phase timings (wall 58.2s)
+  phase           count   total     avg     max
+  scheduler           1   57.4s   57.4s   57.4s
+  test.body           1   54.7s   54.7s   54.7s
+  agent.observe      57   25.7s   450ms  2226ms
+  agent.model         9   24.0s  2663ms  5673ms
+  agent.action       38  3697ms    97ms   423ms
+  config.load         1   743ms   743ms   743ms
+  engine.init         1    77ms    77ms    77ms
+  session.close       1    55ms    55ms    55ms
+  session.launch      1    17ms    17ms    17ms
+  collect             1    12ms    12ms    12ms
+  engine.prepare      1     0ms     0ms     0ms
+[e2e debug] agent steps (execution order, model openrouter/openai/gpt-6-luna, total $0.003341+)
+  step                                                               total   model  observe  action  calls  tokens in/out      cached       cost
+  agent.act "Sign in with username {username} and password {passw…  2910ms     0ms   2399ms   498ms      0            0/0           -          -
+  agent.assert "The app shows a signed-in page, not a sign-in for…  2379ms  2174ms     98ms     0ms      1        2036/84      0% (0)  $0.000296
+  agent.act "Objective 1 of the goal, for run id {runid}, asks on…   454ms     0ms    267ms   183ms      0            0/0           -          -
+  agent.extract "For run id hebs1-n3: Report the names of the pag…  3363ms  3219ms    140ms     0ms      1        2565/76      0% (0)  $0.000359
+  agent.act "Achieve objective 2 of the goal, for run id {runid}:…  1987ms     0ms   1438ms   538ms      0            0/0           -          -
+  agent.assert "For run id hebs1-n3, this now holds in the app: A…  2083ms  1869ms    118ms     0ms      1        2291/66      0% (0)  $0.000319
+  agent.act "Achieve objective 3 of the goal, for run id {runid}:…  4411ms     0ms   3417ms   982ms      0            0/0           -          -
+  agent.assert "For run id hebs1-n3, this now holds in the app: I…  5901ms  5673ms    132ms     0ms      1       1879/366      0% (0)  $0.000418
+  agent.act "Achieve objective 4 of the goal, for run id {runid}:…  9851ms     0ms   9030ms   804ms      0            0/0           -          -
+  agent.assert "For run id hebs1-n3, this now holds in the app: I…  1847ms  1653ms    108ms     0ms      1        2371/78      0% (0)  $0.000335
+  agent.act "Achieve objective 5 of the goal, for run id {runid}:…  8084ms     0ms   7136ms   543ms      0            0/0           -          -
+  agent.assert "For run id hebs1-n3, this now holds in the app: I…  1566ms  1332ms    142ms     0ms      1        2482/61      0% (0)  $0.000341
+  agent.act "Achieve objective 6 of the goal, for run id {runid}:…  1088ms     0ms    829ms   149ms      0            0/0           -          -
+  agent.assert "For run id hebs1-n3, this now holds in the app: I…  1555ms  1390ms    103ms     0ms      1        2606/59      0% (0)  $0.000355
+  agent.act "Objective 7 of the goal, for run id {runid}, asks on…  4516ms  4215ms    212ms     0ms      1       6837/269  57% (3878)   $0.00054
+  agent.extract "For run id hebs1-n3: Report the page's URL slug …  2528ms  2444ms     81ms     0ms      1        2692/83      0% (0)  $0.000378
+
+hebs1-n3: objectives passed 6/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: FAIL — hebs1-n3-bench-page, body includes runid=false
+  obj 3: PASS — tags="Review Status"="Approved", want only "Review Status"="Approved"
+  obj 4: PASS — headings="Overview", want "Overview"
+  obj 5: PASS — in book "Bench Handbook" (id 1), chapter "Release Notes" (id 3); want "Release Notes" (id 3) of "Bench Handbook" (id 1)
+  obj 6: PASS — 1 comment(s): "hebs1-n3"
+  obj 7: PASS — slug hebs1-n3-bench-page reported
+
+=== hebs1-strict (strict cache, read-only) ===
+[reset] bookstack: deleted 1 page(s) (earlier runs', drafts and non-seed)
+[reset] bookstack: deleted comment #7
+[reset] bookstack: emptied the recycle bin (1 deletion(s))
+ ✓ |web| tests/flow.e2e.ts (1 test) 65.91s ai 27.4k tokens · 15% cached · $0.0036
+   ✓ bookstack flow 65.91s ai 27.4k tokens · 15% cached · $0.0036
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+         AI  27.4k tokens · 15% cached · $0.0036 · 9 model calls · openrouter/openai/gpt-6-luna
+      Cache  7 replayed · 1 missed
+   Start at  18:02:50
+   Duration  67.07s (1m 7s)
+     Report  .e2e/report.json
+
+
+--- stderr ---
+[e2e debug] phase timings (wall 67.9s)
+  phase           count   total     avg     max
+  scheduler           1   67.0s   67.0s   67.0s
+  test.body           1   64.4s   64.4s   64.4s
+  agent.model         9   34.0s  3780ms   10.0s
+  agent.observe      57   25.5s   447ms  2350ms
+  agent.action       38  3557ms    94ms   435ms
+  config.load         1   728ms   728ms   728ms
+  engine.init         1    89ms    89ms    89ms
+  session.close       1    61ms    61ms    61ms
+  collect             1    22ms    22ms    22ms
+  session.launch      1    17ms    17ms    17ms
+  engine.prepare      1     1ms     1ms     1ms
+[e2e debug] agent steps (execution order, model openrouter/openai/gpt-6-luna, total $0.003599+)
+  step                                                               total   model  observe  action  calls  tokens in/out      cached       cost
+  agent.act "Sign in with username {username} and password {passw…  2871ms     0ms   2349ms   512ms      0            0/0           -          -
+  agent.assert "The app shows a signed-in page, not a sign-in for…  1936ms  1739ms     95ms     0ms      1        2036/92      0% (0)    $0.0003
+  agent.act "Objective 1 of the goal, for run id {runid}, asks on…   443ms     0ms    273ms   165ms      0            0/0           -          -
+  agent.extract "For run id hebs1-strict: Report the names of the…  2525ms  2394ms    127ms     0ms      1        2565/71      0% (0)  $0.000356
+  agent.act "Achieve objective 2 of the goal, for run id {runid}:…  2138ms     0ms   1551ms   583ms      0            0/0           -          -
+  agent.assert "For run id hebs1-strict, this now holds in the ap…   10.2s   10.0s    115ms     0ms      1       2291/409      0% (0)  $0.000491
+  agent.act "Achieve objective 3 of the goal, for run id {runid}:…  3981ms     0ms   3015ms   954ms      0            0/0           -          -
+  agent.assert "For run id hebs1-strict, this now holds in the ap…  5803ms  5570ms    138ms     0ms      1       1879/361      0% (0)  $0.000415
+  agent.act "Achieve objective 4 of the goal, for run id {runid}:…   10.0s     0ms   9209ms   778ms      0            0/0           -          -
+  agent.assert "For run id hebs1-strict, this now holds in the ap…  2424ms  2226ms    117ms     0ms      1        2371/66      0% (0)  $0.000329
+  agent.act "Achieve objective 5 of the goal, for run id {runid}:…  8062ms     0ms   7232ms   424ms      0            0/0           -          -
+  agent.assert "For run id hebs1-strict, this now holds in the ap…  1643ms  1421ms    116ms     0ms      1        2482/60      0% (0)   $0.00034
+  agent.act "Achieve objective 6 of the goal, for run id {runid}:…  1096ms     0ms    843ms   141ms      0            0/0           -          -
+  agent.assert "For run id hebs1-strict, this now holds in the ap…  3175ms  3010ms    114ms     0ms      1       2606/231      0% (0)  $0.000441
+  agent.act "Objective 7 of the goal, for run id {runid}, asks on…  5480ms  5309ms     79ms     0ms      1       6807/308  57% (3878)  $0.000556
+  agent.extract "For run id hebs1-strict: Report the page's URL s…  2423ms  2345ms     78ms     0ms      1        2692/67      0% (0)   $0.00037
+
+hebs1-strict: objectives passed 6/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: FAIL — hebs1-strict-bench-page, body includes runid=false
+  obj 3: PASS — tags="Review Status"="Approved", want only "Review Status"="Approved"
+  obj 4: PASS — headings="Overview", want "Overview"
+  obj 5: PASS — in book "Bench Handbook" (id 1), chapter "Release Notes" (id 3); want "Release Notes" (id 3) of "Bench Handbook" (id 1)
+  obj 6: PASS — 1 comment(s): "hebs1-strict"
+  obj 7: PASS — slug hebs1-strict-bench-page reported
+
+=== e2e sweep summary ===
+run | objectives | verifier clean | e2e exit | wall s | acts replayed/handed-off/missed/failed | act model calls | usd
+hebs1-n1 | 7/7 | true | 0 | 217 | 0/0/8/0 of 8 | 48 | 0.0161
+    signin:missed:no-entry  obj1:missed:no-entry  obj2:missed:no-entry  obj3:missed:no-entry  obj4:missed:no-entry  obj5:missed:no-entry  obj6:missed:no-entry  obj7:missed:no-entry
+hebs1-n2 | 6/7 | false | 0 | 76 | 6/1/1/0 of 8 | 5 | 0.0044
+    obj4:agent-concluded:gap(pixels)  obj7:missed:no-entry
+hebs1-n3 | 6/7 | false | 0 | 59 | 7/0/1/0 of 8 | 1 | 0.0033
+    obj7:missed:no-entry
+hebs1-strict | 6/7 | false | 0 | 68 | 7/0/1/0 of 8 | 1 | 0.0036
+    obj7:missed:no-entry
