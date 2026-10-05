@@ -1,0 +1,44 @@
+{
+  "arm": "spec",
+  "runid": "hsdx1-spec",
+  "target": "directus",
+  "flow": "hsdx1.json",
+  "flowName": "hsdx1",
+  "skillsDir": "/home/user/sitelooper/bench/results/hsdx1-skills",
+  "compiled": true,
+  "flowFile": "bench/results/hsdx1-spec-spec-tmp/hsdx1.flow.ts",
+  "specFile": "bench/results/hsdx1-spec-spec-tmp/hsdx1.spec.ts",
+  "wallMs": 83789,
+  "exitCode": 1,
+  "timedOut": false,
+  "costUsd": 0,
+  "stats": {
+    "total": 1,
+    "passed": 0,
+    "failed": 1,
+    "skipped": 0
+  },
+  "tests": [
+    {
+      "title": "hsdx1",
+      "status": "unexpected",
+      "ok": false,
+      "durationMs": 80036,
+      "error": "Error: after step 05-set s_2731b5/4 the page still shows \"- button \\\"Oct 5 {{*}} PM Edited by Admin User\\\"\", which the click was recorded removing — it did not have its recorded effect",
+      "drift": [
+        "[sitelooper drift] 02-open s_297355/1 target: primary locator('[data-testid=\"start\"] div') missed; used #2 locator('div:nth-of-type(2) > div:nth-of-type(1) > aside > div:nth-of-type(1) > div > div') (#1 ambiguous)",
+        "[sitelooper drift] 05-set s_2731b5/1 target: primary locator('[data-testid=\"end\"] button') missed; used #2 locator('#reka-accordion-trigger-v-62') (#1 ambiguous)"
+      ]
+    }
+  ],
+  "drift": [
+    "[sitelooper drift] 02-open s_297355/1 target: primary locator('[data-testid=\"start\"] div') missed; used #2 locator('div:nth-of-type(2) > div:nth-of-type(1) > aside > div:nth-of-type(1) > div > div') (#1 ambiguous)",
+    "[sitelooper drift] 05-set s_2731b5/1 target: primary locator('[data-testid=\"end\"] button') missed; used #2 locator('#reka-accordion-trigger-v-62') (#1 ambiguous)"
+  ],
+  "driftCount": 2,
+  "evidence": [
+    "hsdx1-spec-spec-failure.png",
+    "hsdx1-spec-spec-error-context.md"
+  ],
+  "logTail": "ardware_return_tag_option' returned a value the skill itself set/selected ('hardware-return') — confirms the control, not persistence; dropped from the report's confident values\n[sitelooper warn] 05-set s_92759b/7: read 'software_tag_option' returned a value the skill itself set/selected ('software') — confirms the control, not persistence; dropped from the report's confident values\n[sitelooper warn] 05-set s_92759b/8: read 'network_tag_option' returned a value the skill itself set/selected ('network') — confirms the control, not persistence; dropped from the report's confident values\n[sitelooper warn] 05-set s_92759b/9: read 'billing_tag_option' returned a value the skill itself set/selected ('billing') — confirms the control, not persistence; dropped from the report's confident values\n[sitelooper drift] 05-set s_2731b5/1 target: primary locator('[data-testid=\"end\"] button') missed; used #2 locator('#reka-accordion-trigger-v-62') (#1 ambiguous)\n  ✘  1 hsdx1.spec.ts:9:1 › hsdx1 (1.3m)\n\n\n  1) hsdx1.spec.ts:9:1 › hsdx1 › 05-set: For '{{runid}} Bench Ticket', set status to exactly 'In progress' and set its only tag to exactly 'hardware' (not hardware-return or any other tag), save, and verify both persisted values. \n\n    Error: after step 05-set s_2731b5/4 the page still shows \"- button \\\"Oct 5 {{*}} PM Edited by Admin User\\\"\", which the click was recorded removing — it did not have its recorded effect\n\n       at hsdx1.flow.ts:20218\n\n      20216 |         errorPageGate(page, '05-set s_2731b5/4');\n      20217 |         await urlEffect(page, 'http://127.0.0.1:8101/admin/content/tickets/:id', p, '05-set s_2731b5/4', volatile3, obs24?.link());\n    > 20218 |         { const hidden = hideVerdict(['- button \"Oct 5 {{*}} PM Edited by Admin User\"', '- button \"Oct 5 {{*}} PM Edited by Admin User\"'], p, await captureLines(page, 2), '05-set s_2731b5/4'); for (const w of hidden.warnings) console.log(`[sitelooper warn] ${w}`); if (hidden.stop) throw new Error(hidden.stop); }\n            |                                                                                                                                                                                                                                                                                                 ^\n      20219 |         alertGate(alertsBefore24, alertsAfter24, { where: '05-set s_2731b5/4', isRead: false, params: p });\n      20220 |       },\n      20221 |     });\n        at Object.verify (/home/user/sitelooper/bench/results/hsdx1-spec-spec-tmp/hsdx1.flow.ts:20218:289)\n        at runStepLifecycle (/home/user/sitelooper/bench/results/hsdx1-spec-spec-tmp/hsdx1.flow.ts:12555:24)\n        at Object.05-set (/home/user/sitelooper/bench/results/hsdx1-spec-spec-tmp/hsdx1.flow.ts:20180:5)\n        at /home/user/sitelooper/bench/results/hsdx1-spec-spec-tmp/hsdx1.flow.ts:21504:7\n        at runFlow (/home/user/sitelooper/bench/results/hsdx1-spec-spec-tmp/hsdx1.flow.ts:21503:5)\n        at /home/user/sitelooper/bench/results/hsdx1-spec-spec-tmp/hsdx1.spec.ts:14:21\n\n    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────\n    [sitelooper drift] 02-open s_297355/1 target: primary locator('[data-testid=\"start\"] div') missed; used #2 locator('div:nth-of-type(2) > div:nth-of-type(1) > aside > div:nth-of-type(1) > div > div') (#1 ambiguous)\n    [sitelooper drift] 05-set s_2731b5/1 target: primary locator('[data-testid=\"end\"] butt...\n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────\n    test-results/hsdx1-hsdx1/test-failed-1.png\n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    Error Context: test-results/hsdx1-hsdx1/error-context.md\n\n  1 failed\n    hsdx1.spec.ts:9:1 › hsdx1 ──────────────────────────────────────────────────────────────────────\n"
+}

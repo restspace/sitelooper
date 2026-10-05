@@ -1,0 +1,53 @@
+
+Running 1 test using 1 worker
+
+[sitelooper step] 01-signin
+[sitelooper drift] 02-open s_297355/1 target: primary locator('[data-testid="start"] div') missed; used #2 locator('div:nth-of-type(2) > div:nth-of-type(1) > aside > div:nth-of-type(1) > div > div') (#1 ambiguous)
+[sitelooper step] 02-open
+[sitelooper warn] step 03-create s_90c624/1: resolved positionally and its only recorded effect is the fill's own echo — the effect gate cannot tell right element from wrong here
+[sitelooper recipe] filled via recipe contenteditable/set-value (r_7b1e49); value verified on the component
+[sitelooper warn] 03-create s_90c624/3: read 'description_paragraph' returned a value the skill itself set/selected ('This is the description paragraph for ticket hsdx1-spec cove…') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper step] 03-create
+[sitelooper skip] 04-set s_6ce2c0/6 target: no locator recorded — value left empty
+[sitelooper step] 04-set
+[sitelooper warn] 05-set s_92759b/6: read 'hardware_return_tag_option' returned a value the skill itself set/selected ('hardware-return') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper warn] 05-set s_92759b/7: read 'software_tag_option' returned a value the skill itself set/selected ('software') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper warn] 05-set s_92759b/8: read 'network_tag_option' returned a value the skill itself set/selected ('network') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper warn] 05-set s_92759b/9: read 'billing_tag_option' returned a value the skill itself set/selected ('billing') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper drift] 05-set s_2731b5/1 target: primary locator('[data-testid="end"] button') missed; used #2 locator('#reka-accordion-trigger-v-62') (#1 ambiguous)
+  ✘  1 hsdx1.spec.ts:9:1 › hsdx1 (1.3m)
+
+
+  1) hsdx1.spec.ts:9:1 › hsdx1 › 05-set: For '{{runid}} Bench Ticket', set status to exactly 'In progress' and set its only tag to exactly 'hardware' (not hardware-return or any other tag), save, and verify both persisted values. 
+
+    Error: after step 05-set s_2731b5/4 the page still shows "- button \"Oct 5 {{*}} PM Edited by Admin User\"", which the click was recorded removing — it did not have its recorded effect
+
+       at hsdx1.flow.ts:20218
+
+      20216 |         errorPageGate(page, '05-set s_2731b5/4');
+      20217 |         await urlEffect(page, 'http://127.0.0.1:8101/admin/content/tickets/:id', p, '05-set s_2731b5/4', volatile3, obs24?.link());
+    > 20218 |         { const hidden = hideVerdict(['- button "Oct 5 {{*}} PM Edited by Admin User"', '- button "Oct 5 {{*}} PM Edited by Admin User"'], p, await captureLines(page, 2), '05-set s_2731b5/4'); for (const w of hidden.warnings) console.log(`[sitelooper warn] ${w}`); if (hidden.stop) throw new Error(hidden.stop); }
+            |                                                                                                                                                                                                                                                                                                 ^
+      20219 |         alertGate(alertsBefore24, alertsAfter24, { where: '05-set s_2731b5/4', isRead: false, params: p });
+      20220 |       },
+      20221 |     });
+        at Object.verify (/home/user/sitelooper/bench/results/hsdx1-spec-spec-tmp/hsdx1.flow.ts:20218:289)
+        at runStepLifecycle (/home/user/sitelooper/bench/results/hsdx1-spec-spec-tmp/hsdx1.flow.ts:12555:24)
+        at Object.05-set (/home/user/sitelooper/bench/results/hsdx1-spec-spec-tmp/hsdx1.flow.ts:20180:5)
+        at /home/user/sitelooper/bench/results/hsdx1-spec-spec-tmp/hsdx1.flow.ts:21504:7
+        at runFlow (/home/user/sitelooper/bench/results/hsdx1-spec-spec-tmp/hsdx1.flow.ts:21503:5)
+        at /home/user/sitelooper/bench/results/hsdx1-spec-spec-tmp/hsdx1.spec.ts:14:21
+
+    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    [sitelooper drift] 02-open s_297355/1 target: primary locator('[data-testid="start"] div') missed; used #2 locator('div:nth-of-type(2) > div:nth-of-type(1) > aside > div:nth-of-type(1) > div > div') (#1 ambiguous)
+    [sitelooper drift] 05-set s_2731b5/1 target: primary locator('[data-testid="end"] butt...
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/hsdx1-hsdx1/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/hsdx1-hsdx1/error-context.md
+
+  1 failed
+    hsdx1.spec.ts:9:1 › hsdx1 ──────────────────────────────────────────────────────────────────────

@@ -1,0 +1,93 @@
+{
+ "id": "s_74b713",
+ "origin": "http://127.0.0.1:8101",
+ "template": "Open the sidebar on '{{v1}}', add a comment whose text includes '{{v2}}', submit it, and verify the comment appears on that ticket.",
+ "params": {
+  "v1": {
+   "example": "hsdx1-n2 Bench Ticket",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i3:ticket_title"
+  },
+  "v2": {
+   "example": "hsdx1-n2",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v3": {
+   "example": "86d9da04-c2c3-4ff5-873f-65d6ebe55d84",
+   "usedIn": [],
+   "known": true,
+   "binding": "05-set.url.p3"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8101/admin/content/tickets"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e832"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr:nth-of-type(2) > td:nth-of-type(5) > div"
+     },
+     {
+      "kind": "point",
+      "x": 837,
+      "y": 166,
+      "w": 122,
+      "h": 20,
+      "role": null,
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8101/admin/content/tickets/{{v3}}",
+    "addedContains": [
+     "- heading \"{{v1}}\"",
+     "- textbox \"Select an item...\": {{*}}",
+     "- button \"Bench Customer\"",
+     "- button \"December 31st, 2026\"",
+     "- button \"Estimated Hours\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_0471e7",
+    "step": 1
+   }
+  }
+ ],
+ "contract": 2,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-10-05T18:01:58.391Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_4f0bdb",
+  "index": 0,
+  "of": 2
+ },
+ "provenance": {
+  "session": "hsdx1-n2",
+  "instruction": "Open the sidebar on 'hsdx1-n2 Bench Ticket', add a comment whose text includes 'hsdx1-n2', submit it, and verify the comment appears on that ticket.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-10-05T18:01:58.391Z"
+ },
+ "revision": 1
+}

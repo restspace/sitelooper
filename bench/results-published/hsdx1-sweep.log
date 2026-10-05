@@ -1,0 +1,164 @@
+
+[sweep] run 1/3: hsdx1-n1 (store: /home/user/sitelooper/bench/results/hsdx1-skills)
+[harness] directus: defaulting APP_URL
+[harness] directus: defaulting APP_EMAIL
+[harness] directus: defaulting APP_PASSWORD
+[reset] directus: no tickets to delete
+[harness] directus responded 302 at http://127.0.0.1:8101/
+stopped: hsdx1-n1
+  flow "hsdx1" saved: 7 step(s), vars runid → /home/user/sitelooper/bench/results/flows/hsdx1.json
+  warning: note: 01-signin no longer publishes signed_in_role, data_studio_url — no replay reads them from the page and the recording showed no line to read
+  warning: note: 02-open no longer publishes seeded_ticket_count — no replay reads it from the page and the recording showed no line to read
+  warning: note: 03-create no longer publishes ticket_count_after_save — no replay reads it from the page and the recording showed no line to read
+  warning: note: 04-set no longer publishes ticket_id, relation_drawer_options, sibling_rows_customer — no replay reads them from the page and the recording showed no line to read
+  warning: note: 04-set: added a read for list_row_customer_column to s_6ce2c0 (page.getByRole('button', { name: 'Bench Customer', exact: true }); seen on the next instruction's start page)
+  warning: warning: 193 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[0].instruction: "admin@example.com" (output) in "Sign in to Directus at http://127.0.0.1:8101/admin/ using email admin@example.com and password exactly {{env:APP_PASSWORD}}. Confirm the Data Studio is authenti"
+  flow.steps[0].params.v2: "admin@example.com" (output) in "admin@example.com"
+  flow.steps[1].instruction: "Tickets" (output) in "In Directus, open the Tickets collection and report exactly the titles of all items whose title starts with 'Seed:'; do not edit any records."
+  flow.steps[1].route: "http://127.0.0.1:8101/admin/content" (output) in "http://127.0.0.1:8101/admin/content/tickets"
+  flow.steps[2].instruction: "Tickets" (output) in "Create and save a new Tickets item titled '{{runid}} Bench Ticket' with a description containing exactly one paragraph that includes '{{runid}}'. Verify the sav"
+arm=sitelooper model=openai/gpt-6-luna runid=hsdx1-n1 stop=completed
+turns=8 wall=643.6s
+commands=7 cmdTime=611.8s cmdBytes=7587 timeouts=0
+orchestrator in=5377 cw=0 cr=26175 out=1149
+inner prompt=4200616 cached=3950080 completion=48422
+spend=$0.0799 maxUsd=3
+learn: A_n=0 replayed=0/7 full=0 repaired=0 compiled=7 variants=0
+-> /home/user/sitelooper/bench/results/hsdx1-n1-sitelooper-result.json
+
+hsdx1-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — a3aa5480-0ff9-4ac9-b35d-82bc2173c7b8, description includes runid=true
+  obj 3: PASS — customer=Bench Customer (#1), want the seeded Bench Customer (#1)
+  obj 4: PASS — status=in_progress, tags=["hardware"]; want in_progress and ["hardware"]
+  obj 5: PASS — due_date=2026-12-31, estimated_hours=6; want 2026-12-31 and 6
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — ticket id a3aa5480-0ff9-4ac9-b35d-82bc2173c7b8 reported
+
+[sweep] run 2/3: hsdx1-n2 (replay flow hsdx1, no orchestrator)
+[reset] directus: deleted 1 comment(s)
+[reset] directus: deleted 1 ticket(s) (earlier runs' and non-seed)
+[sweep] hsdx1-n2: 5 drift ticket(s) → hsdx1-n2-drift.json
+
+hsdx1-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — 86d9da04-c2c3-4ff5-873f-65d6ebe55d84, description includes runid=true
+  obj 3: PASS — customer=Bench Customer (#1), want the seeded Bench Customer (#1)
+  obj 4: PASS — status=in_progress, tags=["hardware"]; want in_progress and ["hardware"]
+  obj 5: PASS — due_date=2026-12-31, estimated_hours=6; want 2026-12-31 and 6
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — ticket id 86d9da04-c2c3-4ff5-873f-65d6ebe55d84 reported
+
+[sweep] run 3/3: hsdx1-n3 (replay flow hsdx1, no orchestrator)
+[reset] directus: deleted 1 comment(s)
+[reset] directus: deleted 1 ticket(s) (earlier runs' and non-seed)
+[sweep] hsdx1-n3: 4 drift ticket(s) → hsdx1-n3-drift.json
+
+hsdx1-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — 4419b3d0-4f93-4fe5-9638-bcb9188382ea, description includes runid=true
+  obj 3: PASS — customer=Bench Customer (#1), want the seeded Bench Customer (#1)
+  obj 4: PASS — status=in_progress, tags=["hardware"]; want in_progress and ["hardware"]
+  obj 5: PASS — due_date=2026-12-31, estimated_hours=6; want 2026-12-31 and 6
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — ticket id 4419b3d0-4f93-4fe5-9638-bcb9188382ea reported
+
+Learning sweep hsdx1 (K=3)
+┌─────────┬───┬────────────┬──────────┬─────────────┬───────┬──────┬───────────┬──────┬──────────────┬────────┐
+│ (index) │ n │ runid      │ verified │ stop        │ turns │ cmds │ total_usd │ A_n  │ replayed     │ wall_s │
+├─────────┼───┼────────────┼──────────┼─────────────┼───────┼──────┼───────────┼──────┼──────────────┼────────┤
+│ 0       │ 1 │ 'hsdx1-n1' │ '7/7'    │ 'completed' │ 8     │ 7    │ 0.0799    │ 0    │ '0/7'        │ 644    │
+│ 1       │ 2 │ 'hsdx1-n2' │ '7/7'    │ 'success'   │ 49    │ 7    │ 0.0247    │ 0.57 │ '7/7 (flow)' │ 312    │
+│ 2       │ 3 │ 'hsdx1-n3' │ '7/7'    │ 'success'   │ 7     │ 7    │ 0.0051    │ 0.86 │ '7/7 (flow)' │ 175    │
+└─────────┴───┴────────────┴──────────┴─────────────┴───────┴──────┴───────────┴──────┴──────────────┴────────┘
+http://127.0.0.1:8101
+  s_0471e7  validated    1 steps  3/3 (100%)
+           Open the sidebar on '{{v1}}', add a comment whose text includes '{{v2}}', submit it, and verify the comment ap…
+  s_1949aa  validated    2 steps  3/3 (100%)
+           Sign in to Directus at {{v1}} using email {{v2}} and password exactly {{v3}}. Confirm the Data Studio is authe…
+  s_1a1e71  validated    7 steps  2/3 (67%)
+           Open the sidebar on '{{v1}}', add a comment whose text includes '{{v2}}', submit it, and verify the comment ap…
+  s_1bcc37  validated    1 steps  3/3 (100%)
+           Sign in to Directus at {{v1}} using email {{v2}} and password exactly {{v3}}. Confirm the Data Studio is authe…
+  s_1daed3  validated    1 steps  3/3 (100%)
+           In Directus, open the Tickets collection and report exactly the titles of all items whose title starts with 'S…
+  s_1e0f4e  validated   13 steps  2/3 (67%)
+           For '{{v1}}', set Due Date to 2026-12-31 and Estimated Hours to 6, save, and verify both values persisted on t…
+  s_23a6b2  validated    1 steps  3/3 (100%)
+           In Directus, open the Tickets collection and report exactly the titles of all items whose title starts with 'S…
+  s_2731b5  provisional  5 steps  1/3 (33%)
+           For '{{v1}}', set status to exactly 'In progress' and set its only tag to exactly 'hardware' (not hardware-ret…
+  s_297355  validated    2 steps  3/3 (100%)
+           In Directus, open the Tickets collection and report exactly the titles of all items whose title starts with 'S…
+  s_3f3941  validated    1 steps  3/3 (100%)
+           Sign in to Directus at {{v1}} using email {{v2}} and password exactly {{v3}}. Confirm the Data Studio is authe…
+  s_3f52cd  validated    5 steps  3/3 (100%)
+           In Directus, open the Tickets collection and report exactly the titles of all items whose title starts with 'S…
+  s_49532c  validated    1 steps  3/3 (100%)
+           Create and save a new {{v1}} item titled '{{v3}}' with a description containing exactly one paragraph that inc…
+  s_537882  validated    1 steps  3/3 (100%)
+           For '{{v1}}', set status to exactly 'In progress' and set its only tag to exactly 'hardware' (not hardware-ret…
+  s_57e552  validated    3 steps  3/3 (100%)
+           Sign in to Directus at {{v1}} using email {{v2}} and password exactly {{v3}}. Confirm the Data Studio is authe…
+  s_61b5f0  validated    5 steps  3/3 (100%)
+           Sign in to Directus at {{v1}} using email {{v2}} and password exactly {{v3}}. Confirm the Data Studio is authe…
+  s_6ce2c0  validated    6 steps  3/3 (100%)
+           For the saved ticket '{{v1}}', set the customer relation to the existing exact customer 'Bench Customer' (not …
+  s_7a72cc  validated    1 steps  3/3 (100%)
+           Sign in to Directus at {{v1}} using email {{v2}} and password exactly {{v3}}. Confirm the Data Studio is authe…
+  s_8a5261  validated    1 steps  3/3 (100%)
+           Create and save a new {{v1}} item titled '{{v3}}' with a description containing exactly one paragraph that inc…
+  s_90c624  validated    4 steps  3/3 (100%)
+           Create and save a new {{v1}} item titled '{{v3}}' with a description containing exactly one paragraph that inc…
+  s_92759b  validated   19 steps  3/3 (100%)
+           For '{{v1}}', set status to exactly 'In progress' and set its only tag to exactly 'hardware' (not hardware-ret…
+  s_b8447e  validated    1 steps  3/3 (100%)
+           For the saved ticket '{{v1}}', set the customer relation to the existing exact customer 'Bench Customer' (not …
+  s_e7e980  validated    3 steps  3/3 (100%)
+           Create and save a new {{v1}} item titled '{{v3}}' with a description containing exactly one paragraph that inc…
+  s_fe3b8e  validated    9 steps  3/3 (100%)
+           For the saved ticket '{{v1}}', set the customer relation to the existing exact customer 'Bench Customer' (not …
+  s_349874  validated    1 steps  2/2 (100%)
+           For '{{v1}}', set Due Date to 2026-12-31 and Estimated Hours to 6, save, and verify both values persisted on t…
+  s_0c7a33  provisional 18 steps  1/1 (100%)  variant of s_2731b5
+           For '{{v1}}', set status to exactly 'In progress' and set its only tag to exactly 'hardware' (not hardware-ret…
+  s_1fbc49  provisional  1 steps  1/1 (100%)
+           For '{{v1}}', set status to exactly 'In progress' and set its only tag to exactly 'hardware' (not hardware-ret…
+  s_2042a6  provisional 18 steps  1/1 (100%)
+           For '{{v1}}', set status to exactly 'In progress' and set its only tag to exactly 'hardware' (not hardware-ret…
+  s_20f526  provisional 14 steps  1/1 (100%)  variant of s_2731b5
+           For '{{v1}}', set status to exactly 'In progress' and set its only tag to exactly 'hardware' (not hardware-ret…
+  s_37ffba  provisional  1 steps  1/1 (100%)
+           For '{{v1}}', set status to exactly 'In progress' and set its only tag to exactly 'hardware' (not hardware-ret…
+  s_3f3eca  provisional  1 steps  1/1 (100%)  variant of s_2731b5
+           For '{{v1}}', set status to exactly 'In progress' and set its only tag to exactly 'hardware' (not hardware-ret…
+  s_5f1874  provisional  4 steps  1/1 (100%)  variant of s_2731b5
+           For '{{v1}}', set status to exactly 'In progress' and set its only tag to exactly 'hardware' (not hardware-ret…
+  s_671bd4  provisional 14 steps  1/1 (100%)
+           For '{{v1}}', set status to exactly 'In progress' and set its only tag to exactly 'hardware' (not hardware-ret…
+  s_74b713  provisional  1 steps  1/1 (100%)
+           Open the sidebar on '{{v1}}', add a comment whose text includes '{{v2}}', submit it, and verify the comment ap…
+  s_7d6029  provisional 19 steps  1/1 (100%)
+           For '{{v1}}', set status to exactly 'In progress' and set its only tag to exactly 'hardware' (not hardware-ret…
+  s_8bc51e  provisional  1 steps  1/1 (100%)
+           For '{{v1}}', set status to exactly 'In progress' and set its only tag to exactly 'hardware' (not hardware-ret…
+  s_9bc092  provisional  4 steps  1/1 (100%)
+           For '{{v1}}', set status to exactly 'In progress' and set its only tag to exactly 'hardware' (not hardware-ret…
+  s_ac5741  provisional 20 steps  1/1 (100%)  variant of s_1e0f4e
+           For '{{v1}}', set Due Date to 2026-12-31 and Estimated Hours to 6, save, and verify both values persisted on t…
+  s_ac5c5b  provisional 16 steps  1/1 (100%)
+           Open the sidebar on '{{v1}}', add a comment whose text includes '{{v2}}', submit it, and verify the comment ap…
+  s_cff0ab  provisional  1 steps  1/1 (100%)  variant of s_2731b5
+           For '{{v1}}', set status to exactly 'In progress' and set its only tag to exactly 'hardware' (not hardware-ret…
+  s_d056d3  provisional 16 steps  1/1 (100%)  variant of s_1a1e71
+           Open the sidebar on '{{v1}}', add a comment whose text includes '{{v2}}', submit it, and verify the comment ap…
+  s_d43f4e  provisional  1 steps  1/1 (100%)
+           For '{{v1}}', set status to exactly 'In progress' and set its only tag to exactly 'hardware' (not hardware-ret…
+  s_f31ad1  provisional 14 steps  1/1 (100%)
+           For '{{v1}}', set status to exactly 'In progress' and set its only tag to exactly 'hardware' (not hardware-ret…
+  s_f710ac  provisional  3 steps  1/1 (100%)  variant of s_1e0f4e
+           For '{{v1}}', set Due Date to 2026-12-31 and Estimated Hours to 6, save, and verify both values persisted on t…
+store: /home/user/sitelooper/bench/results/hsdx1-skills
+
+summary: /home/user/sitelooper/bench/results/hsdx1-sweep.json

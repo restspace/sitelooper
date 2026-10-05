@@ -1,0 +1,699 @@
+{
+ "id": "s_ac5741",
+ "origin": "http://127.0.0.1:8101",
+ "template": "For '{{v1}}', set Due Date to 2026-12-31 and Estimated Hours to 6, save, and verify both values persisted on the ticket.",
+ "params": {
+  "v1": {
+   "example": "hsdx1-n2 Bench Ticket",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i3:ticket_title"
+  },
+  "v2": {
+   "example": "hsdx1-n2",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v3": {
+   "example": "86d9da04-c2c3-4ff5-873f-65d6ebe55d84",
+   "usedIn": [
+    5,
+    17
+   ],
+   "known": true,
+   "binding": "05-set.url.p3"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8101/admin/content/tickets/{{v3}}"
+ },
+ "steps": [
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e4069",
+    "value": "6"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "input[type=\"number\"]"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"start\"] input"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(5) > div:nth-of-type(2) > div > div > input"
+     },
+     {
+      "kind": "point",
+      "x": 765,
+      "y": 361,
+      "w": 243.5,
+      "h": 50,
+      "role": "spinbutton",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8101/admin/content/tickets/{{v3}}",
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_1e0f4e",
+    "step": 1
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e4052"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(4) > div:nth-of-type(2) > div > div > button"
+     },
+     {
+      "kind": "point",
+      "x": 450,
+      "y": 361,
+      "w": 297.5,
+      "h": 54,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8101/admin/content/tickets/{{v3}}",
+    "addedContains": [
+     "- button \"Previous page\"",
+     "- button \"October\"",
+     "- button \"Next page\"",
+     "- row \"Sun Mon Tue Wed Thu Fri Sat\"",
+     "- cell \"Sun\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_1e0f4e",
+    "step": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e4052"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(4) > div:nth-of-type(2) > div > div > button"
+     },
+     {
+      "kind": "point",
+      "x": 450,
+      "y": 361,
+      "w": 297.5,
+      "h": 54,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8101/admin/content/tickets/{{v3}}",
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_1e0f4e",
+    "step": 3
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "div[data-field=\"due_date\"] button.v-list-item >> nth=0"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(4) > div:nth-of-type(2) > div > div > button"
+     },
+     {
+      "kind": "point",
+      "x": 450,
+      "y": 361,
+      "w": 297.5,
+      "h": 54,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8101/admin/content/tickets/{{v3}}",
+    "addedContains": [
+     "- button \"Previous page\"",
+     "- button \"October\"",
+     "- button \"Next page\"",
+     "- row \"Sun Mon Tue Wed Thu Fri Sat\"",
+     "- cell \"Sun\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_1e0f4e",
+    "step": 4
+   }
+  },
+  {
+   "tool": "goto",
+   "args": {
+    "url": "http://127.0.0.1:8101/admin/content/tickets/{{v3}}"
+   },
+   "locators": {},
+   "via": {
+    "skill": "s_1e0f4e",
+    "step": 5
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e205"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(4) > div:nth-of-type(2) > div > div > button"
+     },
+     {
+      "kind": "point",
+      "x": 450,
+      "y": 361,
+      "w": 297.5,
+      "h": 54,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8101/admin/content/tickets/{{v3}}",
+    "addedContains": [
+     "- button \"Previous page\"",
+     "- button \"October\"",
+     "- button \"Next page\"",
+     "- row \"Sun Mon Tue Wed Thu Fri Sat\"",
+     "- cell \"Sun\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_1e0f4e",
+    "step": 6
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": ".calendar-month-select button"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "point",
+      "x": 412,
+      "y": 414,
+      "w": 71.4,
+      "h": 21.5,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8101/admin/content/tickets/{{v3}}",
+    "addedContains": [
+     "- textbox \"Search\"",
+     "- button \"January\"",
+     "- button \"February\"",
+     "- button \"March\"",
+     "- button \"April\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_1e0f4e",
+    "step": 7
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=button[name=\"December\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "December"
+     },
+     {
+      "kind": "css",
+      "selector": "#-zhP-028BqGIH7p-u3Bbm > div:nth-of-type(2) > ul > button:nth-of-type(12)"
+     },
+     {
+      "kind": "point",
+      "x": 412,
+      "y": 839,
+      "w": 162,
+      "h": 29,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8101/admin/content/tickets/{{v3}}",
+    "addedContains": [
+     "- button \"December 1st, 2026\"",
+     "- row \"29 30 1 2 3 4 5\"",
+     "- button \"Sunday, November 29, 2026\"",
+     "- button \"Monday, November 30, 2026\"",
+     "- button \"Tuesday, December 1, 2026\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_1e0f4e",
+    "step": 8
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "[data-value=\"2026-12-31\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Thursday, December 31, 2026"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > table > tbody > tr:nth-of-type(5) > td:nth-of-type(5) > div"
+     },
+     {
+      "kind": "point",
+      "x": 492,
+      "y": 645,
+      "w": 40.5,
+      "h": 37,
+      "role": "button",
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8101/admin/content/tickets/{{v3}}"
+   },
+   "via": {
+    "skill": "s_1e0f4e",
+    "step": 9
+   }
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "div[data-field=\"estimated_hours\"] input",
+    "value": "6"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "input[type=\"number\"]"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"start\"] input"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(5) > div:nth-of-type(2) > div > div > input"
+     },
+     {
+      "kind": "point",
+      "x": 765,
+      "y": 361,
+      "w": 243.5,
+      "h": 50,
+      "role": "spinbutton",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8101/admin/content/tickets/{{v3}}",
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_1e0f4e",
+    "step": 10
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "div[data-field=\"estimated_hours\"] input",
+    "what": "value",
+    "label": "estimated_hours_field"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "input[type=\"number\"]"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"start\"] input"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(5) > div:nth-of-type(2) > div > div > input"
+     },
+     {
+      "kind": "point",
+      "x": 765,
+      "y": 361,
+      "w": 243.5,
+      "h": 50,
+      "role": "spinbutton",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "persisted_estimated_hours",
+   "via": {
+    "skill": "s_1e0f4e",
+    "step": 11
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "div[data-field=\"due_date\"] button.v-list-item >> nth=0",
+    "what": "text",
+    "label": "due_date_field_display"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(4) > div:nth-of-type(2) > div > div > button"
+     },
+     {
+      "kind": "point",
+      "x": 450,
+      "y": 361,
+      "w": 297.5,
+      "h": 54,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "list_row_due_date",
+   "via": {
+    "skill": "s_1e0f4e",
+    "step": 12
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e129"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"start\"] button",
+      "nth": 4
+     },
+     {
+      "kind": "css",
+      "selector": "header > div:nth-of-type(2) > div:nth-of-type(3) > div > div > button"
+     },
+     {
+      "kind": "point",
+      "x": 887,
+      "y": 27,
+      "w": 22,
+      "h": 22,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8101/admin/content/tickets/{{v3}}",
+    "addedContains": [
+     "- button \"Save and Stay Ctrl+S\"",
+     "- button \"Save and Create New Ctrl+Shift+S\"",
+     "- button \"Save as Copy\"",
+     "- button \"Discard All Changes\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_1e0f4e",
+    "step": 13
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "@e129",
+    "what": "attr",
+    "attr": "class"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"start\"] button",
+      "nth": 3
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div:nth-of-type(3) > header > div:nth-of-type(2) > div:nth-of-type(3) > button"
+     },
+     {
+      "kind": "point",
+      "x": 860,
+      "y": 27,
+      "w": 32,
+      "h": 32,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "header_save_button_state_class"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "what": "url",
+    "label": "current_url"
+   },
+   "locators": {},
+   "label": "current_url"
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e386"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#nBgR_Le0E4a4-TUocMhw4 > div:nth-of-type(2) > ul > button:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 887,
+      "y": 67,
+      "w": 267.8,
+      "h": 30,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8101/admin/content/tickets/{{v3}}",
+    "addedContains": [
+     "- heading \"4 Revisions\"",
+     "- button \"4 Revisions\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "goto",
+   "args": {
+    "url": "http://127.0.0.1:8101/admin/content/tickets/{{v3}}"
+   },
+   "locators": {}
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "@e205",
+    "what": "text",
+    "label": "persisted_due_date_display"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(4) > div:nth-of-type(2) > div > div > button"
+     },
+     {
+      "kind": "point",
+      "x": 450,
+      "y": 361,
+      "w": 297.5,
+      "h": 54,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "list_row_due_date"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "input[type=\"number\"]",
+    "what": "value",
+    "label": "persisted_estimated_hours"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "input[type=\"number\"]"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"start\"] input"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(5) > div:nth-of-type(2) > div > div > input"
+     },
+     {
+      "kind": "point",
+      "x": 765,
+      "y": 361,
+      "w": 243.5,
+      "h": 50,
+      "role": "spinbutton",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "persisted_estimated_hours"
+  },
+  {
+   "tool": "goto",
+   "args": {
+    "url": "http://127.0.0.1:8101/admin/content/tickets"
+   },
+   "locators": {}
+  }
+ ],
+ "contract": 4,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-10-05T18:01:05.190Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 4
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_1d053a",
+  "index": 0,
+  "of": 2
+ },
+ "variantOf": "s_1e0f4e",
+ "provenance": {
+  "session": "hsdx1-n2",
+  "instruction": "For 'hsdx1-n2 Bench Ticket', set Due Date to 2026-12-31 and Estimated Hours to 6, save, and verify both values persisted on the ticket.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-10-05T18:01:05.190Z",
+  "transforms": [
+   {
+    "name": "unfreezeExpectations",
+    "at": 9,
+    "reason": "recorded page change(s) only the recording run could produce: [\"- button \\\"December 31st, 2026\\\"\"] → []"
+   }
+  ]
+ },
+ "revision": 1
+}

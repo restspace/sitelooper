@@ -1,0 +1,264 @@
+{
+  "flow": "hsdx1",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_61b5f0; observed session_reference=cb2c9cd4-388b-439c-ae1e-2608980a8271, signed_in_email_2=Email, signed_in_email=admin@example.com, signed_in_first_name=Admin, signed_in_last_name=User, project_name=Bench Desk.",
+      "values": {
+        "session_reference": "cb2c9cd4-388b-439c-ae1e-2608980a8271",
+        "signed_in_email_2": "Email",
+        "signed_in_email": "admin@example.com",
+        "signed_in_first_name": "Admin",
+        "signed_in_last_name": "User",
+        "project_name": "Bench Desk"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "13/13",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_3f52cd; observed collection=Tickets, seeded_title_1=Seed: Printer jams on tray 2, seeded_title_2=Seed: VPN drops every hour, seeded_title_3=Seed: Laptop battery swelling, ticket_count=3.",
+      "values": {
+        "collection": "Tickets",
+        "seeded_title_1": "Seed: Printer jams on tray 2",
+        "seeded_title_2": "Seed: VPN drops every hour",
+        "seeded_title_3": "Seed: Laptop battery swelling",
+        "ticket_count": "3"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "9/9",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_297355: step 1: primary locator did not resolve; used fallback #2 page.locator('div:nth-of-type(2) > div:nth-of-type(1) > aside > div:nth-of-type(1) > div > div')"
+      ]
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_e7e980; observed ticket_id=4419b3d0-4f93-4fe5-9638-bcb9188382ea, description_paragraph_count=1, ticket_title=hsdx1-n3 Bench Ticket, ticket_reference=hsdx1-n3.",
+      "values": {
+        "ticket_id": "4419b3d0-4f93-4fe5-9638-bcb9188382ea",
+        "description_paragraph_count": "1",
+        "ticket_title": "hsdx1-n3 Bench Ticket",
+        "ticket_reference": "hsdx1-n3"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "9/9",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_90c624: step 1: resolved positionally and its only recorded effect is the fill's own echo — the effect gate cannot tell right element from wrong here",
+        "s_90c624: step 3: read 'description_paragraph' returned a value the skill itself set/selected ('This is the description paragraph for ticket hsdx1-n3 coveri…') — confirms the control, not persistence; dropped from the report's confident values"
+      ]
+    },
+    {
+      "id": "04-set",
+      "status": "success",
+      "summary": "Replayed stored procedure s_6ce2c0; observed ticket_title=hsdx1-n3 Bench Ticket, selected_customer=Bench Customer, customer_collection_name=Customers, ticket_reference=hsdx1-n3, ticket_collection_name=Tickets.",
+      "values": {
+        "ticket_title": "hsdx1-n3 Bench Ticket",
+        "selected_customer": "Bench Customer",
+        "customer_collection_name": "Customers",
+        "ticket_reference": "hsdx1-n3",
+        "ticket_collection_name": "Tickets"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "16/16",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_6ce2c0: step 6: the target chain is dead and was not healed inline — the step is a synthesized read no run has ever resolved, so nothing about it has drifted",
+        "s_6ce2c0: step 6: skipped read — no element matched any known locator for target (tried 1: page.getByRole('button', { name: 'Bench Customer', exact: true }))"
+      ],
+      "unreported": [
+        "list_row_customer_column"
+      ]
+    },
+    {
+      "id": "05-set",
+      "status": "success",
+      "summary": "The ticket 'hsdx1-n3 Bench Ticket' (id 4419b3d0-4f93-4fe5-9638-bcb9188382ea) now has Status = 'In progress' and exactly one tag, 'hardware'. The recorded replay had already set and saved these; I re-verified by reloading the item page and reading the live DOM: the Status select shows \"In progress\", and in the Tags field only the 'hardware' chip is active while hardware-return, software, network and billing all carry the 'inactive' class. The header save button is disabled (no pending edits), so the values are persisted.",
+      "values": {
+        "ticket_title": "hsdx1-n3 Bench Ticket",
+        "ticket_id": "4419b3d0-4f93-4fe5-9638-bcb9188382ea",
+        "persisted_status": "In progress",
+        "tag_hardware_chip_class": "v-chip small label clickable tag",
+        "tag_hardware_return_chip_class": "v-chip small label clickable tag inactive",
+        "tag_software_chip_class": "v-chip small label clickable tag inactive",
+        "tag_network_chip_class": "v-chip small label clickable tag inactive",
+        "tag_billing_chip_class": "v-chip small label clickable tag inactive",
+        "save_button_state": "disabled (no unsaved changes)",
+        "tag_hardware_pressed": "true",
+        "tag_hardware_return_pres": "true",
+        "tag_software_pressed": "true",
+        "tag_network_pressed": "true",
+        "tag_billing_pressed": "true",
+        "tags_field_label": "Tags",
+        "status_value_persisted": "In progress",
+        "ref": "hsdx1-n3"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_2731b5 stopped at step 4 — after step 4 the page still shows \"- button \\\"Oct 5 {{*}} PM Edited by Admin User\\\"\", which the click was recorded removing — it did not have its recorded effect",
+      "replayed": "3/5",
+      "repaired": false,
+      "turns": 7,
+      "warnings": [
+        "s_92759b: step 6: read 'hardware_return_tag_option' returned a value the skill itself set/selected ('hardware-return') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_92759b: step 7: read 'software_tag_option' returned a value the skill itself set/selected ('software') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_92759b: step 8: read 'network_tag_option' returned a value the skill itself set/selected ('network') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_92759b: step 9: read 'billing_tag_option' returned a value the skill itself set/selected ('billing') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_2731b5: step 1: primary locator did not resolve; used fallback #2 page.locator('#reka-accordion-trigger-v-62')"
+      ],
+      "unreported": [
+        "hardware_tag_option",
+        "hardware_return_tag_option",
+        "software_tag_option",
+        "network_tag_option",
+        "billing_tag_option",
+        "ticket_reference"
+      ]
+    },
+    {
+      "id": "06-set",
+      "status": "success",
+      "summary": "Replayed stored procedure s_349874; observed ticket_reference=hsdx1-n3.",
+      "values": {
+        "ticket_reference": "hsdx1-n3"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "14/14",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_1e0f4e: step 11: read 'estimated_hours_field' returned a value the skill itself set/selected ('6') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_1e0f4e: step 12: read 'due_date_field_display' returned 'December 31st, 2026' from a control this step set, and nothing committed it since — it shows the control, however the app formats it, not what the app stored; dropped from the report's confident values",
+        "s_349874: report value ticket_id is given, not observed: it is built only from the step's own parameters, and neither this run's page nor any of its reads shows it — withheld"
+      ],
+      "unreported": [
+        "estimated_hours_field",
+        "due_date_field_display",
+        "ticket_id"
+      ]
+    },
+    {
+      "id": "07-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_1a1e71; observed ticket_id=4419b3d0-4f93-4fe5-9638-bcb9188382ea, estimated_hours_persisted=6, due_date_persisted=December 31st, 2026.",
+      "values": {
+        "ticket_id": "4419b3d0-4f93-4fe5-9638-bcb9188382ea",
+        "estimated_hours_persisted": "6",
+        "due_date_persisted": "December 31st, 2026"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "8/8",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_1a1e71: step 2: primary locator did not resolve; used fallback #2 page.locator('#reka-accordion-trigger-v-16')",
+        "s_1a1e71: report value ticket_reference is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)"
+      ],
+      "unreported": [
+        "ticket_reference"
+      ]
+    }
+  ],
+  "passed": 7,
+  "total": 7,
+  "repinned": 0,
+  "drift": 4,
+  "driftTickets": [
+    {
+      "flow": "hsdx1",
+      "step": "02-open",
+      "skill": "s_297355",
+      "atStep": "1",
+      "key": "target",
+      "similarity": 0.999,
+      "missedLocator": "page.locator('[data-testid=\"start\"] div')",
+      "fallbackUsed": "page.locator('div:nth-of-type(2) > div:nth-of-type(1) > aside > div:nth-of-type(1) > div > div')",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8101/admin/content/tickets",
+      "pageUrl": "http://127.0.0.1:8101/admin/content/tickets"
+    },
+    {
+      "flow": "hsdx1",
+      "step": "04-set",
+      "skill": "s_6ce2c0",
+      "atStep": "6",
+      "key": "target",
+      "similarity": 0.999,
+      "missedLocator": "page.getByRole('button', { name: 'Bench Customer', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8101/admin/content/tickets/:id",
+      "pageUrl": "http://127.0.0.1:8101/admin/content/tickets/4419b3d0-4f93-4fe5-9638-bcb9188382ea"
+    },
+    {
+      "flow": "hsdx1",
+      "step": "05-set",
+      "skill": "s_2731b5",
+      "atStep": "1",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.locator('[data-testid=\"end\"] button')",
+      "fallbackUsed": "page.locator('#reka-accordion-trigger-v-62')",
+      "fallbackIndex": 1,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:8101/admin/content/tickets/:id",
+      "pageUrl": "http://127.0.0.1:8101/admin/content/tickets/4419b3d0-4f93-4fe5-9638-bcb9188382ea"
+    },
+    {
+      "flow": "hsdx1",
+      "step": "07-open",
+      "skill": "s_1a1e71",
+      "atStep": "2",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.locator('[data-testid=\"end\"] button')",
+      "fallbackUsed": "page.locator('#reka-accordion-trigger-v-16')",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8101/admin/content/tickets/:id",
+      "pageUrl": "http://127.0.0.1:8101/admin/content/tickets/4419b3d0-4f93-4fe5-9638-bcb9188382ea"
+    }
+  ],
+  "wallMs": 175206,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 105077,
+    "completionTokens": 4968,
+    "cachedTokens": 92928
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 105077,
+      "completionTokens": 4968,
+      "cachedTokens": 92928
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "openai/gpt-6-luna",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

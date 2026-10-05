@@ -1,0 +1,297 @@
+{
+  "flow": "hsdx1",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_61b5f0; observed session_reference=cb2c9cd4-388b-439c-ae1e-2608980a8271, signed_in_email_2=Email, signed_in_email=admin@example.com, signed_in_first_name=Admin, signed_in_last_name=User, project_name=Bench Desk.",
+      "values": {
+        "session_reference": "cb2c9cd4-388b-439c-ae1e-2608980a8271",
+        "signed_in_email_2": "Email",
+        "signed_in_email": "admin@example.com",
+        "signed_in_first_name": "Admin",
+        "signed_in_last_name": "User",
+        "project_name": "Bench Desk"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "13/13",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_3f52cd; observed collection=Tickets, seeded_title_1=Seed: Printer jams on tray 2, seeded_title_2=Seed: VPN drops every hour, seeded_title_3=Seed: Laptop battery swelling, ticket_count=3.",
+      "values": {
+        "collection": "Tickets",
+        "seeded_title_1": "Seed: Printer jams on tray 2",
+        "seeded_title_2": "Seed: VPN drops every hour",
+        "seeded_title_3": "Seed: Laptop battery swelling",
+        "ticket_count": "3"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "9/9",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_297355: step 1: primary locator did not resolve; used fallback #2 page.locator('div:nth-of-type(2) > div:nth-of-type(1) > aside > div:nth-of-type(1) > div > div')"
+      ]
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_e7e980; observed ticket_id=86d9da04-c2c3-4ff5-873f-65d6ebe55d84, description_paragraph_count=1, ticket_title=hsdx1-n2 Bench Ticket, ticket_reference=hsdx1-n2.",
+      "values": {
+        "ticket_id": "86d9da04-c2c3-4ff5-873f-65d6ebe55d84",
+        "description_paragraph_count": "1",
+        "ticket_title": "hsdx1-n2 Bench Ticket",
+        "ticket_reference": "hsdx1-n2"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "9/9",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_90c624: step 1: resolved positionally and its only recorded effect is the fill's own echo — the effect gate cannot tell right element from wrong here",
+        "s_90c624: step 3: read 'description_paragraph' returned a value the skill itself set/selected ('This is the description paragraph for ticket hsdx1-n2 coveri…') — confirms the control, not persistence; dropped from the report's confident values"
+      ]
+    },
+    {
+      "id": "04-set",
+      "status": "success",
+      "summary": "Replayed stored procedure s_6ce2c0; observed ticket_title=hsdx1-n2 Bench Ticket, selected_customer=Bench Customer, customer_collection_name=Customers, ticket_reference=hsdx1-n2, ticket_collection_name=Tickets.",
+      "values": {
+        "ticket_title": "hsdx1-n2 Bench Ticket",
+        "selected_customer": "Bench Customer",
+        "customer_collection_name": "Customers",
+        "ticket_reference": "hsdx1-n2",
+        "ticket_collection_name": "Tickets"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "16/16",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_6ce2c0: step 6: the target chain is dead and was not healed inline — the step is a synthesized read no run has ever resolved, so nothing about it has drifted",
+        "s_6ce2c0: step 6: skipped read — no element matched any known locator for target (tried 1: page.getByRole('button', { name: 'Bench Customer', exact: true }))"
+      ],
+      "unreported": [
+        "list_row_customer_column"
+      ]
+    },
+    {
+      "id": "05-set",
+      "status": "success",
+      "summary": "The previously replayed steps had already applied both edits, so after reloading the record from the server (http://127.0.0.1:8101/admin/content/tickets/86d9da04-c2c3-4ff5-873f-65d6ebe55d84) I verified the persisted state rather than re-issuing a save (a second save would risk a duplicate write). On the freshly loaded page, Status shows exactly \"In progress\" and the Tags field shows exactly one selected tag, \"hardware\" — its chip carries the active class \"v-chip small label clickable tag\" while hardware-return, software, network and billing all carry the extra \"inactive\" class. No records were edited by me; the record is clean (save/check button disabled).",
+      "values": {
+        "ticket_title": "hsdx1-n2 Bench Ticket",
+        "ticket_id": "86d9da04-c2c3-4ff5-873f-65d6ebe55d84",
+        "persisted_status": "In progress",
+        "persisted_tag": "hardware",
+        "active_tag_chip_class": "v-chip small label clickable tag",
+        "customer": "Bench Customer",
+        "tickets_list_row_status": "In progress",
+        "save_button_state": "disabled (no pending changes)",
+        "button_aria_pressed": "hardware-return",
+        "button_aria_pressed_2": "software",
+        "button_aria_pressed_3": "network",
+        "button_aria_pressed_4": "billing",
+        "button_aria_pressed_5": "true",
+        "ref": "hsdx1-n2",
+        "inactive_tag_chips_1": "hardware-return",
+        "inactive_tag_chips_2": "software",
+        "inactive_tag_chips_3": "network",
+        "inactive_tag_chips_4": "billing"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_2731b5 stopped at step 4 — after step 4 the page still shows \"- button \\\"Oct 5 {{*}} PM Edited by Admin User\\\"\", which the click was recorded removing — it did not have its recorded effect",
+      "replayed": "3/5",
+      "repaired": false,
+      "turns": 17,
+      "warnings": [
+        "s_92759b: step 6: read 'hardware_return_tag_option' returned a value the skill itself set/selected ('hardware-return') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_92759b: step 7: read 'software_tag_option' returned a value the skill itself set/selected ('software') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_92759b: step 8: read 'network_tag_option' returned a value the skill itself set/selected ('network') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_92759b: step 9: read 'billing_tag_option' returned a value the skill itself set/selected ('billing') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_2731b5: step 1: primary locator did not resolve; used fallback #2 page.locator('#reka-accordion-trigger-v-62')"
+      ],
+      "unreported": [
+        "hardware_tag_option",
+        "hardware_return_tag_option",
+        "software_tag_option",
+        "network_tag_option",
+        "billing_tag_option",
+        "ticket_reference"
+      ]
+    },
+    {
+      "id": "06-set",
+      "status": "success",
+      "summary": "Both values are persisted on 'hsdx1-n2 Bench Ticket' (id 86d9da04-c2c3-4ff5-873f-65d6ebe55d84). The replayed steps had typed Due Date 2026-12-31 and Estimated Hours 6 but their final save never landed, so I committed the form with \"Save and Stay\" (a new revision appeared, 3 → 4) and reloaded the record from the server: Due Date shows \"December 31st, 2026\" and Estimated Hours reads 6, with the header Save button back to its disabled/un-highlighted state (\"button small align-center icon normal\"), confirming the commit. Verified again in the Tickets list, where the row shows Due Date \"December 31st, 2026\" and Status \"In progress\".",
+      "values": {
+        "header_save_button_disabled_attribute": "present (empty string)",
+        "header_save_button_state_class": "button small align-center icon normal",
+        "list_row_due_date": "December 31st, 2026",
+        "list_row_status": "In progress",
+        "persisted_due_date_display": "December 31st, 2026",
+        "persisted_estimated_hours": "6",
+        "revisions_after_save": "4",
+        "revisions_before_save": "3",
+        "ticket_id": "86d9da04-c2c3-4ff5-873f-65d6ebe55d84",
+        "ticket_title": "hsdx1-n2 Bench Ticket",
+        "header_save_button": "disabled after reload (all changes committed)",
+        "current_url": "http://127.0.0.1:8101/admin/content/tickets/86d9da04-c2c3-4ff5-873f-65d6ebe55d84",
+        "ref": "hsdx1-n2"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_1e0f4e stopped at step 13 — after step 13 expected url http://127.0.0.1:8101/admin/content/tickets but browser is at http://127.0.0.1:8101/admin/content/tickets/86d9da04-c2c3-4ff5-873f-65d6ebe55d84",
+      "replayed": "12/13",
+      "repaired": false,
+      "turns": 10,
+      "warnings": [
+        "s_1e0f4e: step 11: read 'estimated_hours_field' returned a value the skill itself set/selected ('6') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_1e0f4e: step 12: read 'due_date_field_display' returned 'December 31st, 2026' from a control this step set, and nothing committed it since — it shows the control, however the app formats it, not what the app stored; dropped from the report's confident values"
+      ],
+      "unreported": [
+        "estimated_hours_field",
+        "due_date_field_display",
+        "ticket_reference"
+      ]
+    },
+    {
+      "id": "07-open",
+      "status": "success",
+      "summary": "Added a comment to 'hsdx1-n2 Bench Ticket' (id 86d9da04-c2c3-4ff5-873f-65d6ebe55d84) via the sidebar Comments panel: opened the editor, typed \"hsdx1-n2 comment: verified via sidebar\" (Submit became enabled) and submitted it. The panel heading went from \"Comments / No Comments Yet\" to \"1 Comments\", and after a full page reload the comment is still listed as \"hsdx1-n2 comment: verified via sidebar\", posted by Admin User at 6:01 pm.",
+      "values": {
+        "comment_text": "hsdx1-n2 comment: verified via sidebar",
+        "comment_author": "Admin User",
+        "comment_timestamp": "6:01 pm",
+        "comments_count_before": "No Comments Yet",
+        "comments_count_after": "1 Comments",
+        "comments_count_after_reload": "1 Comments",
+        "ticket_id": "86d9da04-c2c3-4ff5-873f-65d6ebe55d84",
+        "ticket_title": "hsdx1-n2 Bench Ticket",
+        "revisions_after_reload": "4 Revisions",
+        "ref": "hsdx1-n2",
+        "class_accordion_button_1": "1",
+        "class_accordion_button_2": "Comments"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_1a1e71 stopped at step 2 — no element matched any known locator for target (tried 4: page.locator('[data-testid=\"end\"] button'), page.locator('#reka-accordion-trigger-v-16'), page.locator('#reka-accordion-trigger-v-16'), …)",
+      "replayed": "1/7",
+      "repaired": false,
+      "turns": 22,
+      "unreported": [
+        "estimated_hours_persisted",
+        "due_date_persisted",
+        "ticket_reference"
+      ]
+    }
+  ],
+  "passed": 7,
+  "total": 7,
+  "repinned": 0,
+  "drift": 5,
+  "driftTickets": [
+    {
+      "flow": "hsdx1",
+      "step": "02-open",
+      "skill": "s_297355",
+      "atStep": "1",
+      "key": "target",
+      "similarity": 0.999,
+      "missedLocator": "page.locator('[data-testid=\"start\"] div')",
+      "fallbackUsed": "page.locator('div:nth-of-type(2) > div:nth-of-type(1) > aside > div:nth-of-type(1) > div > div')",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8101/admin/content/tickets",
+      "pageUrl": "http://127.0.0.1:8101/admin/content/tickets"
+    },
+    {
+      "flow": "hsdx1",
+      "step": "04-set",
+      "skill": "s_6ce2c0",
+      "atStep": "6",
+      "key": "target",
+      "similarity": 0.999,
+      "missedLocator": "page.getByRole('button', { name: 'Bench Customer', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8101/admin/content/tickets/:id",
+      "pageUrl": "http://127.0.0.1:8101/admin/content/tickets/86d9da04-c2c3-4ff5-873f-65d6ebe55d84"
+    },
+    {
+      "flow": "hsdx1",
+      "step": "05-set",
+      "skill": "s_2731b5",
+      "atStep": "1",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.locator('[data-testid=\"end\"] button')",
+      "fallbackUsed": "page.locator('#reka-accordion-trigger-v-62')",
+      "fallbackIndex": 1,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:8101/admin/content/tickets/:id",
+      "pageUrl": "http://127.0.0.1:8101/admin/content/tickets/86d9da04-c2c3-4ff5-873f-65d6ebe55d84"
+    },
+    {
+      "flow": "hsdx1",
+      "step": "06-set",
+      "skill": "s_1e0f4e",
+      "similarity": 0.909,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_1e0f4e stopped at step 13 — after step 13 expected url http://127.0.0.1:8101/admin/content/tickets but browser is at http://127.0.0.1:8101/admin/content/tickets/86d9da04-c2c3-4ff5-873f-65d6ebe55d84",
+      "reason": "after step 13 expected url http://127.0.0.1:8101/admin/content/tickets but browser is at http://127.0.0.1:8101/admin/content/tickets/86d9da04-c2c3-4ff5-873f-65d6ebe55d84",
+      "pageUrlPattern": "http://127.0.0.1:8101/admin/content/tickets/:id",
+      "pageUrl": "http://127.0.0.1:8101/admin/content/tickets/86d9da04-c2c3-4ff5-873f-65d6ebe55d84"
+    },
+    {
+      "flow": "hsdx1",
+      "step": "07-open",
+      "skill": "s_1a1e71",
+      "atStep": "2",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.locator('[data-testid=\"end\"] button')",
+      "fallbackUsed": null,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:8101/admin/content/tickets/:id",
+      "pageUrl": "http://127.0.0.1:8101/admin/content/tickets/86d9da04-c2c3-4ff5-873f-65d6ebe55d84"
+    }
+  ],
+  "wallMs": 312439,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 943635,
+    "completionTokens": 18886,
+    "cachedTokens": 872064
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 943635,
+      "completionTokens": 18886,
+      "cachedTokens": 872064
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "openai/gpt-6-luna",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

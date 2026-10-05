@@ -1,0 +1,530 @@
+{
+ "id": "s_20f526",
+ "origin": "http://127.0.0.1:8101",
+ "template": "For '{{v1}}', set status to exactly 'In progress' and set its only tag to exactly 'hardware' (not hardware-return or any other tag), save, and verify both persisted values.",
+ "params": {
+  "v1": {
+   "example": "hsdx1-n2 Bench Ticket",
+   "usedIn": [
+    4,
+    14
+   ],
+   "known": true,
+   "binding": "output:i3:ticket_title"
+  },
+  "v2": {
+   "example": "hsdx1-n2",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v3": {
+   "example": "86d9da04-c2c3-4ff5-873f-65d6ebe55d84",
+   "usedIn": [],
+   "known": true,
+   "binding": "04-set.url.p3"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8101/admin/content/tickets/{{v3}}",
+  "requireText": [
+   "{{v1}}",
+   "{{v2}}"
+  ]
+ },
+ "steps": [
+  {
+   "tool": "read",
+   "args": {
+    "target": "button.tag >> nth=0",
+    "what": "text",
+    "label": "persisted_tag"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "button.tag >> nth=0"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "hardware"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"start\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(6) > div:nth-of-type(2) > div > div:nth-of-type(2) > span > button:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 339,
+      "y": 526,
+      "w": 76.6,
+      "h": 22,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "persisted_tag"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "button.tag >> nth=0",
+    "what": "attr",
+    "attr": "class"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "button.tag >> nth=0"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "hardware"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"start\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(6) > div:nth-of-type(2) > div > div:nth-of-type(2) > span > button:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 339,
+      "y": 526,
+      "w": 76.6,
+      "h": 22,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "active_tag_chip_class"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "role=textbox[name=\"Select an item...\"]",
+    "what": "value",
+    "label": "persisted_status"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "role=textbox[name=\"Select an item...\"]"
+     },
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Select an item..."
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "Select an item..."
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"start\"] input"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div > div > div > div > input"
+     },
+     {
+      "kind": "point",
+      "x": 435,
+      "y": 245,
+      "w": 236.5,
+      "h": 50,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "persisted_status"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text",
+    "scopedBy": "v1"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "text",
+      "text": "{{v1}}"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"start\"] span",
+      "nth": 7
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(2) > h1 > div > div > span"
+     },
+     {
+      "kind": "point",
+      "x": 434,
+      "y": 32,
+      "w": 179.8,
+      "h": 20,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "ticket_title"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > button > div:nth-of-type(1) > div > div > span"
+     },
+     {
+      "kind": "point",
+      "x": 695,
+      "y": 245,
+      "w": 103.5,
+      "h": 16,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "customer"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div > div:nth-of-type(2) > span > button:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 445,
+      "y": 526,
+      "w": 102.3,
+      "h": 20,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "button_aria_pressed"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div > div:nth-of-type(2) > span > button:nth-of-type(3) > span"
+     },
+     {
+      "kind": "point",
+      "x": 548,
+      "y": 526,
+      "w": 54.9,
+      "h": 20,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "button_aria_pressed_2"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div > div:nth-of-type(2) > span > button:nth-of-type(4) > span"
+     },
+     {
+      "kind": "point",
+      "x": 626,
+      "y": 526,
+      "w": 50.8,
+      "h": 20,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "button_aria_pressed_3"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div > div:nth-of-type(2) > span > button:nth-of-type(5) > span"
+     },
+     {
+      "kind": "point",
+      "x": 695,
+      "y": 526,
+      "w": 36.9,
+      "h": 20,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "button_aria_pressed_4"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div > div:nth-of-type(2) > span > button:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 445,
+      "y": 526,
+      "w": 102.3,
+      "h": 20,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "inactive_tag_chips_1"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div > div:nth-of-type(2) > span > button:nth-of-type(3) > span"
+     },
+     {
+      "kind": "point",
+      "x": 548,
+      "y": 526,
+      "w": 54.9,
+      "h": 20,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "inactive_tag_chips_2"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div > div:nth-of-type(2) > span > button:nth-of-type(4) > span"
+     },
+     {
+      "kind": "point",
+      "x": 626,
+      "y": 526,
+      "w": 50.8,
+      "h": 20,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "inactive_tag_chips_3"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div > div:nth-of-type(2) > span > button:nth-of-type(5) > span"
+     },
+     {
+      "kind": "point",
+      "x": 695,
+      "y": 526,
+      "w": 36.9,
+      "h": 20,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "inactive_tag_chips_4"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text",
+    "frame": "{{=}} Bench Ticket",
+    "slotFrame": "{{v1}}",
+    "frameMark": "v2"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "text",
+      "text": "{{v1}}"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"start\"] span",
+      "nth": 7
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(2) > h1 > div > div > span"
+     },
+     {
+      "kind": "point",
+      "x": 434,
+      "y": 32,
+      "w": 179.8,
+      "h": 20,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "ref"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "The previously replayed steps had already applied both edits, so after reloading the record from the server (http://127.0.0.1:8101/admin/content/tickets/{{v3}}) I verified the persisted state rather than re-issuing a save (a second save would risk a duplicate write). On the freshly loaded page, Status shows exactly \"In progress\" and the Tags field shows exactly one selected tag, \"hardware\" — its chip carries the active class \"v-chip small label clickable tag\" while hardware-return, software, network and billing all carry the extra \"inactive\" class. No records were edited by me; the record is clean (save/check button disabled).",
+  "values": {
+   "ticket_title": "{{v1}}",
+   "ticket_id": "{{v3}}",
+   "persisted_status": "In progress",
+   "persisted_tag": "hardware",
+   "active_tag_chip_class": "v-chip small label clickable tag",
+   "customer": "Bench Customer",
+   "tickets_list_row_status": "In progress",
+   "save_button_state": "disabled (no pending changes)",
+   "button_aria_pressed": "hardware-return",
+   "button_aria_pressed_2": "software",
+   "button_aria_pressed_3": "network",
+   "button_aria_pressed_4": "billing",
+   "button_aria_pressed_5": "true",
+   "ref": "{{v2}}",
+   "inactive_tag_chips_1": "hardware-return",
+   "inactive_tag_chips_2": "software",
+   "inactive_tag_chips_3": "network",
+   "inactive_tag_chips_4": "billing"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-10-05T18:00:14.858Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_7ee9a7",
+  "index": 3,
+  "of": 4
+ },
+ "variantOf": "s_2731b5",
+ "provenance": {
+  "session": "hsdx1-n2",
+  "instruction": "For 'hsdx1-n2 Bench Ticket', set status to exactly 'In progress' and set its only tag to exactly 'hardware' (not hardware-return or any other tag), save, and verify both persisted values.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-10-05T18:00:14.858Z"
+ },
+ "revision": 1
+}
