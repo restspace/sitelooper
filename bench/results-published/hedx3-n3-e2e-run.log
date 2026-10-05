@@ -1,0 +1,65 @@
+
+ RUN  e2e v0.16.0 /home/user/sitelooper/bench/e2e-arm
+      run 01a10e0a-15e3-74b2-ba7a-3b6259367b35 · targets: web
+      model openrouter/openai/gpt-6-luna
+
+   ✓ directus flow > agent.act "Sign in with username {username} and password {password}" 4.46s
+   ✓ directus flow > agent.assert "The app shows a signed-in page, not a sign-in form" 2.17s · 1 model call
+   ✓ directus flow > agent.act "Objective 1 of the goal, for run id {runid}, asks only for a report: Re…" 805ms
+   ✓ directus flow > agent.extract "For run id hedx3-n3: Report the titles of the items in the Tickets coll…" 2.09s · 1 model call
+   ✓ directus flow > agent.act "Achieve objective 2 of the goal, for run id {runid}: A ticket titled `{…" 4.01s
+   ✓ directus flow > agent.assert "For run id hedx3-n3, this now holds in the app: A ticket titled `hedx3-…" 3.82s · 1 model call
+   ✓ directus flow > agent.act "Achieve objective 3 of the goal, for run id {runid}: Its customer is th…" 3.28s
+   ✓ directus flow > agent.assert "For run id hedx3-n3, this now holds in the app: Its customer is the exi…" 3.23s · 1 model call
+   ✓ directus flow > agent.act "Achieve objective 4 of the goal, for run id {runid}: Its status is `In …" 5.35s
+   × directus flow > agent.assert "For run id hedx3-n3, this now holds in the app: Its status is `In progr…" 2.85s · 1 model call failed
+   ✓ directus flow > agent.act "Achieve objective 5 of the goal, for run id {runid}: Its due date is 20…" 5.32s
+   × directus flow > agent.assert "For run id hedx3-n3, this now holds in the app: Its due date is 2026-12…" 2.69s · 1 model call failed
+   ✓ directus flow > agent.act "Achieve objective 6 of the goal, for run id {runid}: It has a comment w…" 3.45s
+   ✓ directus flow > agent.assert "For run id hedx3-n3, this now holds in the app: It has a comment whose …" 2.17s · 1 model call
+   ✓ directus flow > agent.act "Objective 7 of the goal, for run id {runid}, asks only for a report: Re…" 4.43s · 1 model call
+   ✓ directus flow > agent.extract "For run id hedx3-n3: Report the ticket's ID exactly as it appears in th…" 2.53s · 1 model call
+ ✓ |web| tests/flow.e2e.ts (1 test) 56.64s ai 29.5k tokens · 14% cached · $0.0036
+   ✓ directus flow 56.64s ai 29.5k tokens · 14% cached · $0.0036
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+         AI  29.5k tokens · 14% cached · $0.0036 · 9 model calls · openrouter/openai/gpt-6-luna
+      Cache  7 replayed · 1 missed
+   Start at  21:48:25
+   Duration  58.37s
+     Report  .e2e/report.json
+
+
+--- stderr ---
+[e2e debug] phase timings (wall 59.4s)
+  phase           count   total     avg     max
+  scheduler           1   58.3s   58.3s   58.3s
+  test.body           1   54.5s   54.5s   54.5s
+  agent.model         9   22.7s  2526ms  3688ms
+  agent.observe      54   22.7s   420ms  2111ms
+  agent.action       31  4918ms   159ms   368ms
+  config.load         1  1020ms  1020ms  1020ms
+  engine.init         1   127ms   127ms   127ms
+  session.close       1   123ms   123ms   123ms
+  collect             1    25ms    25ms    25ms
+  session.launch      1    20ms    20ms    20ms
+  engine.prepare      1     1ms     1ms     1ms
+[e2e debug] agent steps (execution order, model openrouter/openai/gpt-6-luna, total $0.003627+)
+  step                                                               total   model  observe  action  calls  tokens in/out      cached       cost
+  agent.act "Sign in with username {username} and password {passw…  4460ms     0ms   2925ms   513ms      0            0/0           -          -
+  agent.assert "The app shows a signed-in page, not a sign-in for…  2175ms  1928ms    158ms     0ms      1        2088/82      0% (0)  $0.000302
+  agent.act "Objective 1 of the goal, for run id {runid}, asks on…   805ms     0ms    586ms   111ms      0            0/0           -          -
+  agent.extract "For run id hedx3-n3: Report the titles of the it…  2089ms  1923ms    162ms     0ms      1        2539/62      0% (0)  $0.000348
+  agent.act "Achieve objective 2 of the goal, for run id {runid}:…  4015ms     0ms   3010ms   992ms      0            0/0           -          -
+  agent.assert "For run id hedx3-n3, this now holds in the app: A…  3824ms  3407ms    272ms     0ms      1       2791/286      0% (0)  $0.000492
+  agent.act "Achieve objective 3 of the goal, for run id {runid}:…  3277ms     0ms   2694ms   472ms      0            0/0           -          -
+  agent.assert "For run id hedx3-n3, this now holds in the app: I…  3226ms  2986ms    177ms     0ms      1       2578/108      0% (0)  $0.000376
+  agent.act "Achieve objective 4 of the goal, for run id {runid}:…  5353ms     0ms   4321ms   915ms      0            0/0           -          -
+  agent.assert "For run id hedx3-n3, this now holds in the app: I…  2847ms  2570ms    202ms     0ms      1        2586/99      0% (0)  $0.000373
+  agent.act "Achieve objective 5 of the goal, for run id {runid}:…  5316ms     0ms   4020ms  1175ms      0            0/0           -          -
+  agent.assert "For run id hedx3-n3, this now holds in the app: I…  2688ms  2403ms    168ms     0ms      1       2612/124      0% (0)  $0.000388
+  agent.act "Achieve objective 6 of the goal, for run id {runid}:…  3451ms     0ms   2697ms   740ms      0            0/0           -          -
+  agent.assert "For run id hedx3-n3, this now holds in the app: I…  2174ms  1624ms    416ms     0ms      1        2967/74      0% (0)  $0.000408
+  agent.act "Objective 7 of the goal, for run id {runid}, asks on…  4427ms  3688ms    563ms     0ms      1       7184/131  54% (3853)  $0.000517
+  agent.extract "For run id hedx3-n3: Report the ticket's ID exac…  2527ms  2203ms    321ms     0ms      1        3073/78      0% (0)  $0.000423
