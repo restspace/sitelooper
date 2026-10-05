@@ -12,6 +12,13 @@ cd "${CLAUDE_PROJECT_DIR:-/home/user/sitelooper}" || exit 0
 # An environment may bring up several targets (the held-out env starts three);
 # restore every one the setup log started, not only the last.
 targets=$(grep -o '==> Starting target: [a-z]*' "$LOG" | awk '{print $4}' | sort -u)
+# An environment whose setup script cannot afford to start its targets (the
+# held-out env's three stacks overran the setup script's limit, exit -1 at
+# ~5 min) names them in /tmp/box-targets instead, and this hook, which has 15
+# minutes, brings them up on every session start.
+if [ -f /tmp/box-targets ]; then
+  targets=$(printf '%s\n' $targets $(cat /tmp/box-targets) | grep -E '^[a-z]+$' | sort -u)
+fi
 if [ -n "$targets" ]; then
   up=1
   for t in $targets; do
