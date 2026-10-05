@@ -1,0 +1,105 @@
+{
+ "id": "s_99dbfd",
+ "origin": "http://127.0.0.1:8102",
+ "template": "Sign in to Mealie at {{v1}} using email {{v2}} and password exactly {{v3}}. Verify that you are signed in and report what confirms it.",
+ "params": {
+  "v1": {
+   "example": "http://127.0.0.1:8102/",
+   "usedIn": [
+    1
+   ]
+  },
+  "v2": {
+   "example": "admin@bench.local",
+   "usedIn": [
+    2
+   ]
+  },
+  "v3": {
+   "example": "{{env:APP_PASSWORD}}",
+   "usedIn": []
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8102/"
+ },
+ "steps": [
+  {
+   "tool": "goto",
+   "args": {
+    "url": "{{v1}}"
+   },
+   "locators": {}
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e29",
+    "value": "{{v2}}"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Email or Username"
+     },
+     {
+      "kind": "label",
+      "label": "Email or Username"
+     },
+     {
+      "kind": "id",
+      "selector": "#username"
+     },
+     {
+      "kind": "css",
+      "selector": "#username"
+     },
+     {
+      "kind": "point",
+      "x": 658,
+      "y": 386,
+      "w": 532,
+      "h": 56,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8102/login",
+    "addedContains": [
+     "- textbox \"Email or Username\": {{v2}}"
+    ],
+    "lineDialect": 2
+   }
+  }
+ ],
+ "contract": 4,
+ "stats": {
+  "uses": 3,
+  "successes": 3,
+  "partial": 0,
+  "created": "2026-10-05T21:31:07.063Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 4,
+  "lastUsed": "2026-10-05T21:36:58.112Z"
+ },
+ "status": "validated",
+ "seq": {
+  "chain": "s_7b8bd0",
+  "index": 0,
+  "of": 3
+ },
+ "provenance": {
+  "session": "hsml2-n1",
+  "instruction": "Sign in to Mealie at http://127.0.0.1:8102/ using email admin@bench.local and password exactly {{env:APP_PASSWORD}}. Verify that you are signed in and report what confirms it.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-10-05T21:31:07.063Z"
+ },
+ "revision": 3
+}

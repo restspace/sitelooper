@@ -1,0 +1,308 @@
+{
+  "name": "hsml2",
+  "origin": "http://127.0.0.1:8102",
+  "startUrl": "http://127.0.0.1:8102/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-signin",
+      "instruction": "Sign in to Mealie at http://127.0.0.1:8102/ using email admin@bench.local and password exactly {{env:APP_PASSWORD}}. Verify that you are signed in and report what confirms it.",
+      "skill": "s_99dbfd",
+      "params": {
+        "v1": "http://127.0.0.1:8102/",
+        "v2": "admin@bench.local",
+        "v3": "{{env:APP_PASSWORD}}"
+      },
+      "outputs": [
+        "final_url",
+        "signed_in_user"
+      ],
+      "recorded": {
+        "final_url": "http://127.0.0.1:8102/g/home",
+        "signed_in_user": "Bench Admin",
+        "confirmation": "Logout button + authenticated sidebar nav present; redirect from login page to /g/home",
+        "url": "http://127.0.0.1:8102/g/home"
+      },
+      "route": "http://127.0.0.1:8102/g/home",
+      "outputEvidence": {
+        "final_url": {
+          "same": 1,
+          "differed": 0
+        },
+        "signed_in_user": {
+          "same": 1,
+          "differed": 0
+        },
+        "confirmation": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "02-find",
+      "instruction": "Without modifying anything, find and report the exact names of all recipes whose name starts with 'Seed:' in Mealie.",
+      "skill": "s_7d9fa0",
+      "params": {
+        "v1": "Seed:"
+      },
+      "outputs": [
+        "recipe_name_1",
+        "recipe_name_2",
+        "recipe_name_3",
+        "cross_check",
+        "recipe_card_description",
+        "recipes_page_url"
+      ],
+      "recorded": {
+        "recipe_name_1": "Seed: Garden Salad",
+        "recipe_name_2": "Seed: Tomato Soup",
+        "recipe_name_3": "Seed: Bench Pancakes",
+        "recipe_count": "3",
+        "recipe_slugs": "seed-garden-salad, seed-tomato-soup, seed-bench-pancakes",
+        "cross_check": "Typing \"Seed:\" into the recipe search box filtered the list to these same 3 recipes",
+        "recipe_card_description": "A simple soup.",
+        "recipes_page_url": "http://127.0.0.1:8102/g/home",
+        "url": "http://127.0.0.1:8102/g/home?search=Seed:+Tomato"
+      },
+      "route": "http://127.0.0.1:8102/g/home",
+      "outputEvidence": {
+        "recipe_name_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "recipe_name_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "recipe_name_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "recipe_count": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "recipe_slugs": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "cross_check": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "recipe_card_description": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "recipes_page_url": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "03-create",
+      "instruction": "Create and save a recipe named '{{runid}} Bench Recipe' with description that includes '{{runid}}', only category existing 'Bench Dinner', only tag existing 'Bench Quick', exactly two ingredients in this order with no notes (2 Bench Cup Bench Flour; 3 Bench Spoon Bench Butter), exactly two instruction steps in order ('Whisk the flour and butter.'; 'Bake until golden ({{runid}}).'), and servings 4. Reuse the existing category, tag, units, and foods by selecting their suggestions, not creating similarly named entries. Remove the default placeholder ingredient/step so the saved recipe contains exactly the specified lists. Save, then verify the saved recipe page/editor values and report its page URL/slug.",
+      "skill": "s_dd6c75",
+      "params": {
+        "v2": "{{runid}} Bench Recipe",
+        "v1": "{{runid}}",
+        "v3": "Bench Dinner",
+        "v4": "Bench Quick",
+        "v9": "Whisk the flour and butter.",
+        "v10": "Bake until golden ({{runid}}).",
+        "v5": "Bench Cup",
+        "v6": "Bench Flour",
+        "v7": "Bench Spoon",
+        "v8": "Bench Butter"
+      },
+      "outputs": [
+        "recipe_name",
+        "recipe_page_url",
+        "recipe_slug",
+        "description",
+        "servings",
+        "ingredients",
+        "category",
+        "tag",
+        "instructions",
+        "slug",
+        "recipe_editor_url",
+        "recipe_page_url_final",
+        "recipe_reference"
+      ],
+      "recorded": {
+        "recipe_name": "hsml2-n1 Bench Recipe",
+        "recipe_page_url": "http://127.0.0.1:8102/g/home/r/hsml2-n1-bench-recipe",
+        "recipe_slug": "hsml2-n1-bench-recipe (the last path segment of the observed URL, not a separately displayed field)",
+        "description": "hsml2-n1 test recipe with flour and butter.",
+        "servings": "Serves 4",
+        "ingredients": "2 Bench Cup Bench Flour | 3 Bench Spoon Bench Butter (exactly 2, no notes)",
+        "category": "Bench Dinner",
+        "tag": "Bench Quick",
+        "instructions": "1. Whisk the flour and butter.  2. Bake until golden (hsml2-n1). (exactly 2 steps)",
+        "slug": "hsml2-n1-bench-recipe",
+        "recipe_editor_url": "http://127.0.0.1:8102/g/home/r/hsml2-n1-bench-recipe?edit=true",
+        "recipe_page_url_final": "http://127.0.0.1:8102/g/home/r/hsml2-n1-bench-recipe",
+        "recipe_reference": "hsml2-n1",
+        "url": "http://127.0.0.1:8102/g/home/r/hsml2-n1-bench-recipe",
+        "url.p3": "hsml2-n1-bench-recipe"
+      },
+      "route": "http://127.0.0.1:8102/g/home/r/:id",
+      "outputEvidence": {
+        "recipe_name": {
+          "same": 0,
+          "differed": 1
+        },
+        "recipe_page_url": {
+          "same": 0,
+          "differed": 1
+        },
+        "recipe_slug": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "description": {
+          "same": 0,
+          "differed": 1
+        },
+        "servings": {
+          "same": 1,
+          "differed": 0
+        },
+        "ingredients": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "category": {
+          "same": 1,
+          "differed": 0
+        },
+        "tag": {
+          "same": 1,
+          "differed": 0
+        },
+        "instructions": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "slug": {
+          "same": 0,
+          "differed": 1
+        },
+        "recipe_editor_url": {
+          "same": 0,
+          "differed": 1
+        },
+        "recipe_page_url_final": {
+          "same": 0,
+          "differed": 1
+        },
+        "recipe_reference": {
+          "same": 0,
+          "differed": 1
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        },
+        "url.p3": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "04-verify",
+      "instruction": "On the saved recipe page for '{{runid}} Bench Recipe', post exactly one comment that includes '{{runid}}'. Use the page's comment form and its own submit button, then verify the page displays exactly one posted comment and report its exact text.",
+      "skill": "s_bc4e08",
+      "params": {
+        "v1": "{{runid}} Bench Recipe",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "comment_author_and_date",
+        "comment_count_shown",
+        "comment_text_exact",
+        "recipe_name",
+        "recipe_reference"
+      ],
+      "recorded": {
+        "comment_author_and_date": "Bench Admin • Monday, October 5, 2026",
+        "comment_count_shown": "1",
+        "comment_text_exact": "hsml2-n1 comment: made this with flour and butter.",
+        "recipe_name": "hsml2-n1 Bench Recipe",
+        "recipe_reference": "hsml2-n1"
+      },
+      "route": "http://127.0.0.1:8102/g/home/r/:id",
+      "outputEvidence": {
+        "comment_author_and_date": {
+          "same": 1,
+          "differed": 0
+        },
+        "comment_count_shown": {
+          "same": 1,
+          "differed": 0
+        },
+        "comment_text_exact": {
+          "same": 0,
+          "differed": 1
+        },
+        "recipe_name": {
+          "same": 0,
+          "differed": 1
+        },
+        "recipe_reference": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "session": "hsml2-n1",
+    "created": "2026-10-05T21:34:47.338Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "01-signin",
+      "outputs": [
+        "confirmation"
+      ]
+    },
+    {
+      "stepId": "02-find",
+      "outputs": [
+        "recipe_count",
+        "recipe_slugs"
+      ]
+    }
+  ]
+}
