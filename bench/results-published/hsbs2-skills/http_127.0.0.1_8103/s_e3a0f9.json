@@ -1,0 +1,100 @@
+{
+ "id": "s_e3a0f9",
+ "origin": "http://127.0.0.1:8103",
+ "template": "On the saved page '{{v1}}', set its only tag to the existing tag name '{{v3}}' with value '{{v4}}'. Ensure there are no other tags, save the page, and verify the displayed tag name and value.",
+ "params": {
+  "v1": {
+   "example": "hsbs2-n2 Bench Page",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i3:page_name"
+  },
+  "v2": {
+   "example": "hsbs2-n2",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v3": {
+   "example": "Review Status",
+   "usedIn": []
+  },
+  "v4": {
+   "example": "Approved",
+   "usedIn": []
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8103/books/bench-handbook/page/{{v2}}-bench-page"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e45"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "link",
+      "name": "Edit"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(1) > aside > div:nth-of-type(2) > div > a:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 166,
+      "y": 279,
+      "w": 326.5,
+      "h": 48.1,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8103/books/bench-handbook/page/{{v2}}-bench-page/edit",
+    "addedContains": [
+     "- link \"Back\"",
+     "- button \"Draft Options\"",
+     "- button \"Set Changelog\"",
+     "- button \"Save Page\"",
+     "- textbox \"Page Title\": {{*}}"
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_1baf0e",
+    "step": 1
+   }
+  }
+ ],
+ "contract": 2,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-10-05T21:18:29.386Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_38c753",
+  "index": 0,
+  "of": 3
+ },
+ "provenance": {
+  "session": "hsbs2-n2",
+  "instruction": "On the saved page 'hsbs2-n2 Bench Page', set its only tag to the existing tag name 'Review Status' with value 'Approved'. Ensure there are no other tags, save the page, and verify the displayed tag name and value.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-10-05T21:18:29.386Z"
+ },
+ "revision": 1
+}

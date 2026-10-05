@@ -1,0 +1,44 @@
+
+Running 1 test using 1 worker
+
+[sitelooper step] 01-signin
+[sitelooper step] 02-report
+[sitelooper recipe] filled via recipe contenteditable/set-value (r_7b1e49); value verified on the component
+[sitelooper warn] 03-create s_c12e70/4: read 'page_content_paragraph_text' returned a value the skill itself set/selected ('hsbs2-spec') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper step] 03-create
+[sitelooper warn] step 04-set s_7db6d8/3: resolved positionally and its only recorded effect is the fill's own echo — the effect gate cannot tell right element from wrong here
+  ✘  1 hsbs2.spec.ts:9:1 › hsbs2 (41.4s)
+
+
+  1) hsbs2.spec.ts:9:1 › hsbs2 › 04-set: On the saved page '{{runid}} Bench Page', set its only tag to the existing tag name 'Review Status' with value 'Approved'. Ensure there are no other tags, save the page, and verify the displayed tag name and value. 
+
+    Error: after step 04-set s_7db6d8/5 the page still shows "- textbox \"Tag Name\"", which the click was recorded removing — it did not have its recorded effect
+
+       at hsbs2.flow.ts:17761
+
+      17759 |             errorPageGate(page, '04-set s_7db6d8/5');
+      17760 |             try { await urlEffect(page, 'http://127.0.0.1:8103/books/bench-handbook/page/{{v2}}-bench-page/edit', p, '04-set s_7db6d8/5', volatile2, obs6?.link()); } catch (err) { urlFailed6 = true; throw err; }
+    > 17761 |             { const hidden = hideVerdict(['- textbox "Tag Name"', '- textbox "Tag Value (Optional)"'], p, await captureLines(page, 2), '04-set s_7db6d8/5'); for (const w of hidden.warnings) console.log(`[sitelooper warn] ${w}`); if (hidden.stop) throw new Error(hidden.stop); }
+            |                                                                                                                                                                                                                                                             ^
+      17762 |             alertGate(alertsBefore6, alertsAfter6, { where: '04-set s_7db6d8/5', isRead: false, params: p });
+      17763 |           },
+      17764 |         });
+        at Object.verify (/home/user/sitelooper/bench/results/hsbs2-spec-spec-tmp/hsbs2.flow.ts:17761:253)
+        at runStepLifecycle (/home/user/sitelooper/bench/results/hsbs2-spec-spec-tmp/hsbs2.flow.ts:11751:24)
+        at Object.04-set (/home/user/sitelooper/bench/results/hsbs2-spec-spec-tmp/hsbs2.flow.ts:17720:9)
+        at /home/user/sitelooper/bench/results/hsbs2-spec-spec-tmp/hsbs2.flow.ts:20100:7
+        at runFlow (/home/user/sitelooper/bench/results/hsbs2-spec-spec-tmp/hsbs2.flow.ts:20099:5)
+        at /home/user/sitelooper/bench/results/hsbs2-spec-spec-tmp/hsbs2.spec.ts:14:21
+
+    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/hsbs2-hsbs2/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/hsbs2-hsbs2/error-context.md
+
+  1 failed
+    hsbs2.spec.ts:9:1 › hsbs2 ──────────────────────────────────────────────────────────────────────

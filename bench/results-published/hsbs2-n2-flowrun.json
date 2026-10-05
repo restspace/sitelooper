@@ -1,0 +1,292 @@
+{
+  "flow": "hsbs2",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_cb7a47; observed final_url=http://127.0.0.1:8103/, sections_visible_1=My Recently Viewed, sections_visible_2=Recently Updated Pages, sections_visible_3=Recent Activity, signed_in_user=Bench Admin.",
+      "values": {
+        "final_url": "http://127.0.0.1:8103/",
+        "sections_visible_1": "My Recently Viewed",
+        "sections_visible_2": "Recently Updated Pages",
+        "sections_visible_3": "Recent Activity",
+        "signed_in_user": "Bench Admin"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "9/9",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-report",
+      "status": "success",
+      "summary": "Replayed stored procedure s_7c455e; observed book_name=Bench Handbook, book_description=How the bench team works., top_book_contents_a_cont=Release Notes, top_book_contents_a_cont_2=Release Notes Archive.",
+      "values": {
+        "book_name": "Bench Handbook",
+        "book_description": "How the bench team works.",
+        "top_book_contents_a_cont": "Release Notes",
+        "top_book_contents_a_cont_2": "Release Notes Archive"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "5/5",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_fd61cc; observed page_content_paragraph_texts_1=hsbs2-n2, editor_body_text=hsbs2-n2, created_page_url=http://127.0.0.1:8103/books/bench-handbook/page/hsbs2-n2-bench-page, page_content_paragraph_count=1, page_name=hsbs2-n2 Bench Page, revision=Revision #1, book=Bench Handbook.",
+      "values": {
+        "page_content_paragraph_texts_1": "hsbs2-n2",
+        "editor_body_text": "hsbs2-n2",
+        "created_page_url": "http://127.0.0.1:8103/books/bench-handbook/page/hsbs2-n2-bench-page",
+        "page_content_paragraph_count": "1",
+        "page_name": "hsbs2-n2 Bench Page",
+        "revision": "Revision #1",
+        "book": "Bench Handbook"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "12/12",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_c12e70: step 4: read 'page_content_paragraph_text' returned a value the skill itself set/selected ('hsbs2-n2') — confirms the control, not persistence; dropped from the report's confident values"
+      ],
+      "unreported": [
+        "page_content_paragraph_text"
+      ]
+    },
+    {
+      "id": "04-set",
+      "status": "success",
+      "summary": "Resumed on the edit screen after the replayed steps (which had already typed the tag name \"Review Status\" and its value \"Approved\" into the tag row). I did not repeat those steps; I verified the tag form showed exactly one non-empty tag row — name \"Review Status\", value \"Approved\" (inputs read back as [\"Review Status\",\"Approved\",\"\",\"\"], the blank pair being an empty spare row) — then clicked \"Save Page\". The save navigated to the page view URL and its tag strip now renders a single tag, \"Review Status\" with value \"Approved\", with no other tags. No page body content was edited.",
+      "values": {
+        "displayed_tag_name": "Review Status",
+        "displayed_tag_value": "Approved",
+        "page_name": "hsbs2-n2 Bench Page",
+        "page_tag_display": "Review Status\nApproved",
+        "page_url": "http://127.0.0.1:8103/books/bench-handbook/page/hsbs2-n2-bench-page",
+        "revision": "Revision #2",
+        "tag_count_on_view_page": "1",
+        "tags_before_save_inputs_1": "Review Status",
+        "tags_before_save_inputs_2": "Approved"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_7db6d8 stopped at step 5 — after step 5 the page still shows \"- textbox \\\"Tag Name\\\"\", which the click was recorded removing — it did not have its recorded effect",
+      "replayed": "4/6",
+      "repaired": false,
+      "turns": 7,
+      "warnings": [
+        "s_7db6d8: step 3: resolved positionally and its only recorded effect is the fill's own echo — the effect gate cannot tell right element from wrong here"
+      ],
+      "unreported": [
+        "displayed_tag_name_link",
+        "displayed_tag_value_link",
+        "revision_after_save",
+        "displayed_tags",
+        "page_reference"
+      ]
+    },
+    {
+      "id": "05-edit",
+      "status": "success",
+      "summary": "Replayed stored procedure s_21be35; observed page_content_paragraphs=hsbs2-n2, h2_text=Overview, paragraph_count_in_page_content=1, page_content_paragraph_text=hsbs2-n2, page_name=hsbs2-n2 Bench Page, revision_after_save=Revision #3, tag_name=Review Status, tag_value=Approved, page_content_heading=Overview.",
+      "values": {
+        "page_content_paragraphs": "hsbs2-n2",
+        "h2_text": "Overview",
+        "paragraph_count_in_page_content": "1",
+        "page_content_paragraph_text": "hsbs2-n2",
+        "page_name": "hsbs2-n2 Bench Page",
+        "revision_after_save": "Revision #3",
+        "tag_name": "Review Status",
+        "tag_value": "Approved",
+        "page_content_heading": "Overview"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "21/21",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "editor_html_before_save"
+      ]
+    },
+    {
+      "id": "06-verify",
+      "status": "success",
+      "summary": "Replayed stored procedure s_d7fdd1; observed breadcrumb_text=Books / Bench Handbook / Release Notes / hsbs2-n2 Bench Page, breadcrumb=Books\nBench Handbook\nRelease Notes\nhsbs2-n2 Bench Page, breadcrumb_hrefs_1=http://127.0.0.1:8103/books, breadcrumb_hrefs_2=http://127.0.0.1:8103/books/bench-handbook, breadcrumb_hrefs_3=http://127.0.0.1:8103/books/bench-handbook/chapter/release-notes, breadcrumb_hrefs_4=http://127.0.0.1:8103/books/bench-handbook/page/hsbs2-n2-bench-page, page_reference=hsbs2-n2, page_name=hsbs2-n2 Bench Page, book=Bench Handbook, chapter=Release Notes.",
+      "values": {
+        "breadcrumb_text": "Books / Bench Handbook / Release Notes / hsbs2-n2 Bench Page",
+        "breadcrumb": "Books\nBench Handbook\nRelease Notes\nhsbs2-n2 Bench Page",
+        "breadcrumb_hrefs_1": "http://127.0.0.1:8103/books",
+        "breadcrumb_hrefs_2": "http://127.0.0.1:8103/books/bench-handbook",
+        "breadcrumb_hrefs_3": "http://127.0.0.1:8103/books/bench-handbook/chapter/release-notes",
+        "breadcrumb_hrefs_4": "http://127.0.0.1:8103/books/bench-handbook/page/hsbs2-n2-bench-page",
+        "page_reference": "hsbs2-n2",
+        "page_name": "hsbs2-n2 Bench Page",
+        "book": "Bench Handbook",
+        "chapter": "Release Notes"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "14/14",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_d7fdd1: step 7: primary locator did not resolve; used fallback #2 page.locator('#bkmrk-page-title')",
+        "s_d7fdd1: step 9: primary locator did not resolve; used fallback #2 page.locator('#book-tree > ul > li:nth-of-type(1) > a > div > h4')",
+        "s_d7fdd1: step 10: primary locator did not resolve; used fallback #2 page.locator('#book-tree > ul > li:nth-of-type(2) > a > div > h4')"
+      ],
+      "unreported": [
+        "rejected_trap_result"
+      ]
+    },
+    {
+      "id": "07-verify",
+      "status": "success",
+      "summary": "Replayed stored procedure s_784e1b; observed comment_region_text=hsbs2-n2, comment_thread_tab_label=1 Comment Thread, final_url=http://127.0.0.1:8103/books/bench-handbook/page/hsbs2-n2-bench-page.",
+      "values": {
+        "comment_region_text": "hsbs2-n2",
+        "comment_thread_tab_label": "1 Comment Thread",
+        "final_url": "http://127.0.0.1:8103/books/bench-handbook/page/hsbs2-n2-bench-page"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "9/9",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_784e1b: step 4: primary locator did not resolve; used fallback #2 page.locator('form > div:nth-of-type(1) > div > div:nth-of-type(2) > div > p')",
+        "s_784e1b: step 4: read 'comment_editor_text' returned a value the skill itself set/selected ('hsbs2-n2') — confirms the control, not persistence; dropped from the report's confident values"
+      ],
+      "unreported": [
+        "comment_editor_text",
+        "posted_comment_text"
+      ]
+    },
+    {
+      "id": "08-report",
+      "status": "success",
+      "summary": "Replayed stored procedure s_8d8d72; observed url_slug_final_path_segment=hsbs2-n2-bench-page, page_url=http://127.0.0.1:8103/books/bench-handbook/page/hsbs2-n2-bench-page, visible_page_heading=hsbs2-n2 Bench Page, page_reference=hsbs2-n2.",
+      "values": {
+        "url_slug_final_path_segment": "hsbs2-n2-bench-page",
+        "page_url": "http://127.0.0.1:8103/books/bench-handbook/page/hsbs2-n2-bench-page",
+        "visible_page_heading": "hsbs2-n2 Bench Page",
+        "page_reference": "hsbs2-n2"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "3/3",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "breadcrumb"
+      ]
+    }
+  ],
+  "passed": 8,
+  "total": 8,
+  "repinned": 0,
+  "drift": 5,
+  "driftTickets": [
+    {
+      "flow": "hsbs2",
+      "step": "04-set",
+      "skill": "s_7db6d8",
+      "similarity": 1,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_7db6d8 stopped at step 5 — after step 5 the page still shows \"- textbox \\\"Tag Name\\\"\", which the click was recorded removing — it did not have its recorded effect",
+      "reason": "after step 5 the page still shows \"- textbox \\\"Tag Name\\\"\", which the click was recorded removing — it did not have its recorded effect",
+      "pageUrlPattern": "http://127.0.0.1:8103/books/bench-handbook/page/:id/edit",
+      "pageUrl": "http://127.0.0.1:8103/books/bench-handbook/page/hsbs2-n2-bench-page/edit"
+    },
+    {
+      "flow": "hsbs2",
+      "step": "06-verify",
+      "skill": "s_d7fdd1",
+      "atStep": "7",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.getByText('hsbs2-n2 Bench Page', { exact: true })",
+      "fallbackUsed": "page.locator('#bkmrk-page-title')",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8103/books/bench-handbook/page/:id",
+      "pageUrl": "http://127.0.0.1:8103/books/bench-handbook/page/hsbs2-n2-bench-page"
+    },
+    {
+      "flow": "hsbs2",
+      "step": "06-verify",
+      "skill": "s_d7fdd1",
+      "atStep": "9",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.getByText('Bench Handbook', { exact: true })",
+      "fallbackUsed": "page.locator('#book-tree > ul > li:nth-of-type(1) > a > div > h4')",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8103/books/bench-handbook/page/:id",
+      "pageUrl": "http://127.0.0.1:8103/books/bench-handbook/page/hsbs2-n2-bench-page"
+    },
+    {
+      "flow": "hsbs2",
+      "step": "06-verify",
+      "skill": "s_d7fdd1",
+      "atStep": "10",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.getByText('Release Notes', { exact: true })",
+      "fallbackUsed": "page.locator('#book-tree > ul > li:nth-of-type(2) > a > div > h4')",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8103/books/bench-handbook/page/:id",
+      "pageUrl": "http://127.0.0.1:8103/books/bench-handbook/page/hsbs2-n2-bench-page"
+    },
+    {
+      "flow": "hsbs2",
+      "step": "07-verify",
+      "skill": "s_784e1b",
+      "atStep": "4",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.getByText('hsbs2-n2', { exact: true })",
+      "fallbackUsed": "page.locator('form > div:nth-of-type(1) > div > div:nth-of-type(2) > div > p')",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8103/books/bench-handbook/page/:id",
+      "pageUrl": "http://127.0.0.1:8103/books/bench-handbook/page/hsbs2-n2-bench-page"
+    }
+  ],
+  "wallMs": 139338,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 85446,
+    "completionTokens": 3149,
+    "cachedTokens": 74368
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 85446,
+      "completionTokens": 3149,
+      "cachedTokens": 74368
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "openai/gpt-6-luna",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

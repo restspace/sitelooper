@@ -1,0 +1,144 @@
+
+[sweep] run 1/3: hsbs2-n1 (store: /home/user/sitelooper/bench/results/hsbs2-skills)
+[harness] bookstack: defaulting APP_URL
+[harness] bookstack: defaulting APP_EMAIL
+[harness] bookstack: defaulting APP_PASSWORD
+[reset] bookstack: deleted 1 page(s) (earlier runs', drafts and non-seed)
+[reset] bookstack: deleted comment #4
+[reset] bookstack: emptied the recycle bin (1 deletion(s))
+[harness] bookstack responded 302 at http://127.0.0.1:8103/
+stopped: hsbs2-n1
+  flow "hsbs2" saved: 8 step(s), vars runid → /home/user/sitelooper/bench/results/flows/hsbs2.json
+  warning: note: dropped 3 locator candidate(s) carrying a value this run minted (known only by export time)
+  warning: note: 01-signin no longer publishes recently_updated_pages — no replay reads it from the page and the recording showed no line to read
+  warning: note: 02-report no longer publishes total_pages_in_book, pages_starting_with_Seed, count_seed_pages, all_pages_in_book — no replay reads them from the page and the recording showed no line to read
+  warning: note: 04-set no longer publishes displayed_tags_text — no replay reads it from the page and the recording showed no line to read
+  warning: note: 05-edit no longer publishes page_reference — no replay reads it from the page and the recording showed no line to read
+  warning: note: 06-verify no longer publishes breadcrumb_text, selected_destination — no replay reads them from the page and the recording showed no line to read
+  warning: note: 07-verify no longer publishes id_comment — no replay reads it from the page and the recording showed no line to read
+  warning: note: 05-edit: added a read for page_content_heading to s_21be35 (page.getByRole('heading', { name: 'Overview', exact: true }), page.getByRole('link', { name: 'Overview', exact: true }); seen on the next instruction's start page)
+  warning: warning: 228 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.startUrl: "http://127.0.0.1:8103/" (output) in "http://127.0.0.1:8103/"
+  flow.steps[0].instruction: "http://127.0.0.1:8103/" (output) in "Sign in to the BookStack app at http://127.0.0.1:8103/ using email admin@bench.local and password exactly {{env:APP_PASSWORD}}. Confirm that login succeeds and "
+  flow.steps[0].params.v1: "http://127.0.0.1:8103/" (output) in "http://127.0.0.1:8103/"
+  flow.steps[0].route: "http://127.0.0.1:8103/" (output) in "http://127.0.0.1:8103/"
+  flow.steps[1].instruction: "Bench Handbook" (output) in "In the book named Bench Handbook, identify and report the exact names of all pages whose names start with 'Seed:'. Do not edit any page."
+arm=sitelooper model=openai/gpt-6-luna runid=hsbs2-n1 stop=completed
+turns=9 wall=299.5s
+commands=8 cmdTime=264.7s cmdBytes=9669 timeouts=0
+orchestrator in=6052 cw=0 cr=32400 out=1008
+inner prompt=1648768 cached=1529728 completion=21098
+spend=$0.0365 maxUsd=3
+learn: A_n=0 replayed=0/8 full=0 repaired=0 compiled=8 variants=0
+-> /home/user/sitelooper/bench/results/hsbs2-n1-sitelooper-result.json
+
+hsbs2-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: PASS — hsbs2-n1-bench-page, body includes runid=true
+  obj 3: PASS — tags="Review Status"="Approved", want only "Review Status"="Approved"
+  obj 4: PASS — headings="Overview", want "Overview"
+  obj 5: PASS — in book "Bench Handbook" (id 1), chapter "Release Notes" (id 3); want "Release Notes" (id 3) of "Bench Handbook" (id 1)
+  obj 6: PASS — 1 comment(s): "hsbs2-n1"
+  obj 7: PASS — slug hsbs2-n1-bench-page reported
+
+[sweep] run 2/3: hsbs2-n2 (replay flow hsbs2, no orchestrator)
+[reset] bookstack: deleted 1 page(s) (earlier runs', drafts and non-seed)
+[reset] bookstack: deleted comment #5
+[reset] bookstack: emptied the recycle bin (1 deletion(s))
+[sweep] hsbs2-n2: 5 drift ticket(s) → hsbs2-n2-drift.json
+
+hsbs2-n2: objectives passed 6/7
+  obj 1: FAIL — not in report: Seed: Getting started, Seed: Release checklist, Seed: House style
+  obj 2: PASS — hsbs2-n2-bench-page, body includes runid=true
+  obj 3: PASS — tags="Review Status"="Approved", want only "Review Status"="Approved"
+  obj 4: PASS — headings="Overview", want "Overview"
+  obj 5: PASS — in book "Bench Handbook" (id 1), chapter "Release Notes" (id 3); want "Release Notes" (id 3) of "Bench Handbook" (id 1)
+  obj 6: PASS — 1 comment(s): "hsbs2-n2"
+  obj 7: PASS — slug hsbs2-n2-bench-page reported
+
+[sweep] run 3/3: hsbs2-n3 (replay flow hsbs2, no orchestrator)
+[reset] bookstack: deleted 1 page(s) (earlier runs', drafts and non-seed)
+[reset] bookstack: deleted comment #6
+[reset] bookstack: emptied the recycle bin (1 deletion(s))
+[sweep] hsbs2-n3: 5 drift ticket(s) → hsbs2-n3-drift.json
+
+hsbs2-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: PASS — hsbs2-n3-bench-page, body includes runid=true
+  obj 3: PASS — tags="Review Status"="Approved", want only "Review Status"="Approved"
+  obj 4: PASS — headings="Overview", want "Overview"
+  obj 5: PASS — in book "Bench Handbook" (id 1), chapter "Release Notes" (id 3); want "Release Notes" (id 3) of "Bench Handbook" (id 1)
+  obj 6: PASS — 1 comment(s): "hsbs2-n3"
+  obj 7: PASS — slug hsbs2-n3-bench-page reported
+
+Learning sweep hsbs2 (K=3)
+┌─────────┬───┬────────────┬──────────┬─────────────┬───────┬──────┬───────────┬──────┬──────────────┬────────┐
+│ (index) │ n │ runid      │ verified │ stop        │ turns │ cmds │ total_usd │ A_n  │ replayed     │ wall_s │
+├─────────┼───┼────────────┼──────────┼─────────────┼───────┼──────┼───────────┼──────┼──────────────┼────────┤
+│ 0       │ 1 │ 'hsbs2-n1' │ '7/7'    │ 'completed' │ 9     │ 8    │ 0.0365    │ 0    │ '0/8'        │ 300    │
+│ 1       │ 2 │ 'hsbs2-n2' │ '6/7'    │ 'success'   │ 7     │ 8    │ 0.0038    │ 0.88 │ '8/8 (flow)' │ 139    │
+│ 2       │ 3 │ 'hsbs2-n3' │ '7/7'    │ 'success'   │ 8     │ 8    │ 0.0045    │ 0.88 │ '8/8 (flow)' │ 148    │
+└─────────┴───┴────────────┴──────────┴─────────────┴───────┴──────┴───────────┴──────┴──────────────┴────────┘
+http://127.0.0.1:8103
+  s_181d58  validated    3 steps  3/3 (100%)
+           Move the page '{{v1}}' into the chapter '{{v3}}' of the book '{{v4}}' (not the similarly named Bench Handbooks…
+  s_1baf0e  validated    1 steps  3/3 (100%)
+           On the saved page '{{v1}}', set its only tag to the existing tag name '{{v3}}' with value '{{v4}}'. Ensure the…
+  s_21be35  validated   10 steps  3/3 (100%)
+           Edit the saved page '{{v1}}' and make its body include a real level-2 heading exactly 'Overview' in addition t…
+  s_3d628a  validated    1 steps  3/3 (100%)
+           Edit the saved page '{{v1}}' and make its body include a real level-2 heading exactly 'Overview' in addition t…
+  s_575aa3  validated   10 steps  3/3 (100%)
+           Edit the saved page '{{v1}}' and make its body include a real level-2 heading exactly 'Overview' in addition t…
+  s_784e1b  validated    9 steps  3/3 (100%)
+           On the page '{{v1}}' itself, post exactly one comment whose text includes '{{v2}}'. Verify the page displays e…
+  s_7aba56  validated    1 steps  3/3 (100%)
+           Move the page '{{v1}}' into the chapter '{{v3}}' of the book '{{v4}}' (not the similarly named Bench Handbooks…
+  s_7c455e  validated    4 steps  3/3 (100%)
+           In the book named Bench Handbook, identify and report the exact names of all pages whose names start with 'See…
+  s_7db6d8  provisional  6 steps  1/3 (33%)
+           On the saved page '{{v1}}', set its only tag to the existing tag name '{{v3}}' with value '{{v4}}'. Ensure the…
+  s_8d8d72  validated    3 steps  3/3 (100%)
+           On the live page '{{v1}}', report the URL slug exactly as shown in its web address (the final path segment), a…
+  s_a3becb  validated    3 steps  3/3 (100%)
+           Sign in to the BookStack app at {{v1}} using email {{v2}} and password exactly {{v3}}. Confirm that login succ…
+  s_c12e70  validated    5 steps  3/3 (100%)
+           Create and save a page named '{{v3}}' in the {{v2}} book. Its body must contain exactly one paragraph that inc…
+  s_c2c0f2  validated    1 steps  3/3 (100%)
+           In the book named Bench Handbook, identify and report the exact names of all pages whose names start with 'See…
+  s_c3c77d  validated    1 steps  3/3 (100%)
+           Create and save a page named '{{v3}}' in the {{v2}} book. Its body must contain exactly one paragraph that inc…
+  s_c72a19  validated    1 steps  3/3 (100%)
+           Sign in to the BookStack app at {{v1}} using email {{v2}} and password exactly {{v3}}. Confirm that login succ…
+  s_cb7a47  validated    5 steps  3/3 (100%)
+           Sign in to the BookStack app at {{v1}} using email {{v2}} and password exactly {{v3}}. Confirm that login succ…
+  s_d7fdd1  validated   10 steps  3/3 (100%)
+           Move the page '{{v1}}' into the chapter '{{v3}}' of the book '{{v4}}' (not the similarly named Bench Handbooks…
+  s_fd61cc  validated    6 steps  3/3 (100%)
+           Create and save a page named '{{v3}}' in the {{v2}} book. Its body must contain exactly one paragraph that inc…
+  s_088b91  provisional  8 steps  1/1 (100%)  variant of s_7db6d8
+           On the saved page '{{v1}}', set its only tag to the existing tag name '{{v3}}' with value '{{v4}}'. Ensure the…
+  s_3299f5  provisional  9 steps  1/1 (100%)
+           On the saved page '{{v1}}', set its only tag to the existing tag name '{{v3}}' with value '{{v4}}'. Ensure the…
+  s_3e9fbe  provisional  6 steps  1/1 (100%)
+           On the saved page '{{v1}}', set its only tag to the existing tag name '{{v3}}' with value '{{v4}}'. Ensure the…
+  s_59a98d  provisional 13 steps  1/1 (100%)  variant of s_7db6d8
+           On the saved page '{{v1}}', set its only tag to the existing tag name '{{v3}}' with value '{{v4}}'. Ensure the…
+  s_5f72ef  provisional  9 steps  1/1 (100%)  variant of s_7db6d8
+           On the saved page '{{v1}}', set its only tag to the existing tag name '{{v3}}' with value '{{v4}}'. Ensure the…
+  s_73e196  provisional  8 steps  1/1 (100%)
+           On the saved page '{{v1}}', set its only tag to the existing tag name '{{v3}}' with value '{{v4}}'. Ensure the…
+  s_7dbba2  provisional 13 steps  1/1 (100%)
+           On the saved page '{{v1}}', set its only tag to the existing tag name '{{v3}}' with value '{{v4}}'. Ensure the…
+  s_82b342  provisional  1 steps  1/1 (100%)
+           On the saved page '{{v1}}', set its only tag to the existing tag name '{{v3}}' with value '{{v4}}'. Ensure the…
+  s_a226cd  provisional 10 steps  1/1 (100%)  variant of s_7db6d8
+           On the saved page '{{v1}}', set its only tag to the existing tag name '{{v3}}' with value '{{v4}}'. Ensure the…
+  s_ae0793  provisional 10 steps  1/1 (100%)
+           On the saved page '{{v1}}', set its only tag to the existing tag name '{{v3}}' with value '{{v4}}'. Ensure the…
+  s_e3a0f9  provisional  1 steps  1/1 (100%)
+           On the saved page '{{v1}}', set its only tag to the existing tag name '{{v3}}' with value '{{v4}}'. Ensure the…
+store: /home/user/sitelooper/bench/results/hsbs2-skills
+
+summary: /home/user/sitelooper/bench/results/hsbs2-sweep.json
+done 0

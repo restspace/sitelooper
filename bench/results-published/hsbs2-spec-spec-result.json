@@ -1,0 +1,38 @@
+{
+  "arm": "spec",
+  "runid": "hsbs2-spec",
+  "target": "bookstack",
+  "flow": "hsbs2.json",
+  "flowName": "hsbs2",
+  "skillsDir": "/home/user/sitelooper/bench/results/hsbs2-skills",
+  "compiled": true,
+  "flowFile": "bench/results/hsbs2-spec-spec-tmp/hsbs2.flow.ts",
+  "specFile": "bench/results/hsbs2-spec-spec-tmp/hsbs2.spec.ts",
+  "wallMs": 54067,
+  "exitCode": 1,
+  "timedOut": false,
+  "costUsd": 0,
+  "stats": {
+    "total": 1,
+    "passed": 0,
+    "failed": 1,
+    "skipped": 0
+  },
+  "tests": [
+    {
+      "title": "hsbs2",
+      "status": "unexpected",
+      "ok": false,
+      "durationMs": 41421,
+      "error": "Error: after step 04-set s_7db6d8/5 the page still shows \"- textbox \\\"Tag Name\\\"\", which the click was recorded removing — it did not have its recorded effect",
+      "drift": []
+    }
+  ],
+  "drift": [],
+  "driftCount": 0,
+  "evidence": [
+    "hsbs2-spec-spec-failure.png",
+    "hsbs2-spec-spec-error-context.md"
+  ],
+  "logTail": "\nRunning 1 test using 1 worker\n\n[sitelooper step] 01-signin\n[sitelooper step] 02-report\n[sitelooper recipe] filled via recipe contenteditable/set-value (r_7b1e49); value verified on the component\n[sitelooper warn] 03-create s_c12e70/4: read 'page_content_paragraph_text' returned a value the skill itself set/selected ('hsbs2-spec') — confirms the control, not persistence; dropped from the report's confident values\n[sitelooper step] 03-create\n[sitelooper warn] step 04-set s_7db6d8/3: resolved positionally and its only recorded effect is the fill's own echo — the effect gate cannot tell right element from wrong here\n  ✘  1 hsbs2.spec.ts:9:1 › hsbs2 (41.4s)\n\n\n  1) hsbs2.spec.ts:9:1 › hsbs2 › 04-set: On the saved page '{{runid}} Bench Page', set its only tag to the existing tag name 'Review Status' with value 'Approved'. Ensure there are no other tags, save the page, and verify the displayed tag name and value. \n\n    Error: after step 04-set s_7db6d8/5 the page still shows \"- textbox \\\"Tag Name\\\"\", which the click was recorded removing — it did not have its recorded effect\n\n       at hsbs2.flow.ts:17761\n\n      17759 |             errorPageGate(page, '04-set s_7db6d8/5');\n      17760 |             try { await urlEffect(page, 'http://127.0.0.1:8103/books/bench-handbook/page/{{v2}}-bench-page/edit', p, '04-set s_7db6d8/5', volatile2, obs6?.link()); } catch (err) { urlFailed6 = true; throw err; }\n    > 17761 |             { const hidden = hideVerdict(['- textbox \"Tag Name\"', '- textbox \"Tag Value (Optional)\"'], p, await captureLines(page, 2), '04-set s_7db6d8/5'); for (const w of hidden.warnings) console.log(`[sitelooper warn] ${w}`); if (hidden.stop) throw new Error(hidden.stop); }\n            |                                                                                                                                                                                                                                                             ^\n      17762 |             alertGate(alertsBefore6, alertsAfter6, { where: '04-set s_7db6d8/5', isRead: false, params: p });\n      17763 |           },\n      17764 |         });\n        at Object.verify (/home/user/sitelooper/bench/results/hsbs2-spec-spec-tmp/hsbs2.flow.ts:17761:253)\n        at runStepLifecycle (/home/user/sitelooper/bench/results/hsbs2-spec-spec-tmp/hsbs2.flow.ts:11751:24)\n        at Object.04-set (/home/user/sitelooper/bench/results/hsbs2-spec-spec-tmp/hsbs2.flow.ts:17720:9)\n        at /home/user/sitelooper/bench/results/hsbs2-spec-spec-tmp/hsbs2.flow.ts:20100:7\n        at runFlow (/home/user/sitelooper/bench/results/hsbs2-spec-spec-tmp/hsbs2.flow.ts:20099:5)\n        at /home/user/sitelooper/bench/results/hsbs2-spec-spec-tmp/hsbs2.spec.ts:14:21\n\n    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────\n    \n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────\n    test-results/hsbs2-hsbs2/test-failed-1.png\n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    Error Context: test-results/hsbs2-hsbs2/error-context.md\n\n  1 failed\n    hsbs2.spec.ts:9:1 › hsbs2 ──────────────────────────────────────────────────────────────────────\n"
+}
