@@ -17,6 +17,16 @@ case "$t" in
   bookstack) url=http://127.0.0.1:8103/login ;;
   *) echo "unknown held-out target: $t" >&2; exit 2 ;;
 esac
+# A box restored from the environment's cached snapshot has no docker daemon
+# (hodx3/homl2 2026-10-05: "Cannot connect to the Docker daemon"). Start it as
+# cloud-setup.sh does, after clearing the snapshot's stale pid file and socket.
+if ! docker info >/dev/null 2>&1; then
+  echo "docker daemon not running; starting dockerd"
+  rm -f /var/run/docker.pid /var/run/docker.sock /var/run/docker/containerd/containerd.pid
+  nohup dockerd >/tmp/dockerd.log 2>&1 &
+  for _ in $(seq 1 60); do docker info >/dev/null 2>&1 && break; sleep 1; done
+  docker info >/dev/null 2>&1 || { tail -30 /tmp/dockerd.log; echo "dockerd did not come up" >&2; exit 1; }
+fi
 "${compose[@]}" down -v --remove-orphans
 "${compose[@]}" up -d
 code=""
