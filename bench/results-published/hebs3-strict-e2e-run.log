@@ -1,0 +1,65 @@
+
+ RUN  e2e v0.16.0 /home/user/sitelooper/bench/e2e-arm
+      run 01a10dee-b47b-7c54-adcf-d67f6fcfd2c6 · targets: web
+      model openrouter/openai/gpt-6-luna
+
+   ✓ bookstack flow > agent.act "Sign in with username {username} and password {password}" 2.98s
+   ✓ bookstack flow > agent.assert "The app shows a signed-in page, not a sign-in form" 2.22s · 1 model call
+   ✓ bookstack flow > agent.act "Objective 1 of the goal, for run id {runid}, asks only for a report: Re…" 611ms
+   ✓ bookstack flow > agent.extract "For run id hebs3-strict: Report the names of the pages in the book `Ben…" 1.45s · 1 model call
+   ✓ bookstack flow > agent.act "Achieve objective 2 of the goal, for run id {runid}: A page named `{run…" 2.58s
+   × bookstack flow > agent.assert "For run id hebs3-strict, this now holds in the app: A page named `hebs3…" 5.82s · 1 model call failed
+   ✓ bookstack flow > agent.act "Achieve objective 3 of the goal, for run id {runid}: Its only tag has t…" 2.94s
+   ✓ bookstack flow > agent.assert "For run id hebs3-strict, this now holds in the app: Its only tag has th…" 1.64s · 1 model call
+   ✓ bookstack flow > agent.act "Achieve objective 4 of the goal, for run id {runid}: Its body also has …" 9.53s
+   ✓ bookstack flow > agent.assert "For run id hebs3-strict, this now holds in the app: Its body also has a…" 1.58s · 1 model call
+   ✓ bookstack flow > agent.act "Achieve objective 5 of the goal, for run id {runid}: It is in the chapt…" 3.49s
+   ✓ bookstack flow > agent.assert "For run id hebs3-strict, this now holds in the app: It is in the chapte…" 1.71s · 1 model call
+   ✓ bookstack flow > agent.act "Achieve objective 6 of the goal, for run id {runid}: It has exactly one…" 1.63s
+   ✓ bookstack flow > agent.assert "For run id hebs3-strict, this now holds in the app: It has exactly one …" 1.44s · 1 model call
+   ✓ bookstack flow > agent.act "Objective 7 of the goal, for run id {runid}, asks only for a report: Re…" 7.41s · 2 model calls
+   ✓ bookstack flow > agent.extract "For run id hebs3-strict: Report the page's URL slug (the last part of t…" 2.62s · 1 model call
+ ✓ |web| tests/flow.e2e.ts (1 test) 51.16s ai 34.6k tokens · 31% cached · $0.0034
+   ✓ bookstack flow 51.16s ai 34.6k tokens · 31% cached · $0.0034
+
+ Test Files  1 passed (1)
+      Tests  1 passed (1)
+         AI  34.6k tokens · 31% cached · $0.0034 · 10 model calls · openrouter/openai/gpt-6-luna
+      Cache  7 replayed · 1 missed
+   Start at  21:18:31
+   Duration  52.71s
+     Report  .e2e/report.json
+
+
+--- stderr ---
+[e2e debug] phase timings (wall 53.7s)
+  phase           count   total     avg     max
+  scheduler           1   52.7s   52.7s   52.7s
+  test.body           1   49.9s   49.9s   49.9s
+  agent.model        10   23.5s  2350ms  5530ms
+  agent.observe      48   21.2s   442ms  2357ms
+  agent.action       30  4313ms   144ms   480ms
+  config.load         1   964ms   964ms   964ms
+  engine.init         1    97ms    97ms    97ms
+  session.close       1    56ms    56ms    56ms
+  session.launch      1    22ms    22ms    22ms
+  collect             1    15ms    15ms    15ms
+  engine.prepare      1     1ms     1ms     1ms
+[e2e debug] agent steps (execution order, model openrouter/openai/gpt-6-luna, total $0.003445+)
+  step                                                               total   model  observe  action  calls  tokens in/out       cached       cost
+  agent.act "Sign in with username {username} and password {passw…  2976ms     0ms   2365ms   595ms      0            0/0            -          -
+  agent.assert "The app shows a signed-in page, not a sign-in for…  2219ms  1927ms    156ms     0ms      1        2106/53       0% (0)   $0.00029
+  agent.act "Objective 1 of the goal, for run id {runid}, asks on…   611ms     0ms    362ms   241ms      0            0/0            -          -
+  agent.extract "For run id hebs3-strict: Report the names of the…  1449ms  1265ms    180ms     0ms      1        2565/58       0% (0)   $0.00035
+  agent.act "Achieve objective 2 of the goal, for run id {runid}:…  2580ms     0ms   1920ms   652ms      0            0/0            -          -
+  agent.assert "For run id hebs3-strict, this now holds in the ap…  5815ms  5530ms    140ms     0ms      1       2291/271       0% (0)  $0.000422
+  agent.act "Achieve objective 3 of the goal, for run id {runid}:…  2940ms     0ms   2124ms   809ms      0            0/0            -          -
+  agent.assert "For run id hebs3-strict, this now holds in the ap…  1638ms  1358ms    169ms     0ms      1        2316/59       0% (0)  $0.000319
+  agent.act "Achieve objective 4 of the goal, for run id {runid}:…  9533ms     0ms   8267ms  1255ms      0            0/0            -          -
+  agent.assert "For run id hebs3-strict, this now holds in the ap…  1582ms  1279ms    189ms     0ms      1        2371/55       0% (0)  $0.000324
+  agent.act "Achieve objective 5 of the goal, for run id {runid}:…  3489ms     0ms   2945ms   538ms      0            0/0            -          -
+  agent.assert "For run id hebs3-strict, this now holds in the ap…  1708ms  1341ms    228ms     0ms      1        2482/63       0% (0)  $0.000342
+  agent.act "Achieve objective 6 of the goal, for run id {runid}:…  1627ms     0ms   1295ms   223ms      0            0/0            -          -
+  agent.assert "For run id hebs3-strict, this now holds in the ap…  1435ms  1169ms    190ms     0ms      1        2606/58       0% (0)  $0.000355
+  agent.act "Objective 7 of the goal, for run id {runid}, asks on…  7410ms  7145ms    556ms     0ms      2      14296/220  74% (10573)  $0.000675
+  agent.extract "For run id hebs3-strict: Report the page's URL s…  2621ms  2487ms    133ms     0ms      1        2692/68       0% (0)   $0.00037
