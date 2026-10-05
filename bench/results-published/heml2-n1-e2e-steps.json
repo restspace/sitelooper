@@ -1,0 +1,180 @@
+{
+  "target": "mealie",
+  "runid": "heml2-n1",
+  "steps": [
+    {
+      "kind": "act",
+      "id": "signin",
+      "ok": true,
+      "ms": 20398,
+      "summary": "Signed in successfully as Bench Admin; the app is open on the Recipes page and shows a Logout button.",
+      "cache": {
+        "mode": "missed",
+        "reason": "no-entry",
+        "replayedActions": 0,
+        "totalActions": 0
+      },
+      "modelCalls": 3,
+      "actions": 3
+    },
+    {
+      "kind": "assert",
+      "id": "signin",
+      "ok": true,
+      "ms": 4572
+    },
+    {
+      "kind": "act",
+      "id": "obj1",
+      "ok": true,
+      "ms": 5821,
+      "summary": "The Recipes screen shows the names starting with `Seed:` as exactly: `Seed: Garden Salad` and `Seed: Bench Pancakes`. `A simple soup.` is accompanying text on the Tomato Soup card, not part of its recipe name. No data was changed.",
+      "cache": {
+        "mode": "missed",
+        "reason": "no-entry",
+        "replayedActions": 0,
+        "totalActions": 0
+      },
+      "modelCalls": 1,
+      "actions": 0
+    },
+    {
+      "kind": "extract",
+      "id": "obj1",
+      "ok": true,
+      "ms": 2797,
+      "values": [
+        "Seed: Garden Salad",
+        "Seed: Tomato Soup",
+        "Seed: Bench Pancakes"
+      ]
+    },
+    {
+      "kind": "act",
+      "id": "obj2",
+      "ok": true,
+      "ms": 13652,
+      "summary": "Created and saved the recipe `heml2-n1 Bench Recipe`; its page shows the description `heml2-n1`, which includes the run id.",
+      "cache": {
+        "mode": "missed",
+        "reason": "no-entry",
+        "replayedActions": 0,
+        "totalActions": 0
+      },
+      "modelCalls": 7,
+      "actions": 6
+    },
+    {
+      "kind": "assert",
+      "id": "obj2",
+      "ok": true,
+      "ms": 3839
+    },
+    {
+      "kind": "act",
+      "id": "obj3",
+      "ok": false,
+      "code": "STEP_TIMEOUT",
+      "blocked": false,
+      "error": "agent.act exceeded its 300000 ms timeout",
+      "ms": 300004
+    },
+    {
+      "kind": "assert",
+      "id": "obj3",
+      "ok": false,
+      "code": "ASSERTION_FAILED",
+      "blocked": false,
+      "error": "The category shown is Bench Dinner, but the Tags field has no selected tag; Bench Quick is not present.",
+      "ms": 4144
+    },
+    {
+      "kind": "act",
+      "id": "obj4",
+      "ok": true,
+      "ms": 55075,
+      "summary": "Saved the recipe. Its page shows exactly two ingredients in order—2 Bench Cup Bench Flour and 3 Bench Spoon Bench Butter—with no notes, and the two instructions are “Whisk the flour and butter.” and “Bake until golden (heml2-n1).”",
+      "cache": {
+        "mode": "missed",
+        "reason": "no-entry",
+        "replayedActions": 0,
+        "totalActions": 0
+      },
+      "modelCalls": 18,
+      "actions": 16
+    },
+    {
+      "kind": "assert",
+      "id": "obj4",
+      "ok": true,
+      "ms": 4243
+    },
+    {
+      "kind": "act",
+      "id": "obj5",
+      "ok": true,
+      "ms": 19863,
+      "summary": "The recipe page now shows “Serves 4,” verifying the recipe’s servings is 4.",
+      "cache": {
+        "mode": "missed",
+        "reason": "no-entry",
+        "replayedActions": 0,
+        "totalActions": 0
+      },
+      "modelCalls": 5,
+      "actions": 3
+    },
+    {
+      "kind": "assert",
+      "id": "obj5",
+      "ok": true,
+      "ms": 1625
+    },
+    {
+      "kind": "act",
+      "id": "obj6",
+      "ok": true,
+      "ms": 8920,
+      "summary": "Posted the comment `heml2-n1` on the recipe page. The page now shows that single comment by Bench Admin, and the comment includes the run id.",
+      "cache": {
+        "mode": "missed",
+        "reason": "no-entry",
+        "replayedActions": 0,
+        "totalActions": 0
+      },
+      "modelCalls": 3,
+      "actions": 2
+    },
+    {
+      "kind": "assert",
+      "id": "obj6",
+      "ok": true,
+      "ms": 3279
+    },
+    {
+      "kind": "act",
+      "id": "obj7",
+      "ok": true,
+      "ms": 129705,
+      "summary": "Opened the recipe page at /g/home/r/heml2-n1-bench-recipe. The slug shown in the page address is exactly `heml2-n1-bench-recipe`; no data was changed.",
+      "cache": {
+        "mode": "missed",
+        "reason": "no-entry",
+        "replayedActions": 0,
+        "totalActions": 0
+      },
+      "modelCalls": 2,
+      "actions": 1
+    },
+    {
+      "kind": "extract",
+      "id": "obj7",
+      "ok": false,
+      "code": "ASSERTION_INCONCLUSIVE",
+      "blocked": false,
+      "error": "nothing to extract: The page address/URL is not shown in the observation, so the recipe slug cannot be read.; the judge saw the semantic tree only; pass vision: true when the answer is in pixels",
+      "ms": 2846
+    }
+  ],
+  "finalText": "1. DONE Seed: Garden Salad | Seed: Tomato Soup | Seed: Bench Pancakes (The Recipes screen shows the names starting with `Seed:` as exactly: `Seed: Garden Salad` and `Seed: Bench Pancakes`. `A simple soup.` is accompanying text on the Tomato Soup card, not part of its recipe name. No data was changed.)\n2. DONE\n3. FAILED\n4. DONE\n5. DONE\n6. DONE\n7. FAILED  (Opened the recipe page at /g/home/r/heml2-n1-bench-recipe. The slug shown in the page address is exactly `heml2-n1-bench-recipe`; no data was changed.)"
+}
