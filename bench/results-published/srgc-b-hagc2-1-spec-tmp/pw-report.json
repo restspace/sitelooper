@@ -1,0 +1,173 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/srgc-b-hagc2-1-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/srgc-b-hagc2-1-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/srgc-b-hagc2-1-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/bench/results/srgc-b-hagc2-1-spec-tmp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/srgc-b-hagc2-1-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "hagc2.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/srgc-b-hagc2-1-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "hagc2.spec.ts",
+      "file": "hagc2.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "hagc2",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 56287,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper step] 01-signin\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 02-find s_83e4d9/7: read 'filter_used' returned a value the skill itself set/selected ('Seed:') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-find\n"
+                    },
+                    {
+                      "text": "[sitelooper recipe] filled via recipe contenteditable/set-value (r_7b1e49); value verified on the component\n"
+                    },
+                    {
+                      "text": "[sitelooper skip] 03-create s_5c0518/22 target: no locator recorded — value left empty\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-create\n"
+                    },
+                    {
+                      "text": "[sitelooper drift] 04-set s_f111e9/3 target: primary getByText('srgc-b-hagc2-1 Bench Product', { exact: true }) missed; used #3 locator('[data-sitelooper-point=\"491,235\"]') (#1 ambiguous, #2 absent)\n"
+                    },
+                    {
+                      "text": "[sitelooper drift] 04-set s_f111e9/9 target: primary getByText('srgc-b-hagc2-1 Bench Product', { exact: true }) missed; used #3 locator('[data-sitelooper-point=\"491,235\"]') (#1 ambiguous, #2 absent)\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-set\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-signin: Sign in to Grocy at http://127.0.0.1:8106/ using username admin and password exactly {{env:APP_PASSWORD}}. Verify that the authenticated app is open.",
+                      "duration": 6133
+                    },
+                    {
+                      "title": "02-find: In Grocy, find and report the names of all products whose name starts exactly with 'Seed:'. Do not edit or change any products.",
+                      "duration": 4026
+                    },
+                    {
+                      "title": "03-create: Create and save a Grocy product named '{{runid}} Bench Product'. Set its description to a single paragraph containing exactly the runid text '{{runid}}', default location to the existing 'Pantry', product group to the existing 'Snacks', stock quantity unit to 'Pack', default purchase quantity unit to 'Pack', minimum stock amount to 4, default due days to 30, and barcode to '{{runid}}-0001'. Ensure the description paragraph is typed once in the rich-text editor, save the product, and report the saved product values and its product edit URL (/product/<id>).",
+                      "duration": 18276
+                    },
+                    {
+                      "title": "04-set: Purchase the existing product '{{runid}} Bench Product' once: buy exactly 3 Packs into location 'Pantry' and set the due date to 2026-12-31. Select the existing product by its {{03-create.barcode_input_field_name}} (do not create a product or use barcode linking), save the purchase, then verify the resulting stock quantity, location, and due date.",
+                      "duration": 27296
+                    }
+                  ],
+                  "startTime": "2026-10-06T16:45:38.525Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": "W3NpdGVsb29wZXIgZHJpZnRdIDA0LXNldCBzX2YxMTFlOS8zIHRhcmdldDogcHJpbWFyeSBnZXRCeVRleHQoJ3NyZ2MtYi1oYWdjMi0xIEJlbmNoIFByb2R1Y3QnLCB7IGV4YWN0OiB0cnVlIH0pIG1pc3NlZDsgdXNlZCAjMyBsb2NhdG9yKCdbZGF0YS1zaXRlbG9vcGVyLXBvaW50PSI0OTEsMjM1Il0nKSAoIzEgYW1iaWd1b3VzLCAjMiBhYnNlbnQpCltzaXRlbG9vcGVyIGRyaWZ0XSAwNC1zZXQgc19mMTExZTkvOSB0YXJnZXQ6IHByaW1hcnkgZ2V0QnlUZXh0KCdzcmdjLWItaGFnYzItMSBCZW5jaCBQcm9kdWN0JywgeyBleGFjdDogdHJ1ZSB9KSBtaXNzZWQ7IHVzZWQgIzMgbG9jYXRvcignW2RhdGEtc2l0ZWxvb3Blci1wb2ludD0iNDkxLDIzNSJdJykgKCMxIGFtYmlndW91cywgIzIgYWJzZW50KQ=="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "df912f561aef8897d89c-1ffb6b5b83658871dd07",
+          "file": "hagc2.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-06T16:45:36.192Z",
+    "duration": 58805.520000000004,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

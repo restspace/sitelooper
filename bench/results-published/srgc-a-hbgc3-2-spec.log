@@ -1,0 +1,40 @@
+
+Running 1 test using 1 worker
+
+[sitelooper step] 01-signin
+[sitelooper step] 02-report
+[sitelooper recipe] filled via recipe contenteditable/set-value (r_7b1e49); value verified on the component
+[sitelooper step] 03-create
+  ✘  1 hbgc3.spec.ts:9:1 › hbgc3 (27.2s)
+
+
+  1) hbgc3.spec.ts:9:1 › hbgc3 › 04-edit: Edit '{{runid}} Bench Product' and set its default location to the existing location exactly 'Pantry' and its product group to the existing group exactly 'Snacks'. Save and verify both values on the saved product. 
+
+    Error: 04-edit s_95b77d: identity: {{v1}} is not confirmed on this page
+
+       at hbgc3.flow.ts:19932
+
+      19930 |         const verdict = await identityMarkerVerdictWithFacts(siteFactsAt(page.url()), 'http://127.0.0.1:8106/product/:id', page.url(), p, `${p.v1}`, { presence: seen.presence, lines: async () => (await captureLines(page, 2).catch(() => null))?.lines ?? null, title: () => page.title() });
+      19931 |         if (verdict.warning) logWarning('04-edit s_95b77d: ' + verdict.warning);
+    > 19932 |         if (!verdict.pass) throw new Error('04-edit s_95b77d: identity: {{v1}} is not confirmed on this page');
+            |                                  ^
+      19933 |       }
+      19934 |     }
+      19935 |     // identity: this must be the record the flow is working on, not another of the same shape.
+        at Object.04-edit (/home/user/sitelooper/bench/results/srgc-a-hbgc3-2-spec-tmp/hbgc3.flow.ts:19932:34)
+        at /home/user/sitelooper/bench/results/srgc-a-hbgc3-2-spec-tmp/hbgc3.flow.ts:23297:7
+        at runFlow (/home/user/sitelooper/bench/results/srgc-a-hbgc3-2-spec-tmp/hbgc3.flow.ts:23296:5)
+        at /home/user/sitelooper/bench/results/srgc-a-hbgc3-2-spec-tmp/hbgc3.spec.ts:14:21
+
+    attachment #2: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/hbgc3-hbgc3/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/hbgc3-hbgc3/error-context.md
+
+  1 failed
+    hbgc3.spec.ts:9:1 › hbgc3 ──────────────────────────────────────────────────────────────────────

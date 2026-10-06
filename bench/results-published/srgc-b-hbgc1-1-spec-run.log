@@ -1,0 +1,13 @@
+[spec-replay] resetting grocy
+[spec-replay] compiling: /opt/node22/bin/node /tmp/before/bin/sitelooper.js compile /tmp/srgc-DMoCUK/hbgc1-b1/bench/results-published/hbgc1.json --out /home/user/sitelooper/bench/results/srgc-b-hbgc1-1-spec-tmp --overwrite-spec
+facts http://127.0.0.1:8106: 57 relied (10 hard), 27 advisory
+error 05-create: slot v3 is bound to {{03-create.product_name_field_name}}, and nothing has ever published product_name_field_name
+  why: nothing in 03-create's procedure reads product_name_field_name from the page, and no report value derives it from a parameter, so no run can publish it. The recording's own value is not a substitute: passing it would make every replay work run 1's record. 05-create types or locates by v3, so the artifact would stop here on every run, part-way through the flow and with everything earlier already done.
+  fix: re-record 03-create so it reads product_name_field_name from an element (`sitelooper rerecord <flow file> 03-create`), or take {{03-create.product_name_field_name}} out of 05-create's v3
+
+nothing written: the error(s) above are about the RECORDING, not the app — a compiled spec would fail at a locator and read as drift.
+re-record the step(s) with the fix command above.
+sitelooper: refused: unsourced-ref — see the diagnostics above
+[spec-replay] srgc-b-hbgc1-1: not compilable — result written (exit 2)
+[reset] grocy: no products to delete
+[reset] grocy: product ids continue after 494669

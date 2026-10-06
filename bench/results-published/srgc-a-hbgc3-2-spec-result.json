@@ -1,0 +1,61 @@
+{
+  "arm": "spec",
+  "runid": "srgc-a-hbgc3-2",
+  "target": "grocy",
+  "flow": "hbgc3.json",
+  "flowName": "hbgc3",
+  "skillsDir": "/tmp/srgc-DMoCUK/hbgc3-a2/bench/results-published/hbgc3-skills",
+  "compiled": true,
+  "outputs": {
+    "01-signin.page_title": "Stock overview | Grocy",
+    "01-signin.signed_in_user": "admin",
+    "01-signin.page_heading": "Stock overview",
+    "01-signin.stock_summary": "0 Products, $0.00 total value",
+    "02-report.table_info": "Showing 1 to 3 of 3 entries",
+    "02-report.first_product_name": "Seed: Oat milk",
+    "02-report.second_product_name": "Seed: Orange juice",
+    "02-report.third_product_name": "Seed: Sparkling water",
+    "02-report.product_names_1": "Seed: Oat milk",
+    "02-report.product_names_2": "Seed: Orange juice",
+    "02-report.product_names_3": "Seed: Sparkling water",
+    "02-report.source_page": "Manage master data",
+    "02-report.matching_products_count": "3",
+    "03-create.form_url": "http://127.0.0.1:8106/product/new",
+    "03-create.product_name": "srgc-a-hbgc3-2 Bench Product",
+    "03-create.saved_description": "srgc-a-hbgc3-2 product for household stock.",
+    "03-create.ref": "srgc-a-hbgc3-2",
+    "04-edit.current_url": "http://127.0.0.1:8106/products?product=1294381",
+    "04-edit.products_row_overview_link_class": "btn btn-info btn-sm",
+    "04-edit.products_row_delete_button_class": "btn btn-danger btn-sm product-delete-button"
+  },
+  "finalText": "01-signin.page_title: Stock overview | Grocy\n01-signin.signed_in_user: admin\n01-signin.page_heading: Stock overview\n01-signin.stock_summary: 0 Products, $0.00 total value\n02-report.table_info: Showing 1 to 3 of 3 entries\n02-report.first_product_name: Seed: Oat milk\n02-report.second_product_name: Seed: Orange juice\n02-report.third_product_name: Seed: Sparkling water\n02-report.product_names_1: Seed: Oat milk\n02-report.product_names_2: Seed: Orange juice\n02-report.product_names_3: Seed: Sparkling water\n02-report.source_page: Manage master data\n02-report.matching_products_count: 3\n03-create.form_url: http://127.0.0.1:8106/product/new\n03-create.product_name: srgc-a-hbgc3-2 Bench Product\n03-create.saved_description: srgc-a-hbgc3-2 product for household stock.\n03-create.ref: srgc-a-hbgc3-2\n04-edit.current_url: http://127.0.0.1:8106/products?product=1294381\n04-edit.products_row_overview_link_class: btn btn-info btn-sm\n04-edit.products_row_delete_button_class: btn btn-danger btn-sm product-delete-button",
+  "flowFile": "bench/results/srgc-a-hbgc3-2-spec-tmp/hbgc3.flow.ts",
+  "specFile": "bench/results/srgc-a-hbgc3-2-spec-tmp/hbgc3.spec.ts",
+  "wallMs": 31706,
+  "exitCode": 1,
+  "timedOut": false,
+  "costUsd": 0,
+  "stats": {
+    "total": 1,
+    "passed": 0,
+    "failed": 1,
+    "skipped": 0
+  },
+  "tests": [
+    {
+      "title": "hbgc3",
+      "status": "unexpected",
+      "ok": false,
+      "durationMs": 27177,
+      "error": "Error: 04-edit s_95b77d: identity: {{v1}} is not confirmed on this page",
+      "drift": []
+    }
+  ],
+  "drift": [],
+  "driftCount": 0,
+  "evidence": [
+    "srgc-a-hbgc3-2-spec-failure.png",
+    "srgc-a-hbgc3-2-spec-error-context.md"
+  ],
+  "logTail": "\nRunning 1 test using 1 worker\n\n[sitelooper step] 01-signin\n[sitelooper step] 02-report\n[sitelooper recipe] filled via recipe contenteditable/set-value (r_7b1e49); value verified on the component\n[sitelooper step] 03-create\n  ✘  1 hbgc3.spec.ts:9:1 › hbgc3 (27.2s)\n\n\n  1) hbgc3.spec.ts:9:1 › hbgc3 › 04-edit: Edit '{{runid}} Bench Product' and set its default location to the existing location exactly 'Pantry' and its product group to the existing group exactly 'Snacks'. Save and verify both values on the saved product. \n\n    Error: 04-edit s_95b77d: identity: {{v1}} is not confirmed on this page\n\n       at hbgc3.flow.ts:19932\n\n      19930 |         const verdict = await identityMarkerVerdictWithFacts(siteFactsAt(page.url()), 'http://127.0.0.1:8106/product/:id', page.url(), p, `${p.v1}`, { presence: seen.presence, lines: async () => (await captureLines(page, 2).catch(() => null))?.lines ?? null, title: () => page.title() });\n      19931 |         if (verdict.warning) logWarning('04-edit s_95b77d: ' + verdict.warning);\n    > 19932 |         if (!verdict.pass) throw new Error('04-edit s_95b77d: identity: {{v1}} is not confirmed on this page');\n            |                                  ^\n      19933 |       }\n      19934 |     }\n      19935 |     // identity: this must be the record the flow is working on, not another of the same shape.\n        at Object.04-edit (/home/user/sitelooper/bench/results/srgc-a-hbgc3-2-spec-tmp/hbgc3.flow.ts:19932:34)\n        at /home/user/sitelooper/bench/results/srgc-a-hbgc3-2-spec-tmp/hbgc3.flow.ts:23297:7\n        at runFlow (/home/user/sitelooper/bench/results/srgc-a-hbgc3-2-spec-tmp/hbgc3.flow.ts:23296:5)\n        at /home/user/sitelooper/bench/results/srgc-a-hbgc3-2-spec-tmp/hbgc3.spec.ts:14:21\n\n    attachment #2: sitelooper-drift (text/plain) ───────────────────────────────────────────────────\n    \n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    attachment #3: screenshot (image/png) ──────────────────────────────────────────────────────────\n    test-results/hbgc3-hbgc3/test-failed-1.png\n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    Error Context: test-results/hbgc3-hbgc3/error-context.md\n\n  1 failed\n    hbgc3.spec.ts:9:1 › hbgc3 ──────────────────────────────────────────────────────────────────────\n"
+}
