@@ -18,7 +18,6 @@
  */
 import type { LocatorCandidate } from '../daemon/recorder.js';
 import { snapshotRefCandidate, structuralCandidate } from '../execution/resolve.js';
-import { retired } from '../skills/repair.js';
 import { VOLATILE_TOKEN_SHAPE, WILDCARD, fieldByName, hasTextMatcher, implicitRoles, volatileMatcher } from '../shared/text.js';
 
 export interface SourceOptions {
@@ -360,17 +359,9 @@ function objectSource(obj: Record<string, unknown>, o: SourceOptions): string {
  *  - `point`: the recorded geometry, for a point. The first point in a chain
  *    is also the plausibility yardstick for every positional guess in it.
  *
- *  - `retired`: the store's retirement evidence (`retired()`, skills/repair.ts:
- *    missed at least twice with the element present, never once resolved),
- *    evaluated HERE, at compile time, and rendered as replay passes it — only
- *    when true. The artifact keeps no evidence store, but it needs none: the
- *    store the compiler reads IS the daemon's, so baking the verdict in orders
- *    the chain exactly as replay does on the same store. Leaving it out had the
- *    two runners try a candidate in different orders (survey: "candidate
- *    retirement — spec lacks"), and the artifact paid the volatile candidate's
- *    miss, or took its wrong element, where replay had learned to skip it.
- *    The raw `seen` counts stay out: only the verdict is an input to the
- *    shared ordering, and `carries` must not name them.
+ * `retired` is deliberately absent: it is the daemon's evidence store, and an
+ * artifact has none — a compiled chain is ordered by class and recorded
+ * order alone.
  */
 export function observationSource(c: LocatorCandidate, index: number, o: SourceOptions = {}): string {
   const page = o.page ?? 'page';
@@ -384,8 +375,6 @@ export function observationSource(c: LocatorCandidate, index: number, o: SourceO
     `carries: JSON.stringify(${objectSource(named as Record<string, unknown>, o)})`,
   ];
   if (c.nth !== undefined) fields.push(`nth: ${c.nth}`);
-  // Store evidence, decided at compile time by the daemon's own rule (see above).
-  if (retired(c)) fields.push('retired: true');
   // The shared rule, rendered as replay passes it: only when true.
   if (snapshotRefCandidate(c)) fields.push('ephemeral: true');
   if (c.kind === 'point') {

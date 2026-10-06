@@ -1,0 +1,104 @@
+
+[sweep] run 1/3: hbpk2-n1 (store: /tmp/before/bench/results/hbpk2-skills)
+[harness] planka: defaulting APP_URL
+[harness] planka: defaulting APP_EMAIL
+[harness] planka: defaulting APP_PASSWORD
+[reset] planka: no cards to delete
+[harness] planka responded 200 at http://127.0.0.1:8104/
+stopped: hbpk2-n1
+  flow "hbpk2" saved: 7 step(s), vars runid → /tmp/before/bench/results/flows/hbpk2.json
+  warning: note: 01-signin no longer publishes user_name — no replay reads it from the page and the recording showed no line to read
+  warning: note: 02-open no longer publishes seed_card_count, other_seed_matches — no replay reads them from the page and the recording showed no line to read
+  warning: note: 03-create no longer publishes card_description_section, occurrences_of_paragraph — no replay reads them from the page and the recording showed no line to read
+  warning: note: 04-set no longer publishes labels_on_card_after_reload, similar_labels_not_used — no replay reads them from the page and the recording showed no line to read
+  warning: note: 05-set no longer publishes member_set, member_not_used — no replay reads them from the page and the recording showed no line to read
+  warning: note: 06-set no longer publishes due_date_set — no replay reads it from the page and the recording showed no line to read
+  warning: note: 07-add no longer publishes list — no replay reads it from the page and the recording showed no line to read
+  warning: note: 06-set: added a read for list to s_bb1008 (page.getByRole('button', { name: 'In Progress', exact: true }); seen on the next instruction's start page)
+  warning: note: 06-set: added a read for displayed_due_date to s_bb1008 (page.getByRole('button', { name: 'December 31 at 12:00 PM', exact: true }); seen on the next instruction's start page)
+  warning: warning: 89 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.startUrl: "http://127.0.0.1:8104/" (output) in "http://127.0.0.1:8104/"
+  flow.steps[0].instruction: "http://127.0.0.1:8104/" (output) in "Sign in to Planka at http://127.0.0.1:8104/ using email admin@example.com and password exactly {{env:APP_PASSWORD}}; verify that the authenticated app opens."
+  flow.steps[0].params.v1: "http://127.0.0.1:8104/" (output) in "http://127.0.0.1:8104/"
+  flow.steps[0].route: "http://127.0.0.1:8104/" (output) in "http://127.0.0.1:8104/"
+  flow.steps[1].instruction: "Bench Project" (output) in "On project Bench Project, open board Bench Board and report exactly the names of cards whose names start with 'Seed:'; do not modify any cards."
+arm=sitelooper model=openai/gpt-6-luna runid=hbpk2-n1 stop=completed
+turns=8 wall=254.8s
+commands=7 cmdTime=229.3s cmdBytes=6872 timeouts=0
+orchestrator in=5313 cw=0 cr=26050 out=830
+inner prompt=1297282 cached=1197440 completion=14246
+spend=$0.0283 maxUsd=3
+learn: A_n=0 replayed=0/7 full=0 repaired=0 compiled=7 variants=0
+-> /tmp/before/bench/results/hbpk2-n1-sitelooper-result.json
+
+hbpk2-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: PASS — 1879839670150366237 in Bench Board / In Progress (want Bench Board / In Progress), description includes runid=true
+  obj 3: PASS — labels=["Hardware (#1879838813707043856)"], want only the seeded Hardware (#1879838813707043856)
+  obj 4: PASS — members=["Bench Tester (#1879838809688900611)"], want only Bench Tester (#1879838809688900611)
+  obj 5: PASS — dueDate=2026-12-31T12:00:00.000Z; want 2026-12-31 (any time of day)
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — card id 1879839670150366237 reported
+
+[sweep] run 2/3: hbpk2-n2 (replay flow hbpk2, no orchestrator)
+[reset] planka: deleted 1 card(s) (earlier runs' and non-seed)
+
+hbpk2-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: PASS — 1879841408982975534 in Bench Board / In Progress (want Bench Board / In Progress), description includes runid=true
+  obj 3: PASS — labels=["Hardware (#1879838813707043856)"], want only the seeded Hardware (#1879838813707043856)
+  obj 4: PASS — members=["Bench Tester (#1879838809688900611)"], want only Bench Tester (#1879838809688900611)
+  obj 5: PASS — dueDate=2026-12-31T12:00:00.000Z; want 2026-12-31 (any time of day)
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — card id 1879841408982975534 reported
+
+[sweep] run 3/3: hbpk2-n3 (replay flow hbpk2, no orchestrator)
+[reset] planka: deleted 1 card(s) (earlier runs' and non-seed)
+
+hbpk2-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: PASS — 1879841773509936191 in Bench Board / In Progress (want Bench Board / In Progress), description includes runid=true
+  obj 3: PASS — labels=["Hardware (#1879838813707043856)"], want only the seeded Hardware (#1879838813707043856)
+  obj 4: PASS — members=["Bench Tester (#1879838809688900611)"], want only Bench Tester (#1879838809688900611)
+  obj 5: PASS — dueDate=2026-12-31T12:00:00.000Z; want 2026-12-31 (any time of day)
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — card id 1879841773509936191 reported
+
+Learning sweep hbpk2 (K=3)
+┌─────────┬───┬────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid      │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'hbpk2-n1' │ '7/7'    │ 'completed' │ 8     │ 7    │ 0.0283    │ 0   │ '0/7'        │ 255    │
+│ 1       │ 2 │ 'hbpk2-n2' │ '7/7'    │ 'success'   │ 0     │ 7    │ 0         │ 1   │ '7/7 (flow)' │ 39     │
+│ 2       │ 3 │ 'hbpk2-n3' │ '7/7'    │ 'success'   │ 0     │ 7    │ 0         │ 1   │ '7/7 (flow)' │ 39     │
+└─────────┴───┴────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:8104
+  s_020437  validated   12 steps  3/3 (100%)
+           On project {{v1}}, open board Bench Board and report exactly the names of cards whose names start with 'Seed:'…
+  s_08c204  validated    4 steps  3/3 (100%)
+           On {{v1}} create a card named '{{v4}}' in the {{v3}} list and set its description to exactly one paragraph con…
+  s_10f193  validated   10 steps  3/3 (100%)
+           For the existing card '{{v1}}' on {{v3}}, set its only member to the existing exact user 'Bench Tester' (not B…
+  s_20cd86  validated    1 steps  3/3 (100%)
+           On project {{v1}}, open board Bench Board and report exactly the names of cards whose names start with 'Seed:'…
+  s_381f1a  validated   11 steps  3/3 (100%)
+           For the existing card '{{v1}}' on {{v3}}, set its only label to the existing exact label 'Hardware' (not Hardw…
+  s_43fb41  validated    1 steps  3/3 (100%)
+           On {{v1}} create a card named '{{v4}}' in the {{v3}} list and set its description to exactly one paragraph con…
+  s_4f8811  validated    1 steps  3/3 (100%)
+           Sign in to Planka at {{v1}} using email {{v2}} and password exactly {{v3}}; verify that the authenticated app …
+  s_74526e  validated    7 steps  3/3 (100%)
+           On {{v1}} create a card named '{{v4}}' in the {{v3}} list and set its description to exactly one paragraph con…
+  s_7aae25  validated    3 steps  3/3 (100%)
+           Sign in to Planka at {{v1}} using email {{v2}} and password exactly {{v3}}; verify that the authenticated app …
+  s_b51945  validated    5 steps  3/3 (100%)
+           On {{v1}} create a card named '{{v4}}' in the {{v3}} list and set its description to exactly one paragraph con…
+  s_b7f901  validated    9 steps  3/3 (100%)
+           From the own view of card '{{v1}}' on {{v3}}, add a comment whose text includes '{{v2}}'. Verify the saved com…
+  s_bb1008  validated   11 steps  3/3 (100%)
+           Set the due date of the existing card '{{v1}}' on {{v3}} to 2026-12-31 (any time that date is fine), save it, …
+  s_fe9af9  validated    3 steps  3/3 (100%)
+           Sign in to Planka at {{v1}} using email {{v2}} and password exactly {{v3}}; verify that the authenticated app …
+store: /tmp/before/bench/results/hbpk2-skills
+
+summary: /tmp/before/bench/results/hbpk2-sweep.json
