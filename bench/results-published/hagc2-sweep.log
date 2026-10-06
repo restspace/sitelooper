@@ -1,0 +1,101 @@
+
+[sweep] run 1/3: hagc2-n1 (store: /home/user/sitelooper/bench/results/hagc2-skills)
+[harness] grocy: defaulting APP_URL
+[harness] grocy: defaulting APP_EMAIL
+[harness] grocy: defaulting APP_PASSWORD
+[reset] grocy: deleted 1 product(s) (earlier runs' and non-seed, with their stock and barcodes)
+[reset] grocy: product ids continue after 358943
+[harness] grocy responded 302 at http://127.0.0.1:8106/
+stopped: hagc2-n1
+  flow "hagc2" saved: 4 step(s), vars runid → /home/user/sitelooper/bench/results/flows/hagc2.json
+  warning: note: 03-create no longer publishes quantity_unit_stock, min_stock_amount_field_name, min_stock_amount — no replay reads them from the page and the recording showed no line to read
+  warning: note: 04-set no longer publishes stock_overview_row_cells — no replay reads it from the page and the recording showed no line to read
+  warning: note: 03-create: added a read for add_barcode_button_label to s_5c0518 (page.getByRole('link', { name: 'Add', exact: true }); seen on the instruction's own page)
+  warning: warning: 114 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[0].instruction: "admin" (output) in "Sign in to Grocy at http://127.0.0.1:8106/ using username admin and password exactly {{env:APP_PASSWORD}}. Verify that the authenticated app is open."
+  flow.steps[0].params.v2: "admin" (output) in "admin"
+  flow.steps[0].route: "stockoverview" (url) in "http://127.0.0.1:8106/stockoverview"
+  flow.steps[1].instruction: "Seed:" (output) in "In Grocy, find and report the names of all products whose name starts exactly with 'Seed:'. Do not edit or change any products."
+  flow.steps[1].instruction: "name" (output) in "In Grocy, find and report the names of all products whose name starts exactly with 'Seed:'. Do not edit or change any products."
+arm=sitelooper model=openai/gpt-6-luna runid=hagc2-n1 stop=completed
+turns=5 wall=240.4s
+commands=4 cmdTime=205.4s cmdBytes=4594 timeouts=0
+orchestrator in=4592 cw=0 cr=13139 out=697
+inner prompt=1049731 cached=968704 completion=15654
+spend=$0.0254 maxUsd=3
+learn: A_n=0 replayed=0/4 full=0 repaired=0 compiled=4 variants=0
+-> /home/user/sitelooper/bench/results/hagc2-n1-sitelooper-result.json
+
+hagc2-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: PASS — #358944, description includes runid=true
+  obj 3: PASS — location=Pantry (#3), product group=Snacks (#2); want the seeded Pantry (#3) and Snacks (#2)
+  obj 4: PASS — stock unit=Pack (#3), purchase unit=Pack (#3), min stock=4; want Pack (#3) twice and 4
+  obj 5: PASS — default due days=30, barcodes=["hagc2-n1-0001"]; want 30 and "hagc2-n1-0001"
+  obj 6: PASS — in stock 3 in 1 entry (3 at Pantry (#3) due 2026-12-31), 1 purchase booking(s); want 3 at Pantry due 2026-12-31 from a purchase
+  obj 7: PASS — product id 358944 reported
+
+[sweep] run 2/3: hagc2-n2 (replay flow hagc2, no orchestrator)
+[reset] grocy: deleted 1 product(s) (earlier runs' and non-seed, with their stock and barcodes)
+[reset] grocy: product ids continue after 445439
+[sweep] hagc2-n2: 3 drift ticket(s) → hagc2-n2-drift.json
+
+hagc2-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: PASS — #445440, description includes runid=true
+  obj 3: PASS — location=Pantry (#3), product group=Snacks (#2); want the seeded Pantry (#3) and Snacks (#2)
+  obj 4: PASS — stock unit=Pack (#3), purchase unit=Pack (#3), min stock=4; want Pack (#3) twice and 4
+  obj 5: PASS — default due days=30, barcodes=["hagc2-n2-0001"]; want 30 and "hagc2-n2-0001"
+  obj 6: PASS — in stock 3 in 1 entry (3 at Pantry (#3) due 2026-12-31), 1 purchase booking(s); want 3 at Pantry due 2026-12-31 from a purchase
+  obj 7: PASS — product id 445440 reported
+
+[sweep] run 3/3: hagc2-n3 (replay flow hagc2, no orchestrator)
+[reset] grocy: deleted 1 product(s) (earlier runs' and non-seed, with their stock and barcodes)
+[reset] grocy: product ids continue after 467094
+[sweep] hagc2-n3: 3 drift ticket(s) → hagc2-n3-drift.json
+
+hagc2-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: PASS — #467095, description includes runid=true
+  obj 3: PASS — location=Pantry (#3), product group=Snacks (#2); want the seeded Pantry (#3) and Snacks (#2)
+  obj 4: PASS — stock unit=Pack (#3), purchase unit=Pack (#3), min stock=4; want Pack (#3) twice and 4
+  obj 5: PASS — default due days=30, barcodes=["hagc2-n3-0001"]; want 30 and "hagc2-n3-0001"
+  obj 6: PASS — in stock 3 in 1 entry (3 at Pantry (#3) due 2026-12-31), 1 purchase booking(s); want 3 at Pantry due 2026-12-31 from a purchase
+  obj 7: PASS — product id 467095 reported
+
+Learning sweep hagc2 (K=3)
+┌─────────┬───┬────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid      │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'hagc2-n1' │ '7/7'    │ 'completed' │ 5     │ 4    │ 0.0254    │ 0   │ '0/4'        │ 240    │
+│ 1       │ 2 │ 'hagc2-n2' │ '7/7'    │ 'success'   │ 0     │ 4    │ 0         │ 1   │ '4/4 (flow)' │ 62     │
+│ 2       │ 3 │ 'hagc2-n3' │ '7/7'    │ 'success'   │ 0     │ 4    │ 0         │ 1   │ '4/4 (flow)' │ 62     │
+└─────────┴───┴────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:8106
+  s_09c7c1  validated    3 steps  3/3 (100%)
+           Sign in to Grocy at {{v1}} using username {{v2}} and password exactly {{v3}}. Verify that the authenticated ap…
+  s_09fd4b  validated    1 steps  3/3 (100%)
+           Purchase the existing product '{{v1}}' once: buy exactly 3 Packs into location '{{v3}}' and set the due date t…
+  s_129338  validated    1 steps  3/3 (100%)
+           Create and save a Grocy product named '{{v2}}'. Set its description to a single paragraph containing exactly t…
+  s_2c0c06  validated    9 steps  3/3 (100%)
+           Create and save a Grocy product named '{{v2}}'. Set its description to a single paragraph containing exactly t…
+  s_5c0518  validated   22 steps  3/3 (100%)
+           Create and save a Grocy product named '{{v2}}'. Set its description to a single paragraph containing exactly t…
+  s_6ba256  validated    2 steps  3/3 (100%)
+           In Grocy, find and report the names of all products whose name starts exactly with '{{v1}}'. Do not edit or ch…
+  s_83e4d9  validated   14 steps  3/3 (100%)
+           In Grocy, find and report the names of all products whose name starts exactly with '{{v1}}'. Do not edit or ch…
+  s_9cd336  validated    4 steps  3/3 (100%)
+           Sign in to Grocy at {{v1}} using username {{v2}} and password exactly {{v3}}. Verify that the authenticated ap…
+  s_a32a5f  validated    2 steps  3/3 (100%)
+           Purchase the existing product '{{v1}}' once: buy exactly 3 Packs into location '{{v3}}' and set the due date t…
+  s_a371cd  validated    1 steps  3/3 (100%)
+           Sign in to Grocy at {{v1}} using username {{v2}} and password exactly {{v3}}. Verify that the authenticated ap…
+  s_f111e9  validated   13 steps  3/3 (100%)
+           Purchase the existing product '{{v1}}' once: buy exactly 3 Packs into location '{{v3}}' and set the due date t…
+  s_f257bf  validated    6 steps  3/3 (100%)
+           Purchase the existing product '{{v1}}' once: buy exactly 3 Packs into location '{{v3}}' and set the due date t…
+store: /home/user/sitelooper/bench/results/hagc2-skills
+
+summary: /home/user/sitelooper/bench/results/hagc2-sweep.json
