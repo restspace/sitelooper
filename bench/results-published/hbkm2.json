@@ -1,0 +1,412 @@
+{
+  "name": "hbkm2",
+  "origin": "http://127.0.0.1:8105",
+  "startUrl": "http://127.0.0.1:8105/en/login",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-signin",
+      "instruction": "Sign in to Kimai at http://127.0.0.1:8105/en/login with email admin@example.com and password exactly {{env:APP_PASSWORD}}. Verify the signed-in page/account is reached.",
+      "skill": "s_4c8666",
+      "params": {
+        "v1": "http://127.0.0.1:8105/en/login",
+        "v2": "admin@example.com",
+        "v3": "{{env:APP_PASSWORD}}"
+      },
+      "outputs": [
+        "login_url",
+        "signed_in_user",
+        "page_heading",
+        "page_message"
+      ],
+      "recorded": {
+        "login_url": "http://127.0.0.1:8105/en/login",
+        "post_login_url": "http://127.0.0.1:8105/en/timesheet/",
+        "signed_in_user": "admin",
+        "page_heading": "My times",
+        "app_version": "Kimai 2.68.0",
+        "page_message": "No entries were found based on your selected filters.",
+        "url": "http://127.0.0.1:8105/en/timesheet/"
+      },
+      "route": "http://127.0.0.1:8105/en/timesheet/",
+      "outputEvidence": {
+        "login_url": {
+          "same": 1,
+          "differed": 0
+        },
+        "post_login_url": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "signed_in_user": {
+          "same": 1,
+          "differed": 0
+        },
+        "page_heading": {
+          "same": 1,
+          "differed": 0
+        },
+        "app_version": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "page_message": {
+          "same": 1,
+          "differed": 0
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "02-report",
+      "instruction": "Read and report the exact names of all projects whose name starts with Seed: in Kimai. Do not modify any projects.",
+      "skill": "s_f57ca4",
+      "params": {},
+      "outputs": [
+        "matching_project_count",
+        "heading",
+        "project_name_1",
+        "project_name_2",
+        "project_name_3",
+        "matching_project_names_1",
+        "matching_project_names_2",
+        "matching_project_names_3"
+      ],
+      "recorded": {
+        "matching_project_count": "3",
+        "total_projects_listed": "3",
+        "heading": "Projects",
+        "project_name_1": "Seed: Annual audit",
+        "project_name_2": "Seed: Office move",
+        "project_name_3": "Seed: Website relaunch",
+        "matching_project_names_1": "Seed: Annual audit",
+        "matching_project_names_2": "Seed: Office move",
+        "matching_project_names_3": "Seed: Website relaunch",
+        "url": "http://127.0.0.1:8105/en/admin/project/"
+      },
+      "route": "http://127.0.0.1:8105/en/admin/project/",
+      "outputEvidence": {
+        "matching_project_count": {
+          "same": 1,
+          "differed": 0
+        },
+        "total_projects_listed": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "heading": {
+          "same": 1,
+          "differed": 0
+        },
+        "project_name_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "project_name_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "project_name_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "matching_project_names_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "matching_project_names_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "matching_project_names_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "03-create",
+      "instruction": "Create and save exactly one timesheet record on project '{{runid}} Bench Project' for 2026-09-16 from 09:00 to 11:30, with a description containing literal runid {{runid}}. Choose the existing activity exactly 'Consulting' (not similarly named activities) and set its only tag to the existing tag 'onsite' (not create a tag and not choose similar tags). Verify the saved entry and report date, start/end times, description, project, activity, and all tags. Do not create a second entry.",
+      "outputs": [
+        "existing_row_count",
+        "existing_row_values",
+        "attempted_date_value",
+        "post_save_date_verification",
+        "requested_description",
+        "activity",
+        "tag",
+        "entry_matching_all_requested_fields",
+        "repaired_entry_id",
+        "entry_edit_url",
+        "pick_datepicker_month_header_read",
+        "datepicker_library",
+        "verified_begin_date",
+        "verified_begin_time",
+        "verified_end_time",
+        "verified_duration",
+        "verified_description",
+        "verified_customer",
+        "verified_project",
+        "verified_activity",
+        "verified_tags",
+        "list_row_for_entry2",
+        "other_entry_id",
+        "other_entry_row_text_unchanged",
+        "new_entries_created",
+        "date_before_edit",
+        "date_after_fill",
+        "begin_date_after_fill",
+        "duration_now",
+        "end_time_now",
+        "begin_date_after_picker",
+        "begin_time_check",
+        "end_time_check",
+        "duration_check",
+        "tr_data_href",
+        "timesheet_edit_form_tags",
+        "ref"
+      ],
+      "recorded": {
+        "existing_row_count": "2",
+        "existing_row_values": "10/6/2026 | 9:00 AM | 11:30 AM | 2:30 | Bench Customer | hbkm2-n1 Bench Project | Consulting (both rows)",
+        "attempted_date_value": "9/16/2026",
+        "post_save_date_verification": "Both existing rows still display 10/6/2026",
+        "requested_description": "Bench timesheet hbkm2-n1 consulting session. (previously entered; saved value not verified)",
+        "activity": "Consulting",
+        "tag": "onsite previously selected; saved tag set not verified",
+        "entry_matching_all_requested_fields": "not confirmed",
+        "repaired_entry_id": "2",
+        "entry_edit_url": "http://127.0.0.1:8105/en/timesheet/2/edit",
+        "pick_datepicker_month_header_read": "September2026",
+        "datepicker_library": "litepicker",
+        "verified_begin_date": "9/16/2026",
+        "verified_begin_time": "9:00 AM",
+        "verified_end_time": "11:30 AM",
+        "verified_duration": "2:30",
+        "verified_description": "Bench timesheet hbkm2-n1 consulting session.",
+        "verified_customer": "Bench Customer",
+        "verified_project": "hbkm2-n1 Bench Project",
+        "verified_activity": "Consulting",
+        "verified_tags": "onsite",
+        "list_row_for_entry2": "9/16/2026 | 9:00 AM | 11:30 AM | 2:30 | Bench Customer | hbkm2-n1 Bench Project | Consulting",
+        "other_entry_id": "1",
+        "other_entry_row_text_unchanged": "10/6/2026 | 9:00 AM | 11:30 AM | 2:30 | Bench Customer | hbkm2-n1 Bench Project | Consulting",
+        "new_entries_created": "0",
+        "date_before_edit": "10/6/2026",
+        "date_after_fill": "9/16/2026",
+        "begin_date_after_fill": "9/16/2026",
+        "duration_now": "2:30",
+        "end_time_now": "11:30 AM",
+        "begin_date_after_picker": "9/16/2026",
+        "begin_time_check": "9:00 AM",
+        "end_time_check": "11:30 AM",
+        "duration_check": "2:30",
+        "tr_data_href": "/en/timesheet/2/edit",
+        "timesheet_edit_form_tags": "onsite",
+        "ref": "hbkm2-n1",
+        "url": "http://127.0.0.1:8105/en/timesheet/2/edit",
+        "url.p2": "2"
+      },
+      "adopted": true,
+      "route": "http://127.0.0.1:8105/en/timesheet/:id/edit"
+    },
+    {
+      "id": "04-verify",
+      "instruction": "Repair the order date on the existing project '{{runid}} Bench Project' (ID 40004) to 2026-11-15. Use the date picker interaction to commit November 15, 2026 rather than merely typing, then save using the actual project form Save control and verify by reopening the edit/details page that the persisted order date is 11/15/2026. Do not create another project or change any other fields. Report the verified value or state plainly if unable.",
+      "skill": "s_fc315b",
+      "params": {
+        "v1": "{{runid}} Bench Project",
+        "v4": "11/15/2026",
+        "v2": "{{runid}}",
+        "v3": "40004"
+      },
+      "outputs": [
+        "customer_unchanged",
+        "description_unchanged",
+        "details_url",
+        "details_page_row_order_date",
+        "new_projects_created",
+        "order_date_persisted_verified",
+        "order_date_verified_sources",
+        "order_number_unchanged",
+        "project_name_heading",
+        "project_number_unchanged",
+        "verified_via",
+        "project_id",
+        "other_fields_changed",
+        "order_date_after_pick",
+        "project_name_value",
+        "url_after_save",
+        "dialog_order_date",
+        "ref"
+      ],
+      "recorded": {
+        "customer_unchanged": "Bench Customer",
+        "description_unchanged": "Bench run hbkm2-n1 project for automation verification.",
+        "details_url": "http://127.0.0.1:8105/en/admin/project/40004/details",
+        "details_page_row_order_date": "Order date\t11/15/2026",
+        "new_projects_created": "0",
+        "order_date_persisted_verified": "11/15/2026",
+        "order_date_verified_sources": "details page row 'Order date 11/15/2026'; reopened edit form field value 11/15/2026; raw server response value=\"11/15/2026\" for id project_edit_form_orderDate",
+        "order_date_was_before": "10/6/2026",
+        "order_number_unchanged": "PO-4471",
+        "picker_month_header_read": "November2026",
+        "project_name_heading": "hbkm2-n1 Bench Project",
+        "project_number_unchanged": "0005",
+        "verified_via": "litepicker calendar (day item data-time 1794700800000) plus form[name=\"project_edit_form\"] input[type=submit][value=\"Save\"]",
+        "project_id": "40004",
+        "other_fields_changed": "none (Working hours 5:00 is the project's derived total from its timesheet entries, not a field I edited)",
+        "order_date_after_pick": "11/15/2026",
+        "order_number_value": "PO-4471",
+        "project_name_value": "hbkm2-n1 Bench Project",
+        "url_after_save": "http://127.0.0.1:8105/en/admin/project/40004/details",
+        "dialog_order_date": "11/15/2026",
+        "dialog_order_number": "PO-4471",
+        "litepicker_month_item_he": "October2026",
+        "ref": "hbkm2-n1",
+        "ref_2": "day-15",
+        "url": "http://127.0.0.1:8105/en/admin/project/40004/details",
+        "url.p3": "40004"
+      },
+      "route": "http://127.0.0.1:8105/en/admin/project/:id/details"
+    },
+    {
+      "id": "05-remove",
+      "instruction": "Remove only the accidental extra timesheet entry for project '{{runid}} Bench Project' that is id 1 and still dated {{03-create.date_before_edit}}. Preserve the verified correct entry id 2 dated {{03-create.attempted_date_value}} with 09:00–11:30, Consulting, description containing {{runid}} and only tag onsite. Verify afterward that exactly the one correct requested entry remains; do not alter the project or any other records.",
+      "skill": "s_a7f8f7",
+      "params": {
+        "v1": "{{runid}} Bench Project",
+        "v3": "{{03-create.date_before_edit}}",
+        "v4": "{{03-create.attempted_date_value}}",
+        "v5": "Consulting",
+        "v2": "{{runid}}",
+        "v6": "onsite",
+        "v7": "2",
+        "v8": "{{04-verify.url.p3}}"
+      },
+      "outputs": [
+        "deleted_entry_id",
+        "deleted_entry_date_was",
+        "delete_confirm_text",
+        "remaining_entry_id",
+        "remaining_entry_date",
+        "remaining_entry_start_time",
+        "remaining_entry_end_time",
+        "remaining_entry_duration",
+        "remaining_entry_description",
+        "remaining_entry_customer",
+        "remaining_entry_project",
+        "remaining_entry_activity",
+        "remaining_entry_tags",
+        "remaining_row_text",
+        "project_details_url",
+        "new_entries_created",
+        "final_begin_date",
+        "final_description",
+        "tr_data_href",
+        "timesheet_edit_form_cust",
+        "ref"
+      ],
+      "recorded": {
+        "deleted_entry_id": "1",
+        "deleted_entry_date_was": "10/6/2026",
+        "delete_confirm_text": "Do you really want to delete it?",
+        "delete_confirm_target": "http://127.0.0.1:8105/api/timesheets/1",
+        "remaining_entry_id": "2",
+        "remaining_entry_edit_url": "http://127.0.0.1:8105/en/timesheet/2/edit",
+        "remaining_entry_date": "9/16/2026",
+        "remaining_entry_start_time": "9:00 AM",
+        "remaining_entry_end_time": "11:30 AM",
+        "remaining_entry_duration": "2:30",
+        "remaining_entry_description": "Bench timesheet hbkm2-n1 consulting session.",
+        "remaining_entry_customer": "Bench Customer",
+        "remaining_entry_project": "hbkm2-n1 Bench Project",
+        "remaining_entry_activity": "Consulting",
+        "remaining_entry_tags": "onsite (only)",
+        "remaining_row_text": "9/16/2026\t9:00 AM\t11:30 AM\t2:30\tBench Customer\thbkm2-n1 Bench Project\tConsulting",
+        "remaining_rows_in_list": "1",
+        "project_details_url": "http://127.0.0.1:8105/en/admin/project/40004/details",
+        "project_order_date_still_saved": "11/15/2026",
+        "project_order_number_still_saved": "PO-4471",
+        "project_number_still_saved": "0005",
+        "project_working_hours_now": "2:30",
+        "project_billable_now": "2:30",
+        "new_entries_created": "0",
+        "final_begin_date": "9/16/2026",
+        "final_begin_time": "9:00 AM",
+        "final_end_time": "11:30 AM",
+        "final_duration": "2:30",
+        "final_description": "Bench timesheet hbkm2-n1 consulting session.",
+        "tr_data_href": "/en/timesheet/2/edit",
+        "timesheet_edit_form_cust": "onsite",
+        "ref": "hbkm2-n1"
+      },
+      "route": "http://127.0.0.1:8105/en/timesheet/"
+    }
+  ],
+  "provenance": {
+    "session": "hbkm2-n1",
+    "created": "2026-10-06T12:35:14.105Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "01-signin",
+      "outputs": [
+        "post_login_url",
+        "app_version"
+      ]
+    },
+    {
+      "stepId": "02-report",
+      "outputs": [
+        "total_projects_listed"
+      ]
+    },
+    {
+      "stepId": "04-verify",
+      "outputs": [
+        "order_date_was_before",
+        "picker_month_header_read",
+        "order_number_value",
+        "dialog_order_number",
+        "litepicker_month_item_he",
+        "ref_2"
+      ]
+    },
+    {
+      "stepId": "05-remove",
+      "outputs": [
+        "delete_confirm_target",
+        "remaining_entry_edit_url",
+        "remaining_rows_in_list",
+        "project_order_date_still_saved",
+        "project_order_number_still_saved",
+        "project_number_still_saved",
+        "project_working_hours_now",
+        "project_billable_now",
+        "final_begin_time",
+        "final_end_time",
+        "final_duration"
+      ]
+    }
+  ]
+}

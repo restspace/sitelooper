@@ -1,0 +1,136 @@
+{
+  "flow": "hbkm2",
+  "status": "halted",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_8ce9f0; observed login_url=http://127.0.0.1:8105/en/login, page_message=No entries were found based on your selected filters., signed_in_user=admin, page_heading=My times.",
+      "values": {
+        "login_url": "http://127.0.0.1:8105/en/login",
+        "page_message": "No entries were found based on your selected filters.",
+        "signed_in_user": "admin",
+        "page_heading": "My times"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "7/7",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-report",
+      "status": "success",
+      "summary": "Replayed stored procedure s_547c5f; observed matching_project_count=3, project_name_1=Seed: Annual audit, project_name_2=Seed: Office move, project_name_3=Seed: Website relaunch, matching_project_names_1=Seed: Annual audit, matching_project_names_2=Seed: Office move, matching_project_names_3=Seed: Website relaunch, heading=Projects.",
+      "values": {
+        "matching_project_count": "3",
+        "project_name_1": "Seed: Annual audit",
+        "project_name_2": "Seed: Office move",
+        "project_name_3": "Seed: Website relaunch",
+        "matching_project_names_1": "Seed: Annual audit",
+        "matching_project_names_2": "Seed: Office move",
+        "matching_project_names_3": "Seed: Website relaunch",
+        "heading": "Projects"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "10/10",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-create",
+      "status": "blocked",
+      "summary": "I did not create or save an entry. Rechecking the create dialog, the Project picker offered only Seed: Annual audit, Seed: Office move, and Seed: Website relaunch; typing the requested project name showed an open Project listbox but no selectable result. The existing Consulting activity and onsite tag are visible, but without the requested project I cannot save the entry without substituting. I made no project changes and did not save a timesheet record.",
+      "values": {
+        "date_before_edit": "10/6/2026",
+        "attempted_date_value": "2026-09-16",
+        "project_options": "Seed: Annual audit, Seed: Office move, Seed: Website relaunch",
+        "requested_project_picker_result": "no selectable result; only Seed projects offered",
+        "activity_options": "Consultancy Review, Consulting, Consulting Travel",
+        "tag_options": "offsite, onsite, onsite-remote",
+        "timesheet_entry_created": "no"
+      },
+      "tier": null,
+      "recovered": true,
+      "fellBack": "the flow step has no pinned skill",
+      "replayed": null,
+      "repaired": false,
+      "turns": 69
+    },
+    {
+      "id": "04-verify",
+      "status": "blocked",
+      "summary": "Unable to repair the order date. I rechecked the Projects page with visibility set to Both and searched for project ID 40004; Kimai displayed the alert “No entries were found based on your selected filters” and showed only the three Seed projects. The provided edit URL for ID 40004 had rendered “Not Found” in the prior observed state. No existing project form or order-date picker was available, so I did not save or change any fields; the persisted order date could not be verified.",
+      "values": {
+        "project_search_term": "40004",
+        "project_search_result": "No entries were found based on your selected filters.",
+        "visible_project_names": "Seed: Annual audit; Seed: Office move; Seed: Website relaunch",
+        "order_date_repaired": "no",
+        "project_fields_changed": "none"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_92a95c stopped at step 1 — no element matched any known locator for target (tried 3: page.getByRole('button', { name: 'Invoices', exact: true }).nth(1), page.locator('#project_invoice_settings > div > div > div > div:nth-of-type(1) > button'), elementAt(760, 660) /* button */)",
+      "replayed": "0/8",
+      "repaired": false,
+      "turns": 41,
+      "warnings": [
+        "s_92a95c: identity marker \"hbkm2-n3 Bench Project\" is not on the page, but the url names this run's record (path[3]=40004) — the marker is stale; proceeding",
+        "s_92a95c: identity marker \"hbkm2-n3\" is not on the page, but the url names this run's record (path[3]=40004) — the marker is stale; proceeding"
+      ]
+    }
+  ],
+  "passed": 2,
+  "total": 5,
+  "repinned": 0,
+  "drift": 1,
+  "driftTickets": [
+    {
+      "flow": "hbkm2",
+      "step": "04-verify",
+      "skill": "s_92a95c",
+      "atStep": "1",
+      "key": "target",
+      "similarity": 0.037,
+      "missedLocator": "page.getByRole('button', { name: 'Invoices', exact: true }).nth(1)",
+      "fallbackUsed": null,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:8105/en/admin/project/:id/edit",
+      "pageUrl": "http://127.0.0.1:8105/en/admin/project/40004/edit"
+    }
+  ],
+  "wallMs": 572164,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 2505631,
+    "completionTokens": 40144,
+    "cachedTokens": 2223004
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 1907927,
+      "completionTokens": 37198,
+      "cachedTokens": 1797760
+    },
+    "openai/gpt-6-luna": {
+      "promptTokens": 597704,
+      "completionTokens": 2946,
+      "cachedTokens": 425244
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ],
+    "openai/gpt-6-luna": [
+      "OpenAI"
+    ]
+  },
+  "recoveryModel": "openai/gpt-6-luna",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "halted",
+  "nextActions": []
+}

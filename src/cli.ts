@@ -17,7 +17,6 @@ import { drainDrift, llmProposer, triage, type DrainSummary, type DriftTicket } 
 import { cascadeProposer } from './skills/repair-jev.js';
 import { buildSystemOne, resolveSystemOneConfig } from './agent/system-one.js';
 import { compileFlow } from './spec/index.js';
-import { converge, roundLine } from './spec/converge.js';
 import { foldTicketEvidence, mintVars, notConverged, reorderByEvidence } from './spec/repair.js';
 import { emitFlowFile } from './spec/emit.js';
 import { carryFactSnapshot, carryFingerprints, carryRecipeSnapshot, flowToSpec, type SpecFlow } from './spec/ir.js';
@@ -167,7 +166,6 @@ function parseArgv(argv: string[]): ParsedArgs {
     'out',
     'converge',
     'reset-cmd',
-    'rerecord-runs',
     'instruction',
     'runs',
     'config',
@@ -220,10 +218,7 @@ function parseArgv(argv: string[]): ParsedArgs {
     const arg = argv[i];
     if (arg.startsWith('--')) {
       const name = arg.slice(2);
-      if (name === 'converge' && !/^\d/.test(argv[i + 1] ?? '')) {
-        // `build --converge` may stand bare (3 rounds); it must not swallow the next flag.
-        flags.set(name, '');
-      } else if (valueFlags.has(name)) {
+      if (valueFlags.has(name)) {
         flags.set(name, argv[++i] ?? '');
       } else if (booleanFlags.has(name)) {
         flags.set(name, true);
@@ -1196,8 +1191,8 @@ async function compileCommand(positional: string[], flags: Map<string, string | 
     if (result.diagnostics.length) console.error('');
     if (result.refused) {
       console.error('nothing written: the error(s) above are about the RECORDING, not the app — a compiled spec would fail at a locator and read as drift.');
-      const onlyDemoted = result.diagnostics.every((d) => d.severity !== 'error' || d.code === 'demoted-pin' || d.code === 'unproven-pin');
-      console.error(`re-record the step(s) with the fix command above${onlyDemoted ? ', or pass --allow-demoted to compile the demoted or unproven pin anyway' : ''}.`);
+      const onlyDemoted = result.diagnostics.every((d) => d.severity !== 'error' || d.code === 'demoted-pin');
+      console.error(`re-record the step(s) with the fix command above${onlyDemoted ? ', or pass --allow-demoted to compile the demoted pin anyway' : ''}.`);
     } else {
       console.log(`flow: ${result.flowFile}`);
       console.log(result.specFile ? `spec: ${result.specFile}` : 'spec: unchanged (already exists — pass --overwrite-spec to overwrite)');
@@ -1210,8 +1205,8 @@ async function compileCommand(positional: string[], flags: Map<string, string | 
   if (result.refused) {
     const codes = [...new Set(result.diagnostics.filter((d) => d.severity === 'error').map((d) => d.code))];
     fail(
-      codes.every((c) => c === 'demoted-pin' || c === 'unproven-pin')
-        ? `refused: a step is pinned to a ${codes.includes('unproven-pin') ? (codes.includes('demoted-pin') ? 'demoted or unproven' : 'unproven') : 'demoted'} skill — see the diagnostics above (--allow-demoted compiles it anyway)`
+      codes.every((c) => c === 'demoted-pin')
+        ? 'refused: a step is pinned to a demoted skill — see the diagnostics above (--allow-demoted compiles it anyway)'
         : `refused: ${codes.join(', ')} — see the diagnostics above`,
       2,
     );
@@ -1277,7 +1272,7 @@ function checkOptions(flags: Map<string, string | boolean>) {
   };
 }
 
-function readinessCommand(file: string, flags: Map<string, string | boolean>, json: boolean, onProgress?: (m: string) => void, compilation?: ReturnType<typeof compileFlow>, extra: object = {}): void {
+function readinessCommand(file: string, flags: Map<string, string | boolean>, json: boolean, onProgress?: (m: string) => void, compilation?: ReturnType<typeof compileFlow>): void {
   const config = loadProjectConfig();
   // Readiness already has a canonical result document — the evidence file,
   // itself versioned with schemaVersion/stage/outcome — so `--report` moves
@@ -1295,7 +1290,7 @@ function readinessCommand(file: string, flags: Map<string, string | boolean>, js
     negativeSpec: flags.get('negative-spec') ? path.resolve(String(flags.get('negative-spec'))) : config.negativeSpec,
     onProgress: onProgress ?? ((m: string) => console.error(m)),
   });
-  if (json) emitJson({ ...extra, ...(compilation ? { compilation } : {}), readiness: result }, result.state, result.outcome);
+  if (json) emitJson({ ...(compilation ? { compilation } : {}), readiness: result }, result.state, result.outcome);
   else {
     console.log(`readiness: ${result.outcome} (${result.runs.length} execution(s))`);
     console.log(`execution: ${result.executionVerified ? 'verified' : 'not verified'}`);
@@ -1307,9 +1302,8 @@ function readinessCommand(file: string, flags: Map<string, string | boolean>, js
 }
 
 async function buildCommand(positional: string[], flags: Map<string, string | boolean>, json: boolean, onProgress?: (m: string) => void): Promise<void> {
-  if (!positional[0]) fail('usage: build <flow-or-bundle> [--var k=v] [--reset-cmd <cmd> | --fixture-isolation] [--converge [N]] [--rerecord-runs n] [--json]', 2);
+  if (!positional[0]) fail('usage: build <flow-or-bundle> [--var k=v] [--reset-cmd <cmd> | --fixture-isolation] [--json]', 2);
   const config = loadProjectConfig();
-  if (flags.has('converge')) return convergeBuild(positional, flags, json, onProgress);
   const result = compileFlow(positional[0], {
     outDir: flags.get('out') ? String(flags.get('out')) : config.outputDir,
     snapshotFile: fs.existsSync(config.snapshotFile) ? config.snapshotFile : undefined,
@@ -1325,72 +1319,6 @@ async function buildCommand(positional: string[], flags: Map<string, string | bo
   }
   if (!json) console.log(`compiled ${result.flowFile}; verifying emitted Playwright code`);
   readinessCommand(result.flowFile, flags, json, onProgress, result);
-}
-
-/**
- * `build --converge [N]`: compile, run the spec once, and re-record the step a
- * refusal or a failure names, up to N rounds (spec/converge.ts owns the loop;
- * this wires its seams). The model is used by the re-records only. A passing
- * spec then gets the same readiness verification `build` gives.
- */
-async function convergeBuild(positional: string[], flags: Map<string, string | boolean>, json: boolean, onProgress?: (m: string) => void): Promise<void> {
-  const config = loadProjectConfig();
-  const raw = String(flags.get('converge') ?? '');
-  const maxRounds = raw === '' ? 3 : Number(raw);
-  if (!Number.isInteger(maxRounds) || maxRounds < 1) fail('--converge takes a positive round count (default 3)', 2);
-  const rerecordRuns = flags.has('rerecord-runs') ? Number(flags.get('rerecord-runs')) : 2;
-  if (!Number.isInteger(rerecordRuns) || rerecordRuns < 1) fail('--rerecord-runs takes a positive integer', 2);
-  const resetCmd = flags.get('reset-cmd') ? String(flags.get('reset-cmd')) : config.resetCommand;
-  const say = (m: string) => console.error(m);
-  const snapshotFile = fs.existsSync(config.snapshotFile) ? config.snapshotFile : undefined;
-  let last: ReturnType<typeof compileFlow> | null = null;
-  const result = await converge({
-    compile: () => {
-      // --allow-demoted is honoured only when given: a demoted pin is a recording to fix, not to ship.
-      last = compileFlow(positional[0], {
-        outDir: flags.get('out') ? String(flags.get('out')) : config.outputDir,
-        snapshotFile,
-        allowDemoted: flags.has('allow-demoted'), overwriteSpec: flags.has('overwrite-spec'),
-      });
-      return last;
-    },
-    // The reset runs in `reset`, once per check, so the runner does not reset again.
-    check: (flowFile) => runSpecCheck({ flowFile, ...checkOptions(flags), resetCmd: undefined, liveReplayPassed: false, onProgress: onProgress ?? say }),
-    reset: resetCmd ? () => runResetCmd(resetCmd, 'converge check', say) : undefined,
-    rerecord: async (step, o) => {
-      const sub = new Map(flags);
-      sub.delete('converge');
-      sub.set('runs', String(o.runs));
-      if (o.outputs.length) {
-        // The step's own instruction, plus the values a later step uses: a re-record that never reads them cannot publish them (fwod88-cv2).
-        const base = resolveRerecordInput(positional[0], snapshotFile).flow.steps.find((st) => st.id === step)?.instruction ?? '';
-        sub.set('instruction', `${base}\n\nA later step of this flow uses these values, so before you report, read each one from the page with \`read\` (label=<name>) and report it under exactly this name: ${o.outputs.join(', ')}.`);
-      }
-      const { ok, payload } = await rerecordFlow([positional[0], step], sub, json, onProgress, false);
-      return {
-        ok,
-        pinned: payload.pinned ?? null,
-        runs: payload.runs ?? [],
-        diagnostics: (payload.diagnostics ?? []).map((d: Diagnostic) => `${d.code}: ${d.what}`.slice(0, 300)),
-      };
-    },
-    say,
-  }, { maxRounds, rerecordRuns });
-
-  const summary = { converge: result };
-  if (result.status === 'converged' && last) {
-    if (!json) {
-      for (const r of result.rounds) console.log(roundLine(r));
-      console.log(`converged: compiled ${result.flowFile}; verifying emitted Playwright code`);
-    }
-    return readinessCommand(result.flowFile as string, flags, json, onProgress, last, summary);
-  }
-  if (json) emitJson(summary, 'converge', result.status === 'unavailable' ? 'unavailable' : 'not-converged');
-  else {
-    for (const r of result.rounds) console.log(roundLine(r));
-    console.log(`not converged (${result.status}): ${result.why}`);
-  }
-  process.exit(result.status === 'unavailable' || result.status === 'stuck' ? 2 : 4);
 }
 
 async function listSessions(json: boolean): Promise<void> {
@@ -2107,22 +2035,6 @@ async function rerecordFlowCommand(
   json: boolean,
   onProgress?: (m: string) => void,
 ): Promise<void> {
-  const { ok } = await rerecordFlow(positional, flags, json, onProgress, true);
-  process.exit(ok ? 0 : 1);
-}
-
-/**
- * One re-record, callable: the command above prints the verdict and exits on
- * it; `build --converge` (spec/converge.ts) passes `report: false`, keeps the
- * progress lines on stderr and reads the payload itself.
- */
-async function rerecordFlow(
-  positional: string[],
-  flags: Map<string, string | boolean>,
-  json: boolean,
-  onProgress: ((m: string) => void) | undefined,
-  report: boolean,
-): Promise<{ ok: boolean; payload: Record<string, any> }> {
   const usage =
     'usage: rerecord <flow-name-or-path> <step-id> [--instruction "<text>"] [--var k=v ...] [--runs n] [--reset-cmd "<cmd>"] [--json]';
   const [nameOrPath, stepId] = positional;
@@ -2269,12 +2181,12 @@ async function rerecordFlow(
 
   // Diagnostics first, before the counts and the file paths.
   if (!verdict.ok) say(formatRerecordDiagnostic(verdict.diagnostic));
-  if (report && json) emitCommandJson(payload);
+  if (json) emitCommandJson(payload);
   else if (verdict.ok) {
     say(`${stepId}: pinned ${pinned}${skill ? ` (${skill.status}, ${skill.steps.length} action(s))` : ''}`);
     say(`${file} updated — the previous recording is at ${backup}`);
   } else {
     say(input.kind !== 'flow' && !persisted.wrote ? `${file} was preserved; inspect the attempted recording in ${stagedInput.workspace}` : `${file} holds the attempted recording; the previous version is at ${backup}`);
   }
-  return { ok: verdict.ok, payload };
+  process.exit(verdict.ok ? 0 : 1);
 }

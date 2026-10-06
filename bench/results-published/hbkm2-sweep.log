@@ -1,0 +1,120 @@
+
+[sweep] run 1/3: hbkm2-n1 (store: /tmp/before/bench/results/hbkm2-skills)
+[harness] kimai: defaulting APP_URL
+[harness] kimai: defaulting APP_EMAIL
+[harness] kimai: defaulting APP_PASSWORD
+[reset] kimai: no timesheets to delete
+[reset] kimai: no projects to delete
+[harness] kimai responded 302 at http://127.0.0.1:8105/
+stopped: hbkm2-n1
+  flow "hbkm2" saved: 5 step(s), vars runid → /tmp/before/bench/results/flows/hbkm2.json
+  warning: note: 01-signin no longer publishes post_login_url, app_version — no replay reads them from the page and the recording showed no line to read
+  warning: note: 02-report no longer publishes total_projects_listed — no replay reads it from the page and the recording showed no line to read
+  warning: note: 04-verify no longer publishes order_date_was_before, picker_month_header_read, order_number_value, dialog_order_number, litepicker_month_item_he, ref_2 — no replay reads them from the page and the recording showed no line to read
+  warning: note: 05-remove no longer publishes delete_confirm_target, remaining_entry_edit_url, remaining_rows_in_list, project_order_date_still_saved, project_order_number_still_saved, project_number_still_saved, project_working_hours_now, project_billable_now, final_begin_time, final_end_time, final_duration — no replay reads them from the page and the recording showed no line to read
+  warning: note: 02-report: added a read for heading to s_547c5f (page.getByRole('heading', { name: 'Projects', exact: true }), page.getByRole('link', { name: 'Projects', exact: true }); seen on the next instruction's start page)
+  warning: note: 1 step(s) adopted from non-success instruction(s) whose work the session continued from (03-create) — they replay model-first with doubled budget, and a non-success there does not halt the flow
+  warning: warning: instruction "Create and save exactly one project named 'hbkm2-n1 Bench Project'. Se…" ran 16 state-changing step(s) but reported failure — its work is NOT in the flow
+  warning: warning: instruction "Update the already-created project 'hbkm2-n1 Bench Project' only to en…" ran 42 state-changing step(s) but reported failure — its work is NOT in the flow
+  warning: warning: 182 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.startUrl: "http://127.0.0.1:8105/en/login" (output) in "http://127.0.0.1:8105/en/login"
+  flow.steps[0].instruction: "http://127.0.0.1:8105/en/login" (output) in "Sign in to Kimai at http://127.0.0.1:8105/en/login with email admin@example.com and password exactly {{env:APP_PASSWORD}}. Verify the signed-in page/account is "
+  flow.steps[0].instruction: "admin" (output) in "Sign in to Kimai at http://127.0.0.1:8105/en/login with email admin@example.com and password exactly {{env:APP_PASSWORD}}. Verify the signed-in page/account is "
+  flow.steps[0].params.v1: "http://127.0.0.1:8105/en/login" (output) in "http://127.0.0.1:8105/en/login"
+  flow.steps[0].params.v2: "admin" (output) in "admin@example.com"
+  warning: {{03-create.date_before_edit}} (used by 05-remove) can only be re-observed by model recovery — consider re-recording so the value is read from the page.
+  warning: {{03-create.attempted_date_value}} (used by 05-remove) can only be re-observed by model recovery — consider re-recording so the value is read from the page.
+arm=sitelooper model=openai/gpt-6-luna runid=hbkm2-n1 stop=completed
+turns=9 wall=1210.0s
+commands=8 cmdTime=1160.5s cmdBytes=17667 timeouts=0
+orchestrator in=8599 cw=0 cr=37881 out=1845
+inner prompt=9666525 cached=8275905 completion=89815
+spend=$0.2528 maxUsd=3
+learn: A_n=0 replayed=0/8 full=0 repaired=0 compiled=5 variants=0
+-> /tmp/before/bench/results/hbkm2-n1-sitelooper-result.json
+
+hbkm2-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: PASS — #40004, description includes runid=true
+  obj 3: PASS — customer=Bench Customer (#1), want the seeded Bench Customer (#1)
+  obj 4: PASS — orderNumber=PO-4471, orderDate=2026-11-15; want PO-4471 and 2026-11-15
+  obj 5: PASS — timesheet #2 begin=2026-09-16T09:00:00+0000 end=2026-09-16T11:30:00+0000; want 2026-09-16T09:00 to 2026-09-16T11:30
+  obj 6: PASS — activity=Consulting (#1), tags=["onsite"]; want the seeded Consulting (#1) and ["onsite"]
+  obj 7: PASS — project id 40004 reported
+
+[sweep] run 2/3: hbkm2-n2 (replay flow hbkm2, no orchestrator)
+[reset] kimai: deleted 1 timesheet(s)
+[reset] kimai: deleted 1 project(s) (earlier runs' and non-seed)
+[sweep] hbkm2-n2: 1 drift ticket(s) → hbkm2-n2-drift.json
+
+hbkm2-n2: objectives passed 1/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: FAIL — project not found
+  obj 3: FAIL — no project
+  obj 4: FAIL — no project
+  obj 5: FAIL — no project
+  obj 6: FAIL — no timesheet
+  obj 7: FAIL — no project to report
+[sweep] hbkm2-n2: 03-create has no pinned skill — 26 model turn(s), on every replay
+
+[sweep] run 3/3: hbkm2-n3 (replay flow hbkm2, no orchestrator)
+[reset] kimai: no timesheets to delete
+[reset] kimai: no projects to delete
+[sweep] hbkm2-n3: 1 drift ticket(s) → hbkm2-n3-drift.json
+
+hbkm2-n3: objectives passed 1/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: FAIL — project not found
+  obj 3: FAIL — no project
+  obj 4: FAIL — no project
+  obj 5: FAIL — no project
+  obj 6: FAIL — no timesheet
+  obj 7: FAIL — no project to report
+[sweep] hbkm2-n3: 03-create has no pinned skill — 69 model turn(s), on every replay
+
+Learning sweep hbkm2 (K=3)
+┌─────────┬───┬────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid      │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'hbkm2-n1' │ '7/7'    │ 'completed' │ 9     │ 8    │ 0.2528    │ 0   │ '0/8'        │ 1210   │
+│ 1       │ 2 │ 'hbkm2-n2' │ '1/7'    │ 'halted'    │ 40    │ 5    │ 0.0272    │ 0.5 │ '2/5 (flow)' │ 269    │
+│ 2       │ 3 │ 'hbkm2-n3' │ '1/7'    │ 'halted'    │ 110   │ 5    │ 0.0672    │ 0.5 │ '2/5 (flow)' │ 572    │
+└─────────┴───┴────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:8105
+  s_4c8666  validated    4 steps  3/3 (100%)
+           Sign in to Kimai at {{v1}} with email {{v2}} and password exactly {{v3}}. Verify the signed-in page/account is…
+  s_547c5f  validated    8 steps  3/3 (100%)
+           Read and report the exact names of all projects whose name starts with Seed: in Kimai. Do not modify any proje…
+  s_8ce9f0  validated    3 steps  3/3 (100%)
+           Sign in to Kimai at {{v1}} with email {{v2}} and password exactly {{v3}}. Verify the signed-in page/account is…
+  s_92a95c  demoted      8 steps  1/3 (33%)
+           Repair the order date on the existing project '{{v1}}' (ID 40004) to 2026-11-15. Use the date picker interacti…
+  s_f57ca4  validated    2 steps  3/3 (100%)
+           Read and report the exact names of all projects whose name starts with Seed: in Kimai. Do not modify any proje…
+  s_fc315b  validated    1 steps  3/3 (100%)
+           Repair the order date on the existing project '{{v1}}' (ID 40004) to 2026-11-15. Use the date picker interacti…
+  s_02508f  provisional  1 steps  1/1 (100%)
+           Repair one existing timesheet entry for project '{{v1}}' rather than creating any new entry. Make exactly one …
+  s_1827b4  provisional  6 steps  1/1 (100%)
+           Remove only the accidental extra timesheet entry for project '{{v1}}' that is id 1 and still dated {{v3}}. Pre…
+  s_3f24d4  provisional 10 steps  1/1 (100%)
+           Remove only the accidental extra timesheet entry for project '{{v1}}' that is id 1 and still dated {{v3}}. Pre…
+  s_56fef8  provisional  7 steps  1/1 (100%)
+           Repair one existing timesheet entry for project '{{v1}}' rather than creating any new entry. Make exactly one …
+  s_6bd2be  provisional  1 steps  1/1 (100%)
+           Repair one existing timesheet entry for project '{{v1}}' rather than creating any new entry. Make exactly one …
+  s_952309  provisional  9 steps  1/1 (100%)
+           Repair one existing timesheet entry for project '{{v1}}' rather than creating any new entry. Make exactly one …
+  s_994742  provisional 17 steps  1/1 (100%)
+           Repair one existing timesheet entry for project '{{v1}}' rather than creating any new entry. Make exactly one …
+  s_a7f8f7  provisional  1 steps  1/1 (100%)
+           Remove only the accidental extra timesheet entry for project '{{v1}}' that is id 1 and still dated {{v3}}. Pre…
+  s_ab02ec  provisional 12 steps  1/1 (100%)
+           Repair the order date on the existing project '{{v1}}' (ID 40004) to 2026-11-15. Use the date picker interacti…
+  s_dc2b40  provisional  5 steps  1/1 (100%)
+           Repair one existing timesheet entry for project '{{v1}}' rather than creating any new entry. Make exactly one …
+  s_f9fc85  provisional  8 steps  1/1 (100%)
+           Remove only the accidental extra timesheet entry for project '{{v1}}' that is id 1 and still dated {{v3}}. Pre…
+store: /tmp/before/bench/results/hbkm2-skills
+
+summary: /tmp/before/bench/results/hbkm2-sweep.json

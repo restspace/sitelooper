@@ -1,0 +1,129 @@
+{
+  "flow": "hbkm2",
+  "status": "halted",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_8ce9f0; observed login_url=http://127.0.0.1:8105/en/login, page_message=No entries were found based on your selected filters., signed_in_user=admin, page_heading=My times.",
+      "values": {
+        "login_url": "http://127.0.0.1:8105/en/login",
+        "page_message": "No entries were found based on your selected filters.",
+        "signed_in_user": "admin",
+        "page_heading": "My times"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "7/7",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-report",
+      "status": "success",
+      "summary": "Replayed stored procedure s_547c5f; observed matching_project_count=3, project_name_1=Seed: Annual audit, project_name_2=Seed: Office move, project_name_3=Seed: Website relaunch, matching_project_names_1=Seed: Annual audit, matching_project_names_2=Seed: Office move, matching_project_names_3=Seed: Website relaunch, heading=Projects.",
+      "values": {
+        "matching_project_count": "3",
+        "project_name_1": "Seed: Annual audit",
+        "project_name_2": "Seed: Office move",
+        "project_name_3": "Seed: Website relaunch",
+        "matching_project_names_1": "Seed: Annual audit",
+        "matching_project_names_2": "Seed: Office move",
+        "matching_project_names_3": "Seed: Website relaunch",
+        "heading": "Projects"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "10/10",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-create",
+      "status": "blocked",
+      "summary": "I re-observed the current unsaved Create dialog before taking any save action. Its Project selector contains only Seed: Annual audit, Seed: Office move, and Seed: Website relaunch; the requested hbkm2-n2 Bench Project is unavailable, so the required entry cannot be created. No timesheet was saved. This run's observed date_before_edit is 10/6/2026; I could not observe an attempted_date_value because no date edit was attempted.",
+      "values": {
+        "date_before_edit": "10/6/2026"
+      },
+      "tier": null,
+      "recovered": true,
+      "fellBack": "the flow step has no pinned skill",
+      "replayed": null,
+      "repaired": false,
+      "turns": 26
+    },
+    {
+      "id": "04-verify",
+      "status": "blocked",
+      "summary": "Unable: the project with ID 40004 is not present. I reopened /en/admin/project/40004/edit and it returned Not Found, then verified the live Projects list has only Seed: Annual audit, Seed: Office move, and Seed: Website relaunch, with edit/details links only for IDs 40001–40003. The server response for the project list also contained no “hbkm2” text. There is no existing project form or date picker to use, so I made no changes and could not verify the requested order date.",
+      "values": {
+        "project_40004_edit": "Not Found",
+        "listed_projects": "Seed: Annual audit; Seed: Office move; Seed: Website relaunch",
+        "project_ids_with_edit_details_links": "40001, 40002, 40003",
+        "order_date": "unable to verify; target project absent"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_92a95c stopped at step 1 — no element matched any known locator for target (tried 3: page.getByRole('button', { name: 'Invoices', exact: true }).nth(1), page.locator('#project_invoice_settings > div > div > div > div:nth-of-type(1) > button'), elementAt(760, 660) /* button */)",
+      "replayed": "0/8",
+      "repaired": false,
+      "turns": 14,
+      "warnings": [
+        "s_92a95c: identity marker \"hbkm2-n2 Bench Project\" is not on the page, but the url names this run's record (path[3]=40004) — the marker is stale; proceeding",
+        "s_92a95c: identity marker \"hbkm2-n2\" is not on the page, but the url names this run's record (path[3]=40004) — the marker is stale; proceeding"
+      ]
+    }
+  ],
+  "passed": 2,
+  "total": 5,
+  "repinned": 0,
+  "drift": 1,
+  "driftTickets": [
+    {
+      "flow": "hbkm2",
+      "step": "04-verify",
+      "skill": "s_92a95c",
+      "atStep": "1",
+      "key": "target",
+      "similarity": 0.037,
+      "missedLocator": "page.getByRole('button', { name: 'Invoices', exact: true }).nth(1)",
+      "fallbackUsed": null,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:8105/en/admin/project/:id/edit",
+      "pageUrl": "http://127.0.0.1:8105/en/admin/project/40004/edit"
+    }
+  ],
+  "wallMs": 268823,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 686062,
+    "completionTokens": 22862,
+    "cachedTokens": 604725
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 552619,
+      "completionTokens": 21948,
+      "cachedTokens": 494592
+    },
+    "openai/gpt-6-luna": {
+      "promptTokens": 133443,
+      "completionTokens": 914,
+      "cachedTokens": 110133
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ],
+    "openai/gpt-6-luna": [
+      "OpenAI"
+    ]
+  },
+  "recoveryModel": "openai/gpt-6-luna",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "halted",
+  "nextActions": []
+}
