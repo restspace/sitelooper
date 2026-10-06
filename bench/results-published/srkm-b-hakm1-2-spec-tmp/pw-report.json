@@ -1,0 +1,247 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/srkm-b-hakm1-2-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/srkm-b-hakm1-2-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/srkm-b-hakm1-2-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/bench/results/srkm-b-hakm1-2-spec-tmp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/srkm-b-hakm1-2-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "hakm1.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/srkm-b-hakm1-2-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "hakm1.spec.ts",
+      "file": "hakm1.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "hakm1",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 59914,
+                  "error": {
+                    "message": "Error: 04-create s_e93247: identity: {{v1}} is not confirmed on this page",
+                    "stack": "Error: 04-create s_e93247: identity: {{v1}} is not confirmed on this page\n    at Object.04-create (/home/user/sitelooper/bench/results/srkm-b-hakm1-2-spec-tmp/hakm1.flow.ts:19446:34)\n    at /home/user/sitelooper/bench/results/srkm-b-hakm1-2-spec-tmp/hakm1.flow.ts:20121:7\n    at runFlow (/home/user/sitelooper/bench/results/srkm-b-hakm1-2-spec-tmp/hakm1.flow.ts:20120:5)\n    at /home/user/sitelooper/bench/results/srkm-b-hakm1-2-spec-tmp/hakm1.spec.ts:14:21",
+                    "location": {
+                      "file": "/home/user/sitelooper/bench/results/srkm-b-hakm1-2-spec-tmp/hakm1.flow.ts",
+                      "column": 34,
+                      "line": 19446
+                    },
+                    "snippet": "\u001b[90m   at \u001b[39mhakm1.flow.ts:19446\n\n  19444 |         const verdict = await identityMarkerVerdictWithFacts(siteFactsAt(page.url()), 'http://127.0.0.1:8105/en/timesheet/:id/edit', page.url(), p, `${p.v1}`, { presence: seen.presence, lines: async () => (await captureLines(page, 2).catch(() => null))?.lines ?? null, title: () => page.title() });\n  19445 |         if (verdict.warning) logWarning('04-create s_e93247: ' + verdict.warning);\n> 19446 |         if (!verdict.pass) throw new Error('04-create s_e93247: identity: {{v1}} is not confirmed on this page');\n        |                                  ^\n  19447 |       }\n  19448 |     }\n  19449 |     // identity: this must be the record the flow is working on, not another of the same shape."
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/home/user/sitelooper/bench/results/srkm-b-hakm1-2-spec-tmp/hakm1.flow.ts",
+                        "column": 34,
+                        "line": 19446
+                      },
+                      "message": "Error: 04-create s_e93247: identity: {{v1}} is not confirmed on this page\n\n   at hakm1.flow.ts:19446\n\n  19444 |         const verdict = await identityMarkerVerdictWithFacts(siteFactsAt(page.url()), 'http://127.0.0.1:8105/en/timesheet/:id/edit', page.url(), p, `${p.v1}`, { presence: seen.presence, lines: async () => (await captureLines(page, 2).catch(() => null))?.lines ?? null, title: () => page.title() });\n  19445 |         if (verdict.warning) logWarning('04-create s_e93247: ' + verdict.warning);\n> 19446 |         if (!verdict.pass) throw new Error('04-create s_e93247: identity: {{v1}} is not confirmed on this page');\n        |                                  ^\n  19447 |       }\n  19448 |     }\n  19449 |     // identity: this must be the record the flow is working on, not another of the same shape.\n    at Object.04-create (/home/user/sitelooper/bench/results/srkm-b-hakm1-2-spec-tmp/hakm1.flow.ts:19446:34)\n    at /home/user/sitelooper/bench/results/srkm-b-hakm1-2-spec-tmp/hakm1.flow.ts:20121:7\n    at runFlow (/home/user/sitelooper/bench/results/srkm-b-hakm1-2-spec-tmp/hakm1.flow.ts:20120:5)\n    at /home/user/sitelooper/bench/results/srkm-b-hakm1-2-spec-tmp/hakm1.spec.ts:14:21"
+                    }
+                  ],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper skip] 01-signin s_b9d960/3 target: read target not found — value left empty\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 01-signin\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-report\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 03-create s_30fff5/9: read 'order_number' returned a value the skill itself set/selected ('PO-4471') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 03-create s_30fff5/11: read 'order_date_field2' returned a value the skill itself set/selected ('11/15/2026') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 03-create s_30fff5/12: read 'customer_selected' returned 'Bench Customer Ltd\nBench Customers Group\nBench Customer' from a control this step set, and nothing committed it since — it shows the control, however the app formats it, not what the app stored; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 03-create s_30fff5/13: read 'project_name' returned a value the skill itself set/selected ('srkm-b-hakm1-2 Bench Project') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 03-create s_30fff5/14: read 'customer_name' returned 'Bench Customer' from a control this step set, and nothing committed it since — it shows the control, however the app formats it, not what the app stored; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 03-create: report value name_field is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 03-create: report value saved_project_name is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-create\n"
+                    },
+                    {
+                      "text": "[sitelooper drift] 04-create s_4dcb0b/4 target: used #3 locator('#timesheet_edit_form_begin_time') (#2 ambiguous)\n"
+                    },
+                    {
+                      "text": "[sitelooper drift] 04-create s_4dcb0b/5 target: used #3 locator('#timesheet_edit_form_end_time') (#2 ambiguous)\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 04-create s_4dcb0b/9: read 'from_date_value' returned '10/6/2026' from a control this step set, and nothing committed it since — it shows the control, however the app formats it, not what the app stored; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 04-create s_4dcb0b/14: read 'from_date_after_blur' returned a value the skill itself set/selected ('09/16/2026') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 04-create s_4dcb0b/15: read 'begin_time_value' returned a value the skill itself set/selected ('9:00 AM') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 04-create s_4dcb0b/16: read 'end_time_value' returned a value the skill itself set/selected ('11:30 AM') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper skip] 04-create s_4dcb0b/19 target: read target not found — value left empty\n"
+                    },
+                    {
+                      "text": "[sitelooper skip] 04-create s_4dcb0b/20 target: read target not found — value left empty\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-signin: Sign in to Kimai at http://127.0.0.1:8105/en/login with username admin@example.com and password exactly {{env:APP_PASSWORD}}. Verify that the signed-in app is reached.",
+                      "duration": 13747
+                    },
+                    {
+                      "title": "02-report: Read and report the exact names of all projects whose names start with Seed:, without modifying any projects.",
+                      "duration": 2462
+                    },
+                    {
+                      "title": "03-create: Create and save exactly one project named {{runid}} Bench Project. Set its description to include the exact runid {{runid}}, select the existing customer exactly named Bench Customer (not similarly named customers), set order number PO-4471 and order date 2026-11-15. Verify the saved project details, including its customer, description, order values, and details-page address/ID. Do not modify existing projects.",
+                      "duration": 16630
+                    },
+                    {
+                      "title": "04-create: Create and save exactly one timesheet record for project {{runid}} Bench Project on 2026-09-16 from 09:00 to 11:30. Set the description to include exact runid {{runid}}. Select the existing activity exactly named Consulting (not Consulting Travel or Consultancy Review) and set its only tag to the existing tag onsite (not similar tags and do not create a tag). Verify the saved record shows the requested project, date, start/end times, description, exact activity, and only onsite as tag.",
+                      "duration": 26514,
+                      "error": {
+                        "message": "Error: 04-create s_e93247: identity: {{v1}} is not confirmed on this page",
+                        "stack": "Error: 04-create s_e93247: identity: {{v1}} is not confirmed on this page\n    at Object.04-create (/home/user/sitelooper/bench/results/srkm-b-hakm1-2-spec-tmp/hakm1.flow.ts:19446:34)\n    at /home/user/sitelooper/bench/results/srkm-b-hakm1-2-spec-tmp/hakm1.flow.ts:20121:7\n    at runFlow (/home/user/sitelooper/bench/results/srkm-b-hakm1-2-spec-tmp/hakm1.flow.ts:20120:5)\n    at /home/user/sitelooper/bench/results/srkm-b-hakm1-2-spec-tmp/hakm1.spec.ts:14:21",
+                        "location": {
+                          "file": "/home/user/sitelooper/bench/results/srkm-b-hakm1-2-spec-tmp/hakm1.flow.ts",
+                          "column": 34,
+                          "line": 19446
+                        },
+                        "snippet": "\u001b[90m   at \u001b[39mhakm1.flow.ts:19446\n\n  19444 |         const verdict = await identityMarkerVerdictWithFacts(siteFactsAt(page.url()), 'http://127.0.0.1:8105/en/timesheet/:id/edit', page.url(), p, `${p.v1}`, { presence: seen.presence, lines: async () => (await captureLines(page, 2).catch(() => null))?.lines ?? null, title: () => page.title() });\n  19445 |         if (verdict.warning) logWarning('04-create s_e93247: ' + verdict.warning);\n> 19446 |         if (!verdict.pass) throw new Error('04-create s_e93247: identity: {{v1}} is not confirmed on this page');\n        |                                  ^\n  19447 |       }\n  19448 |     }\n  19449 |     // identity: this must be the record the flow is working on, not another of the same shape."
+                      }
+                    }
+                  ],
+                  "startTime": "2026-10-06T16:52:49.845Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": "W3NpdGVsb29wZXIgZHJpZnRdIDA0LWNyZWF0ZSBzXzRkY2IwYi80IHRhcmdldDogdXNlZCAjMyBsb2NhdG9yKCcjdGltZXNoZWV0X2VkaXRfZm9ybV9iZWdpbl90aW1lJykgKCMyIGFtYmlndW91cykKW3NpdGVsb29wZXIgZHJpZnRdIDA0LWNyZWF0ZSBzXzRkY2IwYi81IHRhcmdldDogdXNlZCAjMyBsb2NhdG9yKCcjdGltZXNoZWV0X2VkaXRfZm9ybV9lbmRfdGltZScpICgjMiBhbWJpZ3VvdXMp"
+                    },
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/home/user/sitelooper/bench/results/srkm-b-hakm1-2-spec-tmp/test-results/hakm1-hakm1/test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/home/user/sitelooper/bench/results/srkm-b-hakm1-2-spec-tmp/test-results/hakm1-hakm1/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/home/user/sitelooper/bench/results/srkm-b-hakm1-2-spec-tmp/hakm1.flow.ts",
+                    "column": 34,
+                    "line": 19446
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "0c856d45d29d4dab1ff7-a5f25d39ed0831abc6bf",
+          "file": "hakm1.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-06T16:52:47.266Z",
+    "duration": 62735.560000000005,
+    "expected": 0,
+    "skipped": 0,
+    "unexpected": 1,
+    "flaky": 0
+  }
+}

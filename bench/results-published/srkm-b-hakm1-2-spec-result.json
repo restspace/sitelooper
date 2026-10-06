@@ -1,0 +1,44 @@
+{
+  "arm": "spec",
+  "runid": "srkm-b-hakm1-2",
+  "target": "kimai",
+  "flow": "hakm1.json",
+  "flowName": "hakm1",
+  "skillsDir": "/tmp/srkm-6NcXtk/hakm1-b2/bench/results-published/hakm1-skills",
+  "compiled": true,
+  "flowFile": "../../home/user/sitelooper/bench/results/srkm-b-hakm1-2-spec-tmp/hakm1.flow.ts",
+  "specFile": "../../home/user/sitelooper/bench/results/srkm-b-hakm1-2-spec-tmp/hakm1.spec.ts",
+  "wallMs": 64455,
+  "exitCode": 1,
+  "timedOut": false,
+  "costUsd": 0,
+  "stats": {
+    "total": 1,
+    "passed": 0,
+    "failed": 1,
+    "skipped": 0
+  },
+  "tests": [
+    {
+      "title": "hakm1",
+      "status": "unexpected",
+      "ok": false,
+      "durationMs": 59914,
+      "error": "Error: 04-create s_e93247: identity: {{v1}} is not confirmed on this page",
+      "drift": [
+        "[sitelooper drift] 04-create s_4dcb0b/4 target: used #3 locator('#timesheet_edit_form_begin_time') (#2 ambiguous)",
+        "[sitelooper drift] 04-create s_4dcb0b/5 target: used #3 locator('#timesheet_edit_form_end_time') (#2 ambiguous)"
+      ]
+    }
+  ],
+  "drift": [
+    "[sitelooper drift] 04-create s_4dcb0b/4 target: used #3 locator('#timesheet_edit_form_begin_time') (#2 ambiguous)",
+    "[sitelooper drift] 04-create s_4dcb0b/5 target: used #3 locator('#timesheet_edit_form_end_time') (#2 ambiguous)"
+  ],
+  "driftCount": 2,
+  "evidence": [
+    "srkm-b-hakm1-2-spec-failure.png",
+    "srkm-b-hakm1-2-spec-error-context.md"
+  ],
+  "logTail": "03-create\n[sitelooper drift] 04-create s_4dcb0b/4 target: used #3 locator('#timesheet_edit_form_begin_time') (#2 ambiguous)\n[sitelooper drift] 04-create s_4dcb0b/5 target: used #3 locator('#timesheet_edit_form_end_time') (#2 ambiguous)\n[sitelooper warn] 04-create s_4dcb0b/9: read 'from_date_value' returned '10/6/2026' from a control this step set, and nothing committed it since — it shows the control, however the app formats it, not what the app stored; dropped from the report's confident values\n[sitelooper warn] 04-create s_4dcb0b/14: read 'from_date_after_blur' returned a value the skill itself set/selected ('09/16/2026') — confirms the control, not persistence; dropped from the report's confident values\n[sitelooper warn] 04-create s_4dcb0b/15: read 'begin_time_value' returned a value the skill itself set/selected ('9:00 AM') — confirms the control, not persistence; dropped from the report's confident values\n[sitelooper warn] 04-create s_4dcb0b/16: read 'end_time_value' returned a value the skill itself set/selected ('11:30 AM') — confirms the control, not persistence; dropped from the report's confident values\n[sitelooper skip] 04-create s_4dcb0b/19 target: read target not found — value left empty\n[sitelooper skip] 04-create s_4dcb0b/20 target: read target not found — value left empty\n  ✘  1 hakm1.spec.ts:9:1 › hakm1 (59.9s)\n\n\n  1) hakm1.spec.ts:9:1 › hakm1 › 04-create: Create and save exactly one timesheet record for project {{runid}} Bench Project on 2026-09-16 from 09:00 to 11:30. Set the description to include exact runid {{runid}}. Select the existing activity exactly named Consulting (not Consulting Travel or Consultancy Review) and set its only tag to the existing tag onsite (not similar tags and do not create a tag). Verify the saved record shows the requested project, date, start/end times, description, exact activity, and only onsite as tag. \n\n    Error: 04-create s_e93247: identity: {{v1}} is not confirmed on this page\n\n       at hakm1.flow.ts:19446\n\n      19444 |         const verdict = await identityMarkerVerdictWithFacts(siteFactsAt(page.url()), 'http://127.0.0.1:8105/en/timesheet/:id/edit', page.url(), p, `${p.v1}`, { presence: seen.presence, lines: async () => (await captureLines(page, 2).catch(() => null))?.lines ?? null, title: () => page.title() });\n      19445 |         if (verdict.warning) logWarning('04-create s_e93247: ' + verdict.warning);\n    > 19446 |         if (!verdict.pass) throw new Error('04-create s_e93247: identity: {{v1}} is not confirmed on this page');\n            |                                  ^\n      19447 |       }\n      19448 |     }\n      19449 |     // identity: this must be the record the flow is working on, not another of the same shape.\n        at Object.04-create (/home/user/sitelooper/bench/results/srkm-b-hakm1-2-spec-tmp/hakm1.flow.ts:19446:34)\n        at /home/user/sitelooper/bench/results/srkm-b-hakm1-2-spec-tmp/hakm1.flow.ts:20121:7\n        at runFlow (/home/user/sitelooper/bench/results/srkm-b-hakm1-2-spec-tmp/hakm1.flow.ts:20120:5)\n        at /home/user/sitelooper/bench/results/srkm-b-hakm1-2-spec-tmp/hakm1.spec.ts:14:21\n\n    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────\n    [sitelooper drift] 04-create s_4dcb0b/4 target: used #3 locator('#timesheet_edit_form_begin_time') (#2 ambiguous)\n    [sitelooper drift] 04-create s_4dcb0b/5 target: used #3 locator('#timesheet_edit_form_end_time') (#2 ambiguous)\n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────\n    test-results/hakm1-hakm1/test-failed-1.png\n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    Error Context: test-results/hakm1-hakm1/error-context.md\n\n  1 failed\n    hakm1.spec.ts:9:1 › hakm1 ──────────────────────────────────────────────────────────────────────\n"
+}

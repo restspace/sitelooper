@@ -1,0 +1,166 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/srkm-a-hakm2-1-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/srkm-a-hakm2-1-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/srkm-a-hakm2-1-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/bench/results/srkm-a-hakm2-1-spec-tmp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/srkm-a-hakm2-1-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "hakm2.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/srkm-a-hakm2-1-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "hakm2.spec.ts",
+      "file": "hakm2.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "hakm2",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 42104,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper step] 01-signin\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-find\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-create\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 04-edit s_ce45bf/10: read 'order_date' returned a value the skill itself set/selected ('11/15/2026') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-edit\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-signin: Sign in to Kimai at http://127.0.0.1:8105/en/login with username admin@example.com and password exactly {{env:APP_PASSWORD}}. Verify that login succeeds and report the page reached.",
+                      "duration": 7634
+                    },
+                    {
+                      "title": "02-find: Find and report the exact names of all existing projects whose name starts with 'Seed:' in Kimai. Do not edit anything. Verify from the projects listing/search results.",
+                      "duration": 5285
+                    },
+                    {
+                      "title": "03-create: Create exactly one new Kimai project named '{{runid}} Bench Project' with a description that includes the exact runid '{{runid}}'. Save it, then verify the saved project's displayed name and description and report its details URL/ID if available. Do not create a timesheet yet.",
+                      "duration": 8952
+                    },
+                    {
+                      "title": "04-edit: Edit the existing project '{{runid}} Bench Project' and set its order number to 'PO-4471' and order date to 2026-11-15. Save and verify both values on the project details page. Do not change its name, customer, or description.",
+                      "duration": 19761
+                    }
+                  ],
+                  "startTime": "2026-10-06T16:47:53.952Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "outputs",
+                      "contentType": "application/json",
+                      "body": "ewogICIwMS1zaWduaW4ucGFnZV9oZWFkaW5nIjogIk15IHRpbWVzIiwKICAiMDEtc2lnbmluLnBhZ2VfcmVhY2hlZCI6ICJodHRwOi8vMTI3LjAuMC4xOjgxMDUvZW4vdGltZXNoZWV0LyIsCiAgIjAxLXNpZ25pbi5wYWdlX21lc3NhZ2UiOiAiTm8gZW50cmllcyB3ZXJlIGZvdW5kIGJhc2VkIG9uIHlvdXIgc2VsZWN0ZWQgZmlsdGVycy4iLAogICIwMS1zaWduaW4ubG9nZ2VkX2luX3VzZXIiOiAiYWRtaW4iLAogICIwMS1zaWduaW4ubG9naW5fcGFnZSI6ICJodHRwOi8vMTI3LjAuMC4xOjgxMDUvZW4vbG9naW4iLAogICIwMi1maW5kLnByb2plY3RfbmFtZV8xIjogIlNlZWQ6IEFubnVhbCBhdWRpdCIsCiAgIjAyLWZpbmQucHJvamVjdF9uYW1lXzIiOiAiU2VlZDogT2ZmaWNlIG1vdmUiLAogICIwMi1maW5kLnByb2plY3RfbmFtZV8zIjogIlNlZWQ6IFdlYnNpdGUgcmVsYXVuY2giLAogICIwMi1maW5kLnRvdGFsX3Byb2plY3RzX29uX3VuZmlsdGVyZWRfbGlzdGluZyI6ICIzIiwKICAiMDItZmluZC5zZWFyY2hfdGVybV91c2VkIjogIlNlZWQ6IiwKICAiMDItZmluZC5tYXRjaGluZ19wcm9qZWN0c18xIjogIlNlZWQ6IEFubnVhbCBhdWRpdCIsCiAgIjAyLWZpbmQubWF0Y2hpbmdfcHJvamVjdHNfMiI6ICJTZWVkOiBPZmZpY2UgbW92ZSIsCiAgIjAyLWZpbmQubWF0Y2hpbmdfcHJvamVjdHNfMyI6ICJTZWVkOiBXZWJzaXRlIHJlbGF1bmNoIiwKICAiMDItZmluZC5saXN0aW5nX2hlYWRpbmciOiAiUHJvamVjdHMiLAogICIwMy1jcmVhdGUubWludGVkIjogIjQwMDA2IiwKICAiMDMtY3JlYXRlLnByb2plY3RfbmFtZSI6ICJzcmttLWEtaGFrbTItMSBCZW5jaCBQcm9qZWN0IiwKICAiMDMtY3JlYXRlLnByb2plY3RfZGVzY3JpcHRpb24iOiAiQ3JlYXRlZCBmb3IgcnVuIHNya20tYS1oYWttMi0xIiwKICAiMDMtY3JlYXRlLnByb2plY3RfZGV0YWlsc191cmwiOiAiaHR0cDovLzEyNy4wLjAuMTo4MTA1L2VuL2FkbWluL3Byb2plY3QvNDAwMDYvZGV0YWlscyIsCiAgIjAzLWNyZWF0ZS5wcm9qZWN0X2N1c3RvbWVyIjogIkJlbmNoIEN1c3RvbWVyIiwKICAiMDMtY3JlYXRlLnJ1bmlkX2luX2Rlc2NyaXB0aW9uIjogInNya20tYS1oYWttMi0xIiwKICAiMDMtY3JlYXRlLnByb2plY3RfaWQiOiAiNDAwMDYiLAogICIwNC1lZGl0Lm9yZGVyX2RldGFpbHNfdGFibGUiOiAiQ3VzdG9tZXJcdEJlbmNoIEN1c3RvbWVyXHQwXHRcblxuT3JkZXIgbnVtYmVyXHRQTy00NDcxXG5Qcm9qZWN0IG51bWJlclx0MDAwNSIsCiAgIjA0LWVkaXQub3JkZXJfZGF0ZSI6ICIxMS8xNS8yMDI2IiwKICAiMDQtZWRpdC5kZXRhaWxzX3RhYmxlX2FmdGVyX2VudGUiOiAiQ3VzdG9tZXJcdEJlbmNoIEN1c3RvbWVyXHQwXHRcblxuT3JkZXIgbnVtYmVyXHRQTy00NDcxXG5PcmRlciBkYXRlXHQxMS8xNS8yMDI2XG5Qcm9qZWN0IG51bWJlclx0MDAwNSIsCiAgIjA0LWVkaXQucHJvamVjdF9uYW1lX29uX2RldGFpbHNfcGFnZSI6ICJzcmttLWEtaGFrbTItMSBCZW5jaCBQcm9qZWN0IiwKICAiMDQtZWRpdC5wcm9qZWN0X2Rlc2NyaXB0aW9uX29uX2RldGFpbHNfcGFnZSI6ICJDcmVhdGVkIGZvciBydW4gc3JrbS1hLWhha20yLTEiLAogICIwNC1lZGl0LmRldGFpbHNfcGFnZV91cmwiOiAiaHR0cDovLzEyNy4wLjAuMTo4MTA1L2VuL2FkbWluL3Byb2plY3QvNDAwMDYvZGV0YWlscyIsCiAgIjA0LWVkaXQub3JkZXJfbnVtYmVyIjogIlBPLTQ0NzEiLAogICIwNC1lZGl0LmN1c3RvbWVyIjogIkJlbmNoIEN1c3RvbWVyIiwKICAiMDQtZWRpdC5kZXRhaWxzX3RhYmxlX3RleHRfMSI6ICJDdXN0b21lclx0QmVuY2ggQ3VzdG9tZXJcdDAiLAogICIwNC1lZGl0LmRldGFpbHNfdGFibGVfdGV4dF8yIjogIlByb2plY3QgbnVtYmVyXHQwMDA1IiwKICAiMDQtZWRpdC5yZWYiOiAic3JrbS1hLWhha20yLTEiCn0="
+                    },
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": ""
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "4dbd3ba3fa65c0c7d7d0-44997cff90c36ac5265d",
+          "file": "hakm2.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-06T16:47:51.429Z",
+    "duration": 44836.679000000004,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

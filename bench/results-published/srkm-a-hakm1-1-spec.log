@@ -1,0 +1,58 @@
+
+Running 1 test using 1 worker
+
+[sitelooper skip] 01-signin s_b9d960/3 target: read target not found — value left empty
+[sitelooper step] 01-signin
+[sitelooper step] 02-report
+[sitelooper warn] 03-create s_30fff5/9: read 'order_number' returned a value the skill itself set/selected ('PO-4471') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper warn] 03-create s_30fff5/11: read 'order_date_field2' returned a value the skill itself set/selected ('11/15/2026') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper warn] 03-create s_30fff5/12: read 'customer_selected' returned 'Bench Customer Ltd
+Bench Customers Group
+Bench Customer' from a control this step set, and nothing committed it since — it shows the control, however the app formats it, not what the app stored; dropped from the report's confident values
+[sitelooper warn] 03-create s_30fff5/13: read 'project_name' returned a value the skill itself set/selected ('srkm-a-hakm1-1 Bench Project') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper warn] 03-create s_30fff5/14: read 'customer_name' returned 'Bench Customer' from a control this step set, and nothing committed it since — it shows the control, however the app formats it, not what the app stored; dropped from the report's confident values
+[sitelooper warn] 03-create: report value name_field is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)
+[sitelooper warn] 03-create: report value saved_project_name is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)
+[sitelooper step] 03-create
+[sitelooper drift] 04-create s_4dcb0b/4 target: used #3 locator('#timesheet_edit_form_begin_time') (#2 ambiguous)
+[sitelooper drift] 04-create s_4dcb0b/5 target: used #3 locator('#timesheet_edit_form_end_time') (#2 ambiguous)
+[sitelooper warn] 04-create s_4dcb0b/9: read 'from_date_value' returned '10/6/2026' from a control this step set, and nothing committed it since — it shows the control, however the app formats it, not what the app stored; dropped from the report's confident values
+[sitelooper warn] 04-create s_4dcb0b/14: read 'from_date_after_blur' returned a value the skill itself set/selected ('09/16/2026') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper warn] 04-create s_4dcb0b/15: read 'begin_time_value' returned a value the skill itself set/selected ('9:00 AM') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper warn] 04-create s_4dcb0b/16: read 'end_time_value' returned a value the skill itself set/selected ('11:30 AM') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper skip] 04-create s_4dcb0b/19 target: read target not found — value left empty
+[sitelooper skip] 04-create s_4dcb0b/20 target: read target not found — value left empty
+  ✘  1 hakm1.spec.ts:9:1 › hakm1 (1.0m)
+
+
+  1) hakm1.spec.ts:9:1 › hakm1 › 04-create: Create and save exactly one timesheet record for project {{runid}} Bench Project on 2026-09-16 from 09:00 to 11:30. Set the description to include exact runid {{runid}}. Select the existing activity exactly named Consulting (not Consulting Travel or Consultancy Review) and set its only tag to the existing tag onsite (not similar tags and do not create a tag). Verify the saved record shows the requested project, date, start/end times, description, exact activity, and only onsite as tag. 
+
+    Error: 04-create s_e93247: identity: {{v1}} is not confirmed on this page
+
+       at hakm1.flow.ts:19628
+
+      19626 |         const verdict = await identityMarkerVerdictWithFacts(siteFactsAt(page.url()), 'http://127.0.0.1:8105/en/timesheet/:id/edit', page.url(), p, `${p.v1}`, { presence: seen.presence, lines: async () => (await captureLines(page, 2).catch(() => null))?.lines ?? null, title: () => page.title() });
+      19627 |         if (verdict.warning) logWarning('04-create s_e93247: ' + verdict.warning);
+    > 19628 |         if (!verdict.pass) throw new Error('04-create s_e93247: identity: {{v1}} is not confirmed on this page');
+            |                                  ^
+      19629 |       }
+      19630 |     }
+      19631 |     // identity: this must be the record the flow is working on, not another of the same shape.
+        at Object.04-create (/home/user/sitelooper/bench/results/srkm-a-hakm1-1-spec-tmp/hakm1.flow.ts:19628:34)
+        at /home/user/sitelooper/bench/results/srkm-a-hakm1-1-spec-tmp/hakm1.flow.ts:20305:7
+        at runFlow (/home/user/sitelooper/bench/results/srkm-a-hakm1-1-spec-tmp/hakm1.flow.ts:20304:5)
+        at /home/user/sitelooper/bench/results/srkm-a-hakm1-1-spec-tmp/hakm1.spec.ts:14:21
+
+    attachment #2: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    [sitelooper drift] 04-create s_4dcb0b/4 target: used #3 locator('#timesheet_edit_form_begin_time') (#2 ambiguous)
+    [sitelooper drift] 04-create s_4dcb0b/5 target: used #3 locator('#timesheet_edit_form_end_time') (#2 ambiguous)
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/hakm1-hakm1/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/hakm1-hakm1/error-context.md
+
+  1 failed
+    hakm1.spec.ts:9:1 › hakm1 ──────────────────────────────────────────────────────────────────────

@@ -1,0 +1,274 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/srkm-a-hbkm3-2-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/srkm-a-hbkm3-2-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/srkm-a-hbkm3-2-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/bench/results/srkm-a-hbkm3-2-spec-tmp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/srkm-a-hbkm3-2-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "hbkm3.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/srkm-a-hbkm3-2-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "hbkm3.spec.ts",
+      "file": "hbkm3.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "hbkm3",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 59436,
+                  "error": {
+                    "message": "Error: 05-create s_92ddfe: identity: {{v1}} is not confirmed on this page",
+                    "stack": "Error: 05-create s_92ddfe: identity: {{v1}} is not confirmed on this page\n    at Object.05-create (/home/user/sitelooper/bench/results/srkm-a-hbkm3-2-spec-tmp/hbkm3.flow.ts:21115:34)\n    at /home/user/sitelooper/bench/results/srkm-a-hbkm3-2-spec-tmp/hbkm3.flow.ts:22396:7\n    at runFlow (/home/user/sitelooper/bench/results/srkm-a-hbkm3-2-spec-tmp/hbkm3.flow.ts:22395:5)\n    at /home/user/sitelooper/bench/results/srkm-a-hbkm3-2-spec-tmp/hbkm3.spec.ts:14:21",
+                    "location": {
+                      "file": "/home/user/sitelooper/bench/results/srkm-a-hbkm3-2-spec-tmp/hbkm3.flow.ts",
+                      "column": 34,
+                      "line": 21115
+                    },
+                    "snippet": "\u001b[90m   at \u001b[39mhbkm3.flow.ts:21115\n\n  21113 |         const verdict = await identityMarkerVerdictWithFacts(siteFactsAt(page.url()), 'http://127.0.0.1:8105/en/timesheet/:id/edit', page.url(), p, `${p.v1}`, { presence: seen.presence, lines: async () => (await captureLines(page, 2).catch(() => null))?.lines ?? null, title: () => page.title() });\n  21114 |         if (verdict.warning) logWarning('05-create s_92ddfe: ' + verdict.warning);\n> 21115 |         if (!verdict.pass) throw new Error('05-create s_92ddfe: identity: {{v1}} is not confirmed on this page');\n        |                                  ^\n  21116 |       }\n  21117 |     }\n  21118 |     // identity: this must be the record the flow is working on, not another of the same shape."
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/home/user/sitelooper/bench/results/srkm-a-hbkm3-2-spec-tmp/hbkm3.flow.ts",
+                        "column": 34,
+                        "line": 21115
+                      },
+                      "message": "Error: 05-create s_92ddfe: identity: {{v1}} is not confirmed on this page\n\n   at hbkm3.flow.ts:21115\n\n  21113 |         const verdict = await identityMarkerVerdictWithFacts(siteFactsAt(page.url()), 'http://127.0.0.1:8105/en/timesheet/:id/edit', page.url(), p, `${p.v1}`, { presence: seen.presence, lines: async () => (await captureLines(page, 2).catch(() => null))?.lines ?? null, title: () => page.title() });\n  21114 |         if (verdict.warning) logWarning('05-create s_92ddfe: ' + verdict.warning);\n> 21115 |         if (!verdict.pass) throw new Error('05-create s_92ddfe: identity: {{v1}} is not confirmed on this page');\n        |                                  ^\n  21116 |       }\n  21117 |     }\n  21118 |     // identity: this must be the record the flow is working on, not another of the same shape.\n    at Object.05-create (/home/user/sitelooper/bench/results/srkm-a-hbkm3-2-spec-tmp/hbkm3.flow.ts:21115:34)\n    at /home/user/sitelooper/bench/results/srkm-a-hbkm3-2-spec-tmp/hbkm3.flow.ts:22396:7\n    at runFlow (/home/user/sitelooper/bench/results/srkm-a-hbkm3-2-spec-tmp/hbkm3.flow.ts:22395:5)\n    at /home/user/sitelooper/bench/results/srkm-a-hbkm3-2-spec-tmp/hbkm3.spec.ts:14:21"
+                    }
+                  ],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper warn] 01-signin: report value login_email_used is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 01-signin\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-find\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-create\n"
+                    },
+                    {
+                      "text": "[sitelooper skip] 04-verify s_fb25d2/1 target: read target not found — value left empty\n"
+                    },
+                    {
+                      "text": "[sitelooper skip] 04-verify s_fb25d2/2 target: read target not found — value left empty\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-verify\n"
+                    },
+                    {
+                      "text": "[sitelooper drift] 05-create s_e7bb8f/7 target: used #3 locator('#timesheet_edit_form_begin_time') (#2 ambiguous)\n"
+                    },
+                    {
+                      "text": "[sitelooper drift] 05-create s_e7bb8f/8 target: used #3 locator('#timesheet_edit_form_end_time') (#2 ambiguous)\n"
+                    },
+                    {
+                      "text": "[sitelooper drift] 05-create s_e7bb8f/10 target: used #3 locator('#timesheet_edit_form_begin_time') (#2 ambiguous)\n"
+                    },
+                    {
+                      "text": "[sitelooper drift] 05-create s_e7bb8f/11 target: used #3 locator('#timesheet_edit_form_end_time') (#2 ambiguous)\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 05-create s_e7bb8f/12: read 'from_date_filled' returned '10/6/2026' from a control this step set, and nothing committed it since — it shows the control, however the app formats it, not what the app stored; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper drift] 05-create s_e7bb8f/13 target: used #3 locator('#timesheet_edit_form_begin_time') (#2 ambiguous)\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 05-create s_e7bb8f/13: read 'saved_begin_time' returned a value the skill itself set/selected ('9:00 AM') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper drift] 05-create s_e7bb8f/14 target: used #3 locator('#timesheet_edit_form_end_time') (#2 ambiguous)\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 05-create s_e7bb8f/14: read 'saved_end_time' returned a value the skill itself set/selected ('11:30 AM') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 05-create s_e7bb8f/16: read 'from_date_filled' returned '10/6/2026' from a control this step set, and nothing committed it since — it shows the control, however the app formats it, not what the app stored; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 05-create s_e7bb8f/20: read 'saved_date' returned a value the skill itself set/selected ('9/16/2026') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 05-create s_e7bb8f/22: read 'rows_in_timesheet_list' returned '1' from a control this step set, and nothing committed it since — it shows the control, however the app formats it, not what the app stored; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 05-create s_e7bb8f/23: read 'saved_tags' returned 'onsite' from a control this step set, and nothing committed it since — it shows the control, however the app formats it, not what the app stored; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper drift] 05-create s_e7bb8f/24 target: used #3 locator('#timesheet_edit_form_begin_time') (#2 ambiguous)\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 05-create s_e7bb8f/24: read 'saved_begin_time' returned a value the skill itself set/selected ('9:00 AM') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper drift] 05-create s_e7bb8f/25 target: used #3 locator('#timesheet_edit_form_end_time') (#2 ambiguous)\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 05-create s_e7bb8f/25: read 'saved_end_time' returned a value the skill itself set/selected ('11:30 AM') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 05-create s_e7bb8f/26: read 'saved_description' returned a value the skill itself set/selected ('Bench entry for runid srkm-a-hbkm3-2 (automated verification…') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-signin: Sign in to Kimai at http://127.0.0.1:8105/en/login as admin@example.com using password exactly {{env:APP_PASSWORD}}. Verify that sign-in succeeded and report the resulting page.",
+                      "duration": 7512
+                    },
+                    {
+                      "title": "02-find: In Kimai, find and report exactly the names of all projects whose name starts with 'Seed:'. Do not edit anything; verify the full names from the projects list.",
+                      "duration": 2647
+                    },
+                    {
+                      "title": "03-create: Create and save exactly one new Kimai project named '{{runid}} Bench Project' with a description that includes the exact runid '{{runid}}'. Do not edit any seed project. Verify the saved project name and description; leave other project fields at defaults for now.",
+                      "duration": 20253
+                    },
+                    {
+                      "title": "04-verify: Ensure the saved project '{{runid}} Bench Project' is assigned to the existing customer exactly '{{03-create.customer_used}}' (not a similarly named customer). Verify the customer on the saved project details page, and save only if a change is needed.",
+                      "duration": 9480
+                    },
+                    {
+                      "title": "05-create: Create and save exactly one timesheet entry on project '{{runid}} Bench Project' for 2026-09-16 from 09:00 to 11:30, with a description including exact runid '{{runid}}'. Choose the existing activity exactly 'Consulting' and set its only tag to the existing tag exactly 'onsite' (do not create a tag or choose similar names). Verify the saved entry's project, date, times, description, activity, and only tag.",
+                      "duration": 19044,
+                      "error": {
+                        "message": "Error: 05-create s_92ddfe: identity: {{v1}} is not confirmed on this page",
+                        "stack": "Error: 05-create s_92ddfe: identity: {{v1}} is not confirmed on this page\n    at Object.05-create (/home/user/sitelooper/bench/results/srkm-a-hbkm3-2-spec-tmp/hbkm3.flow.ts:21115:34)\n    at /home/user/sitelooper/bench/results/srkm-a-hbkm3-2-spec-tmp/hbkm3.flow.ts:22396:7\n    at runFlow (/home/user/sitelooper/bench/results/srkm-a-hbkm3-2-spec-tmp/hbkm3.flow.ts:22395:5)\n    at /home/user/sitelooper/bench/results/srkm-a-hbkm3-2-spec-tmp/hbkm3.spec.ts:14:21",
+                        "location": {
+                          "file": "/home/user/sitelooper/bench/results/srkm-a-hbkm3-2-spec-tmp/hbkm3.flow.ts",
+                          "column": 34,
+                          "line": 21115
+                        },
+                        "snippet": "\u001b[90m   at \u001b[39mhbkm3.flow.ts:21115\n\n  21113 |         const verdict = await identityMarkerVerdictWithFacts(siteFactsAt(page.url()), 'http://127.0.0.1:8105/en/timesheet/:id/edit', page.url(), p, `${p.v1}`, { presence: seen.presence, lines: async () => (await captureLines(page, 2).catch(() => null))?.lines ?? null, title: () => page.title() });\n  21114 |         if (verdict.warning) logWarning('05-create s_92ddfe: ' + verdict.warning);\n> 21115 |         if (!verdict.pass) throw new Error('05-create s_92ddfe: identity: {{v1}} is not confirmed on this page');\n        |                                  ^\n  21116 |       }\n  21117 |     }\n  21118 |     // identity: this must be the record the flow is working on, not another of the same shape."
+                      }
+                    }
+                  ],
+                  "startTime": "2026-10-06T16:56:39.898Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "outputs",
+                      "contentType": "application/json",
+                      "body": "ewogICIwMS1zaWduaW4ucmVzdWx0aW5nX3VybCI6ICJodHRwOi8vMTI3LjAuMC4xOjgxMDUvZW4vdGltZXNoZWV0LyIsCiAgIjAxLXNpZ25pbi5lbXB0eV9zdGF0ZV9tZXNzYWdlIjogIk5vIGVudHJpZXMgd2VyZSBmb3VuZCBiYXNlZCBvbiB5b3VyIHNlbGVjdGVkIGZpbHRlcnMuIiwKICAiMDEtc2lnbmluLnNpZ25lZF9pbl91c2VyIjogImFkbWluIiwKICAiMDEtc2lnbmluLnBhZ2VfaGVhZGluZyI6ICJNeSB0aW1lcyIsCiAgIjAyLWZpbmQucHJvamVjdF9saXN0X25hbWVfMSI6ICJTZWVkOiBBbm51YWwgYXVkaXQiLAogICIwMi1maW5kLnByb2plY3RfbGlzdF9uYW1lXzIiOiAiU2VlZDogT2ZmaWNlIG1vdmUiLAogICIwMi1maW5kLnByb2plY3RfbGlzdF9uYW1lXzMiOiAiU2VlZDogV2Vic2l0ZSByZWxhdW5jaCIsCiAgIjAyLWZpbmQucHJvamVjdHNfdG90YWxfY291bnQiOiAiMyIsCiAgIjAyLWZpbmQubWF0Y2hpbmdfcHJvamVjdHNfMSI6ICJTZWVkOiBBbm51YWwgYXVkaXQiLAogICIwMi1maW5kLm1hdGNoaW5nX3Byb2plY3RzXzIiOiAiU2VlZDogT2ZmaWNlIG1vdmUiLAogICIwMi1maW5kLm1hdGNoaW5nX3Byb2plY3RzXzMiOiAiU2VlZDogV2Vic2l0ZSByZWxhdW5jaCIsCiAgIjAzLWNyZWF0ZS5taW50ZWQiOiAiNDAwMTUiLAogICIwMy1jcmVhdGUuc2F2ZWRfcHJvamVjdF9uYW1lIjogInNya20tYS1oYmttMy0yIEJlbmNoIFByb2plY3QiLAogICIwMy1jcmVhdGUuc2F2ZWRfcHJvamVjdF9kZXNjcmlwdGlvbiI6ICJCZW5jaCBwcm9qZWN0IGNyZWF0ZWQgZm9yIHJ1bmlkIHNya20tYS1oYmttMy0yIChhdXRvbWF0ZWQgdmVyaWZpY2F0aW9uIHJ1bikuIiwKICAiMDMtY3JlYXRlLnNhdmVkX3Byb2plY3RfdXJsIjogImh0dHA6Ly8xMjcuMC4wLjE6ODEwNS9lbi9hZG1pbi9wcm9qZWN0LzQwMDE1L2RldGFpbHMiLAogICIwMy1jcmVhdGUucHJvamVjdHNfbGlzdF9hZnRlcl9jcmVhdGVfMiI6ICJTZWVkOiBPZmZpY2UgbW92ZSIsCiAgIjAzLWNyZWF0ZS5wcm9qZWN0c19saXN0X2FmdGVyX2NyZWF0ZV8zIjogIlNlZWQ6IFdlYnNpdGUgcmVsYXVuY2giLAogICIwMy1jcmVhdGUucHJvamVjdHNfbGlzdF9hZnRlcl9jcmVhdGVfNCI6ICJzcmttLWEtaGJrbTMtMiBCZW5jaCBQcm9qZWN0IiwKICAiMDMtY3JlYXRlLnByb2plY3RzX3RvdGFsX2NvdW50X2FmdGVyX2NyZWF0ZSI6ICI0IiwKICAiMDMtY3JlYXRlLmN1c3RvbWVyX3VzZWQiOiAiQmVuY2ggQ3VzdG9tZXIiLAogICIwMy1jcmVhdGUucHJvamVjdHNfbGlzdF9hZnRlcl9jcmVhdGVfMSI6ICJzcmttLWEtaGJrbTMtMiBCZW5jaCBQcm9qZWN0IiwKICAiMDMtY3JlYXRlLnNlZWRfcHJvamVjdHNfdW5jaGFuZ2VkXzEiOiAiU2VlZDogT2ZmaWNlIG1vdmUiLAogICIwMy1jcmVhdGUuc2VlZF9wcm9qZWN0c191bmNoYW5nZWRfMiI6ICJTZWVkOiBXZWJzaXRlIHJlbGF1bmNoIiwKICAiMDMtY3JlYXRlLnNlZWRfcHJvamVjdHNfdW5jaGFuZ2VkXzMiOiAic3JrbS1hLWhia20zLTIgQmVuY2ggUHJvamVjdCIsCiAgIjAzLWNyZWF0ZS5yZWYiOiAic3JrbS1hLWhia20zLTIiLAogICIwMy1jcmVhdGUuc2F2ZWRfcHJvamVjdF9pZCI6ICI0MDAxNSIsCiAgIjAzLWNyZWF0ZS51cmwucDMiOiAiNDAwMTUiLAogICIwNC12ZXJpZnkuYXNzaWduZWRfY3VzdG9tZXJfb25fZGV0YWlsc19wYWdlIjogIkJlbmNoIEN1c3RvbWVyIiwKICAiMDQtdmVyaWZ5LmFsbF9jdXN0b21lcnNfaW5fc3lzdGVtXzEiOiAiIiwKICAiMDQtdmVyaWZ5LmFsbF9jdXN0b21lcnNfaW5fc3lzdGVtXzIiOiAiIiwKICAiMDQtdmVyaWZ5LmN1c3RvbWVyX25hbWVfMSI6ICJCZW5jaCBDdXN0b21lciBMdGQiLAogICIwNC12ZXJpZnkuY3VzdG9tZXJfbmFtZV8yIjogIkJlbmNoIEN1c3RvbWVycyBHcm91cCIsCiAgIjA0LXZlcmlmeS5wcm9qZWN0X2RldGFpbHNfdXJsIjogImh0dHA6Ly8xMjcuMC4wLjE6ODEwNS9lbi9hZG1pbi9wcm9qZWN0LzQwMDE1L2RldGFpbHMiLAogICIwNC12ZXJpZnkucHJvamVjdF9uYW1lIjogInNya20tYS1oYmttMy0yIEJlbmNoIFByb2plY3QiLAogICIwNC12ZXJpZnkuZGVzY3JpcHRpb25fdW5jaGFuZ2VkIjogIkJlbmNoIHByb2plY3QgY3JlYXRlZCBmb3IgcnVuaWQgc3JrbS1hLWhia20zLTIgKGF1dG9tYXRlZCB2ZXJpZmljYXRpb24gcnVuKS4iLAogICIwNC12ZXJpZnkucHJvamVjdF9pZCI6ICI0MDAxNSIsCiAgIjA1LWNyZWF0ZS5kYXRlX3BsYWNlaG9sZGVyIjogIk0vRC9ZWVlZIiwKICAiMDUtY3JlYXRlLnN0YXJ0X3RpbWVfcGxhY2Vob2xkZXIiOiAiaDptbSBhIiwKICAiMDUtY3JlYXRlLmZyb21fZGF0ZV9maWxsZWQiOiAiMTAvNi8yMDI2IiwKICAiMDUtY3JlYXRlLnNhdmVkX2JlZ2luX3RpbWUiOiAiOTowMCBBTSIsCiAgIjA1LWNyZWF0ZS5zYXZlZF9lbmRfdGltZSI6ICIxMTozMCBBTSIsCiAgIjA1LWNyZWF0ZS5zYXZlZF9kdXJhdGlvbiI6ICIyOjMwIiwKICAiMDUtY3JlYXRlLnNhdmVkX2RhdGUiOiAiOS8xNi8yMDI2IiwKICAiMDUtY3JlYXRlLnJvd3NfaW5fdGltZXNoZWV0X2xpc3QiOiAiMSIsCiAgIjA1LWNyZWF0ZS5zYXZlZF90YWdzIjogIm9uc2l0ZSIsCiAgIjA1LWNyZWF0ZS5zYXZlZF9kZXNjcmlwdGlvbiI6ICJCZW5jaCBlbnRyeSBmb3IgcnVuaWQgc3JrbS1hLWhia20zLTIgKGF1dG9tYXRlZCB2ZXJpZmljYXRpb24gcnVuKS4iLAogICIwNS1jcmVhdGUubGlzdF9yb3ciOiAiOS8xNi8yMDI2XHQ5OjAwIEFNXHQxMTozMCBBTVx0MjozMFx0QmVuY2ggQ3VzdG9tZXJcdHNya20tYS1oYmttMy0yIEJlbmNoIFByb2plY3RcdENvbnN1bHRpbmciCn0="
+                    },
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": "W3NpdGVsb29wZXIgZHJpZnRdIDA1LWNyZWF0ZSBzX2U3YmI4Zi83IHRhcmdldDogdXNlZCAjMyBsb2NhdG9yKCcjdGltZXNoZWV0X2VkaXRfZm9ybV9iZWdpbl90aW1lJykgKCMyIGFtYmlndW91cykKW3NpdGVsb29wZXIgZHJpZnRdIDA1LWNyZWF0ZSBzX2U3YmI4Zi84IHRhcmdldDogdXNlZCAjMyBsb2NhdG9yKCcjdGltZXNoZWV0X2VkaXRfZm9ybV9lbmRfdGltZScpICgjMiBhbWJpZ3VvdXMpCltzaXRlbG9vcGVyIGRyaWZ0XSAwNS1jcmVhdGUgc19lN2JiOGYvMTAgdGFyZ2V0OiB1c2VkICMzIGxvY2F0b3IoJyN0aW1lc2hlZXRfZWRpdF9mb3JtX2JlZ2luX3RpbWUnKSAoIzIgYW1iaWd1b3VzKQpbc2l0ZWxvb3BlciBkcmlmdF0gMDUtY3JlYXRlIHNfZTdiYjhmLzExIHRhcmdldDogdXNlZCAjMyBsb2NhdG9yKCcjdGltZXNoZWV0X2VkaXRfZm9ybV9lbmRfdGltZScpICgjMiBhbWJpZ3VvdXMpCltzaXRlbG9vcGVyIGRyaWZ0XSAwNS1jcmVhdGUgc19lN2JiOGYvMTMgdGFyZ2V0OiB1c2VkICMzIGxvY2F0b3IoJyN0aW1lc2hlZXRfZWRpdF9mb3JtX2JlZ2luX3RpbWUnKSAoIzIgYW1iaWd1b3VzKQpbc2l0ZWxvb3BlciBkcmlmdF0gMDUtY3JlYXRlIHNfZTdiYjhmLzE0IHRhcmdldDogdXNlZCAjMyBsb2NhdG9yKCcjdGltZXNoZWV0X2VkaXRfZm9ybV9lbmRfdGltZScpICgjMiBhbWJpZ3VvdXMpCltzaXRlbG9vcGVyIGRyaWZ0XSAwNS1jcmVhdGUgc19lN2JiOGYvMjQgdGFyZ2V0OiB1c2VkICMzIGxvY2F0b3IoJyN0aW1lc2hlZXRfZWRpdF9mb3JtX2JlZ2luX3RpbWUnKSAoIzIgYW1iaWd1b3VzKQpbc2l0ZWxvb3BlciBkcmlmdF0gMDUtY3JlYXRlIHNfZTdiYjhmLzI1IHRhcmdldDogdXNlZCAjMyBsb2NhdG9yKCcjdGltZXNoZWV0X2VkaXRfZm9ybV9lbmRfdGltZScpICgjMiBhbWJpZ3VvdXMp"
+                    },
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/home/user/sitelooper/bench/results/srkm-a-hbkm3-2-spec-tmp/test-results/hbkm3-hbkm3/test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/home/user/sitelooper/bench/results/srkm-a-hbkm3-2-spec-tmp/test-results/hbkm3-hbkm3/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/home/user/sitelooper/bench/results/srkm-a-hbkm3-2-spec-tmp/hbkm3.flow.ts",
+                    "column": 34,
+                    "line": 21115
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "99e971fcdd7af7994d42-5941397bab7abb1d108f",
+          "file": "hbkm3.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-06T16:56:37.370Z",
+    "duration": 62178.086,
+    "expected": 0,
+    "skipped": 0,
+    "unexpected": 1,
+    "flaky": 0
+  }
+}

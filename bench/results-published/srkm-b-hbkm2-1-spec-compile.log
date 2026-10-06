@@ -1,0 +1,11 @@
+facts http://127.0.0.1:8105: 64 relied (26 hard), 46 advisory
+warning 03-create: it has no converged procedure, so the compiled spec throws here
+  why: nothing in the store resolves to a recorded procedure for this step; the emitted body is a throw, not a silent skip.
+  fix: sitelooper rerecord /tmp/srkm-6NcXtk/hbkm2-b1/bench/results-published/hbkm2.json 03-create
+error 04-verify: it is pinned to the demoted skill s_92a95c — the compiled spec inherits a procedure whose last replays failed at the same step
+  why: s_92a95c is demoted: 1 of 3 replays succeeded; replay failed at step 1 on 2 of them; the demotion was two consecutive failures at step 1; last used 2026-10-06T12:49:21.827Z.
+  fix: sitelooper rerecord /tmp/srkm-6NcXtk/hbkm2-b1/bench/results-published/hbkm2.json 04-verify
+
+nothing written: the error(s) above are about the RECORDING, not the app — a compiled spec would fail at a locator and read as drift.
+re-record the step(s) with the fix command above, or pass --allow-demoted to compile the demoted pin anyway.
+sitelooper: refused: a step is pinned to a demoted skill — see the diagnostics above (--allow-demoted compiles it anyway)
