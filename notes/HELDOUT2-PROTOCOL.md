@@ -85,3 +85,10 @@ A repetition corrupted by such a bug is rerun for BOTH arms. No change to either
 `src/`. An arm failure is a result, not a bug to fix.
 
 ## Log
+
+- 2026-10-06 11:20Z, validation box (results/heldout2-validate): oracle 7/7 and untouched 0/7 on all
+  three targets; resets idempotent; every widget, choice and decoy the tasks name exists after a
+  reset. Two infrastructure fixes from the box, applied before any arm run: kimai `TRUSTED_HOSTS`
+  is one regex in Kimai's framework.yaml (a comma list answered 400 "Untrusted Host"); grocy
+  seed.sh waits for grocy.db to hold a schema (`/` answered 302 before the migrations wrote it:
+  "no such table: users").

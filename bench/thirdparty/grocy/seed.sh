@@ -50,6 +50,17 @@ done
 [ "$code" = "302" ] || { echo "grocy: $URL/ never answered 302 (last: ${code:-none})" >&2; docker logs --tail 40 "$CONTAINER" >&2 || true; exit 1; }
 code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 "$URL/login" || true)"
 [ "$code" = "200" ] || { echo "grocy: /login answers ${code:-nothing} after migrating (want 200)" >&2; exit 1; }
+# "/" can answer 302 before the migrations have written the schema (grocy.db is
+# a 0-byte file until they finish; seed failed with "no such table: users"
+# on 2026-10-06), so wait for the file to hold a schema too.
+size=0
+for _ in $(seq 1 150); do
+  size="$(docker exec "$CONTAINER" sh -c 'stat -c %s "$1" 2>/dev/null || echo 0' _ "$DB" || echo 0)"
+  [ "${size:-0}" -gt 100000 ] && break
+  curl -s -o /dev/null --max-time 120 "$URL/" || true
+  sleep 2
+done
+[ "${size:-0}" -gt 100000 ] || { echo "grocy: $DB still ${size} bytes, never migrated" >&2; exit 1; }
 echo "grocy: database migrated, /login answers 200"
 
 # 1 + 2. Password and API key, straight into grocy.db. The script comes in on

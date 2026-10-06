@@ -59,9 +59,9 @@ services:
     environment:
       APP_ENV: prod
       APP_SECRET: bench-kimai-secret-not-for-production-0123456789
-      # Symfony trusted-host patterns (regexes); the browser and the scripts
+      # Symfony trusted-host pattern: ONE regex (a comma list matches nothing, 400 "Untrusted Host"); the browser and the scripts
       # reach the app as 127.0.0.1, a few tools as localhost.
-      TRUSTED_HOSTS: "127.0.0.1,localhost"
+      TRUSTED_HOSTS: "^(127\\.0\\.0\\.1|localhost)$$"
       ADMINMAIL: admin@example.com
       ADMINPASS: bench-admin-pass
       # The entrypoint splits this on / : @ to wait for the database, so the
