@@ -1600,6 +1600,617 @@ async function resetBookstack() {
   if (deletions.length) log(`bookstack: emptied the recycle bin (${deletions.length} deletion(s))`);
 }
 
+/**
+ * Planka reset doubles as the SEED. Planka's env bootstrap makes only the
+ * admin; the admin's first sign-in then meets a terms-acceptance step, which
+ * this completes through the API (the terms signature from GET /api/terms), so
+ * neither the reset nor the browser meets it again. Then, through the REST API:
+ * users "Bench Tester" and the look-alike "Bench Tester Lead"; one shared
+ * project "Bench Project" with one board "Bench Board" (kanban view, project
+ * cards) whose members are exactly the admin and both testers (editors);
+ * active lists "To Do", "In Progress", "Done"; labels "Hardware" plus the
+ * look-alikes "Hardware Return" and "Hardware Spares", "Software" and
+ * "Network"; three "Seed:" cards in To Do with only a one-line description.
+ * Everything else is DELETED: every other card on the board (earlier runs'
+ * "<runid> Bench Card"s, copies, cards in the archive and trash lists, and
+ * with them their comments, labels, members and tasks), any other list, label
+ * or board member, board-level custom fields, and any other project or board
+ * (a run can create them). Kept records keep their ids, so a run's recorded
+ * board url stays valid across resets; a card id is a fresh snowflake every
+ * run, so a stored id can never pass by coincidence.
+ *
+ * Auth: the admin's password (POST /api/access-tokens) -> JWT bearer; the
+ * session is signed out at the end.
+ */
+async function resetPlanka() {
+  const base = (process.env.APP_URL || 'http://127.0.0.1:8104/').replace(/\/$/, '');
+  const email = process.env.PLANKA_EMAIL || 'admin@example.com';
+  const password = process.env.PLANKA_PASSWORD || 'bench-admin-pass';
+  let bearer = null;
+  const call = async (method, route, body) => {
+    const res = await fetch(`${base}${route}`, {
+      method,
+      headers: {
+        accept: 'application/json',
+        ...(bearer ? { authorization: `Bearer ${bearer}` } : {}),
+        ...(body !== undefined ? { 'content-type': 'application/json' } : {}),
+      },
+      ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
+    });
+    const text = await res.text();
+    let json = null;
+    try { json = text ? JSON.parse(text) : null; } catch { /* not JSON */ }
+    return { res, text, json };
+  };
+  const api = async (method, route, body) => {
+    const r = await call(method, route, body);
+    if (!r.res.ok) throw new Error(`planka ${method} ${route}: HTTP ${r.res.status} ${r.text.slice(0, 300)}`);
+    return r.json;
+  };
+  const byId = (a, b) => (BigInt(a.id) < BigInt(b.id) ? -1 : BigInt(a.id) > BigInt(b.id) ? 1 : 0);
+  const GAP = 65536;
+
+  // ---- sign in (accepting the terms on the first sign-in) -------------------
+  let login = await call('POST', '/api/access-tokens', { emailOrUsername: email, password });
+  if (login.res.status === 403 && login.json?.step === 'accept-terms' && login.json.pendingToken) {
+    const terms = await api('GET', '/api/terms');
+    login = await call('POST', '/api/access-tokens/accept-terms', {
+      pendingToken: login.json.pendingToken, signature: terms.item.signature, initialLanguage: 'en-US',
+    });
+    if (login.res.ok) log('planka: accepted the terms for the admin (first sign-in)');
+  }
+  if (!login.res.ok || typeof login.json?.item !== 'string') {
+    throw new Error(`planka: ${email} cannot sign in: HTTP ${login.res.status} ${login.text.slice(0, 300)}`);
+  }
+  bearer = login.json.item;
+
+  try {
+    // ---- users ----------------------------------------------------------------
+    const me = (await api('GET', '/api/users/me')).item;
+    const USERS = [
+      { name: 'Bench Tester', username: 'benchtester', email: 'tester@example.com' },
+      { name: 'Bench Tester Lead', username: 'benchtesterlead', email: 'lead@example.com' },
+    ];
+    const users = (await api('GET', '/api/users')).items;
+    const userIds = {};
+    for (const u of USERS) {
+      const found = users.filter((x) => String(x.email).toLowerCase() === u.email).sort(byId)[0];
+      if (found) {
+        if (found.name !== u.name) await api('PATCH', `/api/users/${found.id}`, { name: u.name });
+        userIds[u.name] = found.id;
+        continue;
+      }
+      userIds[u.name] = (await api('POST', '/api/users', {
+        ...u, password: 'bench-tester-pass-2026', role: 'boardUser',
+      })).item.id;
+      log(`planka: created user "${u.name}"`);
+    }
+
+    // ---- project and board ------------------------------------------------------
+    const PROJECT = 'Bench Project';
+    const BOARD = 'Bench Board';
+    let projectsRes = await api('GET', '/api/projects');
+    let project = projectsRes.items.filter((p) => p.name === PROJECT && !p.ownerProjectManagerId).sort(byId)[0];
+    // Any other project (a run can create one) goes, boards first.
+    for (const p of projectsRes.items) {
+      if (project && p.id === project.id) continue;
+      for (const b of projectsRes.included.boards.filter((x) => x.projectId === p.id)) {
+        await api('DELETE', `/api/boards/${b.id}`);
+      }
+      await api('DELETE', `/api/projects/${p.id}`);
+      log(`planka: deleted project "${p.name}"`);
+    }
+    if (!project) {
+      project = (await api('POST', '/api/projects', { type: 'shared', name: PROJECT })).item;
+      log(`planka: created project "${PROJECT}"`);
+      projectsRes = await api('GET', '/api/projects');
+    }
+    const boards = projectsRes.included.boards.filter((b) => b.projectId === project.id).sort(byId);
+    let board = boards.find((b) => b.name === BOARD) ?? null;
+    for (const b of boards) {
+      if (board && b.id === board.id) continue;
+      await api('DELETE', `/api/boards/${b.id}`);
+      log(`planka: deleted board "${b.name}"`);
+    }
+    if (!board) {
+      board = (await api('POST', `/api/projects/${project.id}/boards`, { position: GAP, name: BOARD })).item;
+      log(`planka: created board "${BOARD}"`);
+    }
+    const BOARD_SETTINGS = {
+      position: GAP, defaultView: 'kanban', defaultCardType: 'project', limitCardTypesToDefaultOne: false,
+      alwaysDisplayCardCreator: false, displayCardAges: false, expandTaskListsByDefault: false,
+    };
+    const boardDrift = Object.fromEntries(Object.entries(BOARD_SETTINGS).filter(([k, v]) => board[k] !== undefined && board[k] !== v));
+    if (Object.keys(boardDrift).length) {
+      await api('PATCH', `/api/boards/${board.id}`, boardDrift);
+      log(`planka: restored board settings ${Object.keys(boardDrift).join(', ')}`);
+    }
+
+    let { included: inc } = await api('GET', `/api/boards/${board.id}`);
+
+    // ---- members: exactly the admin and both testers, editors -----------------
+    const wantMembers = [me.id, userIds['Bench Tester'], userIds['Bench Tester Lead']];
+    for (const m of inc.boardMemberships) {
+      if (!wantMembers.includes(m.userId)) {
+        await api('DELETE', `/api/board-memberships/${m.id}`);
+        log(`planka: removed board member #${m.userId}`);
+      } else if (m.role !== 'editor') {
+        await api('PATCH', `/api/board-memberships/${m.id}`, { role: 'editor' });
+      }
+    }
+    for (const userId of wantMembers) {
+      if (inc.boardMemberships.some((m) => m.userId === userId)) continue;
+      await api('POST', `/api/boards/${board.id}/board-memberships`, { userId, role: 'editor' });
+      log(`planka: added board member #${userId}`);
+    }
+
+    // ---- cards: exactly the seed set, each as seeded -----------------------------
+    const LISTS = ['To Do', 'In Progress', 'Done'];
+    const kanban = inc.lists.filter((l) => l.type === 'active' || l.type === 'closed').sort(byId);
+    const listIds = {};
+    for (const l of kanban) if (l.type === 'active' && LISTS.includes(l.name) && !listIds[l.name]) listIds[l.name] = l.id;
+    const SEED = [
+      { name: 'Seed: Replace the office router', description: 'The office router drops connections every afternoon.' },
+      { name: 'Seed: Order spare keyboards', description: 'Two keyboards in the meeting room have sticky keys.' },
+      { name: 'Seed: Renew the domain name', description: 'The company domain expires at the end of next month.' },
+    ];
+    // Every card the board holds: the board view's (active and closed lists)
+    // plus the archive and trash lists', which page by 50.
+    const endless = inc.lists.filter((l) => l.type === 'archive' || l.type === 'trash');
+    const listCards = async (listId) => {
+      const out = [];
+      let before = null;
+      for (;;) {
+        const q = before ? `?before[id]=${before.id}&before[listChangedAt]=${encodeURIComponent(before.listChangedAt)}` : '';
+        const page = (await api('GET', `/api/lists/${listId}/cards${q}`)).items ?? [];
+        const fresh = page.filter((c) => !out.some((o) => o.id === c.id));
+        out.push(...fresh);
+        if (page.length < 50 || !fresh.length) break;
+        before = { id: page[page.length - 1].id, listChangedAt: page[page.length - 1].listChangedAt };
+      }
+      return out;
+    };
+    const cards = [...inc.cards];
+    for (const l of endless) cards.push(...await listCards(l.id));
+    cards.sort(byId);
+    const has = (rows, cardId) => (rows ?? []).some((r) => r.cardId === cardId);
+    const doomed = [];
+    for (const c of cards) {
+      const i = SEED.findIndex((s) => s.name === c.name);
+      const s = SEED[i];
+      let pristine = s && !s.kept && listIds['To Do'] && c.listId === listIds['To Do'] &&
+        c.type === 'project' && c.description === s.description && !c.dueDate && !c.isDueCompleted &&
+        !c.stopwatch && !c.coverAttachmentId && !c.isClosed && !c.commentsTotal &&
+        !has(inc.cardLabels, c.id) && !has(inc.cardMemberships, c.id) && !has(inc.taskLists, c.id) &&
+        !has(inc.attachments, c.id) && !has(inc.customFieldValues, c.id) &&
+        !(inc.customFieldGroups ?? []).some((g) => g.cardId === c.id);
+      if (pristine) {
+        const comments = (await api('GET', `/api/cards/${c.id}/comments`)).items ?? [];
+        pristine = comments.length === 0;
+      }
+      if (pristine) {
+        s.kept = true;
+        if (c.position !== GAP * (i + 1)) await api('PATCH', `/api/cards/${c.id}`, { position: GAP * (i + 1) });
+        continue;
+      }
+      doomed.push(c);
+    }
+    for (const c of doomed) await api('DELETE', `/api/cards/${c.id}`);
+    log(doomed.length ? `planka: deleted ${doomed.length} card(s) (earlier runs' and non-seed)` : 'planka: no cards to delete');
+
+    // ---- lists: exactly To Do, In Progress, Done (after the cards: a deleted
+    // list's cards would move to the trash list) ------------------------------
+    for (const l of kanban) {
+      if (Object.values(listIds).includes(l.id)) continue;
+      await api('DELETE', `/api/lists/${l.id}`);
+      log(`planka: deleted list "${l.name}"`);
+    }
+    for (const [i, name] of LISTS.entries()) {
+      const l = kanban.find((x) => x.id === listIds[name]);
+      if (!l) {
+        listIds[name] = (await api('POST', `/api/boards/${board.id}/lists`, { type: 'active', position: GAP * (i + 1), name })).item.id;
+        log(`planka: created list "${name}"`);
+      } else if (l.position !== GAP * (i + 1) || l.color) {
+        await api('PATCH', `/api/lists/${l.id}`, { position: GAP * (i + 1), color: null });
+      }
+    }
+
+    // ---- labels: exactly the five, each with its colour --------------------------
+    const LABELS = [
+      { name: 'Hardware', color: 'lagoon-blue' },
+      { name: 'Hardware Return', color: 'egg-yellow' },
+      { name: 'Hardware Spares', color: 'desert-sand' },
+      { name: 'Software', color: 'fresh-salad' },
+      { name: 'Network', color: 'midnight-blue' },
+    ];
+    const labelIds = {};
+    for (const l of [...inc.labels].sort(byId)) {
+      const want = LABELS.findIndex((x) => x.name === l.name);
+      if (want >= 0 && !labelIds[l.name]) {
+        labelIds[l.name] = l.id;
+        if (l.color !== LABELS[want].color || l.position !== GAP * (want + 1)) {
+          await api('PATCH', `/api/labels/${l.id}`, { color: LABELS[want].color, position: GAP * (want + 1) });
+        }
+        continue;
+      }
+      await api('DELETE', `/api/labels/${l.id}`);
+      log(`planka: deleted label "${l.name ?? '(unnamed)'}"`);
+    }
+    for (const [i, l] of LABELS.entries()) {
+      if (labelIds[l.name]) continue;
+      await api('POST', `/api/boards/${board.id}/labels`, { position: GAP * (i + 1), name: l.name, color: l.color });
+      log(`planka: created label "${l.name}"`);
+    }
+
+    // Board-level custom field groups (a run can add them from the board menu).
+    for (const g of (inc.customFieldGroups ?? []).filter((x) => x.boardId === board.id)) {
+      await api('DELETE', `/api/custom-field-groups/${g.id}`);
+      log(`planka: deleted custom field group "${g.name ?? g.id}"`);
+    }
+
+    for (const [i, s] of SEED.entries()) {
+      if (s.kept) continue;
+      await api('POST', `/api/lists/${listIds['To Do']}/cards`, {
+        type: 'project', position: GAP * (i + 1), name: s.name, description: s.description,
+      });
+      log(`planka: seeded card "${s.name}"`);
+    }
+  } finally {
+    await call('DELETE', '/api/access-tokens/me').catch(() => {});
+  }
+}
+
+/**
+ * Kimai reset doubles as the SEED, as kanboard's does. It needs
+ * bench/thirdparty/kimai/seed.sh first (the admin's FIXED API token, the
+ * first-login wizard marked seen, the admin's timezone pinned to UTC; refuses
+ * loudly without the token). Then, every time, through /api with
+ * "Authorization: Bearer <token>":
+ *
+ * - no timesheets at all (every user's; the bench seeds none, so any one is a
+ *   run's — "<runid>" workshop records, a retried save, a running timer).
+ * - customers "Bench Customer" plus the look-alikes "Bench Customer Ltd" and
+ *   "Bench Customers Group" (US / USD / UTC, visible, no comment).
+ * - three "Seed:" projects on Bench Customer Ltd, visible, with a fixed
+ *   description, no order number, no order date, global activities allowed.
+ * - global activities "Consulting" plus the look-alikes "Consulting Travel" and
+ *   "Consultancy Review", visible.
+ * - tags "onsite" plus the look-alikes "onsite-remote" and "offsite".
+ *
+ * Any other customer, project, activity or tag (earlier runs' "<runid> Bench
+ * Project"s, a customer or tag a run created from a picker, a renamed or
+ * edited seed record) is DELETED; a seed record a wayward run touched is
+ * deleted and re-created rather than patched. Comments on the kept projects
+ * and customers are deleted. Order matters: timesheets first (they point at
+ * projects and activities), then customers (deleting one cascades to its
+ * projects), projects, activities, tags.
+ */
+async function resetKimai() {
+  const base = (process.env.APP_URL || 'http://127.0.0.1:8105/').replace(/\/$/, '');
+  const token = process.env.KIMAI_API_TOKEN || 'benchkimaiapitoken000000000000001';
+  const call = async (method, route, body) => {
+    const res = await fetch(`${base}/api${route}`, {
+      method,
+      headers: {
+        accept: 'application/json', authorization: `Bearer ${token}`,
+        ...(body !== undefined ? { 'content-type': 'application/json' } : {}),
+      },
+      ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
+    });
+    const text = await res.text();
+    let json = null;
+    try { json = text ? JSON.parse(text) : null; } catch { /* not JSON */ }
+    return { res, text, json };
+  };
+  const api = async (method, route, body) => {
+    const r = await call(method, route, body);
+    if (!r.res.ok) throw new Error(`kimai ${method} /api${route}: HTTP ${r.res.status} ${r.text.slice(0, 300)}`);
+    return r.json;
+  };
+  const byId = (a, b) => a.id - b.id;
+  const custOf = (p) => (p && typeof p.customer === 'object' && p.customer !== null ? p.customer.id : p?.customer);
+  const projOf = (a) => (a && typeof a.project === 'object' && a.project !== null ? a.project.id : a?.project ?? null);
+
+  const probe = await call('GET', '/version');
+  if (!probe.res.ok) {
+    throw new Error(`kimai: the API token is refused (GET /api/version: HTTP ${probe.res.status}) — run bash bench/thirdparty/kimai/seed.sh first`);
+  }
+
+  // ---- timesheets: none survive -------------------------------------------
+  let removedSheets = 0;
+  for (;;) {
+    const r = await call('GET', '/timesheets?user=all&size=500&page=1&orderBy=id&order=ASC');
+    if (r.res.status === 404) break;
+    if (!r.res.ok) throw new Error(`kimai GET /api/timesheets: HTTP ${r.res.status} ${r.text.slice(0, 300)}`);
+    const rows = r.json ?? [];
+    if (!rows.length) break;
+    for (const t of rows) {
+      // A running timer must be stopped before Kimai lets it go.
+      if (!t.end) await call('PATCH', `/timesheets/${t.id}/stop`);
+      await api('DELETE', `/timesheets/${t.id}`);
+      removedSheets++;
+    }
+    if (rows.length < 500) break;
+  }
+  log(removedSheets ? `kimai: deleted ${removedSheets} timesheet(s)` : 'kimai: no timesheets to delete');
+
+  // ---- customers ------------------------------------------------------------
+  const KEEP_CUSTOMERS = ['Bench Customer', 'Bench Customer Ltd', 'Bench Customers Group'];
+  const customerIds = {};
+  for (const c of (await api('GET', '/customers?visible=3')).sort(byId)) {
+    const full = await api('GET', `/customers/${c.id}`);
+    const pristine = KEEP_CUSTOMERS.includes(c.name) && !customerIds[c.name] && full.visible !== false && !full.comment;
+    if (pristine) { customerIds[c.name] = c.id; continue; }
+    await api('DELETE', `/customers/${c.id}`);
+    log(`kimai: deleted customer "${c.name}" (#${c.id}) and its projects`);
+  }
+  for (const name of KEEP_CUSTOMERS) {
+    if (customerIds[name]) continue;
+    customerIds[name] = (await api('POST', '/customers', {
+      name, country: 'US', currency: 'USD', timezone: 'UTC', visible: true, billable: true,
+    })).id;
+    log(`kimai: seeded customer "${name}"`);
+  }
+
+  // ---- projects ---------------------------------------------------------------
+  const SEED_PROJECTS = [
+    { name: 'Seed: Website relaunch', comment: 'Rebuild of the public website on the new design system.' },
+    { name: 'Seed: Annual audit', comment: 'Preparation of the documents for the yearly financial audit.' },
+    { name: 'Seed: Office move', comment: 'Planning the move to the new office floor.' },
+  ];
+  const seedsCustomer = customerIds['Bench Customer Ltd'];
+  let removedProjects = 0;
+  for (const p of (await api('GET', '/projects?visible=3&ignoreDates=1')).sort(byId)) {
+    const s = SEED_PROJECTS.find((x) => x.name === p.name);
+    const pristine = s && !s.kept && custOf(p) === seedsCustomer && p.visible !== false &&
+      String(p.comment ?? '') === s.comment && !p.orderNumber && !p.orderDate && !p.start && !p.end &&
+      p.globalActivities !== false;
+    if (pristine) { s.kept = p.id; continue; }
+    await api('DELETE', `/projects/${p.id}`);
+    removedProjects++;
+  }
+  log(removedProjects ? `kimai: deleted ${removedProjects} project(s) (earlier runs' and non-seed)` : 'kimai: no projects to delete');
+  for (const s of SEED_PROJECTS) {
+    if (s.kept) continue;
+    s.kept = (await api('POST', '/projects', {
+      name: s.name, customer: seedsCustomer, comment: s.comment, visible: true, billable: true, globalActivities: true,
+    })).id;
+    log(`kimai: seeded project "${s.name}"`);
+  }
+
+  // ---- activities -------------------------------------------------------------
+  const KEEP_ACTIVITIES = ['Consulting', 'Consulting Travel', 'Consultancy Review'];
+  const activityIds = {};
+  for (const a of (await api('GET', '/activities?visible=3')).sort(byId)) {
+    const pristine = KEEP_ACTIVITIES.includes(a.name) && !activityIds[a.name] && projOf(a) === null &&
+      a.visible !== false && !a.comment;
+    if (pristine) { activityIds[a.name] = a.id; continue; }
+    await api('DELETE', `/activities/${a.id}`);
+    log(`kimai: deleted activity "${a.name}" (#${a.id})`);
+  }
+  for (const name of KEEP_ACTIVITIES) {
+    if (activityIds[name]) continue;
+    activityIds[name] = (await api('POST', '/activities', { name, project: null, visible: true, billable: true })).id;
+    log(`kimai: seeded activity "${name}"`);
+  }
+
+  // ---- tags -------------------------------------------------------------------
+  const KEEP_TAGS = ['onsite', 'onsite-remote', 'offsite'];
+  const tagsFound = await call('GET', '/tags/find?name=%25');
+  if (!tagsFound.res.ok) throw new Error(`kimai GET /api/tags/find: HTTP ${tagsFound.res.status} ${tagsFound.text.slice(0, 300)}`);
+  const keptTags = new Set();
+  for (const t of (tagsFound.json ?? []).sort(byId)) {
+    if (KEEP_TAGS.includes(t.name) && !keptTags.has(t.name)) { keptTags.add(t.name); continue; }
+    await api('DELETE', `/tags/${t.id}`);
+    log(`kimai: deleted tag "${t.name}"`);
+  }
+  for (const name of KEEP_TAGS) {
+    if (keptTags.has(name)) continue;
+    await api('POST', '/tags', { name, visible: true });
+    log(`kimai: seeded tag "${name}"`);
+  }
+
+  // ---- comments on the kept records ---------------------------------------------
+  const comments = [
+    ...SEED_PROJECTS.map((s) => ['projects', s.kept]),
+    ...KEEP_CUSTOMERS.map((n) => ['customers', customerIds[n]]),
+  ];
+  for (const [kind, id] of comments) {
+    for (const c of (await api('GET', `/${kind}/${id}/comments`)) ?? []) {
+      await api('DELETE', `/${kind}/${id}/comments/${c.id}`);
+      log(`kimai: deleted a comment on ${kind.slice(0, -1)} #${id}`);
+    }
+  }
+}
+
+/**
+ * Grocy reset doubles as the SEED, as kanboard's does. It needs
+ * bench/thirdparty/grocy/seed.sh first (the migrated database, the bench
+ * password and the FIXED API key; refuses loudly without them). Then, every
+ * time, through /api with the header "GROCY-API-KEY: <key>":
+ *
+ * - locations Fridge, Pantry and the look-alikes "Pantry Shelf" and "Garage
+ *   Pantry"; quantity units Piece, Pack and the look-alikes "Package" and
+ *   "Six-pack"; product groups Beverages, Snacks and the look-alikes
+ *   "Snacks & Sweets" and "Healthy Snacks" — each active, as seeded; any other
+ *   location, unit or group (a run may create one in master data) is DELETED.
+ * - three "Seed:" products in Fridge / Beverages / Piece, minimum stock 0,
+ *   default due days 0, a one-paragraph description, no barcodes and no stock
+ *   history. Any other product (earlier runs' "<runid> Bench Product"s, one a
+ *   purchase picker created, a renamed seed) is DELETED, and so is a seed a
+ *   wayward run touched (then re-created). Deleting a product cascades in
+ *   Grocy's own trigger (cascade_product_removal: stock, stock_log,
+ *   product_barcodes, unit conversions, shopping list rows).
+ * - no shopping list items, only the "Default" shopping list, no stores, no
+ *   global unit conversions.
+ * - the product id counter is pushed forward by a random 10000-99999 (a
+ *   throwaway product with an explicit id, deleted at once; products.id is
+ *   AUTOINCREMENT, so sqlite_sequence keeps the jump). The run's product id
+ *   is what objective 7 reports: a small sequential id could appear in a
+ *   report by coincidence (a step number, "2026") or be frozen from an
+ *   earlier run; a jump of 5+ digits cannot.
+ * - the admin's remembered table layouts and new-product presets
+ *   (user settings datatables_state_*, product_presets_*, stock_default_*,
+ *   shopping_list_*) are deleted, so they fall back to the config defaults.
+ *
+ * Grocy turns empty values into '' (the UI sends '' for an empty select, and
+ * the API purifies null to ''), so "unset" below is null OR ''.
+ */
+async function resetGrocy() {
+  const base = (process.env.APP_URL || 'http://127.0.0.1:8106/').replace(/\/$/, '');
+  const key = process.env.GROCY_API_KEY || 'bench-grocy-api-key-0000000000000000000000000001';
+  const api = async (method, route, body) => {
+    const res = await fetch(`${base}/api${route}`, {
+      method,
+      headers: {
+        'GROCY-API-KEY': key, accept: 'application/json',
+        // Grocy compares the header to exactly "application/json" (no charset).
+        ...(body !== undefined ? { 'content-type': 'application/json' } : {}),
+      },
+      ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
+    });
+    const text = await res.text();
+    if (!res.ok) throw new Error(`grocy ${method} ${route}: HTTP ${res.status} ${text.slice(0, 300)}`);
+    try { return text ? JSON.parse(text) : null; } catch { return text; }
+  };
+  const all = (entity) => api('GET', `/objects/${entity}`);
+  const unset = (v) => v === null || v === undefined || v === '';
+  const same = (a, b) => (unset(a) && unset(b)) || String(a) === String(b);
+  const plain = (html) => String(html ?? '').replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
+
+  try {
+    await api('GET', '/system/info');
+  } catch (e) {
+    throw new Error(`grocy: the API key is refused (${e.message}) — run bash bench/thirdparty/grocy/seed.sh first`);
+  }
+
+  // ---- master data: exactly the kept names, each as seeded -----------------
+  const MASTERS = {
+    locations: [
+      { name: 'Fridge', description: 'The kitchen fridge.', is_freezer: 0 },
+      { name: 'Pantry', description: 'The kitchen pantry.', is_freezer: 0 },
+      { name: 'Pantry Shelf', description: 'The open shelf next to the pantry.', is_freezer: 0 },
+      { name: 'Garage Pantry', description: 'Overflow storage in the garage.', is_freezer: 0 },
+    ],
+    quantity_units: [
+      { name: 'Piece', name_plural: 'Pieces' },
+      { name: 'Pack', name_plural: 'Packs' },
+      { name: 'Package', name_plural: 'Packages' },
+      { name: 'Six-pack', name_plural: 'Six-packs' },
+    ],
+    product_groups: [
+      { name: 'Beverages', description: 'Drinks.' },
+      { name: 'Snacks', description: 'Things to eat between meals.' },
+      { name: 'Snacks & Sweets', description: 'Sweet things.' },
+      { name: 'Healthy Snacks', description: 'Fruit, nuts and the like.' },
+    ],
+  };
+  const ids = {}; // ids.locations.Pantry = 2
+  const extras = {};
+  for (const [entity, wanted] of Object.entries(MASTERS)) {
+    ids[entity] = {};
+    extras[entity] = [];
+    for (const row of (await all(entity)).sort((a, b) => a.id - b.id)) {
+      const w = wanted.find((x) => x.name === row.name);
+      if (!w || ids[entity][w.name]) { extras[entity].push(row); continue; }
+      ids[entity][w.name] = row.id;
+      const want = { ...w, active: 1 };
+      if (Object.entries(want).some(([k, v]) => !same(row[k], v))) {
+        await api('PUT', `/objects/${entity}/${row.id}`, want);
+        log(`grocy: restored ${entity} "${w.name}"`);
+      }
+    }
+    for (const w of wanted) {
+      if (ids[entity][w.name]) continue;
+      ids[entity][w.name] = (await api('POST', `/objects/${entity}`, { ...w, active: 1 })).created_object_id;
+      log(`grocy: seeded ${entity} "${w.name}"`);
+    }
+  }
+  const L = ids.locations, Q = ids.quantity_units, G = ids.product_groups;
+
+  // ---- products: exactly the seed set, each as seeded --------------------------
+  const SEED = [
+    { name: 'Seed: Sparkling water', body: 'Bottled sparkling water for the office fridge.' },
+    { name: 'Seed: Orange juice', body: 'Fresh orange juice, one litre.' },
+    { name: 'Seed: Oat milk', body: 'Oat drink for coffee.' },
+  ];
+  const seedRow = (s) => ({
+    name: s.name, description: `<p>${s.body}</p>`, active: 1,
+    location_id: L.Fridge, product_group_id: G.Beverages,
+    qu_id_stock: Q.Piece, qu_id_purchase: Q.Piece, qu_id_consume: Q.Piece, qu_id_price: Q.Piece,
+    min_stock_amount: 0, default_best_before_days: 0,
+  });
+  const stockLog = await all('stock_log');
+  const barcodes = await all('product_barcodes');
+  let removed = 0;
+  for (const p of (await all('products')).sort((a, b) => a.id - b.id)) {
+    const s = SEED.find((x) => x.name === p.name);
+    const want = s && seedRow(s);
+    const pristine = s && !s.kept &&
+      ['active', 'location_id', 'product_group_id', 'qu_id_stock', 'qu_id_purchase', 'min_stock_amount', 'default_best_before_days']
+        .every((k) => Number(p[k]) === Number(want[k])) &&
+      unset(p.parent_product_id) && plain(p.description) === s.body &&
+      !stockLog.some((r) => String(r.product_id) === String(p.id)) &&
+      !barcodes.some((b) => String(b.product_id) === String(p.id));
+    if (pristine) { s.kept = true; continue; }
+    await api('DELETE', `/objects/products/${p.id}`);
+    removed++;
+  }
+  log(removed ? `grocy: deleted ${removed} product(s) (earlier runs' and non-seed, with their stock and barcodes)` : 'grocy: no products to delete');
+  for (const s of SEED) {
+    if (s.kept) continue;
+    await api('POST', '/objects/products', seedRow(s));
+    log(`grocy: seeded product "${s.name}"`);
+  }
+
+  // ---- everything else a run can leave behind ---------------------------------
+  for (const r of await all('shopping_list')) await api('DELETE', `/objects/shopping_list/${r.id}`);
+  for (const r of await all('shopping_lists')) {
+    if (String(r.id) === '1') {
+      if (r.name !== 'Default') await api('PUT', '/objects/shopping_lists/1', { name: 'Default' });
+      continue;
+    }
+    await api('DELETE', `/objects/shopping_lists/${r.id}`);
+    log(`grocy: deleted shopping list "${r.name}"`);
+  }
+  for (const r of await all('shopping_locations')) {
+    await api('DELETE', `/objects/shopping_locations/${r.id}`);
+    log(`grocy: deleted store "${r.name}"`);
+  }
+  for (const r of await all('quantity_unit_conversions')) {
+    if (!unset(r.product_id)) continue;
+    await api('DELETE', `/objects/quantity_unit_conversions/${r.id}`);
+    log(`grocy: deleted a global unit conversion (#${r.id})`);
+  }
+  // Masters a run created, now that no product points at them.
+  for (const [entity, rows] of Object.entries(extras)) {
+    for (const r of rows) {
+      await api('DELETE', `/objects/${entity}/${r.id}`);
+      log(`grocy: deleted ${entity} "${r.name}"`);
+    }
+  }
+
+  // ---- push the product id counter forward ------------------------------------
+  // A probe without an id reads the counter (sqlite_sequence + 1), then a
+  // throwaway with an explicit id further on moves the counter there.
+  const throwaway = async (id) => {
+    const created = await api('POST', '/objects/products', {
+      ...(id ? { id } : {}), name: `bench id bump ${id || 'probe'}`, active: 0, location_id: L.Fridge,
+      qu_id_stock: Q.Piece, qu_id_purchase: Q.Piece, qu_id_consume: Q.Piece, qu_id_price: Q.Piece,
+    });
+    await api('DELETE', `/objects/products/${created.created_object_id}`);
+    return Number(created.created_object_id);
+  };
+  const probe = await throwaway(null);
+  const bumped = await throwaway(probe + 10000 + Math.floor(Math.random() * 90000));
+  log(`grocy: product ids continue after ${bumped}`);
+
+  // ---- the admin's remembered UI state ----------------------------------------
+  const settings = await api('GET', '/user/settings');
+  const stale = Object.keys(settings ?? {}).filter((k) => /^(datatables_state_|product_presets_|stock_default_|shopping_list_)/.test(k));
+  for (const k of stale) await api('DELETE', `/user/settings/${encodeURIComponent(k)}`);
+}
+
 function resetAtelyr() {
   log('atelyr: restoring datastore baseline');
   execFileSync(process.execPath, [path.join(here, 'reset.mjs'), '--restore'], { stdio: 'inherit' });
@@ -1619,6 +2230,9 @@ const RESETS = {
   ghost: resetGhost,
   erpnext: resetErpnext,
   bookstack: resetBookstack,
+  grocy: resetGrocy,
+  kimai: resetKimai,
+  planka: resetPlanka,
   mealie: resetMealie,
   directus: resetDirectus,
 };

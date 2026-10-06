@@ -420,6 +420,52 @@ for WITH_TARGET in $WITH_TARGETS; do
       # first use and is the idempotent seed for everything else, as for kanboard.
       node bench/reset-app.mjs --target directus
       ;;
+    grocy)
+      # nginx + php-fpm, SQLite. Grocy builds its database on the first request
+      # to "/" (about 250 migrations, seconds), and /login answers 500 until it
+      # has, so seed.sh does the waiting: it polls "/" for the 302 that follows
+      # the migrations (up to five minutes), then sets the admin password and
+      # installs the fixed API key (skips both when done). The reset is the
+      # idempotent seed for everything else, as for kanboard.
+      bash bench/thirdparty/grocy/seed.sh || { docker compose -f bench/thirdparty/grocy/docker-compose.yml logs --tail 40 || true; die "grocy seed.sh failed"; }
+      node bench/reset-app.mjs --target grocy
+      # Readiness probe: the sign-in page.
+      code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 http://127.0.0.1:8106/login || true)"
+      echo "    grocy login page: HTTP ${code:-unreachable}"
+      [ "$code" = "200" ] || die "grocy /login is not 200"
+      ;;
+    kimai)
+      # Apache + PHP + MariaDB; the entrypoint waits for the database, runs
+      # kimai:install (schema + migrations) and creates the admin before Apache
+      # starts, ~30-60s warm; allow five minutes on a cold box. /en/login answers
+      # 200 unauthenticated once it serves.
+      for _ in $(seq 1 150); do
+        code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 http://127.0.0.1:8105/en/login || true)"
+        [ "$code" = "200" ] && break; sleep 2
+      done
+      echo "    kimai login page: HTTP ${code:-unreachable}"
+      [ "$code" = "200" ] || { docker compose -f bench/thirdparty/kimai/docker-compose.yml logs --tail 40 kimai || true; die "kimai /en/login is not 200"; }
+      # seed.sh installs the fixed API token, marks the admin's first-login
+      # wizard seen and pins its timezone (idempotent); the reset is the
+      # idempotent seed for everything else, as for kanboard.
+      bash bench/thirdparty/kimai/seed.sh
+      node bench/reset-app.mjs --target kimai
+      ;;
+    planka)
+      # Node (Sails) + Postgres; start.sh runs db/init.js (migrations, the admin
+      # from DEFAULT_ADMIN_*) before the server, ~15-40s warm after Postgres is
+      # healthy; allow five minutes on a cold box. / serves the SPA's index (200)
+      # unauthenticated once the server has lifted.
+      for _ in $(seq 1 150); do
+        code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 5 http://127.0.0.1:8104/ || true)"
+        [ "$code" = "200" ] && break; sleep 2
+      done
+      echo "    planka index: HTTP ${code:-unreachable}"
+      [ "$code" = "200" ] || { docker compose -f bench/thirdparty/planka/docker-compose.yml logs --tail 40 || true; die "planka does not answer /"; }
+      # No seed.sh: the reset accepts the admin's terms on first use and is the
+      # idempotent seed for everything else, as for kanboard.
+      node bench/reset-app.mjs --target planka
+      ;;
   esac
 done
 

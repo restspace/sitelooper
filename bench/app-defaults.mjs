@@ -111,4 +111,28 @@ export const APP_DEFAULTS = {
     APP_EMAIL: 'admin@bench.local',
     APP_PASSWORD: 'bench-admin-pass',
   },
+  // The image's db/init.js creates this admin from DEFAULT_ADMIN_* in the
+  // compose file on every start; the reset accepts the first-sign-in terms
+  // through the API, so a sign-in lands on the projects page. Planka signs in
+  // by email or username (benchadmin).
+  planka: {
+    APP_URL: 'http://127.0.0.1:8104/',
+    APP_EMAIL: 'admin@example.com',
+    APP_PASSWORD: 'bench-admin-pass',
+  },
+  // The image's entrypoint creates this admin (username "admin") from ADMINMAIL /
+  // ADMINPASS; seed.sh marks its first-login wizard seen. Kimai signs in by
+  // username or email.
+  kimai: {
+    APP_URL: 'http://127.0.0.1:8105/',
+    APP_EMAIL: 'admin@example.com',
+    APP_PASSWORD: 'bench-admin-pass',
+  },
+  // bench/thirdparty/grocy/seed.sh sets the install's only user (admin / admin)
+  // to this password. Grocy signs in by USERNAME, so APP_EMAIL is the username.
+  grocy: {
+    APP_URL: 'http://127.0.0.1:8106/',
+    APP_EMAIL: 'admin',
+    APP_PASSWORD: 'bench-admin-pass',
+  },
 };

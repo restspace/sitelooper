@@ -1,0 +1,50 @@
+# Third-party benchmark target: Grocy household ERP (real production app we did not write).
+#
+# HELD OUT (notes/HELDOUT2-PROTOCOL.md): neither code version under test had
+# met it when this target was written; the task, verifier and oracle come from
+# Grocy's docs, its OpenAPI spec and its source at tag v4.7.1 only.
+#
+# Widens the matrix by CLIENT TECHNOLOGY: PHP (Slim + Blade) server-rendered
+# pages with jQuery/Bootstrap 4 forms; native <select> pickers for location,
+# product group and quantity units; numeric "number picker" inputs with +/-
+# buttons; a Summernote WYSIWYG description; a typeahead product combobox on
+# the purchase page that can also start creating a product; a date picker with
+# shorthand input; and a barcode sub-form that opens in a modal iframe on the
+# product page once the product has been saved.
+#
+# One container: the linuxserver image (nginx + php-fpm, SQLite at
+# /config/data/grocy.db). Grocy builds its database on the first request to
+# "/" (migrations run there) and creates the default user admin / admin.
+# seed.sh then sets the bench password and installs a FIXED API key directly
+# in the database (Grocy stores API keys in plain text in the api_keys table).
+# Every location, quantity unit, product group and product is made by the
+# reset, through the REST API.
+#
+#   up:    docker compose -f bench/thirdparty/grocy/docker-compose.yml up -d
+#   seed:  bash bench/thirdparty/grocy/seed.sh   (migrations + password + API key; idempotent)
+#   reset: node bench/reset-app.mjs --target grocy   (idempotent: seeds the master data and products too)
+#   web:   http://127.0.0.1:8106/   (username admin / bench-admin-pass; Grocy signs in by USERNAME)
+#   api:   http://127.0.0.1:8106/api/, header "GROCY-API-KEY: bench-grocy-api-key-0000000000000000000000000001"
+services:
+  grocy:
+    image: linuxserver/grocy:v4.7.1-ls343
+    ports:
+      - "127.0.0.1:8106:80"
+    environment:
+      PUID: "1000"
+      PGID: "1000"
+      TZ: Etc/UTC
+      # Grocy reads any config.php setting from GROCY_<NAME> (helpers/extensions.php
+      # Setting()); the linuxserver image passes env through to php-fpm (clear_env = no).
+      GROCY_MODE: production
+      GROCY_DEFAULT_LOCALE: en
+      GROCY_CURRENCY: USD
+      # Never call out to Open Food Facts for an unknown barcode from a bench box.
+      GROCY_STOCK_BARCODE_LOOKUP_PLUGIN: DemoBarcodeLookupPlugin
+    volumes:
+      - grocy-config:/config
+      # Boxes without IPv6 make nginx die on "listen [::]:80" (BookStack, 2026-10-05).
+      - ./no-ipv6.sh:/custom-cont-init.d/10-no-ipv6.sh:ro
+
+volumes:
+  grocy-config:

@@ -1,0 +1,67 @@
+# Third-party benchmark target: Planka kanban (real production app we did not write).
+#
+# HELD OUT (notes/HELDOUT2-PROTOCOL.md): neither code version under test had met
+# it when this target was written. Widens the matrix by CLIENT TECHNOLOGY: a
+# React + Redux single-page app over a Sails.js API with a live socket, history
+# routes (/boards/<id>, /cards/<id>), a card modal opened over the board, and
+# popovers for labels (searchable, can also CREATE a label), members (board
+# members, searchable) and the due date (date + time fields); a markdown/WYSIWYG
+# description editor; comments under the card.
+#
+# Two containers: the app and Postgres (Planka supports no other database).
+# On every start `node db/init.js` (the image's start.sh) migrates and runs the
+# default seed, which creates — or, on later starts, re-asserts the password
+# of — the admin from DEFAULT_ADMIN_*. Nothing else comes from env: the first
+# sign-in meets a terms-acceptance step, which the reset completes through the
+# API (POST /api/access-tokens/accept-terms) so the browser never sees it. The
+# project, board, lists, labels, users and every card are made by the reset.
+#
+#   up:    docker compose -f bench/thirdparty/planka/docker-compose.yml up -d
+#   reset: node bench/reset-app.mjs --target planka   (idempotent: accepts the terms and seeds too)
+#   web:   http://127.0.0.1:8104/   (admin@example.com / bench-admin-pass)
+#   api:   http://127.0.0.1:8104/api, Authorization: Bearer <POST /api/access-tokens {emailOrUsername, password}>
+services:
+  planka:
+    image: ghcr.io/plankanban/planka:2.2.1
+    ports:
+      - "127.0.0.1:8104:1337"
+    environment:
+      # The first origin is the canonical base url (links, cookies); every
+      # origin listed is accepted by the socket and CORS checks.
+      BASE_URL: http://127.0.0.1:8104,http://localhost:8104
+      DATABASE_URL: postgresql://postgres@postgres/planka
+      SECRET_KEY: bench-planka-secret-not-for-production
+      DEFAULT_ADMIN_EMAIL: admin@example.com
+      DEFAULT_ADMIN_PASSWORD: bench-admin-pass
+      DEFAULT_ADMIN_NAME: Bench Admin
+      DEFAULT_ADMIN_USERNAME: benchadmin
+      DEFAULT_LANGUAGE: en-US
+      # A session long enough for any run (days).
+      TOKEN_EXPIRES_IN: "30"
+      # start.sh launches an internal Squid outgoing proxy unless every
+      # OUTGOING_* list is empty; set-but-empty skips it (a bench box sends no
+      # mail, webhooks or favicon fetches).
+      OUTGOING_BLOCKED_HOSTS: ""
+      LOG_LEVEL: warn
+    volumes:
+      - planka-data:/app/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: planka
+      POSTGRES_HOST_AUTH_METHOD: trust
+    volumes:
+      - planka-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d planka"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+volumes:
+  planka-data:
+  planka-db:

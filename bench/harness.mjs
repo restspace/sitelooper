@@ -206,6 +206,29 @@ const TARGETS = {
     notReadyHint:
       'Start it with: docker compose -f bench/thirdparty/bookstack/docker-compose.yml up -d (then seed.sh once)',
   },
+  planka: {
+    task: 'tasks/planka-card-flow.md',
+    defaults: APP_DEFAULTS.planka,
+    // Reset is also the idempotent seed (and accepts the admin's terms) — see resetPlanka.
+    reset: () => resetTarget('planka'),
+    notReadyHint: 'Start it with: docker compose -f bench/thirdparty/planka/docker-compose.yml up -d',
+  },
+  kimai: {
+    task: 'tasks/kimai-timesheet-flow.md',
+    defaults: APP_DEFAULTS.kimai,
+    // Reset is also the idempotent seed (after seed.sh's API token) — see resetKimai.
+    reset: () => resetTarget('kimai'),
+    notReadyHint:
+      'Start it with: docker compose -f bench/thirdparty/kimai/docker-compose.yml up -d (then seed.sh once)',
+  },
+  grocy: {
+    task: 'tasks/grocy-product-flow.md',
+    defaults: APP_DEFAULTS.grocy,
+    // Reset is also the idempotent seed (after seed.sh's migrations, password and API key) — see resetGrocy.
+    reset: () => resetTarget('grocy'),
+    notReadyHint:
+      'Start it with: docker compose -f bench/thirdparty/grocy/docker-compose.yml up -d (then seed.sh once)',
+  },
   grafana: {
     task: 'tasks/grafana-dashboard-flow.md',
     defaults: APP_DEFAULTS.grafana,

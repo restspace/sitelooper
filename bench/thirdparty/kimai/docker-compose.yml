@@ -1,0 +1,81 @@
+# Third-party benchmark target: Kimai time tracking (real production app we did not write).
+#
+# HELD OUT (notes/HELDOUT2-PROTOCOL.md): neither code version under test had met
+# it when this target was written; the task, verifier and oracle come from
+# Kimai's docs, REST API and source (tag 2.68.0) only.
+#
+# Widens the matrix by CLIENT TECHNOLOGY: Symfony server-rendered forms (Tabler
+# theme) opened as modal dialogs over the list pages, tom-select dropdowns with
+# type-to-search for customer / project / activity, a tag input that suggests
+# existing tags after three characters and can create new ones, litepicker
+# date pickers and time inputs, and integer ids only in the url
+# (/en/admin/project/<id>/details).
+#
+# Two containers: the official image (Apache + PHP on :8001; its entrypoint
+# runs `kimai:install` and `kimai:user:create --ignore-existing admin
+# $ADMINMAIL ROLE_SUPER_ADMIN $ADMINPASS` on every start) and a MariaDB kept
+# small (the same image bookstack uses). APP_SECRET is fixed so sessions survive
+# a recreate; public on purpose, a bench box is thrown away. seed.sh installs a
+# FIXED API token for the admin (Kimai stores API tokens in plain text in
+# kimai2_access_token and offers no console command for them), marks the
+# first-login wizard as seen, pins the admin's timezone to UTC and starts
+# project ids at 40001 so a reported id is distinctive.
+#
+#   up:    docker compose -f bench/thirdparty/kimai/docker-compose.yml up -d
+#   seed:  bash bench/thirdparty/kimai/seed.sh        (token, wizard, timezone; idempotent)
+#   reset: node bench/reset-app.mjs --target kimai    (idempotent: seeds the content too)
+#   web:   http://127.0.0.1:8105/en/login   (admin@example.com / bench-admin-pass; username "admin" also signs in)
+#   api:   http://127.0.0.1:8105/api/, header "Authorization: Bearer benchkimaiapitoken000000000000001"
+services:
+  db:
+    image: mariadb:11.4.13
+    environment:
+      MARIADB_DATABASE: kimai
+      MARIADB_USER: kimai
+      MARIADB_PASSWORD: bench-db-pass
+      MARIADB_ROOT_PASSWORD: bench-db-root-pass
+    command:
+      - --innodb-buffer-pool-size=64M
+      - --performance-schema=OFF
+      - --max-connections=40
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - kimai-db:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  kimai:
+    image: kimai/kimai2:2.68.0
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:8105:8001"
+    environment:
+      APP_ENV: prod
+      APP_SECRET: bench-kimai-secret-not-for-production-0123456789
+      # Symfony trusted-host patterns (regexes); the browser and the scripts
+      # reach the app as 127.0.0.1, a few tools as localhost.
+      TRUSTED_HOSTS: "127.0.0.1,localhost"
+      ADMINMAIL: admin@example.com
+      ADMINPASS: bench-admin-pass
+      # The entrypoint splits this on / : @ to wait for the database, so the
+      # port is explicit and the password has none of those characters.
+      DATABASE_URL: "mysql://kimai:bench-db-pass@db:3306/kimai?charset=utf8mb4&serverVersion=11.4.13-MariaDB"
+      # Nothing is ever sent from a bench box.
+      MAILER_FROM: bench@example.com
+      MAILER_URL: "null://localhost"
+      memory_limit: 512M
+    volumes:
+      - kimai-data:/opt/kimai/var/data
+      - kimai-plugins:/opt/kimai/var/plugins
+
+volumes:
+  kimai-db:
+  kimai-data:
+  kimai-plugins:
