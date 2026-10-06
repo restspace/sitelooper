@@ -1,0 +1,191 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/srpk-a-hapk2-2-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/srpk-a-hapk2-2-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/srpk-a-hapk2-2-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/bench/results/srpk-a-hapk2-2-spec-tmp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/srpk-a-hapk2-2-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "hapk2.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/srpk-a-hapk2-2-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "hapk2.spec.ts",
+      "file": "hapk2.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "hapk2",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 38977,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper warn] 01-signin: report value email_used is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 01-signin\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-report\n"
+                    },
+                    {
+                      "text": "[sitelooper recipe] filled via recipe prosemirror/set-value (r_1ab693); value verified on the component\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 03-create s_67716a/16: read 'label' returned a value the skill itself set/selected ('Hardware') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 03-create s_67716a/18: read 'label' returned a value the skill itself set/selected ('Hardware') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 03-create s_67716a/26: read 'label' returned a value the skill itself set/selected ('Hardware') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 03-create s_67716a/32: read 'assigned_label' returned a value the skill itself set/selected ('Hardware') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-create\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 04-add s_e80ba1/3: read 'comment_text' returned a value the skill itself set/selected ('Comment from sitelooper bench run srpk-a-hapk2-2: comment ad…') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-add\n"
+                    },
+                    {
+                      "text": "[sitelooper probe] 03-create: http://127.0.0.1:8104/cards/1880051552262030568 still shows what it saved\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-signin: Sign in to Planka at http://127.0.0.1:8104/ using email admin@example.com and password exactly {{env:APP_PASSWORD}}. Verify that you are signed in.",
+                      "duration": 4631
+                    },
+                    {
+                      "title": "02-report: On the board Bench Board in project Bench Project, report the exact names of every card whose name starts with 'Seed:' without modifying anything. Verify the board and names from the page.",
+                      "duration": 2301
+                    },
+                    {
+                      "title": "03-create: On Bench Board in Bench Project, create a card named '{{runid}} Bench Card' in the 'In Progress' list. Set its description to exactly one paragraph that includes the runid {{runid}}, assign only the existing label 'Hardware' (not similar labels or a new label), assign only the existing member 'Bench Tester' (not similar names), and set due date to 2026-12-31. Save the description once. Verify the card, list, description paragraph, sole label, sole member, and due date in the UI, and report the card page URL and exact /cards/ ID if available.",
+                      "duration": 26981
+                    },
+                    {
+                      "title": "04-add: On the card '{{runid}} Bench Card' at its own card view in Planka, add a comment whose text includes '{{runid}}'. Verify the saved comment text on the card page and report the card URL and ID.",
+                      "duration": 2245
+                    },
+                    {
+                      "title": "persistence: re-read what the flow saved",
+                      "duration": 1226
+                    }
+                  ],
+                  "startTime": "2026-10-06T18:26:40.171Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "outputs",
+                      "contentType": "application/json",
+                      "body": "ewogICIwMS1zaWduaW4uc2lnbmVkX2luX3VzZXIiOiAiQmVuY2ggQWRtaW4iLAogICIwMS1zaWduaW4udmlzaWJsZV9wcm9qZWN0IjogIkJlbmNoIFByb2plY3QiLAogICIwMi1yZXBvcnQubWludGVkIjogIjE4ODAwNDU4OTE1NzA2MzE2ODciLAogICIwMi1yZXBvcnQuc2VlZF9jYXJkXzEiOiAiU2VlZDogUmVwbGFjZSB0aGUgb2ZmaWNlIHJvdXRlciIsCiAgIjAyLXJlcG9ydC5zZWVkX2NhcmRfMiI6ICJTZWVkOiBPcmRlciBzcGFyZSBrZXlib2FyZHMiLAogICIwMi1yZXBvcnQuc2VlZF9jYXJkXzMiOiAiU2VlZDogUmVuZXcgdGhlIGRvbWFpbiBuYW1lIiwKICAiMDItcmVwb3J0LmJvYXJkX3VybCI6ICJodHRwOi8vMTI3LjAuMC4xOjgxMDQvYm9hcmRzLzE4ODAwNDU4OTE1NzA2MzE2ODciLAogICIwMi1yZXBvcnQuYm9hcmRfbmFtZSI6ICJCZW5jaCBCb2FyZCIsCiAgIjAyLXJlcG9ydC5wcm9qZWN0X25hbWUiOiAiQmVuY2ggUHJvamVjdCIsCiAgIjAyLXJlcG9ydC5saXN0IjogIlRvIERvIiwKICAiMDItcmVwb3J0LmJvYXJkX2xpbmtfbmFtZSI6ICJCZW5jaCBCb2FyZCIsCiAgIjAzLWNyZWF0ZS5taW50ZWQiOiAiMTg4MDA1MTU1MjI2MjAzMDU2OCIsCiAgIjAzLWNyZWF0ZS5jYXJkX3VybCI6ICJodHRwOi8vMTI3LjAuMC4xOjgxMDQvY2FyZHMvMTg4MDA1MTU1MjI2MjAzMDU2OCIsCiAgIjAzLWNyZWF0ZS5kZXNjcmlwdGlvbl9wYXJhZ3JhcGgiOiAiVGhpcyBjYXJkIHdhcyBjcmVhdGVkIGJ5IHRoZSBzaXRlbG9vcGVyIGJlbmNoIHJ1biB3aXRoIHJ1bmlkIHNycGstYS1oYXBrMi0yIHRvIHZlcmlmeSBjYXJkIGNyZWF0aW9uLCBkZXNjcmlwdGlvbiBlZGl0aW5nLCBsYWJlbCBhbmQgbWVtYmVyIGFzc2lnbm1lbnQsIGFuZCBkdWUgZGF0ZSBoYW5kbGluZyBvbiBCZW5jaCBCb2FyZC4iLAogICIwMy1jcmVhdGUubGFiZWwiOiAiSGFyZHdhcmUiLAogICIwMy1jcmVhdGUubWVtYmVyIjogIkJlbmNoIFRlc3RlciIsCiAgIjAzLWNyZWF0ZS5saXN0IjogIkluIFByb2dyZXNzIiwKICAiMDMtY3JlYXRlLmNhcmRfbmFtZSI6ICJzcnBrLWEtaGFwazItMiBCZW5jaCBDYXJkIiwKICAiMDMtY3JlYXRlLmR1ZV9kYXRlXzIiOiAiRGVjZW1iZXIgMzEgYXQgMTI6MDAgUE0iLAogICIwMy1jcmVhdGUuYXNzaWduZWRfbWVtYmVyIjogIkJUIiwKICAiMDMtY3JlYXRlLmJvYXJkIjogIkJlbmNoIEJvYXJkIiwKICAiMDMtY3JlYXRlLnByb2plY3QiOiAiQmVuY2ggUHJvamVjdCIsCiAgIjAzLWNyZWF0ZS5kdWVfZGF0ZSI6ICJEZWNlbWJlciAzMSBhdCAxMjowMCBQTSIsCiAgIjAzLWNyZWF0ZS5yZWYiOiAic3Jway1hLWhhcGsyLTIiLAogICIwMy1jcmVhdGUuY2FyZF9saXN0IjogIkluIFByb2dyZXNzIiwKICAiMDMtY3JlYXRlLmFzc2lnbmVkX2xhYmVsIjogIkhhcmR3YXJlIiwKICAiMDMtY3JlYXRlLmNhcmRfaWQiOiAiMTg4MDA1MTU1MjI2MjAzMDU2OCIsCiAgIjA0LWFkZC5jb21tZW50X3RleHQiOiAiQ29tbWVudCBmcm9tIHNpdGVsb29wZXIgYmVuY2ggcnVuIHNycGstYS1oYXBrMi0yOiBjb21tZW50IGFkZGVkIGF0IHRoZSBjYXJkIHZpZXcgZm9yIHRoZSBzcnBrLWEtaGFwazItMiBCZW5jaCBDYXJkIHZlcmlmaWNhdGlvbi4iLAogICIwNC1hZGQuY2FyZF91cmwiOiAiaHR0cDovLzEyNy4wLjAuMTo4MTA0L2NhcmRzLzE4ODAwNTE1NTIyNjIwMzA1NjgiLAogICIwNC1hZGQuY29tbWVudF9jb3VudCI6ICIxIiwKICAiMDQtYWRkLmNhcmRfdGl0bGUiOiAic3Jway1hLWhhcGsyLTIgQmVuY2ggQ2FyZCIsCiAgIjA0LWFkZC5yZWYiOiAic3Jway1hLWhhcGsyLTIiCn0="
+                    },
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": ""
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b276b800690a452c9b09-1785806368fdadaeb28d",
+          "file": "hapk2.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-06T18:26:37.765Z",
+    "duration": 41588.868,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

@@ -1,0 +1,203 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/srpk-a-hbpk1-2-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/srpk-a-hbpk1-2-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/srpk-a-hbpk1-2-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/bench/results/srpk-a-hbpk1-2-spec-tmp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/srpk-a-hbpk1-2-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "hbpk1.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/srpk-a-hbpk1-2-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "hbpk1.spec.ts",
+      "file": "hbpk1.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "hbpk1",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 47622,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper step] 01-signin\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-report\n"
+                    },
+                    {
+                      "text": "[sitelooper recipe] filled via recipe prosemirror/set-value (r_1ab693); value verified on the component\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-create\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 04-remove s_55593a/1: read 'card_label_only' returned a value the skill itself set/selected ('Hardware') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 04-remove s_55593a/5: read 'card_label' returned a value the skill itself set/selected ('Hardware') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-remove\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 05-remove\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 06-set\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 07-add s_ce5012/2: read 'comment_text' returned a value the skill itself set/selected ('Comment for runid srpk-a-hbpk1-2: card verified end to end o…') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 07-add\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 08-open\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-signin: Sign in to Planka at http://127.0.0.1:8104/ using email admin@example.com and password exactly {{env:APP_PASSWORD}}. Verify the signed-in app is open and report confirmation.",
+                      "duration": 4462
+                    },
+                    {
+                      "title": "02-report: On the board Bench Board in project Bench Project, read and report the exact names of all cards whose names start with 'Seed:'; do not modify any cards, and verify they're on that board.",
+                      "duration": 3265
+                    },
+                    {
+                      "title": "03-create: On Bench Board in Bench Project, create a card named '{{runid}} Bench Card' in the In Progress list. Set its description to exactly one paragraph containing the runid {{runid}} and save it, then verify the card appears in In Progress and the saved description contains the runid once.",
+                      "duration": 14563
+                    },
+                    {
+                      "title": "04-remove: Update the card '{{runid}} Bench Card' on Bench Board so its only label is the existing board label exactly named 'Hardware' (not similarly named labels). Remove any other labels if present, do not create a label, and verify the saved card has exactly Hardware and no others.",
+                      "duration": 5212
+                    },
+                    {
+                      "title": "05-remove: Update card '{{runid}} Bench Card' on Bench Board so its only member is the existing user exactly named 'Bench Tester', not 'Bench Tester Lead'. Remove any other members if present, do not create a user, then verify the saved member assignment is exactly Bench Tester.",
+                      "duration": 3656
+                    },
+                    {
+                      "title": "06-set: Set the due date on card '{{runid}} Bench Card' on Bench Board to 2026-12-31 (any time), save it, and verify the card shows that due date after reopening.",
+                      "duration": 9515
+                    },
+                    {
+                      "title": "07-add: From the own view/page of card '{{runid}} Bench Card', add a comment whose text includes the exact runid {{runid}}, then verify the saved comment appears in the card's activity/comments.",
+                      "duration": 4332
+                    },
+                    {
+                      "title": "08-open: Open the own page/view of card '{{runid}} Bench Card' and report the exact card ID as shown in the browser address path /cards/<id>. Verify the card page URL and confirm the saved card details remain present.",
+                      "duration": 1052
+                    }
+                  ],
+                  "startTime": "2026-10-06T18:29:21.371Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "outputs",
+                      "contentType": "application/json",
+                      "body": "ewogICIwMS1zaWduaW4uc2lnbmVkX2luX3VzZXIiOiAiQmVuY2ggQWRtaW4iLAogICIwMS1zaWduaW4udmlzaWJsZV9wcm9qZWN0IjogIkJlbmNoIFByb2plY3QiLAogICIwMi1yZXBvcnQubWludGVkIjogIjE4ODAwNDU4OTE1NzA2MzE2ODciLAogICIwMi1yZXBvcnQuYm9hcmRfdXJsIjogImh0dHA6Ly8xMjcuMC4wLjE6ODEwNC9ib2FyZHMvMTg4MDA0NTg5MTU3MDYzMTY4NyIsCiAgIjAyLXJlcG9ydC5ib2FyZF9uYW1lIjogIkJlbmNoIEJvYXJkIiwKICAiMDItcmVwb3J0LnByb2plY3RfbmFtZSI6ICJCZW5jaCBQcm9qZWN0IiwKICAiMDItcmVwb3J0LmNhcmRfMiI6ICJTZWVkOiBPcmRlciBzcGFyZSBrZXlib2FyZHMiLAogICIwMi1yZXBvcnQuY2FyZF8zIjogIlNlZWQ6IFJlbmV3IHRoZSBkb21haW4gbmFtZSIsCiAgIjAyLXJlcG9ydC5zZWVkX2NhcmRzX2xpc3QiOiAiVG8gRG8iLAogICIwMi1yZXBvcnQuZmlyc3RfbGlzdF93aXRob3V0X3NlZWRfY2FyZHMiOiAiSW4gUHJvZ3Jlc3MiLAogICIwMi1yZXBvcnQuc2Vjb25kX2xpc3Rfd2l0aG91dF9zZWVkX2NhcmRzIjogIkRvbmUiLAogICIwMi1yZXBvcnQuY2FyZF8xIjogIlNlZWQ6IFJlcGxhY2UgdGhlIG9mZmljZSByb3V0ZXIiLAogICIwMy1jcmVhdGUubWludGVkIjogIjE4ODAwNTI5MTg3NjYyNzM4MjAiLAogICIwMy1jcmVhdGUuY2FyZF9kZXNjcmlwdGlvbl9zYXZlZCI6ICJzcnBrLWEtaGJwazEtMiBCZW5jaCBDYXJkIGNyZWF0ZWQgb24gdGhlIEJlbmNoIEJvYXJkIEluIFByb2dyZXNzIGxpc3QuIiwKICAiMDMtY3JlYXRlLmNhcmRfbmFtZSI6ICJzcnBrLWEtaGJwazEtMiBCZW5jaCBDYXJkIiwKICAiMDMtY3JlYXRlLmNhcmRfbGlzdCI6ICJJbiBQcm9ncmVzcyIsCiAgIjAzLWNyZWF0ZS5jYXJkX3VybCI6ICJodHRwOi8vMTI3LjAuMC4xOjgxMDQvY2FyZHMvMTg4MDA1MjkxODc2NjI3MzgyMCIsCiAgIjAzLWNyZWF0ZS5wcm9qZWN0IjogIkJlbmNoIFByb2plY3QiLAogICIwMy1jcmVhdGUuYm9hcmQiOiAiQmVuY2ggQm9hcmQiLAogICIwMy1jcmVhdGUucnVuaWQiOiAic3Jway1hLWhicGsxLTIiLAogICIwMy1jcmVhdGUuY2FyZF90aXRsZSI6ICJzcnBrLWEtaGJwazEtMiBCZW5jaCBDYXJkIiwKICAiMDMtY3JlYXRlLmNhcmRfdGl0bGVfc2F2ZWQiOiAic3Jway1hLWhicGsxLTIgQmVuY2ggQ2FyZCIsCiAgIjA0LXJlbW92ZS5taW50ZWQiOiAiMTg4MDA1MjkxODc2NjI3MzgyMCIsCiAgIjA0LXJlbW92ZS5zaW1pbGFybHlfbmFtZWRfbGFiZWxzX25vdF9hcHBsaWVkXzEiOiAiSGFyZHdhcmUgUmV0dXJuIiwKICAiMDQtcmVtb3ZlLnNpbWlsYXJseV9uYW1lZF9sYWJlbHNfbm90X2FwcGxpZWRfMiI6ICJIYXJkd2FyZSBTcGFyZXMiLAogICIwNC1yZW1vdmUuYm9hcmRfbGFiZWxzX2F2YWlsYWJsZV8xIjogIkhhcmR3YXJlIFJldHVybiIsCiAgIjA0LXJlbW92ZS5ib2FyZF9sYWJlbHNfYXZhaWxhYmxlXzIiOiAiSGFyZHdhcmUgU3BhcmVzIiwKICAiMDQtcmVtb3ZlLmJvYXJkX2xhYmVsc19hdmFpbGFibGVfMyI6ICJTb2Z0d2FyZSIsCiAgIjA0LXJlbW92ZS5ib2FyZF9sYWJlbHNfYXZhaWxhYmxlXzQiOiAiTmV0d29yayIsCiAgIjA0LXJlbW92ZS5jYXJkX25hbWVfYW5kX2xhYmVscyI6ICJzcnBrLWEtaGJwazEtMiBCZW5jaCBDYXJkXG5IYXJkd2FyZSIsCiAgIjA0LXJlbW92ZS5jYXJkX2xhYmVsX29ubHkiOiAiSGFyZHdhcmUiLAogICIwNC1yZW1vdmUuY2FyZF9uYW1lIjogInNycGstYS1oYnBrMS0yIEJlbmNoIENhcmQiLAogICIwNC1yZW1vdmUuY2FyZF9saXN0IjogIkluIFByb2dyZXNzIiwKICAiMDQtcmVtb3ZlLnJ1bmlkIjogInNycGstYS1oYnBrMS0yIiwKICAiMDQtcmVtb3ZlLmNhcmRfbGFiZWwiOiAiSGFyZHdhcmUiLAogICIwNC1yZW1vdmUuY2FyZF91cmwiOiAiaHR0cDovLzEyNy4wLjAuMTo4MTA0L2NhcmRzLzE4ODAwNTI5MTg3NjYyNzM4MjAiLAogICIwNS1yZW1vdmUubWludGVkIjogIjE4ODAwNDU4OTE1NzA2MzE2ODciLAogICIwNS1yZW1vdmUubWVtYmVyX2NoaXBfdGV4dCI6ICJCVCIsCiAgIjA1LXJlbW92ZS5jYXJkX21lbWJlcl9vbmx5IjogIkJlbmNoIFRlc3RlciIsCiAgIjA1LXJlbW92ZS5jYXJkX25hbWUiOiAic3Jway1hLWhicGsxLTIgQmVuY2ggQ2FyZCIsCiAgIjA1LXJlbW92ZS5wcm9qZWN0IjogIkJlbmNoIFByb2plY3QiLAogICIwNS1yZW1vdmUuYm9hcmQiOiAiQmVuY2ggQm9hcmQiLAogICIwNS1yZW1vdmUubWVtYmVyc19hdmFpbGFibGVfaW5fcGlja2VyIjogIkJlbmNoIEFkbWluIiwKICAiMDUtcmVtb3ZlLmNhcmRfbGFiZWwiOiAiSGFyZHdhcmUiLAogICIwNS1yZW1vdmUuY2FyZF9saXN0IjogIkluIFByb2dyZXNzIiwKICAiMDUtcmVtb3ZlLnJ1bmlkIjogInNycGstYS1oYnBrMS0yIiwKICAiMDYtc2V0LmR1ZV9kYXRlX2Rpc3BsYXlfYWZ0ZXJfcmVvcGVuIjogIkRlY2VtYmVyIDMxIGF0IDEyOjAwIFBNIiwKICAiMDYtc2V0Lm1pbnRlZCI6ICIxODgwMDQ1ODkxNTcwNjMxNjg3IiwKICAiMDYtc2V0LmNhcmRfbmFtZSI6ICJzcnBrLWEtaGJwazEtMiBCZW5jaCBDYXJkIiwKICAiMDYtc2V0LmJvYXJkX2NhcmRfZHVlX2RhdGVfY2hpcCI6ICJEZWMgMzEiLAogICIwNi1zZXQucHJvamVjdCI6ICJCZW5jaCBQcm9qZWN0IiwKICAiMDYtc2V0LmJvYXJkIjogIkJlbmNoIEJvYXJkIiwKICAiMDYtc2V0LmNhcmRfbGFiZWwiOiAiSGFyZHdhcmUiLAogICIwNi1zZXQuY2FyZF9saXN0IjogIkluIFByb2dyZXNzIiwKICAiMDYtc2V0LmNhcmRfZHVlX2RhdGVfYmVmb3JlX3Jlb3BlbiI6ICJEZWNlbWJlciAzMSBhdCAxMjowMCBQTSIsCiAgIjA2LXNldC5jYXJkX2R1ZV9kYXRlX2FmdGVyX3Jlb3BlbiI6ICJEZWNlbWJlciAzMSBhdCAxMjowMCBQTSIsCiAgIjA2LXNldC5ib2FyZF9jYXJkX2VsZW1lbnRfdGV4dCI6ICJzcnBrLWEtaGJwazEtMiBCZW5jaCBDYXJkIEhhcmR3YXJlIERlYyAzMSBCVCIsCiAgIjA2LXNldC5ydW5pZCI6ICJzcnBrLWEtaGJwazEtMiIsCiAgIjA3LWFkZC5taW50ZWQiOiAiMTg4MDA0NTg5MTU3MDYzMTY4NyIsCiAgIjA3LWFkZC5jYXJkX25hbWUiOiAic3Jway1hLWhicGsxLTIgQmVuY2ggQ2FyZCIsCiAgIjA3LWFkZC5jb21tZW50X3RleHQiOiAiQ29tbWVudCBmb3IgcnVuaWQgc3Jway1hLWhicGsxLTI6IGNhcmQgdmVyaWZpZWQgZW5kIHRvIGVuZCBvbiBCZW5jaCBCb2FyZC4iLAogICIwNy1hZGQuY29tbWVudF90aW1lc3RhbXAiOiAianVzdCBub3ciLAogICIwNy1hZGQuZHVlX2RhdGUiOiAiRGVjZW1iZXIgMzEgYXQgMTI6MDAgUE0iLAogICIwNy1hZGQucHJvamVjdCI6ICJCZW5jaCBQcm9qZWN0IiwKICAiMDctYWRkLmJvYXJkIjogIkJlbmNoIEJvYXJkIiwKICAiMDctYWRkLmNhcmRfbGFiZWwiOiAiSGFyZHdhcmUiLAogICIwNy1hZGQuY2FyZF9saXN0IjogIkluIFByb2dyZXNzIiwKICAiMDctYWRkLnJ1bmlkIjogInNycGstYS1oYnBrMS0yIiwKICAiMDgtb3Blbi5jYXJkX3BhZ2VfdXJsIjogImh0dHA6Ly8xMjcuMC4wLjE6ODEwNC9jYXJkcy8xODgwMDUyOTE4NzY2MjczODIwIiwKICAiMDgtb3Blbi5jYXJkX25hbWUiOiAic3Jway1hLWhicGsxLTIgQmVuY2ggQ2FyZCIsCiAgIjA4LW9wZW4uY2FyZF9kZXNjcmlwdGlvbiI6ICJzcnBrLWEtaGJwazEtMiBCZW5jaCBDYXJkIGNyZWF0ZWQgb24gdGhlIEJlbmNoIEJvYXJkIEluIFByb2dyZXNzIGxpc3QuIiwKICAiMDgtb3Blbi5jYXJkX2NvbW1lbnQiOiAiQ29tbWVudCBmb3IgcnVuaWQgc3Jway1hLWhicGsxLTI6IGNhcmQgdmVyaWZpZWQgZW5kIHRvIGVuZCBvbiBCZW5jaCBCb2FyZC4iLAogICIwOC1vcGVuLmNhcmRfbGlzdCI6ICJJbiBQcm9ncmVzcyIsCiAgIjA4LW9wZW4uY2FyZF9sYWJlbF92YWx1ZSI6ICJIYXJkd2FyZSIsCiAgIjA4LW9wZW4uY2FyZF9tZW1iZXJfdmFsdWUiOiAiQlQiLAogICIwOC1vcGVuLmNhcmRfZHVlX2RhdGUiOiAiRGVjZW1iZXIgMzEgYXQgMTI6MDAgUE0iLAogICIwOC1vcGVuLmNhcmRfbWVtYmVyX25hbWUiOiAiQmVuY2ggVGVzdGVyIiwKICAiMDgtb3Blbi5ib2FyZCI6ICJCZW5jaCBCb2FyZCIsCiAgIjA4LW9wZW4ucHJvamVjdCI6ICJCZW5jaCBQcm9qZWN0IiwKICAiMDgtb3Blbi5jYXJkX3RpdGxlX29uX3BhZ2UiOiAic3Jway1hLWhicGsxLTIgQmVuY2ggQ2FyZCIsCiAgIjA4LW9wZW4uY2FyZF9kZXNjcmlwdGlvbl9vbl9wYWdlIjogInNycGstYS1oYnBrMS0yIEJlbmNoIENhcmQgY3JlYXRlZCBvbiB0aGUgQmVuY2ggQm9hcmQgSW4gUHJvZ3Jlc3MgbGlzdC4iLAogICIwOC1vcGVuLmNhcmRfY29tbWVudF9vbl9wYWdlIjogIkNvbW1lbnQgZm9yIHJ1bmlkIHNycGstYS1oYnBrMS0yOiBjYXJkIHZlcmlmaWVkIGVuZCB0byBlbmQgb24gQmVuY2ggQm9hcmQuIiwKICAiMDgtb3Blbi5yZWYiOiAic3Jway1hLWhicGsxLTIiCn0="
+                    },
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": ""
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "762aef96acb8c3a765d5-f68d4b6f61557fa961b0",
+          "file": "hbpk1.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-06T18:29:18.818Z",
+    "duration": 50399.279,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}
