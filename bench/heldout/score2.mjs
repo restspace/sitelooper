@@ -76,7 +76,10 @@ function arm(base) {
   const res = showJson(base, `${tag}-spec-result.json`);
   const v = verdict(show(base, `${tag}-verify.log`), tag);
   const compileLog = show(base, `${tag}-spec-compile.log`) ?? show(base, `${tag}-compile.log`) ?? '';
-  const refusedCodes = [...new Set([...compileLog.matchAll(/\b(demoted-pin|unproven-pin|unsourced-ref|unbound-pin|unbound-slot|unfilled-slot|no-procedure|needs-rerecord|missing-skill|assert-procedure|literal-credential)\b/g)].map((m) => m[1]))];
+  // The compile log prints diagnostics in words ("pinned to the demoted skill"), the codes only in --json.
+  const worded = [[/pinned to the demoted skill/, 'demoted-pin'], [/has not replayed clean since/, 'unproven-pin'], [/no converged procedure/, 'no-procedure']];
+  const codeRe = /\b(demoted-pin|unproven-pin|unsourced-ref|unbound-pin|unbound-slot|unfilled-slot|no-procedure|needs-rerecord|missing-skill|assert-procedure|literal-credential)\b/g;
+  const refusedCodes = [...new Set([...worded.filter(([re]) => re.test(compileLog)).map(([, c]) => c), ...[...compileLog.matchAll(codeRe)].map((m) => m[1])])];
   const compiled = Boolean(res?.compiled);
   const pwPassed = compiled ? res.exitCode === 0 : null;
   const spec = {
