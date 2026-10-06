@@ -1053,7 +1053,7 @@ describe('cli: --reset-cmd and the evidence codemod wiring', () => {
   });
 
   it('carries the per-step cause into the run report', () => {
-    const note = cliSource.slice(cliSource.indexOf('const noteRun ='), cliSource.indexOf('runResetCmd(resetCmd,', cliSource.indexOf('const noteRun =')));
+    const note = cliSource.slice(cliSource.indexOf('const noteRun ='), cliSource.indexOf('runResetCmd(resetCmd,'));
     expect(note).toContain('recovered: Boolean(st.recovered)');
     expect(note).toContain('...(st.fellBack ? { fellBack: st.fellBack } : {})');
   });

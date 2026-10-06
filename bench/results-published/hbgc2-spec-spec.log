@@ -1,0 +1,39 @@
+
+Running 1 test using 1 worker
+
+[sitelooper step] 01-signin
+[sitelooper step] 02-find
+[sitelooper recipe] filled via recipe contenteditable/set-value (r_7b1e49); value verified on the component
+  ✘  1 hbgc2.spec.ts:9:1 › hbgc2 (24.0s)
+
+
+  1) hbgc2.spec.ts:9:1 › hbgc2 › 03-create: Create and save a product named exactly '{{runid}} Bench Product'. Its rich-text description must contain exactly one paragraph including the text '{{runid}}'. Verify the saved product and report its displayed name and description. 
+
+    Error: 03-create s_d57f06: identity: {{v1}} is not confirmed on this page
+
+       at hbgc2.flow.ts:17605
+
+      17603 |         const verdict = await identityMarkerVerdictWithFacts(siteFactsAt(page.url()), 'http://127.0.0.1:8106/product/:id', page.url(), p, `${p.v1}`, { presence: seen.presence, lines: async () => (await captureLines(page, 2).catch(() => null))?.lines ?? null, title: () => page.title() });
+      17604 |         if (verdict.warning) logWarning('03-create s_d57f06: ' + verdict.warning);
+    > 17605 |         if (!verdict.pass) throw new Error('03-create s_d57f06: identity: {{v1}} is not confirmed on this page');
+            |                                  ^
+      17606 |       }
+      17607 |     }
+      17608 |     // identity: this must be the record the flow is working on, not another of the same shape.
+        at Object.03-create (/tmp/before/bench/results/hbgc2-spec-spec-tmp/hbgc2.flow.ts:17605:34)
+        at /tmp/before/bench/results/hbgc2-spec-spec-tmp/hbgc2.flow.ts:20059:7
+        at runFlow (/tmp/before/bench/results/hbgc2-spec-spec-tmp/hbgc2.flow.ts:20058:5)
+        at /tmp/before/bench/results/hbgc2-spec-spec-tmp/hbgc2.spec.ts:14:21
+
+    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/hbgc2-hbgc2/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/hbgc2-hbgc2/error-context.md
+
+  1 failed
+    hbgc2.spec.ts:9:1 › hbgc2 ──────────────────────────────────────────────────────────────────────

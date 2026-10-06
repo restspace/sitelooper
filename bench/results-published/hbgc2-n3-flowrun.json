@@ -1,0 +1,216 @@
+{
+  "flow": "hbgc2",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_8cec15; observed page_title=Stock overview | Grocy, signed_in_user=admin, landing_page=Stock overview, stock_summary=0 Products, $0.00 total value.",
+      "values": {
+        "page_title": "Stock overview | Grocy",
+        "signed_in_user": "admin",
+        "landing_page": "Stock overview",
+        "stock_summary": "0 Products, $0.00 total value"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "8/8",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-find",
+      "status": "success",
+      "summary": "Replayed stored procedure s_766c55; observed matching_products_1=Seed: Oat milk, matching_products_2=Seed: Orange juice, matching_products_3=Seed: Sparkling water.",
+      "values": {
+        "matching_products_1": "Seed: Oat milk",
+        "matching_products_2": "Seed: Orange juice",
+        "matching_products_3": "Seed: Sparkling water"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "8/8",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "The product 'hbgc2-n3 Bench Product' is saved in Grocy (the earlier replay steps of this procedure chain had already performed the create/save, so nothing was re-submitted). I found it in the Products list via the search box and opened its edit page: the Name field reads exactly \"hbgc2-n3 Bench Product\" and the rich-text Description contains exactly one paragraph whose text is \"hbgc2-n3\". No products were modified. Note the chain's stale goto to /product/95708 was a different/blank record; the new product's real address is /product/257967.",
+      "values": {
+        "product_url": "http://127.0.0.1:8106/product/257967",
+        "product_name": "hbgc2-n3 Bench Product",
+        "product_reference": "257967",
+        "description_text": "hbgc2-n3",
+        "description_paragraph_count": "1",
+        "description_paragraphs": "hbgc2-n3",
+        "product_list_row": "hbgc2-n3 Bench Product\tFridge\t0\tPiece\tPiece",
+        "current_url": "http://127.0.0.1:8106/product/95708"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_d57f06 stopped at step ? — the page at http://127.0.0.1:8106/product/:id does not show \"hbgc2-n3\" — it matches this procedure's page template but is a different record — nothing was run",
+      "replayed": "0/3",
+      "repaired": false,
+      "turns": 15,
+      "unreported": [
+        "description_html",
+        "list_row",
+        "product_description"
+      ]
+    },
+    {
+      "id": "04-edit",
+      "status": "success",
+      "summary": "Replayed stored procedure s_69abdc; observed product_id=257967, default_location_displayed=Pantry, selected_default_location=Pantry, selected_product_group=Snacks, default_location_value=3, product_group_value=2, default_location_select_id=location_id, product_group_select_id=product_group_id, product_reference=hbgc2-n3, product_name=hbgc2-n3 Bench Product, product_group_displayed=Snacks, default_location_id_option=selected.",
+      "values": {
+        "product_id": "257967",
+        "default_location_displayed": "Pantry",
+        "selected_default_location": "Pantry",
+        "selected_product_group": "Snacks",
+        "default_location_value": "3",
+        "product_group_value": "2",
+        "default_location_select_id": "location_id",
+        "product_group_select_id": "product_group_id",
+        "product_reference": "hbgc2-n3",
+        "product_name": "hbgc2-n3 Bench Product",
+        "product_group_displayed": "Snacks",
+        "default_location_id_option": "selected"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "14/14",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "location_options",
+        "product_group_options"
+      ]
+    },
+    {
+      "id": "05-edit",
+      "status": "success",
+      "summary": "Replayed stored procedure s_c4add4; observed product_id=257967, default_quantity_unit_purchase_displayed=Pack, quantity_unit_stock_value=3, minimum_stock_amount=4, quantity_unit_stock_displayed=Pack, product_reference=hbgc2-n3, product_name=hbgc2-n3 Bench Product.",
+      "values": {
+        "product_id": "257967",
+        "default_quantity_unit_purchase_displayed": "Pack",
+        "quantity_unit_stock_value": "3",
+        "minimum_stock_amount": "4",
+        "quantity_unit_stock_displayed": "Pack",
+        "product_reference": "hbgc2-n3",
+        "product_name": "hbgc2-n3 Bench Product"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "12/12",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "06-edit",
+      "status": "success",
+      "summary": "Replayed stored procedure s_9112fe; observed product_id_from_edit_url=257967, edit_page_url=http://127.0.0.1:8106/product/257967, barcode_section_table_row=hbgc2-n3-0001, barcode_row=hbgc2-n3-0001, default_due_days=30, barcode=hbgc2-n3-0001, product_reference=hbgc2-n3, product_name=hbgc2-n3 Bench Product.",
+      "values": {
+        "product_id_from_edit_url": "257967",
+        "edit_page_url": "http://127.0.0.1:8106/product/257967",
+        "barcode_section_table_row": "hbgc2-n3-0001",
+        "barcode_row": "hbgc2-n3-0001",
+        "default_due_days": "30",
+        "barcode": "hbgc2-n3-0001",
+        "product_reference": "hbgc2-n3",
+        "product_name": "hbgc2-n3 Bench Product"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "10/10",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "07-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_0f22d4; observed purchase_location_select=3, product_reference=hbgc2-n3, product_id=257967, purchase_amount=3 Packs, purchased_date=2026-10-06, stock_entry_id=1, purchase_location=Pantry.",
+      "values": {
+        "purchase_location_select": "3",
+        "product_reference": "hbgc2-n3",
+        "product_id": "257967",
+        "purchase_amount": "3 Packs",
+        "purchased_date": "2026-10-06",
+        "stock_entry_id": "1",
+        "purchase_location": "Pantry"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "16/16",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_0f22d4: step 10: primary locator did not resolve; used fallback #2 page.locator('#productcard-product-name')",
+        "s_0f22d4: step 10: read 'product_name' returned a value the skill itself set/selected ('hbgc2-n3 Bench Product') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_0f22d4: report value purchase_due_date is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)"
+      ],
+      "unreported": [
+        "product_name",
+        "purchase_due_date"
+      ]
+    }
+  ],
+  "passed": 7,
+  "total": 7,
+  "repinned": 0,
+  "drift": 2,
+  "driftTickets": [
+    {
+      "flow": "hbgc2",
+      "step": "03-create",
+      "skill": "s_d57f06",
+      "similarity": 1.001,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_d57f06 stopped at step ? — the page at http://127.0.0.1:8106/product/:id does not show \"hbgc2-n3\" — it matches this procedure's page template but is a different record — nothing was run",
+      "reason": "the page at http://127.0.0.1:8106/product/:id does not show \"hbgc2-n3\" — it matches this procedure's page template but is a different record — nothing was run",
+      "pageUrlPattern": "http://127.0.0.1:8106/product/:id",
+      "pageUrl": "http://127.0.0.1:8106/product/95708"
+    },
+    {
+      "flow": "hbgc2",
+      "step": "07-create",
+      "skill": "s_0f22d4",
+      "atStep": "10",
+      "key": "target",
+      "similarity": 0.999,
+      "missedLocator": "page.getByText('hbgc2-n3 Bench Product', { exact: true })",
+      "fallbackUsed": "page.locator('#productcard-product-name')",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8106/purchase",
+      "pageUrl": "http://127.0.0.1:8106/purchase?"
+    }
+  ],
+  "wallMs": 116769,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 213146,
+    "completionTokens": 5470,
+    "cachedTokens": 193024
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 213146,
+      "completionTokens": 5470,
+      "cachedTokens": 193024
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "openai/gpt-6-luna",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}
