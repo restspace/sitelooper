@@ -1,0 +1,75 @@
+{
+ "id": "s_45e99a",
+ "origin": "http://127.0.0.1:8105",
+ "template": "Create and save exactly one timesheet entry on project '{{v1}}' for 2026-09-16 from 09:00 to 11:30, with a description including exact runid '{{v2}}'. Choose the existing activity exactly '{{v4}}' and set its only tag to the existing tag exactly '{{v5}}' (do not create a tag or choose similar names). Verify the saved entry's project, date, times, description, activity, and only tag.",
+ "params": {
+  "v1": {
+   "example": "hbkm3-n2 Bench Project",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i3:saved_project_name"
+  },
+  "v2": {
+   "example": "hbkm3-n2",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v3": {
+   "example": "11",
+   "usedIn": [],
+   "known": true,
+   "binding": "url:i5:p2"
+  },
+  "v4": {
+   "example": "Consulting",
+   "usedIn": []
+  },
+  "v5": {
+   "example": "onsite",
+   "usedIn": []
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8105/en/admin/project/:id/details"
+ },
+ "steps": [
+  {
+   "tool": "goto",
+   "args": {
+    "url": "http://127.0.0.1:8105/en/timesheet/"
+   },
+   "locators": {},
+   "expect": {
+    "alertContains": "No entries were found based on your selected filters."
+   },
+   "via": {
+    "skill": "s_8d39f5",
+    "step": 1
+   }
+  }
+ ],
+ "contract": 4,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-10-06T13:24:45.301Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 4
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_612404",
+  "index": 0,
+  "of": 3
+ },
+ "provenance": {
+  "session": "hbkm3-n2",
+  "instruction": "Create and save exactly one timesheet entry on project 'hbkm3-n2 Bench Project' for 2026-09-16 from 09:00 to 11:30, with a description including exact runid 'hbkm3-n2'. Choose the existing activity exactly 'Consulting' and set its only tag to the existing tag exactly 'onsite' (do not create a tag or choose similar names). Verify the saved entry's project, date, times, description, activity, and only tag.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-10-06T13:24:45.301Z"
+ },
+ "revision": 1
+}

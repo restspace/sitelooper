@@ -32,7 +32,7 @@ import { typedControls } from '../execution/facts-display.js';
  */
 import { EXECUTION_MODULES, executionClosure } from './runtime-source.js';
 import { candidateExpr, type LocatorCandidate } from '../daemon/recorder.js';
-import { DIALOG_LINE, SLOT_LINE, TRANSIENT_LINE, popupItem, slotActs, openerWorkLines } from '../execution/expect.js';
+import { DIALOG_LINE, SLOT_LINE, TRANSIENT_LINE, slotActs, openerWorkLines } from '../execution/expect.js';
 import { identityFields, snapshotRefCandidate, structuralCandidate } from '../execution/resolve.js';
 import { originOf } from '../execution/url.js';
 import { describeFramePath, stepEffect } from '../execution/context.js';
@@ -41,7 +41,7 @@ import { seedRecipes, snapshotRecipes } from '../skills/components.js';
 import type { SkillStep } from '../skills/store.js';
 import { consumedReportedOutputs, recordedStandIn } from '../skills/flow.js';
 import { candidateSources, matcherSource, observationSources, stringSource } from './locators.js';
-import { commitIndex, unmeasuredPreconditionDiagnostic, type SpecFlow, type SpecSegment, type SpecStep } from './ir.js';
+import { unmeasuredPreconditionDiagnostic, type SpecFlow, type SpecSegment, type SpecStep } from './ir.js';
 import { diagnosticNote, formatDiagnostic, type Diagnostic } from './diagnostics.js';
 
 export interface EmitOptions {
@@ -68,7 +68,7 @@ export interface EmitOptions {
  * step is in the file and cannot run, and the reader of the generated code is
  * exactly the person who has to supply the missing half by hand.
  */
-const FLAGGED: readonly Diagnostic['code'][] = ['demoted-pin', 'unproven-pin', 'noop-step', 'unsupported-capability'];
+const FLAGGED: readonly Diagnostic['code'][] = ['demoted-pin', 'noop-step', 'unsupported-capability'];
 
 function flaggedByStep(diagnostics: Diagnostic[] | undefined): Map<string, Diagnostic[]> {
   const out = new Map<string, Diagnostic[]>();
@@ -87,13 +87,11 @@ function flaggedByStep(diagnostics: Diagnostic[] | undefined): Map<string, Diagn
  * of 3 recorded locators resolved" — which reads as app drift and sends the
  * reader hunting for a changed selector. The step's own error is the one place
  * the reader is guaranteed to look, so the reason and the fix go there too.
- * Only a demoted or unproven pin (compiled under --allow-demoted): its
- * replays stopped at that step, so the stop is the evidence for the note. A
- * no-op step still replays, so failing it with that note would be a guess
- * about a failure it did not cause.
+ * Only a demoted pin: a no-op step still replays, so failing it with that note
+ * would be a guess about a failure it did not cause.
  */
 function stepNote(flagged: Diagnostic[] | undefined): string | undefined {
-  const d = flagged?.find((x) => x.code === 'demoted-pin') ?? flagged?.find((x) => x.code === 'unproven-pin');
+  const d = flagged?.find((x) => x.code === 'demoted-pin');
   return d ? diagnosticNote(d) : undefined;
 }
 
@@ -253,119 +251,6 @@ const HELPERS: { token: string; source: string[] }[] = [
       ' */',
       'function logWarning(line: string): void {',
       '  console.log(`[sitelooper warn] ${line}`);',
-      '}',
-    ],
-  },
-  {
-    token: 'publishOutputs(',
-    source: [
-      '/** Where the Node module that writes the outputs file lives, as a value: this file type-checks without @types/node. */',
-      "const NODE_FS: string = 'node:fs';",
-      '/**',
-      " * The run's findings — every published output except the references a later",
-      ' * step only borrowed (run.referenceOnly) — as JSON: attached to the test as',
-      " * `outputs`, and written to $SITELOOPER_SPEC_OUTPUTS when it is set. A compiled",
-      " * run's report-only objectives were UNVERIFIABLE on every bench sweep (\"+2",
-      ' * n/a\" on each compiled row): what the flow found was only ever in a log.',
-      ' * Never fails the run: a finding that cannot be written is said and dropped.',
-      ' */',
-      'async function publishOutputs(run: FlowRun): Promise<void> {',
-      '  const findings = Object.fromEntries(Object.entries(run.outputs).filter(([k, v]) => typeof v === \'string\' && !run.referenceOnly.includes(k)));',
-      '  const body = JSON.stringify(findings, null, 2);',
-      '  const file = process.env.SITELOOPER_SPEC_OUTPUTS;',
-      '  if (file) {',
-      '    try {',
-      '      const fs = (await import(NODE_FS)) as { writeFileSync(path: string, data: string): void };',
-      '      fs.writeFileSync(file, body);',
-      '    } catch (err) {',
-      '      logWarning(`could not write the outputs file ${file}: ${err instanceof Error ? err.message : String(err)}`);',
-      '    }',
-      '  }',
-      '  try {',
-      "    await test.info().attach('outputs', { body, contentType: 'application/json' });",
-      '  } catch {',
-      '    // Not inside a Playwright test (a caller driving runFlow itself): the file, if asked for, is the record.',
-      '  }',
-      '}',
-    ],
-  },
-  {
-    token: 'noteProbe(',
-    source: [
-      '/**',
-      ' * Note a record for the persistence probe (runProbes): the page this step',
-      " * ends on, if it is the record page the recording's save showed the lines",
-      " * on, with the lines filled for this run. Lines this run cannot fill, or",
-      ' * fills to nothing, prove nothing and are dropped, as the effect gate drops them.',
-      ' */',
-      'function noteProbe(run: FlowRun, step: string, page: Page, p: Record<string, string>, pattern: string, recorded: string[], dialect: 1 | 2): void {',
-      '  if (!urlMatches(pattern, page.url(), p)) {',
-      '    logWarning(`${step}: ended on ${page.url()}, not the record page its save showed (${pattern}) — no persistence probe`);',
-      '    return;',
-      '  }',
-      '  const usable = recorded.filter((line) => !boundToNothing(line, p));',
-      '  const lines = liveLines(usable, p).filter((line) => !unfilledSlot(line) && !identifiesNothing(line));',
-      '  if (!lines.length) return;',
-      '  const values = [...new Set(usable.flatMap((line) => [...line.matchAll(/\\{\\{(v\\d+)\\}\\}/g)].map((m) => p[m[1]]).filter((v): v is string => Boolean(v))))];',
-      '  (run.probes ??= []).push({ step, url: page.url(), pattern, params: { ...p }, lines, dialect, values });',
-      '}',
-    ],
-  },
-  {
-    token: 'runProbes(',
-    source: [
-      '/** How long a re-read record page is given to show what it saved, as an expectation is given its lines. */',
-      'const PROBE_WAIT_MS = 5_000;',
-      '/**',
-      ' * The persistence probe (notes/CONTRACT-spec-reliability.md 3d). A save can',
-      ' * show the typed value and not keep it: the page renders what the browser',
-      " * holds, the server never stores it. EspoCRM fwec10's refill appended the",
-      ' * amount (1250012500) and both runners passed; gitea fwgt12 showed labels',
-      ' * the picker never saved. Only the app verifier saw either. So every record',
-      " * whose save the recording saw display a typed value is opened again, after",
-      ' * the last step, in a page of its own (the flow\'s page is left where the flow',
-      " * left it, for the caller's own assertions), and must show every line again",
-      " * — lineShows over a fresh capture in the step's dialect, polled as an",
-      ' * expectation is. A miss is a failure; a look that could not cover the page,',
-      " * or a record url that sends the probe elsewhere (a sign-in held per tab), is",
-      ' * said and not judged. SITELOOPER_NO_PROBES=1 turns the probe off.',
-      ' */',
-      'async function runProbes(page: Page, run: FlowRun): Promise<string[]> {',
-      "  if (!run.probes?.length || process.env.SITELOOPER_NO_PROBES === '1') return [];",
-      '  const misses: string[] = [];',
-      '  const probe = await page.context().newPage();',
-      '  try {',
-      '    for (const pr of run.probes) {',
-      "      await probe.goto(pr.url, { waitUntil: 'load', timeout: GOTO_TIMEOUT_MS });",
-      '      await waitForContent(probe).catch(() => {});',
-      '      if (!urlMatches(pr.pattern, probe.url(), pr.params)) {',
-      '        logWarning(`${pr.step}: persistence not checked — ${pr.url} opened ${probe.url()}, not the record`);',
-      '        continue;',
-      '      }',
-      '      const until = Date.now() + PROBE_WAIT_MS;',
-      '      let live: { lines: string[]; complete: boolean } | null = null;',
-      '      for (;;) {',
-      '        live = await captureLines(probe, pr.dialect).catch(() => null);',
-      '        if (live && pr.lines.every((line) => lineShows(live!.lines, [line]))) break;',
-      '        if (Date.now() >= until) break;',
-      '        await probe.waitForTimeout(250);',
-      '      }',
-      '      const missing = live ? pr.lines.filter((line) => !lineShows(live!.lines, [line])) : pr.lines;',
-      '      if (!missing.length) {',
-      '        console.log(`[sitelooper probe] ${pr.step}: ${pr.url} still shows what it saved`);',
-      '        continue;',
-      '      }',
-      '      if (!live || !live.complete) {',
-      "        logWarning(`${pr.step}: persistence not checked at ${pr.url} — ${live ? 'the look did not cover the page' : 'the page could not be read'}`);",
-      '        continue;',
-      '      }',
-      "      const typed = pr.values.length ? pr.values.map((v) => JSON.stringify(v)).join(', ') : 'its values';",
-      "      misses.push(`persistence: ${pr.step} typed ${typed}, the record at ${pr.url} does not show it after reload (missing ${missing.join(' | ')})`);",
-      '    }',
-      '  } finally {',
-      '    await probe.close().catch(() => {});',
-      '  }',
-      '  return misses;',
       '}',
     ],
   },
@@ -782,14 +667,11 @@ const HELPERS: { token: string; source: string[] }[] = [
       ' *    appended only when ambiguity was narrowed to it. The progress guard',
       " *    compares one pass's entries with the last.",
       ' *',
-      " * Retirement (`retired`, replay's evidence-based reordering of a candidate",
-      ' * later runs showed volatile) is the store\'s verdict, decided when the spec',
-      ' * was compiled from the same store replay reads and baked into each',
-      ' * observation, so the chain is ordered here as replay orders it. What the',
-      ' * artifact does not do is LEARN: evidence from its own runs is not written',
-      ' * back, so a candidate that turns volatile after compile is retired at the',
-      ' * next compile, not mid-suite. Everything the policy decides is decided',
-      ' * here from the same observations.',
+      " * WHAT THE ARTIFACT STILL CANNOT MIRROR. Retirement (`retired`, replay's",
+      " * evidence-based reordering of a candidate later runs showed volatile):",
+      ' * that evidence lives in the skill store, and an artifact has none, so a',
+      ' * compiled chain is ordered by class and recorded order alone. Everything',
+      ' * else the policy decides is decided here from the same observations.',
       ' */',
       'async function resolveTarget(',
       '  page: Page,',
@@ -3836,11 +3718,7 @@ function reportTemplateLines(step: SpecStep, ctx: Ctx, consumed: ReadonlySet<str
     // is marked in run.referenceOnly: a reference, never a finding (phase B —
     // it used to sit in `outputs` beside the findings, unmarked).
     const said = [`logWarning(${q(`${step.id}: ${givenWarning(label)}`)});`];
-    // …and the spec fails at its end (runFlow's PARTIAL throw), as the
-    // daemon's flow runner fails the step (server.ts partialReasons): a
-    // logged PARTIAL under a green test was one of the held-out survey's
-    // silent passes (T8).
-    if (asked.has(label)) said.push(`logWarning(${q(`${step.id}: PARTIAL — ${givenPartialReason(label)}`)});`, `(run.partial ??= []).push(${q(`${step.id}: ${givenPartialReason(label)}`)});`);
+    if (asked.has(label)) said.push(`logWarning(${q(`${step.id}: PARTIAL — ${givenPartialReason(label)}`)});`);
     const typedSaid = `logWarning(${q(`${step.id}: ${typedWarning(label)}`)});`;
     const reference = consumed.has(label)
       ? ` else { const ref = referenceValue(${q(template)}, p, ${shown}); if (ref !== null) { outputs[${key}] = ref; run.referenceOnly.push(${key}); } }`
@@ -3850,70 +3728,6 @@ function reportTemplateLines(step: SpecStep, ctx: Ctx, consumed: ReadonlySet<str
     );
   }
   return out;
-}
-
-/**
- * Roles a reload takes off the page whatever the app kept: notifications,
- * popups and their items. A line in one is what the save SAID, not what it
- * stored, so the persistence probe never asks for it again.
- */
-const EPHEMERAL_LINE = /^-?\s*(dialog|alertdialog|tooltip|log|marquee|timer|menu|menubar|listbox)\b/;
-
-/**
- * Where a step's persistence probe comes from (3d), or null. Evidence-gated,
- * every condition from the recording:
- *  - the step's last commit (ir.ts commitIndex: the last click or press after
- *    a fill, type or select) recorded an ADDED line carrying a `{{vN}}` the
- *    chain typed — the recording saw the typed value displayed after the save;
- *    a popup item, a transient line or a notification is not that;
- *  - the page that line was on is a RECORD's: the commit's url carries a
- *    `{{vN}}`/`{{dN}}` id, or the step mints one;
- *  - the step ends there: nothing after the commit moves the url, so "the
- *    live url after the step" is the page the recording saw the line on.
- */
-export function probeSite(step: SpecStep): { pattern: string; lines: string[]; dialect: 1 | 2 } | null {
-  if (step.kind === 'assert') return null;
-  const segments = step.segments;
-  const typed = new Set(typedSlots(segments.flatMap((segment) => segment.steps)));
-  for (let at = segments.length - 1; at >= 0; at--) {
-    const seg = segments[at];
-    if (seg.assert) continue;
-    const ci = commitIndex(seg.steps);
-    if (ci < 0) continue;
-    let url = seg.preconditions.urlPattern;
-    for (const s of seg.steps.slice(0, ci + 1)) if (s.expect?.urlPattern) url = s.expect.urlPattern;
-    const commit = seg.steps[ci];
-    const moved = [
-      ...seg.steps.slice(ci + 1).map((s) => s.expect?.urlPattern),
-      ...segments.slice(at + 1).flatMap((later) => [later.preconditions.urlPattern, ...later.steps.map((s) => s.expect?.urlPattern)]),
-    ].some((pattern) => pattern !== undefined && pattern !== url);
-    if (moved) return null;
-    const mints = segments.some((segment) => segment.steps.some((s) => s.mints));
-    if (!mints && !/\{\{[vd]\d+\}\}/.test(url)) return null;
-    const lines = (commit.expect?.addedContains ?? []).filter(
-      (line) =>
-        SLOT_LINE.test(line) &&
-        !popupItem(line) &&
-        !TRANSIENT_LINE.test(line) &&
-        !EPHEMERAL_LINE.test(line) &&
-        [...line.matchAll(/\{\{(v\d+)\}\}/g)].some((m) => typed.has(m[1])) &&
-        markerBound(line, seg),
-    );
-    if (!lines.length) return null;
-    return { pattern: url, lines, dialect: commit.expect?.lineDialect === 2 ? 2 : 1 };
-  }
-  return null;
-}
-
-/** The line that notes a step's persistence probe (see probeSite and the emitted noteProbe), or none. */
-function probeLines(step: SpecStep, ctx: Ctx): string[] {
-  const site = probeSite(step);
-  if (!site) return [];
-  noteSlots([site.pattern, ...site.lines], ctx);
-  return [
-    `// persistence: the save showed ${commentSafe(site.lines.join(' | '))} on this record's page; re-read after the flow (runProbes).`,
-    `noteProbe(run, ${q(step.id)}, page, p, ${q(site.pattern)}, [${site.lines.map(q).join(', ')}], ${site.dialect});`,
-  ];
 }
 
 /** The segment's identity gate: one poll per bound marker, a comment per unbound one. */
@@ -4613,10 +4427,6 @@ export function emitFlowFile(spec: SpecFlow, o: EmitOptions): { source: string; 
       const consumedRoutes = (urlRefs.get(step.id) ?? []).some((out) => routes?.[out]);
       const published = urlOutputLines(step.id, urlRefs.get(step.id), routes);
       if (published.length) lines.push('', ...published);
-      // A save the recording saw display a typed value, on a record's own page:
-      // noted for the persistence probe runFlow runs after the last step (3d).
-      const probe = ctx.assertStep ? [] : probeLines(step, ctx);
-      if (probe.length) lines.push('', ...probe);
       // The url trail a mid-step url output is published from, kept from the
       // top of the body as the flow runner keeps it (server.ts urlTrail).
       if (consumedRoutes) {
@@ -4654,13 +4464,7 @@ export function emitFlowFile(spec: SpecFlow, o: EmitOptions): { source: string; 
   // GOTO_TIMEOUT_MS is named unconditionally: runFlow's own start-url goto
   // passes it, and runFlow is written after this scan, so a flow whose steps
   // never navigate would otherwise reference a constant the file does not carry.
-  // A flow with a step that noted a persistence probe runs them after its last step.
-  const probing = body.includes('noteProbe(');
-  // publishOutputs (3b) is named unconditionally: runFlow's finally calls it.
-  const helpers = neededHelpers(
-    [body, 'profileMismatch(', 'readLiveBrowser(', 'GOTO_TIMEOUT_MS', 'pageTraffic(', 'startPageSettled(', 'siteFactsAt', 'publishOutputs(', ...(probing ? ['runProbes('] : [])].join('\n'),
-    [recipesHelper(spec), factsHelper(spec)],
-  );
+  const helpers = neededHelpers([body, 'profileMismatch(', 'readLiveBrowser(', 'GOTO_TIMEOUT_MS', 'pageTraffic(', 'startPageSettled(', 'siteFactsAt'].join('\n'), [recipesHelper(spec), factsHelper(spec)]);
 
   const out: string[] = [
     '// @sitelooper-flow v1',
@@ -4718,17 +4522,6 @@ export function emitFlowFile(spec: SpecFlow, o: EmitOptions): { source: string; 
     '   * that is not the one the flow was recorded in (see RECORDED_BROWSER).',
     '   */',
     '  warnings: string[];',
-    '  /**',
-    "   * Why a step that ran to its end is only PARTIAL: an output its instruction",
-    "   * asked for went unreported (the daemon's partialReasons). runFlow fails the",
-    '   * test with them once every step has run, unless SITELOOPER_ALLOW_PARTIAL=1.',
-    '   */',
-    '  partial: string[];',
-    '  /**',
-    "   * The records whose save the recording saw display a typed value, to be",
-    '   * re-read once the flow is done (runProbes): `lines` are those lines, filled.',
-    '   */',
-    '  probes: { step: string; url: string; pattern: string; params: Record<string, string>; lines: string[]; dialect: 1 | 2; values: string[] }[];',
     ...(followsPages
       ? [
           '  /**',
@@ -4746,7 +4539,7 @@ export function emitFlowFile(spec: SpecFlow, o: EmitOptions): { source: string; 
     '}',
     ...recordedBrowserLines(spec.browser ?? DEFAULT_BROWSER_PROFILE),
     'export function createFlowRun(): FlowRun {',
-    '  return { outputs: {}, drift: [], echoed: [], referenceOnly: [], created: [], warnings: [], partial: [], probes: [] };',
+    '  return { outputs: {}, drift: [], echoed: [], referenceOnly: [], created: [], warnings: [] };',
     '}',
     '/**',
     ' * The wall-clock budget one run of this flow needs under a test runner: every',
@@ -4841,8 +4634,6 @@ export function emitFlowFile(spec: SpecFlow, o: EmitOptions): { source: string; 
   out.push('  run.referenceOnly = [];');
   out.push('  run.created = [];');
   out.push('  run.warnings = [];');
-  out.push('  run.partial = [];');
-  out.push('  run.probes = [];');
   if (followsPages) out.push('  run.page = undefined;');
   out.push('  const outputs = run.outputs;');
   out.push('  try {');
@@ -4882,22 +4673,9 @@ export function emitFlowFile(spec: SpecFlow, o: EmitOptions): { source: string; 
     out.push(`      console.log(${q(`[sitelooper step] ${b.step.id}`)});`);
     out.push('    });');
   }
-  // No silent passes (item 3): once every step has run, a record whose save
-  // the recording saw show a typed value is re-read (3d), and a step left
-  // PARTIAL fails the test (3a). Both after the last step, so neither can
-  // disturb the flow; both said in one error, so a run that has both shows both.
-  if (probing) {
-    out.push("    const unpersisted = await test.step('persistence: re-read what the flow saved', async () => await runProbes(page, run));");
-  }
-  out.push(`    const failures: string[] = [${probing ? '...unpersisted' : ''}];`);
-  out.push("    if (run.partial.length && process.env.SITELOOPER_ALLOW_PARTIAL !== '1') failures.push(`PARTIAL: ${run.partial.join('; ')}`);");
-  out.push("    if (failures.length) throw new Error(failures.join('\\n'));");
   out.push('    return outputs;');
   out.push('  } finally {');
   out.push('    DRIFT.splice(0, DRIFT.length, ...run.drift);');
-  // Findings are published whether or not the run got to its end: what the
-  // steps that ran found is still what they found (3b).
-  out.push('    await publishOutputs(run);');
   out.push('  }');
   out.push('}', '');
 
