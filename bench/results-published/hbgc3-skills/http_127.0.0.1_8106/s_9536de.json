@@ -1,0 +1,102 @@
+{
+ "id": "s_9536de",
+ "origin": "http://127.0.0.1:8106",
+ "template": "Open the edit page for '{{v1}}' and verify the address path is /product/<id>. Report the exact numeric ID from the address and confirm the product name on the page.",
+ "params": {
+  "v1": {
+   "example": "hbgc3-n2 Bench Product",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i3:product_name"
+  },
+  "v2": {
+   "example": "hbgc3-n2",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8106/purchase"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e187"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "id",
+      "selector": "#productcard-product-edit-button"
+     },
+     {
+      "kind": "css",
+      "selector": "#productcard-product-edit-button"
+     },
+     {
+      "kind": "point",
+      "x": 891,
+      "y": 79,
+      "w": 32,
+      "h": 23,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "mints": {
+    "at": "p1"
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8106/product/{{d1}}?returnto=/purchase",
+    "addedContains": [
+     "- heading \"Edit product\"",
+     "- textbox \"Name\": {{*}}",
+     "- checkbox \"Active\" [checked]",
+     "- button \"Font Size\"",
+     "- button \"Bold (CTRL+B)\""
+    ],
+    "lineDialect": 2
+   }
+  }
+ ],
+ "derived": {
+  "d1": {
+   "step": 1,
+   "at": "p1",
+   "example": "346654"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 2,
+  "successes": 1,
+  "partial": 1,
+  "created": "2026-10-06T14:03:37.580Z",
+  "failedAtStep": {
+   "1": 1
+  },
+  "fallthroughs": 0,
+  "verifiedContract": 2,
+  "lastUsed": "2026-10-06T14:08:25.540Z",
+  "recoveredStops": 1,
+  "harmlessStops": 1
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_f56755",
+  "index": 0,
+  "of": 2
+ },
+ "provenance": {
+  "session": "hbgc3-n2",
+  "instruction": "Open the edit page for 'hbgc3-n2 Bench Product' and verify the address path is /product/<id>. Report the exact numeric ID from the address and confirm the product name on the page.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-10-06T14:03:37.580Z"
+ },
+ "revision": 2
+}

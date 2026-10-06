@@ -1,0 +1,144 @@
+
+[sweep] run 1/3: hbgc3-n1 (store: /tmp/before/bench/results/hbgc3-skills)
+[harness] grocy: defaulting APP_URL
+[harness] grocy: defaulting APP_EMAIL
+[harness] grocy: defaulting APP_PASSWORD
+[reset] grocy: deleted 1 product(s) (earlier runs' and non-seed, with their stock and barcodes)
+[reset] grocy: product ids continue after 298406
+[harness] grocy responded 302 at http://127.0.0.1:8106/
+stopped: hbgc3-n1
+  flow "hbgc3" saved: 8 step(s), vars runid → /tmp/before/bench/results/flows/hbgc3.json
+  warning: note: 01-signin no longer publishes post_login_url — no replay reads it from the page and the recording showed no line to read
+  warning: note: 03-create no longer publishes product_id, current_url — no replay reads them from the page and the recording showed no line to read
+  warning: note: 04-edit no longer publishes item_1, default_location_id, product_group_id, saved_location, saved_product_group_2, location_select_name, product_group_select_name — no replay reads them from the page and the recording showed no line to read
+  warning: note: 05-edit no longer publishes product_id, purchase_qu_pre_save, min_stock_pre_save, stock_qu_saved, purchase_qu_saved, min_stock_saved — no replay reads them from the page and the recording showed no line to read
+  warning: note: 06-edit no longer publishes item_1, item_1_value, default_best_before_days_field, table — no replay reads them from the page and the recording showed no line to read
+  warning: note: 07-create no longer publishes stock_entry_count, amount_before_save, due_date_before_save — no replay reads them from the page and the recording showed no line to read
+  warning: warning: 08-open's instruction asks to report product_id, and no replay can publish it: nothing in its procedure reads it from the page, so export dropped it — re-record the step so the value is read, not only reported
+  warning: note: 08-open no longer publishes address_path — no replay reads it from the page and the recording showed no line to read
+  warning: warning: 198 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[0].instruction: "admin" (output) in "Sign in to Grocy at http://127.0.0.1:8106/ using username admin and password exactly {{env:APP_PASSWORD}}. Verify that you are signed in and report the visible "
+  flow.steps[0].params.v2: "admin" (output) in "admin"
+  flow.steps[0].route: "http://127.0.0.1:8106/stockoverview" (output) in "http://127.0.0.1:8106/stockoverview"
+  flow.steps[0].route: "stockoverview" (url) in "http://127.0.0.1:8106/stockoverview"
+  flow.steps[3].instruction: "Pantry" (output) in "Edit '{{runid}} Bench Product' and set its default location to the existing location exactly 'Pantry' and its product group to the existing group exactly 'Snack"
+arm=sitelooper model=openai/gpt-6-luna runid=hbgc3-n1 stop=completed
+turns=9 wall=387.5s
+commands=8 cmdTime=351.1s cmdBytes=9139 timeouts=0
+orchestrator in=6267 cw=0 cr=33072 out=1050
+inner prompt=2048408 cached=1895936 completion=26991
+spend=$0.0462 maxUsd=3
+learn: A_n=0 replayed=0/8 full=0 repaired=0 compiled=8 variants=0
+-> /tmp/before/bench/results/hbgc3-n1-sitelooper-result.json
+
+hbgc3-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: PASS — #298407, description includes runid=true
+  obj 3: PASS — location=Pantry (#3), product group=Snacks (#2); want the seeded Pantry (#3) and Snacks (#2)
+  obj 4: PASS — stock unit=Pack (#3), purchase unit=Pack (#3), min stock=4; want Pack (#3) twice and 4
+  obj 5: PASS — default due days=30, barcodes=["hbgc3-n1-0001"]; want 30 and "hbgc3-n1-0001"
+  obj 6: PASS — in stock 3 in 1 entry (3 at Pantry (#3) due 2026-12-31), 1 purchase booking(s); want 3 at Pantry due 2026-12-31 from a purchase
+  obj 7: PASS — product id 298407 reported
+
+[sweep] run 2/3: hbgc3-n2 (replay flow hbgc3, no orchestrator)
+[reset] grocy: deleted 1 product(s) (earlier runs' and non-seed, with their stock and barcodes)
+[reset] grocy: product ids continue after 346653
+[sweep] hbgc3-n2: 4 drift ticket(s) → hbgc3-n2-drift.json
+
+hbgc3-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: PASS — #346654, description includes runid=true
+  obj 3: PASS — location=Pantry (#3), product group=Snacks (#2); want the seeded Pantry (#3) and Snacks (#2)
+  obj 4: PASS — stock unit=Pack (#3), purchase unit=Pack (#3), min stock=4; want Pack (#3) twice and 4
+  obj 5: PASS — default due days=30, barcodes=["hbgc3-n2-0001"]; want 30 and "hbgc3-n2-0001"
+  obj 6: PASS — in stock 3 in 1 entry (3 at Pantry (#3) due 2026-12-31), 1 purchase booking(s); want 3 at Pantry due 2026-12-31 from a purchase
+  obj 7: PASS — product id 346654 reported
+
+[sweep] run 3/3: hbgc3-n3 (replay flow hbgc3, no orchestrator)
+[reset] grocy: deleted 1 product(s) (earlier runs' and non-seed, with their stock and barcodes)
+[reset] grocy: product ids continue after 420128
+[sweep] hbgc3-n3: 4 drift ticket(s) → hbgc3-n3-drift.json
+
+hbgc3-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: PASS — #420129, description includes runid=true
+  obj 3: PASS — location=Pantry (#3), product group=Snacks (#2); want the seeded Pantry (#3) and Snacks (#2)
+  obj 4: PASS — stock unit=Pack (#3), purchase unit=Pack (#3), min stock=4; want Pack (#3) twice and 4
+  obj 5: PASS — default due days=30, barcodes=["hbgc3-n3-0001"]; want 30 and "hbgc3-n3-0001"
+  obj 6: PASS — in stock 3 in 1 entry (3 at Pantry (#3) due 2026-12-31), 1 purchase booking(s); want 3 at Pantry due 2026-12-31 from a purchase
+  obj 7: PASS — product id 420129 reported
+
+Learning sweep hbgc3 (K=3)
+┌─────────┬───┬────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid      │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'hbgc3-n1' │ '7/7'    │ 'completed' │ 9     │ 8    │ 0.0462    │ 0   │ '0/8'        │ 387    │
+│ 1       │ 2 │ 'hbgc3-n2' │ '7/7'    │ 'success'   │ 46    │ 8    │ 0.0222    │ 0.5 │ '8/8 (flow)' │ 221    │
+│ 2       │ 3 │ 'hbgc3-n3' │ '7/7'    │ 'success'   │ 65    │ 8    │ 0.0302    │ 0.5 │ '8/8 (flow)' │ 285    │
+└─────────┴───┴────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:8106
+  s_1a5204  validated    7 steps  4/4 (100%)
+           Edit '{{v1}}' and set both Stock quantity unit and Default purchase quantity unit to the exact existing unit '…
+  s_5b5137  validated    1 steps  4/4 (100%)
+           Edit '{{v1}}' and set both Stock quantity unit and Default purchase quantity unit to the exact existing unit '…
+  s_051b4f  validated    2 steps  3/3 (100%)
+           Read the names of all products whose displayed name starts with 'Seed:' in Grocy, without editing any products…
+  s_545c55  validated    4 steps  3/3 (100%)
+           Edit '{{v1}}' and set its default location to the existing location exactly '{{v3}}' and its product group to …
+  s_6e0c81  validated    4 steps  3/3 (100%)
+           Sign in to Grocy at {{v1}} using username {{v2}} and password exactly {{v3}}. Verify that you are signed in an…
+  s_99426c  validated    1 steps  3/3 (100%)
+           Create and save a product named '{{v2}}'. In its rich-text description editor, type exactly one paragraph that…
+  s_a80738  validated    3 steps  3/3 (100%)
+           Sign in to Grocy at {{v1}} using username {{v2}} and password exactly {{v3}}. Verify that you are signed in an…
+  s_c2134f  validated   10 steps  3/3 (100%)
+           Create and save a product named '{{v2}}'. In its rich-text description editor, type exactly one paragraph that…
+  s_c3a7c1  validated    1 steps  3/3 (100%)
+           Sign in to Grocy at {{v1}} using username {{v2}} and password exactly {{v3}}. Verify that you are signed in an…
+  s_dd71a5  validated    3 steps  3/3 (100%)
+           Create and save a product named '{{v2}}'. In its rich-text description editor, type exactly one paragraph that…
+  s_fcb903  validated   13 steps  3/3 (100%)
+           Read the names of all products whose displayed name starts with 'Seed:' in Grocy, without editing any products…
+  s_011510  validated    1 steps  2/2 (100%)
+           Make one purchase of exactly 3 Packs of '{{v1}}' into location '{{v3}}' with due date 2026-12-31. Select the e…
+  s_927e70  validated   16 steps  2/2 (100%)
+           Make one purchase of exactly 3 Packs of '{{v1}}' into location '{{v3}}' with due date 2026-12-31. Select the e…
+  s_9536de  provisional  1 steps  1/2 (50%)
+           Open the edit page for '{{v1}}' and verify the address path is /product/<id>. Report the exact numeric ID from…
+  s_99a660  validated    7 steps  2/2 (100%)
+           Edit '{{v1}}' and set both Stock quantity unit and Default purchase quantity unit to the exact existing unit '…
+  s_9ce2aa  demoted     10 steps  2/2 (100%)
+           Edit '{{v1}}' and set Default due days to {{v3}}, save and verify it persisted. Then, on the saved product, ad…
+  s_24a792  provisional  2 steps  1/1 (100%)
+           Open the edit page for '{{v1}}' and verify the address path is /product/<id>. Report the exact numeric ID from…
+  s_57b4a3  provisional  1 steps  1/1 (100%)
+           Make one purchase of exactly 3 Packs of '{{v1}}' into location '{{v3}}' with due date 2026-12-31. Select the e…
+  s_613c09  provisional  8 steps  1/1 (100%)
+           Edit '{{v1}}' and set its default location to the existing location exactly '{{v3}}' and its product group to …
+  s_6a6e3e  provisional  1 steps  1/1 (100%)
+           Edit '{{v1}}' and set its default location to the existing location exactly '{{v3}}' and its product group to …
+  s_6abf32  provisional  5 steps  1/1 (100%)
+           Open the edit page for '{{v1}}' and verify the address path is /product/<id>. Report the exact numeric ID from…
+  s_8702bf  provisional 10 steps  1/1 (100%)
+           Make one purchase of exactly 3 Packs of '{{v1}}' into location '{{v3}}' with due date 2026-12-31. Select the e…
+  s_95b77d  provisional  5 steps  1/1 (100%)
+           Edit '{{v1}}' and set its default location to the existing location exactly '{{v3}}' and its product group to …
+  s_b2518f  provisional 10 steps  1/1 (100%)
+           Edit '{{v1}}' and set both Stock quantity unit and Default purchase quantity unit to the exact existing unit '…
+  s_b28a0e  provisional 21 steps  1/1 (100%)
+           Make one purchase of exactly 3 Packs of '{{v1}}' into location '{{v3}}' with due date 2026-12-31. Select the e…
+  s_b7d9b2  provisional 14 steps  1/1 (100%)
+           Edit '{{v1}}' and set Default due days to {{v3}}, save and verify it persisted. Then, on the saved product, ad…
+  s_bc86c2  provisional  1 steps  1/1 (100%)
+           Edit '{{v1}}' and set both Stock quantity unit and Default purchase quantity unit to the exact existing unit '…
+  s_d318fc  provisional  7 steps  1/1 (100%)  variant of s_9536de
+           Open the edit page for '{{v1}}' and verify the address path is /product/<id>. Report the exact numeric ID from…
+  s_ed6e82  provisional  7 steps  1/1 (100%)
+           Edit '{{v1}}' and set both Stock quantity unit and Default purchase quantity unit to the exact existing unit '…
+  s_f2446a  provisional  3 steps  1/1 (100%)  variant of s_9536de
+           Open the edit page for '{{v1}}' and verify the address path is /product/<id>. Report the exact numeric ID from…
+  s_f6e0b0  provisional  3 steps  1/1 (100%)
+           Open the edit page for '{{v1}}' and verify the address path is /product/<id>. Report the exact numeric ID from…
+store: /tmp/before/bench/results/hbgc3-skills
+
+summary: /tmp/before/bench/results/hbgc3-sweep.json

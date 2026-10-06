@@ -46,8 +46,6 @@ import {
   type PageObservation,
 } from '../execution/snapshot.js';
 import { OPENER_LINE, committedSlots, dismissalAlreadyInEffect, effectExpectation, expectedChangesVerdict, liveLines, namesDialogControl, openerAlreadyShowing, openerWorkLines, slotActs } from '../execution/expect.js';
-// The line classes an added-change stop judges, for naming the stop (stopGateOf).
-import * as stopLines from '../execution/expect.js';
 // The observation dialect and the content-expectation rules live in the
 // shared execution modules, where a compiled artifact embeds them too.
 // Re-exported so this module's callers need not know which owns the source.
@@ -508,13 +506,8 @@ export interface ReplayResult {
    * proceeded optimistically; the caller persists the generalised pattern
    * onto the skill only once the run past that point succeeded — the segment
    * has then demonstrated volatility.
-   *
-   * `line`: the same for a page-change expectation (expect.ts generaliseLine):
-   * the recorded added line `from` was missing and the step's diff added one
-   * that differed only in number-bearing tokens; `to` replaces it in step
-   * `step`'s `expect.addedContains`, under the same walked-past rule.
    */
-  generalisations: Array<{ kind: 'precondition' | 'expect'; step?: number; pattern: string } | { kind: 'line'; step: number; from: string; to: string }>;
+  generalisations: { kind: 'precondition' | 'expect'; step?: number; pattern: string }[];
   /**
    * The url segment diffs those same expectations treated as volatile, raw.
    *
@@ -566,41 +559,6 @@ export interface ReplayResult {
    * how fwrd8-n2/n3 did the whole flow's work on a seed ticket).
    */
   wrongRecord?: string;
-  /**
-   * Which EXPECTATION gate stopped this replay after its step ran (StopGate).
-   * Absent on every other stop — a refusal, a locator miss, an assertion's
-   * miss — and on a stop inside a loop body.
-   */
-  stopGate?: StopGate;
-}
-
-/**
- * The recorded expectation a replay stopped on, as stored: what the flow
- * runner hands `SkillStore.relaxExpectation` when the recovery then proves the
- * stop harmless (notes/CONTRACT-spec-reliability.md item 1). hsdx1's s_2731b5
- * stopped at step 4 on every replay over a hide line naming a timestamp, and
- * hsbs2's s_7db6d8 at step 5 over `textbox "Tag Name"`; each was forgiven as
- * harmless twice, never corrected, and the compiled spec threw at that gate.
- * Naming the gate is what lets the evidence correct it.
- */
-export interface StopGate {
-  /** The segment (skill id) whose step stopped — a chained replay names the member. */
-  skill: string;
-  /** 1-based top-level step index in that skill. */
-  step: number;
-  kind: 'hide' | 'url' | 'added';
-  /** hide/added: the recorded line (as stored, markers unfilled) the stop names. */
-  line?: string;
-  /**
-   * hide/added: EVERY recorded line the stopping verdict judged, as stored. A
-   * hide stops only when all of its lines still show (toggle.ts hideVerdict),
-   * and an added stop only when none of its plain lines appeared (expect.ts):
-   * the verdict is over the group, so dropping one line of it would leave the
-   * rest to stop the next replay the same way.
-   */
-  lines?: string[];
-  /** url: the stored urlPattern. */
-  pattern?: string;
 }
 
 const MAX_LINE = 160;
@@ -1020,9 +978,6 @@ export async function replaySkill(
     /** Loop-body cursor: which match an ambiguous per-record locator should act on (see resolveChain). */
     ambiguousNth?: number,
   ): Promise<'ran' | 'skipped' | 'stop'> => {
-    // Only the body that ends the replay may name its gate: a repeat after a
-    // lost submit, or a loop body's inner step, runs this again.
-    delete res.stopGate;
     // The applied-pick baseline, ahead of everything this step does — where
     // the artifact takes it, before the step's settle.
     const topLevel = pickSteps.size > 0 && skill.steps.includes(step);
@@ -1539,8 +1494,6 @@ export async function replaySkill(
     let navAlerts: StepGateInput['navAlerts'];
     /** The verification stopped at the url gate (expectedUrl), the one failure a lost submit is repeated on. */
     let urlStopped = false;
-    /** The effect gate whose verdict stopped this step, for ReplayResult.stopGate. */
-    let stoppedBy: StepGate | null = null;
     /** The recorded lines this step's own diff added, from its effect gate (commits are judged on them). */
     let inDiff: string[] = [];
     /** The document a fill ran in, read ahead of its dispatch (refill.ts fillLost). */
@@ -1787,7 +1740,6 @@ export async function replaySkill(
           if (verdict.stop) {
             stop = verdict;
             urlStopped = gate === expectedUrl;
-            stoppedBy = gate;
             break;
           }
         }
@@ -1838,10 +1790,6 @@ export async function replaySkill(
       res.failedAt = failIndex;
       res.reason = stop.stop!;
       res.lines.push(`${head} → ran, but ${stop.stop}`);
-      // Name the expectation that stopped a top-level step (never a loop
-      // body's, whose step index is the loop's; never an assertion's check).
-      const gate = tag === String(failIndex) && !step.assert ? stopGateOf(stoppedBy, step, stop, skill.id, failIndex) : null;
-      if (gate) res.stopGate = gate;
       return 'stop';
     }
 
@@ -2249,7 +2197,7 @@ const alerts: StepGate = ({ outcome, isRead, step, params, tag, effectConfirmed,
  * turns a rejected state change into a clean recovery instead of a false
  * success (the fwrd4l-n3 Ready click).
  */
-const expectedChanges: StepGate = async ({ outcome, step, params, tag, failIndex, args, page, positionalResolution, facts }) => {
+const expectedChanges: StepGate = async ({ outcome, step, params, tag, args, page, positionalResolution, facts }) => {
   if (!step.expect?.addedContains?.length) return null;
   // The verdict itself is the shared expectedChangesVerdict (src/execution/
   // expect.ts) — the one rule a compiled artifact embeds too. This adapter
@@ -2283,14 +2231,7 @@ const expectedChanges: StepGate = async ({ outcome, step, params, tag, failIndex
     },
     { added: outcome.captureFailed ? null : added, live: (look) => captureLines(page, d, look) },
   );
-  // A line the verdict matched only by generalising it (survey T1: a number
-  // the recording froze) is staged like a url generalisation and kept once the
-  // replay walks past the step (tools.ts). Top-level steps only: a loop body's
-  // tag ("9.2.1") names a step `failIndex` does not, and the loop is left alone.
-  const { generalised, ...rest } = verdict;
-  const generalise = generalised && tag === String(failIndex) ? { kind: 'line' as const, step: failIndex, from: generalised.from, to: generalised.to } : undefined;
-  if (generalise) return { ...rest, generalise };
-  return rest.stop || rest.unobserved || rest.absentDialog || rest.confirmed || rest.inDiff || rest.warnings.length ? rest : null;
+  return verdict.stop || verdict.unobserved || verdict.absentDialog || verdict.confirmed || verdict.inDiff || verdict.warnings.length ? verdict : null;
 };
 
 /**
@@ -2353,39 +2294,6 @@ const gotoLanding: StepGate = ({ page, step, args, params, tag, facts }) => {
 };
 
 const STEP_GATES: StepGate[] = [errorPage, gotoLanding, expectedUrl, expectedChanges, expectedRemovals, alerts];
-
-/**
- * The recorded expectation a gate's stop was over (ReplayResult.stopGate), or
- * null for a stop that is not an expectation's: the error page, a landing,
- * an alert — and any stop whose evidence was incomplete (`unobserved`), which
- * says the page could not be read, not that the line was wrong.
- *
- * An added-change stop is over one of two groups (expect.ts changesVerdict):
- * the HARD lines (a `{{vN}}` outside a popup) when one did not show, else the
- * plain lines when none appeared. Which one is read off the verdict's wording;
- * an unrecognised wording is named as the hard group, which no relaxation will
- * touch — a misread can only keep a gate, never drop one.
- */
-function stopGateOf(gate: StepGate | null, step: SkillStep, stop: StepVerdict, skill: string, index: number): StopGate | null {
-  if (!gate || stop.unobserved) return null;
-  const at = { skill, step: index };
-  if (gate === expectedUrl) {
-    const pattern = step.expect?.urlPattern;
-    return pattern ? { ...at, kind: 'url', pattern } : null;
-  }
-  if (gate === expectedRemovals) {
-    const lines = hideEffectLines(step);
-    return lines.length ? { ...at, kind: 'hide', line: lines[0], lines } : null;
-  }
-  if (gate === expectedChanges) {
-    const recorded = (step.expect?.addedContains ?? []).filter((l) => !stopLines.TRANSIENT_LINE.test(l) && !stopLines.identifiesNothing(l));
-    const hard = (l: string) => stopLines.SLOT_LINE.test(l) && !stopLines.popupItem(l);
-    const plainStop = /\bnone of the \d+ recorded page change/.test(stop.stop ?? '');
-    const lines = recorded.filter((l) => (plainStop ? !hard(l) : hard(l)));
-    return lines.length ? { ...at, kind: 'added', line: lines[0], lines } : null;
-  }
-  return null;
-}
 
 /** The line dialect a step's recorded lines are in: absent is dialect 1, every expectation compiled before dialects existed. */
 function dialectOf(step: SkillStep): LineDialect {

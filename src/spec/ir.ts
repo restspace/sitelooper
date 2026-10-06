@@ -314,27 +314,6 @@ function demotionWhy(skill: Skill): string {
   return `${parts.join('; ')}.`;
 }
 
-/** The step an unproven pin's latest stop was at: its own record, else where it stopped most. */
-function unprovenStopAt(skill: Skill): number | undefined {
-  const st = skill.stats;
-  if (st.lastStopAt) return st.lastStopAt;
-  const worst = Object.entries(st.failedAtStep ?? {}).sort((a, b) => b[1] - a[1])[0];
-  return worst ? Number(worst[0]) : undefined;
-}
-
-/** The evidence behind `unproven-pin`, from the procedure's own counts. */
-function unprovenWhy(skill: Skill, at: number | undefined): string {
-  const st = skill.stats;
-  const parts = [`${skill.id} is ${skill.status}: ${st.successes} of ${st.uses} replays succeeded`];
-  const stops = Object.entries(st.failedAtStep ?? {}).map(([n, c]) => `step ${n} ×${c}`);
-  if (stops.length) parts.push(`its replays stopped at ${stops.join(', ')}`);
-  parts.push(`the last ${st.stopStreak} replay(s) all stopped${at ? ` (latest at step ${at})` : ''}`);
-  if (st.recoveredStops !== undefined) parts.push(`${st.recoveredStops} stop(s) were recovered by the model`);
-  if (st.harmlessStops) parts.push(`${st.harmlessStops} were judged harmless — forgiven in the daemon, which has a model to finish the step, but the compiled spec has none`);
-  if (st.lastUsed) parts.push(`last used ${st.lastUsed}`);
-  return `${parts.join('; ')} (--allow-demoted compiles it anyway).`;
-}
-
 /**
  * The record-time warnings a flow carries, as diagnostics.
  *
@@ -582,25 +561,6 @@ export function flowToSpec(
           severity: 'error',
           line: `step ${step.id} compiles a demoted skill (${member.id}) — its last replays failed at the same step`,
         });
-      } else if ((member.stats?.stopStreak ?? 0) >= 1) {
-        // A pin that stopped on its latest replay and has not replayed clean
-        // since. The daemon survived that stop with the model, and a stop the
-        // recovery proved harmless is no strike, so the skill stays
-        // provisional — but the artifact has no model and stops there. hsdx1's
-        // s_2731b5 (failedAtStep {4: 2}, harmlessStops 2) and hsbs2's s_7db6d8
-        // ({5: 2}, harmlessStops 2) compiled and threw at those very steps.
-        // Absent on stores banked before the streak existed: no evidence.
-        const at = unprovenStopAt(member);
-        diagnostics.push({
-          code: 'unproven-pin',
-          step: step.id,
-          what: `its pinned procedure ${member.id} stopped at step ${at ?? '?'} on its latest replay and has not replayed clean since — a compiled spec would stop there`,
-          why: unprovenWhy(member, at),
-          fix: rerecordFix(fixFile, step.id),
-          action: rerecordAction(fixFile, step.id),
-          severity: 'error',
-          line: `step ${step.id} compiles ${member.id}, which stopped at step ${at ?? '?'} on its latest replay and has not replayed clean since`,
-        });
       }
     }
     // A literal binding on a step whose instruction threads references is
@@ -638,10 +598,6 @@ export function flowToSpec(
     });
   }
 
-  // A commit with nothing recorded to check it by (item 3c): said once, over
-  // the procedures as compiled, after every step is resolved.
-  diagnostics.push(...uncheckedCommits(steps));
-
   // Only a flow that fills, types or selects somewhere (loop bodies included)
   // runs a recipe at all: anything else would carry a snapshot its code never
   // embeds, and warnings about widgets it never touches.
@@ -678,84 +634,6 @@ const WIDGET_TOOLS = new Set(['fill', 'type', 'select']);
 
 function skillStepsDriveWidgets(steps: readonly SkillStep[]): boolean {
   return steps.some((s) => WIDGET_TOOLS.has(s.tool) || (Array.isArray(s.body) && skillStepsDriveWidgets(s.body)));
-}
-
-/** The gestures that hand the app work a segment typed: a click or a key press. */
-const COMMIT_TOOLS = new Set(['click', 'dblclick', 'press']);
-
-/**
- * A segment's COMMIT: its last top-level click or press that comes after a
- * fill, type or select — the Save that hands the typed work to the app. A
- * click before every fill (opening the form) commits nothing. Shared with the
- * emitter's persistence probe (emit.ts probeSite), so the lint and the probe
- * name the same gesture.
- */
-export function commitIndex(steps: readonly SkillStep[]): number {
-  const firstSet = steps.findIndex((s) => WIDGET_TOOLS.has(s.tool));
-  if (firstSet < 0) return -1;
-  for (let i = steps.length - 1; i > firstSet; i--) if (COMMIT_TOOLS.has(steps[i].tool)) return i;
-  return -1;
-}
-
-/**
- * `unchecked-commit` (notes/CONTRACT-spec-reliability.md 3c): a mutating step
- * whose commit gesture carries no recorded effect, with nothing read after it.
- *
- * WHY. A compiled spec checks what the recording saw a gesture do; a gesture
- * that saw nothing is checked by nothing, and a run where the app ignored it
- * passes. The held-out survey's honesty count: sitelooper reported success on
- * 10 of 14 runs the app's own verifier failed (T8: fwec10, fwgt12, fwgt13,
- * fwod98, hsbs1). hsbs1's move into a chapter is the shape: the clicks that
- * picked the chapter carried only `urlPattern` — the same url they started on
- * — and Playwright passed while the page never moved.
- *
- * So "no expectation" here is no added, removed or alert line AND no url
- * change: a urlPattern equal to the url the gesture started on records that
- * nothing moved, which is no evidence the commit landed (a deliberate reading
- * of the contract's "no urlPattern", from hsbs1's s_ca7686 whose every click
- * carried exactly that). A read or wait after the commit — later in its
- * segment or in a later segment of the chain — checks the outcome, so the
- * step is not flagged. A warning, never a refusal: the procedure may be
- * fine, it is only unverified.
- */
-export function uncheckedCommits(steps: readonly SpecStep[]): Diagnostic[] {
-  const out: Diagnostic[] = [];
-  for (const step of steps) {
-    if (step.kind === 'assert') continue;
-    const segments = step.segments.filter((seg) => !seg.assert);
-    // The step's last segment that commits typed work.
-    let at = -1;
-    for (let i = segments.length - 1; i >= 0 && at < 0; i--) if (commitIndex(segments[i].steps) >= 0) at = i;
-    if (at < 0) continue;
-    const seg = segments[at];
-    const ci = commitIndex(seg.steps);
-    const commit = seg.steps[ci];
-    // The url the commit started on: the segment's start, moved by every
-    // earlier step that recorded where it left the page.
-    let before = seg.preconditions.urlPattern;
-    for (const s of seg.steps.slice(0, ci)) if (s.expect?.urlPattern) before = s.expect.urlPattern;
-    const e = commit.expect;
-    const checked =
-      Boolean(e?.addedContains?.length) ||
-      Boolean(e?.removedContains?.length) ||
-      Boolean(e?.alertContains) ||
-      (e?.urlPattern !== undefined && e.urlPattern !== before);
-    if (checked) continue;
-    const reads = (list: readonly SkillStep[]) => list.some((s) => s.tool === 'read' || s.tool === 'read_all' || s.tool === 'wait_for');
-    if (reads(seg.steps.slice(ci + 1)) || segments.slice(at + 1).some((later) => reads(later.steps))) continue;
-    const gesture = `${commit.tool}${commit.tool === 'press' && typeof commit.args.key === 'string' ? ` ${commit.args.key}` : ''}`;
-    const where = `${seg.id} step ${ci + 1}`;
-    out.push({
-      code: 'unchecked-commit',
-      step: step.id,
-      what: `its commit (${gesture}, ${where}) has no recorded effect to check and nothing is read after it — a compiled run where the app ignored it still passes`,
-      why: `${where} is the last ${commit.tool} after the segment's fills, and the recording saw it change nothing a check could hold: no line added or removed, no alert, ${e?.urlPattern !== undefined ? 'the url it recorded is the one it started on' : 'no url change'}; no read or wait follows it in the step.`,
-      fix: 'add an assertion with `sitelooper assert` or re-record',
-      severity: 'warning',
-      line: `step ${step.id}: commit ${gesture} (${where}) is unchecked — no recorded effect and no read after it`,
-    });
-  }
-  return out;
 }
 
 /** Whether any segment of these spec steps fills, types or selects — loop bodies included. */

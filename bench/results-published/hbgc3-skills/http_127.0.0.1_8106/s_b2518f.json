@@ -1,0 +1,329 @@
+{
+ "id": "s_b2518f",
+ "origin": "http://127.0.0.1:8106",
+ "template": "Edit '{{v1}}' and set both Stock quantity unit and Default purchase quantity unit to the exact existing unit '{{v3}}', and set Minimum stock amount to 4. Save, reload the product edit page, and verify all three values persisted.",
+ "params": {
+  "v1": {
+   "example": "hbgc3-n3 Bench Product",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i3:product_name"
+  },
+  "v2": {
+   "example": "hbgc3-n3",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v3": {
+   "example": "Pack",
+   "usedIn": []
+  },
+  "v4": {
+   "example": "420129",
+   "usedIn": [
+    2
+   ],
+   "known": true,
+   "binding": "04-edit.url.p1"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8106/product/{{v4}}",
+  "requireText": [
+   "{{v1}}",
+   "{{v2}}"
+  ]
+ },
+ "steps": [
+  {
+   "tool": "read",
+   "args": {
+    "target": "input#min_stock_amount",
+    "what": "value",
+    "label": "minimum_stock_amount_saved"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "input#min_stock_amount"
+     },
+     {
+      "kind": "role",
+      "role": "spinbutton",
+      "name": "Minimum stock amount"
+     },
+     {
+      "kind": "label",
+      "label": "Minimum stock amount"
+     },
+     {
+      "kind": "id",
+      "selector": "#min_stock_amount"
+     },
+     {
+      "kind": "css",
+      "selector": "#min_stock_amount"
+     },
+     {
+      "kind": "point",
+      "x": 470,
+      "y": 1086,
+      "w": 418.5,
+      "h": 38,
+      "role": "spinbutton",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "minimum_stock_amount_after_reload"
+  },
+  {
+   "tool": "goto",
+   "args": {
+    "url": "http://127.0.0.1:8106/product/{{v4}}"
+   },
+   "locators": {}
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "form select#qu_id_stock option:checked, form select#qu_id_purchase option:checked",
+    "what": "text",
+    "label": "stock_quantity_unit_after_reload"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "form select#qu_id_stock option:checked, form select#qu_id_purchase option:checked",
+      "nth": 0
+     }
+    ]
+   },
+   "label": "stock_quantity_unit_after_reload"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "form select#qu_id_stock option:checked, form select#qu_id_purchase option:checked",
+    "what": "text",
+    "label": "purchase_quantity_unit_after_reload"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "form select#qu_id_stock option:checked, form select#qu_id_purchase option:checked",
+      "nth": 1
+     }
+    ]
+   },
+   "label": "purchase_quantity_unit_after_reload"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "input#min_stock_amount",
+    "what": "value",
+    "label": "minimum_stock_amount_after_reload"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "input#min_stock_amount"
+     },
+     {
+      "kind": "role",
+      "role": "spinbutton",
+      "name": "Minimum stock amount"
+     },
+     {
+      "kind": "label",
+      "label": "Minimum stock amount"
+     },
+     {
+      "kind": "id",
+      "selector": "#min_stock_amount"
+     },
+     {
+      "kind": "css",
+      "selector": "#min_stock_amount"
+     },
+     {
+      "kind": "point",
+      "x": 470,
+      "y": 1086,
+      "w": 418.5,
+      "h": 38,
+      "role": "spinbutton",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "minimum_stock_amount_after_reload"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "value"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Name"
+     },
+     {
+      "kind": "label",
+      "label": "Name"
+     },
+     {
+      "kind": "id",
+      "selector": "#name"
+     },
+     {
+      "kind": "css",
+      "selector": "#name"
+     },
+     {
+      "kind": "point",
+      "x": 507,
+      "y": 157,
+      "w": 492.5,
+      "h": 38,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "product_name_after_reload"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#product_group_id > option:nth-of-type(4)"
+     }
+    ]
+   },
+   "label": "product_group"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text",
+    "frame": "{{=}} product for household stock."
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#product-form > div:nth-of-type(4) > div > div:nth-of-type(3) > div:nth-of-type(2) > p"
+     },
+     {
+      "kind": "point",
+      "x": 507,
+      "y": 452,
+      "w": 470.5,
+      "h": 20.4,
+      "role": null,
+      "tag": "p",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "ref"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#qu_id_stock > option:nth-of-type(2)"
+     }
+    ]
+   },
+   "label": "stock_quantity_unit_after_reload"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#location_id > option:nth-of-type(4)"
+     }
+    ]
+   },
+   "label": "default_location"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "The recorded procedure chain had replayed its edit/save segment successfully but then tried to verify on /product/298407, which is a blank form that does not hold this product. The real record is /product/{{v4}}, so I confirmed the values there: after a fresh server reload the edit page shows Name \"{{v1}}\", Stock quantity unit \"{{v3}}\", Default purchase quantity unit \"{{v3}}\" and Minimum stock amount \"4\" — all three persisted (the prior save from the replayed segment did land on this record; Default location \"Pantry\" and Product group \"Snacks\" are also still intact).",
+  "values": {
+   "product_name_after_reload": "{{v1}}",
+   "stock_quantity_unit_after_reload": "{{v3}}",
+   "purchase_quantity_unit_after_reload": "{{v3}}",
+   "minimum_stock_amount_after_reload": "4",
+   "default_location": "Pantry",
+   "product_group": "Snacks",
+   "qu_id_stock_value": "3",
+   "qu_id_purchase_value": "3",
+   "product_edit_url": "http://127.0.0.1:8106/product/{{v4}}",
+   "bogus_url_from_replay": "http://127.0.0.1:8106/product/298407 (blank form: empty Name, 'A name is required')",
+   "minimum_stock_amount_sav": "4",
+   "ref": "{{v2}}"
+  }
+ },
+ "contract": 4,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-10-06T14:06:21.367Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 4
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_61f241",
+  "index": 2,
+  "of": 3
+ },
+ "provenance": {
+  "session": "hbgc3-n3",
+  "instruction": "Edit 'hbgc3-n3 Bench Product' and set both Stock quantity unit and Default purchase quantity unit to the exact existing unit 'Pack', and set Minimum stock amount to 4. Save, reload the product edit page, and verify all three values persisted.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-10-06T14:06:21.367Z"
+ },
+ "revision": 1
+}

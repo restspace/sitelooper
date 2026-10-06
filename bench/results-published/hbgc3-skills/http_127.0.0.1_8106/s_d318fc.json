@@ -1,0 +1,254 @@
+{
+ "id": "s_d318fc",
+ "origin": "http://127.0.0.1:8106",
+ "template": "Open the edit page for '{{v1}}' and verify the address path is /product/<id>. Report the exact numeric ID from the address and confirm the product name on the page.",
+ "params": {
+  "v1": {
+   "example": "hbgc3-n3 Bench Product",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i3:product_name"
+  },
+  "v2": {
+   "example": "hbgc3-n3",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8106/purchase"
+ },
+ "steps": [
+  {
+   "tool": "read_all",
+   "args": {
+    "target": "#product-overview-card a, .product-overview a, a[href*=\"/product/\"]",
+    "what": "attr",
+    "attr": "href"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#product-overview-card a, .product-overview a, a[href*=\"/product/\"]"
+     },
+     {
+      "kind": "id",
+      "selector": "#productcard-product-edit-button"
+     },
+     {
+      "kind": "css",
+      "selector": "#productcard-product-edit-button"
+     },
+     {
+      "kind": "point",
+      "x": 880,
+      "y": 79,
+      "w": 32,
+      "h": 23,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "product_edit_url"
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "a[href*=\"/product/420129?returnto=\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "id",
+      "selector": "#productcard-product-edit-button"
+     },
+     {
+      "kind": "css",
+      "selector": "#productcard-product-edit-button"
+     },
+     {
+      "kind": "point",
+      "x": 880,
+      "y": 79,
+      "w": 32,
+      "h": 23,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "repeatIfNoEffect": true,
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8106/purchase",
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "what": "url",
+    "label": "product_edit_url"
+   },
+   "locators": {},
+   "label": "product_edit_url_2"
+  },
+  {
+   "tool": "wait_for",
+   "args": {
+    "target": "body",
+    "state": "visible",
+    "timeout_ms": 3000
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "body"
+     },
+     {
+      "kind": "css",
+      "selector": "html > body"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 504,
+      "w": 1280,
+      "h": 1008.4,
+      "role": null,
+      "tag": "body",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "what": "url",
+    "label": "url_check2"
+   },
+   "locators": {},
+   "label": "product_edit_url_2"
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@f2e71"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "html > body > div:nth-of-type(2) > button"
+     }
+    ]
+   },
+   "contexts": {
+    "target": {
+     "frame": [
+      {
+       "selectors": [
+        "iframe[src*=\"/stockentries\"]",
+        "iframe >> nth=0"
+       ],
+       "urlPattern": "http://127.0.0.1:8106/stockentries?embedded=&product=:id"
+      }
+     ]
+    }
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8106/purchase",
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e184"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "id",
+      "selector": "#productcard-product-edit-button"
+     },
+     {
+      "kind": "css",
+      "selector": "#productcard-product-edit-button"
+     },
+     {
+      "kind": "point",
+      "x": 880,
+      "y": 79,
+      "w": 32,
+      "h": 23,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "mints": {
+    "at": "p1"
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8106/product/{{d1}}?returnto=/purchase",
+    "addedContains": [
+     "- textbox \"Name\": {{*}}",
+     "- checkbox \"Active\" [checked]",
+     "- button \"Font Size\"",
+     "- button \"Bold (CTRL+B)\""
+    ],
+    "lineDialect": 2
+   }
+  }
+ ],
+ "derived": {
+  "d1": {
+   "step": 7,
+   "at": "p1",
+   "example": "420129"
+  }
+ },
+ "contract": 3,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-10-06T14:08:25.568Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 3
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_2c1961",
+  "index": 0,
+  "of": 2
+ },
+ "variantOf": "s_9536de",
+ "provenance": {
+  "session": "hbgc3-n3",
+  "instruction": "Open the edit page for 'hbgc3-n3 Bench Product' and verify the address path is /product/<id>. Report the exact numeric ID from the address and confirm the product name on the page.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-10-06T14:08:25.568Z",
+  "transforms": [
+   {
+    "name": "unfreezeExpectations",
+    "at": 7,
+    "reason": "recorded page change(s) only the recording run could produce: [\"- heading \\\"Edit product\\\"\",\"- textbox \\\"Name\\\": {{*}}\",\"- checkbox \\\"Active\\\" [checked]\",\"- button \\\"Font Size\\\"\",\"- button \\\"Bold (CTRL+B)\\\"\"] → [\"- textbox \\\"Name\\\": {{*}}\",\"- checkbox \\\"Active\\\" [checked]\",\"- button \\\"Font Size\\\"\",\"- button \\\"Bold (CTRL+B)\\\"\"]"
+   }
+  ]
+ },
+ "revision": 1
+}

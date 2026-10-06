@@ -1,0 +1,328 @@
+{
+  "flow": "hbgc3",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_6e0c81; observed page_title=Stock overview | Grocy, signed_in_user=admin, page_heading=Stock overview, stock_summary=0 Products, $0.00 total value.",
+      "values": {
+        "page_title": "Stock overview | Grocy",
+        "signed_in_user": "admin",
+        "page_heading": "Stock overview",
+        "stock_summary": "0 Products, $0.00 total value"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "8/8",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-report",
+      "status": "success",
+      "summary": "Replayed stored procedure s_fcb903; observed table_info=Showing 1 to 3 of 3 entries, first_product_name=Seed: Oat milk, second_product_name=Seed: Orange juice, third_product_name=Seed: Sparkling water, product_names_1=Seed: Oat milk, product_names_2=Seed: Orange juice, product_names_3=Seed: Sparkling water, source_page=Manage master data, matching_products_count=3.",
+      "values": {
+        "table_info": "Showing 1 to 3 of 3 entries",
+        "first_product_name": "Seed: Oat milk",
+        "second_product_name": "Seed: Orange juice",
+        "third_product_name": "Seed: Sparkling water",
+        "product_names_1": "Seed: Oat milk",
+        "product_names_2": "Seed: Orange juice",
+        "product_names_3": "Seed: Sparkling water",
+        "source_page": "Manage master data",
+        "matching_products_count": "3"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "15/15",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_dd71a5; observed ref=hbgc3-n2, form_url=http://127.0.0.1:8106/product/new, product_name=hbgc3-n2 Bench Product, saved_description=hbgc3-n2 product for household stock..",
+      "values": {
+        "ref": "hbgc3-n2",
+        "form_url": "http://127.0.0.1:8106/product/new",
+        "product_name": "hbgc3-n2 Bench Product",
+        "saved_description": "hbgc3-n2 product for household stock."
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "14/14",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_dd71a5: step 2: primary locator did not resolve; used fallback #2 page.locator('#productcard-product-name')"
+      ]
+    },
+    {
+      "id": "04-edit",
+      "status": "success",
+      "summary": "The replayed segment had navigated to the wrong product page (/product/298407, an empty \"Edit product\" form), so I located 'hbgc3-n2 Bench Product' from the products list (its edit link is /product/346654), opened it, set Default location to the existing location 'Pantry' and Product group to the existing group 'Snacks' via the native selects, and saved with \"Save & return to products\". Both values were verified twice: the products list row now reads \"hbgc3-n2 Bench Product | Pantry | 0 | Piece | Piece | Snacks\", and on reopening the saved edit page the checked options read \"Pantry\" and \"Snacks\". Note the default location was already Pantry before my change; the product group was empty and is now Snacks. No products were deleted.",
+      "values": {
+        "product_name": "hbgc3-n2 Bench Product",
+        "edit_url": "http://127.0.0.1:8106/product/346654",
+        "default_location": "Pantry",
+        "product_group": "Snacks",
+        "products_list_row": "hbgc3-n2 Bench Product\tPantry\t0\tPiece\tPiece\tSnacks",
+        "location_before_save": "Pantry (value 3)",
+        "group_before_save": "empty",
+        "available_locations": "Fridge, Garage Pantry, Pantry, Pantry Shelf",
+        "item_1": "product_id",
+        "item_1_value": "346654",
+        "current_url_after_replay": "http://127.0.0.1:8106/product/298407",
+        "seed_row_link1_href": "http://127.0.0.1:8106/product/3",
+        "hbgc3n2_row_link1_href": "http://127.0.0.1:8106/product/346654",
+        "hbgc3n2_row_link2_href": "#",
+        "location_before": "3",
+        "location_after_select": "3",
+        "group_after_select": "2",
+        "saved_default_location_l": "Pantry",
+        "saved_product_group_labe": "Snacks",
+        "ref": "hbgc3-n2",
+        "available_product_groups_1": "Beverages",
+        "available_product_groups_2": "Healthy Snacks",
+        "available_product_groups_3": "Snacks",
+        "available_product_groups_4": "Snacks & Sweets"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_95b77d stopped at step ? — the page at http://127.0.0.1:8106/product/:id does not show \"hbgc3-n2 Bench Product\" — it matches this procedure's page template but is a different record — nothing was run",
+      "replayed": "0/5",
+      "repaired": false,
+      "turns": 23,
+      "unreported": [
+        "saved_default_location",
+        "saved_default_location_id",
+        "saved_product_group",
+        "saved_product_group_id",
+        "description_still_present",
+        "products_row_overview_link_class",
+        "products_row_delete_button_class",
+        "current_url"
+      ]
+    },
+    {
+      "id": "05-edit",
+      "status": "success",
+      "summary": "The replayed segment had already performed the selects (both quantity units to 'Pack'), filled Minimum stock amount 4 and clicked Save for 'hbgc3-n2 Bench Product'; its trailing goto had only landed on the wrong record (/product/298407), so I did not re-save to avoid a duplicate. I reloaded the correct product page (/product/346654, Name field = 'hbgc3-n2 Bench Product') and verified from the freshly server-loaded form that all three values persisted: Stock quantity unit = 'Pack' (value 3), Default purchase quantity unit = 'Pack' (value 3), Minimum stock amount = 4. The unit list confirms only one option named 'Pack' (id 3).",
+      "values": {
+        "product_name": "hbgc3-n2 Bench Product",
+        "product_id": "346654",
+        "edit_url": "http://127.0.0.1:8106/product/346654",
+        "stock_quantity_unit": "Pack (id 3)",
+        "default_purchase_quantity_unit": "Pack (id 3)",
+        "minimum_stock_amount": "4",
+        "quantity_unit_options": "Pack, Package, Piece, Six-pack",
+        "read_back_after_reload": "stock_qu=Pack, purchase_qu=Pack, min_stock=4",
+        "stock_qu_now": "Pack",
+        "purchase_qu_now": "Pack",
+        "min_stock_now": "4",
+        "stock_qu_id_check": "3",
+        "purchase_qu_id_check": "3",
+        "ref": "hbgc3-n2"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_99a660 stopped at step ? — the page at http://127.0.0.1:8106/product/:id does not show \"hbgc3-n2 Bench Product\" — it matches this procedure's page template but is a different record — nothing was run",
+      "replayed": "0/7",
+      "repaired": false,
+      "turns": 6,
+      "warnings": [
+        "s_1a5204: step 4: read 'stock_qu_pre_save' returned '3' from a control this step set, and nothing committed it since — it shows the control, however the app formats it, not what the app stored; dropped from the report's confident values",
+        "s_1a5204: step 5: read 'stock_qu_pre_save' returned '3' from a control this step set, and nothing committed it since — it shows the control, however the app formats it, not what the app stored; dropped from the report's confident values",
+        "s_1a5204: step 6: read 'minimum_stock_amount' returned a value the skill itself set/selected ('4') — confirms the control, not persistence; dropped from the report's confident values"
+      ],
+      "unreported": [
+        "stock_qu_pre_save",
+        "stock_qu_label_saved",
+        "purchase_qu_label_saved"
+      ]
+    },
+    {
+      "id": "06-edit",
+      "status": "success",
+      "summary": "Replayed stored procedure s_9ce2aa; observed barcode_table_rows=hbgc3-n2-0001, barcode_rows=hbgc3-n2-0001, due_days_saved=1, barcode_added=No data available in table, product_name=.",
+      "values": {
+        "barcode_table_rows": "hbgc3-n2-0001",
+        "barcode_rows": "hbgc3-n2-0001",
+        "due_days_saved": "1",
+        "barcode_added": "No data available in table",
+        "product_name": ""
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "10/10",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_9ce2aa: step 10: skipped read — no element matched any known locator for target (tried 3: page.getByText('hbgc3-n2-0001', { exact: true }), page.locator('#barcode-table > tbody > tr > td:nth-of-type(2)'), elementAt(922, 214) /* td */)",
+        "s_9ce2aa: report value ref is given, not observed: it is built only from the step's own parameters, and neither this run's page nor any of its reads shows it — withheld"
+      ],
+      "unreported": [
+        "ref"
+      ]
+    },
+    {
+      "id": "07-create",
+      "status": "success",
+      "summary": "On /purchase I selected the existing product via the name autocomplete (\"hbgc3-n2 Bench Product\" link, no barcode created), set Amount to 3 (quantity unit auto-filled as Pack), due date 2026-12-31, location Pantry, and saved once with OK. The purchase form reset with the product header showing \"Stock amount: 3 Packs\", and the product's Stock entries view shows exactly one entry row: Product \"hbgc3-n2 Bench Product\", Amount \"3 Packs\", Due date \"2026-12-31 (in 3 months)\", Location \"Pantry\", Purchased date 2026-10-06. Both required facts are verified from live DOM reads.",
+      "values": {
+        "product_name": "hbgc3-n2 Bench Product",
+        "product_id": "346654",
+        "purchase_product_field": "hbgc3-n2 Bench Product",
+        "purchase_amount_before_save": "3",
+        "purchase_quantity_unit": "Pack",
+        "purchase_due_date_before_save": "2026-12-31",
+        "purchase_location_before_save": "Pantry",
+        "stock_entry_row": "hbgc3-n2 Bench Product\t3 Packs\t2026-12-31 in 3 months\tPantry\t\t$0.00 per Pack\t2026-10-06 Today",
+        "stock_entry_id": "6",
+        "purchase_amount": "3",
+        "purchase_due_date": "2026-12-31",
+        "purchase_location": "Pantry",
+        "purchase_product": "hbgc3-n2 Bench Product",
+        "product_overview_card_bo": "hbgc3-n2",
+        "product_overview_card_bo_2": "Stock amount:",
+        "stock_amount_after_save": "Stock amount:"
+      },
+      "tier": null,
+      "recovered": true,
+      "fellBack": "every candidate refused — s_57b4a3: the page at http://127.0.0.1:8106/product/:id does not show \"hbgc3-n2 Bench Product\" — it matches this procedure's page template but is a different record — nothing was run",
+      "replayed": null,
+      "repaired": false,
+      "turns": 14,
+      "unreported": [
+        "stock_amount",
+        "quantity_unit",
+        "due_date",
+        "location",
+        "price_per_unit",
+        "purchased_date",
+        "amount_purchased",
+        "location_before_save",
+        "ref",
+        "stock_entries_row_1",
+        "stock_entries_row_2",
+        "stock_entries_row_3",
+        "stock_entries_row_4",
+        "stock_entries_row_5",
+        "stock_entries_row_6"
+      ]
+    },
+    {
+      "id": "08-open",
+      "status": "success",
+      "summary": "From the Purchase page I clicked the product's card link for 'hbgc3-n2 Bench Product', which opened the edit page at http://127.0.0.1:8106/product/346654?returnto=%2Fpurchase — the address path is /product/346654, so the numeric ID is 346654. The page is the \"Edit product\" form and its Name field reads exactly \"hbgc3-n2 Bench Product\", confirming the correct product.",
+      "values": {
+        "product_name": "hbgc3-n2 Bench Product",
+        "product_id": "346654",
+        "address_path": "/product/346654",
+        "url": "http://127.0.0.1:8106/product/346654?returnto=%2Fpurchase",
+        "product_edit_url": "http://127.0.0.1:8106/product/346654?returnto=%2Fpurchase",
+        "product_name_on_page": "hbgc3-n2 Bench Product",
+        "ref": "hbgc3-n2"
+      },
+      "tier": null,
+      "recovered": true,
+      "fellBack": "every candidate refused — s_6abf32: not on the page this procedure starts from (expects http://127.0.0.1:8106/stockentries, browser is at http://127.0.0.1:8106/purchase) — nothing was run",
+      "replayed": null,
+      "repaired": false,
+      "turns": 3,
+      "unreported": [
+        "page_title",
+        "form_name_field_value",
+        "stock_entry_row_link",
+        "product_open_button_class",
+        "current_url",
+        "edit_page_url"
+      ]
+    }
+  ],
+  "passed": 8,
+  "total": 8,
+  "repinned": 0,
+  "drift": 4,
+  "driftTickets": [
+    {
+      "flow": "hbgc3",
+      "step": "03-create",
+      "skill": "s_dd71a5",
+      "atStep": "2",
+      "key": "target",
+      "similarity": 1.001,
+      "missedLocator": "page.getByText('hbgc3-n2 Bench Product', { exact: true })",
+      "fallbackUsed": "page.locator('#productcard-product-name')",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8106/products?product=:id",
+      "pageUrl": "http://127.0.0.1:8106/products?product=346654"
+    },
+    {
+      "flow": "hbgc3",
+      "step": "04-edit",
+      "skill": "s_95b77d",
+      "similarity": 1.001,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_95b77d stopped at step ? — the page at http://127.0.0.1:8106/product/:id does not show \"hbgc3-n2 Bench Product\" — it matches this procedure's page template but is a different record — nothing was run",
+      "reason": "the page at http://127.0.0.1:8106/product/:id does not show \"hbgc3-n2 Bench Product\" — it matches this procedure's page template but is a different record — nothing was run",
+      "pageUrlPattern": "http://127.0.0.1:8106/product/:id",
+      "pageUrl": "http://127.0.0.1:8106/product/298407"
+    },
+    {
+      "flow": "hbgc3",
+      "step": "05-edit",
+      "skill": "s_99a660",
+      "similarity": 1.001,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_99a660 stopped at step ? — the page at http://127.0.0.1:8106/product/:id does not show \"hbgc3-n2 Bench Product\" — it matches this procedure's page template but is a different record — nothing was run",
+      "reason": "the page at http://127.0.0.1:8106/product/:id does not show \"hbgc3-n2 Bench Product\" — it matches this procedure's page template but is a different record — nothing was run",
+      "pageUrlPattern": "http://127.0.0.1:8106/product/:id",
+      "pageUrl": "http://127.0.0.1:8106/product/298407"
+    },
+    {
+      "flow": "hbgc3",
+      "step": "06-edit",
+      "skill": "s_9ce2aa",
+      "atStep": "10",
+      "key": "target",
+      "similarity": 1.001,
+      "missedLocator": "page.getByText('hbgc3-n2-0001', { exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8106/product/:id",
+      "pageUrl": "http://127.0.0.1:8106/product/298407"
+    }
+  ],
+  "wallMs": 220589,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 815512,
+    "completionTokens": 13153,
+    "cachedTokens": 735104
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 815512,
+      "completionTokens": 13153,
+      "cachedTokens": 735104
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "openai/gpt-6-luna",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

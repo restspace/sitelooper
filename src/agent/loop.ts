@@ -347,12 +347,6 @@ export interface SkillRecord {
   given?: string[];
   /** 1-based skill step the replay failed at, when it did. */
   failedAt?: number;
-  /**
-   * The recorded expectation that stopped the replay, when a gate did
-   * (ReplayResult.stopGate): what the flow runner relaxes once the recovery
-   * proves the stop harmless (SkillStore.relaxExpectation).
-   */
-  stopGate?: import('../skills/replay.js').StopGate;
   /** The url the replay finished (or stopped) on. */
   replayUrl?: string;
   /** Browser actions taken by replay vs. in total (batch steps count individually). */
