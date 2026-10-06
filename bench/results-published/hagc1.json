@@ -1,0 +1,799 @@
+{
+  "name": "hagc1",
+  "origin": "http://127.0.0.1:8106",
+  "startUrl": "http://127.0.0.1:8106/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-signin",
+      "instruction": "Sign in to Grocy at http://127.0.0.1:8106/ with username admin and password exactly {{env:APP_PASSWORD}}. Verify that the authenticated app is open.",
+      "skill": "s_84ac15",
+      "params": {
+        "v1": "http://127.0.0.1:8106/",
+        "v2": "admin",
+        "v3": "{{env:APP_PASSWORD}}"
+      },
+      "outputs": [
+        "page_title",
+        "header_user",
+        "stock_overview_header",
+        "stock_overview_summary"
+      ],
+      "recorded": {
+        "page_title": "Stock overview | Grocy",
+        "header_user": "admin",
+        "stock_overview_header": "Stock overview",
+        "stock_overview_summary": "0 Products, $0.00 total value",
+        "nav_items": "Stock overview, Shopping list, Recipes, Meal plan, Chores overview, Tasks, Batteries overview, Equipment, Calendar, Purchase, Consume, Transfer, Inventory, Chore tracking, Battery tracking, Manage master data",
+        "url": "http://127.0.0.1:8106/stockoverview",
+        "url.p0": "stockoverview"
+      },
+      "route": "http://127.0.0.1:8106/stockoverview",
+      "outputEvidence": {
+        "page_title": {
+          "same": 1,
+          "differed": 0
+        },
+        "header_user": {
+          "same": 1,
+          "differed": 0
+        },
+        "stock_overview_header": {
+          "same": 1,
+          "differed": 0
+        },
+        "stock_overview_summary": {
+          "same": 1,
+          "differed": 0
+        },
+        "nav_items": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        },
+        "url.p0": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "02-report",
+      "instruction": "Report the exact names of all products whose name starts with 'Seed:' as shown in Grocy. Do not modify any products.",
+      "skill": "s_e7b84f",
+      "params": {
+        "v1": "Seed:"
+      },
+      "outputs": [
+        "product_count_total",
+        "product_rows_detail",
+        "seed_oat_milk_product_name",
+        "seed_orange_juice_product_name",
+        "table_tbody_tr_td_nth_ch_3",
+        "products_starting_with_Seed_1",
+        "products_starting_with_Seed_2",
+        "products_starting_with_Seed_3"
+      ],
+      "recorded": {
+        "product_count_total": "Showing 1 to 3 of 3 entries",
+        "product_rows_detail": "Seed: Oat milk | Fridge | 0 | Piece | Piece | Beverages; Seed: Orange juice | Fridge | 0 | Piece | Piece | Beverages; Seed: Sparkling water | Fridge | 0 | Piece | Piece | Beverages",
+        "page_url_before_filters": "http://127.0.0.1:8106/products",
+        "seed_oat_milk_product_name": "Seed: Oat milk",
+        "seed_orange_juice_product_name": "Seed: Orange juice",
+        "table_tbody_tr_td_nth_ch_3": "Seed: Sparkling water",
+        "products_starting_with_Seed_1": "Seed: Oat milk",
+        "products_starting_with_Seed_2": "Seed: Orange juice",
+        "products_starting_with_Seed_3": "Seed: Sparkling water",
+        "url": "http://127.0.0.1:8106/products?include_disabled=true"
+      },
+      "route": "http://127.0.0.1:8106/products",
+      "outputEvidence": {
+        "product_count_total": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "product_rows_detail": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "page_url_before_filters": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "seed_oat_milk_product_name": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "seed_orange_juice_product_name": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "table_tbody_tr_td_nth_ch_3": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "products_starting_with_Seed_1": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "products_starting_with_Seed_2": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "products_starting_with_Seed_3": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "03-create",
+      "instruction": "Create and save a product named '{{runid}} Bench Product' with a rich-text description containing exactly one paragraph that includes the text '{{runid}}'. Verify the saved product name and description paragraph on the product page; do not add stock.",
+      "skill": "s_a93f60",
+      "params": {
+        "v2": "{{runid}} Bench Product",
+        "v1": "{{runid}}"
+      },
+      "outputs": [
+        "description_html",
+        "description_paragraph_count",
+        "new_product_form_url",
+        "product_id",
+        "product_name",
+        "products_list_row",
+        "saved_description_text",
+        "ref"
+      ],
+      "recorded": {
+        "default_location": "Fridge",
+        "description_html": "<p>hagc1-n1 benchmark rich text description paragraph.</p>",
+        "description_paragraph_count": "1",
+        "new_product_form_url": "http://127.0.0.1:8106/product/new",
+        "product_id": "88079",
+        "product_name": "hagc1-n1 Bench Product",
+        "products_list_row": "hagc1-n1 Bench Product | Fridge | 0 | Piece | Piece",
+        "quantity_unit": "Piece",
+        "saved_description_text": "hagc1-n1 benchmark rich text description paragraph.",
+        "stock_amount": "0",
+        "ref": "hagc1-n1",
+        "url": "http://127.0.0.1:8106/product/88079",
+        "url.p1": "88079"
+      },
+      "route": "http://127.0.0.1:8106/product/:id",
+      "outputEvidence": {
+        "default_location": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "description_html": {
+          "same": 0,
+          "differed": 1
+        },
+        "description_paragraph_count": {
+          "same": 1,
+          "differed": 0
+        },
+        "new_product_form_url": {
+          "same": 1,
+          "differed": 0
+        },
+        "product_id": {
+          "same": 0,
+          "differed": 1
+        },
+        "product_name": {
+          "same": 0,
+          "differed": 1
+        },
+        "products_list_row": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "quantity_unit": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "saved_description_text": {
+          "same": 0,
+          "differed": 1
+        },
+        "stock_amount": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        },
+        "url.p1": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "04-edit",
+      "instruction": "Edit '{{runid}} Bench Product' and set its default location to the existing location 'Pantry' and its product group to the existing group 'Snacks'. Save and verify both exact values on its edit page.",
+      "skill": "s_928aa4",
+      "params": {
+        "v1": "{{runid}} Bench Product",
+        "v3": "Pantry",
+        "v4": "Snacks",
+        "v2": "{{runid}}",
+        "v5": "{{03-create.url.p1}}"
+      },
+      "outputs": [
+        "default_location_id",
+        "default_location_set",
+        "item_edited",
+        "product_edit_page_url",
+        "product_group_id",
+        "product_group_set",
+        "product_name_after_reload",
+        "save_action_used",
+        "selected_product_group",
+        "selected_default_location",
+        "persisted_default_locati",
+        "persisted_product_group",
+        "ref"
+      ],
+      "recorded": {
+        "default_location_id": "3",
+        "default_location_set": "Pantry",
+        "item_edited": "hagc1-n1 Bench Product",
+        "persisted_after_reload": "confirmed — after reloading /product/88079 the location select reads Pantry and the group select reads Snacks",
+        "product_edit_page_url": "http://127.0.0.1:8106/product/88079",
+        "product_group_id": "2",
+        "product_group_set": "Snacks",
+        "product_name_after_reload": "hagc1-n1 Bench Product",
+        "save_action_used": "Save & continue",
+        "default_location_field": "3",
+        "product_group_field": "2",
+        "selected_product_group": "Snacks",
+        "selected_default_location": "Pantry",
+        "persisted_default_locati": "Pantry",
+        "persisted_product_group": "Snacks",
+        "ref": "hagc1-n1"
+      },
+      "route": "http://127.0.0.1:8106/product/:id",
+      "outputEvidence": {
+        "default_location_id": {
+          "same": 1,
+          "differed": 0
+        },
+        "default_location_set": {
+          "same": 1,
+          "differed": 0
+        },
+        "item_edited": {
+          "same": 0,
+          "differed": 1
+        },
+        "persisted_after_reload": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "product_edit_page_url": {
+          "same": 0,
+          "differed": 1
+        },
+        "product_group_id": {
+          "same": 1,
+          "differed": 0
+        },
+        "product_group_set": {
+          "same": 1,
+          "differed": 0
+        },
+        "product_name_after_reload": {
+          "same": 0,
+          "differed": 1
+        },
+        "save_action_used": {
+          "same": 1,
+          "differed": 0
+        },
+        "default_location_field": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "product_group_field": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "selected_product_group": {
+          "same": 1,
+          "differed": 0
+        },
+        "selected_default_location": {
+          "same": 1,
+          "differed": 0
+        },
+        "persisted_default_locati": {
+          "same": 1,
+          "differed": 0
+        },
+        "persisted_product_group": {
+          "same": 1,
+          "differed": 0
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "05-edit",
+      "instruction": "Edit '{{runid}} Bench Product' so its quantity unit for stock and its default quantity unit for purchase are both the existing unit 'Pack', and its minimum stock amount is 4. Save and verify all three persisted values on the edit page.",
+      "skill": "s_f1c2cf",
+      "params": {
+        "v1": "{{runid}} Bench Product",
+        "v3": "Pack",
+        "v2": "{{runid}}",
+        "v4": "{{03-create.url.p1}}"
+      },
+      "outputs": [
+        "item_edited",
+        "quantity_unit_stock_set",
+        "default_quantity_unit_purchase_set",
+        "minimum_stock_amount_set",
+        "selected_option_values",
+        "cascade_side_effect",
+        "quantity_unit_stock",
+        "default_quantity_unit_purchase",
+        "persisted_qu_stock",
+        "persisted_qu_purchase",
+        "persisted_qu_consume",
+        "ref"
+      ],
+      "recorded": {
+        "item_edited": "hagc1-n1 Bench Product",
+        "quantity_unit_stock_set": "Pack",
+        "default_quantity_unit_purchase_set": "Pack",
+        "minimum_stock_amount_set": "4",
+        "selected_option_values": "qu_id_stock=3 (Pack), qu_id_purchase=3 (Pack)",
+        "cascade_side_effect": "Grocy auto-followed the stock unit for the dependent selects, so quantity unit consume and quantity unit for prices also became Pack",
+        "verification_method": "Fresh load of http://127.0.0.1:8106/product/88079 (goto, not a cached DOM) — qu_id_stock selected option text = \"Pack\", qu_id_purchase selected option text = \"Pack\", min_stock_amount value = \"4\"",
+        "quantity_unit_stock": "Pack",
+        "default_quantity_unit_purchase": "Pack",
+        "minimum_stock_amount": "4",
+        "persisted_qu_stock": "Pack",
+        "persisted_qu_purchase": "Pack",
+        "persisted_min_stock_amou": "4",
+        "persisted_qu_consume": "Pack",
+        "ref": "hagc1-n1"
+      },
+      "route": "http://127.0.0.1:8106/product/:id",
+      "outputEvidence": {
+        "item_edited": {
+          "same": 0,
+          "differed": 1
+        },
+        "quantity_unit_stock_set": {
+          "same": 1,
+          "differed": 0
+        },
+        "default_quantity_unit_purchase_set": {
+          "same": 1,
+          "differed": 0
+        },
+        "minimum_stock_amount_set": {
+          "same": 1,
+          "differed": 0
+        },
+        "selected_option_values": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "cascade_side_effect": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "verification_method": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "quantity_unit_stock": {
+          "same": 1,
+          "differed": 0
+        },
+        "default_quantity_unit_purchase": {
+          "same": 1,
+          "differed": 0
+        },
+        "minimum_stock_amount": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "persisted_qu_stock": {
+          "same": 1,
+          "differed": 0
+        },
+        "persisted_qu_purchase": {
+          "same": 1,
+          "differed": 0
+        },
+        "persisted_min_stock_amou": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "persisted_qu_consume": {
+          "same": 1,
+          "differed": 0
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "06-edit",
+      "instruction": "Edit '{{runid}} Bench Product' to set its default due days to 30, save and verify it persisted; then add the barcode '{{runid}}-0001' to this already-saved product, save the barcode, and verify the exact barcode is attached to the product.",
+      "skill": "s_ee047a",
+      "params": {
+        "v1": "{{runid}} Bench Product",
+        "v3": "30",
+        "v4": "{{runid}}-0001",
+        "v2": "{{runid}}",
+        "v5": "{{03-create.url.p1}}"
+      },
+      "outputs": [
+        "item_edited",
+        "default_due_days_set",
+        "barcode_added",
+        "barcode_attached_to",
+        "barcodes_table_after_reload",
+        "barcode_persisted",
+        "due_days_field",
+        "persisted_default_due_da",
+        "barcode_value",
+        "persisted_default_due_days",
+        "ref"
+      ],
+      "recorded": {
+        "item_edited": "hagc1-n1 Bench Product",
+        "default_due_days_set": "30",
+        "default_due_days_persisted": "confirmed — after a fresh load of /product/88079 the \"Default due days\" input (#default_best_before_days) reads 30",
+        "barcode_added": "hagc1-n1-0001",
+        "barcode_attached_to": "product id 88079 (hagc1-n1 Bench Product), via Create Barcode dialog (Amount 1)",
+        "barcodes_table_after_reload": "Barcode | Store | Quantity unit | Amount — row: hagc1-n1-0001",
+        "barcodes_table_row_count": "1",
+        "barcode_persisted": "confirmed — after a full page reload the product's Barcodes table lists exactly one row, hagc1-n1-0001",
+        "due_days_field": "30",
+        "persisted_default_due_da": "30",
+        "barcode_value": "hagc1-n1-0001",
+        "persisted_default_due_days": "30",
+        "ref": "hagc1-n1"
+      },
+      "route": "http://127.0.0.1:8106/product/:id",
+      "outputEvidence": {
+        "item_edited": {
+          "same": 0,
+          "differed": 1
+        },
+        "default_due_days_set": {
+          "same": 1,
+          "differed": 0
+        },
+        "default_due_days_persisted": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "barcode_added": {
+          "same": 0,
+          "differed": 1
+        },
+        "barcode_attached_to": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "barcodes_table_after_reload": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "barcodes_table_row_count": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "barcode_persisted": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "due_days_field": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "persisted_default_due_da": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "barcode_value": {
+          "same": 0,
+          "differed": 1
+        },
+        "persisted_default_due_days": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "07-create",
+      "instruction": "Purchase exactly 3 Packs of '{{runid}} Bench Product' in one purchase, into the existing location 'Pantry', with due date 2026-12-31. Select the existing product by its name (do not create a product or link an unknown barcode), save the purchase once, then verify Grocy shows 3 in stock with the requested location and due date.",
+      "skill": "s_de5df7",
+      "params": {
+        "v1": "{{runid}} Bench Product",
+        "v3": "Pantry",
+        "v4": "2026-12-31",
+        "v2": "{{runid}}",
+        "v5": "{{03-create.url.p1}}",
+        "v6": "{{01-signin.url.p0}}"
+      },
+      "outputs": [
+        "product_selected_by_name",
+        "purchased_amount",
+        "purchase_location",
+        "purchase_due_date",
+        "stock_entry_count",
+        "purchase_amount_field",
+        "purchase_due_date_field",
+        "purchase_location_field",
+        "stock_overview_rows",
+        "ref",
+        "stock_overview_product_name",
+        "stock_overview_quantity",
+        "stock_overview_due_date",
+        "stock_entry_product_name",
+        "stock_entry_quantity",
+        "stock_entry_due_date",
+        "stock_entry_location",
+        "stock_entry_price_per_unit",
+        "stock_entry_purchase_date"
+      ],
+      "recorded": {
+        "product_selected_by_name": "hagc1-n1 Bench Product (picked from the autocomplete option list on the Purchase page — no product created, no barcode used)",
+        "purchased_amount": "3 Packs (quantity unit select showed Pack on the form)",
+        "purchase_location": "Pantry",
+        "purchase_due_date": "2026-12-31",
+        "purchase_form_values_before_save": "Amount 3, Quantity unit Pack, Due date 2026-12-31, Location Pantry",
+        "stock_entries_row": "hagc1-n1 Bench Product | 3 Packs | 2026-12-31 in 3 months | Pantry | (no store) | $0.00 per Pack | 2026-10-06 Today",
+        "stock_entry_count": "1 (a single stock entry row — one purchase only)",
+        "stock_overview_summary": "1 Product, $0.00 total value",
+        "purchase_amount_field": "3",
+        "purchase_due_date_field": "2026-12-31",
+        "purchase_location_field": "Pantry",
+        "stock_overview_rows": "1  All  1 \thagc1-n1 Bench Product\t3 Packs\t2026-12-31 in 3 months",
+        "ref": "hagc1-n1",
+        "stock_overview_product_name": "hagc1-n1 Bench Product",
+        "stock_overview_quantity": "3 Packs",
+        "stock_overview_due_date": "2026-12-31 in 3 months",
+        "stock_entry_product_name": "hagc1-n1 Bench Product",
+        "stock_entry_quantity": "3 Packs",
+        "stock_entry_due_date": "2026-12-31 in 3 months",
+        "stock_entry_location": "Pantry",
+        "stock_entry_price_per_unit": "$0.00 per Pack",
+        "stock_entry_purchase_date": "2026-10-06 Today",
+        "url": "http://127.0.0.1:8106/stockentries",
+        "url.p0": "stockentries"
+      },
+      "route": "http://127.0.0.1:8106/stockentries",
+      "outputEvidence": {
+        "product_selected_by_name": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "purchased_amount": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "purchase_location": {
+          "same": 1,
+          "differed": 0
+        },
+        "purchase_due_date": {
+          "same": 1,
+          "differed": 0
+        },
+        "purchase_form_values_before_save": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "stock_entries_row": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "stock_entry_count": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "stock_overview_summary": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "purchase_amount_field": {
+          "same": 1,
+          "differed": 0
+        },
+        "purchase_due_date_field": {
+          "same": 1,
+          "differed": 0
+        },
+        "purchase_location_field": {
+          "same": 1,
+          "differed": 0
+        },
+        "stock_overview_rows": {
+          "same": 0,
+          "differed": 1
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "stock_overview_product_name": {
+          "same": 0,
+          "differed": 1
+        },
+        "stock_overview_quantity": {
+          "same": 1,
+          "differed": 0
+        },
+        "stock_overview_due_date": {
+          "same": 1,
+          "differed": 0
+        },
+        "stock_entry_product_name": {
+          "same": 0,
+          "differed": 1
+        },
+        "stock_entry_quantity": {
+          "same": 1,
+          "differed": 0
+        },
+        "stock_entry_due_date": {
+          "same": 1,
+          "differed": 0
+        },
+        "stock_entry_location": {
+          "same": 1,
+          "differed": 0
+        },
+        "stock_entry_price_per_unit": {
+          "same": 1,
+          "differed": 0
+        },
+        "stock_entry_purchase_date": {
+          "same": 1,
+          "differed": 0
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        },
+        "url.p0": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "session": "hagc1-n1",
+    "created": "2026-10-06T11:28:58.143Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "01-signin",
+      "outputs": [
+        "nav_items"
+      ]
+    },
+    {
+      "stepId": "02-report",
+      "outputs": [
+        "page_url_before_filters"
+      ]
+    },
+    {
+      "stepId": "03-create",
+      "outputs": [
+        "default_location",
+        "quantity_unit",
+        "stock_amount"
+      ]
+    },
+    {
+      "stepId": "04-edit",
+      "outputs": [
+        "persisted_after_reload",
+        "default_location_field",
+        "product_group_field"
+      ]
+    },
+    {
+      "stepId": "05-edit",
+      "outputs": [
+        "verification_method",
+        "minimum_stock_amount",
+        "persisted_min_stock_amou"
+      ]
+    },
+    {
+      "stepId": "06-edit",
+      "outputs": [
+        "default_due_days_persisted",
+        "barcodes_table_row_count"
+      ]
+    },
+    {
+      "stepId": "07-create",
+      "outputs": [
+        "purchase_form_values_before_save",
+        "stock_entries_row",
+        "stock_overview_summary"
+      ]
+    }
+  ]
+}

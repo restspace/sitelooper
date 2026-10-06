@@ -1,0 +1,129 @@
+{
+ "id": "s_d872b0",
+ "origin": "http://127.0.0.1:8106",
+ "template": "Report the exact names of all products whose name starts with '{{v1}}' as shown in Grocy. Do not modify any products.",
+ "params": {
+  "v1": {
+   "example": "Seed:",
+   "usedIn": []
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8106/stockoverview"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e58"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "link",
+      "name": "Manage master data"
+     },
+     {
+      "kind": "css",
+      "selector": "#sidebarResponsive > ul:nth-of-type(1) > li:nth-of-type(16) > a"
+     },
+     {
+      "kind": "point",
+      "x": 125,
+      "y": 694,
+      "w": 250,
+      "h": 41,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8106/stockoverview",
+    "addedContains": [
+     "- link \"Products\"",
+     "- link \"Locations\"",
+     "- link \"Stores\"",
+     "- link \"Quantity units\"",
+     "- link \"Product groups\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_e7b84f",
+    "step": 1
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=link[name=\"Products\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "link",
+      "name": "Products"
+     },
+     {
+      "kind": "css",
+      "selector": "#sub-nav-manage-master-data > li:nth-of-type(1) > a"
+     },
+     {
+      "kind": "point",
+      "x": 125,
+      "y": 734,
+      "w": 250,
+      "h": 40,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8106/products",
+    "addedContains": [
+     "- heading \"Products\"",
+     "- link \"Add\"",
+     "- link \"Configure userfields\"",
+     "- link \"Presets for new products\"",
+     "- combobox \"All In stock products Out of stock products\": {{*}}"
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_e7b84f",
+    "step": 2
+   }
+  }
+ ],
+ "contract": 2,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-10-06T11:30:18.776Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_1e03d4",
+  "index": 0,
+  "of": 2
+ },
+ "provenance": {
+  "session": "hagc1-n2",
+  "instruction": "Report the exact names of all products whose name starts with 'Seed:' as shown in Grocy. Do not modify any products.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-10-06T11:30:18.776Z"
+ },
+ "revision": 1
+}
