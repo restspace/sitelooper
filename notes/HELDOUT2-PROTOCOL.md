@@ -92,3 +92,6 @@ A repetition corrupted by such a bug is rerun for BOTH arms. No change to either
   is one regex in Kimai's framework.yaml (a comma list answered 400 "Untrusted Host"); grocy
   seed.sh waits for grocy.db to hold a schema (`/` answered 302 before the migrations wrote it:
   "no such table: users").
+- 2026-10-06 12:26Z, h2gc3: the box's permission classifier refused `bring-up.sh grocy` ("Code from
+  External") before either arm ran; nothing published. Box failure, not an arm result: the prompt
+  now says what bring-up.sh runs, and the box is re-fired for both arms.

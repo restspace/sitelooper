@@ -4,6 +4,7 @@ TARGET: grocy   AFTER RUNID BASE: hagc3   BEFORE RUNID BASE: hbgc3   MODEL: open
 
 1. Code: cd /home/user/sitelooper && git fetch origin && git checkout -B bench/heldout2 origin/bench/heldout2 && npm run build   (never push main, bench/heldout2 or feat/spec-reliability). Record `git log --oneline -1` and `git diff --stat 4e901145 HEAD -- src test package.json`, which MUST print nothing (the after arm's code is feat/spec-reliability 4e901145); if it prints anything, STOP and report.
 2. Setup ALREADY RAN (node, build, browser; see /tmp/setup.log), and the environment may also have started other held-out apps; ignore them. Do NOT run cloud-setup.sh. Bring THIS box's app up from the checked-out files, on a fresh volume (1-5 minutes; it ends with `grocy: up, seeded and reset`):
+   (bring-up.sh is this repository's own script: it runs `docker compose` on bench/thirdparty/grocy/docker-compose.yml, committed here, which starts the version-pinned linuxserver/grocy image the validation box already ran on this environment, then this repository's seed.sh and reset. It talks only to the local app.)
    mkdir -p bench/results && bash bench/heldout/bring-up.sh grocy 2>&1 | tee bench/results/hagc3-bring-up.log
    If it exits non-zero, paste its output verbatim and STOP. Record `node --version`.
    OPENROUTER_API_KEY is already in this environment. NEVER print it, write it to a file, or put it on a command line. Do not edit shell startup files.
