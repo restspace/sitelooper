@@ -4,6 +4,7 @@ import path from 'node:path';
 import type { LocatorCandidate } from '../daemon/recorder.js';
 import { stepEffect, type PageEffect, type TargetContext } from '../execution/context.js';
 import { rootDir } from '../shared/paths.js';
+import type { StopGate } from './replay.js';
 
 /**
  * A stored, parameterised procedure: what one successful `do` instruction did,
@@ -608,6 +609,25 @@ export interface SkillStats {
    * `recordOutcome`.
    */
   harmlessStops?: number;
+  /**
+   * Consecutive replays that ended in a stop of ANY kind — a strike, a
+   * harmless stop, a recovered one — since the last full replay or the last
+   * relaxation (`relaxExpectation`). The compile reads it as "this procedure
+   * has not replayed clean since it last stopped" (spec/ir.ts `unproven-pin`):
+   * hsdx1's s_2731b5 and hsbs2's s_7db6d8 stopped on every replay, were
+   * forgiven as harmless every time, stayed provisional, and compiled into
+   * specs that threw at the same gate. Absent on stores banked before it and
+   * on a fresh recording: no evidence, never a refusal.
+   */
+  stopStreak?: number;
+  /**
+   * The 1-based step the latest stop was at, strike or not — `lastFailedAt`
+   * is the STRIKE streak's and a harmless stop leaves it alone. What
+   * `unproven-pin` names.
+   */
+  lastStopAt?: number;
+  /** Expectations a harmless stop proved wrong and `relaxExpectation` dropped. */
+  relaxations?: number;
   /**
    * The contract `successes` were counted under. Absent means 1. Read by
    * `isVerified`, which is what decides whether a validated status is
@@ -1292,6 +1312,10 @@ export class SkillStore {
       st.fallthroughs += outcome.fallthroughs ?? 0;
       const unobserved = outcome.unobserved ?? 0;
       if (unobserved > 0) st.unobserved = (st.unobserved ?? 0) + unobserved;
+      // A full replay ends the stop streak, observed or not; any stop extends
+      // it, strike or not (SkillStats.stopStreak) — a harmless stop is exactly
+      // the one the strike count forgives and the compile must still see.
+      st.stopStreak = outcome.ok ? 0 : (st.stopStreak ?? 0) + 1;
       if (outcome.ok && outcome.instructionSucceeded && unobserved === 0) {
         st.successes += 1;
         st.lastFailedAt = undefined;
@@ -1309,6 +1333,7 @@ export class SkillStore {
         st.partial += 1;
         const at = outcome.failedAt ?? 0;
         st.failedAtStep[String(at)] = (st.failedAtStep[String(at)] ?? 0) + 1;
+        st.lastStopAt = at;
         // Recorded whether or not this stop strikes: a demoted pin's
         // diagnostic has to be able to say how many of the demoting stops the
         // flow recovered from.
@@ -1327,6 +1352,81 @@ export class SkillStore {
           st.lastFailedAt = at;
         }
       }
+      return skill;
+    });
+  }
+
+  /**
+   * Drop the recorded expectation a HARMLESS stop proved wrong (the flow
+   * runner's harmlessStop: the pinned replay stopped at this gate, the
+   * instruction succeeded, and nothing the recovery did changed the page — so
+   * the step had done its work and only the check disagreed). Forgiving such a
+   * stop without correcting it is what let hsdx1's s_2731b5 stop at step 4 on
+   * every replay (a hide line naming a timestamp) and hsbs2's s_7db6d8 at step
+   * 5 (hide `textbox "Tag Name"`), while the compiled spec, which has no
+   * recovery to forgive anything, threw there.
+   *
+   * hide → the lines leave `expect.removedContains`; added → they leave
+   * `expect.addedContains`; url → `expect.urlPattern` is deleted. One
+   * transaction, re-read under the lock. Returns null and changes nothing when
+   * the evidence does not reach:
+   *  - the procedure or the step is an assertion — a check's miss is its
+   *    answer, never a gate to relax;
+   *  - the removal is `removalRequired` — a modal Save's only evidence that it
+   *    saved;
+   *  - a line or the pattern carries a slot marker (`{{v`/`{{d`) — a HARD
+   *    identity check, the guard against acting on the wrong record;
+   *  - the step carries a page effect (a popup, a tab): later steps were
+   *    recorded on the page it opens, so its stop is a strike, not harmless
+   *    (recordOutcome, fwsi9);
+   *  - a url stop at a step that mints: its url is where the record it made is
+   *    read from;
+   *  - the line or pattern is no longer there (a concurrent relaxation, a
+   *    re-record).
+   * On a change the weakening is said in `provenance.contractChanges`, the
+   * validation it carried is given up (`verifiedContract`, as the url
+   * generalisation does), the stop streak restarts and `relaxations` counts it.
+   */
+  relaxExpectation(id: string, gate: StopGate, now = new Date().toISOString()): Skill | null {
+    if (gate.skill !== id) return null;
+    const marked = (s: string) => /\{\{[vd]\d+\}\}/.test(s);
+    return this.update(id, (skill) => {
+      if (skill.assert) return null;
+      const step = skill.steps[gate.step - 1];
+      if (!step || step.tool === 'loop' || step.assert || !step.expect) return null;
+      if (step.expect.removalRequired || stepEffect(step)) return null;
+      const expect = step.expect;
+      const gave: string[] = [];
+      if (gate.kind === 'url') {
+        if (!gate.pattern || expect.urlPattern !== gate.pattern || marked(gate.pattern) || step.mints) return null;
+        delete expect.urlPattern;
+        gave.push(`step ${gate.step} no longer requires the url to match ${JSON.stringify(gate.pattern)}: a replay stopped there and its recovery, which changed nothing, proved the step had done its work`);
+      } else {
+        const wanted = gate.lines?.length ? gate.lines : gate.line ? [gate.line] : [];
+        if (!wanted.length || wanted.some(marked)) return null;
+        const field = gate.kind === 'hide' ? 'removedContains' : 'addedContains';
+        const stored = expect[field] ?? [];
+        const gone = wanted.filter((l) => stored.includes(l));
+        if (!gone.length) return null;
+        const kept = stored.filter((l) => !gone.includes(l));
+        if (kept.length) expect[field] = kept;
+        else delete expect[field];
+        for (const l of gone) {
+          gave.push(
+            gate.kind === 'hide'
+              ? `step ${gate.step} no longer requires its click to take ${JSON.stringify(l)} off the page: a replay stopped with it still showing and its recovery, which changed nothing, proved the step had done its work`
+              : `step ${gate.step} no longer requires ${JSON.stringify(l)} to appear: a replay stopped without it and its recovery, which changed nothing, proved the step had done its work`,
+          );
+        }
+      }
+      if (!Object.keys(expect).filter((k) => k !== 'lineDialect').length) delete step.expect;
+      skill.provenance = {
+        ...skill.provenance,
+        contractChanges: [...(skill.provenance.contractChanges ?? []), { at: now, by: 'harmless-stop relaxation', gave }],
+      };
+      delete skill.stats.verifiedContract;
+      skill.stats.stopStreak = 0;
+      skill.stats.relaxations = (skill.stats.relaxations ?? 0) + 1;
       return skill;
     });
   }

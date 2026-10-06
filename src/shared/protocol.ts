@@ -133,6 +133,12 @@ export interface FlowStepResult {
   /** Why the zero-model path did not run it (only meaningful when `recovered`). */
   fellBack?: string;
   /**
+   * The step's pinned replay stopped part-way and the model finished it. The
+   * step keeps `tier: 'A'` for compatibility; this says it was model-assisted
+   * (hsdx1-n2 05-set: "tier A", 17 turns, the compiled spec threw there).
+   */
+  pinStopped?: { skill: string; step: number; why: string };
+  /**
    * Why a step that reported success is only PARTIAL (status 'partial'): its
    * recovery's last gesture never went through, or its replay skipped the read
    * of an output it declares. See src/daemon/step-verdict.ts.

@@ -271,6 +271,14 @@ if (!fs.existsSync(specFile)) {
   process.exit(2);
 }
 
+// The artifact's findings (its `outputs` minus references), written by the
+// compiled runFlow itself (emit.ts publishOutputs). Every compiled row in
+// SWEEPS scored its report-only objectives n/a ("+2 n/a"): the verifiers read a
+// run's report from `finalText`, and this arm wrote none. A stale file from an
+// earlier run of the same tag must not stand in for this run's.
+const outputsFile = path.join(outDir, `${tag}-spec-outputs.json`);
+fs.rmSync(outputsFile, { force: true });
+
 console.log(`[spec-replay] running: ${testCmd.join(' ')}`);
 const run = spawnSync(testCmd[0], testCmd.slice(1), {
   encoding: 'utf8',
@@ -282,7 +290,7 @@ const run = spawnSync(testCmd[0], testCmd.slice(1), {
   // A flow's {{env:NAME}} credentials are read from process.env at run time and
   // refused up front when missing, so the target's defaults (the same ones the
   // sweep's replays get) are supplied here; values already in the env win.
-  env: { ...(APP_DEFAULTS[args.target] ?? {}), ...process.env, RUNID: process.env.RUNID ?? tag },
+  env: { ...(APP_DEFAULTS[args.target] ?? {}), ...process.env, RUNID: process.env.RUNID ?? tag, SITELOOPER_SPEC_OUTPUTS: outputsFile },
   shell: process.platform === 'win32',
 });
 const runOut = `${run.stdout || ''}${run.stderr || ''}`;
@@ -356,6 +364,20 @@ const stats = report?.stats ?? {
   skipped: tests.filter((t) => t.status === 'skipped').length,
 };
 
+// What the run found, in the shape every bench/verify-*.mjs already reads a
+// run's report from: `finalText` on a `<runid>-*-result.json`, here one
+// `<step>.<output>: <value>` line per finding (the flowrun fallback they use
+// for daemon replays joins the same values). Absent when the artifact wrote
+// no file (it died before runFlow's finally, or predates the file): the
+// objectives then stay UNVERIFIABLE, as before, rather than read as unreported.
+let outputs = null;
+try {
+  outputs = JSON.parse(fs.readFileSync(outputsFile, 'utf8'));
+} catch {
+  /* no outputs file */
+}
+const finalText = outputs ? Object.entries(outputs).map(([k, v]) => `${k}: ${v}`).join('\n') : undefined;
+
 const result = {
   arm: 'spec',
   runid: tag,
@@ -364,6 +386,7 @@ const result = {
   flowName: name,
   skillsDir,
   compiled: true,
+  ...(outputs ? { outputs, finalText } : {}),
   flowFile: path.relative(repoRoot, flowFile),
   specFile: path.relative(repoRoot, specFile),
   wallMs: Date.now() - started,

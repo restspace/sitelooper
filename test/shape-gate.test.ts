@@ -276,6 +276,7 @@ const ALLOWLIST: Record<string, { hits: string[]; answers: string }> = {
     answers: 'splits a stored url pattern at its scheme (syntax) to rewrite an app-minted path position; which position is minted is decided by recording evidence, never by its shape',
   },
   'src/execution/fingerprint.ts': { hits: ['[0-9a-f]{6'], answers: 'CLASS_HASH_HEX_RUN, page-side (decision 3C)' },
+  'src/spec/converge.ts': { hits: ['[0-9a-f]{6'], answers: 'the skill-id syntax s_<6 hex> in an artifact error site ("01-signin s_5fccd8/2: …")' },
   'src/execution/url.ts': {
     hits: ['[0-9a-f]{8', '[0-9A-Fa-f]{2'],
     answers:

@@ -272,17 +272,13 @@ compile time over the chain. Parity cases: `execution-parity.test.ts:1292`
 (origin guard, with its same-origin control) and `:1322` (the cursor on a
 unique body target, both runners stopping on the shared progress guard).
 
-What remains daemon-only, by design: `retired` — evidence-based reordering of a
-candidate later runs showed volatile. That evidence lives in the skill store;
-an artifact has none, so a compiled chain is ordered by class and recorded
-order alone (the observation's `retired` is simply omitted). Every guard still
-runs in both runners, so a candidate that fails one is refused by both. But two
-"working" candidates can be two different elements: where a retired candidate
-and a live one in the same class BOTH resolve uniquely and BOTH pass every
-guard, the daemon acts on the live (later-ordered) one and the artifact on the
-retired one — so, in plain words, omitting `retired` can make the artifact act
-on a different, retired-but-working element than the daemon. It is listed under
-"Retirement evidence" below.
+Retirement (`retired`, evidence-based reordering of a candidate later runs
+showed volatile) is now baked in at compile time (feat/spec-reliability, item
+2a): `observationSource` evaluates the daemon's own `retired()` over the
+store's `seen` counts and emits `retired: true`, so both runners order a chain
+identically on the same store. What stays daemon-only is LEARNING it: an
+artifact writes no evidence back, so a candidate that turns volatile after the
+compile is retired at the next compile.
 
 ### B8. The identity guard's SOURCE differs between the runners — CLOSED by shared `identityValues`
 
@@ -456,26 +452,19 @@ from replay's values and published as `''` by the artifact (consumers treat
 both as unpublished), and on a rejected creating click the artifact waits up
 to `URL_WAIT_MS` before concluding nothing was minted (gap 8).
 
-### Retirement evidence — daemon-only, by design
+### Retirement evidence — CLOSED: baked in at compile time
 
-The one input to the shared resolution policy the artifact cannot supply:
-`retired(candidate)` (`src/skills/repair.ts:531`), passed by `resolveChain`
-(`replay.ts:987`) from the store's `seen` counts and omitted by the emitter. It
-orders a demonstrated-volatile candidate LAST within its class; it never
-accepts or rejects one. The spec IR does carry `seen` on candidates saved after
-replays, so a compile-time snapshot is possible; it would be stale the moment
-the next replay ran, which is why it is not rendered. Listed here so the
-difference is not rediscovered as a gap.
-
-What the omission can change, stated plainly: when a retired candidate and a
-live one in the same class both resolve to exactly one element and both pass
-the identity, plausibility and origin guards, the two runners act on DIFFERENT
-elements — the daemon on the live candidate's, the artifact on the retired
-candidate's. A retired candidate is one that later runs showed to miss, not
-one shown to land on the wrong element, so the element it resolves to is
-usually the same one; but nothing guarantees that, and "orders two working
-candidates" must not be read as "acts on the same element". A candidate that
-fails a guard is refused by both runners whatever its order.
+`retired(candidate)` (`src/skills/repair.ts`) is the one input to the shared
+resolution policy that comes from the store's `seen` counts. Replay passes it
+from `resolveChain`; since feat/spec-reliability (item 2a) `observationSource`
+evaluates the same function over the same store at compile time and emits
+`retired: true`, so both runners order a chain identically. The old objection
+(a compile-time snapshot is stale after the next replay) holds for LEARNING,
+not for the order: a spec compiled after n3 orders as n3's store does, and a
+candidate that turns volatile later is retired at the next compile. Before,
+a retired candidate and a live one in the same class that both resolved
+uniquely and passed every guard could send the two runners to different elements
+(daemon: the live one's; artifact: the retired one's).
 
 ### Assertion detail text — runner-specific, by design
 
