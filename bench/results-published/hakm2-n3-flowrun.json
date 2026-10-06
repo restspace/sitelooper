@@ -1,0 +1,129 @@
+{
+  "flow": "hakm2",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_e6fafe; observed login_page=http://127.0.0.1:8105/en/login, page_heading=My times, page_reached=http://127.0.0.1:8105/en/timesheet/, page_message=No entries were found based on your selected filters., logged_in_user=admin.",
+      "values": {
+        "login_page": "http://127.0.0.1:8105/en/login",
+        "page_heading": "My times",
+        "page_reached": "http://127.0.0.1:8105/en/timesheet/",
+        "page_message": "No entries were found based on your selected filters.",
+        "logged_in_user": "admin"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "8/8",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-find",
+      "status": "success",
+      "summary": "Replayed stored procedure s_a48820; observed project_name_1=Seed: Annual audit, project_name_2=Seed: Office move, project_name_3=Seed: Website relaunch, total_projects_on_unfiltered_listing=3, search_term_used=Seed:, matching_projects_1=Seed: Annual audit, matching_projects_2=Seed: Office move, matching_projects_3=Seed: Website relaunch, listing_heading=Projects.",
+      "values": {
+        "project_name_1": "Seed: Annual audit",
+        "project_name_2": "Seed: Office move",
+        "project_name_3": "Seed: Website relaunch",
+        "total_projects_on_unfiltered_listing": "3",
+        "search_term_used": "Seed:",
+        "matching_projects_1": "Seed: Annual audit",
+        "matching_projects_2": "Seed: Office move",
+        "matching_projects_3": "Seed: Website relaunch",
+        "listing_heading": "Projects"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "21/21",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "No timesheet was created.",
+      "values": {
+        "project_id": "40007",
+        "project_name": "hakm2-n3 Bench Project",
+        "project_description": "Created for run hakm2-n3",
+        "project_details_url": "http://127.0.0.1:8105/en/admin/project/40007/details",
+        "project_customer": "Bench Customer",
+        "runid_in_description": "hakm2-n3"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "11/11",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "04-edit",
+      "status": "success",
+      "summary": "Replayed stored procedure s_ce45bf; observed ref=hakm2-n3, order_details_table=Customer\tBench Customer\t0\t\n\nOrder number\tPO-4471\nProject number\t0005, details_table_after_ente=Customer\tBench Customer\t0\t\n\nOrder number\tPO-4471\nOrder date\t11/15/2026\nProject number\t0005, project_name_on_details_page=hakm2-n3 Bench Project, project_description_on_details_page=Created for run hakm2-n3, details_page_url=http://127.0.0.1:8105/en/admin/project/40007/details, order_number=PO-4471, customer=Bench Customer, details_table_text_1=Customer\tBench Customer\t0, details_table_text_2=Project number\t0005.",
+      "values": {
+        "ref": "hakm2-n3",
+        "order_details_table": "Customer\tBench Customer\t0\t\n\nOrder number\tPO-4471\nProject number\t0005",
+        "details_table_after_ente": "Customer\tBench Customer\t0\t\n\nOrder number\tPO-4471\nOrder date\t11/15/2026\nProject number\t0005",
+        "project_name_on_details_page": "hakm2-n3 Bench Project",
+        "project_description_on_details_page": "Created for run hakm2-n3",
+        "details_page_url": "http://127.0.0.1:8105/en/admin/project/40007/details",
+        "order_number": "PO-4471",
+        "customer": "Bench Customer",
+        "details_table_text_1": "Customer\tBench Customer\t0",
+        "details_table_text_2": "Project number\t0005"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "25/25",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_ce45bf: step 10: read 'order_date' returned a value the skill itself set/selected ('11/15/2026') — confirms the control, not persistence; dropped from the report's confident values"
+      ],
+      "repinned": "s_ce45bf",
+      "repinParams": {
+        "v1": "{{03-create.project_name}}",
+        "v2": "{{runid}}",
+        "v3": "PO-4471"
+      },
+      "unreported": [
+        "order_number_field_on_reopen",
+        "project_name_field_on_reopen",
+        "details_page_url_read_from_page",
+        "order_date_saved",
+        "order_number_filled",
+        "order_date_filled",
+        "order_number_on_reopen",
+        "project_name_on_reopen",
+        "project_name",
+        "project_description",
+        "customer_row",
+        "order_number_row_label",
+        "order_number_row_value",
+        "customer_row_label",
+        "customer_row_value"
+      ]
+    }
+  ],
+  "passed": 4,
+  "total": 4,
+  "repinned": 1,
+  "drift": 0,
+  "wallMs": 41544,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "cachedTokens": 0
+  },
+  "usageByModel": {},
+  "servedByModel": {},
+  "recoveryModel": "openai/gpt-6-luna",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

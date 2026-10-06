@@ -1,0 +1,970 @@
+{
+ "id": "s_ce45bf",
+ "origin": "http://127.0.0.1:8105",
+ "template": "Edit the existing project '{{v1}}' and set its order number to '{{v3}}' and order date to 2026-11-15. Save and verify both values on the project details page. Do not change its name, customer, or description.",
+ "params": {
+  "v1": {
+   "example": "hakm2-n2 Bench Project",
+   "usedIn": [
+    19
+   ],
+   "known": true,
+   "binding": "output:i3:project_name"
+  },
+  "v2": {
+   "example": "hakm2-n2",
+   "usedIn": [
+    20
+   ],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v3": {
+   "example": "PO-4471",
+   "usedIn": [
+    3
+   ]
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8105/en/admin/project/:id/details"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e126"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "link",
+      "name": "Edit",
+      "nth": 1
+     },
+     {
+      "kind": "css",
+      "selector": "#project_details_box > div:nth-of-type(1) > div > a"
+     },
+     {
+      "kind": "point",
+      "x": 1231,
+      "y": 173,
+      "w": 40,
+      "h": 40,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8105/en/admin/project/:id/details",
+    "addedContains": [
+     "- dialog \"\"",
+     "- heading \"Edit\"",
+     "- button \"Close\"",
+     "- textbox \"Name\": {{*}}",
+     "- combobox \"Color\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e326"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Invoices",
+      "nth": 0
+     },
+     {
+      "kind": "css",
+      "selector": "#project_invoice_settings > div > div > div > div:nth-of-type(1) > button"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 615,
+      "w": 668,
+      "h": 52,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8105/en/admin/project/:id/details",
+    "addedContains": [
+     "- textbox \"Order number\"",
+     "- textbox \"Invoice text\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "#project_edit_form_orderNumber",
+    "value": "{{v3}}"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#project_edit_form_orderNumber"
+     },
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Order number"
+     },
+     {
+      "kind": "label",
+      "label": "Order number"
+     },
+     {
+      "kind": "point",
+      "x": 479,
+      "y": 706,
+      "w": 306,
+      "h": 40,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8105/en/admin/project/:id/details",
+    "addedContains": [
+     "- textbox \"Order number\": {{v3}}"
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "#project_edit_form_orderDate",
+    "value": "11/15/2026"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#project_edit_form_orderDate"
+     },
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Order date"
+     },
+     {
+      "kind": "label",
+      "label": "Order date"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "M/D/YYYY"
+     },
+     {
+      "kind": "point",
+      "x": 803,
+      "y": 706,
+      "w": 218.8,
+      "h": 40,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8105/en/admin/project/:id/details",
+    "addedContains": [
+     "- textbox \"M/D/YYYY\": {{*}}"
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e350"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Save"
+     },
+     {
+      "kind": "id",
+      "selector": "#form_modal_save"
+     },
+     {
+      "kind": "css",
+      "selector": "#form_modal_save"
+     },
+     {
+      "kind": "point",
+      "x": 858,
+      "y": 1064,
+      "w": 66.8,
+      "h": 40,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8105/en/admin/project/:id/details",
+    "addedContains": [
+     "- row \"Order number {{v3}}\"",
+     "- cell \"Order number\"",
+     "- cell \"{{v3}}\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "@e365",
+    "what": "text",
+    "label": "order_details_table"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#project_details_box > div:nth-of-type(2) > table"
+     },
+     {
+      "kind": "point",
+      "x": 760,
+      "y": 338,
+      "w": 1006,
+      "h": 135,
+      "role": null,
+      "tag": "table",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "order_details_table"
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e106"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "link",
+      "name": "Edit"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div > div:nth-of-type(2) > div > div:nth-of-type(1) > a:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 620,
+      "y": 100,
+      "w": 83.4,
+      "h": 40,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8105/en/admin/project/:id/details",
+    "addedContains": [
+     "- dialog \"\"",
+     "- heading \"Edit\"",
+     "- button \"Close\"",
+     "- textbox \"Name\": {{*}}",
+     "- combobox \"Color\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e557"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Invoices",
+      "nth": 0
+     },
+     {
+      "kind": "css",
+      "selector": "#project_invoice_settings > div > div > div > div:nth-of-type(1) > button"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 615,
+      "w": 668,
+      "h": 52,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8105/en/admin/project/:id/details",
+    "addedContains": [
+     "- textbox \"Order number\": {{*}}",
+     "- textbox \"Invoice text\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "#project_edit_form_orderDate",
+    "value": "11/15/2026"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#project_edit_form_orderDate"
+     },
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Order date"
+     },
+     {
+      "kind": "label",
+      "label": "Order date"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "M/D/YYYY"
+     },
+     {
+      "kind": "point",
+      "x": 803,
+      "y": 706,
+      "w": 218.8,
+      "h": 40,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8105/en/admin/project/:id/details",
+    "addedContains": [
+     "- textbox \"M/D/YYYY\": {{*}}"
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "label": "order_date_before_save",
+    "target": "#project_edit_form_orderDate",
+    "what": "value"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#project_edit_form_orderDate"
+     },
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Order date"
+     },
+     {
+      "kind": "label",
+      "label": "Order date"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "M/D/YYYY"
+     },
+     {
+      "kind": "point",
+      "x": 803,
+      "y": 706,
+      "w": 218.8,
+      "h": 40,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "order_date"
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e581"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Save"
+     },
+     {
+      "kind": "id",
+      "selector": "#form_modal_save"
+     },
+     {
+      "kind": "css",
+      "selector": "#form_modal_save"
+     },
+     {
+      "kind": "point",
+      "x": 858,
+      "y": 1064,
+      "w": 66.8,
+      "h": 40,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8105/en/admin/project/:id/details",
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "@e595",
+    "what": "text",
+    "label": "details_table_after_save"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#project_details_box > div:nth-of-type(2) > table"
+     },
+     {
+      "kind": "point",
+      "x": 760,
+      "y": 338,
+      "w": 1006,
+      "h": 135,
+      "role": null,
+      "tag": "table",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "order_details_table"
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e590"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#project_details_box > div:nth-of-type(1) > div > a"
+     },
+     {
+      "kind": "point",
+      "x": 1231,
+      "y": 173,
+      "w": 40,
+      "h": 40,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8105/en/admin/project/:id/details",
+    "addedContains": [
+     "- dialog \"\"",
+     "- heading \"Edit\"",
+     "- button \"Close\"",
+     "- textbox \"Name\": {{*}}",
+     "- combobox \"Color\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e787"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Invoices",
+      "nth": 0
+     },
+     {
+      "kind": "css",
+      "selector": "#project_invoice_settings > div > div > div > div:nth-of-type(1) > button"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 615,
+      "w": 668,
+      "h": 52,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8105/en/admin/project/:id/details",
+    "addedContains": [
+     "- textbox \"Order number\": {{*}}",
+     "- textbox \"Invoice text\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "#project_edit_form_orderDate"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#project_edit_form_orderDate"
+     },
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Order date"
+     },
+     {
+      "kind": "label",
+      "label": "Order date"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "M/D/YYYY"
+     },
+     {
+      "kind": "point",
+      "x": 803,
+      "y": 706,
+      "w": 218.8,
+      "h": 40,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8105/en/admin/project/:id/details",
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "type",
+   "args": {
+    "target": "#project_edit_form_orderDate",
+    "text": "11/15/2026",
+    "delay_ms": 60
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#project_edit_form_orderDate"
+     },
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Order date"
+     },
+     {
+      "kind": "label",
+      "label": "Order date"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "M/D/YYYY"
+     },
+     {
+      "kind": "point",
+      "x": 803,
+      "y": 706,
+      "w": 218.8,
+      "h": 40,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8105/en/admin/project/:id/details",
+    "addedContains": [
+     "- textbox \"M/D/YYYY\": {{*}}"
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "press",
+   "args": {
+    "target": "#project_edit_form_orderDate",
+    "key": "Enter"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#project_edit_form_orderDate"
+     },
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Order date"
+     },
+     {
+      "kind": "label",
+      "label": "Order date"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "M/D/YYYY"
+     },
+     {
+      "kind": "point",
+      "x": 803,
+      "y": 706,
+      "w": 218.8,
+      "h": 40,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8105/en/admin/project/:id/details",
+    "addedContains": [
+     "- row \"Order date {{*}}\"",
+     "- cell \"Order date\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "@e825",
+    "what": "text",
+    "label": "details_table_after_enter_save"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#project_details_box > div:nth-of-type(2) > table"
+     },
+     {
+      "kind": "point",
+      "x": 760,
+      "y": 360,
+      "w": 1006,
+      "h": 180,
+      "role": null,
+      "tag": "table",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "details_table_after_ente"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "label": "project_name_on_details_page",
+    "target": "@e816",
+    "what": "text",
+    "scopedBy": "v1"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "heading",
+      "name": "{{v1}}"
+     },
+     {
+      "kind": "css",
+      "selector": "#project_details_box > div:nth-of-type(1) > h3"
+     },
+     {
+      "kind": "point",
+      "x": 381,
+      "y": 173,
+      "w": 208.3,
+      "h": 24,
+      "role": "heading",
+      "tag": "h3",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "project_name_on_details_page"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "label": "project_description_on_details_page",
+    "target": "@e824",
+    "what": "text",
+    "scopedBy": "v2"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "text",
+      "text": "Created for run {{v2}}"
+     },
+     {
+      "kind": "css",
+      "selector": "#project_details_box > div:nth-of-type(2) > div > p"
+     },
+     {
+      "kind": "point",
+      "x": 760,
+      "y": 228,
+      "w": 974,
+      "h": 20,
+      "role": null,
+      "tag": "p",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "project_description_on_details_page"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "what": "url",
+    "label": "details_page_url"
+   },
+   "locators": {},
+   "label": "details_page_url"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#project_details_box > div:nth-of-type(2) > table > tbody > tr:nth-of-type(2) > td"
+     },
+     {
+      "kind": "point",
+      "x": 911,
+      "y": 337,
+      "w": 704.2,
+      "h": 45,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "order_number"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > table > tbody > tr:nth-of-type(1) > td:nth-of-type(1) > span"
+     },
+     {
+      "kind": "point",
+      "x": 635,
+      "y": 292,
+      "w": 128.3,
+      "h": 17,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "customer"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#project_details_box > div:nth-of-type(2) > table > tbody > tr:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 760,
+      "y": 292,
+      "w": 1006,
+      "h": 44.5,
+      "role": null,
+      "tag": "tr",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "details_table_text_1"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#project_details_box > div:nth-of-type(2) > table > tbody > tr:nth-of-type(4)"
+     },
+     {
+      "kind": "point",
+      "x": 760,
+      "y": 427,
+      "w": 1006,
+      "h": 45,
+      "role": null,
+      "tag": "tr",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "details_table_text_2"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "Edited Kimai project '{{v1}}' via its Edit form on the details page. Order number was set to {{v3}} and Order date to 11/15/2026 in the dialog's collapsed \"Invoices\" section. The project details table now shows \"Order number {{v3}}\" and \"Order date 11/15/2026\". Name ('{{v1}}'), customer ('Bench Customer') and description ('Created for run {{v2}}') are unchanged, and no timesheet was created.",
+  "values": {
+   "order_number": "{{v3}}",
+   "order_date": "11/15/2026",
+   "project_name_on_details_page": "{{v1}}",
+   "project_description_on_details_page": "Created for run {{v2}}",
+   "customer": "Bench Customer",
+   "details_page_url": "http://127.0.0.1:8105/en/admin/project/40006/details",
+   "project_id": "40006",
+   "order_details_table": "Customer\tBench Customer\t0\t\n\nOrder number\t{{v3}}\nProject number\t0005",
+   "order_date_before_save": "11/15/2026",
+   "details_table_after_save": "Customer\tBench Customer\t0\t\n\nOrder number\t{{v3}}\nProject number\t0005",
+   "details_table_after_ente": "Customer\tBench Customer\t0\t\n\nOrder number\t{{v3}}\nOrder date\t11/15/2026\nProject number\t0005",
+   "ref": "{{v2}}",
+   "details_table_text_1": "Customer Bench Customer 0",
+   "details_table_text_2": "Project number 0005"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 2,
+  "successes": 2,
+  "partial": 0,
+  "created": "2026-10-06T12:59:09.133Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2,
+  "lastUsed": "2026-10-06T12:59:53.431Z",
+  "stopStreak": 0
+ },
+ "status": "validated",
+ "variantOf": "s_2577e3",
+ "provenance": {
+  "session": "hakm2-n2",
+  "instruction": "Edit the existing project 'hakm2-n2 Bench Project' and set its order number to 'PO-4471' and order date to 2026-11-15. Save and verify both values on the project details page. Do not change its name, customer, or description.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-10-06T12:59:09.133Z"
+ },
+ "revision": 2
+}

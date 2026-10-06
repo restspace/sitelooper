@@ -1,0 +1,155 @@
+{
+  "flow": "hakm2",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_e6fafe; observed login_page=http://127.0.0.1:8105/en/login, page_heading=My times, page_reached=http://127.0.0.1:8105/en/timesheet/, page_message=No entries were found based on your selected filters., logged_in_user=admin.",
+      "values": {
+        "login_page": "http://127.0.0.1:8105/en/login",
+        "page_heading": "My times",
+        "page_reached": "http://127.0.0.1:8105/en/timesheet/",
+        "page_message": "No entries were found based on your selected filters.",
+        "logged_in_user": "admin"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "8/8",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-find",
+      "status": "success",
+      "summary": "Replayed stored procedure s_a48820; observed project_name_1=Seed: Annual audit, project_name_2=Seed: Office move, project_name_3=Seed: Website relaunch, total_projects_on_unfiltered_listing=3, search_term_used=Seed:, matching_projects_1=Seed: Annual audit, matching_projects_2=Seed: Office move, matching_projects_3=Seed: Website relaunch, listing_heading=Projects.",
+      "values": {
+        "project_name_1": "Seed: Annual audit",
+        "project_name_2": "Seed: Office move",
+        "project_name_3": "Seed: Website relaunch",
+        "total_projects_on_unfiltered_listing": "3",
+        "search_term_used": "Seed:",
+        "matching_projects_1": "Seed: Annual audit",
+        "matching_projects_2": "Seed: Office move",
+        "matching_projects_3": "Seed: Website relaunch",
+        "listing_heading": "Projects"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "21/21",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "No timesheet was created.",
+      "values": {
+        "project_id": "40006",
+        "project_name": "hakm2-n2 Bench Project",
+        "project_description": "Created for run hakm2-n2",
+        "project_details_url": "http://127.0.0.1:8105/en/admin/project/40006/details",
+        "project_customer": "Bench Customer",
+        "runid_in_description": "hakm2-n2"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "11/11",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "04-edit",
+      "status": "success",
+      "summary": "Edited Kimai project 'hakm2-n2 Bench Project' via its Edit form on the details page. Order number was set to PO-4471 and Order date to 11/15/2026 in the dialog's collapsed \"Invoices\" section. The project details table now shows \"Order number PO-4471\" and \"Order date 11/15/2026\". Name ('hakm2-n2 Bench Project'), customer ('Bench Customer') and description ('Created for run hakm2-n2') are unchanged, and no timesheet was created.",
+      "values": {
+        "order_number": "PO-4471",
+        "order_date": "11/15/2026",
+        "project_name_on_details_page": "hakm2-n2 Bench Project",
+        "project_description_on_details_page": "Created for run hakm2-n2",
+        "customer": "Bench Customer",
+        "details_page_url": "http://127.0.0.1:8105/en/admin/project/40006/details",
+        "project_id": "40006",
+        "order_details_table": "Customer\tBench Customer\t0\t\n\nOrder number\tPO-4471\nProject number\t0005",
+        "order_date_before_save": "11/15/2026",
+        "details_table_after_save": "Customer\tBench Customer\t0\t\n\nOrder number\tPO-4471\nProject number\t0005",
+        "details_table_after_ente": "Customer\tBench Customer\t0\t\n\nOrder number\tPO-4471\nOrder date\t11/15/2026\nProject number\t0005",
+        "ref": "hakm2-n2",
+        "details_table_text_1": "Customer Bench Customer 0",
+        "details_table_text_2": "Project number 0005"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_2577e3 stopped at step 1 — after step 1 the page did not show \"- textbox \\\"Name\\\": hakm2-n2 Bench Project\" as it did when recorded — the step ran but probably acted on the wrong element",
+      "pinStopped": {
+        "skill": "s_2577e3",
+        "step": 1,
+        "why": "after step 1 the page did not show \"- textbox \\\"Name\\\": hakm2-n2 Bench Project\" as it did when recorded — the step ran but probably acted on the wrong element"
+      },
+      "replayed": "0/28",
+      "repaired": false,
+      "turns": 26,
+      "unreported": [
+        "order_number_field_on_reopen",
+        "project_name_field_on_reopen",
+        "details_page_url_read_from_page",
+        "order_date_saved",
+        "order_number_filled",
+        "order_date_filled",
+        "order_number_on_reopen",
+        "project_name_on_reopen",
+        "project_name",
+        "project_description",
+        "customer_row",
+        "order_number_row_label",
+        "order_number_row_value",
+        "customer_row_label",
+        "customer_row_value"
+      ]
+    }
+  ],
+  "passed": 4,
+  "total": 4,
+  "repinned": 0,
+  "drift": 1,
+  "driftTickets": [
+    {
+      "flow": "hakm2",
+      "step": "04-edit",
+      "skill": "s_2577e3",
+      "similarity": 1,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_2577e3 stopped at step 1 — after step 1 the page did not show \"- textbox \\\"Name\\\": hakm2-n2 Bench Project\" as it did when recorded — the step ran but probably acted on the wrong element",
+      "reason": "after step 1 the page did not show \"- textbox \\\"Name\\\": hakm2-n2 Bench Project\" as it did when recorded — the step ran but probably acted on the wrong element",
+      "pageUrlPattern": "http://127.0.0.1:8105/en/admin/project/:id/details",
+      "pageUrl": "http://127.0.0.1:8105/en/admin/project/40006/details"
+    }
+  ],
+  "wallMs": 128865,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 399417,
+    "completionTokens": 8087,
+    "cachedTokens": 362880
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 399417,
+      "completionTokens": 8087,
+      "cachedTokens": 362880
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "openai/gpt-6-luna",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

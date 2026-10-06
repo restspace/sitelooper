@@ -1,0 +1,456 @@
+{
+  "name": "hakm2-cv",
+  "origin": "http://127.0.0.1:8105",
+  "startUrl": "http://127.0.0.1:8105/en/login",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-signin",
+      "instruction": "Sign in to Kimai at http://127.0.0.1:8105/en/login with username admin@example.com and password exactly {{env:APP_PASSWORD}}. Verify that login succeeds and report the page reached.",
+      "skill": "s_54fb74",
+      "params": {
+        "v1": "http://127.0.0.1:8105/en/login",
+        "v2": "admin@example.com",
+        "v3": "{{env:APP_PASSWORD}}"
+      },
+      "outputs": [
+        "login_page",
+        "page_reached",
+        "page_heading",
+        "logged_in_user",
+        "page_message"
+      ],
+      "recorded": {
+        "login_page": "http://127.0.0.1:8105/en/login",
+        "page_reached": "http://127.0.0.1:8105/en/timesheet/",
+        "page_heading": "My times",
+        "logged_in_user": "admin",
+        "app_version_shown": "Kimai 2.68.0",
+        "page_message": "No entries were found based on your selected filters.",
+        "url": "http://127.0.0.1:8105/en/timesheet/"
+      },
+      "route": "http://127.0.0.1:8105/en/timesheet/",
+      "outputEvidence": {
+        "login_page": {
+          "same": 2,
+          "differed": 0
+        },
+        "page_reached": {
+          "same": 2,
+          "differed": 0
+        },
+        "page_heading": {
+          "same": 2,
+          "differed": 0
+        },
+        "logged_in_user": {
+          "same": 2,
+          "differed": 0
+        },
+        "app_version_shown": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "page_message": {
+          "same": 2,
+          "differed": 0
+        },
+        "url": {
+          "same": 2,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "02-find",
+      "instruction": "Find and report the exact names of all existing projects whose name starts with 'Seed:' in Kimai. Do not edit anything. Verify from the projects listing/search results.",
+      "skill": "s_ecc8aa",
+      "params": {
+        "v1": "Seed:"
+      },
+      "outputs": [
+        "total_projects_on_unfiltered_listing",
+        "search_term_used",
+        "listing_heading",
+        "project_name_1",
+        "project_name_2",
+        "project_name_3",
+        "matching_projects_1",
+        "matching_projects_2",
+        "matching_projects_3"
+      ],
+      "recorded": {
+        "projects_listing_url": "http://127.0.0.1:8105/en/admin/project/",
+        "total_projects_on_unfiltered_listing": "3",
+        "search_term_used": "Seed:",
+        "search_result_count": "3",
+        "matching_projects_count": "3",
+        "listing_heading": "Projects",
+        "project_count": "3",
+        "project_name_1": "Seed: Annual audit",
+        "project_name_2": "Seed: Office move",
+        "project_name_3": "Seed: Website relaunch",
+        "matching_projects_1": "Seed: Annual audit",
+        "matching_projects_2": "Seed: Office move",
+        "matching_projects_3": "Seed: Website relaunch",
+        "url": "http://127.0.0.1:8105/en/admin/project/?visibility=1&size=50&page=1&orderBy=name&order=ASC&searchTerm=Seed%3A&_token=c1e4cb.pYVCzz1gbXGg0QtZC9oMjIqqG3Ng-TQsY4olaH7tn-U.3-0Nq1AyKCOUh0gVTq5Z7dn1dQZUlwJzMOtgPh-ox4zh8yuLRxMYGcbmeA&performSearch=performSearch"
+      },
+      "route": "http://127.0.0.1:8105/en/admin/project/",
+      "outputEvidence": {
+        "projects_listing_url": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "total_projects_on_unfiltered_listing": {
+          "same": 2,
+          "differed": 0
+        },
+        "search_term_used": {
+          "same": 2,
+          "differed": 0
+        },
+        "search_result_count": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "matching_projects_count": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "listing_heading": {
+          "same": 2,
+          "differed": 0
+        },
+        "project_count": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "project_name_1": {
+          "same": 2,
+          "differed": 0
+        },
+        "project_name_2": {
+          "same": 2,
+          "differed": 0
+        },
+        "project_name_3": {
+          "same": 2,
+          "differed": 0
+        },
+        "matching_projects_1": {
+          "same": 2,
+          "differed": 0
+        },
+        "matching_projects_2": {
+          "same": 2,
+          "differed": 0
+        },
+        "matching_projects_3": {
+          "same": 2,
+          "differed": 0
+        },
+        "url": {
+          "same": 0,
+          "differed": 2
+        }
+      }
+    },
+    {
+      "id": "03-create",
+      "instruction": "Create exactly one new Kimai project named '{{runid}} Bench Project' with a description that includes the exact runid '{{runid}}'. Save it, then verify the saved project's displayed name and description and report its details URL/ID if available. Do not create a timesheet yet.",
+      "skill": "s_0b18b9",
+      "params": {
+        "v2": "{{runid}} Bench Project",
+        "v1": "{{runid}}"
+      },
+      "outputs": [
+        "project_id",
+        "project_name",
+        "project_description",
+        "project_customer",
+        "project_details_url",
+        "runid_in_description"
+      ],
+      "recorded": {
+        "project_id": "40005",
+        "project_name": "hakm2-n1 Bench Project",
+        "project_description": "Created for run hakm2-n1",
+        "project_customer": "Bench Customer",
+        "project_details_url": "http://127.0.0.1:8105/en/admin/project/40005/details",
+        "runid_in_description": "hakm2-n1",
+        "url": "http://127.0.0.1:8105/en/admin/project/40005/details",
+        "url.p3": "40005"
+      },
+      "route": "http://127.0.0.1:8105/en/admin/project/:id/details",
+      "outputEvidence": {
+        "project_id": {
+          "same": 0,
+          "differed": 2
+        },
+        "project_name": {
+          "same": 0,
+          "differed": 2
+        },
+        "project_description": {
+          "same": 0,
+          "differed": 2
+        },
+        "project_customer": {
+          "same": 2,
+          "differed": 0
+        },
+        "project_details_url": {
+          "same": 0,
+          "differed": 2
+        },
+        "runid_in_description": {
+          "same": 0,
+          "differed": 2
+        },
+        "url": {
+          "same": 0,
+          "differed": 2
+        },
+        "url.p3": {
+          "same": 0,
+          "differed": 2
+        }
+      }
+    },
+    {
+      "id": "04-edit",
+      "instruction": "Edit the existing project '{{runid}} Bench Project' and set its order number to 'PO-4471' and order date to 2026-11-15. Save and verify both values on the project details page. Do not change its name, customer, or description.",
+      "skill": "s_ce45bf",
+      "params": {
+        "v1": "{{03-create.project_name}}",
+        "v2": "{{runid}}",
+        "v3": "PO-4471"
+      },
+      "outputs": [
+        "project_name_on_details_page",
+        "project_description_on_details_page",
+        "order_number_field_on_reopen",
+        "project_name_field_on_reopen",
+        "details_page_url_read_from_page",
+        "project_id_derived_from_url",
+        "customer",
+        "order_date_saved",
+        "order_number_filled",
+        "order_date_filled",
+        "order_number_on_reopen",
+        "project_name_on_reopen",
+        "project_name",
+        "project_description",
+        "customer_row",
+        "ref",
+        "order_number_row_label",
+        "order_number_row_value",
+        "customer_row_label",
+        "customer_row_value"
+      ],
+      "recorded": {
+        "project_name_on_details_page": "hakm2-n1 Bench Project",
+        "project_description_on_details_page": "Created for run hakm2-n1",
+        "order_date_row_text": "Order date | 11/15/2026",
+        "order_number_field_on_reopen": "PO-4471",
+        "project_name_field_on_reopen": "hakm2-n1 Bench Project",
+        "details_page_url_read_from_page": "http://127.0.0.1:8105/en/admin/project/40005/details",
+        "project_id_derived_from_url": "40005 (my own reading of the id segment in the details page URL; the page itself does not print a numeric ID)",
+        "project_id": "40005",
+        "customer": "Bench Customer",
+        "order_date_saved": "11/15/2026",
+        "order_date_on_details_page": "11/15/2026",
+        "order_number_filled": "PO-4471",
+        "order_date_filled": "2026-11-15",
+        "order_date_entered": "11/15/2026",
+        "order_number_on_reopen": "PO-4471",
+        "project_name_on_reopen": "hakm2-n1 Bench Project",
+        "order_date_after_typing": "11/15/2026",
+        "project_name": "hakm2-n1 Bench Project",
+        "project_description": "Created for run hakm2-n1",
+        "details_url": "http://127.0.0.1:8105/en/admin/project/40005/details",
+        "customer_row": "Customer\tBench Customer\t0",
+        "ref": "hakm2-n1",
+        "order_number_row_label": "Order number",
+        "order_number_row_value": "PO-4471",
+        "customer_row_label": "Customer",
+        "customer_row_value": "Bench Customer"
+      },
+      "route": "http://127.0.0.1:8105/en/admin/project/:id/details",
+      "outputEvidence": {
+        "project_name_on_details_page": {
+          "same": 0,
+          "differed": 2
+        },
+        "project_description_on_details_page": {
+          "same": 0,
+          "differed": 2
+        },
+        "order_date_row_text": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "order_number_field_on_reopen": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "project_name_field_on_reopen": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "details_page_url_read_from_page": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "project_id_derived_from_url": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "project_id": {
+          "same": 0,
+          "differed": 1,
+          "absent": 1
+        },
+        "customer": {
+          "same": 2,
+          "differed": 0
+        },
+        "order_date_saved": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "order_date_on_details_page": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "order_number_filled": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "order_date_filled": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "order_date_entered": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "order_number_on_reopen": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "project_name_on_reopen": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "order_date_after_typing": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "project_name": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "project_description": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "details_url": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "customer_row": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "ref": {
+          "same": 0,
+          "differed": 2
+        },
+        "order_number_row_label": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "order_number_row_value": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "customer_row_label": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "customer_row_value": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "session": "hakm2-n1",
+    "created": "2026-10-06T12:56:57.440Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "01-signin",
+      "outputs": [
+        "app_version_shown"
+      ]
+    },
+    {
+      "stepId": "02-find",
+      "outputs": [
+        "projects_listing_url",
+        "search_result_count",
+        "matching_projects_count",
+        "project_count"
+      ]
+    },
+    {
+      "stepId": "04-edit",
+      "outputs": [
+        "order_date_row_text",
+        "project_id",
+        "order_date_on_details_page",
+        "order_date_entered",
+        "order_date_after_typing",
+        "details_url"
+      ]
+    }
+  ]
+}
