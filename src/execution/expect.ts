@@ -359,15 +359,6 @@ export interface ChangeVerdict {
    * nothing, however the live page looks. Absent when the diff was not captured.
    */
   inDiff?: string[];
-  /**
-   * The plain group was found only through generaliseLine: `from`, a recorded
-   * line (as stored), was missing, and this run's diff added one line that
-   * differed from it only in number-bearing tokens; `to` is that line with
-   * those tokens as the wildcard. The step passed with a warning. The daemon
-   * stages it and keeps it once the replay gets past the step (tools.ts, the
-   * same rule as a url generalisation); the artifact only warns.
-   */
-  generalised?: { from: string; to: string };
 }
 
 /**
@@ -562,19 +553,6 @@ async function changesVerdict(
     // before judging (a change can land outside the diff window).
     const seen = await look(plain);
     if (!seen.shown) {
-      // CROSS-RUN CALIBRATION (survey T1). A recorded line that differs from
-      // one this step ADDED only in number-bearing tokens — a relative time,
-      // a counter in a name, "#4", a minted "S00022" in a heading — is the
-      // recording's value frozen into the expectation, not a missing effect.
-      // Matched with a warning and handed back for the daemon to keep; only a
-      // slot-free plain line, only against the diff (generaliseLine says why).
-      const general = added !== null ? generalisePlain(recorded, params, ctx, added) : null;
-      if (general) {
-        warnings.push(
-          `step ${tag}: recorded page change ${JSON.stringify(general.from)} was not shown, but this step added ${JSON.stringify(general.seen)}, which differs from it only in numbers — matched as ${JSON.stringify(general.to)}`,
-        );
-        return { warnings, generalised: { from: general.from, to: general.to } };
-      }
       // The recorded effect was a dialog opening. A dialog is conditional
       // UI: fwgr24's create step recorded "Exit edit" → "Discard changes to
       // dashboard?" because the RECORDING had unsaved edits at that moment;
@@ -618,123 +596,6 @@ async function changesVerdict(
   }
   if (added === null) return { warnings, unobserved: true };
   return confirmed ? { warnings, confirmed: true } : { warnings };
-}
-
-/** Any `{{…}}` marker but the wildcard: a slot, a derived value, a secret. A line carrying one is never generalised. */
-const MARKER_ANY = /\{\{(?!\*\}\})/;
-
-/**
- * The plain group's first recorded line that generaliseLine can match against
- * what this step added, with the line it matched. Only lines carrying no
- * marker at all: a `{{vN}}` line is the run's own identity (HARD), and a
- * `{{dN}}` one already names the minted value it expects.
- */
-function generalisePlain(
-  recorded: readonly string[],
-  params: Record<string, string>,
-  ctx: ChangeContext,
-  added: readonly string[],
-): { from: string; to: string; seen: string } | null {
-  // Every value this run put or carries: a differing token that is, or is
-  // inside, one of them may be the identity this step was recorded against.
-  const values = [...Object.values(params), ctx.value ?? '']
-    .filter((v): v is string => typeof v === 'string')
-    .map((v) => v.replace(/\s+/g, ' ').trim())
-    .filter(Boolean);
-  for (const from of recorded) {
-    if (TRANSIENT_LINE.test(from) || MARKER_ANY.test(from)) continue;
-    const [want] = liveLines([from], params, ctx.counters);
-    if (!want || identifiesNothing(want) || unfilledSlot(want)) continue;
-    const hit = generaliseLine(want, added, values);
-    if (hit) return { from, ...hit };
-  }
-  return null;
-}
-
-/** One token of a page line: the wildcard, a word (letters, digits, `_`), a whitespace run, or any other single character. */
-const LINE_TOKEN = /\{\{\*\}\}|[\p{L}\p{N}_]+|\s+|[^\p{L}\p{N}_\s]/gu;
-
-/** `- role "name" [states]: value`, with the spans of the name (3) and value (6) — LINE_PARTS, with indices. */
-const LINE_SHAPE = /^(-?\s*[A-Za-z][\w-]*)(?:(\s+")((?:[^"\\]|\\.)*)("?))?((?:\s+\[[^\]]*\])*)(?::\s*(.*))?$/d;
-
-/** A word with no digit in it: what must survive unchanged for two lines to be the same line. */
-const ALPHA_WORD = /^\p{L}{2,}$/u;
-
-/**
- * Text generalisation for an expectation line — mechanism 2 (url segments
- * that demonstrated volatility, gates.ts) applied to page lines. The survey's
- * T1 (frozen run-minted values, ~20 sweeps, recurring on every new app:
- * fwgt27's "#4" in a heading name, fwgh3's relative time, fwod's minted
- * quotation number in a heading, a counter in "Inbox 3") is a line whose
- * recording froze a number the next run renders differently; each was patched
- * by a shape rule of its own. This is the evidence-based form: the line the
- * step DID add, compared token by token with the one it was recorded adding.
- *
- * `want` (the line as searched: filled, masked) matches a line of `candidates`
- * when, after whitespace is collapsed:
- *  - the role prefix and every token outside the name and the value (the
- *    states) are identical — `- heading "42" [level=2]` is not `[level=1]`;
- *  - every token of the name and value is identical, except tokens that (i)
- *    contain a digit on BOTH sides, with the same letters in the same places
- *    (`S00022`→`S00023`, `4`→`12`; never `v2`→`draft3`, never a word for a
- *    number), and (ii) on the live side are not a value of this run nor part
- *    of one, nor contain one — the token may be the identity the step acts on;
- *  - (iii) at least one alphabetic word of the name or value is left —
- *    `- cell "42"` is nothing BUT its number, so it never generalises;
- *  - exactly ONE candidate line matches: two rows differing from the recorded
- *    one by their number are a list, and picking one would be a guess.
- *
- * Returns the matched line and `want` with each differing token replaced by
- * the wildcard; null otherwise. A false match is a false pass, so every rule
- * errs toward null, and `candidates` is only ever what the step ADDED (its
- * diff): a sibling row already on the page, differing by its number, is not
- * evidence that this step did anything.
- */
-export function generaliseLine(want: string, candidates: readonly string[], values: readonly string[]): { to: string; seen: string } | null {
-  const line = want.replace(/\s+/g, ' ').trim();
-  if (MARKER_ANY.test(line)) return null;
-  const shape = LINE_SHAPE.exec(line);
-  if (!shape?.indices) return null;
-  const spans = [shape.indices[3], shape.indices[6]].filter((s): s is [number, number] => Array.isArray(s));
-  const inside = (at: number) => spans.some(([a, b]) => at >= a && at < b);
-  const tokens = [...line.matchAll(LINE_TOKEN)].map((m) => ({ text: m[0], at: m.index ?? 0 }));
-  // (iii): a word of the name or value that is not a number.
-  if (!tokens.some((t) => inside(t.at) && ALPHA_WORD.test(t.text))) return null;
-  const variable: number[] = [];
-  let source = '^';
-  for (const t of tokens) {
-    if (t.text === WILDCARD) source += '.*?';
-    else if (inside(t.at) && /\d/.test(t.text) && /^[\p{L}\p{N}_]+$/u.test(t.text)) {
-      // (i): the same letters, any digits — a whole token, never part of one.
-      variable.push(variable.length);
-      const shapeOf = t.text.split(/\d+/).map(escapeRe).join('\\d+');
-      source += `(?<![\\p{L}\\p{N}_])(${shapeOf})(?![\\p{L}\\p{N}_])`;
-    } else source += escapeRe(t.text);
-  }
-  if (!variable.length) return null;
-  const re = new RegExp(source, 'u');
-  const recordedVariable = tokens.filter((t) => t.text !== WILDCARD && inside(t.at) && /\d/.test(t.text) && /^[\p{L}\p{N}_]+$/u.test(t.text)).map((t) => t.text);
-  const hits: { seen: string; differs: boolean[] }[] = [];
-  for (const raw of new Set(candidates.map((c) => c.replace(/\s+/g, ' ').trim()))) {
-    const m = re.exec(raw);
-    if (!m) continue;
-    const live = m.slice(1, 1 + variable.length);
-    const differs = live.map((v, i) => v !== recordedVariable[i]);
-    if (!differs.some(Boolean)) continue;
-    // (ii): a differing token that is, sits inside, or contains a value of this run.
-    if (live.some((v, i) => differs[i] && values.some((x) => x.includes(v) || v.includes(x)))) continue;
-    hits.push({ seen: raw, differs });
-  }
-  if (hits.length !== 1) return null;
-  const [hit] = hits;
-  let k = 0;
-  const to = tokens
-    .map((t) => {
-      if (t.text === WILDCARD || !(inside(t.at) && /\d/.test(t.text) && /^[\p{L}\p{N}_]+$/u.test(t.text))) return t.text;
-      return hit.differs[k++] ? WILDCARD : t.text;
-    })
-    .join('');
-  return { to, seen: hit.seen };
 }
 
 /** The locator candidates of a step, as far as the dialog-membership rule reads them. */

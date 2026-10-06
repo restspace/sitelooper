@@ -1,0 +1,97 @@
+{
+ "id": "s_be4bd5",
+ "origin": "http://127.0.0.1:8106",
+ "template": "Add barcode {{v2}} to the existing product {{v1}} Bench Product, save it, and verify the barcode is associated with that product.",
+ "params": {
+  "v1": {
+   "example": "hbgc1-n2",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v2": {
+   "example": "hbgc1-n2-0001",
+   "usedIn": [],
+   "known": true
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8106/products?product=:id"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e207"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#products-table > tbody > tr:nth-of-type(4) > td:nth-of-type(1) > a:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 282,
+      "y": 332,
+      "w": 32,
+      "h": 31,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "mints": {
+    "at": "p1"
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8106/product/{{d1}}",
+    "addedContains": [
+     "- heading \"Edit product\"",
+     "- link \"Stock entries\"",
+     "- link \"Stock journal\"",
+     "- textbox \"Name\": {{*}}",
+     "- checkbox \"Active\" [checked]"
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_ebe24c",
+    "step": 1
+   }
+  }
+ ],
+ "derived": {
+  "d1": {
+   "step": 1,
+   "at": "p1",
+   "example": "572587"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 2,
+  "successes": 2,
+  "partial": 0,
+  "created": "2026-10-06T11:47:32.980Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2,
+  "lastUsed": "2026-10-06T11:48:40.628Z"
+ },
+ "status": "validated",
+ "seq": {
+  "chain": "s_53ef85",
+  "index": 0,
+  "of": 2
+ },
+ "provenance": {
+  "session": "hbgc1-n2",
+  "instruction": "Add barcode hbgc1-n2-0001 to the existing product hbgc1-n2 Bench Product, save it, and verify the barcode is associated with that product.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-10-06T11:47:32.980Z"
+ },
+ "revision": 2
+}

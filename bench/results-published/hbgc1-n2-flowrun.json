@@ -1,0 +1,212 @@
+{
+  "flow": "hbgc1",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_844eac; observed page_title=Stock overview | Grocy, logged_in_user=admin, stock_header=0 Products, $0.00 total value.",
+      "values": {
+        "page_title": "Stock overview | Grocy",
+        "logged_in_user": "admin",
+        "stock_header": "0 Products, $0.00 total value"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "7/7",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-report",
+      "status": "success",
+      "summary": "Replayed stored procedure s_619a04; observed list_count_all=Showing 1 to 3 of 3 entries, seed_products_1=Seed: Oat milk, seed_products_2=Seed: Orange juice, seed_products_3=Seed: Sparkling water.",
+      "values": {
+        "list_count_all": "Showing 1 to 3 of 3 entries",
+        "seed_products_1": "Seed: Oat milk",
+        "seed_products_2": "Seed: Orange juice",
+        "seed_products_3": "Seed: Sparkling water"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "9/9",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_9060f4.",
+      "values": {},
+      "tier": "A",
+      "recovered": false,
+      "replayed": "19/19",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_9060f4: step 9: read 'saved_description' returned a value the skill itself set/selected ('This product was created by benchmark run hbgc1-n2 to verify…') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_9060f4: step 10: read 'product_name' returned a value the skill itself set/selected ('hbgc1-n2 Bench Product') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_9060f4: step 12: read 'saved_min_stock_amount' returned a value the skill itself set/selected ('4') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_9060f4: step 13: read 'saved_default_due_days' returned a value the skill itself set/selected ('30') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_9060f4: step 14: read 'location_id' returned '3' from a control this step set, and nothing committed it since — it shows the control, however the app formats it, not what the app stored; dropped from the report's confident values",
+        "s_9060f4: step 15: read 'product_group_id' returned '2' from a control this step set, and nothing committed it since — it shows the control, however the app formats it, not what the app stored; dropped from the report's confident values",
+        "s_9060f4: step 16: read 'location_id' returned '3' from a control this step set, and nothing committed it since — it shows the control, however the app formats it, not what the app stored; dropped from the report's confident values",
+        "s_9060f4: step 17: read 'location_id' returned '3' from a control this step set, and nothing committed it since — it shows the control, however the app formats it, not what the app stored; dropped from the report's confident values",
+        "s_9060f4: report value saved_name is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)",
+        "s_9060f4: report value saved_location is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)",
+        "s_9060f4: report value saved_product_group is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)",
+        "s_9060f4: report value product_name_field_value is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)",
+        "s_9060f4: report value default_due_days is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)",
+        "s_9060f4: report value saved_default_best_befor is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)",
+        "s_9060f4: report value ref is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)",
+        "s_9060f4: report value products_list_row_1 is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)",
+        "s_9060f4: report value product_location is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)",
+        "s_9060f4: report value product_group is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)"
+      ],
+      "unreported": [
+        "product_name",
+        "saved_name",
+        "saved_location",
+        "saved_product_group",
+        "saved_min_stock_amount",
+        "saved_default_due_days",
+        "product_name_field_value",
+        "default_due_days",
+        "location_id",
+        "product_group_id",
+        "saved_default_best_befor",
+        "product_name_field_name",
+        "ref",
+        "products_list_row_1",
+        "product_location",
+        "product_group"
+      ]
+    },
+    {
+      "id": "04-add",
+      "status": "success",
+      "summary": "Opened the edit page for product hbgc1-n2 Bench Product (id 572587), used the Barcodes section's \"Add\" dialog to create barcode hbgc1-n2-0001 (default Amount 1, default quantity unit), and saved it. The Barcodes table on the product page now lists hbgc1-n2-0001 — verified still present after a full page reload, i.e. persisted server-side and associated with that product. No other data was edited.",
+      "values": {
+        "product_name": "hbgc1-n2 Bench Product",
+        "barcode_added": "hbgc1-n2-0001",
+        "barcode_record_id": "10",
+        "barcode_edit_link": "http://127.0.0.1:8106/productbarcodes/10?embedded&product=572587",
+        "product_edit_page": "http://127.0.0.1:8106/product/572587",
+        "item_1": "product_id",
+        "item_1_value": "572587",
+        "barcode_table_row_cells_2": "hbgc1-n2-0001",
+        "ref": "hbgc1-n2"
+      },
+      "tier": "B",
+      "recovered": true,
+      "fellBack": "every candidate refused — s_ebe24c: not on the page this procedure starts from (expects http://127.0.0.1:8106/products?product=new, browser is at http://127.0.0.1:8106/products?product=572587) — nothing was run",
+      "replayed": "1/1",
+      "repaired": false,
+      "turns": 16,
+      "unreported": [
+        "product_id",
+        "product_edit_page_url",
+        "barcode_rows_after_reload_1",
+        "product_edit_url",
+        "product_barcode",
+        "run_id"
+      ]
+    },
+    {
+      "id": "05-create",
+      "status": "success",
+      "summary": "On /purchase I selected the existing product by name (\"hbgc1-n2 Bench Product\", chosen from the search dropdown — no product created, no barcode linked), set Amount 3 (quantity unit auto-resolved to Pack), location Pantry and due date 2026-12-31, then clicked OK; the form reset, indicating the purchase was booked. Verified on the product's stock entries page (live DOM table): one row \"hbgc1-n2 Bench Product — 3 Packs — 2026-12-31 (in 3 months) — Pantry — $0.00 per Pack — purchased 2026-10-06\", i.e. stock is 3 Packs in Pantry with the requested due date.",
+      "values": {
+        "product_name": "hbgc1-n2 Bench Product",
+        "product_id": "572587",
+        "purchase_amount": "3 Packs",
+        "purchase_location": "Pantry",
+        "due_date": "2026-12-31",
+        "purchased_date": "2026-10-06",
+        "stock_entries_url": "http://127.0.0.1:8106/stockentries?product=572587",
+        "stock_entries_link": "http://127.0.0.1:8106/stockentries?embedded&product=572587",
+        "ref": "hbgc1-n2",
+        "stock_entries_row_1": "hbgc1-n2 Bench Product",
+        "stock_entries_row_2": "3 Packs",
+        "stock_entries_row_3": "2026-12-31 in 3 months",
+        "stock_entries_row_4": "Pantry",
+        "stock_entries_row_5": "$0.00 per Pack",
+        "stock_entries_row_6": "2026-10-06 Today"
+      },
+      "tier": "B",
+      "recovered": true,
+      "fellBack": "unresolved reference(s): 03-create.product_name_field_name, 03-create.product_name_field_name",
+      "replayed": "1/1",
+      "repaired": false,
+      "turns": 14,
+      "unreported": [
+        "purchased_amount",
+        "location",
+        "stock_overview_header",
+        "stock_overview_amount",
+        "stock_overview_next_due_date",
+        "purchase_form_state",
+        "run_id",
+        "stock_overview_table_pagination",
+        "stock_overview_product_name",
+        "stock_overview_quantity",
+        "stock_overview_due_date"
+      ]
+    }
+  ],
+  "passed": 5,
+  "total": 5,
+  "repinned": 0,
+  "drift": 2,
+  "driftTickets": [
+    {
+      "flow": "hbgc1",
+      "step": "04-add",
+      "skill": "s_ebe24c",
+      "similarity": 1.001,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "every candidate refused — s_ebe24c: not on the page this procedure starts from (expects http://127.0.0.1:8106/products?product=new, browser is at http://127.0.0.1:8106/products?product=572587) — nothing was run",
+      "pageUrlPattern": "http://127.0.0.1:8106/product/:id",
+      "pageUrl": "http://127.0.0.1:8106/product/572587"
+    },
+    {
+      "flow": "hbgc1",
+      "step": "05-create",
+      "skill": "s_364d6b",
+      "similarity": 1.001,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "unresolved reference(s): 03-create.product_name_field_name, 03-create.product_name_field_name",
+      "pageUrlPattern": "http://127.0.0.1:8106/purchase",
+      "pageUrl": "http://127.0.0.1:8106/purchase"
+    }
+  ],
+  "wallMs": 99500,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 405923,
+    "completionTokens": 6833,
+    "cachedTokens": 366464
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 405923,
+      "completionTokens": 6833,
+      "cachedTokens": 366464
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "openai/gpt-6-luna",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

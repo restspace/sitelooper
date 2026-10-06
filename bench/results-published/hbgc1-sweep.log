@@ -1,0 +1,123 @@
+
+[sweep] run 1/3: hbgc1-n1 (store: /tmp/before/bench/results/hbgc1-skills)
+[harness] grocy: defaulting APP_URL
+[harness] grocy: defaulting APP_EMAIL
+[harness] grocy: defaulting APP_PASSWORD
+[reset] grocy: deleted 1 product(s) (earlier runs' and non-seed, with their stock and barcodes)
+[reset] grocy: product ids continue after 495332
+[harness] grocy responded 302 at http://127.0.0.1:8106/
+stopped: hbgc1-n1
+  flow "hbgc1" saved: 5 step(s), vars runid → /tmp/before/bench/results/flows/hbgc1.json
+  warning: note: 01-signin no longer publishes nav_items — no replay reads it from the page and the recording showed no line to read
+  warning: note: 02-report no longer publishes product_rows_full — no replay reads it from the page and the recording showed no line to read
+  warning: warning: 03-create's instruction asks to report product_id, and no replay can publish it: nothing in its procedure reads it from the page, so export dropped it — re-record the step so the value is read, not only reported
+  warning: note: 03-create no longer publishes product_edit_page_url, saved_stock_quantity_unit, saved_purchase_quantity_unit, saved_description_paragraphs, id_field_name, minimum_stock_amount, stock_quantity_unit_id, purchase_quantity_unit_id, saved_stock_qu, saved_purchase_qu, saved_minimum_stock_amount, description_field_name, location_field_name, minimum_stock_field_name, default_due_days_field_name, product_group_field_name, stock_quantity_unit_field_name, form_input_form_select_f_8, products_list_row_3, stock_quantity_unit, purchase_quantity_unit — no replay reads them from the page and the recording showed no line to read
+  warning: note: 05-create no longer publishes product_id, quantity_unit, stock_entry_id, stock_entry_row, booked_purchase_date, quantity_label — no replay reads them from the page and the recording showed no line to read
+  warning: warning: 135 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[0].instruction: "admin" (output) in "Sign in to Grocy at http://127.0.0.1:8106/ using username admin and password exactly {{env:APP_PASSWORD}}. Verify that the authenticated app page is displayed."
+  flow.steps[0].params.v2: "admin" (output) in "admin"
+  flow.steps[0].route: "stockoverview" (url) in "http://127.0.0.1:8106/stockoverview"
+  flow.steps[1].instruction: "name" (output) in "Report the exact names of all products whose name starts with Seed: as shown in Grocy. Do not edit anything."
+  flow.steps[2].instruction: "description" (output) in "Create and save a Grocy product named {{runid}} Bench Product. Set its description to one paragraph that includes exactly the runid {{runid}}, default location "
+  warning: {{03-create.product_name_field_name}} (used by 05-create) can only be re-observed by model recovery, and 05-create's procedure types or locates by it — so `sitelooper spec` will REFUSE to compile this flow (unsourced-ref) until 03-create reads product_name_field_name from an element. Re-record 03-create now, while this session is still open.
+  warning: 03-create reports product_name_field_name, but no segment of the procedure it pins (s_e07ada, through its last segment s_9060f4) re-reads it from the page — a replay without the model will succeed without that value; re-record so a read for it lands in s_9060f4.
+arm=sitelooper model=openai/gpt-6-luna runid=hbgc1-n1 stop=completed
+turns=6 wall=278.5s
+commands=5 cmdTime=258.3s cmdBytes=8939 timeouts=0
+orchestrator in=5814 cw=0 cr=18573 out=651
+inner prompt=1268549 cached=1159552 completion=18965
+spend=$0.0323 maxUsd=3
+learn: A_n=0 replayed=0/5 full=0 repaired=0 compiled=5 variants=0
+-> /tmp/before/bench/results/hbgc1-n1-sitelooper-result.json
+
+hbgc1-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: PASS — #495333, description includes runid=true
+  obj 3: PASS — location=Pantry (#3), product group=Snacks (#2); want the seeded Pantry (#3) and Snacks (#2)
+  obj 4: PASS — stock unit=Pack (#3), purchase unit=Pack (#3), min stock=4; want Pack (#3) twice and 4
+  obj 5: PASS — default due days=30, barcodes=["hbgc1-n1-0001"]; want 30 and "hbgc1-n1-0001"
+  obj 6: PASS — in stock 3 in 1 entry (3 at Pantry (#3) due 2026-12-31), 1 purchase booking(s); want 3 at Pantry due 2026-12-31 from a purchase
+  obj 7: PASS — product id 495333 reported
+
+[sweep] run 2/3: hbgc1-n2 (replay flow hbgc1, no orchestrator)
+[reset] grocy: deleted 1 product(s) (earlier runs' and non-seed, with their stock and barcodes)
+[reset] grocy: product ids continue after 572586
+[sweep] hbgc1-n2: 2 drift ticket(s) → hbgc1-n2-drift.json
+
+hbgc1-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: PASS — #572587, description includes runid=true
+  obj 3: PASS — location=Pantry (#3), product group=Snacks (#2); want the seeded Pantry (#3) and Snacks (#2)
+  obj 4: PASS — stock unit=Pack (#3), purchase unit=Pack (#3), min stock=4; want Pack (#3) twice and 4
+  obj 5: PASS — default due days=30, barcodes=["hbgc1-n2-0001"]; want 30 and "hbgc1-n2-0001"
+  obj 6: PASS — in stock 3 in 1 entry (3 at Pantry (#3) due 2026-12-31), 1 purchase booking(s); want 3 at Pantry due 2026-12-31 from a purchase
+  obj 7: PASS — product id 572587 reported
+
+[sweep] run 3/3: hbgc1-n3 (replay flow hbgc1, no orchestrator)
+[reset] grocy: deleted 1 product(s) (earlier runs' and non-seed, with their stock and barcodes)
+[reset] grocy: product ids continue after 641583
+[sweep] hbgc1-n3: 1 drift ticket(s) → hbgc1-n3-drift.json
+
+hbgc1-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: PASS — #641584, description includes runid=true
+  obj 3: PASS — location=Pantry (#3), product group=Snacks (#2); want the seeded Pantry (#3) and Snacks (#2)
+  obj 4: PASS — stock unit=Pack (#3), purchase unit=Pack (#3), min stock=4; want Pack (#3) twice and 4
+  obj 5: PASS — default due days=30, barcodes=["hbgc1-n3-0001"]; want 30 and "hbgc1-n3-0001"
+  obj 6: PASS — in stock 3 in 1 entry (3 at Pantry (#3) due 2026-12-31), 1 purchase booking(s); want 3 at Pantry due 2026-12-31 from a purchase
+  obj 7: PASS — product id 641584 reported
+
+Learning sweep hbgc1 (K=3)
+┌─────────┬───┬────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid      │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'hbgc1-n1' │ '7/7'    │ 'completed' │ 6     │ 5    │ 0.0323    │ 0   │ '0/5'        │ 278    │
+│ 1       │ 2 │ 'hbgc1-n2' │ '7/7'    │ 'success'   │ 30    │ 5    │ 0.0111    │ 0.6 │ '5/5 (flow)' │ 100    │
+│ 2       │ 3 │ 'hbgc1-n3' │ '7/7'    │ 'success'   │ 13    │ 5    │ 0.0054    │ 0.8 │ '5/5 (flow)' │ 71     │
+└─────────┴───┴────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:8106
+  s_364d6b  validated    1 steps  3/3 (100%)
+           Make one purchase of exactly 3 Packs of the existing product {{v1}}, selecting the product by its {{v3}} (do n…
+  s_619a04  validated    7 steps  3/3 (100%)
+           Report the exact names of all products whose name starts with Seed: as shown in Grocy. Do not edit anything.
+  s_768b47  validated    3 steps  3/3 (100%)
+           Sign in to Grocy at {{v1}} using username {{v2}} and password exactly {{v3}}. Verify that the authenticated ap…
+  s_844eac  validated    3 steps  3/3 (100%)
+           Sign in to Grocy at {{v1}} using username {{v2}} and password exactly {{v3}}. Verify that the authenticated ap…
+  s_9060f4  validated   18 steps  3/3 (100%)
+           Create and save a Grocy product named {{v2}}. Set its description to one paragraph that includes exactly the r…
+  s_97cd06  validated    2 steps  3/3 (100%)
+           Report the exact names of all products whose name starts with Seed: as shown in Grocy. Do not edit anything.
+  s_af58f5  validated    1 steps  3/3 (100%)
+           Sign in to Grocy at {{v1}} using username {{v2}} and password exactly {{v3}}. Verify that the authenticated ap…
+  s_e07ada  validated    1 steps  3/3 (100%)
+           Create and save a Grocy product named {{v2}}. Set its description to one paragraph that includes exactly the r…
+  s_0c2665  validated    9 steps  2/2 (100%)
+           Add barcode {{v2}} to the existing product {{v1}} Bench Product, save it, and verify the barcode is associated…
+  s_be4bd5  validated    1 steps  2/2 (100%)
+           Add barcode {{v2}} to the existing product {{v1}} Bench Product, save it, and verify the barcode is associated…
+  s_ebe24c  validated    1 steps  2/2 (100%)
+           Add barcode {{v3}} to the existing product {{v2}}, save it, and verify the barcode is associated with that pro…
+  s_19b4ce  provisional 12 steps  1/1 (100%)
+           Make one purchase of exactly 3 Packs of the existing product {{v1}}, selecting the product by its {{v3}} (do n…
+  s_26c749  provisional 10 steps  1/1 (100%)
+           Add barcode {{v3}} to the existing product {{v2}}, save it, and verify the barcode is associated with that pro…
+  s_3686a7  provisional  8 steps  1/1 (100%)
+           Make one purchase of exactly 3 Packs of the existing product {{v1}}, selecting the product by its 'name' (reco…
+  s_6e00a2  provisional  6 steps  1/1 (100%)
+           Make one purchase of exactly 3 Packs of the existing product {{v1}}, selecting the product by its 'name' (reco…
+  s_834ddf  provisional 12 steps  1/1 (100%)
+           Make one purchase of exactly 3 Packs of the existing product {{v1}}, selecting the product by its 'name' (reco…
+  s_87932b  provisional  1 steps  1/1 (100%)
+           Make one purchase of exactly 3 Packs of the existing product {{v1}}, selecting the product by its 'name' (reco…
+  s_987bad  provisional 12 steps  1/1 (100%)
+           Make one purchase of exactly 3 Packs of the existing product {{v1}}, selecting the product by its 'name' (reco…
+  s_ccc89a  provisional 11 steps  1/1 (100%)
+           Make one purchase of exactly 3 Packs of the existing product {{v1}}, selecting the product by its {{v3}} (do n…
+  s_dbd23a  provisional  1 steps  1/1 (100%)
+           Make one purchase of exactly 3 Packs of the existing product {{v1}}, selecting the product by its 'name' (reco…
+  s_e87a6c  provisional  2 steps  1/1 (100%)
+           Make one purchase of exactly 3 Packs of the existing product {{v1}}, selecting the product by its 'name' (reco…
+store: /tmp/before/bench/results/hbgc1-skills
+
+summary: /tmp/before/bench/results/hbgc1-sweep.json

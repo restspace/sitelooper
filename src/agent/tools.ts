@@ -29,7 +29,6 @@ import { feedbackLines, feedbackText, journalFeedbackOn } from '../daemon/journa
 import { contractWeakening } from '../skills/contract.js';
 import { urlPattern as compiledUrlPattern } from '../skills/compile.js';
 import { renderReplay, replaySkill, type ReplayResult } from '../skills/replay.js';
-import type { Skill } from '../skills/store.js';
 import { hasWriteRequest, noteRecordedUrl, replayFactsFor, samePageOf } from '../skills/facts-url.js';
 import type { ToolDef } from './llm.js';
 
@@ -733,11 +732,47 @@ async function executeSkill(
   // then walked PAST has demonstrated volatility — generalise exactly that
   // segment in the stored pattern, permanently. Segments that never vary stay
   // exact. A soft match the replay did NOT get past stays unconfirmed.
-  const confirmed = confirmedGeneralisations(replay);
-  // A transaction: the pattern is re-read here, so two replays confirming
-  // different segments of the same url cannot each widen from the same
-  // starting point and have one of the two widenings vanish.
-  if (confirmed.length) store.update(skill.id, (fresh) => keepGeneralisations(fresh, confirmed));
+  const confirmed = replay.generalisations.filter((g) =>
+    g.kind === 'precondition' ? replay.stepsRun >= 1 : replay.ok || (g.step !== undefined && replay.stepsRun > g.step),
+  );
+  if (confirmed.length) {
+    // A transaction: the pattern is re-read here, so two replays confirming
+    // different segments of the same url cannot each widen from the same
+    // starting point and have one of the two widenings vanish.
+    store.update(skill.id, (fresh) => {
+      const was = structuredClone(fresh);
+      let changed = false;
+      for (const g of confirmed) {
+        if (g.kind === 'precondition') {
+          fresh.preconditions.urlPattern = g.pattern;
+          changed = true;
+        } else if (g.step !== undefined) {
+          const st = fresh.steps[g.step - 1];
+          if (st && st.tool !== 'loop' && st.expect?.urlPattern) {
+            st.expect.urlPattern = g.pattern;
+            changed = true;
+          }
+        }
+      }
+      if (!changed) return null;
+      // Generalising a url segment that demonstrated volatility is a real
+      // improvement, and it is also, precisely, a promise made weaker: the
+      // procedure will now start on pages it would previously have refused.
+      // Invariant 7 does not forbid that — it forbids doing it quietly. So
+      // the widening is recorded, and the validation it was carrying is given
+      // up, because two clean runs under the narrower promise are not
+      // evidence for the wider one.
+      const gave = contractWeakening(was, fresh);
+      if (gave.length) {
+        fresh.provenance = {
+          ...fresh.provenance,
+          contractChanges: [...(fresh.provenance.contractChanges ?? []), { at: new Date().toISOString(), by: 'replay generalisation', gave }],
+        };
+        delete fresh.stats.verifiedContract;
+      }
+      return fresh;
+    });
+  }
   const observed = before && replay.stepsRun ? await stateDiff(page, before, BATCH_LINE_BUDGET) : EMPTY_OBSERVATION;
   const body = scrubSecrets(renderReplay(skill, replay)) + scrubSecrets(observed.note) + dialogNote(session);
   return {
@@ -746,78 +781,6 @@ async function executeSkill(
     replay,
     snapshotIncluded: observed.snapshotIncluded,
   };
-}
-
-/**
- * The staged generalisations a replay has earned: a precondition once a step
- * ran, anything staged at a step once the replay walked past it (or finished).
- */
-export function confirmedGeneralisations(replay: Pick<ReplayResult, 'generalisations' | 'stepsRun' | 'ok'>): ReplayResult['generalisations'] {
-  return replay.generalisations.filter((g) =>
-    g.kind === 'precondition' ? replay.stepsRun >= 1 : replay.ok || (g.step !== undefined && replay.stepsRun > g.step),
-  );
-}
-
-/**
- * Write confirmed generalisations onto a freshly read skill (inside the
- * store's update transaction), declaring each weakening; null when nothing
- * changed.
- */
-export function keepGeneralisations(fresh: Skill, confirmed: ReplayResult['generalisations'], now: string = new Date().toISOString()): Skill | null {
-  const was = structuredClone(fresh);
-  let changed = false;
-  for (const g of confirmed) {
-    if (g.kind === 'precondition') {
-      fresh.preconditions.urlPattern = g.pattern;
-      changed = true;
-    } else if (g.kind === 'expect' && g.step !== undefined) {
-      const st = fresh.steps[g.step - 1];
-      if (st && st.tool !== 'loop' && st.expect?.urlPattern) {
-        st.expect.urlPattern = g.pattern;
-        changed = true;
-      }
-    }
-  }
-  // Page lines after urls, so each kind's weakening is declared under its
-  // own name (contractWeakening over the two halves separately).
-  const urlsDone = structuredClone(fresh);
-  let lineChanged = false;
-  for (const g of confirmed) {
-    if (g.kind !== 'line') continue;
-    // A page line that differed only in its numbers (expect.ts
-    // generaliseLine) and was then walked past: the number was the
-    // recording's, not the step's effect (survey T1). Replaced in place,
-    // never on an assertion — that line is what a person said must hold —
-    // and never when the line is gone already (another replay took it).
-    const st = fresh.steps[g.step - 1];
-    const lines = st && st.tool !== 'loop' && !st.assert && !fresh.assert ? st.expect?.addedContains : undefined;
-    const at = lines ? lines.indexOf(g.from) : -1;
-    if (!lines || at < 0) continue;
-    if (lines.includes(g.to)) lines.splice(at, 1);
-    else lines[at] = g.to;
-    lineChanged = true;
-  }
-  if (!changed && !lineChanged) return null;
-  // Generalising a url segment that demonstrated volatility is a real
-  // improvement, and it is also, precisely, a promise made weaker: the
-  // procedure will now start on pages it would previously have refused.
-  // Invariant 7 does not forbid that — it forbids doing it quietly. So
-  // the widening is recorded, and the validation it was carrying is given
-  // up, because two clean runs under the narrower promise are not
-  // evidence for the wider one. A generalised page line is the same kind
-  // of promise: it now accepts another number where the recording's stood.
-  const entries = [
-    { at: now, by: 'replay generalisation', gave: changed ? contractWeakening(was, urlsDone) : [] },
-    { at: now, by: 'replay line generalisation', gave: lineChanged ? contractWeakening(urlsDone, fresh) : [] },
-  ].filter((e) => e.gave.length);
-  if (entries.length) {
-    fresh.provenance = {
-      ...fresh.provenance,
-      contractChanges: [...(fresh.provenance.contractChanges ?? []), ...entries],
-    };
-    delete fresh.stats.verifiedContract;
-  }
-  return fresh;
 }
 
 /**
