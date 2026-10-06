@@ -95,3 +95,11 @@ A repetition corrupted by such a bug is rerun for BOTH arms. No change to either
 - 2026-10-06 12:26Z, h2gc3: the box's permission classifier refused `bring-up.sh grocy` ("Code from
   External") before either arm ran; nothing published. Box failure, not an arm result: the prompt
   now says what bring-up.sh runs, and the box is re-fired for both arms.
+- 2026-10-06 (after scoring the sweeps): **same-recording A/B, added after the result and not part of
+  the pre-registered headline.** The sweep compared different recordings per arm, and the new
+  mechanisms barely fired (notes/HELDOUT2-RESULTS.md), so the headline difference is mostly
+  recording variance. This follow-up compiles each of the 18 published recordings with BOTH code
+  versions (bench/heldout/same-recording.mjs, no model) and runs every spec twice against a reset
+  app. Metric, fixed before it runs: per version, specs whose verifier state objectives (2-6) are
+  all PASS with no DUPLICATE/EXTRA, out of 36 runs; plus refusals and silent passes (Playwright
+  pass with a state objective failing).
