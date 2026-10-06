@@ -64,3 +64,27 @@ recording luck.** The defensible gains are item 3's scoreable outputs and item 4
     grocy    3   | before | 7/7 7/7·m 7/7·m       | 1/7✗ pw:fail                       | —
     
     ✗ = not clean; ·m = a replay that used the model; spec ✗ counts state objectives (2-6) only
+
+## Follow-up: same recordings, both code versions (no model)
+
+Added after the sweep result (protocol Log). bench/heldout/same-recording.mjs compiled each of the
+18 published recordings with both code versions and ran every spec twice against a reset app
+(results/srpk, srkm, srgc; 36 runs per version).
+
+| | after code | before code |
+|---|---|---|
+| spec runs with every state objective PASS | **16/36** | **17/36** |
+| compile refused | 10 | 10 |
+| silent passes (Playwright pass, a state objective FAIL) | 2 | 2 |
+| report objectives (1, 7) scored on compiled runs | all PASS (outputs file) | UNVERIFIABLE |
+
+Per app: planka 12/12 vs 12/12; kimai 0/12 vs 1/12 (one before-code run of hakm1 passed, its
+repeat did not — timing); grocy 4/12 vs 4/12. Refusals are identical recording by recording (the
+same demoted pins and the same unsourced-ref), and so are the silent passes (hakm2's recording,
+which omits the timesheet). On grocy's failing before-arm recordings the after code gets one or two
+more objectives done before the same identity stop.
+
+**Conclusion: on identical recordings the two code versions perform the same.** The sweep's +2
+headline was recording variance. What items 1-4 demonstrably add on unseen apps: the spec's
+findings are scoreable (item 3) and `build --converge` repairs half of the not-clean recordings
+(item 4). Items 1-2 did not fire on these apps; their effect is unmeasured, not shown to be zero.
