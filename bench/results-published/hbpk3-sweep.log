@@ -1,0 +1,106 @@
+
+[sweep] run 1/3: hbpk3-n1 (store: /tmp/before/bench/results/hbpk3-skills)
+[harness] planka: defaulting APP_URL
+[harness] planka: defaulting APP_EMAIL
+[harness] planka: defaulting APP_PASSWORD
+[reset] planka: deleted 1 card(s) (earlier runs' and non-seed)
+[harness] planka responded 200 at http://127.0.0.1:8104/
+stopped: hbpk3-n1
+  flow "hbpk3" saved: 7 step(s), vars runid → /tmp/before/bench/results/flows/hbpk3.json
+  warning: note: 02-report no longer publishes other_lists — no replay reads it from the page and the recording showed no line to read
+  warning: note: 04-create no longer publishes card_id, card_label_count — no replay reads them from the page and the recording showed no line to read
+  warning: note: 05-verify no longer publishes card_url, card_modal_member_name, member_selection_source, new_user_created, board_header_member_names, card_tile_member, card_modal_member — no replay reads them from the page and the recording showed no line to read
+  warning: note: 06-set no longer publishes card_due_date, card_member_name, due_date_field_value, due_date_field_after_pick — no replay reads them from the page and the recording showed no line to read
+  warning: note: 07-add no longer publishes comment_author — no replay reads it from the page and the recording showed no line to read
+  warning: note: 04-create: added a read for card_label_read_back to s_642b47 (page.getByRole('button', { name: 'Hardware', exact: true }); seen on the next instruction's start page)
+  warning: note: 05-verify: added a read for card_label to s_4101a2 (page.getByRole('button', { name: 'Hardware', exact: true }); seen on the next instruction's start page)
+  warning: note: 06-set: added a read for card_label to s_4fee27 (page.getByRole('button', { name: 'Hardware', exact: true }); seen on the next instruction's start page)
+  warning: warning: 111 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.startUrl: "http://127.0.0.1:8104/" (output) in "http://127.0.0.1:8104/"
+  flow.steps[0].instruction: "http://127.0.0.1:8104/" (output) in "Sign in to Planka at http://127.0.0.1:8104/ using email admin@example.com and password exactly {{env:APP_PASSWORD}}. Verify that the signed-in app is open and r"
+  flow.steps[0].params.v1: "http://127.0.0.1:8104/" (output) in "http://127.0.0.1:8104/"
+  flow.steps[0].route: "http://127.0.0.1:8104/" (output) in "http://127.0.0.1:8104/"
+  flow.steps[1].instruction: "Bench Project" (output) in "On the board Bench Board in project Bench Project, report the exact names of all cards whose names start with 'Seed:'; do not modify any cards."
+arm=sitelooper model=openai/gpt-6-luna runid=hbpk3-n1 stop=completed
+turns=8 wall=298.6s
+commands=7 cmdTime=268.2s cmdBytes=7668 timeouts=0
+orchestrator in=5467 cw=0 cr=26597 out=813
+inner prompt=1724039 cached=1606144 completion=20091
+spend=$0.0358 maxUsd=3
+learn: A_n=0 replayed=0/7 full=0 repaired=0 compiled=7 variants=0
+-> /tmp/before/bench/results/hbpk3-n1-sitelooper-result.json
+
+hbpk3-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: PASS — 1879874096276178001 in Bench Board / In Progress (want Bench Board / In Progress), description includes runid=true
+  obj 3: PASS — labels=["Hardware (#1879870517536621584)"], want only the seeded Hardware (#1879870517536621584)
+  obj 4: PASS — members=["Bench Tester (#1879870513753359363)"], want only Bench Tester (#1879870513753359363)
+  obj 5: PASS — dueDate=2026-12-31T12:00:00.000Z; want 2026-12-31 (any time of day)
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — card id 1879874096276178001 reported
+
+[sweep] run 2/3: hbpk3-n2 (replay flow hbpk3, no orchestrator)
+[reset] planka: deleted 1 card(s) (earlier runs' and non-seed)
+[sweep] hbpk3-n2: 1 drift ticket(s) → hbpk3-n2-drift.json
+
+hbpk3-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: PASS — 1879876150403007582 in Bench Board / In Progress (want Bench Board / In Progress), description includes runid=true
+  obj 3: PASS — labels=["Hardware (#1879870517536621584)"], want only the seeded Hardware (#1879870517536621584)
+  obj 4: PASS — members=["Bench Tester (#1879870513753359363)"], want only Bench Tester (#1879870513753359363)
+  obj 5: PASS — dueDate=2026-12-31T12:00:00.000Z; want 2026-12-31 (any time of day)
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — card id 1879876150403007582 reported
+
+[sweep] run 3/3: hbpk3-n3 (replay flow hbpk3, no orchestrator)
+[reset] planka: deleted 1 card(s) (earlier runs' and non-seed)
+
+hbpk3-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: PASS — 1879876977528145003 in Bench Board / In Progress (want Bench Board / In Progress), description includes runid=true
+  obj 3: PASS — labels=["Hardware (#1879870517536621584)"], want only the seeded Hardware (#1879870517536621584)
+  obj 4: PASS — members=["Bench Tester (#1879870513753359363)"], want only Bench Tester (#1879870513753359363)
+  obj 5: PASS — dueDate=2026-12-31T12:00:00.000Z; want 2026-12-31 (any time of day)
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — card id 1879876977528145003 reported
+
+Learning sweep hbpk3 (K=3)
+┌─────────┬───┬────────────┬──────────┬─────────────┬───────┬──────┬───────────┬──────┬──────────────┬────────┐
+│ (index) │ n │ runid      │ verified │ stop        │ turns │ cmds │ total_usd │ A_n  │ replayed     │ wall_s │
+├─────────┼───┼────────────┼──────────┼─────────────┼───────┼──────┼───────────┼──────┼──────────────┼────────┤
+│ 0       │ 1 │ 'hbpk3-n1' │ '7/7'    │ 'completed' │ 8     │ 7    │ 0.0358    │ 0    │ '0/7'        │ 299    │
+│ 1       │ 2 │ 'hbpk3-n2' │ '7/7'    │ 'success'   │ 12    │ 7    │ 0.0091    │ 0.86 │ '7/7 (flow)' │ 95     │
+│ 2       │ 3 │ 'hbpk3-n3' │ '7/7'    │ 'success'   │ 0     │ 7    │ 0         │ 1    │ '7/7 (flow)' │ 42     │
+└─────────┴───┴────────────┴──────────┴─────────────┴───────┴──────┴───────────┴──────┴──────────────┴────────┘
+http://127.0.0.1:8104
+  s_13cee3  validated    4 steps  3/3 (100%)
+           On {{v1}} in {{v2}}, create a card named '{{v4}}' in the 'In Progress' list. Set its description to a single p…
+  s_14350a  validated    3 steps  3/3 (100%)
+           Sign in to Planka at {{v1}} using email {{v2}} and password exactly {{v3}}. Verify that the signed-in app is o…
+  s_2ecb9e  validated    7 steps  3/3 (100%)
+           On {{v1}} in {{v2}}, create a card named '{{v4}}' in the 'In Progress' list. Set its description to a single p…
+  s_4101a2  validated    9 steps  3/3 (100%)
+           On the card '{{v1}}' on {{v3}}, make its only member the existing exact user 'Bench Tester' (not Bench Tester …
+  s_4fee27  validated   13 steps  3/3 (100%)
+           On the card '{{v1}}' on {{v3}}, set the due date to 2026-12-31 (any time of day is fine). Verify the saved due…
+  s_52b3c5  validated    1 steps  3/3 (100%)
+           On the board Bench Board in project {{v1}}, report the exact names of all cards whose names start with 'Seed:'…
+  s_79f413  validated    8 steps  3/3 (100%)
+           On {{v1}} in {{v2}}, create a card named '{{v4}}' in the 'In Progress' list. Set its description to a single p…
+  s_7f9a5d  validated    1 steps  3/3 (100%)
+           Sign in to Planka at {{v1}} using email {{v2}} and password exactly {{v3}}. Verify that the signed-in app is o…
+  s_81ca09  validated   10 steps  3/3 (100%)
+           On the board Bench Board in project {{v1}}, report the exact names of all cards whose names start with 'Seed:'…
+  s_945072  validated    2 steps  3/3 (100%)
+           On {{v1}} in {{v2}}, create a card named '{{v4}}' in the 'In Progress' list. Set its description to a single p…
+  s_ca41ab  validated    9 steps  3/3 (100%)
+           From the own view of card '{{v1}}' on {{v3}}, add a comment whose text includes '{{v2}}'. Submit it and verify…
+  s_cbec3b  validated    4 steps  3/3 (100%)
+           Sign in to Planka at {{v1}} using email {{v2}} and password exactly {{v3}}. Verify that the signed-in app is o…
+  s_4ac258  validated   17 steps  2/2 (100%)  variant of s_642b47
+           On the card '{{v1}}' on {{v3}}, make its only label the existing exact label 'Hardware' (not Hardware Return o…
+  s_642b47  demoted     10 steps  1/2 (50%)
+           On the card '{{v1}}' on {{v3}}, make its only label the existing exact label 'Hardware' (not Hardware Return o…
+store: /tmp/before/bench/results/hbpk3-skills
+
+summary: /tmp/before/bench/results/hbpk3-sweep.json

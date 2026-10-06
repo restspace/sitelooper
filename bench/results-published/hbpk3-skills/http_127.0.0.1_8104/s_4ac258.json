@@ -1,0 +1,592 @@
+{
+ "id": "s_4ac258",
+ "origin": "http://127.0.0.1:8104",
+ "template": "On the card '{{v1}}' on {{v3}}, make its only label the existing exact label 'Hardware' (not Hardware Return or Hardware Spares; do not create a label). Verify the card shows Hardware as its only label.",
+ "params": {
+  "v1": {
+   "example": "hbpk3-n2 Bench Card",
+   "usedIn": [
+    13
+   ],
+   "known": true,
+   "binding": "output:i3:card_name"
+  },
+  "v2": {
+   "example": "hbpk3-n2",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v3": {
+   "example": "Bench Board",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i2:board"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8104/cards/:id"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e501"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Labels"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > div:nth-of-type(2) > div > div:nth-of-type(2) > button:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 966,
+      "y": 280,
+      "w": 196,
+      "h": 33,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8104/cards/:id",
+    "addedContains": [
+     "- textbox \"Search labels...\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_642b47",
+    "step": 1
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e541"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Hardware"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > span"
+     },
+     {
+      "kind": "point",
+      "x": 1001,
+      "y": 414,
+      "w": 241.4,
+      "h": 36,
+      "role": "button",
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8104/cards/:id",
+    "addedContains": [
+     "- button \"{{v1}} {{*}}\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_642b47",
+    "step": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e374"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div > button",
+      "nth": 0
+     },
+     {
+      "kind": "point",
+      "x": 363,
+      "y": 146,
+      "w": 31.8,
+      "h": 32,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8104/cards/:id",
+    "addedContains": [
+     "- textbox \"Search labels...\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "@e390",
+    "what": "text",
+    "label": "option1_hardware"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > span"
+     },
+     {
+      "kind": "point",
+      "x": 480,
+      "y": 280,
+      "w": 241.4,
+      "h": 36,
+      "role": "button",
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "card_detail_only_label_chip"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "@e394",
+    "what": "text",
+    "label": "option2_hardware_return"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Hardware Return"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) > span"
+     },
+     {
+      "kind": "point",
+      "x": 480,
+      "y": 320,
+      "w": 241.4,
+      "h": 36,
+      "role": "button",
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "option2_hardware_return"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "@e398",
+    "what": "text",
+    "label": "option3_hardware_spares"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Hardware Spares"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(3) > span"
+     },
+     {
+      "kind": "point",
+      "x": 480,
+      "y": 360,
+      "w": 241.4,
+      "h": 36,
+      "role": "button",
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "option3_hardware_spares"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "@e402",
+    "what": "text",
+    "label": "option4_software"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Software"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(4) > span"
+     },
+     {
+      "kind": "point",
+      "x": 480,
+      "y": 400,
+      "w": 241.4,
+      "h": 36,
+      "role": "button",
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "option4_software"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "@e406",
+    "what": "text",
+    "label": "option5_network"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Network"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(5) > span"
+     },
+     {
+      "kind": "point",
+      "x": 480,
+      "y": 440,
+      "w": 241.4,
+      "h": 36,
+      "role": "button",
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "option5_network"
+  },
+  {
+   "tool": "press",
+   "args": {
+    "key": "Escape"
+   },
+   "locators": {},
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8104/cards/:id",
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "what": "url",
+    "label": "card_url"
+   },
+   "locators": {},
+   "label": "card_url"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "@e298",
+    "what": "value",
+    "label": "card_name"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(1) > div > div > div > textarea"
+     },
+     {
+      "kind": "point",
+      "x": 639,
+      "y": 71,
+      "w": 776,
+      "h": 34,
+      "role": "textbox",
+      "tag": "textarea",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "card_name"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "@e372",
+    "what": "text",
+    "label": "card_detail_only_label_chip"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Hardware"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div > span > button"
+     },
+     {
+      "kind": "point",
+      "x": 300,
+      "y": 146,
+      "w": 87.4,
+      "h": 32,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "card_detail_only_label_chip"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "@e364",
+    "what": "text",
+    "label": "card_tile_text",
+    "scopedBy": "v1"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "{{v1}} Hardware"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > div > div > div > div"
+     },
+     {
+      "kind": "point",
+      "x": 436,
+      "y": 289,
+      "w": 256,
+      "h": 86,
+      "role": "button",
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "card_tile_text_2"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > div > div > div > p"
+     },
+     {
+      "kind": "point",
+      "x": 546,
+      "y": 224,
+      "w": 580,
+      "h": 20,
+      "role": null,
+      "tag": "p",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "ref"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div > div > div > a > span",
+      "nth": 2
+     },
+     {
+      "kind": "point",
+      "x": 73,
+      "y": 112,
+      "w": 77.6,
+      "h": 18,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "board"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#root > div:nth-of-type(2) > div:nth-of-type(1) > div > div:nth-of-type(1) > div"
+     },
+     {
+      "kind": "point",
+      "x": 135,
+      "y": 25,
+      "w": 174.7,
+      "h": 50,
+      "role": null,
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "project"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(2) > div > div:nth-of-type(1) > div > button"
+     },
+     {
+      "kind": "point",
+      "x": 966,
+      "y": 146,
+      "w": 196,
+      "h": 32,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "card_list"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "The card '{{v1}}' on {{v3}} (Bench Project) now has exactly one label: 'Hardware'. Verified live on the card's own view — the detail sidebar \"Labels\" row renders a single chip, 'Hardware' (ref @e372), with no other chip — and in the label picker reopened from that row, only 'Hardware' carries the checked glyph while 'Hardware Return', 'Hardware Spares', 'Software' and 'Network' are all unchecked. The card tile in the 'In Progress' list on the board also shows exactly one label chip, 'Hardware' (tile text: \"{{v1}} / Hardware\"). I made no changes myself: the applied state came from the replayed procedure's two clicks; my only interactions were opening and dismissing the label picker, so no duplicate label was created and no card was modified.",
+  "values": {
+   "card_url": "http://127.0.0.1:8104/cards/1879876150403007582",
+   "card_name": "{{v1}}",
+   "card_list": "In Progress",
+   "board": "{{v3}}",
+   "project": "Bench Project",
+   "card_detail_only_label_chip": "Hardware",
+   "card_tile_text": "{{v1}} / Hardware",
+   "card_label_count": "1",
+   "card_label_name": "Hardware",
+   "label_picker_checked_option": "Hardware",
+   "label_picker_unchecked_options": "Hardware Return, Hardware Spares, Software, Network",
+   "card_reference": "1879876150403007582",
+   "option1_hardware": "Hardware",
+   "option2_hardware_return": "Hardware Return",
+   "option3_hardware_spares": "Hardware Spares",
+   "option4_software": "Software",
+   "option5_network": "Network",
+   "card_tile_text_2": "{{v1}}\nHardware",
+   "ref": "{{v2}}"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 2,
+  "successes": 2,
+  "partial": 0,
+  "created": "2026-10-06T12:39:29.571Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2,
+  "lastUsed": "2026-10-06T12:40:15.960Z"
+ },
+ "status": "validated",
+ "variantOf": "s_642b47",
+ "provenance": {
+  "session": "hbpk3-n2",
+  "instruction": "On the card 'hbpk3-n2 Bench Card' on Bench Board, make its only label the existing exact label 'Hardware' (not Hardware Return or Hardware Spares; do not create a label). Verify the card shows Hardware as its only label.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-10-06T12:39:29.571Z",
+  "transforms": [
+   {
+    "name": "unfreezeExpectations",
+    "at": 1,
+    "reason": "recorded page change(s) only the recording run could produce: [\"- textbox \\\"Search labels...\\\"\",\"- button \\\"Hardware\\\"\",\"- button \\\"Hardware Return\\\"\",\"- button \\\"Hardware Spares\\\"\",\"- button \\\"Software\\\"\"] → [\"- textbox \\\"Search labels...\\\"\"]"
+   },
+   {
+    "name": "unfreezeExpectations",
+    "at": 2,
+    "reason": "recorded page change(s) only the recording run could produce: [\"- button \\\"{{v1}} Hardware\\\"\"] → [\"- button \\\"{{v1}} {{*}}\\\"\"]"
+   },
+   {
+    "name": "unfreezeExpectations",
+    "at": 3,
+    "reason": "recorded page change(s) only the recording run could produce: [\"- textbox \\\"Search labels...\\\"\",\"- button \\\"Hardware Return\\\"\",\"- button \\\"Hardware Spares\\\"\",\"- button \\\"Software\\\"\",\"- button \\\"Network\\\"\"] → [\"- textbox \\\"Search labels...\\\"\"]"
+   }
+  ]
+ },
+ "revision": 2
+}
