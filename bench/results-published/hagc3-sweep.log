@@ -1,0 +1,125 @@
+
+[sweep] run 1/3: hagc3-n1 (store: /home/user/sitelooper/bench/results/hagc3-skills)
+[harness] grocy: defaulting APP_URL
+[harness] grocy: defaulting APP_EMAIL
+[harness] grocy: defaulting APP_PASSWORD
+[reset] grocy: no products to delete
+[reset] grocy: product ids continue after 61823
+[harness] grocy responded 302 at http://127.0.0.1:8106/
+stopped: hagc3-n1
+  flow "hagc3" saved: 8 step(s), vars runid → /home/user/sitelooper/bench/results/flows/hagc3.json
+  warning: note: 03-create no longer publishes product_id, default_location — no replay reads them from the page and the recording showed no line to read
+  warning: note: 04-edit no longer publishes verified_columns, save_action, form_button — no replay reads them from the page and the recording showed no line to read
+  warning: note: 05-edit no longer publishes default_quantity_unit_purchase, verified_columns, item_1, select, select_2 — no replay reads them from the page and the recording showed no line to read
+  warning: note: 06-edit no longer publishes default_due_days_field, item_1, form_input_form_select — no replay reads them from the page and the recording showed no line to read
+  warning: note: 07-create no longer publishes stock_amount_after, stock_entries_dialog_row, stock_amount_overview_pa — no replay reads them from the page and the recording showed no line to read
+  warning: warning: 148 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[0].instruction: "admin" (output) in "Sign in to Grocy at http://127.0.0.1:8106/ using username admin and password exactly {{env:APP_PASSWORD}}. Verify that the signed-in app is open and report the "
+  flow.steps[0].params.v2: "admin" (output) in "admin"
+  flow.steps[0].route: "stockoverview" (url) in "http://127.0.0.1:8106/stockoverview"
+  flow.steps[3].instruction: "Pantry" (output) in "Edit the existing product '{{runid}} Bench Product' so its default location is the existing location 'Pantry' (not similarly named locations) and its product gr"
+  flow.steps[3].instruction: "Snacks" (output) in "Edit the existing product '{{runid}} Bench Product' so its default location is the existing location 'Pantry' (not similarly named locations) and its product gr"
+arm=sitelooper model=openai/gpt-6-luna runid=hagc3-n1 stop=completed
+turns=9 wall=463.7s
+commands=8 cmdTime=423.3s cmdBytes=10665 timeouts=0
+orchestrator in=6590 cw=0 cr=33697 out=1094
+inner prompt=2656562 cached=2493696 completion=26467
+spend=$0.0493 maxUsd=3
+learn: A_n=0 replayed=0/8 full=0 repaired=0 compiled=8 variants=0
+-> /home/user/sitelooper/bench/results/hagc3-n1-sitelooper-result.json
+
+hagc3-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: PASS — #61824, description includes runid=true
+  obj 3: PASS — location=Pantry (#3), product group=Snacks (#2); want the seeded Pantry (#3) and Snacks (#2)
+  obj 4: PASS — stock unit=Pack (#3), purchase unit=Pack (#3), min stock=4; want Pack (#3) twice and 4
+  obj 5: PASS — default due days=30, barcodes=["hagc3-n1-0001"]; want 30 and "hagc3-n1-0001"
+  obj 6: PASS — in stock 3 in 1 entry (3 at Pantry (#3) due 2026-12-31), 1 purchase booking(s); want 3 at Pantry due 2026-12-31 from a purchase
+  obj 7: PASS — product id 61824 reported
+
+[sweep] run 2/3: hagc3-n2 (replay flow hagc3, no orchestrator)
+[reset] grocy: deleted 1 product(s) (earlier runs' and non-seed, with their stock and barcodes)
+[reset] grocy: product ids continue after 84721
+[sweep] hagc3-n2: 6 drift ticket(s) → hagc3-n2-drift.json
+
+hagc3-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: PASS — #84722, description includes runid=true
+  obj 3: PASS — location=Pantry (#3), product group=Snacks (#2); want the seeded Pantry (#3) and Snacks (#2)
+  obj 4: PASS — stock unit=Pack (#3), purchase unit=Pack (#3), min stock=4; want Pack (#3) twice and 4
+  obj 5: PASS — default due days=30, barcodes=["hagc3-n2-0001"]; want 30 and "hagc3-n2-0001"
+  obj 6: PASS — in stock 3 in 1 entry (3 at Pantry (#3) due 2026-12-31), 1 purchase booking(s); want 3 at Pantry due 2026-12-31 from a purchase
+  obj 7: PASS — product id 84722 reported
+
+[sweep] run 3/3: hagc3-n3 (replay flow hagc3, no orchestrator)
+[reset] grocy: deleted 1 product(s) (earlier runs' and non-seed, with their stock and barcodes)
+[reset] grocy: product ids continue after 116252
+[sweep] hagc3-n3: 5 drift ticket(s) → hagc3-n3-drift.json
+
+hagc3-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: PASS — #116253, description includes runid=true
+  obj 3: PASS — location=Pantry (#3), product group=Snacks (#2); want the seeded Pantry (#3) and Snacks (#2)
+  obj 4: PASS — stock unit=Pack (#3), purchase unit=Pack (#3), min stock=4; want Pack (#3) twice and 4
+  obj 5: PASS — default due days=30, barcodes=["hagc3-n3-0001"]; want 30 and "hagc3-n3-0001"
+  obj 6: PASS — in stock 3 in 1 entry (3 at Pantry (#3) due 2026-12-31), 1 purchase booking(s); want 3 at Pantry due 2026-12-31 from a purchase
+  obj 7: PASS — product id 116253 reported
+
+Learning sweep hagc3 (K=3)
+┌─────────┬───┬────────────┬──────────┬─────────────┬───────┬──────┬───────────┬──────┬──────────────┬────────┐
+│ (index) │ n │ runid      │ verified │ stop        │ turns │ cmds │ total_usd │ A_n  │ replayed     │ wall_s │
+├─────────┼───┼────────────┼──────────┼─────────────┼───────┼──────┼───────────┼──────┼──────────────┼────────┤
+│ 0       │ 1 │ 'hagc3-n1' │ '7/7'    │ 'completed' │ 9     │ 8    │ 0.0493    │ 0    │ '0/8'        │ 464    │
+│ 1       │ 2 │ 'hagc3-n2' │ '7/7'    │ 'success'   │ 13    │ 8    │ 0.0049    │ 0.88 │ '8/8 (flow)' │ 174    │
+│ 2       │ 3 │ 'hagc3-n3' │ '7/7'    │ 'success'   │ 0     │ 8    │ 0         │ 1    │ '8/8 (flow)' │ 126    │
+└─────────┴───┴────────────┴──────────┴─────────────┴───────┴──────┴───────────┴──────┴──────────────┴────────┘
+http://127.0.0.1:8106
+  s_00d9ab  validated    3 steps  3/3 (100%)
+           Edit the existing product '{{v1}}' so its default location is the existing location '{{v3}}' (not similarly na…
+  s_0cbf0a  validated    3 steps  3/3 (100%)
+           Sign in to Grocy at {{v1}} using username {{v2}} and password exactly {{v3}}. Verify that the signed-in app is…
+  s_11c9d6  validated    5 steps  3/3 (100%)
+           Report the exact names of all existing products whose name starts with {{v1}}, without modifying any products.…
+  s_1f4220  validated    1 steps  3/3 (100%)
+           Create and save a product named '{{v2}}' whose rich-text description contains exactly one paragraph that inclu…
+  s_34320f  validated    9 steps  3/3 (100%)
+           Edit '{{v1}}' and set Quantity unit stock to the exact existing unit 'Pack', Default quantity unit purchase to…
+  s_4043a7  validated    5 steps  3/3 (100%)
+           Edit '{{v1}}' and set Quantity unit stock to the exact existing unit 'Pack', Default quantity unit purchase to…
+  s_414dc1  validated   16 steps  3/3 (100%)
+           Edit '{{v1}}' to set Default due days to {{v3}}, save, then add barcode '{{v4}}' to this saved product (barcod…
+  s_45936f  validated    2 steps  3/3 (100%)
+           Edit the existing product '{{v1}}' so its default location is the existing location '{{v3}}' (not similarly na…
+  s_5c4ea0  validated    1 steps  3/3 (100%)
+           Sign in to Grocy at {{v1}} using username {{v2}} and password exactly {{v3}}. Verify that the signed-in app is…
+  s_aa52f1  validated    8 steps  3/3 (100%)
+           Create and save a product named '{{v2}}' whose rich-text description contains exactly one paragraph that inclu…
+  s_aeb6fb  validated   27 steps  3/3 (100%)
+           Make exactly one purchase of 3 Packs of '{{v1}}' into the existing location {{v3}}, with due date {{v4}}. Sele…
+  s_d1b827  validated    1 steps  3/3 (100%)
+           Edit '{{v1}}' to set Default due days to {{v3}}, save, then add barcode '{{v4}}' to this saved product (barcod…
+  s_dec8ae  validated    1 steps  3/3 (100%)
+           Make exactly one purchase of 3 Packs of '{{v1}}' into the existing location {{v3}}, with due date {{v4}}. Sele…
+  s_e56fb7  validated    1 steps  3/3 (100%)
+           Edit '{{v1}}' and set Quantity unit stock to the exact existing unit 'Pack', Default quantity unit purchase to…
+  s_e8fb81  validated    4 steps  3/3 (100%)
+           Sign in to Grocy at {{v1}} using username {{v2}} and password exactly {{v3}}. Verify that the signed-in app is…
+  s_e900b0  validated    6 steps  3/3 (100%)
+           Edit the existing product '{{v1}}' so its default location is the existing location '{{v3}}' (not similarly na…
+  s_f4dd61  validated    2 steps  3/3 (100%)
+           Report the exact names of all existing products whose name starts with {{v1}}, without modifying any products.…
+  s_fb9771  validated    8 steps  3/3 (100%)
+           Create and save a product named '{{v2}}' whose rich-text description contains exactly one paragraph that inclu…
+  s_5a1bc9  validated    3 steps  2/2 (100%)  variant of s_e9b093
+           Open the edit page for '{{v1}}', verify the address is /product/<id>, and report the exact product ID from the…
+  s_733ffa  validated    2 steps  2/2 (100%)  variant of s_e9b093
+           Open the edit page for '{{v1}}', verify the address is /product/<id>, and report the exact product ID from the…
+  s_d9dba6  validated    3 steps  2/2 (100%)  variant of s_e9b093
+           Open the edit page for '{{v1}}', verify the address is /product/<id>, and report the exact product ID from the…
+  s_e9b093  demoted      1 steps  1/2 (50%)
+           Open the edit page for '{{v1}}', verify the address is /product/<id>, and report the exact product ID from the…
+  s_663570  provisional  3 steps  1/1 (100%)
+           Open the edit page for '{{v1}}', verify the address is /product/<id>, and report the exact product ID from the…
+store: /home/user/sitelooper/bench/results/hagc3-skills
+
+summary: /home/user/sitelooper/bench/results/hagc3-sweep.json

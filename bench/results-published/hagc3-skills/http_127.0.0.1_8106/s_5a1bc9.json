@@ -1,0 +1,167 @@
+{
+ "id": "s_5a1bc9",
+ "origin": "http://127.0.0.1:8106",
+ "template": "Open the edit page for '{{v1}}', verify the address is /product/<id>, and report the exact product ID from the URL. Also verify the saved product name in the edit page.",
+ "params": {
+  "v1": {
+   "example": "hagc3-n2 Bench Product",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i3:product_name"
+  },
+  "v2": {
+   "example": "hagc3-n2",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8106/purchase"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@f2e71"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "html > body > div:nth-of-type(2) > button"
+     }
+    ]
+   },
+   "contexts": {
+    "target": {
+     "frame": [
+      {
+       "selectors": [
+        "iframe[src*=\"/stockentries\"]",
+        "iframe >> nth=0"
+       ],
+       "urlPattern": "http://127.0.0.1:8106/stockentries?embedded=&product=:id"
+      }
+     ]
+    }
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8106/purchase",
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e58"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "link",
+      "name": "Manage master data"
+     },
+     {
+      "kind": "css",
+      "selector": "#sidebarResponsive > ul:nth-of-type(1) > li:nth-of-type(16) > a"
+     },
+     {
+      "kind": "point",
+      "x": 125,
+      "y": 694,
+      "w": 250,
+      "h": 41,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8106/purchase",
+    "addedContains": [
+     "- link \"Products\"",
+     "- link \"Locations\"",
+     "- link \"Stores\"",
+     "- link \"Quantity units\"",
+     "- link \"Product groups\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=link[name=\"Products\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "role=link[name=\"Products\"]"
+     },
+     {
+      "kind": "role",
+      "role": "link",
+      "name": "Products"
+     },
+     {
+      "kind": "css",
+      "selector": "#sub-nav-manage-master-data > li:nth-of-type(1) > a"
+     },
+     {
+      "kind": "point",
+      "x": 125,
+      "y": 734,
+      "w": 250,
+      "h": 40,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8106/products",
+    "addedContains": [
+     "- heading \"Products\"",
+     "- link \"Add\"",
+     "- link \"Configure userfields\"",
+     "- link \"Presets for new products\"",
+     "- textbox \"Search\""
+    ],
+    "lineDialect": 2
+   }
+  }
+ ],
+ "contract": 3,
+ "stats": {
+  "uses": 2,
+  "successes": 2,
+  "partial": 0,
+  "created": "2026-10-06T13:41:56.898Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 3,
+  "lastUsed": "2026-10-06T13:44:06.711Z",
+  "stopStreak": 0
+ },
+ "status": "validated",
+ "seq": {
+  "chain": "s_808b9a",
+  "index": 0,
+  "of": 3
+ },
+ "variantOf": "s_e9b093",
+ "provenance": {
+  "session": "hagc3-n2",
+  "instruction": "Open the edit page for 'hagc3-n2 Bench Product', verify the address is /product/<id>, and report the exact product ID from the URL. Also verify the saved product name in the edit page.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-10-06T13:41:56.898Z"
+ },
+ "revision": 2
+}
