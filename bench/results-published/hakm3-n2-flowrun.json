@@ -1,0 +1,302 @@
+{
+  "flow": "hakm3",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_fcf802; observed account_email=admin@example.com, login_url=http://127.0.0.1:8105/en/login, avatar_initials=AD, profile_email_link=mailto:admin@example.com, account_username=admin.",
+      "unanswered": [
+        "account_identity"
+      ],
+      "values": {
+        "account_email": "admin@example.com",
+        "login_url": "http://127.0.0.1:8105/en/login",
+        "avatar_initials": "AD",
+        "profile_email_link": "mailto:admin@example.com",
+        "account_username": "admin"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "9/9",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-find",
+      "status": "success",
+      "summary": "Replayed stored procedure s_240204; observed projects_url=http://127.0.0.1:8105/en/admin/project/, matching_project_count=3, pagination_summary=Show entries 1 to 3 from 3., matching_projects_1=Seed: Annual audit, matching_projects_2=Seed: Office move, matching_projects_3=Seed: Website relaunch.",
+      "values": {
+        "projects_url": "http://127.0.0.1:8105/en/admin/project/",
+        "matching_project_count": "3",
+        "pagination_summary": "Show entries 1 to 3 from 3.",
+        "matching_projects_1": "Seed: Annual audit",
+        "matching_projects_2": "Seed: Office move",
+        "matching_projects_3": "Seed: Website relaunch"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "9/9",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "Continuing the partially-replayed procedure (name and description had already been typed into Kimai's Create-project dialog at /en/admin/project/), I selected the existing exact customer \"Bench Customer\" from the form's customer select and clicked Save. Kimai redirected to the new project's details page, confirming the save. The project's detail page shows the exact name and a description containing the runid; no Seed: project was touched.",
+      "values": {
+        "saved_project_url": "http://127.0.0.1:8105/en/admin/project/40005/details",
+        "saved_project_name": "hakm3-n2 Bench Project",
+        "saved_project_description": "Bench project created by automated run hakm3-n2. runid: hakm3-n2",
+        "customer_required": "yes — the create form has a mandatory customer field (project_edit_form[customer], required)",
+        "selected_customer_name": "Bench Customer",
+        "selected_customer_value": "1",
+        "saved_project_customer_row": "Customer\tBench Customer\t0",
+        "available_customer_options": "Bench Customer Ltd, Bench Customers Group, Bench Customer",
+        "selected_customer_option": "1",
+        "selected_customer_text": "Bench Customer Ltd\nBench Customers Group\nBench Customer"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_11f319 stopped at step 4 — after step 4 expected url http://127.0.0.1:8105/en/admin/project/:id/details but browser is at http://127.0.0.1:8105/en/admin/project",
+      "pinStopped": {
+        "skill": "s_11f319",
+        "step": 4,
+        "why": "after step 4 expected url http://127.0.0.1:8105/en/admin/project/:id/details but browser is at http://127.0.0.1:8105/en/admin/project"
+      },
+      "replayed": "3/4",
+      "repaired": false,
+      "turns": 9,
+      "unreported": [
+        "project_id",
+        "project_url",
+        "saved_project_customer",
+        "project_name_heading",
+        "customer_row",
+        "ref"
+      ]
+    },
+    {
+      "id": "04-edit",
+      "status": "success",
+      "summary": "Replayed stored procedure s_195dc9; observed project_id=40005, order_before_save=PO-4471, project_name=hakm3-n2 Bench Project, order_date_input_type=text, run_id=hakm3-n2.",
+      "values": {
+        "project_id": "40005",
+        "order_before_save": "PO-4471",
+        "project_name": "hakm3-n2 Bench Project",
+        "order_date_input_type": "text",
+        "run_id": "hakm3-n2"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "43/43",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_195dc9: step 2: the recorded effect (- dialog \"\") is already showing — a click would toggle it away; skipped as already in effect",
+        "s_195dc9: step 6: read 'order_number' returned a value the skill itself set/selected ('PO-4471') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_195dc9: step 7: read 'order_date_iso' returned a value the skill itself set/selected ('2026-11-15') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_195dc9: step 11: read 'order_number' returned a value the skill itself set/selected ('PO-4471') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_195dc9: step 13: read 'order_date_displayed' returned a value the skill itself set/selected ('11/15/2026') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_195dc9: step 14: read 'order_number' returned a value the skill itself set/selected ('PO-4471') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_195dc9: step 19: read 'order_number' returned a value the skill itself set/selected ('PO-4471') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_195dc9: step 25: read 'order_number' returned a value the skill itself set/selected ('PO-4471') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_195dc9: step 28: read 'order_date_displayed' returned a value the skill itself set/selected ('11/15/2026') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_195dc9: step 32: read 'order_number' returned a value the skill itself set/selected ('PO-4471') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_195dc9: step 33: read 'order_date_displayed' returned a value the skill itself set/selected ('11/15/2026') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_195dc9: step 37: read 'order_date_displayed' returned a value the skill itself set/selected ('11/15/2026') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_195dc9: step 38: read 'order_number' returned a value the skill itself set/selected ('PO-4471') — confirms the control, not persistence; dropped from the report's confident values"
+      ],
+      "unreported": [
+        "order_number",
+        "order_date_displayed",
+        "order_date_iso"
+      ]
+    },
+    {
+      "id": "05-create",
+      "status": "success",
+      "summary": "Exactly one timesheet entry exists for runid hakm3-n2. The replayed skills had already filled Kimai's create dialog but the final Save never registered and left the From date empty (Save disabled); I re-filled From with 9/16/2026, which submitted the form once. Verified from the persisted record's edit form (opened read-only, closed without saving) and the single row in My times: date 9/16/2026, 09:00–11:30 (2:30), description \"Bench timesheet entry for runid hakm3-n2 (automated verification run hakm3-n2)\", project \"hakm3-n2 Bench Project\" (customer Bench Customer), activity \"Consulting\", and its only tag \"onsite\" (the tag select's one selected option, read off the page).",
+      "values": {
+        "date": "9/16/2026",
+        "start_time": "9:00 AM",
+        "end_time": "11:30 AM",
+        "duration": "2:30",
+        "description": "Bench timesheet entry for runid hakm3-n2 (automated verification run hakm3-n2)",
+        "project": "hakm3-n2 Bench Project",
+        "customer": "Bench Customer",
+        "activity": "Consulting",
+        "tags": "onsite",
+        "entry_id_url": "/en/timesheet/2/edit",
+        "timesheet_id": "1",
+        "entry_count_for_run": "1",
+        "tags_selected_options_1": "onsite",
+        "from_date_value": "9/16/2026",
+        "edit_from_date": "9/16/2026",
+        "edit_start_time": "9:00 AM",
+        "edit_end_time": "11:30 AM",
+        "edit_description": "Bench timesheet entry for runid hakm3-n2 (automated verification run hakm3-n2)",
+        "edit_project_selected": "hakm3-n2 Bench Project",
+        "edit_activity_selected": "Consulting",
+        "edit_tags_selected": "onsite",
+        "final_rows": "9/16/2026\t9:00 AM\t11:30 AM\t2:30\tBench Customer\thakm3-n2 Bench Project\tConsulting",
+        "current_url": "http://127.0.0.1:8105/en/timesheet/",
+        "tags_selected_options": "onsite",
+        "edit_page_from_date": "9/16/2026",
+        "ref": "hakm3-n2",
+        "ref_3": "step-34",
+        "list_row_1": "9/16/2026",
+        "list_row_2": "9:00 AM",
+        "list_row_3": "11:30 AM",
+        "list_row_4": "2:30",
+        "list_row_5": "Bench Customer"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_4b410f stopped at step 34 — after step 34 none of the 5 recorded page change(s) appeared (e.g. \"- row \\\"DATE BEGIN END DURATION CUSTOMER PROJECT ACTIVITY\\\"\") — the step ran but did not have its recorded effect",
+      "pinStopped": {
+        "skill": "s_4b410f",
+        "step": 34,
+        "why": "after step 34 none of the 5 recorded page change(s) appeared (e.g. \"- row \\\"DATE BEGIN END DURATION CUSTOMER PROJECT ACTIVITY\\\"\") — the step ran but did not have its recorded effect"
+      },
+      "replayed": "33/46",
+      "repaired": false,
+      "turns": 22,
+      "warnings": [
+        "s_4b410f: step 9: a better-ranked locator did not resolve; used fallback #3 page.locator('#timesheet_edit_form_begin_time')",
+        "s_4b410f: step 10: a better-ranked locator did not resolve; used fallback #3 page.locator('#timesheet_edit_form_end_time')",
+        "s_4b410f: step 13: read 'project_native_value' returned '40005' from a control this step set, and nothing committed it since — it shows the control, however the app formats it, not what the app stored; dropped from the report's confident values",
+        "s_4b410f: step 20: read 'form_date' returned '10/6/2026' from a control this step set, and nothing committed it since — it shows the control, however the app formats it, not what the app stored; dropped from the report's confident values",
+        "s_4b410f: step 21: a better-ranked locator did not resolve; used fallback #3 page.locator('#timesheet_edit_form_begin_time')",
+        "s_4b410f: step 21: read 'start_time' returned a value the skill itself set/selected ('9:00 AM') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_4b410f: step 22: a better-ranked locator did not resolve; used fallback #3 page.locator('#timesheet_edit_form_end_time')",
+        "s_4b410f: step 22: read 'end_time' returned a value the skill itself set/selected ('11:30 AM') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_4b410f: step 24: read 'description' returned a value the skill itself set/selected ('Bench timesheet entry for runid hakm3-n2 (automated verifica…') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_4b410f: step 29: read 'date_displayed' returned a value the skill itself set/selected ('9/16/2026') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_4b410f: step 30: read 'project_native_value' returned '40005' from a control this step set, and nothing committed it since — it shows the control, however the app formats it, not what the app stored; dropped from the report's confident values",
+        "s_4b410f: step 33: read 'date_displayed' returned a value the skill itself set/selected ('9/16/2026') — confirms the control, not persistence; dropped from the report's confident values"
+      ],
+      "unreported": [
+        "date_displayed",
+        "project_name",
+        "my_times_row_values_project",
+        "date_placeholder",
+        "date_pattern",
+        "date_id",
+        "project_sel_id",
+        "activity_sel_id",
+        "tags_sel_id",
+        "project_native_value",
+        "form_date",
+        "activity_option",
+        "activity_option_2",
+        "run_id",
+        "timesheet_row_date",
+        "timesheet_row_start_time",
+        "timesheet_row_end_time",
+        "timesheet_row_duration",
+        "timesheet_row_customer"
+      ]
+    }
+  ],
+  "passed": 5,
+  "total": 5,
+  "repinned": 0,
+  "drift": 5,
+  "driftTickets": [
+    {
+      "flow": "hakm3",
+      "step": "03-create",
+      "skill": "s_11f319",
+      "similarity": 1.001,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_11f319 stopped at step 4 — after step 4 expected url http://127.0.0.1:8105/en/admin/project/:id/details but browser is at http://127.0.0.1:8105/en/admin/project",
+      "reason": "after step 4 expected url http://127.0.0.1:8105/en/admin/project/:id/details but browser is at http://127.0.0.1:8105/en/admin/project",
+      "pageUrlPattern": "http://127.0.0.1:8105/en/admin/project/",
+      "pageUrl": "http://127.0.0.1:8105/en/admin/project/"
+    },
+    {
+      "flow": "hakm3",
+      "step": "05-create",
+      "skill": "s_4b410f",
+      "atStep": "9",
+      "key": "target",
+      "similarity": 0.999,
+      "missedLocator": "page.getByRole('textbox', { name: 'h:mm a', exact: true }).nth(0)",
+      "fallbackUsed": "page.locator('#timesheet_edit_form_begin_time')",
+      "fallbackIndex": 2,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:8105/en/timesheet/",
+      "pageUrl": "http://127.0.0.1:8105/en/timesheet/"
+    },
+    {
+      "flow": "hakm3",
+      "step": "05-create",
+      "skill": "s_4b410f",
+      "atStep": "10",
+      "key": "target",
+      "similarity": 0.999,
+      "missedLocator": "page.getByRole('textbox', { name: 'h:mm a', exact: true }).nth(1)",
+      "fallbackUsed": "page.locator('#timesheet_edit_form_end_time')",
+      "fallbackIndex": 2,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:8105/en/timesheet/",
+      "pageUrl": "http://127.0.0.1:8105/en/timesheet/"
+    },
+    {
+      "flow": "hakm3",
+      "step": "05-create",
+      "skill": "s_4b410f",
+      "atStep": "21",
+      "key": "target",
+      "similarity": 0.999,
+      "missedLocator": "page.getByRole('textbox', { name: 'h:mm a', exact: true }).nth(0)",
+      "fallbackUsed": "page.locator('#timesheet_edit_form_begin_time')",
+      "fallbackIndex": 2,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:8105/en/timesheet/",
+      "pageUrl": "http://127.0.0.1:8105/en/timesheet/"
+    },
+    {
+      "flow": "hakm3",
+      "step": "05-create",
+      "skill": "s_4b410f",
+      "atStep": "22",
+      "key": "target",
+      "similarity": 0.999,
+      "missedLocator": "page.getByRole('textbox', { name: 'h:mm a', exact: true }).nth(1)",
+      "fallbackUsed": "page.locator('#timesheet_edit_form_end_time')",
+      "fallbackIndex": 2,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:8105/en/timesheet/",
+      "pageUrl": "http://127.0.0.1:8105/en/timesheet/"
+    }
+  ],
+  "wallMs": 182942,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 486553,
+    "completionTokens": 10342,
+    "cachedTokens": 446592
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 486553,
+      "completionTokens": 10342,
+      "cachedTokens": 446592
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "openai/gpt-6-luna",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

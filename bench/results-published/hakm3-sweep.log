@@ -1,0 +1,116 @@
+
+[sweep] run 1/3: hakm3-n1 (store: /home/user/sitelooper/bench/results/hakm3-skills)
+[harness] kimai: defaulting APP_URL
+[harness] kimai: defaulting APP_EMAIL
+[harness] kimai: defaulting APP_PASSWORD
+[reset] kimai: no timesheets to delete
+[reset] kimai: no projects to delete
+[harness] kimai responded 302 at http://127.0.0.1:8105/
+stopped: hakm3-n1
+  flow "hakm3" saved: 5 step(s), vars runid → /home/user/sitelooper/bench/results/flows/hakm3.json
+  warning: warning: 03-create's instruction asks to report customer_required, and only a recorded literal backs it: no read in its procedure publishes it, so a replay reports it only if the page it ends on shows that exact text — re-record the step so the value is read where it is shown
+  warning: warning: 01-signin's instruction asks to report account_identity, and no replay can publish it: nothing in its procedure reads it from the page, so export dropped it — re-record the step so the value is read, not only reported
+  warning: note: 01-signin no longer publishes app_version, profile_url — no replay reads them from the page and the recording showed no line to read
+  warning: note: 02-find no longer publishes total_projects_on_page — no replay reads it from the page and the recording showed no line to read
+  warning: note: 04-edit no longer publishes date_before_save — no replay reads it from the page and the recording showed no line to read
+  warning: note: 05-create no longer publishes entry_edit_url, entry_api_url, date_iso, customer_name, activity_name, tag_count, my_times_row_count, my_times_row_values_date, my_times_row_values_start, my_times_row_values_end, my_times_row_values_duration, my_times_row_values_customer, my_times_row_values_activity, duration_hours, form_start_time, form_end_time, form_duration, date_after_typing, native_project_value, native_activity_value, tag_id, date_final, saved_entry_date — no replay reads them from the page and the recording showed no line to read
+  warning: warning: 332 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.startUrl: "http://127.0.0.1:8105/en/login" (output) in "http://127.0.0.1:8105/en/login"
+  flow.steps[0].instruction: "http://127.0.0.1:8105/en/login" (output) in "Sign in to Kimai at http://127.0.0.1:8105/en/login using email admin@example.com and password exactly {{env:APP_PASSWORD}}. Verify that you are signed in and re"
+  flow.steps[0].instruction: "admin@example.com" (output) in "Sign in to Kimai at http://127.0.0.1:8105/en/login using email admin@example.com and password exactly {{env:APP_PASSWORD}}. Verify that you are signed in and re"
+  flow.steps[0].instruction: "admin" (output) in "Sign in to Kimai at http://127.0.0.1:8105/en/login using email admin@example.com and password exactly {{env:APP_PASSWORD}}. Verify that you are signed in and re"
+  flow.steps[0].params.v1: "http://127.0.0.1:8105/en/login" (output) in "http://127.0.0.1:8105/en/login"
+arm=sitelooper model=openai/gpt-6-luna runid=hakm3-n1 stop=completed
+turns=6 wall=518.8s
+commands=5 cmdTime=490.5s cmdBytes=7834 timeouts=0
+orchestrator in=5568 cw=0 cr=17246 out=1112
+inner prompt=2431041 cached=2198973 completion=33207
+spend=$0.0599 maxUsd=3
+learn: A_n=0 replayed=0/5 full=0 repaired=0 compiled=5 variants=0
+-> /home/user/sitelooper/bench/results/hakm3-n1-sitelooper-result.json
+
+hakm3-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: PASS — #40004, description includes runid=true
+  obj 3: PASS — customer=Bench Customer (#1), want the seeded Bench Customer (#1)
+  obj 4: PASS — orderNumber=PO-4471, orderDate=2026-11-15; want PO-4471 and 2026-11-15
+  obj 5: PASS — timesheet #1 begin=2026-09-16T09:00:00+0000 end=2026-09-16T11:30:00+0000; want 2026-09-16T09:00 to 2026-09-16T11:30
+  obj 6: PASS — activity=Consulting (#1), tags=["onsite"]; want the seeded Consulting (#1) and ["onsite"]
+  obj 7: PASS — project id 40004 reported
+
+[sweep] run 2/3: hakm3-n2 (replay flow hakm3, no orchestrator)
+[reset] kimai: deleted 1 timesheet(s)
+[reset] kimai: deleted 1 project(s) (earlier runs' and non-seed)
+[sweep] hakm3-n2: 5 drift ticket(s) → hakm3-n2-drift.json
+
+hakm3-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: PASS — #40005, description includes runid=true
+  obj 3: PASS — customer=Bench Customer (#1), want the seeded Bench Customer (#1)
+  obj 4: PASS — orderNumber=PO-4471, orderDate=2026-11-15; want PO-4471 and 2026-11-15
+  obj 5: PASS — timesheet #2 begin=2026-09-16T09:00:00+0000 end=2026-09-16T11:30:00+0000; want 2026-09-16T09:00 to 2026-09-16T11:30
+  obj 6: PASS — activity=Consulting (#1), tags=["onsite"]; want the seeded Consulting (#1) and ["onsite"]
+  obj 7: PASS — project id 40005 reported
+
+[sweep] run 3/3: hakm3-n3 (replay flow hakm3, no orchestrator)
+[reset] kimai: deleted 1 timesheet(s)
+[reset] kimai: deleted 1 project(s) (earlier runs' and non-seed)
+[sweep] hakm3-n3: 4 drift ticket(s) → hakm3-n3-drift.json
+
+hakm3-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: PASS — #40006, description includes runid=true
+  obj 3: PASS — customer=Bench Customer (#1), want the seeded Bench Customer (#1)
+  obj 4: PASS — orderNumber=PO-4471, orderDate=2026-11-15; want PO-4471 and 2026-11-15
+  obj 5: PASS — timesheet #3 begin=2026-09-16T09:00:00+0000 end=2026-09-16T11:30:00+0000; want 2026-09-16T09:00 to 2026-09-16T11:30
+  obj 6: PASS — activity=Consulting (#1), tags=["onsite"]; want the seeded Consulting (#1) and ["onsite"]
+  obj 7: PASS — project id 40006 reported
+
+Learning sweep hakm3 (K=3)
+┌─────────┬───┬────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid      │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'hakm3-n1' │ '7/7'    │ 'completed' │ 6     │ 5    │ 0.0599    │ 0   │ '0/5'        │ 519    │
+│ 1       │ 2 │ 'hakm3-n2' │ '7/7'    │ 'success'   │ 31    │ 5    │ 0.0135    │ 0.6 │ '5/5 (flow)' │ 183    │
+│ 2       │ 3 │ 'hakm3-n3' │ '7/7'    │ 'success'   │ 18    │ 5    │ 0.0107    │ 0.8 │ '5/5 (flow)' │ 133    │
+└─────────┴───┴────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:8105
+  s_195dc9  validated   43 steps  3/3 (100%)
+           Edit the already-created Kimai project '{{v1}}' and set its order number to exactly '{{v3}}' and its order dat…
+  s_240204  validated    6 steps  3/3 (100%)
+           In Kimai, find and report exactly the names of all projects whose names start with 'Seed:'. Do not edit any pr…
+  s_28bf05  validated    3 steps  3/3 (100%)
+           In Kimai, find and report exactly the names of all projects whose names start with 'Seed:'. Do not edit any pr…
+  s_4b410f  demoted     46 steps  1/3 (33%)
+           Create and save exactly one Kimai timesheet entry for project '{{v1}}' on 2026-09-16 from 09:00 to 11:30. Set …
+  s_f4a3ba  validated    1 steps  3/3 (100%)
+           Create and save exactly one Kimai timesheet entry for project '{{v1}}' on 2026-09-16 from 09:00 to 11:30. Set …
+  s_fb7f1c  validated    3 steps  3/3 (100%)
+           Sign in to Kimai at {{v1}} using email {{v2}} and password exactly {{v3}}. Verify that you are signed in and r…
+  s_fcf802  validated    2 steps  3/3 (100%)
+           Sign in to Kimai at {{v1}} using email {{v2}} and password exactly {{v3}}. Verify that you are signed in and r…
+  s_ff0e3b  validated    4 steps  3/3 (100%)
+           Sign in to Kimai at {{v1}} using email {{v2}} and password exactly {{v3}}. Verify that you are signed in and r…
+  s_11f319  provisional  4 steps  1/2 (50%)
+           Create and save a Kimai project named '{{v2}}' with a description that includes the exact runid '{{v1}}'. Do n…
+  s_65adf6  validated    9 steps  2/2 (100%)  variant of s_11f319
+           Create and save a Kimai project named '{{v2}}' with a description that includes the exact runid '{{v1}}'. Do n…
+  s_8d4dc3  validated    4 steps  2/2 (100%)  variant of s_11f319
+           Create and save a Kimai project named '{{v2}}' with a description that includes the exact runid '{{v1}}'. Do n…
+  s_1902ed  provisional  6 steps  1/1 (100%)
+           Create and save a Kimai project named '{{v2}}' with a description that includes the exact runid '{{v1}}'. Do n…
+  s_35d4f3  provisional 50 steps  1/1 (100%)
+           Create and save exactly one Kimai timesheet entry for project '{{v1}}' on 2026-09-16 from 09:00 to 11:30. Set …
+  s_649ba3  provisional  1 steps  1/1 (100%)
+           Create and save exactly one Kimai timesheet entry for project '{{v1}}' on 2026-09-16 from 09:00 to 11:30. Set …
+  s_988c9c  provisional 50 steps  1/1 (100%)  variant of s_4b410f
+           Create and save exactly one Kimai timesheet entry for project '{{v1}}' on 2026-09-16 from 09:00 to 11:30. Set …
+  s_bcc254  provisional  1 steps  1/1 (100%)
+           Create and save exactly one Kimai timesheet entry for project '{{v1}}' on 2026-09-16 from 09:00 to 11:30. Set …
+  s_bd2d79  provisional 52 steps  1/1 (100%)
+           Create and save exactly one Kimai timesheet entry for project '{{v1}}' on 2026-09-16 from 09:00 to 11:30. Set …
+  s_c3abf5  provisional 52 steps  1/1 (100%)  variant of s_4b410f
+           Create and save exactly one Kimai timesheet entry for project '{{v1}}' on 2026-09-16 from 09:00 to 11:30. Set …
+store: /home/user/sitelooper/bench/results/hakm3-skills
+
+summary: /home/user/sitelooper/bench/results/hakm3-sweep.json

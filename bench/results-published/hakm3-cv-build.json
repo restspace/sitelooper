@@ -1,0 +1,76 @@
+{
+  "exit": 4,
+  "wallMs": 1349996,
+  "result": {
+    "converge": {
+      "status": "exhausted",
+      "why": "2 round(s) without a passing compiled spec",
+      "rounds": [
+        {
+          "round": 1,
+          "compile": {
+            "refused": true,
+            "outcome": "refused",
+            "codes": [
+              "demoted-pin@05-create"
+            ],
+            "steps": [
+              "05-create"
+            ],
+            "blockers": [],
+            "flowFile": null
+          },
+          "rerecord": {
+            "step": "05-create",
+            "why": "compile refusal",
+            "ok": false,
+            "attempt": 1,
+            "runs": 2,
+            "pinned": "s_ea4fe0",
+            "turns": 78,
+            "diagnostics": [
+              "needs-rerecord: 05-create did not pass on its last run after re-recording"
+            ]
+          }
+        },
+        {
+          "round": 2,
+          "compile": {
+            "refused": false,
+            "outcome": "compiled",
+            "codes": [],
+            "steps": [],
+            "blockers": [],
+            "flowFile": "/home/user/sitelooper/bench/results/.hakm3-cv-compiled-YevI0r/hakm3-cv.flow.ts"
+          },
+          "check": {
+            "ran": true,
+            "passed": false,
+            "timedOut": false,
+            "step": "05-create",
+            "anchor": "05-create s_49e1fd/25",
+            "error": "TypeError: Cannot read properties of undefined (reading 'nth')"
+          },
+          "rerecord": {
+            "step": "05-create",
+            "why": "the spec failed at this step",
+            "ok": false,
+            "attempt": 2,
+            "runs": 3,
+            "pinned": "s_9b15ba",
+            "turns": 147,
+            "diagnostics": [
+              "needs-rerecord: 05-create did not pass on its last run after re-recording"
+            ]
+          }
+        }
+      ],
+      "flowFile": null,
+      "modelTurns": 225
+    },
+    "schemaVersion": 1,
+    "stage": "converge",
+    "outcome": "not-converged",
+    "nextActions": []
+  }
+}
