@@ -179,7 +179,7 @@ export function compileFlow(
     snapshotFile?: string;
     outDir?: string;
     tier?: 'plain';
-    /** Permit compilation despite a `demoted-pin` or `unproven-pin` error. Does not overwrite user code. */
+    /** Permit compilation with an ERROR diagnostic. Does not overwrite user code. */
     allowDemoted?: boolean;
     /** Replace the user-owned .spec.ts scaffold. Does not relax diagnostics. */
     overwriteSpec?: boolean;
@@ -223,11 +223,8 @@ export function compileFlow(
   // reference is bound into — and a refusal the writer does not honour is not
   // a refusal (fwkb14, fwod52: both compiled clean and stopped at 1/6 and
   // 3/6).
-  // …and about unproven pins (`unproven-pin`), the same fact one step earlier:
-  // a pin whose stops were forgiven as harmless rather than counted as strikes
-  // (notes/CONTRACT-spec-reliability.md item 1).
   const refused = [...diagnostics, ...emitted.diagnostics].some(
-    (d) => d.severity === 'error' && !((d.code === 'demoted-pin' || d.code === 'unproven-pin') && o.allowDemoted),
+    (d) => d.severity === 'error' && !(d.code === 'demoted-pin' && o.allowDemoted),
   );
   const base = safeName(spec.name);
   const compiler = compilerProvenance();

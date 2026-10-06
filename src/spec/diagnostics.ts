@@ -41,8 +41,6 @@ export type DiagnosticCode =
   | 'recipe-snapshot' // flow-level: the component store holds state the artifact's compile-time recipe snapshot cannot express (a demoted recipe, a family with none usable, a learned variant travelling as data)
   | 'literal-credential' // the procedure carries the value of a credential-named environment variable in the clear (fwrd83: `v2: 'bench-pass-1234'`, requiredEnvNames [])
   | 'assert-procedure' // an assertion step and its pinned procedure disagree about being one (FlowStep.kind vs Skill.assert), so it would compile under the wrong failure policy
-  | 'unproven-pin' // the step's pinned procedure stopped on its latest replay(s) and has not replayed clean since — a compiled spec would stop at the same step (notes/CONTRACT-spec-reliability.md item 1)
-  | 'unchecked-commit' // a step that commits work (a click after fills) has no recorded effect to check, so a spec run where it did nothing still passes (item 3)
   | 'no-procedure'; // step has no converged procedure
 
 export interface Diagnostic {
