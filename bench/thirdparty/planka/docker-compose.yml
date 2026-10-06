@@ -50,7 +50,9 @@ services:
         condition: service_healthy
 
   postgres:
-    image: postgres:16-alpine
+    # Docker Hub rate-limited this environment (429, 2026-10-06 16:44Z and
+    # 17:44Z): the same official image through Google's pull-through mirror.
+    image: mirror.gcr.io/library/postgres:16-alpine
     environment:
       POSTGRES_DB: planka
       POSTGRES_HOST_AUTH_METHOD: trust

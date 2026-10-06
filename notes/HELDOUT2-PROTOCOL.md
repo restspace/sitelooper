@@ -103,3 +103,5 @@ A repetition corrupted by such a bug is rerun for BOTH arms. No change to either
   app. Metric, fixed before it runs: per version, specs whose verifier state objectives (2-6) are
   all PASS with no DUPLICATE/EXTRA, out of 36 runs; plus refusals and silent passes (Playwright
   pass with a state objective failing).
+- 2026-10-06 17:44Z, srpk: Docker Hub answered 429 for postgres:16-alpine twice (16:44Z, 17:44Z);
+  planka's compose now pulls the same official image from mirror.gcr.io. Infrastructure only.
