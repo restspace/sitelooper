@@ -94,6 +94,8 @@ Build the test and run it:
 sitelooper build ticket --var runid=test-{n} --reset-cmd "npm run reset:e2e"
 # or, if your Playwright fixtures already prepare fresh data:
 # sitelooper build ticket --var runid=test-{n} --fixture-isolation
+# to let the build re-record the steps a refusal or a failing spec names (the model works those steps only):
+# sitelooper build ticket --var runid=test-{n} --reset-cmd "npm run reset:e2e" --converge 3 [--rerecord-runs 2] [--json]
 npx playwright test tests/sitelooper/ticket.spec.ts
 ```
 

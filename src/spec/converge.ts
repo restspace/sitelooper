@@ -1,0 +1,263 @@
+/**
+ * `sitelooper build --converge`: compile → check → re-record as one command.
+ *
+ * bench/converge.mjs found out how far the EXISTING mechanisms take a
+ * recording that does not compile to a passing model-free artifact: refused
+ * compiles name steps to re-record, a failing spec names the step it died at,
+ * and re-recording that step (the model works that one step; the rest
+ * replays) usually clears it. This is that loop without the bench: the model
+ * is only ever used by a re-record, and the artifact that ends the loop is
+ * model-free.
+ *
+ * The rules are the bench's lessons, each paid for in model turns:
+ *
+ *  - Only the FAILURE names a step. A `[sitelooper drift]` line is a locator
+ *    the artifact healed on its way past, and that step is fine: fwsi14-cv2
+ *    spent 207 turns re-recording 02-create (a healed drift) while the spec
+ *    failed at 03-open every round. This module never reads `result.drift`.
+ *  - A producer a failure names ("02-open needs {{01-signin.x}}") is the
+ *    step to re-record, and what to read there: fwvk15-cv burned four rounds
+ *    re-recording the consumer.
+ *  - A check that only timed out is the emitted budget (MAX_BUDGET_MS), not a
+ *    step failure (fwod88-cv4: the artifact had passed, then hit 300s).
+ *  - A step whose re-record the re-pin rule refused twice does not replay
+ *    clean; a third attempt is not made (fwop15-cv: four identical refusals,
+ *    150 model turns). The second attempt gets a third run.
+ *  - The last re-record is compiled and checked too: the loop must not end on
+ *    an untested recording (fwgt15-cv2).
+ *
+ * Every effect is a seam, so the loop is driven with fakes in
+ * test/build-converge.test.ts; src/cli.ts wires the real compile, spec check,
+ * re-record and reset command.
+ */
+import type { Diagnostic } from './diagnostics.js';
+
+/** What the loop needs of a compile: `CompileResult` satisfies it. */
+export interface ConvergeCompile {
+  refused: boolean;
+  compilable: boolean;
+  flowFile: string | null;
+  diagnostics: Diagnostic[];
+  compileBlockers: string[];
+  /** The flow's steps in order; only ids are read (the order a refusal's re-records are taken in). */
+  spec?: { steps: Array<{ id: string }> };
+}
+
+/** What the loop needs of a spec check: `SpecCheckResult` satisfies it. */
+export interface ConvergeCheck {
+  ran: boolean;
+  passed: boolean;
+  timedOut: boolean;
+  error: string | null;
+  /** "04-open s_1e46d8/10": the nearest `// @step` above the failing line. */
+  anchor: string | null;
+  verdict?: string;
+}
+
+export interface ConvergeRerecord {
+  ok: boolean;
+  pinned: string | null;
+  runs: Array<{ status: string; tier: string | null; turns: number | null }>;
+  diagnostics: string[];
+}
+
+export interface ConvergeSeams {
+  compile(): ConvergeCompile;
+  /** Runs the compiled spec once; `reset` has already run. */
+  check(flowFile: string): ConvergeCheck;
+  /** Re-record one step. `outputs`: values a later step needs, to be read from the page. */
+  rerecord(step: string, o: { runs: number; outputs: string[] }): Promise<ConvergeRerecord>;
+  /** Puts the app back before every check (the `--reset-cmd`); absent when there is none. */
+  reset?(): void;
+  /** One progress line per event; the CLI prints them to stderr. */
+  say?(line: string): void;
+}
+
+export interface ConvergeOptions {
+  /** Rounds before the loop gives up (each may re-record one step). */
+  maxRounds: number;
+  /** Runs of a first re-record of a step; a second attempt at the same step gets at least three. */
+  rerecordRuns: number;
+}
+
+export interface ConvergeRound {
+  round: number;
+  /** True for the check after the last round's re-record: it never re-records. */
+  final?: boolean;
+  compile: {
+    refused: boolean;
+    outcome: 'compiled' | 'refused';
+    /** `code@step` of every error diagnostic. */
+    codes: string[];
+    /** Steps the refusal says to re-record, in flow order. */
+    steps: string[];
+    blockers: string[];
+    flowFile: string | null;
+  };
+  check?: { ran: boolean; passed: boolean; timedOut: boolean; step: string | null; anchor: string | null; error: string | null };
+  rerecord?: { step: string; why: string; ok: boolean; attempt: number; runs: number; pinned: string | null; turns: number; diagnostics: string[] };
+}
+
+export type ConvergeStatus =
+  | 'converged'
+  | 'stuck'          // nothing names a step to re-record
+  | 'stuck-repin'    // one step's re-record was refused twice
+  | 'timed-out'      // the check only hit the runner's budget
+  | 'unavailable'    // the spec could not be run at all
+  | 'exhausted';     // the round cap
+
+export interface ConvergeResult {
+  status: ConvergeStatus;
+  why: string;
+  rounds: ConvergeRound[];
+  /** The artifact that passed, when one did. */
+  flowFile: string | null;
+  modelTurns: number;
+}
+
+/** The outputs a refusal says nobody publishes, by producer step ("{{03-create.ref}}, and nothing has ever published"). */
+function missingOutputs(diagnostics: Diagnostic[]): Map<string, string[]> {
+  const missing = new Map<string, string[]>();
+  for (const d of diagnostics) {
+    if (d.severity !== 'error') continue;
+    const m = /\{\{([\w-]+)\.([\w.-]+?)\}\}, and nothing has ever published/.exec(d.what ?? '');
+    if (m) missing.set(m[1], [...new Set([...(missing.get(m[1]) ?? []), m[2]])]);
+  }
+  return missing;
+}
+
+/**
+ * The steps a refused compile says to re-record, in FLOW order: an unsourced
+ * reference names its producer (03-create) beside the consumer's own pin
+ * (08-open), and re-recording the producer first usually clears the rest.
+ * One re-record per round, then recompile — cheaper than re-recording every
+ * named step on evidence the next compile will change.
+ */
+export function rerecordSteps(diagnostics: Diagnostic[], order: string[]): string[] {
+  const at = new Map(order.map((id, i) => [id, i]));
+  const named = diagnostics
+    .filter((d) => d.severity === 'error' && d.action?.command === 'rerecord')
+    .map((d) => d.action?.step ?? d.step)
+    .filter((s): s is string => Boolean(s));
+  return [...new Set(named)].sort((a, b) => (at.get(a) ?? 1e9) - (at.get(b) ?? 1e9));
+}
+
+/** Playwright's own whole-test budget message, as opposed to a locator or expect timeout inside a step. */
+const TEST_BUDGET = /\bTest timeout of \d+\s*ms exceeded\b/i;
+
+/**
+ * The step a failing spec check names, from the failure alone: the producer
+ * of a value the failure says it needed, else the failure's own site.
+ * Never a drift line. `null` when the failure names none.
+ */
+export function failingStep(check: Pick<ConvergeCheck, 'error' | 'anchor'>): { step: string | null; outputs: string[] } {
+  const error = check.error ?? '';
+  const producer = /needs \{\{([\w-]+)\.([\w.-]+?)\}\}/.exec(error);
+  if (producer) {
+    const outputs = [...new Set([...error.matchAll(new RegExp(`needs \\{\\{${producer[1]}\\.([\\w.-]+?)\\}\\}`, 'g'))].map((m) => m[1]))];
+    return { step: producer[1], outputs };
+  }
+  // The checks the artifact makes after its last step (emit.ts runFlow) name
+  // their step only in the message: "persistence: 01-create typed …" and
+  // "PARTIAL: 01-create: …". They are thrown outside every step's anchor, so
+  // an anchor here would be wrong — read the message first.
+  const after = /^(?:Error: )?(?:persistence|PARTIAL): ([\w-]+)\b/m.exec(error);
+  if (after) return { step: after[1], outputs: [] };
+  const anchor = check.anchor?.trim().split(/\s+/)[0];
+  if (anchor) return { step: anchor, outputs: [] };
+  // The artifact's own message leads with the site: "01-signin s_5fccd8/2: …".
+  const site = /(?:^|[\s(:])([\w-]+) s_[0-9a-f]{6}(?:\/\d+)?\b/.exec(error);
+  return { step: site?.[1] ?? null, outputs: [] };
+}
+
+/** Whether a failed check is the runner's budget and nothing else. */
+export function budgetOnly(check: Pick<ConvergeCheck, 'timedOut' | 'error'>): boolean {
+  return check.timedOut || TEST_BUDGET.test(check.error ?? '');
+}
+
+export async function converge(seams: ConvergeSeams, o: ConvergeOptions): Promise<ConvergeResult> {
+  const say = seams.say ?? (() => {});
+  const rounds: ConvergeRound[] = [];
+  const refused = new Map<string, number>();
+  let order: string[] = [];
+  let modelTurns = 0;
+  const done = (status: ConvergeStatus, why: string, flowFile: string | null = null): ConvergeResult => {
+    say(`converge: ${status} — ${why}`);
+    return { status, why, rounds, flowFile, modelTurns };
+  };
+
+  for (let k = 1; k <= o.maxRounds + 1; k++) {
+    // Round maxRounds+1 only tests the last round's re-record; it never makes another.
+    const final = k > o.maxRounds;
+    const last = rounds.at(-1);
+    if (final && !last?.rerecord?.ok) break;
+
+    const c = seams.compile();
+    if (c.spec?.steps.length) order = c.spec.steps.map((s) => s.id);
+    const isRefused = c.refused || !c.compilable || !c.flowFile;
+    const steps = isRefused ? rerecordSteps(c.diagnostics, order) : [];
+    const round: ConvergeRound = {
+      round: k,
+      ...(final ? { final: true } : {}),
+      compile: {
+        refused: isRefused,
+        outcome: isRefused ? 'refused' : 'compiled',
+        codes: [...new Set(c.diagnostics.filter((d) => d.severity === 'error').map((d) => `${d.code}@${d.step ?? '-'}`))],
+        steps,
+        blockers: c.compileBlockers.slice(0, 10),
+        flowFile: c.flowFile,
+      },
+    };
+    rounds.push(round);
+
+    // A step to re-record: with the reason, the outputs a later step needs read there.
+    const rerecordStep = async (step: string, why: string, outputs: string[]): Promise<ConvergeResult | null> => {
+      const before = refused.get(step) ?? 0;
+      if (before >= 2) {
+        return done('stuck-repin', `${step} was re-recorded twice and the re-pin rule refused both: its procedure does not replay clean`);
+      }
+      const runs = before ? Math.max(o.rerecordRuns, 3) : o.rerecordRuns;
+      say(`converge round ${k}: re-recording ${step} (${why}), ${runs} run(s)${before ? ' — refused before' : ''}`);
+      const r = await seams.rerecord(step, { runs, outputs });
+      if (!r.ok) refused.set(step, before + 1);
+      const turns = r.runs.reduce((n, x) => n + (x.turns ?? 0), 0);
+      modelTurns += turns;
+      round.rerecord = { step, why, ok: r.ok, attempt: refused.get(step) ?? 0, runs: r.runs.length, pinned: r.pinned, turns, diagnostics: r.diagnostics.slice(0, 5) };
+      return null;
+    };
+
+    if (isRefused) {
+      say(`converge round ${k}: compile refused (${round.compile.codes.join(', ') || 'no error code'}); re-record: ${steps.join(', ') || 'nothing named'}`);
+      // Refused with no action is a compiler blocker: nothing to retry.
+      if (!steps.length) return done('stuck', `compile refused with no re-record action${round.compile.blockers.length ? `: ${round.compile.blockers[0]}` : ''}`);
+      if (final) return done('stuck', 'the last re-record did not clear the compile refusal');
+      const stop = await rerecordStep(steps[0], `compile refusal${steps.length > 1 ? `; also named: ${steps.slice(1).join(', ')}` : ''}`, missingOutputs(c.diagnostics).get(steps[0]) ?? []);
+      if (stop) return stop;
+      continue;
+    }
+
+    seams.reset?.();
+    const chk = seams.check(c.flowFile as string);
+    const step = chk.passed ? null : failingStep(chk);
+    round.check = { ran: chk.ran, passed: chk.passed, timedOut: chk.timedOut, step: step?.step ?? null, anchor: chk.anchor, error: chk.error ? chk.error.slice(0, 400) : null };
+    if (!chk.ran) return done('unavailable', `the compiled spec could not be run${chk.verdict ? `: ${chk.verdict}` : ''}`);
+    if (chk.passed) return done('converged', `round ${k}: the compiled spec passed`, c.flowFile);
+    say(`converge round ${k}: the spec failed${step?.step ? ` at ${step.step}` : ''}${chk.error ? ` — ${chk.error.split('\n')[0].slice(0, 160)}` : ''}`);
+    // The budget, not a recording: re-recording a step cannot lengthen it.
+    if (budgetOnly(chk)) return done('timed-out', `round ${k}: the spec check only hit its time budget; no step failed (raise the runner's timeout or shorten the flow)`);
+    if (final) return done('exhausted', `${o.maxRounds} round(s) and the last re-record still fail${step?.step ? ` at ${step.step}` : ''}`);
+    if (!step?.step) return done('stuck', `round ${k}: the spec failed and the failure names no step to re-record`);
+    if (order.length && !order.includes(step.step)) return done('stuck', `round ${k}: the failure names ${step.step}, which is not a step of this flow`);
+    const stop = await rerecordStep(step.step, step.outputs.length ? 'a later step needs values it never published' : 'the spec failed at this step', step.outputs);
+    if (stop) return stop;
+  }
+  return done('exhausted', `${o.maxRounds} round(s) without a passing compiled spec`);
+}
+
+/** One line per round for the terminal. */
+export function roundLine(r: ConvergeRound): string {
+  const parts = [`round ${r.round}${r.final ? ' (final check)' : ''}: compile ${r.compile.outcome}${r.compile.codes.length ? ` (${r.compile.codes.join(', ')})` : ''}`];
+  if (r.check) parts.push(`check ${!r.check.ran ? 'unavailable' : r.check.passed ? 'passed' : r.check.timedOut ? 'timed out' : `failed${r.check.step ? ` at ${r.check.step}` : ''}`}`);
+  if (r.rerecord) parts.push(`re-record ${r.rerecord.step} ${r.rerecord.ok ? 'ok' : `refused (attempt ${r.rerecord.attempt})`}, ${r.rerecord.turns} turn(s)`);
+  return parts.join('; ');
+}

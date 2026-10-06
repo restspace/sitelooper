@@ -2339,6 +2339,24 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
             ...referencedValues(step, outputs),
           },
         });
+        // Learn from the harmless stop, not only forgive it. The stop above was
+        // over a recorded expectation (stopGate), and the recovery has just
+        // proved that expectation wrong for this app: the step had done its
+        // work, the gate disagreed. Forgiven and left standing, it stopped
+        // every later replay the same way — hsdx1's s_2731b5 at step 4 (a hide
+        // line naming "Oct 5 {{*}} PM Edited by Admin User"), hsbs2's s_7db6d8
+        // at step 5 (hide `textbox "Tag Name"`) — and the compiled spec, which
+        // has no recovery, threw there. After recordOutcome, so the relaxation
+        // restarts the stop streak the stop just extended. The store refuses
+        // what the evidence does not reach (relaxExpectation).
+        const gate = result.skill?.stopGate;
+        if (harmlessStop && gate && result.skill?.invoked === gate.skill && !result.skill.refused && result.skill.stepsReplayed < result.skill.stepsTotal) {
+          if (this.browser.learn.relaxExpectation(gate.skill, gate)) {
+            const what = gate.kind === 'url' ? gate.pattern : gate.line;
+            const more = (gate.lines?.length ?? 0) > 1 ? ` (+${gate.lines!.length - 1} more)` : '';
+            opts.progress(`[flow ${flow.name}] ${step.id}: relaxed ${gate.skill} step ${gate.step} — ${gate.kind} ${JSON.stringify(what)}${more} stopped a replay the recovery proved harmless`);
+          }
+        }
         // A skill this recovery just compiled carries this run's values the
         // same way a recording's does, and the export-time strip never sees
         // it: fwod70-n2's 03-create recovery saved quotation S00022 and read
@@ -2648,6 +2666,13 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
         // replaying left no record of the cause anywhere (sp4od 06-open).
         recovered,
         ...(recovered ? { fellBack } : {}),
+        // A pinned replay that stopped part-way and that the model finished:
+        // still tier A for compatibility, but model-assisted, and said so.
+        // hsdx1-n2's 05-set read "tier A" over 17 recovery turns, and the
+        // compiled spec — which has no model — threw at that very stop.
+        ...(recovered && sk?.invoked && !sk.refused && sk.stepsReplayed < sk.stepsTotal
+          ? { pinStopped: { skill: sk.invoked, step: sk.failedAt ?? sk.stepsReplayed + 1, why: sk.failReason ?? fellBack } }
+          : {}),
         replayed: sk?.invoked ? `${sk.stepsReplayed}/${sk.stepsTotal}` : null,
         repaired: Boolean(sk?.repaired),
         turns: result.turns,
@@ -3231,6 +3256,9 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
       ...(agg.skipped.length ? { skippedReads: [...new Set(agg.skipped)] } : {}),
       ...(replay.reason ? { failReason: replay.reason } : {}),
       ...(replay.failedAt !== undefined ? { failedAt: replay.failedAt } : {}),
+      // The gate a part-way stop was over, named by the segment that stopped
+      // (`last`), for the flow runner's harmless-stop relaxation.
+      ...(!replay.ok && replay.stopGate ? { stopGate: replay.stopGate } : {}),
       replayUrl: replay.url,
       deterministicActions: agg.stepsRun,
       totalActions: agg.stepsRun,
