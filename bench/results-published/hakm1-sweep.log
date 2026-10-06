@@ -1,0 +1,116 @@
+
+[sweep] run 1/3: hakm1-n1 (store: /home/user/sitelooper/bench/results/hakm1-skills)
+[harness] kimai: defaulting APP_URL
+[harness] kimai: defaulting APP_EMAIL
+[harness] kimai: defaulting APP_PASSWORD
+[reset] kimai: no timesheets to delete
+[reset] kimai: no projects to delete
+[harness] kimai responded 302 at http://127.0.0.1:8105/
+stopped: hakm1-n1
+  flow "hakm1" saved: 4 step(s), vars runid → /home/user/sitelooper/bench/results/flows/hakm1.json
+  warning: note: 01-signin no longer publishes kimai_version, profile_url — no replay reads them from the page and the recording showed no line to read
+  warning: note: 02-report no longer publishes list_url, projects_matching_count — no replay reads them from the page and the recording showed no line to read
+  warning: note: 03-create no longer publishes customer_id, customer_link, order_date — no replay reads them from the page and the recording showed no line to read
+  warning: note: 04-create no longer publishes api_url, duration_value, edit_from_date_value — no replay reads them from the page and the recording showed no line to read
+  warning: warning: 200 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[0].instruction: "admin@example.com" (output) in "Sign in to Kimai at http://127.0.0.1:8105/en/login with username admin@example.com and password exactly {{env:APP_PASSWORD}}. Verify that the signed-in app is r"
+  flow.steps[0].instruction: "admin" (output) in "Sign in to Kimai at http://127.0.0.1:8105/en/login with username admin@example.com and password exactly {{env:APP_PASSWORD}}. Verify that the signed-in app is r"
+  flow.steps[0].params.v2: "admin@example.com" (output) in "admin@example.com"
+  flow.steps[0].params.v2: "admin" (output) in "admin@example.com"
+  flow.steps[0].route: "http://127.0.0.1:8105/en/profile/admin" (output) in "http://127.0.0.1:8105/en/profile/admin"
+arm=sitelooper model=openai/gpt-6-luna runid=hakm1-n1 stop=completed
+turns=5 wall=295.0s
+commands=4 cmdTime=273.7s cmdBytes=7022 timeouts=0
+orchestrator in=5256 cw=0 cr=13391 out=734
+inner prompt=1666054 cached=1561984 completion=27264
+spend=$0.0377 maxUsd=3
+learn: A_n=0 replayed=0/4 full=0 repaired=0 compiled=4 variants=0
+-> /home/user/sitelooper/bench/results/hakm1-n1-sitelooper-result.json
+
+hakm1-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: PASS — #40004, description includes runid=true
+  obj 3: PASS — customer=Bench Customer (#1), want the seeded Bench Customer (#1)
+  obj 4: PASS — orderNumber=PO-4471, orderDate=2026-11-15; want PO-4471 and 2026-11-15
+  obj 5: PASS — timesheet #1 begin=2026-09-16T09:00:00+0000 end=2026-09-16T11:30:00+0000; want 2026-09-16T09:00 to 2026-09-16T11:30
+  obj 6: PASS — activity=Consulting (#1), tags=["onsite"]; want the seeded Consulting (#1) and ["onsite"]
+  obj 7: PASS — project id 40004 reported
+
+[sweep] run 2/3: hakm1-n2 (replay flow hakm1, no orchestrator)
+[reset] kimai: deleted 1 timesheet(s)
+[reset] kimai: deleted 1 project(s) (earlier runs' and non-seed)
+[sweep] hakm1-n2: 5 drift ticket(s) → hakm1-n2-drift.json
+
+hakm1-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: PASS — #40005, description includes runid=true
+  obj 3: PASS — customer=Bench Customer (#1), want the seeded Bench Customer (#1)
+  obj 4: PASS — orderNumber=PO-4471, orderDate=2026-11-15; want PO-4471 and 2026-11-15
+  obj 5: PASS — timesheet #2 begin=2026-09-16T09:00:00+0000 end=2026-09-16T11:30:00+0000; want 2026-09-16T09:00 to 2026-09-16T11:30
+  obj 6: PASS — activity=Consulting (#1), tags=["onsite"]; want the seeded Consulting (#1) and ["onsite"]
+  obj 7: PASS — project id 40005 reported
+
+[sweep] run 3/3: hakm1-n3 (replay flow hakm1, no orchestrator)
+[reset] kimai: deleted 1 timesheet(s)
+[reset] kimai: deleted 1 project(s) (earlier runs' and non-seed)
+[sweep] hakm1-n3: 5 drift ticket(s) → hakm1-n3-drift.json
+
+hakm1-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: PASS — #40006, description includes runid=true
+  obj 3: PASS — customer=Bench Customer (#1), want the seeded Bench Customer (#1)
+  obj 4: PASS — orderNumber=PO-4471, orderDate=2026-11-15; want PO-4471 and 2026-11-15
+  obj 5: PASS — timesheet #3 begin=2026-09-16T09:00:00+0000 end=2026-09-16T11:30:00+0000; want 2026-09-16T09:00 to 2026-09-16T11:30
+  obj 6: PASS — activity=Consulting (#1), tags=["onsite"]; want the seeded Consulting (#1) and ["onsite"]
+  obj 7: PASS — project id 40006 reported
+
+Learning sweep hakm1 (K=3)
+┌─────────┬───┬────────────┬──────────┬─────────────┬───────┬──────┬───────────┬──────┬──────────────┬────────┐
+│ (index) │ n │ runid      │ verified │ stop        │ turns │ cmds │ total_usd │ A_n  │ replayed     │ wall_s │
+├─────────┼───┼────────────┼──────────┼─────────────┼───────┼──────┼───────────┼──────┼──────────────┼────────┤
+│ 0       │ 1 │ 'hakm1-n1' │ '7/7'    │ 'completed' │ 5     │ 4    │ 0.0377    │ 0    │ '0/4'        │ 295    │
+│ 1       │ 2 │ 'hakm1-n2' │ '7/7'    │ 'success'   │ 30    │ 4    │ 0.0117    │ 0.75 │ '4/4 (flow)' │ 156    │
+│ 2       │ 3 │ 'hakm1-n3' │ '7/7'    │ 'success'   │ 47    │ 4    │ 0.0283    │ 0.75 │ '4/4 (flow)' │ 234    │
+└─────────┴───┴────────────┴──────────┴─────────────┴───────┴──────┴───────────┴──────┴──────────────┴────────┘
+http://127.0.0.1:8105
+  s_168d88  validated    2 steps  3/3 (100%)
+           Read and report the exact names of all projects whose names start with Seed:, without modifying any projects.
+  s_30fff5  validated   16 steps  3/3 (100%)
+           Create and save exactly one project named {{v2}}. Set its description to include the exact runid {{v1}}, selec…
+  s_3c619a  validated   10 steps  3/3 (100%)
+           Read and report the exact names of all projects whose names start with Seed:, without modifying any projects.
+  s_409fc8  validated    6 steps  3/3 (100%)
+           Create and save exactly one project named {{v2}}. Set its description to include the exact runid {{v1}}, selec…
+  s_4dcb0b  validated   22 steps  3/3 (100%)
+           Create and save exactly one timesheet record for project {{v1}} on 2026-09-{{v3}} from 09:00 to 11:30. Set the…
+  s_a61154  validated    4 steps  3/3 (100%)
+           Sign in to Kimai at {{v1}} with username {{v2}} and password exactly {{v3}}. Verify that the signed-in app is …
+  s_b9d960  validated    4 steps  3/3 (100%)
+           Sign in to Kimai at {{v1}} with username {{v2}} and password exactly {{v3}}. Verify that the signed-in app is …
+  s_c322aa  validated    3 steps  3/3 (100%)
+           Sign in to Kimai at {{v1}} with username {{v2}} and password exactly {{v3}}. Verify that the signed-in app is …
+  s_ebe743  validated    1 steps  3/3 (100%)
+           Create and save exactly one timesheet record for project {{v1}} on 2026-09-{{v3}} from 09:00 to 11:30. Set the…
+  s_034829  provisional  2 steps  1/1 (100%)
+           Create and save exactly one timesheet record for project {{v1}} on 2026-09-{{v3}} from 09:00 to 11:30. Set the…
+  s_5622e5  provisional 63 steps  1/1 (100%)
+           Create and save exactly one timesheet record for project {{v2}} on 2026-09-16 from 09:00 to 11:30. Set the des…
+  s_5a4a8c  provisional 21 steps  1/1 (100%)
+           Create and save exactly one timesheet record for project {{v2}} on 2026-09-{{v3}} from 09:00 to 11:30. Set the…
+  s_5eb311  provisional  7 steps  1/1 (100%)
+           Create and save exactly one timesheet record for project {{v1}} on 2026-09-{{v3}} from 09:00 to 11:30. Set the…
+  s_6c5880  provisional  2 steps  1/1 (100%)
+           Create and save exactly one timesheet record for project {{v2}} on 2026-09-{{v3}} from 09:00 to 11:30. Set the…
+  s_72a4ab  provisional  1 steps  1/1 (100%)
+           Create and save exactly one timesheet record for project {{v2}} on 2026-09-{{v3}} from 09:00 to 11:30. Set the…
+  s_996fe9  provisional 11 steps  1/1 (100%)
+           Create and save exactly one timesheet record for project {{v2}} on 2026-09-{{v3}} from 09:00 to 11:30. Set the…
+  s_9e2f8a  provisional  9 steps  1/1 (100%)
+           Create and save exactly one timesheet record for project {{v2}} on 2026-09-{{v3}} from 09:00 to 11:30. Set the…
+  s_dca1aa  provisional  1 steps  1/1 (100%)
+           Create and save exactly one timesheet record for project {{v2}} on 2026-09-16 from 09:00 to 11:30. Set the des…
+  s_e93247  provisional  6 steps  1/1 (100%)
+           Create and save exactly one timesheet record for project {{v1}} on 2026-09-{{v3}} from 09:00 to 11:30. Set the…
+store: /home/user/sitelooper/bench/results/hakm1-skills
+
+summary: /home/user/sitelooper/bench/results/hakm1-sweep.json

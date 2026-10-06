@@ -1,0 +1,104 @@
+{
+ "id": "s_72a4ab",
+ "origin": "http://127.0.0.1:8105",
+ "template": "Create and save exactly one timesheet record for project {{v2}} on 2026-09-{{v3}} from 09:00 to 11:30. Set the description to include exact runid {{v1}}. Select the existing activity exactly named Consulting (not Consulting Travel or Consultancy Review) and set its only tag to the existing tag onsite (not similar tags and do not create a tag). Verify the saved record shows the requested project, date, start/end times, description, exact activity, and only onsite as tag.",
+ "params": {
+  "v1": {
+   "example": "hakm1-n2",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v2": {
+   "example": "hakm1-n2 Bench Project",
+   "usedIn": [],
+   "known": true
+  },
+  "v3": {
+   "example": "16",
+   "usedIn": []
+  },
+  "v4": {
+   "example": "2",
+   "usedIn": [],
+   "known": true,
+   "binding": "url:i4:p2"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8105/en/admin/project/:id/details"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e23"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "link",
+      "name": "My times"
+     },
+     {
+      "kind": "css",
+      "selector": "#times > div > div > div > a:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 120,
+      "y": 170,
+      "w": 240,
+      "h": 36,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8105/en/timesheet/",
+    "alertContains": "No entries were found based on your selected filters.",
+    "addedContains": [
+     "- heading \"My times\"",
+     "- link \"Customize display\"",
+     "- button \"Search filter\"",
+     "- textbox \"Search\"",
+     "- button \"Search\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_ebe743",
+    "step": 1
+   }
+  }
+ ],
+ "contract": 2,
+ "stats": {
+  "uses": 2,
+  "successes": 2,
+  "partial": 0,
+  "created": "2026-10-06T11:31:47.253Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2,
+  "lastUsed": "2026-10-06T11:48:01.677Z",
+  "stopStreak": 0
+ },
+ "status": "validated",
+ "seq": {
+  "chain": "s_573ee7",
+  "index": 0,
+  "of": 5
+ },
+ "provenance": {
+  "session": "hakm1-n2",
+  "instruction": "Create and save exactly one timesheet record for project hakm1-n2 Bench Project on 2026-09-16 from 09:00 to 11:30. Set the description to include exact runid hakm1-n2. Select the existing activity exactly named Consulting (not Consulting Travel or Consultancy Review) and set its only tag to the existing tag onsite (not similar tags and do not create a tag). Verify the saved record shows the requested project, date, start/end times, description, exact activity, and only onsite as tag.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-10-06T11:31:47.253Z"
+ },
+ "revision": 2
+}

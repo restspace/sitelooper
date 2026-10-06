@@ -1,0 +1,247 @@
+{
+  "flow": "hakm1",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_b9d960; observed signed_in_email=admin@example.com, logged_in_url=http://127.0.0.1:8105/en/timesheet/, profile_email_label=E-mail, profile_email_link=mailto:admin@example.com, signed_in_user=admin.",
+      "values": {
+        "signed_in_email": "admin@example.com",
+        "logged_in_url": "http://127.0.0.1:8105/en/timesheet/",
+        "profile_email_label": "E-mail",
+        "profile_email_link": "mailto:admin@example.com",
+        "signed_in_user": "admin"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "11/11",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_b9d960: step 3: skipped read — no element matched any known locator for target (tried 2: page.locator('#profile-buttons > a:nth-of-type(2)'), elementAt(1192, 193) /* link */)"
+      ],
+      "unreported": [
+        "profile_email_href"
+      ]
+    },
+    {
+      "id": "02-report",
+      "status": "success",
+      "summary": "Replayed stored procedure s_3c619a; observed seed_annual_audit_project_name=Seed: Annual audit, seed_office_move_project_name=Seed: Office move, table_tbody_tr_td_first__3=Seed: Website relaunch, total_projects_shown=3, projects_starting_with_Seed_1=Seed: Annual audit, projects_starting_with_Seed_2=Seed: Office move, projects_starting_with_Seed_3=Seed: Website relaunch.",
+      "values": {
+        "seed_annual_audit_project_name": "Seed: Annual audit",
+        "seed_office_move_project_name": "Seed: Office move",
+        "table_tbody_tr_td_first__3": "Seed: Website relaunch",
+        "total_projects_shown": "3",
+        "projects_starting_with_Seed_1": "Seed: Annual audit",
+        "projects_starting_with_Seed_2": "Seed: Office move",
+        "projects_starting_with_Seed_3": "Seed: Website relaunch"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "12/12",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_409fc8; observed project_id=40006, runid_in_description=hakm1-n3, order_number_field=PO-4471, customer_checked_option=Bench Customer, saved_project_description=Bench project for run hakm1-n3, project_details_table=Customer\tBench Customer\t0\t\n\nOrder number\tPO-4471\nOrder date\t11/15/2026\nProject number\t0005, details_url=http://127.0.0.1:8105/en/admin/project/40006/details, description=Bench project for run hakm1-n3, project_number=0005, activities_count=0.",
+      "values": {
+        "project_id": "40006",
+        "runid_in_description": "hakm1-n3",
+        "order_number_field": "PO-4471",
+        "customer_checked_option": "Bench Customer",
+        "saved_project_description": "Bench project for run hakm1-n3",
+        "project_details_table": "Customer\tBench Customer\t0\t\n\nOrder number\tPO-4471\nOrder date\t11/15/2026\nProject number\t0005",
+        "details_url": "http://127.0.0.1:8105/en/admin/project/40006/details",
+        "description": "Bench project for run hakm1-n3",
+        "project_number": "0005",
+        "activities_count": "0"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "22/22",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_30fff5: step 9: read 'order_number' returned a value the skill itself set/selected ('PO-4471') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_30fff5: step 11: read 'order_date_field2' returned a value the skill itself set/selected ('11/15/2026') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_30fff5: step 12: read 'customer_selected' returned 'Bench Customer Ltd\nBench Customers Group\nBench Customer' from a control this step set, and nothing committed it since — it shows the control, however the app formats it, not what the app stored; dropped from the report's confident values",
+        "s_30fff5: step 13: read 'project_name' returned a value the skill itself set/selected ('hakm1-n3 Bench Project') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_30fff5: step 14: read 'customer_name' returned 'Bench Customer' from a control this step set, and nothing committed it since — it shows the control, however the app formats it, not what the app stored; dropped from the report's confident values",
+        "s_409fc8: report value name_field is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)",
+        "s_409fc8: report value saved_project_name is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)"
+      ],
+      "unreported": [
+        "project_name",
+        "customer_name",
+        "order_number",
+        "order_date_field2",
+        "customer_selected",
+        "name_field",
+        "saved_project_name"
+      ]
+    },
+    {
+      "id": "04-create",
+      "status": "success",
+      "summary": "Verified the single saved timesheet record for hakm1-n3 Bench Project is dated 9/16/2026 (2026-09-16), 9:00 AM–11:30 AM, with description \"Bench timesheet for run hakm1-n3\", activity exactly Consulting, and only the existing onsite tag selected. The saved row now shows the requested date; the edit view confirms the record fields and selected tag without creating another record.",
+      "values": {
+        "saved_row": "9/16/2026\t9:00 AM\t11:30 AM\t2:30\tBench Customer\thakm1-n3 Bench Project\tConsulting",
+        "row_count": "1",
+        "project": "hakm1-n3 Bench Project",
+        "start_time": "9:00 AM",
+        "end_time": "11:30 AM",
+        "description": "Bench timesheet for run hakm1-n3",
+        "activity": "Consulting",
+        "selected_tag": "onsite",
+        "tag_count_selected": "1",
+        "current_edit_date": "10/6/2026",
+        "edited_from_date": "09/16/2026",
+        "record_date": "9/16/2026",
+        "record_description": "Bench timesheet for run hakm1-n3",
+        "ref": "hakm1-n3",
+        "date": "9/16/2026"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_e93247 stopped at step ? — the page at http://127.0.0.1:8105/en/timesheet/:id/edit does not show \"hakm1-n3 Bench Project\", and its structure is not the recorded page's (similarity 0.007) — a different view or page, not only a different record — nothing was run",
+      "replayed": "0/6",
+      "repaired": false,
+      "turns": 47,
+      "warnings": [
+        "s_4dcb0b: step 4: a better-ranked locator did not resolve; used fallback #3 page.locator('#timesheet_edit_form_begin_time')",
+        "s_4dcb0b: step 5: a better-ranked locator did not resolve; used fallback #3 page.locator('#timesheet_edit_form_end_time')",
+        "s_4dcb0b: step 9: read 'from_date_value' returned '10/6/2026' from a control this step set, and nothing committed it since — it shows the control, however the app formats it, not what the app stored; dropped from the report's confident values",
+        "s_4dcb0b: step 14: read 'from_date_after_blur' returned a value the skill itself set/selected ('09/16/2026') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_4dcb0b: step 15: read 'begin_time_value' returned a value the skill itself set/selected ('9:00 AM') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_4dcb0b: step 16: read 'end_time_value' returned a value the skill itself set/selected ('11:30 AM') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_4dcb0b: step 19: skipped read — no element matched any known locator for target (tried 1: page.getByRole('cell', { name: '11:30 AM', exact: true }))",
+        "s_4dcb0b: step 20: skipped read — no element matched any known locator for target (tried 1: page.getByRole('cell', { name: '9:00 AM', exact: true }))"
+      ],
+      "unreported": [
+        "record_id",
+        "record_edit_url",
+        "customer",
+        "duration",
+        "runid_in_description",
+        "tags",
+        "my_times_row",
+        "from_date_value",
+        "from_date_after_blur",
+        "begin_time_value",
+        "end_time_value",
+        "my_times_rows",
+        "my_times_rows_after_fix"
+      ]
+    }
+  ],
+  "passed": 4,
+  "total": 4,
+  "repinned": 0,
+  "drift": 5,
+  "driftTickets": [
+    {
+      "flow": "hakm1",
+      "step": "01-signin",
+      "skill": "s_b9d960",
+      "atStep": "3",
+      "key": "target",
+      "similarity": 0.998,
+      "missedLocator": "page.locator('#profile-buttons > a:nth-of-type(2)')",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8105/en/profile/admin",
+      "pageUrl": "http://127.0.0.1:8105/en/profile/admin"
+    },
+    {
+      "flow": "hakm1",
+      "step": "04-create",
+      "skill": "s_4dcb0b",
+      "atStep": "4",
+      "key": "target",
+      "similarity": 0.007,
+      "missedLocator": "page.getByRole('textbox', { name: 'h:mm a', exact: true }).nth(0)",
+      "fallbackUsed": "page.locator('#timesheet_edit_form_begin_time')",
+      "fallbackIndex": 2,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:8105/en/timesheet/:id/edit",
+      "pageUrl": "http://127.0.0.1:8105/en/timesheet/1/edit"
+    },
+    {
+      "flow": "hakm1",
+      "step": "04-create",
+      "skill": "s_4dcb0b",
+      "atStep": "5",
+      "key": "target",
+      "similarity": 0.007,
+      "missedLocator": "page.getByRole('textbox', { name: 'h:mm a', exact: true }).nth(1)",
+      "fallbackUsed": "page.locator('#timesheet_edit_form_end_time')",
+      "fallbackIndex": 2,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:8105/en/timesheet/:id/edit",
+      "pageUrl": "http://127.0.0.1:8105/en/timesheet/1/edit"
+    },
+    {
+      "flow": "hakm1",
+      "step": "04-create",
+      "skill": "s_4dcb0b",
+      "atStep": "19",
+      "key": "target",
+      "similarity": 0.007,
+      "missedLocator": "page.getByRole('cell', { name: '11:30 AM', exact: true })",
+      "fallbackUsed": null,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:8105/en/timesheet/:id/edit",
+      "pageUrl": "http://127.0.0.1:8105/en/timesheet/1/edit"
+    },
+    {
+      "flow": "hakm1",
+      "step": "04-create",
+      "skill": "s_4dcb0b",
+      "atStep": "20",
+      "key": "target",
+      "similarity": 0.007,
+      "missedLocator": "page.getByRole('cell', { name: '9:00 AM', exact: true })",
+      "fallbackUsed": null,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:8105/en/timesheet/:id/edit",
+      "pageUrl": "http://127.0.0.1:8105/en/timesheet/1/edit"
+    }
+  ],
+  "wallMs": 234381,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 738605,
+    "completionTokens": 13374,
+    "cachedTokens": 578532
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 461132,
+      "completionTokens": 11235,
+      "cachedTokens": 426880
+    },
+    "openai/gpt-6-luna": {
+      "promptTokens": 277473,
+      "completionTokens": 2139,
+      "cachedTokens": 151652
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ],
+    "openai/gpt-6-luna": [
+      "OpenAI"
+    ]
+  },
+  "recoveryModel": "openai/gpt-6-luna",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}
