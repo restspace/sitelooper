@@ -1,0 +1,707 @@
+{
+  "name": "hapk1",
+  "origin": "http://127.0.0.1:8104",
+  "startUrl": "http://127.0.0.1:8104/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-signin",
+      "instruction": "Sign in to Planka at http://127.0.0.1:8104/ using email admin@example.com and password exactly {{env:APP_PASSWORD}}. Verify that the authenticated app is open.",
+      "skill": "s_e0f0a9",
+      "params": {
+        "v1": "http://127.0.0.1:8104/",
+        "v2": "admin@example.com",
+        "v3": "{{env:APP_PASSWORD}}"
+      },
+      "outputs": [
+        "signed_in_user",
+        "final_url",
+        "visible_project"
+      ],
+      "recorded": {
+        "signed_in_user": "Bench Admin",
+        "final_url": "http://127.0.0.1:8104/",
+        "visible_project": "Bench Project",
+        "url": "http://127.0.0.1:8104/"
+      },
+      "route": "http://127.0.0.1:8104/",
+      "outputEvidence": {
+        "signed_in_user": {
+          "same": 1,
+          "differed": 0
+        },
+        "final_url": {
+          "same": 1,
+          "differed": 0
+        },
+        "visible_project": {
+          "same": 1,
+          "differed": 0
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "02-open",
+      "instruction": "On project Bench Project, open board Bench Board and report the exact names of all cards whose names start with Seed:, confirming these are the Seed cards in To Do. Do not edit any cards.",
+      "skill": "s_c0f835",
+      "params": {
+        "v1": "Bench Project"
+      },
+      "outputs": [
+        "board",
+        "board_url",
+        "seed_card_list",
+        "other_board_lists",
+        "promotion_dismiss_button_text",
+        "project",
+        "seed_card_1_name",
+        "seed_card_2_name",
+        "seed_card_3_name",
+        "card_1",
+        "card_2",
+        "card_3"
+      ],
+      "recorded": {
+        "board": "Bench Board",
+        "board_url": "http://127.0.0.1:8104/boards/1879838315339842567",
+        "seed_card_list": "To Do",
+        "other_board_lists": "In Progress (0 cards), Done (0 cards)",
+        "promotion_dismiss_button_text": "Dismiss for 30 days",
+        "project": "Bench Project",
+        "seed_card_1_name": "Seed: Replace the office router",
+        "seed_card_2_name": "Seed: Order spare keyboards",
+        "seed_card_3_name": "Seed: Renew the domain name",
+        "seed_card_count": "3",
+        "card_1": "Seed: Replace the office router",
+        "card_2": "Seed: Order spare keyboards",
+        "card_3": "Seed: Renew the domain name",
+        "add_card_button": "Add card",
+        "url": "http://127.0.0.1:8104/boards/1879838315339842567",
+        "url.p1": "1879838315339842567"
+      },
+      "route": "http://127.0.0.1:8104/boards/:id",
+      "outputEvidence": {
+        "board": {
+          "same": 1,
+          "differed": 0
+        },
+        "board_url": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_card_list": {
+          "same": 1,
+          "differed": 0
+        },
+        "other_board_lists": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "promotion_dismiss_button_text": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "project": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_card_1_name": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_card_2_name": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_card_3_name": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_card_count": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "card_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "card_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "card_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "add_card_button": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        },
+        "url.p1": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "03-create",
+      "instruction": "On board Bench Board, create a card named exactly '{{runid}} Bench Card' in the 'In Progress' list. Set its description to one paragraph that includes '{{runid}}', saving the description once without duplicate paragraph. Open the card's own view and report its address ID and verify its name, list, and saved description.",
+      "skill": "s_f25569",
+      "params": {
+        "v1": "Bench Board",
+        "v3": "{{runid}} Bench Card",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "card_name",
+        "card_address_id",
+        "card_url",
+        "board",
+        "list",
+        "description",
+        "card_view_url",
+        "card_title_field",
+        "test_marker"
+      ],
+      "recorded": {
+        "card_name": "hapk1-n1 Bench Card",
+        "card_address_id": "1879838891788207133",
+        "card_url": "http://127.0.0.1:8104/cards/1879838891788207133",
+        "board": "Bench Board",
+        "board_url": "http://127.0.0.1:8104/boards/1879838315339842567",
+        "list": "In Progress",
+        "description": "hapk1-n1 Bench Card smoke-test description: this paragraph was written through the board UI to confirm the card detail view saves exactly one copy of the hapk1-n1 marker text.",
+        "description_paragraph_count": "1",
+        "card_view_url": "http://127.0.0.1:8104/cards/1879838891788207133",
+        "card_title_field": "hapk1-n1 Bench Card",
+        "test_marker": "hapk1-n1",
+        "url": "http://127.0.0.1:8104/cards/1879838891788207133",
+        "url.p1": "1879838891788207133"
+      },
+      "route": "http://127.0.0.1:8104/cards/:id",
+      "outputEvidence": {
+        "card_name": {
+          "same": 0,
+          "differed": 1
+        },
+        "card_address_id": {
+          "same": 0,
+          "differed": 1
+        },
+        "card_url": {
+          "same": 0,
+          "differed": 1
+        },
+        "board": {
+          "same": 1,
+          "differed": 0
+        },
+        "board_url": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "list": {
+          "same": 1,
+          "differed": 0
+        },
+        "description": {
+          "same": 0,
+          "differed": 1
+        },
+        "description_paragraph_count": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "card_view_url": {
+          "same": 0,
+          "differed": 1
+        },
+        "card_title_field": {
+          "same": 0,
+          "differed": 1
+        },
+        "test_marker": {
+          "same": 0,
+          "differed": 1
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        },
+        "url.p1": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "04-open",
+      "instruction": "For the open card '{{runid}} Bench Card', set its only label to the existing exact label 'Hardware'. Ensure no other labels are attached and verify the card displays only Hardware; do not create a label.",
+      "skill": "s_39bdb2",
+      "params": {
+        "v1": "{{runid}} Bench Card",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "card_name",
+        "list",
+        "applied_label",
+        "board_column_card_text",
+        "board_card_label_text",
+        "card_detail_labels_secti",
+        "labels_button",
+        "create_label_button",
+        "test_marker",
+        "labels_offered_in_picker_1",
+        "labels_offered_in_picker_2",
+        "labels_offered_in_picker_3",
+        "labels_offered_in_picker_4",
+        "labels_offered_in_picker_5"
+      ],
+      "recorded": {
+        "card_name": "hapk1-n1 Bench Card",
+        "card_address_id": "1879838891788207133",
+        "list": "In Progress",
+        "applied_label": "Hardware",
+        "card_detail_labels_section": "LABELS / Hardware",
+        "board_column_card_text": "hapk1-n1 Bench Card / Hardware",
+        "labels_created": "none",
+        "board_card_label_text": "hapk1-n1 Bench Card\nHardware",
+        "card_detail_labels_secti": "LABELS\nHardware",
+        "labels_button": "Labels",
+        "create_label_button": "Create new label",
+        "test_marker": "hapk1-n1",
+        "labels_offered_in_picker_1": "Hardware Return",
+        "labels_offered_in_picker_2": "Hardware Spares",
+        "labels_offered_in_picker_3": "Software",
+        "labels_offered_in_picker_4": "Network",
+        "labels_offered_in_picker_5": "Create new label",
+        "url.p1": "1879838891788207133"
+      },
+      "route": "http://127.0.0.1:8104/cards/:id",
+      "outputEvidence": {
+        "card_name": {
+          "same": 0,
+          "differed": 1
+        },
+        "card_address_id": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "list": {
+          "same": 1,
+          "differed": 0
+        },
+        "applied_label": {
+          "same": 1,
+          "differed": 0
+        },
+        "card_detail_labels_section": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "board_column_card_text": {
+          "same": 0,
+          "differed": 1
+        },
+        "labels_created": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "board_card_label_text": {
+          "same": 0,
+          "differed": 1
+        },
+        "card_detail_labels_secti": {
+          "same": 1,
+          "differed": 0
+        },
+        "labels_button": {
+          "same": 0,
+          "differed": 1
+        },
+        "create_label_button": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "test_marker": {
+          "same": 0,
+          "differed": 1
+        },
+        "labels_offered_in_picker_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "labels_offered_in_picker_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "labels_offered_in_picker_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "labels_offered_in_picker_4": {
+          "same": 1,
+          "differed": 0
+        },
+        "labels_offered_in_picker_5": {
+          "same": 1,
+          "differed": 0
+        },
+        "url.p1": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "05-set",
+      "instruction": "For '{{runid}} Bench Card', set its only member to the existing exact board user 'Bench Tester'. Make sure no other member remains assigned and verify the card displays only Bench Tester; do not select Bench Tester Lead.",
+      "skill": "s_28a0ac",
+      "params": {
+        "v1": "{{runid}} Bench Card",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "assigned_member",
+        "board_chip_text_final",
+        "card_name",
+        "list",
+        "card_description_icon_title",
+        "members_popover_options",
+        "card_detail_members_sect",
+        "board_chip_text_final_2",
+        "test_marker",
+        "members_offered_in_picker"
+      ],
+      "recorded": {
+        "assigned_member": "Bench Tester",
+        "board_card_member_name": "Bench Tester",
+        "board_chip_text_final": "hapk1-n1 Bench Card / Hardware / BT",
+        "card_address_id": "1879838891788207133",
+        "card_detail_member_name": "Bench Tester",
+        "card_detail_members_summary": "MEMBERS / BT",
+        "card_name": "hapk1-n1 Bench Card",
+        "list": "In Progress",
+        "card_description_icon_title": "Description",
+        "members_popover_options": "BABench Admin\nBTBench Tester\nBTBench Tester Lead",
+        "card_detail_members_sect": "MEMBERS\nBT",
+        "board_chip_text_final_2": "hapk1-n1 Bench Card\nHardware\nBT",
+        "card_member_full_name_title": "Bench Tester",
+        "test_marker": "hapk1-n1",
+        "members_offered_in_picker": "Bench Admin",
+        "url.p1": "1879838891788207133"
+      },
+      "route": "http://127.0.0.1:8104/cards/:id",
+      "outputEvidence": {
+        "assigned_member": {
+          "same": 1,
+          "differed": 0
+        },
+        "board_card_member_name": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "board_chip_text_final": {
+          "same": 0,
+          "differed": 1
+        },
+        "card_address_id": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "card_detail_member_name": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "card_detail_members_summary": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "card_name": {
+          "same": 0,
+          "differed": 1
+        },
+        "list": {
+          "same": 1,
+          "differed": 0
+        },
+        "card_description_icon_title": {
+          "same": 1,
+          "differed": 0
+        },
+        "members_popover_options": {
+          "same": 1,
+          "differed": 0
+        },
+        "card_detail_members_sect": {
+          "same": 1,
+          "differed": 0
+        },
+        "board_chip_text_final_2": {
+          "same": 0,
+          "differed": 1
+        },
+        "card_member_full_name_title": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "test_marker": {
+          "same": 0,
+          "differed": 1
+        },
+        "members_offered_in_picker": {
+          "same": 1,
+          "differed": 0
+        },
+        "url.p1": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "06-set",
+      "instruction": "Set the due date of '{{runid}} Bench Card' to 2026-12-31 (any time that date is fine). Verify the saved date on the card.",
+      "skill": "s_0624ce",
+      "params": {
+        "v1": "{{runid}} Bench Card",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "card_name",
+        "board",
+        "list",
+        "due_date_field_value_after_save",
+        "due_date_dialog_heading",
+        "card_due_date",
+        "board_chip_due_date",
+        "board_chip_text",
+        "test_marker"
+      ],
+      "recorded": {
+        "card_name": "hapk1-n1 Bench Card",
+        "card_address_id": "1879838891788207133",
+        "board": "Bench Board",
+        "list": "In Progress",
+        "due_date_requested": "2026-12-31",
+        "due_date_field_value_after_save": "12/31/2026",
+        "due_date_dialog_heading": "December 2026",
+        "card_due_date": "December 31 at 12:00 PM",
+        "board_chip_due_date": "Dec 31",
+        "board_chip_text": "hapk1-n1 Bench Card / Hardware / Dec 31 / BT",
+        "due_date_field_value": "12/31/2026",
+        "test_marker": "hapk1-n1",
+        "url.p1": "1879838891788207133"
+      },
+      "route": "http://127.0.0.1:8104/cards/:id",
+      "outputEvidence": {
+        "card_name": {
+          "same": 0,
+          "differed": 1
+        },
+        "card_address_id": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "board": {
+          "same": 1,
+          "differed": 0
+        },
+        "list": {
+          "same": 1,
+          "differed": 0
+        },
+        "due_date_requested": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "due_date_field_value_after_save": {
+          "same": 1,
+          "differed": 0
+        },
+        "due_date_dialog_heading": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "card_due_date": {
+          "same": 1,
+          "differed": 0
+        },
+        "board_chip_due_date": {
+          "same": 1,
+          "differed": 0
+        },
+        "board_chip_text": {
+          "same": 0,
+          "differed": 1
+        },
+        "due_date_field_value": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "test_marker": {
+          "same": 0,
+          "differed": 1
+        },
+        "url.p1": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "07-add",
+      "instruction": "From the own card view of '{{runid}} Bench Card', add a comment whose text includes '{{runid}}'. Verify that the comment is posted and report its exact text.",
+      "skill": "s_27811e",
+      "params": {
+        "v1": "{{runid}} Bench Card",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "card_name",
+        "comment_text",
+        "comment_timestamp",
+        "posted_comment_thread",
+        "test_marker"
+      ],
+      "recorded": {
+        "card_name": "hapk1-n1 Bench Card",
+        "card_address_id": "1879838891788207133",
+        "comment_text": "hapk1-n1 comment: posted from the card's own view to verify the comment thread saves through the UI.",
+        "comment_author": "Bench Admin",
+        "comment_timestamp": "just now",
+        "posted_comment_thread": "Bench Admin\\n\\nhapk1-n1 comment: posted from the card's own view to verify the comment thread saves through the UI.\\n\\njust now\\nEditDelete",
+        "test_marker": "hapk1-n1",
+        "url.p1": "1879838891788207133"
+      },
+      "route": "http://127.0.0.1:8104/cards/:id",
+      "outputEvidence": {
+        "card_name": {
+          "same": 0,
+          "differed": 1
+        },
+        "card_address_id": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "comment_text": {
+          "same": 0,
+          "differed": 1
+        },
+        "comment_author": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "comment_timestamp": {
+          "same": 1,
+          "differed": 0
+        },
+        "posted_comment_thread": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "test_marker": {
+          "same": 0,
+          "differed": 1
+        },
+        "url.p1": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "session": "hapk1-n1",
+    "created": "2026-10-06T11:27:37.563Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "02-open",
+      "outputs": [
+        "seed_card_count",
+        "add_card_button"
+      ]
+    },
+    {
+      "stepId": "03-create",
+      "outputs": [
+        "board_url",
+        "description_paragraph_count"
+      ]
+    },
+    {
+      "stepId": "04-open",
+      "outputs": [
+        "card_address_id",
+        "card_detail_labels_section",
+        "labels_created"
+      ]
+    },
+    {
+      "stepId": "05-set",
+      "outputs": [
+        "board_card_member_name",
+        "card_address_id",
+        "card_detail_member_name",
+        "card_detail_members_summary",
+        "card_member_full_name_title"
+      ]
+    },
+    {
+      "stepId": "06-set",
+      "outputs": [
+        "card_address_id",
+        "due_date_requested",
+        "due_date_field_value"
+      ]
+    },
+    {
+      "stepId": "07-add",
+      "outputs": [
+        "card_address_id",
+        "comment_author"
+      ]
+    }
+  ]
+}

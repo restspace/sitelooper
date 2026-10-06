@@ -1,0 +1,106 @@
+
+[sweep] run 1/3: hapk1-n1 (store: /home/user/sitelooper/bench/results/hapk1-skills)
+[harness] planka: defaulting APP_URL
+[harness] planka: defaulting APP_EMAIL
+[harness] planka: defaulting APP_PASSWORD
+[reset] planka: no cards to delete
+[harness] planka responded 200 at http://127.0.0.1:8104/
+stopped: hapk1-n1
+  flow "hapk1" saved: 7 step(s), vars runid → /home/user/sitelooper/bench/results/flows/hapk1.json
+  warning: note: 02-open no longer publishes seed_card_count, add_card_button — no replay reads them from the page and the recording showed no line to read
+  warning: note: 03-create no longer publishes board_url, description_paragraph_count — no replay reads them from the page and the recording showed no line to read
+  warning: note: 04-open no longer publishes card_address_id, card_detail_labels_section, labels_created — no replay reads them from the page and the recording showed no line to read
+  warning: note: 05-set no longer publishes board_card_member_name, card_address_id, card_detail_member_name, card_detail_members_summary, card_member_full_name_title — no replay reads them from the page and the recording showed no line to read
+  warning: note: 06-set no longer publishes card_address_id, due_date_requested, due_date_field_value — no replay reads them from the page and the recording showed no line to read
+  warning: note: 07-add no longer publishes card_address_id, comment_author — no replay reads them from the page and the recording showed no line to read
+  warning: note: 02-open: added a read for promotion_dismiss_button_text to s_7762d3 (page.getByRole('button', { name: 'Dismiss for 30 days', exact: true }); seen on the next instruction's start page)
+  warning: note: 02-open: added a read for card_1 to s_7762d3 (page.getByRole('button', { name: 'Seed: Replace the office router', exact: true }); seen on the next instruction's start page)
+  warning: note: 02-open: added a read for card_2 to s_7762d3 (page.getByRole('button', { name: 'Seed: Order spare keyboards', exact: true }); seen on the next instruction's start page)
+  warning: note: 02-open: added a read for card_3 to s_7762d3 (page.getByRole('button', { name: 'Seed: Renew the domain name', exact: true }); seen on the next instruction's start page)
+  warning: note: 04-open: added a read for create_label_button to s_39bdb2 (page.getByRole('button', { name: 'Create new label', exact: true }); seen on the instruction's own page)
+  warning: note: 06-set: added a read for list to s_0624ce (page.getByRole('button', { name: 'In Progress', exact: true }); seen on the next instruction's start page)
+  warning: note: 06-set: added a read for due_date_dialog_heading to s_0624ce (page.getByRole('alert', { name: 'December 2026', exact: true }); seen on the instruction's own page)
+  warning: warning: 165 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.startUrl: "http://127.0.0.1:8104/" (output) in "http://127.0.0.1:8104/"
+  flow.steps[0].instruction: "http://127.0.0.1:8104/" (output) in "Sign in to Planka at http://127.0.0.1:8104/ using email admin@example.com and password exactly {{env:APP_PASSWORD}}. Verify that the authenticated app is open."
+  flow.steps[0].params.v1: "http://127.0.0.1:8104/" (output) in "http://127.0.0.1:8104/"
+  flow.steps[0].route: "http://127.0.0.1:8104/" (output) in "http://127.0.0.1:8104/"
+  flow.steps[1].instruction: "Bench Project" (output) in "On project Bench Project, open board Bench Board and report the exact names of all cards whose names start with Seed:, confirming these are the Seed cards in To"
+arm=sitelooper model=openai/gpt-6-luna runid=hapk1-n1 stop=completed
+turns=8 wall=255.9s
+commands=7 cmdTime=224.6s cmdBytes=9752 timeouts=0
+orchestrator in=5914 cw=0 cr=27567 out=779
+inner prompt=1389890 cached=1252736 completion=16705
+spend=$0.0356 maxUsd=3
+learn: A_n=0 replayed=0/7 full=0 repaired=0 compiled=7 variants=0
+-> /home/user/sitelooper/bench/results/hapk1-n1-sitelooper-result.json
+
+hapk1-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: PASS — 1879838891788207133 in Bench Board / In Progress (want Bench Board / In Progress), description includes runid=true
+  obj 3: PASS — labels=["Hardware (#1879838317562823696)"], want only the seeded Hardware (#1879838317562823696)
+  obj 4: PASS — members=["Bench Tester (#1879838313427239939)"], want only Bench Tester (#1879838313427239939)
+  obj 5: PASS — dueDate=2026-12-31T12:00:00.000Z; want 2026-12-31 (any time of day)
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — card id 1879838891788207133 reported
+
+[sweep] run 2/3: hapk1-n2 (replay flow hapk1, no orchestrator)
+[reset] planka: deleted 1 card(s) (earlier runs' and non-seed)
+[sweep] hapk1-n2: 3 drift ticket(s) → hapk1-n2-drift.json
+
+hapk1-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: PASS — 1879840702209197098 in Bench Board / In Progress (want Bench Board / In Progress), description includes runid=true
+  obj 3: PASS — labels=["Hardware (#1879838317562823696)"], want only the seeded Hardware (#1879838317562823696)
+  obj 4: PASS — members=["Bench Tester (#1879838313427239939)"], want only Bench Tester (#1879838313427239939)
+  obj 5: PASS — dueDate=2026-12-31T12:00:00.000Z; want 2026-12-31 (any time of day)
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — card id 1879840702209197098 reported
+
+[sweep] run 3/3: hapk1-n3 (replay flow hapk1, no orchestrator)
+[reset] planka: deleted 1 card(s) (earlier runs' and non-seed)
+[sweep] hapk1-n3: 3 drift ticket(s) → hapk1-n3-drift.json
+
+hapk1-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: PASS — 1879841097916613687 in Bench Board / In Progress (want Bench Board / In Progress), description includes runid=true
+  obj 3: PASS — labels=["Hardware (#1879838317562823696)"], want only the seeded Hardware (#1879838317562823696)
+  obj 4: PASS — members=["Bench Tester (#1879838313427239939)"], want only Bench Tester (#1879838313427239939)
+  obj 5: PASS — dueDate=2026-12-31T12:00:00.000Z; want 2026-12-31 (any time of day)
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — card id 1879841097916613687 reported
+
+Learning sweep hapk1 (K=3)
+┌─────────┬───┬────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid      │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'hapk1-n1' │ '7/7'    │ 'completed' │ 8     │ 7    │ 0.0356    │ 0   │ '0/7'        │ 256    │
+│ 1       │ 2 │ 'hapk1-n2' │ '7/7'    │ 'success'   │ 0     │ 7    │ 0         │ 1   │ '7/7 (flow)' │ 43     │
+│ 2       │ 3 │ 'hapk1-n3' │ '7/7'    │ 'success'   │ 0     │ 7    │ 0         │ 1   │ '7/7 (flow)' │ 43     │
+└─────────┴───┴────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:8104
+  s_059716  validated    3 steps  3/3 (100%)
+           Sign in to Planka at {{v1}} using email {{v2}} and password exactly {{v3}}. Verify that the authenticated app …
+  s_0624ce  validated   14 steps  3/3 (100%)
+           Set the due date of '{{v1}}' to 2026-12-31 (any time that date is fine). Verify the saved date on the card.
+  s_24d111  validated    3 steps  3/3 (100%)
+           Sign in to Planka at {{v1}} using email {{v2}} and password exactly {{v3}}. Verify that the authenticated app …
+  s_27811e  validated    5 steps  3/3 (100%)
+           From the own card view of '{{v1}}', add a comment whose text includes '{{v2}}'. Verify that the comment is pos…
+  s_28a0ac  validated   13 steps  3/3 (100%)
+           For '{{v1}}', set its only member to the existing exact board user 'Bench Tester'. Make sure no other member r…
+  s_3205d8  validated    9 steps  3/3 (100%)
+           On board {{v1}}, create a card named exactly '{{v3}}' in the 'In Progress' list. Set its description to one pa…
+  s_39bdb2  validated   16 steps  3/3 (100%)
+           For the open card '{{v1}}', set its only label to the existing exact label 'Hardware'. Ensure no other labels …
+  s_7762d3  validated   11 steps  3/3 (100%)
+           On project {{v1}}, open board Bench Board and report the exact names of all cards whose names start with Seed:…
+  s_c0f835  validated    1 steps  3/3 (100%)
+           On project {{v1}}, open board Bench Board and report the exact names of all cards whose names start with Seed:…
+  s_e0f0a9  validated    1 steps  3/3 (100%)
+           Sign in to Planka at {{v1}} using email {{v2}} and password exactly {{v3}}. Verify that the authenticated app …
+  s_f25569  validated    4 steps  3/3 (100%)
+           On board {{v1}}, create a card named exactly '{{v3}}' in the 'In Progress' list. Set its description to one pa…
+store: /home/user/sitelooper/bench/results/hapk1-skills
+
+summary: /home/user/sitelooper/bench/results/hapk1-sweep.json
