@@ -92,3 +92,28 @@ Not clean, with the reason:
   min (moved to the session hook); BookStack IPv6 and Directus email fixes before any run; the
   five second-wave boxes first found no docker daemon on the cached snapshot and stopped before
   running anything, then were re-fired with the same bases.
+
+## Does each tool say when it failed? (bench/heldout/honesty.mjs)
+
+The tool's own verdict set against the verifier's, per run (36 per arm):
+
+```
+
+== sitelooper
+  record    9 runs: clean 7, failed 2 (silent 2, loud 0), false alarm 0
+  replay    18 runs: clean 11, failed 7 (silent 7, loud 0), false alarm 0
+  no-model  9 runs: clean 3, failed 5 (silent 1, loud 4), false alarm 0
+  all       36 runs: clean 21, failed 14 (silent 10, loud 4), false alarm 0
+  objectives the verifier failed where the tool gave a per-objective verdict: 2, of which the tool claimed 2 as done
+
+== e2e
+  record    9 runs: clean 2, failed 1 (silent 0, loud 1), false alarm 6
+  replay    18 runs: clean 2, failed 8 (silent 3, loud 5), false alarm 8
+  no-model  9 runs: clean 1, failed 5 (silent 1, loud 4), false alarm 3
+  all       36 runs: clean 5, failed 14 (silent 4, loud 10), false alarm 17
+  objectives the verifier failed where the tool gave a per-objective verdict: 18, of which the tool claimed 6 as done
+```
+
+sitelooper's failures were mostly silent (10 of 14: it reported success, the app disagreed);
+e2e's were mostly loud (10 of 14), at the cost of 17 false alarms (mostly report-only extracts
+and inconclusive judgments on runs the verifier scored clean). Neither is a clean win.
