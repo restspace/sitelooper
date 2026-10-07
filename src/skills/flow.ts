@@ -64,6 +64,32 @@ export interface Flow {
    * this is a record, not a gate.
    */
   pruned?: { stepId: string; outputs: string[] }[];
+  /**
+   * Work the recording did that this flow does NOT contain: each instruction
+   * that ran state-changing steps, did not report success and was not adopted
+   * (resolveGroups), with how many of its steps were left out.
+   *
+   * Persisted for the same reason as `pruned`: it is a fact about the
+   * RECORDING. It was an export console line only, and nothing acted on it —
+   * kimai hakm2's timesheet create (24 steps, reported failure) was named
+   * there and then the compiled spec passed without it. Compile re-surfaces
+   * each entry as an `omitted-work` warning: a spec may pass without that
+   * work. Absent on flows built before it was stored, and when nothing was
+   * left out.
+   */
+  omitted?: OmittedWork[];
+}
+
+/** One instruction's work a flow left out (Flow.omitted). */
+export interface OmittedWork {
+  /** The instruction as recorded. */
+  instruction: string;
+  /** How many of its state-changing steps the flow does not carry. */
+  mutations: number;
+  /** What it reported: 'failure' | 'blocked', or 'none' when it reported nothing. */
+  status: string;
+  /** The next instruction, when it put back what this one changed (undoneByNext): the pair nets to nothing. */
+  undoneBy?: string;
 }
 
 export interface FlowStep {
@@ -441,6 +467,9 @@ export function buildFlow(
 ): Flow | null {
   const groups = resolveGroups(groupByInstruction(entries));
   if (!groups.length) return null;
+  // What the flow leaves out rides on it (Flow.omitted), stripped of the
+  // export line's carried count.
+  const omitted: OmittedWork[] = omittedWork(entries).map(({ carried: _carried, ...w }) => w);
 
   const steps: FlowStep[] = [];
   const warnings: string[] = [];
@@ -900,6 +929,7 @@ export function buildFlow(
     steps,
     provenance: { session: opts.session, created: opts.now ?? new Date().toISOString(), ...(opts.model ? { model: opts.model } : {}) },
     ...(warnings.length ? { warnings } : {}),
+    ...(omitted.length ? { omitted } : {}),
   };
 }
 
@@ -1717,6 +1747,11 @@ function samePage(a?: string, b?: string): boolean {
  *      part of the path: the next is dropped with it.
  * Scanned right-to-left so a chain of continuations adopts as a chain.
  *
+ * Rule 2 needs a successor, so it never reaches the recording's TAIL: work
+ * after the last successful group. That is adopted on its own evidence (see
+ * TAIL ADOPTION below): nothing came after it, so the recording's final state
+ * holds it.
+ *
  * Marks `adopted` (or `undoneBy`) on the group (unbankedMutations reads both)
  * and returns the kept groups.
  */
@@ -1733,6 +1768,65 @@ function resolveGroups(recorded: Group[]): Group[] {
   const groups = recorded.filter((g) => !g.instruction.assert);
   const standsBetween = (a: Group, b: Group): boolean => recorded.slice(recorded.indexOf(a) + 1, recorded.indexOf(b)).some((g) => g.instruction.assert === true);
   const kept = groups.map((g) => g.report?.status === 'success');
+  // TAIL ADOPTION. A non-success group that changed the app with no
+  // successful group after it is the recording's LAST work: nothing later
+  // replaced it, so the app the recording ended on holds what it did, and a
+  // flow without it is a flow that skips it. Kimai hakm2-n1: "Create exactly
+  // one timesheet record…" saved the record (its own summary says so) and
+  // reported blocked; its re-issue (a resume, so the same group) re-opened the
+  // record to verify and reported failure. That was the recording's end, rule
+  // 2 had no successor to ask, and the flow stopped at 04-edit: both replays
+  // and the compiled spec skipped the timesheet objectives, and the spec
+  // PASSED against an app that had none — a silent pass.
+  //
+  // The guards rule 2 asks of its successor are asked of the LATER tail
+  // groups (this one, possibly followed only by other non-success ones):
+  //  - undone (undoneByNext, without its "the successor succeeded" clause —
+  //    in the tail nothing succeeds; the page the group started on reading the
+  //    same again after its successor is the evidence on its own): neither
+  //    group of the pair is adopted;
+  //  - redidFromScratch / reappliedByNext by a later adopted group carrying
+  //    DIFFERENT work: superseded where it stood, exactly as mid-flow.
+  // A later group re-issuing the SAME instruction is not a replacement but a
+  // retry of the same work: both are kept and merged below into ONE step that
+  // owns the work (a `resume` re-issue is already one group, groupByInstruction).
+  // A tail group that changed nothing, or reported nothing (a recording cut
+  // off mid-instruction), is not adopted: it holds no work a replay needs.
+  const tailFrom = kept.lastIndexOf(true) + 1;
+  const undoneTail = new Set<Group>();
+  for (let i = tailFrom; i < groups.length - 2; i++) {
+    const g = groups[i];
+    if (undoneTail.has(g) || !g.mutations || !undoneByNext(groups, i, false)) continue;
+    g.undoneBy = groups[i + 1];
+    undoneTail.add(g).add(groups[i + 1]);
+  }
+  for (let i = groups.length - 1; i >= tailFrom; i--) {
+    const g = groups[i];
+    if (undoneTail.has(g) || !g.report || !g.mutations) continue;
+    const j = kept.indexOf(true, i + 1);
+    const next = j < 0 ? undefined : groups[j];
+    if (next && next.instruction.text !== g.instruction.text && (redidFromScratch(g, next) || reappliedByNext(groups, kept, i))) continue;
+    g.adopted = true;
+    kept[i] = true;
+  }
+  // ...and a retry folds into the attempt it retried: one step, ending where
+  // the retry did, reporting what the retry reported (over the attempt's
+  // values), as resolveGroups' continuation merge folds a continuation. Never
+  // across an assertion, which checked the page between the two.
+  for (let i = tailFrom; i < groups.length; i++) {
+    const g = groups[i];
+    if (!g.adopted) continue;
+    for (let j = i + 1; j < groups.length; j++) {
+      if (!kept[j]) continue;
+      const h = groups[j];
+      if (h.instruction.text !== g.instruction.text || standsBetween(g, h)) break;
+      foldInto(g, h);
+      groups.splice(j, 1);
+      kept.splice(j, 1);
+      recorded.splice(recorded.indexOf(h), 1);
+      j--;
+    }
+  }
   for (let i = groups.length - 2; i >= 0; i--) {
     if (kept[i]) continue;
     const g = groups[i];
@@ -1801,16 +1895,7 @@ function resolveGroups(recorded: Group[]): Group[] {
       // never got a pin of its own.
       const reached = g.diffs.some((d) => landsRecord(g.instruction.url, d.url)) || landsRecord(g.instruction.url, g.endUrl);
       if (reached || !sameUrlState(g.endUrl, next.instruction.url) || !landedBeforeLeaving(next)) break;
-      const values = { ...(g.report?.values ?? {}), ...(next.report?.values ?? {}) };
-      const { skill: _skill, skillParams: _params, ...rest } = next.report ?? { status: 'success' as const, summary: '', values: {} };
-      g.report = { ...rest, values } as Group['report'];
-      g.endUrl = next.endUrl ?? g.endUrl;
-      g.diffs.push(...next.diffs);
-      g.acts.push(...next.acts);
-      g.steps.push(...next.steps);
-      g.mutations += next.mutations;
-      g.mutationsDiffed += next.mutationsDiffed;
-      g.mutationsEffective += next.mutationsEffective;
+      const values = foldInto(g, next);
       // ...and the continuation's INSTRUCTION, which the merge used to drop.
       // The merged step owns the continuation's report values, so its replay
       // must be told what produced them: fwen2-luna's 04-create was "create
@@ -1844,6 +1929,27 @@ function resolveGroups(recorded: Group[]): Group[] {
   }
   const resolved = new Set(groups.filter((_, i) => kept[i]));
   return recorded.filter((g) => (g.instruction.assert ? g.report?.status === 'success' : resolved.has(g)));
+}
+
+/**
+ * Fold `next` into `g` as one step (resolveGroups' merges): `g` ends where
+ * `next` did and reports what `next` reported, over `g`'s own values; the
+ * steps, diffs and counts add up. `next`'s pinned skill is not carried — it
+ * is a way of finishing from where `g` stopped, which the merged step no
+ * longer does. Returns the merged values.
+ */
+function foldInto(g: Group, next: Group): Record<string, string> {
+  const values = { ...(g.report?.values ?? {}), ...(next.report?.values ?? {}) };
+  const { skill: _skill, skillParams: _params, ...rest } = next.report ?? { status: 'success' as const, summary: '', values: {} };
+  g.report = { ...rest, values } as Group['report'];
+  g.endUrl = next.endUrl ?? g.endUrl;
+  g.diffs.push(...next.diffs);
+  g.acts.push(...next.acts);
+  g.steps.push(...next.steps);
+  g.mutations += next.mutations;
+  g.mutationsDiffed += next.mutationsDiffed;
+  g.mutationsEffective += next.mutationsEffective;
+  return values;
 }
 
 /**
@@ -2046,12 +2152,14 @@ function sameChoice(a: RecordedStep, b: RecordedStep): boolean {
  * Anything short of that keeps today's adoption: a wrongly dropped step loses
  * the run's work silently, while a wrongly kept one is only slow.
  */
-function undoneByNext(groups: readonly Group[], i: number): boolean {
+function undoneByNext(groups: readonly Group[], i: number, finished = true): boolean {
   const g = groups[i];
   const next = groups[i + 1];
   const before = g.instruction;
   const after = groups[i + 2]?.instruction;
-  if (!after || !next.mutations || next.report?.status !== 'success') return false;
+  // `finished` false: resolveGroups' tail, where no group succeeded and the
+  // page reading the same afterwards is the only witness there can be.
+  if (!after || !next.mutations || (finished && next.report?.status !== 'success')) return false;
   if (!before.startText || before.startText !== after.startText) return false;
   // Only a snapshot that SAYS whether it is whole: dialect-1 recordings wrote
   // no startTextComplete and cut the page at a smaller budget. fwod20's shows
@@ -2421,11 +2529,16 @@ export function staleInstructionIds(entries: RecordedEntry[], flow: Flow): strin
   return out;
 }
 
-export function unbankedMutations(entries: RecordedEntry[]): string[] {
+/**
+ * The mutating work a recording did that its flow does NOT contain, one entry
+ * per instruction (unbankedMutations says each as a line; buildFlow stores
+ * them on the flow as `omitted`, which compile re-surfaces as `omitted-work`).
+ * `mutations` counts the steps left out — those a later procedure carried in
+ * front of its own (carryOpener) are in the flow, and counted out.
+ */
+export function omittedWork(entries: RecordedEntry[]): (OmittedWork & { carried: number })[] {
   const groups = groupByInstruction(entries);
-  resolveGroups(groups); // marks `adopted` in place
-  const out: string[] = [];
-  const quote = (text: string): string => `"${text.slice(0, 70)}${text.length > 70 ? '…' : ''}"`;
+  resolveGroups(groups); // marks `adopted` in place, and takes merged groups out
   // A dead instruction's gestures that a later, successful instruction's
   // procedure carries in front of its own (compile.ts carryOpener) ARE in the
   // flow: gitea fwgt11-n1 04-set's blocked attempt was said to have "ran 17
@@ -2443,29 +2556,40 @@ export function unbankedMutations(entries: RecordedEntry[]): string[] {
     for (const step of carriedSteps(entries.slice(0, i), span)) carried.add(step);
     for (const { step } of carriedChoices(entries.slice(0, i), span)) carried.add(step);
   }
+  // The undoing half of a pair undoneByNext dropped is said with the half it
+  // undid (a tail pair's undoer reported no success either).
+  const undoers = new Set(groups.map((g) => g.undoneBy).filter((g): g is Group => Boolean(g)));
+  const out: (OmittedWork & { carried: number })[] = [];
   for (const g of groups) {
-    if (g.report?.status === 'success' || g.adopted || !g.mutations) continue;
+    if (g.instruction.assert || g.report?.status === 'success' || g.adopted || !g.mutations || undoers.has(g)) continue;
     const taken = g.acts.filter((a) => carried.has(a)).length;
     const left = g.mutations - taken;
     if (!left) continue;
-    const text = g.instruction.text;
-    // The pair undoneByNext drops: the successor reported success, so this is
-    // the only place its absence from the flow is said.
-    if (g.undoneBy) {
-      out.push(
-        `instruction ${quote(text)} ran ${g.mutations} state-changing step(s) and reported ${g.report!.status}; ` +
-          `the next instruction ${quote(g.undoneBy.instruction.text)} put back what it changed (the page it started on ` +
-          `read the same afterwards) — the pair nets to nothing, so NEITHER is in the flow`,
-      );
-      continue;
-    }
-    out.push(
-      `instruction "${text.slice(0, 70)}${text.length > 70 ? '…' : ''}" ran ${left} state-changing step(s) ` +
-        `but reported ${g.report ? g.report.status : 'nothing'} — its work is NOT in the flow` +
-        (taken ? ` (${taken} more were carried into the next instruction's procedure)` : ''),
-    );
+    out.push({
+      instruction: g.instruction.text,
+      mutations: g.undoneBy ? g.mutations : left,
+      status: g.report ? g.report.status : 'none',
+      carried: taken,
+      ...(g.undoneBy ? { undoneBy: g.undoneBy.instruction.text } : {}),
+    });
   }
   return out;
+}
+
+/** omittedWork, as the export's warning lines. */
+export function unbankedMutations(entries: RecordedEntry[]): string[] {
+  const quote = (text: string): string => `"${text.slice(0, 70)}${text.length > 70 ? '…' : ''}"`;
+  return omittedWork(entries).map((w) =>
+    // The pair undoneByNext drops: the successor reported success, so this is
+    // the only place its absence from the flow is said.
+    w.undoneBy !== undefined
+      ? `instruction ${quote(w.instruction)} ran ${w.mutations} state-changing step(s) and reported ${w.status}; ` +
+        `the next instruction ${quote(w.undoneBy)} put back what it changed (the page it started on ` +
+        `read the same afterwards) — the pair nets to nothing, so NEITHER is in the flow`
+      : `instruction ${quote(w.instruction)} ran ${w.mutations} state-changing step(s) ` +
+        `but reported ${w.status === 'none' ? 'nothing' : w.status} — its work is NOT in the flow` +
+        (w.carried ? ` (${w.carried} more were carried into the next instruction's procedure)` : ''),
+  );
 }
 
 function stepId(text: string, i: number, assert = false): string {

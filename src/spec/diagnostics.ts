@@ -43,6 +43,7 @@ export type DiagnosticCode =
   | 'assert-procedure' // an assertion step and its pinned procedure disagree about being one (FlowStep.kind vs Skill.assert), so it would compile under the wrong failure policy
   | 'unproven-pin' // the step's pinned procedure stopped on its latest replay(s) and has not replayed clean since — a compiled spec would stop at the same step (notes/CONTRACT-spec-reliability.md item 1)
   | 'unchecked-commit' // a step that commits work (a click after fills) has no recorded effect to check, so a spec run where it did nothing still passes (item 3)
+  | 'omitted-work' // record time: an instruction changed the app, did not report success and is not in the flow (Flow.omitted), so a spec may pass without that work (kimai hakm2's timesheet)
   | 'no-procedure'; // step has no converged procedure
 
 export interface Diagnostic {

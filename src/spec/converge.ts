@@ -78,6 +78,8 @@ export interface ConvergeOptions {
   maxRounds: number;
   /** Runs of a first re-record of a step; a second attempt at the same step gets at least three. */
   rerecordRuns: number;
+  /** False when no model can be called: the loop compiles and checks, and stops `unavailable` where a re-record would be needed. */
+  modelAvailable?: boolean;
 }
 
 export interface ConvergeRound {
@@ -212,6 +214,9 @@ export async function converge(seams: ConvergeSeams, o: ConvergeOptions): Promis
 
     // A step to re-record: with the reason, the outputs a later step needs read there.
     const rerecordStep = async (step: string, why: string, outputs: string[]): Promise<ConvergeResult | null> => {
+      if (o.modelAvailable === false) {
+        return done('unavailable', `${step} needs a re-record (${why}), and no model API key is configured: set one (see \`sitelooper doctor\`) and run build again, or pass --no-converge`);
+      }
       const before = refused.get(step) ?? 0;
       if (before >= 2) {
         return done('stuck-repin', `${step} was re-recorded twice and the re-pin rule refused both: its procedure does not replay clean`);
@@ -252,6 +257,43 @@ export async function converge(seams: ConvergeSeams, o: ConvergeOptions): Promis
     if (stop) return stop;
   }
   return done('exhausted', `${o.maxRounds} round(s) without a passing compiled spec`);
+}
+
+export interface BuildConvergeInput {
+  /** `--no-converge` was given. */
+  noConverge: boolean;
+  /** `--converge` was given: undefined when absent, '' when bare, else the raw round count. */
+  convergeFlag: string | undefined;
+  /** `--reset-cmd` or the project config's resetCommand. */
+  resetCmd: string | undefined;
+  /** The provider config resolves with an API key. */
+  hasModelKey: boolean;
+}
+
+export type BuildConvergeDecision =
+  | { mode: 'plain'; skipped: null }
+  | { mode: 'plain'; skipped: string }
+  | { mode: 'converge'; maxRounds: number; modelAvailable: boolean };
+
+export const DEFAULT_BUILD_ROUNDS = 2;
+export const DEFAULT_EXPLICIT_ROUNDS = 3;
+
+export const NO_RESET_SKIP_MESSAGE = 'convergence skipped: no reset command is configured, so a failing spec cannot be re-checked against a clean app (pass --reset-cmd "<command>" or set resetCommand in the project config; --no-converge silences this)';
+
+/**
+ * What `build` does about convergence. An explicit --converge always converges
+ * (a bare one takes 3 rounds); the default is 2 rounds, and only when a reset
+ * command exists. An absent API key does not skip convergence: the loop still
+ * compiles and checks, and stops `unavailable` where a re-record is needed.
+ */
+export function decideBuildConvergence(i: BuildConvergeInput): BuildConvergeDecision {
+  if (i.noConverge) return { mode: 'plain', skipped: null };
+  if (i.convergeFlag !== undefined) {
+    const n = i.convergeFlag === '' ? DEFAULT_EXPLICIT_ROUNDS : Number(i.convergeFlag);
+    return { mode: 'converge', maxRounds: n, modelAvailable: i.hasModelKey };
+  }
+  if (!i.resetCmd) return { mode: 'plain', skipped: NO_RESET_SKIP_MESSAGE };
+  return { mode: 'converge', maxRounds: DEFAULT_BUILD_ROUNDS, modelAvailable: i.hasModelKey };
 }
 
 /** One line per round for the terminal. */
