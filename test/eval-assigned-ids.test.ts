@@ -61,6 +61,9 @@ describe('eval-assigned identifiers are not locators (fwop10)', () => {
     const fills = compile(es)
       .flatMap((s) => s.steps)
       .filter((s) => s.tool === 'fill');
-    expect(fills.some((f) => JSON.stringify(f.locators.target).includes('#journal-editor-2'))).toBe(true);
+    expect(fills.some((f) => JSON.stringify(f.locators.target).includes('#wp-new-inline-edit--field-combinedDate'))).toBe(true);
+    // `#journal-editor-2` goes all the same, for another reason: its "2" was
+    // never an address the recording showed (skills/id-fragments.ts, fwgt35-luna).
+    expect(fills.some((f) => JSON.stringify(f.locators.target).includes('#journal-editor-2'))).toBe(false);
   });
 });

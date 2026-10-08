@@ -22,6 +22,7 @@ import { generaliseAppMinted, generaliseAppMintedDeep, sessionAppMintedPositions
 import { DEBOUNCE_MS, type JournalEvent } from '../daemon/journal-attribute.js';
 import { locatingSlots, scopeReadBySlot } from './readscope.js';
 import { keyPicks } from './key-pick.js';
+import { anchorEvidencedIds, shownBy } from './id-fragments.js';
 import type { ShadowRow } from './shadow.js';
 import { matchesShape, routeTemplateOf, valueClassFact, valueRoleFact, type SiteFacts } from '../execution/facts.js';
 
@@ -1044,6 +1045,8 @@ export function compileSkills(input: CompileInput): Skill[] {
   // template, or binding an instruction to segment 1 would fail).
   let segOffset = 0;
   /** Slots some recorded candidate locates by: the reads scoped by a slot are scoped by these (readscope.ts, fwrd87). */
+  /** Everything the recording showed, for anchorEvidencedIds: the whole session up to and through this instruction, and the ledger's values. */
+  const shown = shownBy([...(input.before ?? []), ...input.entries], Object.values(input.knownValues ?? {}).map((v) => String(v ?? '')));
   const locating = locatingSlots(segments.map((sg) => sg.steps.map((st) => substituteDeep(Object.values(st.locators).map((l) => l.chain ?? []), textSlots))));
   const built = segments.map((sg) => {
     const base = segOffset;
@@ -1057,6 +1060,8 @@ export function compileSkills(input: CompileInput): Skill[] {
     const recordedObs = new WeakMap<SkillStep, RecordedEvidence>();
     /** What takenBackLines kept out of an expectation, noted once the segment's notes exist. */
     const takenNotes: TransformNote[] = [];
+    /** What anchorEvidencedIds rewrote or removed, noted the same way. */
+    const idNotes: TransformNote[] = [];
     const skillSteps: SkillStep[] = sg.steps.map((step, i) => {
       const g = base + i;
       // A minted value is a reference only DOWNSTREAM of its mint: in this
@@ -1097,7 +1102,7 @@ export function compileSkills(input: CompileInput): Skill[] {
       if (typeof args.target === 'string' && positionalUrlSlots.length && /^\s*role=/.test(args.target)) args.target = substituteHashIds(args.target, positionalUrlSlots);
       const locators: Record<string, LocatorCandidate[]> = {};
       for (const [key, loc] of Object.entries(step.locators)) {
-        const filled = (loc.chain ?? []).map((c) => {
+        const substituted = (loc.chain ?? []).map((c) => {
           const out = substituteDeep(substituteDeep(c, textSlots), mintedBefore) as LocatorCandidate;
           if (!positionalUrlSlots.length) return out;
           if (out.kind === 'css') return { ...out, selector: substituteHrefIds(out.selector, positionalUrlSlots) };
@@ -1105,6 +1110,13 @@ export function compileSkills(input: CompileInput): Skill[] {
           // NAME a control is found by (substituteHashIds, gitea fwgt27 05-open).
           return substituteHashIdsIn(out, positionalUrlSlots);
         });
+        // An id inside a css or id candidate whose number is the run's own
+        // url value is slotted (`#issue-{{v6}}`); one whose number the
+        // recording never showed anchors nothing (`#issuecomment-11`, gitea
+        // fwgt35-luna's five read-back drifts): see skills/id-fragments.ts.
+        const anchored = anchorEvidencedIds(substituted, positionalUrlSlots, shown);
+        for (const reason of anchored.notes) idNotes.push({ name: 'anchorEvidencedIds', at: i + 1, reason });
+        const filled = anchored.chain;
         // An identity anchor still carrying THIS RUN's known value after
         // slotting (the recorded runid, because the value was typed in an
         // earlier instruction and so is not a slot here) can never match
@@ -1245,7 +1257,7 @@ export function compileSkills(input: CompileInput): Skill[] {
       return out;
     });
     const mintedForStart = mintedMap((m) => m.keptIndex < base);
-    const notes: TransformNote[] = [...takenNotes];
+    const notes: TransformNote[] = [...takenNotes, ...idNotes];
     // An assertion's waits are kept as recorded: every transform below removes
     // or folds steps on evidence about what an ACTION did, and a check that a
     // transform dropped is a check no run makes.
