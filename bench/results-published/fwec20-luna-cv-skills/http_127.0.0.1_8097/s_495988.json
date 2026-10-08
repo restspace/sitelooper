@@ -1,0 +1,94 @@
+{
+ "id": "s_495988",
+ "origin": "http://127.0.0.1:8097",
+ "template": "Create an EspoCRM opportunity named '{{v3}}', linked by selecting the actual '{{v2}}' record, with description including '{{v1}}'. Save it and verify the created record/page shows the name, linked account, and description.",
+ "params": {
+  "v1": {
+   "example": "fwec20-luna-n3",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v2": {
+   "example": "Bench Account",
+   "usedIn": [],
+   "known": true,
+   "binding": "02-open.opportunity_1_account"
+  },
+  "v3": {
+   "example": "fwec20-luna-n3 Bench Opportunity",
+   "usedIn": [],
+   "known": true
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8097/#Opportunity"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e179"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#main > div:nth-of-type(1) > div > div:nth-of-type(2) > div > a"
+     },
+     {
+      "kind": "point",
+      "x": 1170,
+      "y": 65,
+      "w": 168.2,
+      "h": 36,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8097/#Opportunity/create",
+    "addedContains": [
+     "- heading \"Opportunitiescreate\"",
+     "- link \"Opportunities\"",
+     "- button \"Ctrl+Enter\"",
+     "- button \"Esc\"",
+     "- textbox \"Select\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_ce63b8",
+    "step": 1
+   }
+  }
+ ],
+ "contract": 2,
+ "stats": {
+  "uses": 3,
+  "successes": 3,
+  "partial": 0,
+  "created": "2026-10-08T14:59:57.492Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2,
+  "lastUsed": "2026-10-08T15:22:11.633Z",
+  "stopStreak": 0
+ },
+ "status": "validated",
+ "seq": {
+  "chain": "s_06d5f0",
+  "index": 0,
+  "of": 5
+ },
+ "provenance": {
+  "session": "fwec20-luna-n3",
+  "instruction": "Create an EspoCRM opportunity named 'fwec20-luna-n3 Bench Opportunity', linked by selecting the actual 'Bench Account' record, with description including 'fwec20-luna-n3'. Save it and verify the created record/page shows the name, linked account, and description.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-10-08T14:59:57.492Z"
+ },
+ "revision": 3
+}

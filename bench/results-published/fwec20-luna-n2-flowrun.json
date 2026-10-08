@@ -1,0 +1,255 @@
+{
+  "flow": "fwec20-luna",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_d5febb; observed final_url=http://127.0.0.1:8097/, stream_panel_content=No Data, button_text=logo, signed_in_user=Admin, user_menu_items_1=Admin, user_menu_items_2=Administration, user_menu_items_3=Preferences, user_menu_items_4=About, user_menu_items_5=Log Out.",
+      "unanswered": [
+        "visible_page"
+      ],
+      "values": {
+        "final_url": "http://127.0.0.1:8097/",
+        "stream_panel_content": "No Data",
+        "button_text": "logo",
+        "signed_in_user": "Admin",
+        "user_menu_items_1": "Admin",
+        "user_menu_items_2": "Administration",
+        "user_menu_items_3": "Preferences",
+        "user_menu_items_4": "About",
+        "user_menu_items_5": "Log Out"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "14/14",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_c74f98; observed names_1=Seed: training package, names_2=Seed: pilot expansion, names_3=Seed: annual support renewal, opportunity_1_1=Seed: training package, opportunity_1_account=Bench Account, opportunity_1_stage=Prospecting, opportunity_1_amount=$2,500.00, opportunity_2_1=Seed: pilot expansion, opportunity_2_account=Bench Account, opportunity_2_stage=Prospecting, opportunity_2_amount=$9,000.00, opportunity_3_1=Seed: annual support renewal, opportunity_3_account=Bench Account, opportunity_3_stage=Prospecting, opportunity_3_amount=$4,800.00.",
+      "values": {
+        "names_1": "Seed: training package",
+        "names_2": "Seed: pilot expansion",
+        "names_3": "Seed: annual support renewal",
+        "opportunity_1_1": "Seed: training package",
+        "opportunity_1_account": "Bench Account",
+        "opportunity_1_stage": "Prospecting",
+        "opportunity_1_amount": "$2,500.00",
+        "opportunity_2_1": "Seed: pilot expansion",
+        "opportunity_2_account": "Bench Account",
+        "opportunity_2_stage": "Prospecting",
+        "opportunity_2_amount": "$9,000.00",
+        "opportunity_3_1": "Seed: annual support renewal",
+        "opportunity_3_account": "Bench Account",
+        "opportunity_3_stage": "Prospecting",
+        "opportunity_3_amount": "$4,800.00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "25/25",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_c74f98: step 24: read 'search_filter_used' returned a value the skill itself set/selected ('Seed:') — confirms the control, not persistence; dropped from the report's confident values"
+      ],
+      "unreported": [
+        "search_filter_used"
+      ]
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "The opportunity was created and saved (the replay's step 18 Save landed, navigating to the record view page). The live record page at http://127.0.0.1:8097/#Opportunity/view/6ac7af3d2b307bce4 shows Name \"fwec20-luna-n2 Bench Opportunity\", Account rendered as a real link \"Bench Account\" pointing to #Account/view/6ac7acf61a2687997 (an actual linked Account record, not free text), and Description \"fwec20-luna-n2 test opportunity created via UI\". No further actions were taken beyond reading the saved page, so no duplicate record was created and nothing was edited.",
+      "values": {
+        "opportunity_name": "fwec20-luna-n2 Bench Opportunity",
+        "record_id": "6ac7af3d2b307bce4",
+        "linked_account_name": "Bench Account",
+        "linked_account_href": "#Account/view/6ac7acf61a2687997",
+        "linked_account_id": "6ac7acf61a2687997",
+        "description": "fwec20-luna-n2 test opportunity created via UI",
+        "amount_displayed": "$1,000.00",
+        "stage_displayed": "Prospecting",
+        "close_date_displayed": "Oct 31",
+        "created": "Today 14:57 by Admin",
+        "saved_opportunity_name": "fwec20-luna-n2 Bench Opportunity",
+        "saved_description": "fwec20-luna-n2 test opportunity created via UI",
+        "record_url": "http://127.0.0.1:8097/#Opportunity/view/6ac7af3d2b307bce4",
+        "ref": "fwec20-luna-n2"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_936046 stopped at step 18 — after step 18 expected url http://127.0.0.1:8097/#Opportunity/create but browser is at http://127.0.0.1:8097/#Opportunity/view/6ac7af3d2b307bce4",
+      "pinStopped": {
+        "skill": "s_936046",
+        "step": 18,
+        "why": "after step 18 expected url http://127.0.0.1:8097/#Opportunity/create but browser is at http://127.0.0.1:8097/#Opportunity/view/6ac7af3d2b307bce4"
+      },
+      "replayed": "17/36",
+      "repaired": false,
+      "turns": 2,
+      "warnings": [
+        "s_936046: step 5: 1 field(s) this procedure filled were empty again before this press (the page rebuilt its form, or dropped the value when the field lost focus, after the fills were checked) — refilled once",
+        "s_936046: step 12: read 'opportunity_name' returned a value the skill itself set/selected ('fwec20-luna-n2 Bench Opportunity') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_936046: step 14: read 'opportunity_name' returned a value the skill itself set/selected ('fwec20-luna-n2 Bench Opportunity') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_936046: step 17: read 'amount' returned a value the skill itself set/selected ('1000') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_936046: step 18: 1 field(s) this procedure filled were empty again before this click (the page rebuilt its form, or dropped the value when the field lost focus, after the fills were checked); 1 of them kept only a value typed key by key — refilled once"
+      ],
+      "unreported": [
+        "opportunity_id",
+        "linked_account",
+        "amount",
+        "selected_account_name",
+        "saved_amount_display",
+        "account_field_label"
+      ]
+    },
+    {
+      "id": "04-change",
+      "status": "success",
+      "summary": "Replayed stored procedure s_ecdb29; observed record_name=fwec20-luna-n2 Bench Opportunity, record_description=fwec20-luna-n2 test opportunity created via UI, stage_after_save=Negotiation, record_url=http://127.0.0.1:8097/#Opportunity/view/6ac7af3d2b307bce4, opportunity_name=fwec20-luna-n2 Bench Opportunity, linked_account=Bench Account, description=fwec20-luna-n2 test opportunity created via UI, stage_before=Prospecting, ref=fwec20-luna-n2, record_account=Bench Account.",
+      "values": {
+        "record_name": "fwec20-luna-n2 Bench Opportunity",
+        "record_description": "fwec20-luna-n2 test opportunity created via UI",
+        "stage_after_save": "Negotiation",
+        "record_url": "http://127.0.0.1:8097/#Opportunity/view/6ac7af3d2b307bce4",
+        "opportunity_name": "fwec20-luna-n2 Bench Opportunity",
+        "linked_account": "Bench Account",
+        "description": "fwec20-luna-n2 test opportunity created via UI",
+        "stage_before": "Prospecting",
+        "ref": "fwec20-luna-n2",
+        "record_account": "Bench Account"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "13/13",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "05-edit",
+      "status": "success",
+      "summary": "Replayed stored procedure s_ecf0f1; observed saved_name=fwec20-luna-n2 Bench Opportunity, saved_amount_display=$12,500.00, saved_close_date_display=Dec 31, stage=Negotiation, opportunity_name=fwec20-luna-n2 Bench Opportunity, record_url=http://127.0.0.1:8097/#Opportunity/view/6ac7af3d2b307bce4, linked_account=Bench Account, ref=fwec20-luna-n2.",
+      "values": {
+        "saved_name": "fwec20-luna-n2 Bench Opportunity",
+        "saved_amount_display": "$12,500.00",
+        "saved_close_date_display": "Dec 31",
+        "stage": "Negotiation",
+        "opportunity_name": "fwec20-luna-n2 Bench Opportunity",
+        "record_url": "http://127.0.0.1:8097/#Opportunity/view/6ac7af3d2b307bce4",
+        "linked_account": "Bench Account",
+        "ref": "fwec20-luna-n2"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "30/30",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_ecf0f1: step 6: read 'amount_after_fill' returned '1,000.00' from a control this step set, and nothing committed it since — it shows the control, however the app formats it, not what the app stored; dropped from the report's confident values",
+        "s_ecf0f1: step 7: read 'close_date_after_fill' returned '2026-10-31' from a control this step set, and nothing committed it since — it shows the control, however the app formats it, not what the app stored; dropped from the report's confident values",
+        "s_ecf0f1: step 9: read 'amount_after_fill' returned '1,000.00' from a control this step set, and nothing committed it since — it shows the control, however the app formats it, not what the app stored; dropped from the report's confident values",
+        "s_ecf0f1: step 13: read 'amount_field_input_value' returned '12,500.00' from a control this step set, and nothing committed it since — it shows the control, however the app formats it, not what the app stored; dropped from the report's confident values",
+        "s_ecf0f1: step 18: read 'close_date_stored_value' returned a value the skill itself set/selected ('2026-12-31') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_ecf0f1: step 26: read 'close_date_stored_value' returned a value the skill itself set/selected ('2026-12-31') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_ecf0f1: step 27: read 'amount_field_input_value' returned '12,500.00' from a control this step set, and nothing committed it since — it shows the control, however the app formats it, not what the app stored; dropped from the report's confident values",
+        "s_ecf0f1: report value close_date_now is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)",
+        "s_ecf0f1: report value edit_form_close_date is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)"
+      ],
+      "unreported": [
+        "amount_field_input_value",
+        "close_date_stored_value",
+        "amount_after_fill",
+        "close_date_after_fill",
+        "close_date_now",
+        "edit_form_close_date"
+      ]
+    },
+    {
+      "id": "06-edit",
+      "status": "success",
+      "summary": "Replayed stored procedure s_6ca656; observed ref=fwec20-luna-n2, assigned_input_class=main-element form-control, assigned_user_id_committed=6ac7acf7af75c9bda, assigned_user=Bench Assignee, saved_amount=$12,500.00, saved_stage=Negotiation, record_url=http://127.0.0.1:8097/#Opportunity/view/6ac7af3d2b307bce4, opportunity_name=fwec20-luna-n2 Bench Opportunity, linked_account=Bench Account.",
+      "values": {
+        "ref": "fwec20-luna-n2",
+        "assigned_input_class": "main-element form-control",
+        "assigned_user_id_committed": "6ac7acf7af75c9bda",
+        "assigned_user": "Bench Assignee",
+        "saved_amount": "$12,500.00",
+        "saved_stage": "Negotiation",
+        "record_url": "http://127.0.0.1:8097/#Opportunity/view/6ac7af3d2b307bce4",
+        "opportunity_name": "fwec20-luna-n2 Bench Opportunity",
+        "linked_account": "Bench Account"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "20/20",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "07-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_6ec74a; observed ref=fwec20-luna-n2, record_url=http://127.0.0.1:8097/#Opportunity/view/6ac7af3d2b307bce4, opportunity_name=fwec20-luna-n2 Bench Opportunity, post_timestamp=14:58.",
+      "values": {
+        "ref": "fwec20-luna-n2",
+        "record_url": "http://127.0.0.1:8097/#Opportunity/view/6ac7af3d2b307bce4",
+        "opportunity_name": "fwec20-luna-n2 Bench Opportunity",
+        "post_timestamp": "14:58"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "6/6",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_6ec74a: step 5: read 'posted_message_text' returned a value the skill itself set/selected ('fwec20-luna-n2 stream post verifying Stream message creation') — confirms the control, not persistence; dropped from the report's confident values"
+      ]
+    }
+  ],
+  "passed": 7,
+  "total": 7,
+  "repinned": 0,
+  "drift": 1,
+  "driftTickets": [
+    {
+      "flow": "fwec20-luna",
+      "step": "03-create",
+      "skill": "s_936046",
+      "similarity": 1,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_936046 stopped at step 18 — after step 18 expected url http://127.0.0.1:8097/#Opportunity/create but browser is at http://127.0.0.1:8097/#Opportunity/view/6ac7af3d2b307bce4",
+      "reason": "after step 18 expected url http://127.0.0.1:8097/#Opportunity/create but browser is at http://127.0.0.1:8097/#Opportunity/view/6ac7af3d2b307bce4",
+      "pageUrlPattern": "http://127.0.0.1:8097/#Opportunity/view/6ac7af3d2b307bce4",
+      "pageUrl": "http://127.0.0.1:8097/#Opportunity/view/6ac7af3d2b307bce4"
+    }
+  ],
+  "wallMs": 134753,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 33781,
+    "completionTokens": 1321,
+    "cachedTokens": 22912
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 33781,
+      "completionTokens": 1321,
+      "cachedTokens": 22912
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "openai/gpt-6-luna",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

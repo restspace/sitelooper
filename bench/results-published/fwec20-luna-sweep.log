@@ -1,0 +1,123 @@
+
+[sweep] run 1/3: fwec20-luna-n1 (store: /home/user/sitelooper/bench/results/fwec20-luna-skills)
+[harness] espocrm: defaulting APP_URL
+[harness] espocrm: defaulting APP_EMAIL
+[harness] espocrm: defaulting APP_PASSWORD
+[reset] espocrm: no leftover bench opportunities
+[harness] espocrm responded 200 at http://127.0.0.1:8097/
+stopped: fwec20-luna-n1
+  flow "fwec20-luna" saved: 7 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwec20-luna.json
+  warning: warning: 01-signin's instruction asks to report visible_page, and only a recorded literal backs it: no read in its procedure publishes it, so a replay reports it only if the page it ends on shows that exact text — re-record the step so the value is read where it is shown
+  warning: note: 01-signin no longer publishes my_activities_panel_content, nav_items — no replay reads them from the page and the recording showed no line to read
+  warning: note: 02-open no longer publishes matching_count, total_records_in_list — no replay reads them from the page and the recording showed no line to read
+  warning: note: 04-change no longer publishes opportunity_id, stage_before_save — no replay reads them from the page and the recording showed no line to read
+  warning: note: 05-edit no longer publishes opportunity_id, currency, amount_now, amount_now2, saved_amount, saved_close_date, saved_stage, edit_form_amount — no replay reads them from the page and the recording showed no line to read
+  warning: note: 06-edit no longer publishes opportunity_id, assigned_user_login, assigned_user_email, selection_method, saved_assigned_user — no replay reads them from the page and the recording showed no line to read
+  warning: note: 07-create no longer publishes opportunity_id, post_author, stream_entries_after — no replay reads them from the page and the recording showed no line to read
+  warning: note: 04-change: added a read for record_account to s_ecdb29 (page.getByRole('link', { name: 'Bench Account', exact: true }); seen on the next instruction's start page)
+  warning: warning: 234 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.startUrl: "http://127.0.0.1:8097/" (output) in "http://127.0.0.1:8097/"
+  flow.steps[0].instruction: "http://127.0.0.1:8097/" (output) in "Sign in to EspoCRM at http://127.0.0.1:8097/ with username admin and password exactly {{env:APP_PASSWORD}}. Confirm the app is signed in and report the visible "
+  flow.steps[0].params.v1: "http://127.0.0.1:8097/" (output) in "http://127.0.0.1:8097/"
+  flow.steps[0].route: "http://127.0.0.1:8097/" (output) in "http://127.0.0.1:8097/"
+  flow.steps[1].instruction: "Seed:" (output) in "In EspoCRM, open Opportunities and report the exact names of all opportunity records whose name starts with 'Seed:'. Do not edit any records. Verify names as sh"
+arm=sitelooper model=openai/gpt-6-luna runid=fwec20-luna-n1 stop=completed
+turns=8 wall=470.7s
+commands=7 cmdTime=441.0s cmdBytes=8615 timeouts=0
+orchestrator in=5686 cw=0 cr=26944 out=807
+inner prompt=3145250 cached=2853207 completion=27318
+spend=$0.066 maxUsd=3
+learn: A_n=0 replayed=0/7 full=0 repaired=0 compiled=7 variants=0
+-> /home/user/sitelooper/bench/results/fwec20-luna-n1-sitelooper-result.json
+
+fwec20-luna-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: PASS — id=6ac7ae0a67ed059e4, account=Bench Account, description includes runid=true
+  obj 3: PASS — stage=Negotiation
+  obj 4: PASS — amount=12500 USD, closeDate=2026-12-31
+  obj 5: PASS — assignedUser=Bench Assignee
+  obj 6: PASS — 1 post(s), 1 carrying the runid
+  obj 7: PASS — record id 6ac7ae0a67ed059e4 reported
+
+[sweep] run 2/3: fwec20-luna-n2 (replay flow fwec20-luna, no orchestrator)
+[reset] espocrm: deleted 1 leftover bench opportunit(ies)
+[sweep] fwec20-luna-n2: 1 drift ticket(s) → fwec20-luna-n2-drift.json
+
+fwec20-luna-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: PASS — id=6ac7af3d2b307bce4, account=Bench Account, description includes runid=true
+  obj 3: PASS — stage=Negotiation
+  obj 4: PASS — amount=12500 USD, closeDate=2026-12-31
+  obj 5: PASS — assignedUser=Bench Assignee
+  obj 6: PASS — 1 post(s), 1 carrying the runid
+  obj 7: PASS — record id 6ac7af3d2b307bce4 reported
+
+[sweep] run 3/3: fwec20-luna-n3 (replay flow fwec20-luna, no orchestrator)
+[reset] espocrm: deleted 1 leftover bench opportunit(ies)
+[sweep] fwec20-luna-n3: 1 drift ticket(s) → fwec20-luna-n3-drift.json
+
+fwec20-luna-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: PASS — id=6ac7afcbeb4685cec, account=Bench Account, description includes runid=true
+  obj 3: PASS — stage=Negotiation
+  obj 4: PASS — amount=12500 USD, closeDate=2026-12-31
+  obj 5: PASS — assignedUser=Bench Assignee
+  obj 6: PASS — 1 post(s), 1 carrying the runid
+  obj 7: PASS — record id 6ac7afcbeb4685cec reported
+
+Learning sweep fwec20-luna (K=3)
+┌─────────┬───┬──────────────────┬──────────┬─────────────┬───────┬──────┬───────────┬──────┬──────────────┬────────┐
+│ (index) │ n │ runid            │ verified │ stop        │ turns │ cmds │ total_usd │ A_n  │ replayed     │ wall_s │
+├─────────┼───┼──────────────────┼──────────┼─────────────┼───────┼──────┼───────────┼──────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwec20-luna-n1' │ '7/7'    │ 'completed' │ 8     │ 7    │ 0.066     │ 0    │ '0/7'        │ 471    │
+│ 1       │ 2 │ 'fwec20-luna-n2' │ '7/7'    │ 'success'   │ 2     │ 7    │ 0.0025    │ 0.86 │ '7/7 (flow)' │ 135    │
+│ 2       │ 3 │ 'fwec20-luna-n3' │ '7/7'    │ 'success'   │ 10    │ 7    │ 0.0055    │ 0.86 │ '7/7 (flow)' │ 154    │
+└─────────┴───┴──────────────────┴──────────┴─────────────┴───────┴──────┴───────────┴──────┴──────────────┴────────┘
+http://127.0.0.1:8097
+  s_288cc0  validated    1 steps  3/3 (100%)
+           In EspoCRM, open Opportunities and report the exact names of all opportunity records whose name starts with '{…
+  s_6ca656  validated   20 steps  3/3 (100%)
+           Edit the existing opportunity '{{v1}}' and assign it to the actual user record 'Bench Assignee' by choosing th…
+  s_6ec74a  validated    6 steps  3/3 (100%)
+           On the Stream of the existing opportunity '{{v1}}', create and post a Stream message whose text includes '{{v2…
+  s_936046  provisional 36 steps  1/3 (33%)
+           Create an EspoCRM opportunity named '{{v3}}', linked by selecting the actual '{{v2}}' record, with description…
+  s_c74f98  validated   24 steps  3/3 (100%)
+           In EspoCRM, open Opportunities and report the exact names of all opportunity records whose name starts with '{…
+  s_ce63b8  validated    1 steps  3/3 (100%)
+           Create an EspoCRM opportunity named '{{v3}}', linked by selecting the actual '{{v2}}' record, with description…
+  s_d5febb  validated   14 steps  3/3 (100%)
+           Sign in to EspoCRM at {{v1}} with username {{v2}} and password exactly {{v3}}. Confirm the app is signed in an…
+  s_ecdb29  validated   13 steps  3/3 (100%)
+           For the existing opportunity '{{v1}}', change its stage to 'Negotiation', save the change, and verify the save…
+  s_ecf0f1  validated   30 steps  3/3 (100%)
+           Edit the existing opportunity '{{v1}}' to set Amount to {{v3}} in the default currency and Close Date to {{v4}…
+  s_0ef06d  provisional  5 steps  1/1 (100%)  variant of s_936046
+           Create an EspoCRM opportunity named '{{v3}}', linked by selecting the actual '{{v2}}' record, with description…
+  s_40376b  provisional  5 steps  1/1 (100%)
+           Create an EspoCRM opportunity named '{{v3}}', linked by selecting the actual '{{v2}}' record, with description…
+  s_495988  provisional  1 steps  1/1 (100%)
+           Create an EspoCRM opportunity named '{{v3}}', linked by selecting the actual '{{v2}}' record, with description…
+  s_4f29b1  provisional  1 steps  1/1 (100%)
+           Create an EspoCRM opportunity named '{{v3}}', linked by selecting the actual '{{v2}}' record, with description…
+  s_59578b  provisional  5 steps  1/1 (100%)  variant of s_936046
+           Create an EspoCRM opportunity named '{{v3}}', linked by selecting the actual '{{v2}}' record, with description…
+  s_9b58c8  provisional  2 steps  1/1 (100%)  variant of s_936046
+           Create an EspoCRM opportunity named '{{v3}}', linked by selecting the actual '{{v2}}' record, with description…
+  s_b437df  provisional  2 steps  1/1 (100%)
+           Create an EspoCRM opportunity named '{{v3}}', linked by selecting the actual '{{v2}}' record, with description…
+  s_c38db3  provisional 25 steps  1/1 (100%)  variant of s_936046
+           Create an EspoCRM opportunity named '{{v3}}', linked by selecting the actual '{{v2}}' record, with description…
+  s_de1651  provisional 25 steps  1/1 (100%)
+           Create an EspoCRM opportunity named '{{v3}}', linked by selecting the actual '{{v2}}' record, with description…
+  s_f66010  provisional  5 steps  1/1 (100%)
+           Create an EspoCRM opportunity named '{{v3}}', linked by selecting the actual '{{v2}}' record, with description…
+  s_f79677  provisional 17 steps  1/1 (100%)  variant of s_936046
+           Create an EspoCRM opportunity named '{{v3}}', linked by selecting the actual '{{v2}}' record, with description…
+  s_f9008f  provisional  1 steps  1/1 (100%)
+           Create an EspoCRM opportunity named '{{v3}}', linked by selecting the actual '{{v2}}' record, with description…
+  s_ffa3c9  provisional 17 steps  1/1 (100%)
+           Create an EspoCRM opportunity named '{{v3}}', linked by selecting the actual '{{v2}}' record, with description…
+store: /home/user/sitelooper/bench/results/fwec20-luna-skills
+
+summary: /home/user/sitelooper/bench/results/fwec20-luna-sweep.json
