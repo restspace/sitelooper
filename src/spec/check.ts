@@ -221,6 +221,24 @@ export function findStepAnchor(source: string, line: number): string | null {
   return null;
 }
 
+/**
+ * The site the artifact's own error names in its first line: `05-add s_f44792:`
+ * or `01-signin s_5fccd8/2:` → `05-add s_f44792` / `01-signin s_5fccd8/2`.
+ *
+ * The runtime knows which segment it was in when it threw; a stack anchor only
+ * knows the nearest `@step` marker above the throwing line. They differ where
+ * the throw sits between markers — a segment's start gate runs before its first
+ * gesture's marker, so its anchor is the PREVIOUS step's last gesture (fwen8:
+ * 05-add's gate refused, the anchor said 04-create s_538e35/13, and convergence
+ * re-recorded 04-create twice). Null for errors without a leading site, such as
+ * a plain Playwright locator timeout.
+ */
+export function messageAnchor(error: string | null | undefined): string | null {
+  const first = (error ?? '').split(/\r?\n/, 1)[0] ?? '';
+  const m = /^(?:\w*Error: )?([\w-]+ s_[0-9a-f]{6}(?:\/\d+)?):/.exec(first.trim());
+  return m?.[1] ?? null;
+}
+
 /** Walk the Playwright JSON reporter's suite tree, flattening to one row per test. */
 function flattenTests(suite: Record<string, unknown>, files: string[], acc: SpecTestRow[] = []): SpecTestRow[] {
   for (const s of (suite.suites as Record<string, unknown>[]) ?? []) flattenTests(s, files, acc);
@@ -525,6 +543,8 @@ export function runSpecCheck(o: SpecCheckOptions): SpecCheckResult {
     const found = findStepAnchor(source, frame.line);
     if (found) { anchor = found; site = frame; break; }
   }
+  // The message's own site wins over the stack's: see messageAnchor.
+  anchor = messageAnchor(error) ?? anchor;
   const passed = parsed.passed && run.status === 0;
   const r: Omit<SpecCheckResult, 'verdict'> = {
     outcome: passed ? 'passed' : 'failed', ran: true, skipped: null, passed,

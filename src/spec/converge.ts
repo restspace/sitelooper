@@ -31,6 +31,7 @@
  * re-record and reset command.
  */
 import type { Diagnostic } from './diagnostics.js';
+import { messageAnchor } from './check.js';
 
 /** What the loop needs of a compile: `CompileResult` satisfies it. */
 export interface ConvergeCompile {
@@ -165,9 +166,13 @@ export function failingStep(check: Pick<ConvergeCheck, 'error' | 'anchor'>): { s
   // an anchor here would be wrong — read the message first.
   const after = /^(?:Error: )?(?:persistence|PARTIAL): ([\w-]+)\b/m.exec(error);
   if (after) return { step: after[1], outputs: [] };
+  // The artifact's own message leads with the site ("05-add s_f44792: …"), and
+  // that beats the stack anchor, which names the nearest marker ABOVE the throw:
+  // a start gate throws before its segment's first marker (fwen8; messageAnchor).
+  const own = messageAnchor(error);
+  if (own) return { step: own.split(/\s+/)[0], outputs: [] };
   const anchor = check.anchor?.trim().split(/\s+/)[0];
   if (anchor) return { step: anchor, outputs: [] };
-  // The artifact's own message leads with the site: "01-signin s_5fccd8/2: …".
   const site = /(?:^|[\s(:])([\w-]+) s_[0-9a-f]{6}(?:\/\d+)?\b/.exec(error);
   return { step: site?.[1] ?? null, outputs: [] };
 }

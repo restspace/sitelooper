@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { messageAnchor } from '../src/spec/check.js';
 import { converge, failingStep, rerecordSteps, type ConvergeCheck, type ConvergeCompile, type ConvergeRerecord, type ConvergeSeams } from '../src/spec/converge.js';
 import type { Diagnostic } from '../src/spec/diagnostics.js';
 
@@ -59,6 +60,16 @@ describe('build --converge', () => {
     // The artifact's end-of-run checks (PARTIAL, persistence) sit outside every step anchor.
     expect(failingStep({ anchor: '05-report s_bbbbbb/1', error: 'Error: persistence: 03-create typed "Seed: Tomato", the record at http://x/r/1 does not show it after reload' }).step).toBe('03-create');
     expect(failingStep({ anchor: null, error: 'PARTIAL: 02-find: the report gave seed_name as given' }).step).toBe('02-find');
+  });
+
+  it("a start gate's refusal names its own step, not the previous step the stack anchor points at (fwen8)", () => {
+    const error = 'Error: 05-add s_f44792: not on the page this procedure starts from (expects http://127.0.0.1:8100/app/sales-order/new-sales-order-uxvwbpigvk, browser is at http://127.0.0.1:8100/app/sales-order/new-sales-order-stngnmhhdk) — nothing of this segment has run';
+    expect(failingStep({ anchor: '04-create s_538e35/13', error }).step).toBe('05-add');
+    expect(messageAnchor(error)).toBe('05-add s_f44792');
+    expect(messageAnchor('01-signin s_5fccd8/2: no element matched')).toBe('01-signin s_5fccd8/2');
+    // Only a LEADING site counts: a quoted drift line or a site mid-sentence is not the thrower.
+    expect(messageAnchor('[sitelooper drift] 02-create s_aaaaaa/1 healed')).toBeNull();
+    expect(messageAnchor('TimeoutError: locator.click: Timeout 10000ms exceeded')).toBeNull();
   });
 
   it('a failure naming a producer re-records the producer and asks it to read the value', async () => {
