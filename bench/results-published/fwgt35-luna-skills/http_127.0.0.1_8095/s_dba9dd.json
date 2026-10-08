@@ -1,0 +1,245 @@
+{
+ "id": "s_dba9dd",
+ "origin": "http://127.0.0.1:8095",
+ "template": "On issue {{v1}} '{{v2}}' in {{v4}}/{{v5}}, set its labels to exactly bug and priority-high (remove any other labels if present). Ensure the picker selections are applied and verify the issue page visibly shows both labels and no others.",
+ "params": {
+  "v1": {
+   "example": "#5",
+   "usedIn": [],
+   "known": true,
+   "binding": "03-create.issue_number"
+  },
+  "v2": {
+   "example": "fwgt35-luna-n2 Bench Issue",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i3:issue_title_field"
+  },
+  "v3": {
+   "example": "fwgt35-luna-n2",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v4": {
+   "example": "bench",
+   "usedIn": [
+    6
+   ],
+   "known": true,
+   "binding": "output:i3:repository_owner"
+  },
+  "v5": {
+   "example": "bench-repo",
+   "usedIn": [
+    6
+   ],
+   "known": true,
+   "binding": "output:i3:repository_name"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8095/{{v4}}/{{v5}}/issues/:id"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e261"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(3) > div:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 1098,
+      "y": 336,
+      "w": 270,
+      "h": 17,
+      "role": "combobox",
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/{{v4}}/{{v5}}/issues/:id",
+    "addedContains": [
+     "- combobox \"{{*}} Clear labels {{*}} documentation enhancement {{*}}\"",
+     "- listbox \"Clear labels {{*}} documentation enhancement {{*}}\"",
+     "- textbox \"Filter Label\"",
+     "- link \"Clear labels\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_81c9a7",
+    "step": 1
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=link[name=\"bug\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "link",
+      "name": "bug"
+     },
+     {
+      "kind": "css",
+      "selector": "#_aria_dropdown_menu_32 > div:nth-of-type(2) > a:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 1098,
+      "y": 480,
+      "w": 268,
+      "h": 41.7,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/{{v4}}/{{v5}}/issues/:id",
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_81c9a7",
+    "step": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e392"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "link",
+      "name": "bug"
+     },
+     {
+      "kind": "css",
+      "selector": "#_aria_dropdown_menu_32 > div:nth-of-type(2) > a:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 1098,
+      "y": 480,
+      "w": 268,
+      "h": 41.7,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/{{v4}}/{{v5}}/issues/:id",
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_81c9a7",
+    "step": 3
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=link[name=\"bug\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "link",
+      "name": "bug"
+     },
+     {
+      "kind": "css",
+      "selector": "#_aria_dropdown_menu_32 > div:nth-of-type(2) > a:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 1098,
+      "y": 480,
+      "w": 268,
+      "h": 41.7,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8095/{{v4}}/{{v5}}/issues/:id",
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_81c9a7",
+    "step": 4
+   }
+  },
+  {
+   "tool": "goto",
+   "args": {
+    "url": "http://127.0.0.1:8095/{{v4}}/{{v5}}/issues"
+   },
+   "locators": {},
+   "via": {
+    "skill": "s_81c9a7",
+    "step": 7
+   }
+  }
+ ],
+ "contract": 4,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-10-08T14:56:42.943Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 4
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_056d7e",
+  "index": 0,
+  "of": 2
+ },
+ "provenance": {
+  "session": "fwgt35-luna-n2",
+  "instruction": "On issue #5 'fwgt35-luna-n2 Bench Issue' in bench/bench-repo, set its labels to exactly bug and priority-high (remove any other labels if present). Ensure the picker selections are applied and verify the issue page visibly shows both labels and no others.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-10-08T14:56:42.943Z",
+  "transforms": [
+   {
+    "name": "dropSupersededNavigation",
+    "at": 5,
+    "reason": "a link click that recorded no consequence, replaced by the goto at step 6"
+   },
+   {
+    "name": "unfreezeExpectations",
+    "at": 1,
+    "reason": "recorded page change(s) only the recording run could produce: [\"- combobox \\\"Labels Clear labels bug documentation enhancement priority-high\\\"\",\"- listbox \\\"Clear labels bug documentation enhancement priority-high\\\"\",\"- textbox \\\"Filter Label\\\"\",\"- link \\\"Clear labels\\\"\",\"- link \\\"bug\\\"\"] → [\"- combobox \\\"{{*}} Clear labels {{*}} documentation enhancement {{*}}\\\"\",\"- listbox \\\"Clear labels {{*}} documentation enhancement {{*}}\\\"\",\"- textbox \\\"Filter Label\\\"\",\"- link \\\"Clear labels\\\"\"]"
+   }
+  ]
+ },
+ "revision": 1
+}

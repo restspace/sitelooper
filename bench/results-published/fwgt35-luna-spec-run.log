@@ -1,0 +1,12 @@
+[spec-replay] resetting gitea
+[reset] gitea: deleted 1 leftover bench issue(s)
+[spec-replay] compiling: /opt/node22/bin/node /home/user/sitelooper/bin/sitelooper.js compile bench/results/flows/fwgt35-luna.json --out /home/user/sitelooper/bench/results/fwgt35-luna-spec-spec-tmp --overwrite-spec
+facts http://127.0.0.1:8095: 39 relied (15 hard), 32 advisory
+error 04-set: its pinned procedure s_7e1ad1 stopped at step 7 on its latest replay and has not replayed clean since — a compiled spec would stop there
+  why: s_7e1ad1 is provisional: 1 of 3 replays succeeded; its replays stopped at step 7 ×2; the last 2 replay(s) all stopped (latest at step 7); 2 stop(s) were recovered by the model; 2 were judged harmless — forgiven in the daemon, which has a model to finish the step, but the compiled spec has none; last used 2026-10-08T14:58:43.490Z (--allow-demoted compiles it anyway).
+  fix: sitelooper rerecord bench/results/flows/fwgt35-luna.json 04-set
+
+nothing written: the error(s) above are about the RECORDING, not the app — a compiled spec would fail at a locator and read as drift.
+re-record the step(s) with the fix command above, or pass --allow-demoted to compile the demoted or unproven pin anyway.
+sitelooper: refused: a step is pinned to a unproven skill — see the diagnostics above (--allow-demoted compiles it anyway)
+[spec-replay] fwgt35-luna-spec: not compilable — result written (exit 2)
