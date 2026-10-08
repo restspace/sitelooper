@@ -18,7 +18,7 @@ import { collapseTogglePairs, dropSupersededSets, sameControl } from './toggles.
 import { namedHighlightPicks } from './highlight-pick.js';
 import { dropRestoredDetours } from './restored-field.js';
 import { dropRetriedSubmits } from './retried-submit.js';
-import { appMintedPositions, generaliseAppMinted, generaliseAppMintedDeep } from './app-minted-url.js';
+import { generaliseAppMinted, generaliseAppMintedDeep, sessionAppMintedPositions } from './app-minted-url.js';
 import { DEBOUNCE_MS, type JournalEvent } from '../daemon/journal-attribute.js';
 import { locatingSlots, scopeReadBySlot } from './readscope.js';
 import { keyPicks } from './key-pick.js';
@@ -903,8 +903,11 @@ export function compileSkills(input: CompileInput): Skill[] {
   // Url positions the APP minted under this recording — a form instance's
   // made-up address (ERPNext's `new-sales-order-rxojnkvnht`, fwen1): every
   // pattern carrying one is written `:var`, and the seam rule below compares
-  // through it. Evidence only: see skills/app-minted-url.ts.
-  const appMinted = appMintedPositions(startUrl, steps, [input.instruction, ...Object.values(input.knownValues ?? {}).map(String)]);
+  // through it. Evidence only: see skills/app-minted-url.ts. The window is the
+  // session, not this instruction: a form an EARLIER instruction opened and
+  // this one finished carries the address that instruction watched the app
+  // mint (erpnext fwen8-luna 05-add, sessionAppMintedPositions).
+  const appMinted = sessionAppMintedPositions(input.before, startUrl, steps, [input.instruction, ...Object.values(input.knownValues ?? {}).map(String)]);
   // Page changes the app took back before the next gesture are not a step's
   // lasting effect (erpnext fwen4-luna 02-find): see takenBackLines.
   const takenBack = takenBackLines(steps);
