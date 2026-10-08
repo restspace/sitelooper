@@ -1,0 +1,936 @@
+{
+  "name": "fwod105-luna",
+  "origin": "http://127.0.0.1:8069",
+  "startUrl": "http://127.0.0.1:8069/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-signin",
+      "instruction": "Sign in to Odoo 17 at http://127.0.0.1:8069/ with login admin and password exactly {{env:APP_PASSWORD}}. Verify the authenticated app is open.",
+      "skill": "s_5102d5",
+      "params": {
+        "v1": "http://127.0.0.1:8069/",
+        "v2": "admin",
+        "v3": "{{env:APP_PASSWORD}}"
+      },
+      "outputs": [
+        "login_used",
+        "page_title_context"
+      ],
+      "recorded": {
+        "login_used": "admin",
+        "current_url": "http://127.0.0.1:8069/web#action=123&cids=1&menu_id=81",
+        "page_title_context": "Odoo - Discuss",
+        "authenticated_indicators": "top navbar with Discuss menu, Messages 6, Activities 3, YourCompany, User; channel list with #general; inbox empty message",
+        "url": "http://127.0.0.1:8069/web#action=123&cids=1&menu_id=81",
+        "url.q.action": "123"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&menu_id=:id",
+      "outputEvidence": {
+        "login_used": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "current_url": {
+          "same": 1,
+          "differed": 0
+        },
+        "page_title_context": {
+          "same": 1,
+          "differed": 0
+        },
+        "authenticated_indicators": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        },
+        "url.q.action": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "02-create",
+      "instruction": "Create a customer contact named {{runid}} Bench Customer with City set to Benchville. Submit/save and verify the customer record shows that exact name and city.",
+      "skill": "s_440c89",
+      "params": {
+        "v2": "{{runid}} Bench Customer",
+        "v3": "Benchville",
+        "v1": "{{runid}}"
+      },
+      "outputs": [
+        "partner_name",
+        "city",
+        "partner_id",
+        "partner_type",
+        "save_button_class",
+        "page_title",
+        "ref"
+      ],
+      "recorded": {
+        "partner_name": "fwod105-luna-n1 Bench Customer",
+        "city": "Benchville",
+        "partner_id": "44",
+        "partner_type": "Company",
+        "save_button_class": "o_form_button_save btn btn-light border-0 px-1 py-0 lh-sm",
+        "page_title": "Odoo - fwod105-luna-n1 Bench Customer",
+        "ref": "fwod105-luna-n1",
+        "url": "http://127.0.0.1:8069/web#cids=1&menu_id=109&action=156&model=res.partner&view_type=form&id=44",
+        "url.q.menu_id": "109",
+        "url.q.action": "156",
+        "url.q.id": "44"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=res.partner&view_type=form",
+      "outputEvidence": {
+        "partner_name": {
+          "same": 0,
+          "differed": 1
+        },
+        "city": {
+          "same": 1,
+          "differed": 0
+        },
+        "partner_id": {
+          "same": 0,
+          "differed": 1
+        },
+        "partner_type": {
+          "same": 1,
+          "differed": 0
+        },
+        "save_button_class": {
+          "same": 1,
+          "differed": 0
+        },
+        "page_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        },
+        "url.q.menu_id": {
+          "same": 1,
+          "differed": 0
+        },
+        "url.q.action": {
+          "same": 1,
+          "differed": 0
+        },
+        "url.q.id": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "03-create",
+      "instruction": "Create a quotation for customer {{runid}} Bench Customer with exactly one order line: choose any catalog product via its autocomplete option and set quantity 3. Save the quotation and report the chosen product name, the unit price Odoo filled, computed untaxed amount, and quotation reference; verify the saved quotation values.",
+      "skill": "s_17237e",
+      "params": {
+        "v1": "{{runid}} Bench Customer",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "quotation_reference",
+        "sale_order_id",
+        "customer",
+        "customer_city",
+        "product_name",
+        "quantity",
+        "unit_price",
+        "taxes",
+        "tax_amount",
+        "total",
+        "order_status",
+        "o_field_x2many_list_o_da",
+        "oe_subtotal_footer_tr",
+        "ref",
+        "oe_subtotal_footer_tr_2_1",
+        "oe_subtotal_footer_tr_2_2",
+        "oe_subtotal_footer_tr_3_1",
+        "oe_subtotal_footer_tr_3_2",
+        "oe_subtotal_footer_tr_3_3"
+      ],
+      "recorded": {
+        "quotation_reference": "S00021",
+        "sale_order_id": "21",
+        "customer": "fwod105-luna-n1 Bench Customer",
+        "customer_city": "Benchville",
+        "product_name": "[FURN_6666] Acoustic Bloc Screens",
+        "quantity": "3.00",
+        "unit_price": "295.00",
+        "taxes": "20%",
+        "line_subtotal_tax_excl": "£ 885.00",
+        "untaxed_amount": "£ 885.00",
+        "tax_amount": "£ 177.00",
+        "total": "£ 1,062.00",
+        "order_status": "Quotation",
+        "order_line_count": "1",
+        "o_field_x2many_list_o_da": "£ 885.00",
+        "oe_subtotal_footer_tr": "Untaxed Amount\t£ 885.00",
+        "ref": "fwod105-luna-n1",
+        "ref_2": "FURN_6666",
+        "oe_subtotal_footer_tr_2_1": "TAX 20%",
+        "oe_subtotal_footer_tr_2_2": "£ 177.00",
+        "oe_subtotal_footer_tr_3_1": "Total",
+        "oe_subtotal_footer_tr_3_2": "£ 1",
+        "oe_subtotal_footer_tr_3_3": "062.00",
+        "url": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=21",
+        "url.q.menu_id": "194",
+        "url.q.action": "316",
+        "url.q.id": "21"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "outputEvidence": {
+        "quotation_reference": {
+          "same": 0,
+          "differed": 1
+        },
+        "sale_order_id": {
+          "same": 0,
+          "differed": 1
+        },
+        "customer": {
+          "same": 0,
+          "differed": 1
+        },
+        "customer_city": {
+          "same": 1,
+          "differed": 0
+        },
+        "product_name": {
+          "same": 1,
+          "differed": 0
+        },
+        "quantity": {
+          "same": 1,
+          "differed": 0
+        },
+        "unit_price": {
+          "same": 1,
+          "differed": 0
+        },
+        "taxes": {
+          "same": 1,
+          "differed": 0
+        },
+        "line_subtotal_tax_excl": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "untaxed_amount": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "tax_amount": {
+          "same": 0,
+          "differed": 1
+        },
+        "total": {
+          "same": 0,
+          "differed": 1
+        },
+        "order_status": {
+          "same": 1,
+          "differed": 0
+        },
+        "order_line_count": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "o_field_x2many_list_o_da": {
+          "same": 1,
+          "differed": 0
+        },
+        "oe_subtotal_footer_tr": {
+          "same": 1,
+          "differed": 0
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "ref_2": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "oe_subtotal_footer_tr_2_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "oe_subtotal_footer_tr_2_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "oe_subtotal_footer_tr_3_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "oe_subtotal_footer_tr_3_2": {
+          "same": 0,
+          "differed": 1
+        },
+        "oe_subtotal_footer_tr_3_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        },
+        "url.q.menu_id": {
+          "same": 1,
+          "differed": 0
+        },
+        "url.q.action": {
+          "same": 1,
+          "differed": 0
+        },
+        "url.q.id": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "04-add",
+      "instruction": "On quotation {{03-create.quotation_reference}}, add exactly one second order line using a different catalog product than {{03-create.product_name}}, choose it from autocomplete, set quantity 2, and save. Verify both lines and report the second product and the updated untaxed amount.",
+      "skill": "s_c6e01c",
+      "params": {
+        "v1": "{{03-create.quotation_reference}}",
+        "v2": "{{03-create.product_name}}"
+      },
+      "outputs": [
+        "quotation_reference",
+        "order_line_count",
+        "line1_product",
+        "line1_qty",
+        "line1_unit_price",
+        "line1_subtotal",
+        "line2_product",
+        "line2_qty",
+        "line2_unit_price",
+        "line2_subtotal",
+        "untaxed_amount",
+        "tax_amount",
+        "total",
+        "order_status",
+        "o_field_x2many_list_o_da",
+        "oe_subtotal_footer_tr_1",
+        "oe_subtotal_footer_tr_2_2",
+        "oe_subtotal_footer_tr_2_1",
+        "oe_subtotal_footer_tr_2_2_2",
+        "oe_subtotal_footer_tr_3_1",
+        "oe_subtotal_footer_tr_3_2",
+        "oe_subtotal_footer_tr_3_3"
+      ],
+      "recorded": {
+        "quotation_reference": "S00021",
+        "sale_order_id": "21",
+        "order_line_count": "2",
+        "line1_product": "[FURN_6666] Acoustic Bloc Screens",
+        "line1_qty": "3.00",
+        "line1_unit_price": "295.00",
+        "line1_subtotal": "£ 885.00",
+        "line2_product": "Chair floor protection",
+        "line2_qty": "2.00",
+        "line2_unit_price": "12.00",
+        "line2_tax": "20%",
+        "line2_subtotal": "£ 24.00",
+        "untaxed_amount": "£ 909.00",
+        "tax_amount": "£ 181.80",
+        "total": "£ 1,090.80",
+        "order_status": "Quotation",
+        "o_field_x2many_list_o_da": "£ 24.00",
+        "ref": "FURN_6666",
+        "oe_subtotal_footer_tr_1": "Untaxed Amount",
+        "oe_subtotal_footer_tr_2_2": "£ 909.00",
+        "oe_subtotal_footer_tr_2_1": "TAX 20%",
+        "oe_subtotal_footer_tr_2_2_2": "£ 181.80",
+        "oe_subtotal_footer_tr_3_1": "Total",
+        "oe_subtotal_footer_tr_3_2": "£ 1",
+        "oe_subtotal_footer_tr_3_3": "090.80"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "outputEvidence": {
+        "quotation_reference": {
+          "same": 0,
+          "differed": 1
+        },
+        "sale_order_id": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "order_line_count": {
+          "same": 1,
+          "differed": 0
+        },
+        "line1_product": {
+          "same": 1,
+          "differed": 0
+        },
+        "line1_qty": {
+          "same": 1,
+          "differed": 0
+        },
+        "line1_unit_price": {
+          "same": 1,
+          "differed": 0
+        },
+        "line1_subtotal": {
+          "same": 0,
+          "differed": 1
+        },
+        "line2_product": {
+          "same": 1,
+          "differed": 0
+        },
+        "line2_qty": {
+          "same": 1,
+          "differed": 0
+        },
+        "line2_unit_price": {
+          "same": 1,
+          "differed": 0
+        },
+        "line2_tax": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "line2_subtotal": {
+          "same": 0,
+          "differed": 1
+        },
+        "untaxed_amount": {
+          "same": 0,
+          "differed": 1
+        },
+        "tax_amount": {
+          "same": 0,
+          "differed": 1
+        },
+        "total": {
+          "same": 0,
+          "differed": 1
+        },
+        "order_status": {
+          "same": 1,
+          "differed": 0
+        },
+        "o_field_x2many_list_o_da": {
+          "same": 1,
+          "differed": 0
+        },
+        "ref": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "oe_subtotal_footer_tr_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "oe_subtotal_footer_tr_2_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "oe_subtotal_footer_tr_2_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "oe_subtotal_footer_tr_2_2_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "oe_subtotal_footer_tr_3_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "oe_subtotal_footer_tr_3_2": {
+          "same": 0,
+          "differed": 1
+        },
+        "oe_subtotal_footer_tr_3_3": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "05-change",
+      "instruction": "On quotation {{03-create.quotation_reference}} change the first line {{03-create.product_name}} quantity from 3 to 5, save, and verify the saved line quantities and new untaxed amount.",
+      "skill": "s_46e625",
+      "params": {
+        "v1": "{{03-create.quotation_reference}}",
+        "v2": "{{03-create.product_name}}",
+        "v4": "{{runid}}",
+        "v5": "{{03-create.url.q.id}}"
+      },
+      "outputs": [
+        "quotation_reference",
+        "sale_order_id",
+        "line1_product",
+        "line1_qty",
+        "line1_unit_price",
+        "line1_subtotal_tax_excl",
+        "line2_product",
+        "line2_qty",
+        "line2_unit_price",
+        "line2_subtotal_tax_excl",
+        "untaxed_amount",
+        "tax_amount",
+        "total",
+        "order_status",
+        "oe_subtotal_footer_tr",
+        "oe_subtotal_footer_tr_3",
+        "table_o_list_table_tbody_2",
+        "table_o_list_table_tbody_3",
+        "table_o_list_table_tbody_4",
+        "oe_subtotal_footer_tr_2_1",
+        "oe_subtotal_footer_tr_2_2"
+      ],
+      "recorded": {
+        "quotation_reference": "S00021",
+        "sale_order_id": "21",
+        "line1_product": "[FURN_6666] Acoustic Bloc Screens",
+        "line1_qty": "5.00",
+        "line1_unit_price": "295.00",
+        "line1_subtotal_tax_excl": "£ 1,475.00",
+        "line2_product": "Chair floor protection",
+        "line2_qty": "2.00",
+        "line2_unit_price": "12.00",
+        "line2_subtotal_tax_excl": "£ 24.00",
+        "order_line_count": "2",
+        "untaxed_amount": "£ 1,499.00",
+        "tax_amount": "£ 299.80",
+        "total": "£ 1,798.80",
+        "order_status": "Quotation",
+        "list_view_total_for_S00021": "£ 1,798.80",
+        "oe_subtotal_footer_tr": "Untaxed Amount\t£ 1,499.00",
+        "oe_subtotal_footer_tr_3": "Total\t£ 1,798.80",
+        "table_o_list_table_tbody": "20%",
+        "table_o_list_table_tbody_2": "£ 1,475.00",
+        "table_o_list_table_tbody_3": "£ 24.00",
+        "table_o_list_table_tbody_4": "£ 1,798.80",
+        "ref": "FURN_6666",
+        "oe_subtotal_footer_tr_2_1": "TAX 20%",
+        "oe_subtotal_footer_tr_2_2": "£ 299.80",
+        "url": "http://127.0.0.1:8069/web#id=21&cids=1&menu_id=196&action=316&model=sale.order&view_type=form",
+        "url.q.menu_id": "196"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "outputEvidence": {
+        "quotation_reference": {
+          "same": 0,
+          "differed": 1
+        },
+        "sale_order_id": {
+          "same": 0,
+          "differed": 1
+        },
+        "line1_product": {
+          "same": 1,
+          "differed": 0
+        },
+        "line1_qty": {
+          "same": 1,
+          "differed": 0
+        },
+        "line1_unit_price": {
+          "same": 1,
+          "differed": 0
+        },
+        "line1_subtotal_tax_excl": {
+          "same": 0,
+          "differed": 1
+        },
+        "line2_product": {
+          "same": 1,
+          "differed": 0
+        },
+        "line2_qty": {
+          "same": 1,
+          "differed": 0
+        },
+        "line2_unit_price": {
+          "same": 1,
+          "differed": 0
+        },
+        "line2_subtotal_tax_excl": {
+          "same": 0,
+          "differed": 1
+        },
+        "order_line_count": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "untaxed_amount": {
+          "same": 0,
+          "differed": 1
+        },
+        "tax_amount": {
+          "same": 0,
+          "differed": 1
+        },
+        "total": {
+          "same": 0,
+          "differed": 1
+        },
+        "order_status": {
+          "same": 1,
+          "differed": 0
+        },
+        "list_view_total_for_S00021": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "oe_subtotal_footer_tr": {
+          "same": 1,
+          "differed": 0
+        },
+        "oe_subtotal_footer_tr_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "table_o_list_table_tbody": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "table_o_list_table_tbody_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "table_o_list_table_tbody_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "table_o_list_table_tbody_4": {
+          "same": 1,
+          "differed": 0
+        },
+        "ref": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "oe_subtotal_footer_tr_2_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "oe_subtotal_footer_tr_2_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        },
+        "url.q.menu_id": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "06-verify",
+      "instruction": "Confirm quotation {{03-create.quotation_reference}} so it becomes a sales order. Verify and report the order reference and exact status displayed after confirmation.",
+      "skill": "s_6d765f",
+      "params": {
+        "v1": "{{03-create.quotation_reference}}",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "order_reference",
+        "customer",
+        "untaxed_amount",
+        "tax_amount",
+        "total",
+        "o_statusbar_status_o_arr_2",
+        "oe_subtotal_footer_tr_2",
+        "oe_subtotal_footer_tr_1",
+        "oe_subtotal_footer_tr_2_2"
+      ],
+      "recorded": {
+        "order_reference": "S00021",
+        "sale_order_id": "21",
+        "status_after_confirm": "Sales Order (statusbar radio \"Sales Order\" checked/active; \"Quotation Sent\" and \"Quotation\" greyed out/disabled)",
+        "customer": "fwod105-luna-n1 Bench Customer",
+        "untaxed_amount": "£ 1,499.00",
+        "tax_amount": "£ 299.80",
+        "total": "£ 1,798.80",
+        "o_statusbar_status_o_arr": "Sales Order",
+        "o_statusbar_status_o_arr_2": "Quotation Sent",
+        "o_statusbar_status_o_arr_3": "Quotation",
+        "oe_subtotal_footer_tr_2": "Total\t£ 1,798.80",
+        "oe_subtotal_footer_tr_1": "TAX 20%",
+        "oe_subtotal_footer_tr_2_2": "£ 299.80"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "outputEvidence": {
+        "order_reference": {
+          "same": 0,
+          "differed": 1
+        },
+        "sale_order_id": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "status_after_confirm": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "customer": {
+          "same": 0,
+          "differed": 1
+        },
+        "untaxed_amount": {
+          "same": 0,
+          "differed": 1
+        },
+        "tax_amount": {
+          "same": 0,
+          "differed": 1
+        },
+        "total": {
+          "same": 0,
+          "differed": 1
+        },
+        "o_statusbar_status_o_arr": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "o_statusbar_status_o_arr_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "o_statusbar_status_o_arr_3": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "oe_subtotal_footer_tr_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "oe_subtotal_footer_tr_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "oe_subtotal_footer_tr_2_2": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "07-verify",
+      "instruction": "Cancel sales order {{03-create.quotation_reference}} so it is no longer active. Complete any cancellation confirmation dialog if shown, then verify the final status displayed on the order.",
+      "skill": "s_6c84ea",
+      "params": {
+        "v1": "{{03-create.quotation_reference}}",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "order_reference",
+        "final_status",
+        "cancellation_path",
+        "customer",
+        "cancel_btn_name",
+        "send_cancel_btn_name",
+        "discard_btn_special",
+        "final_status_2",
+        "modal_footer_button",
+        "modal_footer_button_3",
+        "oe_subtotal_footer_tr_2",
+        "oe_subtotal_footer_tr_1",
+        "oe_subtotal_footer_tr_2_2"
+      ],
+      "recorded": {
+        "order_reference": "S00021",
+        "sale_order_id": "21",
+        "final_status": "Cancelled",
+        "statusbar_states": "Cancelled (checked, the other states Sales Order / Quotation Sent / Quotation shown greyed out/disabled)",
+        "cancellation_path": "Cancel button → Odoo 'Cancel Sales Order' wizard → clicked object button name=\"action_cancel\" (Cancel, no email sent); 'Discard' (special=cancel) only closes the wizard",
+        "customer": "fwod105-luna-n1 Bench Customer",
+        "amounts_unchanged": "Untaxed £1,499.00 / TAX 20% £299.80 / Total £1,798.80",
+        "cancel_btn_name": "action_cancel",
+        "send_cancel_btn_name": "action_send_mail_and_cancel",
+        "discard_btn_special": "cancel",
+        "final_status_2": "Cancelled\nSales Order\nQuotation Sent\nQuotation",
+        "modal_footer_button": "Send and cancel",
+        "modal_footer_button_2": "Cancel",
+        "modal_footer_button_3": "Discard",
+        "oe_subtotal_footer_tr_2": "Total\t£ 1,798.80",
+        "oe_subtotal_footer_tr_1": "TAX 20%",
+        "oe_subtotal_footer_tr_2_2": "£ 299.80"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "outputEvidence": {
+        "order_reference": {
+          "same": 0,
+          "differed": 1
+        },
+        "sale_order_id": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "final_status": {
+          "same": 1,
+          "differed": 0
+        },
+        "statusbar_states": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "cancellation_path": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "customer": {
+          "same": 0,
+          "differed": 1
+        },
+        "amounts_unchanged": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "cancel_btn_name": {
+          "same": 1,
+          "differed": 0
+        },
+        "send_cancel_btn_name": {
+          "same": 1,
+          "differed": 0
+        },
+        "discard_btn_special": {
+          "same": 1,
+          "differed": 0
+        },
+        "final_status_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "modal_footer_button": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "modal_footer_button_2": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "modal_footer_button_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "oe_subtotal_footer_tr_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "oe_subtotal_footer_tr_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "oe_subtotal_footer_tr_2_2": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "session": "fwod105-luna-n1",
+    "created": "2026-10-08T14:55:13.614Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "01-signin",
+      "outputs": [
+        "current_url",
+        "authenticated_indicators"
+      ]
+    },
+    {
+      "stepId": "03-create",
+      "outputs": [
+        "line_subtotal_tax_excl",
+        "untaxed_amount",
+        "order_line_count",
+        "ref_2"
+      ]
+    },
+    {
+      "stepId": "04-add",
+      "outputs": [
+        "sale_order_id",
+        "line2_tax",
+        "ref"
+      ]
+    },
+    {
+      "stepId": "05-change",
+      "outputs": [
+        "order_line_count",
+        "list_view_total_for_S00021",
+        "table_o_list_table_tbody",
+        "ref"
+      ]
+    },
+    {
+      "stepId": "06-verify",
+      "outputs": [
+        "sale_order_id",
+        "status_after_confirm",
+        "o_statusbar_status_o_arr",
+        "o_statusbar_status_o_arr_3"
+      ]
+    },
+    {
+      "stepId": "07-verify",
+      "outputs": [
+        "sale_order_id",
+        "statusbar_states",
+        "amounts_unchanged",
+        "modal_footer_button_2"
+      ]
+    }
+  ]
+}
