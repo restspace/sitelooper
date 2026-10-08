@@ -17,12 +17,13 @@
  * inside an id only PROPOSES a value, and the recording decides what it is.
  *
  *  - The run's own value at a url position: written as its slot
- *    (`#issue-{{v6}}`). The textual and minted passes already slot every value
- *    of two characters or more (`#{{d1}}` for gitea's `issuecomment-15`, which
- *    the Comment click's url fragment showed); what is left is a url-position
- *    slot below the text floor — the issue number `6` at `/issues/6`, the one
- *    the app prints as `#6` (substituteHashIds) — written here, inside an id,
- *    for the same reason.
+ *    (`#issue-{{v6}}`, slotIdFragments). The textual and minted passes already
+ *    slot every value of two characters or more (`#{{d1}}` for gitea's
+ *    `issuecomment-15`, which the Comment click's url fragment showed); what
+ *    is left is a url-position slot below the text floor — the issue number
+ *    `6` at `/issues/6`, the one the app prints as `#6` (substituteHashIds) —
+ *    written inside an id only when the segment already uses that param, so
+ *    the slot never changes which params a skill keeps or its url gates.
  *  - Shown AS AN ADDRESS by the recording: the whole id in a page line, a
  *    read, a url, a typed value, an instruction or a name a locator found an
  *    element by; or its number standing whole at a url position the recording
@@ -30,8 +31,9 @@
  *  - Otherwise: not evidence of anything. The id step is dropped from the
  *    selector; when the id was the selector's root — the recorder's cssPath
  *    roots at the first id it meets, so it always is — nothing stable is left
- *    above it and the candidate goes. The rest of the chain (a name, an
- *    attribute, the recorded point) leads; a chain is never emptied.
+ *    above it and the candidate goes — but only while the chain keeps another
+ *    non-point candidate; otherwise the chain stands unchanged
+ *    (anchorEvidencedIds).
  *
  * A bare number in page text is not the id's evidence: fwgt35-luna-n1 showed
  * "3" many times (`link "#3"` — issue 3, a seed — `Issues 3`, `Heading 3`)
@@ -219,13 +221,20 @@ export interface IdFragmentOutcome {
 }
 
 /**
- * Apply the rule (file header) to one locator chain, after the slot passes.
- * `slots` are the url-position slots below the text floor; `shown` what the
- * recording showed (shownBy).
+ * Drop what anchors on an id the recording never showed as an address (file
+ * header), from one locator chain after the slot passes. `shown` is what the
+ * recording showed (shownBy); `survives` says whether a candidate outlives the
+ * compile passes after this one (compile.ts: not `stranded`).
+ *
+ * Only ever in favour of something better: a drop or rewrite stands only when
+ * the chain keeps a NON-POINT candidate that survives, else the chain is
+ * returned unchanged. A rebuild of every published n1 recording (bench/
+ * rebuild-survey.mjs, 2026-10-08) left 188 chains point-only under the
+ * unguarded rule; a gitea read-back's id css that misses is a readiness
+ * warning (fix 5b), while a point-only chain is a position and nothing else.
  */
-export function anchorEvidencedIds(chain: readonly LocatorCandidate[], slots: readonly IdSlot[], shown: Shown): IdFragmentOutcome {
+export function anchorEvidencedIds(chain: readonly LocatorCandidate[], shown: Shown, survives: (c: LocatorCandidate) => boolean = () => true): IdFragmentOutcome {
   const notes: string[] = [];
-  const positionSlots = slots.filter((s) => /^(p|h)\d+$/.test(s.at) && /^\d+$/.test(s.value));
   const out: LocatorCandidate[] = [];
   for (const c of chain) {
     if (c.kind !== 'css' && c.kind !== 'id') {
@@ -238,18 +247,6 @@ export function anchorEvidencedIds(chain: readonly LocatorCandidate[], slots: re
     for (const at of idsIn(selector).sort((a, b) => b.start - a.start)) {
       const runs = digitRuns(at.id);
       if (!runs.length) continue;
-      // The run's own value at a url position: written as its slot, in this id only.
-      let id = at.id;
-      for (const run of new Set(runs)) {
-        const slot = positionSlots.find((s) => s.value === run);
-        if (slot) id = id.replace(new RegExp(`(?<![\\d{])${run}(?![\\d}])`, 'g'), `{{${slot.name}}}`);
-      }
-      if (id !== at.id) {
-        const raw = selector.slice(at.start, at.end);
-        selector = selector.slice(0, at.start) + raw.replace(at.id, id) + selector.slice(at.end);
-        notes.push(`${c.selector}: id "${at.id}" carries the run's own url value — written as "${id}"`);
-        continue;
-      }
       if (idShown(at.id.replace(/\\/g, ''), shown.texts)) continue;
       const unshown = runs.filter((r) => !shown.addresses.has(r));
       if (!unshown.length) continue;
@@ -265,8 +262,41 @@ export function anchorEvidencedIds(chain: readonly LocatorCandidate[], slots: re
     if (drop) continue;
     out.push(selector === c.selector ? c : ({ ...c, selector } as LocatorCandidate));
   }
-  // Never an empty chain: a step with no way to find its element is worse
-  // than one whose candidate may miss (compile.ts's `stranded` guard).
-  if (!out.length && chain.length) return { chain: [...chain], notes: [] };
+  if (!notes.length) return { chain: [...chain], notes };
+  if (!out.some((c) => c.kind !== 'point' && survives(c))) return { chain: [...chain], notes: [] };
   return { chain: out, notes };
+}
+
+/**
+ * Write a url-position slot below the text floor into the ids of a chain's
+ * css and id candidates (`#issue-6` → `#issue-{{v6}}`). The caller passes
+ * only slots the segment ALREADY uses elsewhere: a marker here must never be
+ * what keeps a param, because a kept url param changes the segment's url
+ * gates (`/issues/:id` became `/issues/{{v2}}` in ten gitea recordings under
+ * the first cut of this rule). Returns the chain itself when nothing changed.
+ */
+export function slotIdFragments(chain: LocatorCandidate[], slots: readonly IdSlot[]): { chain: LocatorCandidate[]; notes: string[] } {
+  const positionSlots = slots.filter((s) => /^(p|h)\d+$/.test(s.at) && /^\d+$/.test(s.value));
+  if (!positionSlots.length) return { chain, notes: [] };
+  const notes: string[] = [];
+  let changed = false;
+  const out = chain.map((c) => {
+    if (c.kind !== 'css' && c.kind !== 'id') return c;
+    let selector = c.selector;
+    for (const at of idsIn(selector).sort((a, b) => b.start - a.start)) {
+      let id = at.id;
+      for (const run of new Set(digitRuns(at.id))) {
+        const slot = positionSlots.find((s) => s.value === run);
+        if (slot) id = id.replace(new RegExp(`(?<![\\d{])${run}(?![\\d}])`, 'g'), `{{${slot.name}}}`);
+      }
+      if (id === at.id) continue;
+      const raw = selector.slice(at.start, at.end);
+      selector = selector.slice(0, at.start) + raw.replace(at.id, id) + selector.slice(at.end);
+      notes.push(`${c.selector}: id "${at.id}" carries the run's own url value — written as "${id}"`);
+    }
+    if (selector === c.selector) return c;
+    changed = true;
+    return { ...c, selector } as LocatorCandidate;
+  });
+  return { chain: changed ? out : chain, notes };
 }

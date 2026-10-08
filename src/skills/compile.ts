@@ -22,7 +22,7 @@ import { generaliseAppMinted, generaliseAppMintedDeep, sessionAppMintedPositions
 import { DEBOUNCE_MS, type JournalEvent } from '../daemon/journal-attribute.js';
 import { locatingSlots, scopeReadBySlot } from './readscope.js';
 import { keyPicks } from './key-pick.js';
-import { anchorEvidencedIds, shownBy } from './id-fragments.js';
+import { anchorEvidencedIds, shownBy, slotIdFragments } from './id-fragments.js';
 import type { ShadowRow } from './shadow.js';
 import { matchesShape, routeTemplateOf, valueClassFact, valueRoleFact, type SiteFacts } from '../execution/facts.js';
 
@@ -1110,11 +1110,12 @@ export function compileSkills(input: CompileInput): Skill[] {
           // NAME a control is found by (substituteHashIds, gitea fwgt27 05-open).
           return substituteHashIdsIn(out, positionalUrlSlots);
         });
-        // An id inside a css or id candidate whose number is the run's own
-        // url value is slotted (`#issue-{{v6}}`); one whose number the
-        // recording never showed anchors nothing (`#issuecomment-11`, gitea
-        // fwgt35-luna's five read-back drifts): see skills/id-fragments.ts.
-        const anchored = anchorEvidencedIds(substituted, positionalUrlSlots, shown);
+        // An id whose number the recording never showed as an address anchors
+        // nothing (`#issuecomment-11`, gitea fwgt35-luna's read-back drifts)
+        // while the chain keeps another non-point candidate: see
+        // skills/id-fragments.ts. (An id carrying the run's own url value is
+        // slotted after the segments are built — slotIdFragments below.)
+        const anchored = anchorEvidencedIds(substituted, shown, (c) => !stranded(c, runValues));
         for (const reason of anchored.notes) idNotes.push({ name: 'anchorEvidencedIds', at: i + 1, reason });
         const filled = anchored.chain;
         // An identity anchor still carrying THIS RUN's known value after
@@ -1284,6 +1285,27 @@ export function compileSkills(input: CompileInput): Skill[] {
   // A flash is not a step's effect (vikunja fwvk12): see dropFlashedLines.
   for (const b of built) dropFlashedLines(b.folded, steps, (s) => b.recordedDiffs.get(s), b.notes);
   if (built.length) built[0].notes.unshift(...recordingNotes);
+  // An id carrying the run's own url value below the text floor (`#issue-6`
+  // at `/issues/6`) is written as its slot — only where the segment already
+  // uses that param, so the marker never decides which params a skill keeps
+  // and never changes its url gates (skills/id-fragments.ts slotIdFragments).
+  if (positionalUrlSlots.length) {
+    for (const b of built) {
+      const usable = positionalUrlSlots.filter((s) => b.segParams[s.name]?.usedIn.length);
+      if (!usable.length) continue;
+      const visit = (list: SkillStep[]) =>
+        list.forEach((st, k) => {
+          for (const [key, chain] of Object.entries(st.locators ?? {})) {
+            const r = slotIdFragments(chain, usable);
+            if (r.chain === chain) continue;
+            st.locators[key] = r.chain;
+            for (const reason of r.notes) b.notes.push({ name: 'slotIdFragments', at: k + 1, reason });
+          }
+          if (st.body) visit(st.body);
+        });
+      visit(b.folded);
+    }
+  }
 
   // Derived-param metadata lands on the MINTING segment: which post-fold step
   // to bind from, and which url part to read there. Replay binds the value
