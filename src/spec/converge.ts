@@ -11,10 +11,16 @@
  *
  * The rules are the bench's lessons, each paid for in model turns:
  *
- *  - Only the FAILURE names a step. A `[sitelooper drift]` line is a locator
- *    the artifact healed on its way past, and that step is fine: fwsi14-cv2
- *    spent 207 turns re-recording 02-create (a healed drift) while the spec
- *    failed at 03-open every round. This module never reads `result.drift`.
+ *  - A FAILURE names the step first. A `[sitelooper drift]` line on a failing
+ *    check is a locator the artifact healed on its way past: fwsi14-cv2 spent
+ *    207 turns re-recording 02-create (a healed drift) while the spec failed
+ *    at 03-open every round. A failing check's drift is never read.
+ *  - A PASSING check is converged only when readiness would call it clean:
+ *    its drift lines go through the classifier readiness uses
+ *    (drift-class.ts). A fallback on a gesture, or on a read a later step
+ *    consumes, blocks — the round re-records the first step it names; one on
+ *    a read that only feeds the final report is a warning. fwgt35-luna-cv
+ *    printed "converged" and then readiness exited 4 on 5 such fallbacks.
  *  - A producer a failure names ("02-open needs {{01-signin.x}}") is the
  *    step to re-record, and what to read there: fwvk15-cv burned four rounds
  *    re-recording the consumer.
@@ -32,6 +38,7 @@
  */
 import type { Diagnostic } from './diagnostics.js';
 import { messageAnchor } from './check.js';
+import { classifyDrift, describeDrift, firstBlockingStep, type DriftFlow } from './drift-class.js';
 
 /** What the loop needs of a compile: `CompileResult` satisfies it. */
 export interface ConvergeCompile {
@@ -40,8 +47,12 @@ export interface ConvergeCompile {
   flowFile: string | null;
   diagnostics: Diagnostic[];
   compileBlockers: string[];
-  /** The flow's steps in order; only ids are read (the order a refusal's re-records are taken in). */
-  spec?: { steps: Array<{ id: string }> };
+  /**
+   * The flow's steps in order: the ids give the order a refusal's re-records
+   * are taken in, and the segments say what a drift line's site is
+   * (drift-class.ts). Without segments every drift line blocks.
+   */
+  spec?: DriftFlow;
 }
 
 /** What the loop needs of a spec check: `SpecCheckResult` satisfies it. */
@@ -53,6 +64,9 @@ export interface ConvergeCheck {
   /** "04-open s_1e46d8/10": the nearest `// @step` above the failing line. */
   anchor: string | null;
   verdict?: string;
+  /** `[sitelooper drift]` lines; read only on a passing check. */
+  drift?: string[];
+  driftCount?: number;
 }
 
 export interface ConvergeRerecord {
@@ -97,7 +111,11 @@ export interface ConvergeRound {
     blockers: string[];
     flowFile: string | null;
   };
-  check?: { ran: boolean; passed: boolean; timedOut: boolean; step: string | null; anchor: string | null; error: string | null };
+  check?: {
+    ran: boolean; passed: boolean; timedOut: boolean; step: string | null; anchor: string | null; error: string | null;
+    /** A passing check's locator fallbacks, as readiness classifies them; `step` is the first blocking one's. */
+    drift?: { blocking: number; warnings: number; step: string | null };
+  };
   rerecord?: { step: string; why: string; ok: boolean; attempt: number; runs: number; pinned: string | null; turns: number; diagnostics: string[] };
 }
 
@@ -188,6 +206,8 @@ export async function converge(seams: ConvergeSeams, o: ConvergeOptions): Promis
   const refused = new Map<string, number>();
   let order: string[] = [];
   let modelTurns = 0;
+  /** The last passing check that blocking drift kept from converging: the honest why when the budget runs out. */
+  let lastShort: string | null = null;
   const done = (status: ConvergeStatus, why: string, flowFile: string | null = null): ConvergeResult => {
     say(`converge: ${status} — ${why}`);
     return { status, why, rounds, flowFile, modelTurns };
@@ -251,7 +271,29 @@ export async function converge(seams: ConvergeSeams, o: ConvergeOptions): Promis
     const step = chk.passed ? null : failingStep(chk);
     round.check = { ran: chk.ran, passed: chk.passed, timedOut: chk.timedOut, step: step?.step ?? null, anchor: chk.anchor, error: chk.error ? chk.error.slice(0, 400) : null };
     if (!chk.ran) return done('unavailable', `the compiled spec could not be run${chk.verdict ? `: ${chk.verdict}` : ''}`);
-    if (chk.passed) return done('converged', `round ${k}: the compiled spec passed`, c.flowFile);
+    if (chk.passed) {
+      // Readiness's own question (drift-class.ts): a pass that leaned on a
+      // fallback where the run acted, or where it read a value it went on to
+      // use, is not clean, and must not be called converged.
+      const drift = classifyDrift(chk.drift ?? [], c.spec);
+      const unlined = Math.max(0, (chk.driftCount ?? 0) - (chk.drift?.length ?? 0));
+      const blockingCount = drift.blocking.length + unlined;
+      const at = firstBlockingStep(drift.blocking, order);
+      round.check.drift = { blocking: blockingCount, warnings: drift.warnings.length, step: at };
+      const warned = drift.warnings.length ? ` (${drift.warnings.length} locator fallback warning(s) on report-only reads)` : '';
+      if (!blockingCount) return done('converged', `round ${k}: the compiled spec passed${warned}`, c.flowFile);
+      const short = drift.blocking.length
+        ? `spec passes but ${describeDrift(drift.blocking, 'blocking locator fallbacks')}`
+        : `spec passes but ${unlined} locator fallback events have no drift line to classify`;
+      lastShort = `round ${k}: ${short}`;
+      say(`converge round ${k}: the ${short}`);
+      if (final) return done('exhausted', `${o.maxRounds} round(s); ${short}`);
+      if (!at) return done('stuck', `round ${k}: ${short}, and none names a step to re-record`);
+      if (order.length && !order.includes(at)) return done('stuck', `round ${k}: ${short}; ${at} is not a step of this flow`);
+      const stop = await rerecordStep(at, `the spec passed but ${describeDrift(drift.blocking.filter((e) => e.step === at), 'blocking locator fallbacks')}`, []);
+      if (stop) return stop;
+      continue;
+    }
     say(`converge round ${k}: the spec failed${step?.step ? ` at ${step.step}` : ''}${chk.error ? ` — ${chk.error.split('\n')[0].slice(0, 160)}` : ''}`);
     // The budget, not a recording: re-recording a step cannot lengthen it.
     if (budgetOnly(chk)) return done('timed-out', `round ${k}: the spec check only hit its time budget; no step failed (raise the runner's timeout or shorten the flow)`);
@@ -261,7 +303,9 @@ export async function converge(seams: ConvergeSeams, o: ConvergeOptions): Promis
     const stop = await rerecordStep(step.step, step.outputs.length ? 'a later step needs values it never published' : 'the spec failed at this step', step.outputs);
     if (stop) return stop;
   }
-  return done('exhausted', `${o.maxRounds} round(s) without a passing compiled spec`);
+  return done('exhausted', lastShort && rounds.at(-1)?.check?.drift?.blocking
+    ? `${o.maxRounds} round(s); ${lastShort} and its re-record did not replay clean`
+    : `${o.maxRounds} round(s) without a passing compiled spec`);
 }
 
 export interface BuildConvergeInput {
@@ -304,7 +348,9 @@ export function decideBuildConvergence(i: BuildConvergeInput): BuildConvergeDeci
 /** One line per round for the terminal. */
 export function roundLine(r: ConvergeRound): string {
   const parts = [`round ${r.round}${r.final ? ' (final check)' : ''}: compile ${r.compile.outcome}${r.compile.codes.length ? ` (${r.compile.codes.join(', ')})` : ''}`];
-  if (r.check) parts.push(`check ${!r.check.ran ? 'unavailable' : r.check.passed ? 'passed' : r.check.timedOut ? 'timed out' : `failed${r.check.step ? ` at ${r.check.step}` : ''}`}`);
+  if (r.check) parts.push(`check ${!r.check.ran ? 'unavailable' : r.check.passed ? 'passed' : r.check.timedOut ? 'timed out' : `failed${r.check.step ? ` at ${r.check.step}` : ''}`}`
+    + (r.check.drift?.blocking ? ` with ${r.check.drift.blocking} blocking locator fallback(s)${r.check.drift.step ? ` at ${r.check.drift.step}` : ''}` : '')
+    + (r.check.drift?.warnings ? `, ${r.check.drift.warnings} report-only fallback warning(s)` : ''));
   if (r.rerecord) parts.push(`re-record ${r.rerecord.step} ${r.rerecord.ok ? 'ok' : `refused (attempt ${r.rerecord.attempt})`}, ${r.rerecord.turns} turn(s)`);
   return parts.join('; ');
 }

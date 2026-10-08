@@ -1,7 +1,9 @@
+import fs from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { messageAnchor } from '../src/spec/check.js';
-import { converge, failingStep, rerecordSteps, type ConvergeCheck, type ConvergeCompile, type ConvergeRerecord, type ConvergeSeams } from '../src/spec/converge.js';
+import { converge, failingStep, rerecordSteps, roundLine, type ConvergeCheck, type ConvergeCompile, type ConvergeRerecord, type ConvergeSeams } from '../src/spec/converge.js';
 import type { Diagnostic } from '../src/spec/diagnostics.js';
+import type { DriftFlow } from '../src/spec/drift-class.js';
 
 const STEPS = ['01-signin', '02-create', '03-open', '04-edit'].map((id) => ({ id }));
 
@@ -54,7 +56,7 @@ describe('build --converge', () => {
   });
 
   it('never lets a drift line pick the step: only the anchor and the failure text are read', () => {
-    // A check result carries no drift field to read; an error that merely quotes a drift line names no site.
+    // A failing check's drift is never read; an error that merely quotes a drift line names no site.
     expect(failingStep({ anchor: '03-open s_1e46d8/10', error: '[sitelooper drift] 02-create s_aaaaaa/1 healed' }).step).toBe('03-open');
     expect(failingStep({ anchor: null, error: 'expect(locator) failed' }).step).toBeNull();
     // The artifact's end-of-run checks (PARTIAL, persistence) sit outside every step anchor.
@@ -173,5 +175,65 @@ describe('build --converge', () => {
   it('rerecordSteps ignores warnings and non-rerecord actions and sorts by flow order', () => {
     const d = (step: string, severity: 'error' | 'warning', command = 'rerecord'): Diagnostic => ({ code: 'demoted-pin', step, what: 'w', why: 'w', severity, action: { command, args: [], step } });
     expect(rerecordSteps([d('04-edit', 'error'), d('01-signin', 'warning'), d('03-open', 'error', 'compile'), d('02-create', 'error')], STEPS.map((s) => s.id))).toEqual(['02-create', '04-edit']);
+  });
+});
+
+/**
+ * fwgt35-luna-cv: converge said "round 2: the compiled spec passed", then
+ * readiness run 1 refused the same artifact on 5 locator fallbacks and build
+ * exited 4. Converge now asks readiness's question (drift-class.ts) of a pass.
+ */
+describe('build --converge: a passing check is clean only by readiness rules', () => {
+  const fixture = JSON.parse(fs.readFileSync(new URL('./fwgt35-luna-cv-drift.fixture.json', import.meta.url), 'utf8')) as { drift: string[]; flow: DriftFlow };
+  const gtCompiled = (): ConvergeCompile => ({ refused: false, compilable: true, flowFile: '/out/gt.flow.ts', compileBlockers: [], diagnostics: [], spec: fixture.flow });
+  const passWith = (drift: string[]): ConvergeCheck => ({ ran: true, passed: true, timedOut: false, error: null, anchor: null, drift, driftCount: drift.length });
+  const CLICK_DRIFT = "[sitelooper drift] 05-open s_76d091/2 target: primary locator('#x') missed; used #2 locator('[data-sitelooper-point=\"1,2\"]') (#1 absent)";
+
+  it('fwgt35: report-only read fallbacks are warnings; the pass converges and says so', async () => {
+    const f = fakes({ compile: [gtCompiled()], check: [passWith(fixture.drift)] });
+    const r = await converge(f.seams, opts);
+    expect(r.status).toBe('converged');
+    expect(r.why).toContain('5 locator fallback warning(s) on report-only reads');
+    expect(r.rounds[0].check?.drift).toEqual({ blocking: 0, warnings: 5, step: null });
+    expect(f.rerecords).toEqual([]);
+  });
+
+  it('a pass with a blocking fallback is not converged: it re-records that step and tests the re-record', async () => {
+    const f = fakes({ compile: [gtCompiled(), gtCompiled()], check: [passWith([...fixture.drift, CLICK_DRIFT]), passWith(fixture.drift)] });
+    const r = await converge(f.seams, opts);
+    expect(f.rerecords.map((x) => x.step)).toEqual(['05-open']);
+    expect(r.rounds[0].check).toMatchObject({ passed: true, drift: { blocking: 1, warnings: 5, step: '05-open' } });
+    expect(r.rounds[0].rerecord?.why).toContain('1 blocking locator fallbacks at 05-open s_76d091/2');
+    expect(r.status).toBe('converged');
+    expect(roundLine(r.rounds[0])).toContain('check passed with 1 blocking locator fallback(s) at 05-open');
+  });
+
+  it('when the budget runs out the why says the spec passes but names the blocking fallbacks — never converged', async () => {
+    const f = fakes({ compile: [gtCompiled(), gtCompiled(), gtCompiled()], check: [passWith([CLICK_DRIFT]), passWith([CLICK_DRIFT]), passWith([CLICK_DRIFT])] });
+    const r = await converge(f.seams, { maxRounds: 2, rerecordRuns: 2 });
+    expect(r.status).toBe('exhausted');
+    expect(r.why).toContain('spec passes but 1 blocking locator fallbacks at 05-open s_76d091/2');
+    expect(r.flowFile).toBeNull();
+  });
+
+  it('a refused re-record after a blocking-drift pass ends exhausted with the same honest why', async () => {
+    const f = fakes({ compile: [gtCompiled()], check: [passWith([CLICK_DRIFT])], rerecord: [refused()] });
+    const r = await converge(f.seams, { maxRounds: 1, rerecordRuns: 2 });
+    expect(r.status).toBe('exhausted');
+    expect(r.why).toContain('spec passes but 1 blocking locator fallbacks at 05-open');
+  });
+
+  it('drift a flow cannot place blocks (fail closed); with no step named the loop stops stuck', async () => {
+    const f = fakes({ compile: [compiled()], check: [passWith(['[sitelooper drift] unplaceable'])] });
+    const r = await converge(f.seams, opts);
+    expect(r.status).toBe('stuck');
+    expect(r.why).toContain('spec passes but 1 blocking locator fallbacks');
+  });
+
+  it('without a model a blocking-drift pass stops unavailable, naming the step', async () => {
+    const f = fakes({ compile: [gtCompiled()], check: [passWith([CLICK_DRIFT])] });
+    const r = await converge(f.seams, { ...opts, modelAvailable: false });
+    expect(r.status).toBe('unavailable');
+    expect(r.why).toContain('05-open needs a re-record (the spec passed but 1 blocking locator fallbacks');
   });
 });
