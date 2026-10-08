@@ -55,8 +55,12 @@ describe('compile keeps the pick’s name once the code is a constant', () => {
     const compile = (constants?: string[]) =>
       compileSkills({ entries: es.filter((e) => e.k !== 'report'), instruction: head.text, report: { status: 'success', summary: 'ok' }, session: 't', knownValues: known, ...(constants ? { taskConstants: constants } : {}) })
         .flatMap((s) => s.steps)
-        .find((s) => s.tool === 'click' && JSON.stringify(s.locators.target ?? []).includes('autocomplete_0_2'))!;
+        // The pick: its point is the option it clicked. (`#autocomplete_0_2`,
+        // the render counter, is gone either way — its number was never an
+        // address the recording showed: skills/id-fragments.ts, fwgt35-luna.)
+        .find((s) => s.tool === 'click' && (s.locators.target ?? []).some((c) => c.kind === 'point' && c.role === 'option'))!;
     expect(compile().locators.target?.some((c) => c.kind === 'role')).toBe(false); // the defect, at compile
+    expect(JSON.stringify(compile().locators.target)).not.toContain('autocomplete_0_2');
     const pick = compile([...taskConstants(es, Object.values(known), ['fwod84-n1'])]);
     expect(pick.locators.target?.[0]).toMatchObject({ kind: 'role', role: 'option', name: '[FURN_7777] Office Chair' });
   });
