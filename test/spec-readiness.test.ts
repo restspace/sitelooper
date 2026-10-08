@@ -212,3 +212,67 @@ describe('generated browser artifact readiness', () => {
     expect(result.runs.every((run) => run.result.executedSteps?.includes('save'))).toBe(true);
   }, 60_000);
 });
+
+/**
+ * fwgt35-luna-cv: readiness run 1 refused the converged artifact on 5 locator
+ * fallbacks, every one on a read-back that only fed the final report. The
+ * classifier converge also uses (drift-class.ts) makes those warnings; a
+ * fallback on an action, or on a read a later step uses, still blocks.
+ */
+describe('readiness drift classification', () => {
+  const loc = (id: string) => ({ target: [{ kind: 'id', selector: `#${id}` }] });
+  const spec: SpecFlow = {
+    version: 1, name: 'sample', origin: 'http://127.0.0.1:8095', startUrl: 'http://127.0.0.1:8095/', vars: ['name'],
+    steps: [
+      { id: '04-set', instruction: 'Label the issue', params: { v1: '{{name}}' }, outputs: ['sidebar_labels_1', 'ref'],
+        segments: [{ id: 's_6733ad', template: 'Label {{v1}}', params: { v1: { example: 'x', usedIn: [0], known: true } },
+          preconditions: { urlPattern: 'http://127.0.0.1:8095/' }, steps: [
+            { tool: 'fill', args: { target: '@e1', value: '{{v1}}' }, locators: loc('e1') },
+            { tool: 'click', args: { target: '@e2' }, locators: loc('e2') },
+            { tool: 'read', args: { target: '@e3', what: 'text' }, locators: loc('e3'), label: 'sidebar_labels_1' },
+            { tool: 'read', args: { target: '@e4', what: 'text' }, locators: loc('e4'), label: 'ref' },
+          ] }] },
+      { id: '05-open', instruction: 'Open {{04-set.ref}}', params: { v1: '{{04-set.ref}}' }, outputs: [],
+        segments: [{ id: 's_76d091', template: 'Open {{v1}}', params: { v1: { example: 'x', usedIn: [0], known: true } },
+          preconditions: { urlPattern: 'http://127.0.0.1:8095/' }, steps: [
+            { tool: 'fill', args: { target: '@e5', value: '{{v1}}' }, locators: loc('e5') },
+          ] }] },
+    ],
+  };
+  const line = (site: string) => `[sitelooper drift] ${site} target: primary locator('#issuecomment-11 > span') missed; used #2 locator('[data-sitelooper-point="285,374"]') (#1 absent)`;
+  const run = (drift: string[]) => {
+    fs.writeFileSync(flowFile, emitFlowFile(spec, { tier: 'plain' }).source);
+    return runReadinessCheck({ flowFile, vars: { name: 'n-{n}' }, fixtureIsolation: true },
+      () => passing({ drift, driftCount: drift.length, executedSteps: ['04-set', '05-open'] }));
+  };
+
+  it('a fallback on a read that only feeds the report is a warning: verified, warnings listed', () => {
+    const result = run([line('04-set s_6733ad/3')]);
+    expect(result.blockers).toEqual([]);
+    expect(result.outcome).toBe('verified');
+    expect(result.runs).toHaveLength(3);
+    expect(result.runs.every((r) => r.clean && r.warnings.length === 1)).toBe(true);
+    expect(result.warnings).toHaveLength(3);
+    expect(result.warnings[0]).toMatch(/^Run 1: \[sitelooper drift\] 04-set s_6733ad\/3 .* — fallback on read "sidebar_labels_1", which only feeds the final report$/);
+  });
+
+  it.each([
+    ['04-set s_6733ad/4', 'a read a later step consumes'],
+    ['04-set s_6733ad/2', 'a click'],
+    ['05-open s_76d091/1', 'a fill'],
+    ['09-gone s_000000/1', 'a site the flow does not have'],
+  ])('a fallback at %s (%s) blocks', (site) => {
+    const result = run([line('04-set s_6733ad/3'), line(site)]);
+    expect(result.outcome).toBe('failed');
+    expect(result.runs).toHaveLength(1);
+    expect(result.blockers).toEqual([`Run 1: 1 locator fallback events at ${site}`]);
+    expect(result.warnings).toHaveLength(1);
+  });
+
+  it('an artifact without flow metadata cannot classify, so every fallback blocks', () => {
+    const result = runReadinessCheck({ flowFile, vars: { name: 'n-{n}' }, fixtureIsolation: true },
+      () => passing({ drift: [line('save s_6733ad/3')], driftCount: 1 }));
+    expect(result.outcome).toBe('failed');
+    expect(result.blockers.join(' ')).toContain('1 locator fallback events at save s_6733ad/3');
+  });
+});

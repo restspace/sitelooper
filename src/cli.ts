@@ -80,7 +80,7 @@ Compile and verify (no daemon or model):
   build <flow-or-bundle> [--out <dir>] [--converge [N] | --no-converge] [--rerecord-runs n]
       # compile, then readiness gate (3 clean runs). With a reset command (--reset-cmd or the
       # project config) build converges first by default: it runs the compiled spec once and
-      # re-records the step a refusal or failure names, up to 2 rounds (--converge N sets the
+      # re-records the step a refusal, failure or blocking fallback names, up to 2 rounds (--converge N sets the
       # count; the model works those steps only). Without a reset command it prints one line
       # saying convergence was skipped. --no-converge: compile and readiness only. With no
       # model API key it compiles and checks once, and stops "unavailable" if a re-record is needed.
@@ -101,7 +101,9 @@ Verification options:
       creating its directory; the same bytes --json prints. For --ready and build this is
       the readiness evidence file, moved rather than copied. Independent of --json.
   Readiness requires distinct inputs for parameterized flows, all required steps executed,
-  no skipped tests, no already-satisfied shortcuts and no locator drift. Retries are disabled.
+  no skipped tests, no already-satisfied shortcuts and no blocking locator drift: a fallback on an
+  action, or on a read a later step or assertion uses, blocks; one on a read that only feeds the
+  final report is listed as a warning. build's convergence applies the same rule. Retries are disabled.
   Missing setup or dependencies means unavailable, never a successful check.
 
 Repair:
@@ -1307,6 +1309,7 @@ function readinessCommand(file: string, flags: Map<string, string | boolean>, js
     console.log(`readiness: ${result.outcome} (${result.runs.length} execution(s))`);
     console.log(`execution: ${result.executionVerified ? 'verified' : 'not verified'}`);
     for (const blocker of result.blockers) console.error(`  ${blocker}`);
+    for (const warning of result.warnings) console.log(`  warning: ${warning}`);
     console.log(`failure detection: ${result.failureDetection}`);
     if (fs.existsSync(result.evidenceFile)) console.log(`evidence: ${result.evidenceFile}`);
   }

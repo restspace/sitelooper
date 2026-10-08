@@ -4,6 +4,7 @@ import { createHash } from 'node:crypto';
 import { liftFlowFile } from './lift.js';
 import { assertionCounts } from './ir.js';
 import { envName, runSpecCheck, inputEnvCollisions, type SpecCheckOptions, type SpecCheckResult } from './check.js';
+import { classifyDrift, describeDrift, type DriftFlow } from './drift-class.js';
 
 export interface ReadinessOptions extends SpecCheckOptions {
   runs?: number;
@@ -25,6 +26,8 @@ export interface ReadinessRun {
   result: SpecCheckResult;
   clean: boolean;
   blockers: string[];
+  /** Locator fallbacks on reads that only feed the final report (drift-class.ts): reported, never blocking. */
+  warnings: string[];
 }
 
 export interface ReadinessReport {
@@ -41,6 +44,12 @@ export interface ReadinessReport {
   distinctDatasets: number;
   runs: ReadinessRun[];
   blockers: string[];
+  /**
+   * What a clean run still logged that does not block the claim: a locator
+   * fallback on a read whose value only feeds the final report (fwgt35-luna-cv,
+   * the user's decision; drift-class.ts). `Run <n>: <drift line> — <why>`.
+   */
+  warnings: string[];
   failureDetection: 'verified' | 'not-configured' | 'failed';
   negativeResult?: SpecCheckResult;
   evidenceFile: string;
@@ -87,7 +96,7 @@ export function runReadinessCheck(o: ReadinessOptions, check: typeof runSpecChec
   const report: ReadinessReport = {
     schemaVersion: 1, stage: 'readiness', state: 'compiled', executionVerified: false, outcome: 'blocked',
     artifactHash: '', verifiedAt: null, requiredRuns: count, distinctDatasets: 0,
-    runs: [], blockers: [], failureDetection: 'not-configured', evidenceFile,
+    runs: [], blockers: [], warnings: [], failureDetection: 'not-configured', evidenceFile,
     assertions: { steps: 0, checks: 0 },
   };
   const unchanged = (): boolean => {
@@ -135,9 +144,12 @@ export function runReadinessCheck(o: ReadinessOptions, check: typeof runSpecChec
   const requiredEnv = metadata(source, 'requiredEnvNames');
   const requiredInputs = [...new Set([...generatedInputs, ...(o.requiredInputs ?? [])])];
   const requiredSteps = [...new Set([...generatedSteps, ...(o.requiredSteps ?? [])])];
+  // What each drift line's site is (gesture, consumed read, report-only read); without it every line blocks.
+  let flow: DriftFlow | null = null;
   if (source.includes('// @sitelooper-flow-begin')) {
     try {
       const { spec } = liftFlowFile(source);
+      flow = spec;
       report.assertions = assertionCounts(spec);
       for (const name of spec.vars) if (!requiredInputs.includes(name)) requiredInputs.push(name);
       for (const step of spec.steps) {
@@ -202,10 +214,17 @@ export function runReadinessCheck(o: ReadinessOptions, check: typeof runSpecChec
     else if (!result.passed) blockers.push(result.error ?? 'Spec failed');
     if (result.skippedCount) blockers.push(`${result.skippedCount} tests skipped`);
     if (result.satisfied?.length) blockers.push(`${result.satisfied.length} actions were already satisfied and did not execute`);
-    if (result.driftCount) blockers.push(`${result.driftCount} locator fallback events`);
+    // Converge asks the same question of its passing check (converge.ts), so a
+    // spec it called converged is not refused here for the same fallback.
+    const drift = classifyDrift(result.drift ?? [], flow);
+    if (drift.blocking.length) blockers.push(describeDrift(drift.blocking));
+    const unlined = (result.driftCount ?? 0) - (result.drift?.length ?? 0);
+    if (unlined > 0) blockers.push(`${unlined} locator fallback events with no drift line to classify`);
+    const warnings = drift.warnings.map((e) => `${e.line} — ${e.why}`);
     const missingSteps = requiredSteps.filter((step) => !result.executedSteps?.includes(step));
     if (missingSteps.length) blockers.push(`Required steps did not complete: ${missingSteps.join(', ')}`);
-    report.runs.push({ index: i + 1, datasetHash: datasetHashes[i], result, clean: blockers.length === 0, blockers });
+    report.runs.push({ index: i + 1, datasetHash: datasetHashes[i], result, clean: blockers.length === 0, blockers, warnings });
+    report.warnings.push(...warnings.map((w) => `Run ${i + 1}: ${w}`));
     if (blockers.length) {
       report.outcome = !result.ran || result.outcome === 'unavailable' ? 'unavailable' : 'failed';
       report.blockers.push(...blockers.map((b) => `Run ${i + 1}: ${b}`));
