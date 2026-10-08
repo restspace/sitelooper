@@ -1,0 +1,254 @@
+{
+  "flow": "fwen8-luna",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_22a41f; observed landing_page_heading=Home.",
+      "values": {
+        "landing_page_heading": "Home"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "7/7",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_22a41f: report value signed_in_user is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)"
+      ],
+      "unreported": [
+        "signed_in_user"
+      ]
+    },
+    {
+      "id": "02-find",
+      "status": "success",
+      "summary": "Replayed stored procedure s_17f910; observed customer_name_3=Seed: Alpha Traders, verified_on_form_2=Seed: Alpha Traders, customer_name_1=Seed: Cobalt Retail, customer_name_2=Seed: Beacon Supplies, sales_order_list_column_header=Customer Name, list_columns_2=Tag, list_columns_3=Status, list_columns_4=Delivery Date, list_columns_5=ID, list_count=3 of 3, sales_order_1=SAL-ORD-2026-00001, sales_order_2=SAL-ORD-2026-00002, sales_order_3=SAL-ORD-2026-00003, list_columns_1=Customer Name, verified_on_form_1=SAL-ORD-2026-00001, verified_on_form_3=Seed: Alpha Traders.",
+      "values": {
+        "customer_name_3": "Seed: Alpha Traders",
+        "verified_on_form_2": "Seed: Alpha Traders",
+        "customer_name_1": "Seed: Cobalt Retail",
+        "customer_name_2": "Seed: Beacon Supplies",
+        "sales_order_list_column_header": "Customer Name",
+        "list_columns_2": "Tag",
+        "list_columns_3": "Status",
+        "list_columns_4": "Delivery Date",
+        "list_columns_5": "ID",
+        "list_count": "3 of 3",
+        "sales_order_1": "SAL-ORD-2026-00001",
+        "sales_order_2": "SAL-ORD-2026-00002",
+        "sales_order_3": "SAL-ORD-2026-00003",
+        "list_columns_1": "Customer Name",
+        "verified_on_form_1": "SAL-ORD-2026-00001",
+        "verified_on_form_3": "Seed: Alpha Traders"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "29/29",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_7296ac; observed customer_name=fwen8-luna-n2 Bench Customer, customer_name_value=fwen8-luna-n2 Bench Customer, customer_name_prefix=fwen8-luna-n2, customer_group=Commercial, territory=United States.",
+      "values": {
+        "customer_name": "fwen8-luna-n2 Bench Customer",
+        "customer_name_value": "fwen8-luna-n2 Bench Customer",
+        "customer_name_prefix": "fwen8-luna-n2",
+        "customer_group": "Commercial",
+        "territory": "United States"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "9/9",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_7296ac: step 1: read 'customer_record_name' returned a value the skill itself set/selected ('fwen8-luna-n2 Bench Customer') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_7296ac: step 6: the target chain is dead and was not healed inline — the step is a synthesized read no run has ever resolved, so nothing about it has drifted",
+        "s_7296ac: step 6: skipped read — no element matched any known locator for target (tried 1: page.getByRole('alert', { name: 'Saved', exact: true }))"
+      ],
+      "unreported": [
+        "customer_record_name",
+        "save_alert"
+      ]
+    },
+    {
+      "id": "04-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_538e35; observed so_items_required_marker=items\nItems\nNo.\nItem Code\nDelivery Date\nQuantity\nRate (USD)\nAmount (USD)\nNo Data\nAdd Row\nAdd Multiple\nDownload\nUpload, role_option=Sales.",
+      "values": {
+        "so_items_required_marker": "items\nItems\nNo.\nItem Code\nDelivery Date\nQuantity\nRate (USD)\nAmount (USD)\nNo Data\nAdd Row\nAdd Multiple\nDownload\nUpload",
+        "role_option": "Sales"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "14/14",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_538e35: step 9: read 'so_customer_field' returned 'fwen8-luna-n2 Bench Customer' from a control this step set, and nothing committed it since — it shows the control, however the app formats it, not what the app stored; dropped from the report's confident values",
+        "s_538e35: step 10: read 'so_delivery_date_field' returned a value the skill itself set/selected ('2026-12-31') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_538e35: report value customer_name_prefix is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)"
+      ],
+      "unreported": [
+        "so_customer_field",
+        "so_delivery_date_field",
+        "customer_name_prefix"
+      ]
+    },
+    {
+      "id": "05-add",
+      "status": "success",
+      "summary": "On the unsaved Sales Order form I added exactly two item lines via the Items grid: the exact \"Bench Widget\" (qty 3, default rate 40.00 → 120.00) and the exact \"Bench Gadget\" (qty 2, default rate 125.00 → 250.00), each with delivery date 2026-12-31, leaving all default rates untouched. Saving produced the record SAL-ORD-2026-00004 for customer 'fwen8-luna-n2 Bench Customer' with an ERPNext \"Saved\" alert; the order is still in Draft and was NOT submitted. The live grid shows exactly those two rows and the Customer field reads 'fwen8-luna-n2 Bench Customer'.",
+      "values": {
+        "sales_order_id": "SAL-ORD-2026-00004",
+        "customer_on_saved_order": "fwen8-luna-n2 Bench Customer",
+        "line_1_item_code": "Bench Widget",
+        "line_1_delivery_date": "2026-12-31",
+        "line_1_quantity": "3",
+        "line_1_rate": "$ 40.00",
+        "line_1_amount": "$ 120.00",
+        "line_2_item_code": "Bench Gadget",
+        "line_2_delivery_date": "2026-12-31",
+        "line_2_quantity": "2",
+        "line_2_rate": "$ 125.00",
+        "line_2_amount": "$ 250.00",
+        "order_status": "Draft",
+        "save_alert": "Saved",
+        "items_row_count": "2 item lines (plus header row)",
+        "sales_order_url": "http://127.0.0.1:8100/app/sales-order/SAL-ORD-2026-00004",
+        "ref": "fwen8-luna-n2"
+      },
+      "tier": null,
+      "recovered": true,
+      "fellBack": "every candidate refused — s_f44792: not on the page this procedure starts from (expects http://127.0.0.1:8100/app/sales-order/new-sales-order-uxvwbpigvk, browser is at http://127.0.0.1:8100/app/sales-order/new-sales-order-ofbcucxuar) — nothing was run",
+      "replayed": null,
+      "repaired": false,
+      "turns": 21,
+      "unreported": [
+        "customer",
+        "delivery_date",
+        "draft_grid_row_1_text",
+        "item_selection_path",
+        "so_customer_saved",
+        "so_delivery_date_saved",
+        "item_1_code",
+        "item_2_code",
+        "item_1_quantity",
+        "item_1_rate",
+        "item_2_rate",
+        "item_2_quantity",
+        "item_1_amount",
+        "item_2_amount",
+        "customer_name_prefix"
+      ]
+    },
+    {
+      "id": "06-verify",
+      "status": "success",
+      "summary": "Replayed stored procedure s_5a18a6; observed submission_alert=Submitted / \"Sales Order has been submitted successfully\", so_customer_after_submit=fwen8-luna-n2 Bench Customer, so_delivery_date_after_s=2026-12-31, customer_name_prefix=fwen8-luna-n2, sales_order_status_pill=Draft, sales_order_url=http://127.0.0.1:8100/app/sales-order/SAL-ORD-2026-00004, sales_order_status_after_submit=To Deliver and Bill, customer_after_submit=fwen8-luna-n2 Bench Customer, delivery_date_after_submit=2026-12-31, sales_order_id=SAL-ORD-2026-00004.",
+      "values": {
+        "submission_alert": "Submitted / \"Sales Order has been submitted successfully\"",
+        "so_customer_after_submit": "fwen8-luna-n2 Bench Customer",
+        "so_delivery_date_after_s": "2026-12-31",
+        "customer_name_prefix": "fwen8-luna-n2",
+        "sales_order_status_pill": "Draft",
+        "sales_order_url": "http://127.0.0.1:8100/app/sales-order/SAL-ORD-2026-00004",
+        "sales_order_status_after_submit": "To Deliver and Bill",
+        "customer_after_submit": "fwen8-luna-n2 Bench Customer",
+        "delivery_date_after_submit": "2026-12-31",
+        "sales_order_id": "SAL-ORD-2026-00004"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "10/10",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "confirmation_prompt"
+      ]
+    },
+    {
+      "id": "07-add",
+      "status": "success",
+      "summary": "Replayed stored procedure s_a413bb; observed comment_count=1, sales_order_reference=SAL-ORD-2026-00004.",
+      "values": {
+        "comment_count": "1",
+        "sales_order_reference": "SAL-ORD-2026-00004"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "7/7",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_a413bb: step 6: primary locator did not resolve; used fallback #2 elementAt(637, 1834) /* p */",
+        "s_a413bb: step 6: read 'run_id' returned a value the skill itself set/selected ('fwen8-luna-n2') — confirms the control, not persistence; dropped from the report's confident values"
+      ],
+      "unreported": [
+        "run_id"
+      ]
+    }
+  ],
+  "passed": 7,
+  "total": 7,
+  "repinned": 0,
+  "drift": 2,
+  "driftTickets": [
+    {
+      "flow": "fwen8-luna",
+      "step": "03-create",
+      "skill": "s_7296ac",
+      "atStep": "6",
+      "key": "target",
+      "similarity": 0.999,
+      "missedLocator": "page.getByRole('alert', { name: 'Saved', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8100/app/customer/fwen8-luna-n2%20Bench%20Customer",
+      "pageUrl": "http://127.0.0.1:8100/app/customer/fwen8-luna-n2%20Bench%20Customer"
+    },
+    {
+      "flow": "fwen8-luna",
+      "step": "07-add",
+      "skill": "s_a413bb",
+      "atStep": "6",
+      "key": "target",
+      "similarity": 0.999,
+      "missedLocator": "page.locator('#comment-v2gnsq2mi3 > div > div:nth-of-type(1) > div > p')",
+      "fallbackUsed": "elementAt(637, 1834) /* p */",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8100/app/sales-order/:id",
+      "pageUrl": "http://127.0.0.1:8100/app/sales-order/SAL-ORD-2026-00004"
+    }
+  ],
+  "wallMs": 143340,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 288371,
+    "completionTokens": 6312,
+    "cachedTokens": 261120
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 288371,
+      "completionTokens": 6312,
+      "cachedTokens": 261120
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "openai/gpt-6-luna",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

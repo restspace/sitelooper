@@ -1,0 +1,305 @@
+{
+ "id": "s_ff2a19",
+ "origin": "http://127.0.0.1:8100",
+ "template": "Add a comment to the timeline of submitted {{v1}} Order {{v2}} with text that includes the exact runid {{v3}} (for example, '{{v3}}'). Save/post the comment and verify the timeline displays its text.",
+ "params": {
+  "v1": {
+   "example": "Sales",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i4:order_type"
+  },
+  "v2": {
+   "example": "SAL-ORD-2026-00004",
+   "usedIn": [],
+   "known": true,
+   "binding": "06-verify.url.p2"
+  },
+  "v3": {
+   "example": "fwen8-luna-cvn0",
+   "usedIn": [
+    3
+   ],
+   "known": true,
+   "binding": "var:runid"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8100/app/sales-order/{{v2}}"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e1770"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > p"
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8100/app/sales-order/{{v2}}",
+    "removedContains": [
+     "- button \"New\"",
+     "- button \"Print\"",
+     "- button \"Email\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_a413bb",
+    "step": 1
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e2423"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > div > div > div:nth-of-type(1) > p",
+      "nth": 2
+     },
+     {
+      "kind": "point",
+      "x": 761,
+      "y": 1648,
+      "w": 963.2,
+      "h": 20.8,
+      "role": null,
+      "tag": "p",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8100/app/sales-order/{{v2}}",
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "type",
+   "args": {
+    "target": "@e2423",
+    "text": "{{v3}}"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > div > div > div:nth-of-type(1) > p",
+      "nth": 2
+     },
+     {
+      "kind": "point",
+      "x": 761,
+      "y": 1648,
+      "w": 963.2,
+      "h": 20.8,
+      "role": null,
+      "tag": "p",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8100/app/sales-order/{{v2}}",
+    "addedContains": [
+     "- button \"Comment\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=button[name=\"Comment\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "role=button[name=\"Comment\"]"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Comment"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(3) > div > div > div:nth-of-type(1) > div > button"
+     },
+     {
+      "kind": "point",
+      "x": 315,
+      "y": 1693,
+      "w": 82.3,
+      "h": 24.8,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8100/app/sales-order/{{v2}}"
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#navbar-breadcrumbs > li:nth-of-type(3) > a"
+     },
+     {
+      "kind": "point",
+      "x": 318,
+      "y": 1113,
+      "w": 171.1,
+      "h": 17,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "sales_order_id"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#comment-77vkc2c17t > div > span > span:nth-of-type(2) > div:nth-of-type(1) > button:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 897,
+      "y": 1792,
+      "w": 24.3,
+      "h": 19.5,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "comment_action_button_after_post"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#comment-77vkc2c17t > div > div:nth-of-type(1) > div > p"
+     },
+     {
+      "kind": "point",
+      "x": 637,
+      "y": 1834,
+      "w": 644,
+      "h": 22.4,
+      "role": null,
+      "tag": "p",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "comment_text_on_timeline"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text",
+    "frame": "A\n{{=}}"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#comment-77vkc2c17t > div > span > span:nth-of-type(1) > span"
+     },
+     {
+      "kind": "point",
+      "x": 383,
+      "y": 1795,
+      "w": 213.1,
+      "h": 28,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "timeline_entry"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "The stored procedure had already opened the comment box on submitted {{v1}} Order {{v2}}; its typing step failed, so I clicked into the comment contenteditable and typed '{{v3}}', then clicked the \"Comment\" button (which disappeared, replaced by \"Edit\" — the post landed). The timeline on the live page now shows \"You commented · just now / Edit / {{v3}}\", so the exact runid text is displayed on the order's timeline. No other change was made; the order remains submitted (status \"To Deliver and Bill\").",
+  "values": {
+   "sales_order_id": "{{v2}}",
+   "comment_text_on_timeline": "{{v3}}",
+   "timeline_entry": "You commented · just now",
+   "sales_order_status": "To Deliver and Bill (submitted)",
+   "comment_action_button_after_post": "Edit"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-10-08T16:21:09.685Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2
+ },
+ "status": "provisional",
+ "variantOf": "s_a413bb",
+ "provenance": {
+  "session": "rerecord-muzqnk8l-0",
+  "instruction": "Add a comment to the timeline of submitted Sales Order SAL-ORD-2026-00004 with text that includes the exact runid fwen8-luna-cvn0 (for example, 'fwen8-luna-cvn0'). Save/post the comment and verify the timeline displays its text.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-10-08T16:21:09.685Z",
+  "transforms": [
+   {
+    "name": "unfreezeExpectations",
+    "at": 4,
+    "reason": "recorded page change(s) only the recording run could produce: [\"- button \\\"Edit\\\"\"] → []"
+   }
+  ]
+ },
+ "revision": 1
+}

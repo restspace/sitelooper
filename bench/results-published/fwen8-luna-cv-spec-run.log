@@ -1,0 +1,23 @@
+[spec-replay] resetting erpnext
+[spec-replay] compiling: /opt/node22/bin/node /home/user/sitelooper/bin/sitelooper.js compile /home/user/sitelooper/bench/results/flows/fwen8-luna-cv.json --out /home/user/sitelooper/bench/results/fwen8-luna-cv-spec-spec-tmp --overwrite-spec
+flow: /home/user/sitelooper/bench/results/fwen8-luna-cv-spec-spec-tmp/fwen8-luna-cv.flow.ts
+spec: /home/user/sitelooper/bench/results/fwen8-luna-cv-spec-spec-tmp/fwen8-luna-cv.spec.ts
+facts http://127.0.0.1:8100: 59 relied (50 hard), 21 advisory
+warning a component recipe is demoted in the store, and the compiled artifact omits it for good
+  why: aria-combobox/set-value: learned recipe r_ad57b4 is demoted in the component store (2 consecutive verification failures); the snapshot omits it. The snapshot is compile-time state: the daemon keeps validating, learning and demoting after this file is written; the artifact runs what it was given.
+  fix: record the widget again with the daemon to learn a working recipe, then recompile
+warning a component family has no usable recipe, so the compiled artifact drives it with the native primitive for good
+  why: aria-combobox/set-value: no usable recipe; the artifact falls back to the native primitive on this family, as the daemon does today. The snapshot is compile-time state: the daemon keeps validating, learning and demoting after this file is written; the artifact runs what it was given.
+  fix: record the widget again with the daemon to learn a working recipe, then recompile
+[spec-replay] running: npx playwright test --config /home/user/sitelooper/bench/results/fwen8-luna-cv-spec-spec-tmp/playwright.config.mjs
+[spec-replay] failure evidence: fwen8-luna-cv-spec-spec-failure.png
+[spec-replay] failure evidence: fwen8-luna-cv-spec-spec-error-context.md
+[spec-replay] fwen8-luna-cv-spec: 0/1 passed, exit=1, 48s, 0 drift line(s) — result written
+[reset] erpnext: cleared saved list settings for Sales Order (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view, updated_on)
+[reset] erpnext: cleared saved list settings for Customer (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view)
+[reset] erpnext: cleared saved list settings for Item (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view)
+[reset] erpnext: cleared saved list settings for Sales Invoice (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view)
+[reset] erpnext: cleared saved list settings for Quotation (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view)
+[reset] erpnext: cleared saved list settings for Delivery Note (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view)
+[reset] erpnext: deleted 1 sales order(s) (earlier runs' and non-seed)
+[reset] erpnext: deleted customer "fwen8-luna-cvn2 Bench Customer"

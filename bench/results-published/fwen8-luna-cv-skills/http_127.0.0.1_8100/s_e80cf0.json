@@ -1,0 +1,411 @@
+{
+ "id": "s_e80cf0",
+ "origin": "http://127.0.0.1:8100",
+ "template": "On the current unsaved {{v1}} Order form, add exactly two item lines: choose the exact 'Bench Widget' item (not similarly named items) with quantity 3, and the exact '{{v4}}' item with quantity 2. Use each item's default rate without changing it. Save the {{v1}} Order, then verify exactly those two lines, quantities and rates, and the customer '{{v2}}' and delivery date 2026-12-31. Do not submit yet.",
+ "params": {
+  "v1": {
+   "example": "Sales",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i4:role_option"
+  },
+  "v2": {
+   "example": "fwen8-luna-n3 Bench Customer",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i3:customer_name"
+  },
+  "v3": {
+   "example": "fwen8-luna-n3",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v4": {
+   "example": "Bench Gadget",
+   "usedIn": [
+    5,
+    6
+   ]
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8100/app/sales-order/new-sales-order-hfarptadnz"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e235"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Add Row",
+      "nth": 0
+     },
+     {
+      "kind": "css",
+      "selector": "div > div > div:nth-of-type(3) > div > div:nth-of-type(1) > button:nth-of-type(3)"
+     },
+     {
+      "kind": "point",
+      "x": 75,
+      "y": 827,
+      "w": 77.2,
+      "h": 24.8,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8100/app/sales-order/new-sales-order-hfarptadnz",
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e944"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "option",
+      "name": "Bench Widget Bench Widget, Products"
+     },
+     {
+      "kind": "css",
+      "selector": "#awesomplete_list_33 > div:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 318,
+      "y": 815,
+      "w": 284.8,
+      "h": 51,
+      "role": "option",
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8100/app/sales-order/new-sales-order-hfarptadnz",
+    "addedContains": [
+     "- combobox \"Item Code\": {{*}}",
+     "- link \"Open Link\"",
+     "- textbox \"Quantity\": {{*}}",
+     "- textbox \"Rate (USD)\": {{*}}",
+     "- textbox \"Amount (USD)\" [disabled]: {{*}}"
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": ".grid-row .col[data-fieldname=\"qty\"] input",
+    "value": "3"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".grid-row .col[data-fieldname=\"qty\"] input"
+     },
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Quantity"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "Quantity"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div > div:nth-of-type(5) > div:nth-of-type(1) > div > input"
+     },
+     {
+      "kind": "point",
+      "x": 715,
+      "y": 709,
+      "w": 98.3,
+      "h": 38,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8100/app/sales-order/new-sales-order-hfarptadnz",
+    "addedContains": [
+     "- textbox \"Quantity\": {{*}}",
+     "- textbox \"Amount (USD)\" [disabled]: {{*}}"
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=button[name=\"Add Row\"] >> nth=0"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "role=button[name=\"Add Row\"] >> nth=0"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Add Row",
+      "nth": 0
+     },
+     {
+      "kind": "css",
+      "selector": "div > div > div:nth-of-type(3) > div > div:nth-of-type(1) > button:nth-of-type(3)"
+     },
+     {
+      "kind": "point",
+      "x": 75,
+      "y": 755,
+      "w": 77.2,
+      "h": 24.8,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8100/app/sales-order/new-sales-order-hfarptadnz",
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "type",
+   "args": {
+    "target": ".grid-row[data-idx=\"2\"] .col[data-fieldname=\"item_code\"] input",
+    "text": "{{v4}}"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "combobox",
+      "name": "Item Code"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "Item Code"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(3) > div:nth-of-type(1) > div > div > div > input"
+     },
+     {
+      "kind": "css",
+      "selector": ".grid-row[data-idx=\"2\"] .col[data-fieldname=\"item_code\"] input"
+     },
+     {
+      "kind": "point",
+      "x": 318,
+      "y": 749,
+      "w": 296.8,
+      "h": 38,
+      "role": "combobox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8100/app/sales-order/new-sales-order-hfarptadnz",
+    "addedContains": [
+     "- combobox \"Item Code\": {{v4}}"
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "#awesomplete_list_34 div[role=\"option\"] >> nth=0"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "option",
+      "name": "{{v4}} {{v4}}, Products"
+     },
+     {
+      "kind": "css",
+      "selector": "#awesomplete_list_34 div[role=\"option\"] >> nth=0"
+     },
+     {
+      "kind": "css",
+      "selector": "#awesomplete_list_34 > div:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 318,
+      "y": 800,
+      "w": 284.8,
+      "h": 51,
+      "role": "option",
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8100/app/sales-order/new-sales-order-hfarptadnz",
+    "addedContains": [
+     "- link \"Open Link\"",
+     "- textbox \"Quantity\": {{*}}",
+     "- textbox \"Rate (USD)\": {{*}}",
+     "- textbox \"Amount (USD)\" [disabled]: {{*}}"
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": ".grid-row[data-idx=\"2\"] .col[data-fieldname=\"qty\"] input",
+    "value": "2"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Quantity"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "Quantity"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div > div:nth-of-type(5) > div:nth-of-type(1) > div > input"
+     },
+     {
+      "kind": "css",
+      "selector": ".grid-row[data-idx=\"2\"] .col[data-fieldname=\"qty\"] input"
+     },
+     {
+      "kind": "point",
+      "x": 715,
+      "y": 749,
+      "w": 98.3,
+      "h": 38,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8100/app/sales-order/new-sales-order-hfarptadnz",
+    "addedContains": [
+     "- textbox \"Quantity\": {{*}}",
+     "- textbox \"Amount (USD)\" [disabled]: {{*}}"
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e67"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Save"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div > div > div:nth-of-type(2) > div:nth-of-type(3) > button:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 1225,
+      "y": 537,
+      "w": 49.6,
+      "h": 28,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "mints": {
+    "at": "p2"
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8100/app/sales-order/{{d1}}",
+    "alertContains": "Saved",
+    "addedContains": [
+     "- link \"{{d1}}\"",
+     "- heading \"{{v2}}\"",
+     "- button \"Submit\"",
+     "- tab \"Connections\"",
+     "- link \"{{v4}}\""
+    ],
+    "lineDialect": 2
+   }
+  }
+ ],
+ "derived": {
+  "d1": {
+   "step": 8,
+   "at": "p2",
+   "example": "SAL-ORD-2026-00004"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-10-08T16:13:30.347Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_fbbceb",
+  "index": 0,
+  "of": 2
+ },
+ "provenance": {
+  "session": "fwen8-luna-n3",
+  "instruction": "On the current unsaved Sales Order form, add exactly two item lines: choose the exact 'Bench Widget' item (not similarly named items) with quantity 3, and the exact 'Bench Gadget' item with quantity 2. Use each item's default rate without changing it. Save the Sales Order, then verify exactly those two lines, quantities and rates, and the customer 'fwen8-luna-n3 Bench Customer' and delivery date 2026-12-31. Do not submit yet.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-10-08T16:13:30.347Z"
+ },
+ "revision": 1
+}
