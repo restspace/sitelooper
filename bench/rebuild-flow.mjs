@@ -314,6 +314,11 @@ function storeFrom(entries, known, valuesByInstruction) {
             // constants judged over the whole script so far (server.ts
             // taskConstants).
             knownValues: knownValues(),
+            // ...and what the run recorded before this instruction (server.ts
+            // `before`): the url positions an earlier instruction watched the
+            // app mint (erpnext fwen8-luna 05-add, app-minted-url.ts
+            // sessionAppMintedPositions) and the sourceless-goto rule.
+            before: entries.slice(0, cur.mark),
             taskConstants: [
               ...taskConstants(
                 entries.slice(0, at + 1),

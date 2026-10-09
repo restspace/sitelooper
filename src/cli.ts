@@ -17,7 +17,7 @@ import { drainDrift, llmProposer, triage, type DrainSummary, type DriftTicket } 
 import { cascadeProposer } from './skills/repair-jev.js';
 import { buildSystemOne, resolveSystemOneConfig } from './agent/system-one.js';
 import { compileFlow } from './spec/index.js';
-import { converge, roundLine } from './spec/converge.js';
+import { converge, decideBuildConvergence, roundLine } from './spec/converge.js';
 import { foldTicketEvidence, mintVars, notConverged, reorderByEvidence } from './spec/repair.js';
 import { emitFlowFile } from './spec/emit.js';
 import { carryFactSnapshot, carryFingerprints, carryRecipeSnapshot, flowToSpec, type SpecFlow } from './spec/ir.js';
@@ -77,7 +77,13 @@ Authoring:
 
 Compile and verify (no daemon or model):
   compile <flow-or-bundle> [--out <dir>] [--allow-demoted] [--overwrite-spec]
-  build <flow-or-bundle> [--out <dir>]       # compile, then readiness gate (3 clean runs)
+  build <flow-or-bundle> [--out <dir>] [--converge [N] | --no-converge] [--rerecord-runs n]
+      # compile, then readiness gate (3 clean runs). With a reset command (--reset-cmd or the
+      # project config) build converges first by default: it runs the compiled spec once and
+      # re-records the step a refusal, failure or blocking fallback names, up to 2 rounds (--converge N sets the
+      # count; the model works those steps only). Without a reset command it prints one line
+      # saying convergence was skipped. --no-converge: compile and readiness only. With no
+      # model API key it compiles and checks once, and stops "unavailable" if a re-record is needed.
   check <name.flow.ts>                      # one plain Playwright execution
   check <name.flow.ts> --ready [--runs N]    # readiness for an existing artifact
   flow list | show <name>
@@ -95,7 +101,9 @@ Verification options:
       creating its directory; the same bytes --json prints. For --ready and build this is
       the readiness evidence file, moved rather than copied. Independent of --json.
   Readiness requires distinct inputs for parameterized flows, all required steps executed,
-  no skipped tests, no already-satisfied shortcuts and no locator drift. Retries are disabled.
+  no skipped tests, no already-satisfied shortcuts and no blocking locator drift: a fallback on an
+  action, or on a read a later step or assertion uses, blocks; one on a read that only feeds the
+  final report is listed as a warning. build's convergence applies the same rule. Retries are disabled.
   Missing setup or dependencies means unavailable, never a successful check.
 
 Repair:
@@ -202,6 +210,7 @@ function parseArgv(argv: string[]): ParsedArgs {
     'fixture-isolation',
     'stdin',
     'no-check-spec',
+    'no-converge',
     'full-page',
     'headed',
     'help',
@@ -1300,6 +1309,7 @@ function readinessCommand(file: string, flags: Map<string, string | boolean>, js
     console.log(`readiness: ${result.outcome} (${result.runs.length} execution(s))`);
     console.log(`execution: ${result.executionVerified ? 'verified' : 'not verified'}`);
     for (const blocker of result.blockers) console.error(`  ${blocker}`);
+    for (const warning of result.warnings) console.log(`  warning: ${warning}`);
     console.log(`failure detection: ${result.failureDetection}`);
     if (fs.existsSync(result.evidenceFile)) console.log(`evidence: ${result.evidenceFile}`);
   }
@@ -1307,9 +1317,24 @@ function readinessCommand(file: string, flags: Map<string, string | boolean>, js
 }
 
 async function buildCommand(positional: string[], flags: Map<string, string | boolean>, json: boolean, onProgress?: (m: string) => void): Promise<void> {
-  if (!positional[0]) fail('usage: build <flow-or-bundle> [--var k=v] [--reset-cmd <cmd> | --fixture-isolation] [--converge [N]] [--rerecord-runs n] [--json]', 2);
+  if (!positional[0]) fail('usage: build <flow-or-bundle> [--var k=v] [--reset-cmd <cmd> | --fixture-isolation] [--converge [N] | --no-converge] [--rerecord-runs n] [--json]', 2);
   const config = loadProjectConfig();
-  if (flags.has('converge')) return convergeBuild(positional, flags, json, onProgress);
+  if (flags.has('converge') && flags.has('no-converge')) fail('--converge and --no-converge contradict each other', 2);
+  if (flags.has('converge')) {
+    const raw = String(flags.get('converge') ?? '');
+    if (raw !== '' && (!Number.isInteger(Number(raw)) || Number(raw) < 1)) fail('--converge takes a positive round count (default 3)', 2);
+  }
+  let hasModelKey = false;
+  try { hasModelKey = Boolean(resolveProviderConfig({ provider: flags.get('provider') ? String(flags.get('provider')) : undefined, model: flags.get('model') ? String(flags.get('model')) : undefined }).apiKey); } catch { /* unknown provider: no usable model */ }
+  const decision = decideBuildConvergence({
+    noConverge: flags.has('no-converge'),
+    convergeFlag: flags.has('converge') ? String(flags.get('converge') ?? '') : undefined,
+    resetCmd: flags.get('reset-cmd') ? String(flags.get('reset-cmd')) : config.resetCommand,
+    hasModelKey,
+  });
+  if (decision.mode === 'converge') return convergeBuild(positional, flags, json, onProgress, decision.maxRounds, decision.modelAvailable);
+  if (decision.skipped && !json) console.log(decision.skipped);
+  const extra = decision.skipped ? { convergence: { skipped: true, why: decision.skipped } } : {};
   const result = compileFlow(positional[0], {
     outDir: flags.get('out') ? String(flags.get('out')) : config.outputDir,
     snapshotFile: fs.existsSync(config.snapshotFile) ? config.snapshotFile : undefined,
@@ -1324,7 +1349,7 @@ async function buildCommand(positional: string[], flags: Map<string, string | bo
     process.exit(2);
   }
   if (!json) console.log(`compiled ${result.flowFile}; verifying emitted Playwright code`);
-  readinessCommand(result.flowFile, flags, json, onProgress, result);
+  readinessCommand(result.flowFile, flags, json, onProgress, result, extra);
 }
 
 /**
@@ -1333,11 +1358,8 @@ async function buildCommand(positional: string[], flags: Map<string, string | bo
  * this wires its seams). The model is used by the re-records only. A passing
  * spec then gets the same readiness verification `build` gives.
  */
-async function convergeBuild(positional: string[], flags: Map<string, string | boolean>, json: boolean, onProgress?: (m: string) => void): Promise<void> {
+async function convergeBuild(positional: string[], flags: Map<string, string | boolean>, json: boolean, onProgress: ((m: string) => void) | undefined, maxRounds: number, modelAvailable: boolean): Promise<void> {
   const config = loadProjectConfig();
-  const raw = String(flags.get('converge') ?? '');
-  const maxRounds = raw === '' ? 3 : Number(raw);
-  if (!Number.isInteger(maxRounds) || maxRounds < 1) fail('--converge takes a positive round count (default 3)', 2);
   const rerecordRuns = flags.has('rerecord-runs') ? Number(flags.get('rerecord-runs')) : 2;
   if (!Number.isInteger(rerecordRuns) || rerecordRuns < 1) fail('--rerecord-runs takes a positive integer', 2);
   const resetCmd = flags.get('reset-cmd') ? String(flags.get('reset-cmd')) : config.resetCommand;
@@ -1375,7 +1397,7 @@ async function convergeBuild(positional: string[], flags: Map<string, string | b
       };
     },
     say,
-  }, { maxRounds, rerecordRuns });
+  }, { maxRounds, rerecordRuns, modelAvailable });
 
   const summary = { converge: result };
   if (result.status === 'converged' && last) {

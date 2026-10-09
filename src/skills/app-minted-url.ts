@@ -54,7 +54,7 @@
  * two values: another record's url on the same route (`/app/customer/<name>`,
  * a slot or a literal) keeps its identity.
  */
-import type { RecordedStep } from '../daemon/recorder.js';
+import { isFailedStep, type RecordedEntry, type RecordedInstruction, type RecordedStep } from '../daemon/recorder.js';
 import { originOf, routeAt, safeDecode, urlPart, urlParts, urlShapeOf } from '../execution/url.js';
 import { allEvents, caused, isWrite, succeeded } from './restored-field.js';
 
@@ -234,6 +234,50 @@ export function appMintedPositions(startUrl: string | undefined, steps: readonly
       see(landed);
       current = landed;
     }
+  }
+  return out;
+}
+
+/**
+ * appMintedPositions over the whole SESSION, for compiling one instruction:
+ * what this instruction's own steps show (as before), and what the run showed
+ * under the instructions BEFORE it (`before`, every entry the session recorded
+ * ahead of this instruction), walked as one recording.
+ *
+ * erpnext fwen8-luna n1: 04-create's `goto /app/sales-order/new` landed on
+ * `…/new-sales-order-uxvwbpigvk` and its Save failed (no items); 05-add then
+ * added the rows on that same unsaved form and saved it. 04-create's skill
+ * (s_538e35) got `/app/sales-order/:var`, but 05-add's (s_f44792) froze
+ * `new-sales-order-uxvwbpigvk` into its start precondition and every step
+ * expectation, because its own steps never watched the app mint it: they
+ * started on it. n2, n3 and the compiled spec all refused at 05-add's start
+ * gate, each on a fresh form of its own.
+ *
+ * The window widens, not the rule: the evidence is the same, judged over the
+ * earlier steps with everything the session had seen and shown by then (so a
+ * value an earlier instruction typed, or a page showed first, stays literal),
+ * and each earlier instruction's text counts as named by the caller. The
+ * session's later steps are in the walk too: a provisional value an earlier
+ * instruction landed on may be renamed by THIS instruction's save
+ * (provisionalPosition). A save that renames the value still keeps the saved
+ * name's identity (`SAL-ORD-2026-00004` is not generalised).
+ */
+export function sessionAppMintedPositions(
+  before: readonly RecordedEntry[] | undefined,
+  startUrl: string | undefined,
+  steps: readonly RecordedStep[],
+  known: readonly string[] = [],
+): AppMintedPosition[] {
+  const own = appMintedPositions(startUrl, steps, known);
+  const earlier = (before ?? []).filter((e): e is RecordedStep => e.k === 'step' && !isFailedStep(e));
+  if (!earlier.length) return own;
+  const said = (before ?? []).filter((e): e is RecordedInstruction => e.k === 'instruction').map((e) => e.text ?? '');
+  const sessionStart = (before ?? []).find((e): e is RecordedInstruction => e.k === 'instruction' && typeof e.url === 'string')?.url;
+  const out = own.map((p) => ({ ...p, values: [...p.values] }));
+  for (const p of appMintedPositions(sessionStart, [...earlier, ...steps], [...said, ...known])) {
+    const same = out.find((m) => m.route === p.route && m.label === p.label && m.parts === p.parts);
+    if (!same) out.push(p);
+    else for (const v of p.values) if (!same.values.includes(v)) same.values.push(v);
   }
   return out;
 }

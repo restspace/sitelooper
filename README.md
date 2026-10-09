@@ -94,8 +94,10 @@ Build the test and run it:
 sitelooper build ticket --var runid=test-{n} --reset-cmd "npm run reset:e2e"
 # or, if your Playwright fixtures already prepare fresh data:
 # sitelooper build ticket --var runid=test-{n} --fixture-isolation
-# to let the build re-record the steps a refusal or a failing spec names (the model works those steps only):
+# with a reset command, build converges by default (2 rounds): it re-records the steps a refusal or
+# a failing spec names (the model works those steps only). Tune or opt out:
 # sitelooper build ticket --var runid=test-{n} --reset-cmd "npm run reset:e2e" --converge 3 [--rerecord-runs 2] [--json]
+# sitelooper build ticket --var runid=test-{n} --reset-cmd "npm run reset:e2e" --no-converge
 npx playwright test tests/sitelooper/ticket.spec.ts
 ```
 
@@ -139,9 +141,23 @@ sitelooper treats the recording as evidence to compile, not text to replay:
 --ready` runs the same gate on an existing artifact. Plain `compile` works offline, and plain
 `check` runs the spec once.
 
+`build` also converges by default when a reset command is available (`--reset-cmd` or
+`resetCommand` in the project config): it runs the compiled spec once and, if the compile is
+refused, the spec fails, or it passes only through a blocking locator fallback (below), re-records
+the step it names (2 rounds; `--converge N` sets the
+count), then runs the readiness gate on the spec that passed. Without a reset command it cannot
+check against a clean app, so it compiles and runs readiness exactly as before and prints one line
+(and, with `--json`, a `convergence: { skipped: true, why }` field) saying convergence was skipped.
+Re-recording calls the model: with no API key configured, `build` compiles and checks once and stops
+with status `unavailable` if a re-record is needed. `--no-converge` restores compile plus readiness only.
+
 The gate requires three clean executions with retries disabled. Each run starts from state
 prepared by the reset command or by declared fixtures, and it uses at least two distinct datasets
-(`{n}` becomes `1`, `2`, `3`). No step may be skipped, unresolved or drifted. The gate uses your
+(`{n}` becomes `1`, `2`, `3`). No step may be skipped or unresolved, and no locator fallback may
+decide what a run acts on or uses: a fallback on an action, or on a read whose value a later step
+or assertion uses, blocks. A fallback on a read that only feeds the final report is listed under
+`warnings` in the evidence and does not block. Convergence applies the same rule, so a spec it
+calls converged is not refused by readiness for the same fallback. The gate uses your
 Playwright config and project (`--config`, `--project`). Evidence goes to
 `<name>.readiness.json`, or to `--report <file.json>`. Three clean runs are an execution gate, not
 a statistical guarantee against flakiness.

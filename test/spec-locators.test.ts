@@ -167,6 +167,18 @@ describe('candidateSource', () => {
   it('takes the page expression from the options', () => {
     expect(candidateSource({ kind: 'id', selector: '#name' }, { page: 'frame' })).toBe("frame.locator('#name')");
   });
+
+  // hakm3-cv s_06578c step 13: a slot substituted into the kind emitted
+  // `undefined.nth(0)` and threw on every run.
+  it('names nothing for a kind no recorder writes, and the chain leaves it out at its stored index', () => {
+    const poisoned = { kind: '{{v3}}', text: 'onsite', nth: 0 } as unknown as LocatorCandidate;
+    expect(candidateSource(poisoned)).toBeNull();
+    const chain = [poisoned, { kind: 'text', text: 'onsite' } as LocatorCandidate];
+    const sources = observationSources(chain);
+    expect(sources).toHaveLength(1);
+    expect(sources[0]).toContain('index: 1');
+    expect(sources.join('')).not.toContain('undefined');
+  });
 });
 
 describe('chainSource', () => {

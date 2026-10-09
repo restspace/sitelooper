@@ -151,6 +151,10 @@ export function makeLocator(page: Root, c: LocatorCandidate): Locator {
       if (!isPage(page)) throw new Error('a recorded point cannot be resolved inside a frame');
       loc = pointLocator(page, c);
       break;
+    default:
+      // A kind no recorder writes (hakm3-cv `kind: "{{v3}}"`): the walk's
+      // locatorOf turns this into an error miss and tries the next candidate.
+      throw new Error(`no locator for candidate kind ${JSON.stringify((c as { kind?: unknown }).kind)}`);
   }
   return c.nth !== undefined ? loc.nth(c.nth) : loc;
 }
@@ -281,6 +285,11 @@ export interface RecordedStep {
   fingerprintAfter?: number[];
   /** Set when the step was executed by replaying a stored skill, not chosen by the agent. */
   via?: { skill: string; step: number };
+  /**
+   * Compile-internal: this read is one element of a list read, split out by
+   * compile's expandListReads (the list's element count). Never recorded.
+   */
+  listOf?: number;
   /**
    * The index of the page this step ran on among the browser's open pages,
    * written only when more than one page was open (see SkillStep.page).

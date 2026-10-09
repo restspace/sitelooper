@@ -1015,6 +1015,11 @@ describe('work the recording did that the flow does not contain', () => {
       { k: 'instruction', text: 'Read the panel titles.', url: `${ORIGIN}/d/abc` },
       { k: 'step', tool: 'read', args: { target: '@e3' }, locators: {}, result: 'x7 Availability' },
       { k: 'report', status: 'blocked', summary: 'timed out', values: {} },
+      // A later success that starts elsewhere: without it the two blocked
+      // groups are the recording's TAIL, and the create is adopted (hakm2).
+      { k: 'instruction', text: 'Open the home page.', url: `${ORIGIN}/d/abc` },
+      { k: 'step', tool: 'goto', args: { url: `${ORIGIN}/` }, locators: {} },
+      { k: 'report', status: 'success', summary: 'home', values: {} },
     ];
     const warnings = unbankedMutations(entries);
     expect(warnings).toHaveLength(1);

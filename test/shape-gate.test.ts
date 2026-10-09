@@ -277,6 +277,7 @@ const ALLOWLIST: Record<string, { hits: string[]; answers: string }> = {
   },
   'src/execution/fingerprint.ts': { hits: ['[0-9a-f]{6'], answers: 'CLASS_HASH_HEX_RUN, page-side (decision 3C)' },
   'src/spec/converge.ts': { hits: ['[0-9a-f]{6'], answers: 'the skill-id syntax s_<6 hex> in an artifact error site ("01-signin s_5fccd8/2: …")' },
+  'src/spec/check.ts': { hits: ['[0-9a-f]{6'], answers: 'the skill-id syntax s_<6 hex> in the leading site of an artifact error (messageAnchor)' },
   'src/execution/url.ts': {
     hits: ['[0-9a-f]{8', '[0-9A-Fa-f]{2'],
     answers:

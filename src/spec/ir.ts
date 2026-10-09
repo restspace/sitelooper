@@ -410,6 +410,35 @@ function noopDiagnostics(flow: Flow, flowFile: string | undefined): Diagnostic[]
 }
 
 /**
+ * The work the recording did that the flow left out (Flow.omitted), one
+ * warning each.
+ *
+ * Kimai hakm2: the recording's last instruction created the timesheet the
+ * task asked for, reported failure, and was not in the 4-step flow; the
+ * export said so on one console line, and the compiled spec then PASSED
+ * against an app with no timesheet. Most omissions are right (work the
+ * session abandoned and did another way), so this warns rather than refuses:
+ * a passing spec does not prove that work was done. A flow saved before
+ * `omitted` was stored carries none and gets none.
+ */
+function omittedDiagnostics(flow: Flow): Diagnostic[] {
+  return (flow.omitted ?? []).map((w) => {
+    const quoted = `"${w.instruction.slice(0, 90)}${w.instruction.length > 90 ? '…' : ''}"`;
+    const what = `the recording's instruction ${quoted} changed the app but is not in the flow — a spec may pass without that work`;
+    return {
+      code: 'omitted-work' as const,
+      what,
+      why: w.undoneBy !== undefined
+        ? `it ran ${w.mutations} state-changing step(s) and reported ${w.status}; the next instruction put back what it changed, so neither is a step`
+        : `it ran ${w.mutations} state-changing step(s) and reported ${w.status === 'none' ? 'nothing' : w.status}, and no step of the flow carries them`,
+      fix: 'check the flow covers the work another way; if not, re-record so that instruction reports success',
+      severity: 'warning' as const,
+      line: what,
+    };
+  });
+}
+
+/**
  * Resolve a flow against a skill store into the IR the emitter prints.
  *
  * Diagnostics are the honest half of the result: a step with no converged
@@ -448,7 +477,7 @@ export function flowToSpec(
     facts?: SiteFactStore;
   } = {},
 ): { spec: SpecFlow; warnings: string[]; diagnostics: Diagnostic[] } {
-  const diagnostics: Diagnostic[] = [...noopDiagnostics(flow, o.flowFile)];
+  const diagnostics: Diagnostic[] = [...noopDiagnostics(flow, o.flowFile), ...omittedDiagnostics(flow)];
   // The recipe findings keep their place ahead of the per-step ones; whether
   // there are any is decided once the steps are known (see below).
   const recipeAt = diagnostics.length;

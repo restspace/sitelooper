@@ -7,7 +7,7 @@ type RecordedEvidence = NonNullable<RecordedStep['obs']>;
 import type { Report } from '../agent/report.js';
 import { CONTROL_ARGS, contractFor, newSkillId, originOf, type Skill, type SkillParam, type SkillStep, type StepExpectation } from './store.js';
 import { MIN_ID_LEN, digitDominant, looksLikeId, skeleton, tokenPattern } from './shape.js';
-import { linkMintedParts, occursAsToken, replaceAsToken, unseenGotoParts } from './ledger.js';
+import { idPositionPart, linkMintedParts, occursAsToken, pathDigitPart, replaceAsToken, unseenGotoParts } from './ledger.js';
 import { WILDCARD, escapeRe, identityRe, maskVolatile } from '../shared/text.js';
 import { CREDENTIAL_KEY, fillParamsDeep, queryPairs, safeDecode, urlParts, urlShapeOf } from '../execution/url.js';
 import { contextsEqual, framesEqual, stepEffect } from '../execution/context.js';
@@ -18,10 +18,11 @@ import { collapseTogglePairs, dropSupersededSets, sameControl } from './toggles.
 import { namedHighlightPicks } from './highlight-pick.js';
 import { dropRestoredDetours } from './restored-field.js';
 import { dropRetriedSubmits } from './retried-submit.js';
-import { appMintedPositions, generaliseAppMinted, generaliseAppMintedDeep } from './app-minted-url.js';
+import { generaliseAppMinted, generaliseAppMintedDeep, sessionAppMintedPositions } from './app-minted-url.js';
 import { DEBOUNCE_MS, type JournalEvent } from '../daemon/journal-attribute.js';
 import { locatingSlots, scopeReadBySlot } from './readscope.js';
 import { keyPicks } from './key-pick.js';
+import { anchorEvidencedIds, shownBy, slotIdFragments } from './id-fragments.js';
 import type { ShadowRow } from './shadow.js';
 import { matchesShape, routeTemplateOf, valueClassFact, valueRoleFact, type SiteFacts } from '../execution/facts.js';
 
@@ -818,7 +819,7 @@ export function compileSkills(input: CompileInput): Skill[] {
   const origin = startUrl ? originOf(startUrl) : null;
   if (!origin || !startUrl) return [];
 
-  const slots = discoverSlots(input.instruction, steps, input.knownValues);
+  const slots = discoverSlots(input.instruction, steps, input.knownValues, sessionUrls(input.before ?? [], head?.url), head?.url);
   const textMinted = textMintSlots(input, steps, slots);
   const sub = (s: string) => substitute(s, textSlots);
 
@@ -896,15 +897,18 @@ export function compileSkills(input: CompileInput): Skill[] {
       kept = kept.filter((s) => !(s.via?.skill === stopped.skill && s.via.step === stopped.step));
     }
   }
-  kept = sourcelessGoto(kept, input, recordingNotes);
+  kept = sourcelessGoto(kept, input, recordingNotes, slots);
   const readMints: ReadMint[] = [];
   kept = mintedFill(kept, input, slots, recordingNotes, readMints);
   if (!kept.length) return [];
   // Url positions the APP minted under this recording — a form instance's
   // made-up address (ERPNext's `new-sales-order-rxojnkvnht`, fwen1): every
   // pattern carrying one is written `:var`, and the seam rule below compares
-  // through it. Evidence only: see skills/app-minted-url.ts.
-  const appMinted = appMintedPositions(startUrl, steps, [input.instruction, ...Object.values(input.knownValues ?? {}).map(String)]);
+  // through it. Evidence only: see skills/app-minted-url.ts. The window is the
+  // session, not this instruction: a form an EARLIER instruction opened and
+  // this one finished carries the address that instruction watched the app
+  // mint (erpnext fwen8-luna 05-add, sessionAppMintedPositions).
+  const appMinted = sessionAppMintedPositions(input.before, startUrl, steps, [input.instruction, ...Object.values(input.knownValues ?? {}).map(String)]);
   // Page changes the app took back before the next gesture are not a step's
   // lasting effect (erpnext fwen4-luna 02-find): see takenBackLines.
   const takenBack = takenBackLines(steps);
@@ -1041,7 +1045,9 @@ export function compileSkills(input: CompileInput): Skill[] {
   // template, or binding an instruction to segment 1 would fail).
   let segOffset = 0;
   /** Slots some recorded candidate locates by: the reads scoped by a slot are scoped by these (readscope.ts, fwrd87). */
-  const locating = locatingSlots(segments.map((sg) => sg.steps.map((st) => substituteDeep(Object.values(st.locators).map((l) => l.chain ?? []), textSlots))));
+  /** Everything the recording showed, for anchorEvidencedIds: the whole session up to and through this instruction, and the ledger's values. */
+  const shown = shownBy([...(input.before ?? []), ...input.entries], Object.values(input.knownValues ?? {}).map((v) => String(v ?? '')));
+  const locating = locatingSlots(segments.map((sg) => sg.steps.map((st) => Object.values(st.locators).map((l) => (l.chain ?? []).map((c) => substituteCandidate(c, textSlots))))));
   const built = segments.map((sg) => {
     const base = segOffset;
     segOffset += sg.steps.length;
@@ -1054,6 +1060,8 @@ export function compileSkills(input: CompileInput): Skill[] {
     const recordedObs = new WeakMap<SkillStep, RecordedEvidence>();
     /** What takenBackLines kept out of an expectation, noted once the segment's notes exist. */
     const takenNotes: TransformNote[] = [];
+    /** What anchorEvidencedIds rewrote or removed, noted the same way. */
+    const idNotes: TransformNote[] = [];
     const skillSteps: SkillStep[] = sg.steps.map((step, i) => {
       const g = base + i;
       // A minted value is a reference only DOWNSTREAM of its mint: in this
@@ -1094,14 +1102,22 @@ export function compileSkills(input: CompileInput): Skill[] {
       if (typeof args.target === 'string' && positionalUrlSlots.length && /^\s*role=/.test(args.target)) args.target = substituteHashIds(args.target, positionalUrlSlots);
       const locators: Record<string, LocatorCandidate[]> = {};
       for (const [key, loc] of Object.entries(step.locators)) {
-        const filled = (loc.chain ?? []).map((c) => {
-          const out = substituteDeep(substituteDeep(c, textSlots), mintedBefore) as LocatorCandidate;
+        const substituted = (loc.chain ?? []).map((c) => {
+          const out = substituteCandidate(substituteCandidate(c, textSlots), mintedBefore);
           if (!positionalUrlSlots.length) return out;
           if (out.kind === 'css') return { ...out, selector: substituteHrefIds(out.selector, positionalUrlSlots) };
           // ...and, written as the app's own record number (`#4`), into the
           // NAME a control is found by (substituteHashIds, gitea fwgt27 05-open).
           return substituteHashIdsIn(out, positionalUrlSlots);
         });
+        // An id whose number the recording never showed as an address anchors
+        // nothing (`#issuecomment-11`, gitea fwgt35-luna's read-back drifts)
+        // while the chain keeps another non-point candidate: see
+        // skills/id-fragments.ts. (An id carrying the run's own url value is
+        // slotted after the segments are built — slotIdFragments below.)
+        const anchored = anchorEvidencedIds(substituted, shown, (c) => !stranded(c, runValues));
+        for (const reason of anchored.notes) idNotes.push({ name: 'anchorEvidencedIds', at: i + 1, reason });
+        const filled = anchored.chain;
         // An identity anchor still carrying THIS RUN's known value after
         // slotting (the recorded runid, because the value was typed in an
         // earlier instruction and so is not a slot here) can never match
@@ -1138,7 +1154,10 @@ export function compileSkills(input: CompileInput): Skill[] {
         locators[key] = isRead && lostAnchor && kept.every(positional) ? [] : kept;
       }
       // A read whose recorded value carries a locating slot's value is scoped by that slot (readscope.ts, fwrd87).
-      scopeReadBySlot(step.result, step.tool, args, locators, textSlots, locating);
+      // ...led by the slot's text only where this page's reads never showed the value more than once (shownMoreThanOnce, fwen9-luna).
+      scopeReadBySlot(step.result, step.tool, args, locators, textSlots, locating, {
+        reads: sg.steps.slice(0, i + 1).filter((s) => s.tool === 'read' || s.tool === 'read_all'),
+      });
       const out: SkillStep = { tool: step.tool, args, locators };
       // Where each target lives and what the step did to its page travel
       // verbatim: a frame path names an iframe, not a record, so nothing in
@@ -1242,7 +1261,7 @@ export function compileSkills(input: CompileInput): Skill[] {
       return out;
     });
     const mintedForStart = mintedMap((m) => m.keptIndex < base);
-    const notes: TransformNote[] = [...takenNotes];
+    const notes: TransformNote[] = [...takenNotes, ...idNotes];
     // An assertion's waits are kept as recorded: every transform below removes
     // or folds steps on evidence about what an ACTION did, and a check that a
     // transform dropped is a check no run makes.
@@ -1269,6 +1288,27 @@ export function compileSkills(input: CompileInput): Skill[] {
   // A flash is not a step's effect (vikunja fwvk12): see dropFlashedLines.
   for (const b of built) dropFlashedLines(b.folded, steps, (s) => b.recordedDiffs.get(s), b.notes);
   if (built.length) built[0].notes.unshift(...recordingNotes);
+  // An id carrying the run's own url value below the text floor (`#issue-6`
+  // at `/issues/6`) is written as its slot — only where the segment already
+  // uses that param, so the marker never decides which params a skill keeps
+  // and never changes its url gates (skills/id-fragments.ts slotIdFragments).
+  if (positionalUrlSlots.length) {
+    for (const b of built) {
+      const usable = positionalUrlSlots.filter((s) => b.segParams[s.name]?.usedIn.length);
+      if (!usable.length) continue;
+      const visit = (list: SkillStep[]) =>
+        list.forEach((st, k) => {
+          for (const [key, chain] of Object.entries(st.locators ?? {})) {
+            const r = slotIdFragments(chain, usable);
+            if (r.chain === chain) continue;
+            st.locators[key] = r.chain;
+            for (const reason of r.notes) b.notes.push({ name: 'slotIdFragments', at: k + 1, reason });
+          }
+          if (st.body) visit(st.body);
+        });
+      visit(b.folded);
+    }
+  }
 
   // Derived-param metadata lands on the MINTING segment: which post-fold step
   // to bind from, and which url part to read there. Replay binds the value
@@ -2111,8 +2151,19 @@ function textMintSlots(input: CompileInput, steps: readonly RecordedStep[], slot
  *    landing — the value is only known once the navigation it would supply
  *    has happened.
  */
-function sourcelessGoto(kept: RecordedStep[], input: CompileInput, notes: TransformNote[]): RecordedStep[] {
-  const known = new Set(Object.values(input.knownValues ?? {}).map((v) => String(v ?? '').trim()));
+function sourcelessGoto(kept: RecordedStep[], input: CompileInput, notes: TransformNote[], slots: ReadonlyMap<string, string> = new Map()): RecordedStep[] {
+  // A known value SOURCES a part only where compile writes it into this url:
+  // a declared var, or a url id the ledger banked at this position (or one it
+  // relocates to — discoverSlots' urlIdVals rule). An earlier step's OUTPUT
+  // is not written into a url unless the instruction states it, and then the
+  // instruction's words source it (ledger.ts addressedIn). grocy hbgc3-n1
+  // 04-edit: the product id 298407 was known only as `output:i3:product_id`,
+  // so the exemption kept `goto /product/298407` literal and nothing slotted
+  // it; n2 and n3 opened n1's product and s_95b77d's identity gate refused it.
+  const knownVars = new Set(Object.entries(input.knownValues ?? {}).filter(([k]) => isVarOrigin(k)).map(([, v]) => String(v ?? '').trim()));
+  const origins = urlOriginPositions(input.knownValues);
+  const sourcedByKnown = (p: { label: string; value: string }): boolean =>
+    knownVars.has(p.value) || origins.some((o) => o.value === p.value && (o.label === p.label || relocatesTo(o, p.label)));
   for (let i = 0; i < kept.length; i++) {
     const s = kept[i];
     if (s.tool !== 'goto' || typeof s.args.url !== 'string') continue;
@@ -2121,9 +2172,9 @@ function sourcelessGoto(kept: RecordedStep[], input: CompileInput, notes: Transf
     // any position (ledger.ts linkMintedParts): kanboard fwkb41's `goto
     // …task_id=4` right after the save added `link "#4"` stored the recording's
     // task, and held only because the reset makes the new task #4 again.
-    const unseen = [...unseenGotoParts(s.args.url, before), ...linkMintedParts(s, before)].filter((p) => !known.has(p.value));
+    const unseen = [...unseenGotoParts(s.args.url, before, { sourced: true }), ...linkMintedParts(s, before)].filter((p) => !sourcedByKnown(p));
     if (!unseen.length) continue;
-    const click = linkClick(s, unseen);
+    const click = linkClick(s, unseen, [...slots.values()]);
     if (click) {
       linkBefore.set(click, before);
       notes.push({ name: 'sourcelessGoto', at: i + 1, reason: `goto ${s.args.url} reached a record no step supplies; replayed as a click on the link that carried it` });
@@ -2275,7 +2326,7 @@ function entriesBefore(input: CompileInput, s: RecordedStep): RecordedEntry[] {
 const linkBefore = new WeakMap<RecordedStep, RecordedEntry[]>();
 
 /** A goto recorded with the link that carried its href, as a click on that link (see sourcelessGoto). */
-function linkClick(s: RecordedStep, minted: readonly { label: string; value: string }[] = []): RecordedStep | null {
+function linkClick(s: RecordedStep, minted: readonly { label: string; value: string }[] = [], slotValues: readonly string[] = []): RecordedStep | null {
   const url = String(s.args.url);
   let path = '';
   try {
@@ -2292,13 +2343,28 @@ function linkClick(s: RecordedStep, minted: readonly { label: string; value: str
   };
   const chain = (s.linkedFrom?.chain ?? []).filter((c) => !spells(c));
   const named = chain.find((c): c is Extract<LocatorCandidate, { kind: 'role' }> => c.kind === 'role' && Boolean(c.name));
-  if (!named) return null;
+  // ...or the link inside the container that carries a SLOT's value: the row
+  // is the record the task names, so the slot is the clicked record's
+  // identity. grocy hbgc2-n1/hbgc3-n1: the products table row
+  // `{container: '#products-table tr.even', hasText: '<product name>', selector:
+  // 'td:nth-of-type(1) > a:nth-of-type(1)'}` (an icon link, no name) carried
+  // `/product/<id>`; with no role-with-name candidate the goto stayed literal.
+  const scoped = named
+    ? undefined
+    : chain.find(
+        (c): c is Extract<LocatorCandidate, { kind: 'scoped' }> =>
+          c.kind === 'scoped' && Boolean(c.hasText.trim()) && slotValues.some((v) => v.trim().length >= 2 && occursAsToken(c.hasText, v.trim())),
+      );
+  if (!named && !scoped) return null;
+  const target = named
+    ? `role=${named.role}[name=${JSON.stringify(named.name)}]`
+    : `${scoped!.container}:has-text(${JSON.stringify(scoped!.hasText)})${scoped!.selector ? ` >> ${scoped!.selector}` : ''}`;
   const { linkedFrom: _link, ...rest } = s;
   return {
     ...rest,
     tool: 'click',
-    args: { target: `role=${named.role}[name=${JSON.stringify(named.name)}]` },
-    locators: { target: { expr: s.linkedFrom?.expr ?? '', verified: Boolean(s.linkedFrom?.verified), raw: '', chain } },
+    args: { target },
+    locators: { target: { expr: s.linkedFrom?.expr ?? '', verified: Boolean(s.linkedFrom?.verified), raw: '', chain: scoped ? [scoped, ...chain.filter((c) => c !== scoped)] : chain } },
   };
 }
 
@@ -2384,6 +2450,10 @@ export function discoverSlots(
   instruction: string,
   steps: RecordedStep[],
   known: Record<string, string> = {},
+  /** Every url the session stood on before this instruction's steps (sessionUrls): where an earlier instruction reached a record. */
+  earlierUrls: readonly string[] = [],
+  /** The url this instruction began on. */
+  startUrl?: string,
 ): Map<string, string> {
   const values = new Set<string>();
   const locatorCandidates = new Set<string>();
@@ -2493,10 +2563,31 @@ export function discoverSlots(
   // ledger banked, whatever the label.
   const urlIdVals: string[] = [];
   const knownOrigins = urlOriginPositions(known);
-  for (const step of steps) {
+  // …and a goto's RECORD position (a path digit run, a numeric `id=`) holding a
+  // known value of any origin that an EARLIER instruction's url already held
+  // at that very position: the session reached that record there, and the
+  // value's origin binds it. grocy hbgc3-n1: 03-create reported product_id
+  // 298407 (banked as `output:i3:product_id`), 04-edit's goto landed
+  // `/product/298407`, and the ledger, which banks a value once, never banked
+  // that url part — so 05-edit's, 06-edit's and 08-open's `goto
+  // /product/298407` stayed literal and every replay opened n1's product
+  // (notes/CONTRACT-compile-g1.md item 1b: "when the session minted the value
+  // earlier, slot it").
+  const knownAny = new Set(Object.values(known).map((v) => String(v ?? '').trim()));
+  const stoodAt = new Set(earlierUrls.flatMap((u) => urlParts(u).map((p) => `${p.label}=${p.value}`)));
+  // Not when THIS instruction minted it first: a step's own landing before
+  // the goto, on a value the instruction's start url did not hold, is
+  // discoverMinted's {{dN}}, derived live (grocy hagc3-n1 05-edit: a click
+  // landed `/product/<id>` from `products?product=<id>`, then went back by goto).
+  const startHeld = new Set(startUrl ? urlParts(startUrl).map((p) => p.value) : []);
+  const landedHere = (value: string, upTo: number): boolean =>
+    !startHeld.has(value) && steps.slice(0, upTo).some((s) => !NAVIGATION_TOOLS.has(s.tool) && typeof s.diff?.url === 'string' && urlParts(s.diff.url).some((p) => p.value === value));
+  const reachedRecord = (part: { label: string; value: string }, at: number): boolean =>
+    (pathDigitPart(part) || idPositionPart(part)) && part.value.length >= 2 && knownAny.has(part.value) && stoodAt.has(`${part.label}=${part.value}`) && !landedHere(part.value, at);
+  for (const [at, step] of steps.entries()) {
     if (!NAVIGATION_TOOLS.has(step.tool) || typeof step.args.url !== 'string') continue;
     for (const part of urlParts(step.args.url)) {
-      if (!knownOrigins.some((o) => o.value === part.value && (o.label === part.label || relocatesTo(o, part.label)))) continue;
+      if (!knownOrigins.some((o) => o.value === part.value && (o.label === part.label || relocatesTo(o, part.label))) && !(step.tool === 'goto' && reachedRecord(part, at))) continue;
       if (urlIdVals.includes(part.value)) continue;
       if (knownVals.includes(part.value) || varOnly.includes(part.value) || values.has(part.value)) continue;
       urlIdVals.push(part.value);
@@ -2525,6 +2616,18 @@ export function discoverSlots(
   // decide whether the skill survives past the run that recorded it.
   [...knownVals, ...varOnly, ...ordered.map(({ v }) => v), ...urlIdVals].forEach((v, i) => slots.set(`v${i + 1}`, v));
   return slots;
+}
+
+/** Every url `before` stood on or was sent to (an instruction's, a landing, a navigation's argument), and `startUrl`. */
+function sessionUrls(before: readonly RecordedEntry[], startUrl?: string): string[] {
+  const out: string[] = [];
+  for (const e of before) {
+    if (e.k === 'instruction' && e.url) out.push(e.url);
+    if (e.k !== 'step') continue;
+    for (const u of [e.diff?.url, e.afterUrl, e.args?.url]) if (typeof u === 'string' && u) out.push(u);
+  }
+  if (startUrl) out.push(startUrl);
+  return out;
 }
 
 /** A slot value and the url position (a `urlParts` label) it may be written at. */
@@ -3127,6 +3230,21 @@ export function substitute(text: string, slots: Map<string, string>): string {
     out = out.replace(re, `{{${name}}}`);
   }
   return out;
+}
+
+/**
+ * The fields of a locator candidate that carry a VALUE a slot can stand for.
+ * Everything else is structure — `kind`, a role's `role`, a testid's `attr`,
+ * `nth`, a point's geometry/tag — and is never a slot: hakm3-cv s_06578c
+ * step 13 stored `{"kind":"{{v3}}","text":"onsite"}` because v3's example was
+ * the word "text", and the artifact emitted `undefined.nth(0)` on every run.
+ */
+const CANDIDATE_VALUE_FIELDS = new Set(['text', 'name', 'label', 'placeholder', 'selector', 'value', 'container', 'hasText']);
+
+/** substituteDeep for one locator candidate: its value fields only (CANDIDATE_VALUE_FIELDS). */
+export function substituteCandidate<C extends LocatorCandidate>(c: C, slots: Map<string, string>): C {
+  if (!slots.size) return c;
+  return Object.fromEntries(Object.entries(c).map(([k, v]) => [k, CANDIDATE_VALUE_FIELDS.has(k) ? substituteDeep(v, slots) : v])) as C;
 }
 
 export function substituteDeep(value: unknown, slots: Map<string, string>): unknown {
@@ -3927,6 +4045,9 @@ export function expandListReads(steps: readonly RecordedStep[], values: Record<s
         locators: { ...step.locators, target: { ...step.locators.target, chain: chain.map((c) => ({ ...c, nth: index })) } },
         result: JSON.stringify(element),
         label: key,
+        // One of several like elements: the page shows its siblings beside it
+        // (readscope.ts shownMoreThanOnce, erpnext fwen9-luna s_1c570b step 3).
+        listOf: expanded.length,
       });
     }
   }
