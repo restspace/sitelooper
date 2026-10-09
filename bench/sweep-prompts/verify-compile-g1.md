@@ -2,7 +2,7 @@ Verify the code on branch `fix/compile-g1` in the cloud (the dev box is short of
 
 1. Check out the branch and build it:
    git fetch origin && git checkout -B fix/compile-g1 origin/fix/compile-g1
-   (The box's local clone can be an unrelated old history; never pull --ff-only onto it, and never push main.) Record `git log --oneline -1`; it must contain all three items (`grep -q reachedGateRefusal src/daemon/server.ts && grep -q shownMoreThanOnce src/skills/readscope.ts && grep -q 'export function substituteCandidate' src/skills/compile.ts && test -f test/compile-g1-goto.test.ts`), else STOP and report. Then:
+   (The box's local clone can be an unrelated old history; never pull --ff-only onto it, and never push main.) Record `git log --oneline -1`; it must contain all three items (`grep -q reachedGateRefusal src/daemon/server.ts && grep -q cut-procedure src/spec/ir.ts && grep -q shownMoreThanOnce src/skills/readscope.ts && grep -q 'export function substituteCandidate' src/skills/compile.ts && test -f test/compile-g1-goto.test.ts`), else STOP and report. Then:
    npm ci && npm run build && npx playwright install --with-deps chromium
    Start every long command with the Bash tool's run_in_background: true and wait for its completion notification. Do NOT use the Monitor tool, and do not chain `sleep`. Do not end your turn while a command runs.
 BROWSER (mandatory): this repo's @playwright/test wants Chromium revision 1228. The box may ship an
@@ -27,7 +27,7 @@ Record the Chromium revision the tests actually ran in the report.
       node bench/rebuild-survey.mjs --quiet --no-fetch --code /tmp/main --out /tmp/v/rs-main.json 2>&1 | tee /tmp/v/rs-main.log
       node bench/rebuild-survey.mjs --quiet --no-fetch --out /tmp/v/rs-branch.json 2>&1 | tee /tmp/v/rs-branch.log
       node bench/rebuild-survey.mjs --compare /tmp/v/rs-main.json /tmp/v/rs-branch.json > /tmp/v/rs-diff.txt
-      (Both bench scripts are copied from the branch so both sides are surveyed the same way; only src differs. Informational: report the last line of rs-diff.txt, the count of `+ … POINT-ONLY` and `- … POINT-ONLY` lines, the number of recordings changed, and the full diff for hakm1, hbgc3 and fwen9-luna.)
+      (Both bench scripts are copied from the branch so both sides are surveyed the same way; only src differs. Informational: report the last line of rs-diff.txt, the count of `+ … POINT-ONLY` and `- … POINT-ONLY` lines, the number of recordings changed, and the full diff for hakm1, fwsi14, fwsi26, hbgc3 and fwen9-luna.)
 3. Write bench/verify-reports/compile-g1.md containing:
    - the commit;
    - for a-c: the "Test Files" and "Tests" summary lines, plus the name and the first 30 lines of the error for every failing test;
@@ -36,6 +36,6 @@ Record the Chromium revision the tests actually ran in the report.
    - an overall PASS or FAIL (PASS only if a-c have 0 failures and no runid in e went from compiled to refused).
    Copy /tmp/v/corpus.json to bench/corpus-snapshots/g1-<short sha>.json and /tmp/v/rs-diff.txt to bench/verify-reports/compile-g1-rebuild-diff.txt.
 4. Publish on a new branch, never main:
-   git checkout -b results/verify-compile-g1 && git add bench/verify-reports bench/corpus-snapshots && git commit -m "verify compile-g1" && git push -u origin results/verify-compile-g1
+   git checkout -b results/verify-compile-g1b && git add bench/verify-reports bench/corpus-snapshots && git commit -m "verify compile-g1" && git push -u origin results/verify-compile-g1b
 5. Your final message: the overall PASS/FAIL and the report's contents.
 RULES: if a check fails, report it; do not retry more than once, and do not try to fix anything.
