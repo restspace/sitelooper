@@ -86,6 +86,35 @@ export function unpinStep(flow: Flow, stepId: string, instruction?: string): Flo
   return { ...flow, steps };
 }
 
+/**
+ * The flow with an omitted instruction put back as a step nobody has recorded
+ * yet (`sitelooper build` converge: Flow.omitted, kimai hbkm3's order number).
+ * The step goes right after `after` (null: first) under `stepId`, the id the
+ * export reserved for it, so no existing id — and no reference to one —
+ * moves. A flow that already has the step is returned as it is: a second
+ * attempt re-records the same step.
+ *
+ * The omitted entry stays until the step is pinned (dropRecoveredOmission):
+ * a failed attempt leaves the flow saying the work is still missing.
+ */
+export function insertOmittedStep(flow: Flow, stepId: string, after: string | null, instruction: string): Flow {
+  if (flow.steps.some((s) => s.id === stepId)) return flow;
+  const at = after === null ? -1 : flow.steps.findIndex((s) => s.id === after);
+  if (after !== null && at < 0) {
+    throw new RerecordError(`flow "${flow.name}" has no step "${after}" to put ${stepId} after — steps are: ${flow.steps.map((s) => s.id).join(', ')}`);
+  }
+  const step: FlowStep = { id: stepId, instruction, outputs: [], recorded: {}, adopted: true };
+  return { ...flow, steps: [...flow.steps.slice(0, at + 1), step, ...flow.steps.slice(at + 1)] };
+}
+
+/** The flow without the omitted entries step `stepId` now carries; the same object when there are none. */
+export function dropRecoveredOmission(flow: Flow, stepId: string): Flow {
+  if (!flow.omitted?.some((w) => w.step === stepId)) return flow;
+  const omitted = flow.omitted.filter((w) => w.step !== stepId);
+  const { omitted: _omitted, ...rest } = flow;
+  return omitted.length ? { ...rest, omitted } : rest;
+}
+
 /** The flow-warning prefix a quarantined step carries; see `noopDiagnostics` in ir.ts. */
 export const LEAKED_STEP = 'leaked-step:';
 
