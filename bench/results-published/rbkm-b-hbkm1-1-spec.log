@@ -1,0 +1,42 @@
+
+Running 1 test using 1 worker
+
+[sitelooper warn] 01-signin: report value login_email is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)
+[sitelooper step] 01-signin
+[sitelooper step] 02-report
+  ✘  1 hbkm1.spec.ts:9:1 › hbkm1 (23.8s)
+
+
+  1) hbkm1.spec.ts:9:1 › hbkm1 › 03-create: Create and save exactly one new project named '{{runid}} Bench Project' with a description that includes the exact runid '{{runid}}'. Do not modify any seed project. If the form requires a customer to save, choose the exact existing customer 'Bench Customer'. Verify the saved project name, description, and its details-page URL. 
+
+    Error: after 03-create s_77406c/4 expected url http://127.0.0.1:8105/en/admin/project/:id/details but browser is at http://127.0.0.1:8105/en/admin/project
+
+       at hbkm1.flow.ts:15581
+
+      15579 |   // (navigationTarget), whether or not the step goes on to stop.
+      15580 |   if (verdict.diffs) volatile.push(...verdict.diffs);
+    > 15581 |   if (verdict.stop) throw new Error(verdict.stop);
+            |                           ^
+      15582 | }
+      15583 |
+      15584 | /**
+        at urlEffect (/home/user/sitelooper/bench/results/rbkm-b-hbkm1-1-spec-tmp/hbkm1.flow.ts:15581:27)
+        at Object.verify (/home/user/sitelooper/bench/results/rbkm-b-hbkm1-1-spec-tmp/hbkm1.flow.ts:17131:19)
+        at runStepLifecycle (/home/user/sitelooper/bench/results/rbkm-b-hbkm1-1-spec-tmp/hbkm1.flow.ts:12233:24)
+        at Object.03-create (/home/user/sitelooper/bench/results/rbkm-b-hbkm1-1-spec-tmp/hbkm1.flow.ts:17089:9)
+        at /home/user/sitelooper/bench/results/rbkm-b-hbkm1-1-spec-tmp/hbkm1.flow.ts:20871:7
+        at runFlow (/home/user/sitelooper/bench/results/rbkm-b-hbkm1-1-spec-tmp/hbkm1.flow.ts:20870:5)
+        at /home/user/sitelooper/bench/results/rbkm-b-hbkm1-1-spec-tmp/hbkm1.spec.ts:14:21
+
+    attachment #2: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/hbkm1-hbkm1/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/hbkm1-hbkm1/error-context.md
+
+  1 failed
+    hbkm1.spec.ts:9:1 › hbkm1 ──────────────────────────────────────────────────────────────────────

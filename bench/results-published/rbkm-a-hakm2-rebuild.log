@@ -1,0 +1,37 @@
+
+=== hakm2-n1 ===
+   1 success reads= 2  model-named=[login_page,page_reached,page_heading,logged_in_user,app_version_shown,page_message]  would-ask=[]  backfilled=[]
+   2 success reads= 3  model-named=[projects_listing_url,total_projects_on_unfiltered_listing,search_term_used,search_result_count,matching_projects_count,listing_heading,project_count,project_name_1,project_name_2,project_name_3,matching_projects_1,matching_projects_2,matching_projects_3]  would-ask=[]  backfilled=[]
+   3 success reads= 3  model-named=[project_id,project_name,project_description,project_customer,project_details_url,runid_in_description]  would-ask=[]  backfilled=[]
+   4 success reads=11  model-named=[project_name_on_details_page,project_description_on_details_page,order_date_row_text,order_number_field_on_reopen,project_name_field_on_reopen,details_page_url_read_from_page,project_id_derived_from_url,project_id,customer,order_date_saved,order_date_on_details_page,order_number_filled,order_date_filled,order_date_entered,order_number_on_reopen,project_name_on_reopen,order_date_after_typing,project_name,project_description,details_url,customer_row,ref,order_number_row_label,order_number_row_value,customer_row_label,customer_row_value]  would-ask=[]  backfilled=[]
+   5 blocked reads=14  model-named=[saved_from_date,saved_description,saved_project_display,saved_activity_display,start_time_as_entered_not_reverified,end_time_as_entered_not_reverified,tag_selected_at_submit_not_reverified,save_count,date_format_expected_by_app]  would-ask=[]  backfilled=[]
+   6 failure reads= 9  model-named=[saved_date,saved_start_time,saved_end_time,saved_project,saved_activity,saved_description,complete_selected_tag_list,save_count]  would-ask=[]  backfilled=[]
+  flow: 5 step(s), 0 cross-step reference(s), adopted [05-create]
+  refs: {"{{runid}}":9,"{{env:APP_PASSWORD}}":2}
+    01-signin publishes [login_page,page_reached,page_heading,logged_in_user,app_version_shown,page_message]
+    02-find publishes [projects_listing_url,total_projects_on_unfiltered_listing,search_term_used,search_result_count,matching_projects_count,listing_heading,project_count,project_name_1,project_name_2,project_name_3,matching_projects_1,matching_projects_2,matching_projects_3]
+    03-create publishes [project_id,project_name,project_description,project_customer,project_details_url,runid_in_description]
+    04-edit publishes [project_name_on_details_page,project_description_on_details_page,order_date_row_text,order_number_field_on_reopen,project_name_field_on_reopen,details_page_url_read_from_page,project_id_derived_from_url,project_id,customer,order_date_saved,order_date_on_details_page,order_number_filled,order_date_filled,order_date_entered,order_number_on_reopen,project_name_on_reopen,order_date_after_typing,project_name,project_description,details_url,customer_row,ref,order_number_row_label,order_number_row_value,customer_row_label,customer_row_value]
+    05-create publishes [saved_date,saved_start_time,saved_end_time,saved_project,saved_activity,saved_description,complete_selected_tag_list,save_count]
+
+{
+  "tag": "hakm2",
+  "runs": [
+    {
+      "runid": "hakm2-n1",
+      "instructions": 6,
+      "withModelNames": 6,
+      "wouldAsk": 0,
+      "crossStepRefs": 0,
+      "stepsPublishing": 5,
+      "flowSteps": 5,
+      "adoptedSteps": 1,
+      "markers": [
+        "db194d:{{v1}} = \"hakm2-n1\"",
+        "db194d:{{v2}} = \"hakm2-n1 Bench Project\"",
+        "7bf497:{{v1}} = \"hakm2-n1 Bench Project\"",
+        "7bf497:{{v2}} = \"hakm2-n1\""
+      ]
+    }
+  ]
+}

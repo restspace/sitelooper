@@ -1,0 +1,298 @@
+{
+  "name": "hbkm3",
+  "origin": "http://127.0.0.1:8105",
+  "startUrl": "http://127.0.0.1:8105/en/login",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-signin",
+      "instruction": "Sign in to Kimai at http://127.0.0.1:8105/en/login as admin@example.com using password exactly {{env:APP_PASSWORD}}. Verify that sign-in succeeded and report the resulting page.",
+      "skill": "s_28980c",
+      "params": {
+        "v1": "http://127.0.0.1:8105/en/login",
+        "v2": "admin@example.com",
+        "v3": "{{env:APP_PASSWORD}}"
+      },
+      "outputs": [
+        "resulting_url",
+        "signed_in_user",
+        "login_email_used",
+        "page_heading",
+        "app_version",
+        "empty_state_message"
+      ],
+      "recorded": {
+        "resulting_url": "http://127.0.0.1:8105/en/timesheet/",
+        "signed_in_user": "admin",
+        "login_email_used": "admin@example.com",
+        "page_heading": "My times",
+        "app_version": "Kimai 2.68.0",
+        "empty_state_message": "No entries were found based on your selected filters.",
+        "url": "http://127.0.0.1:8105/en/timesheet/"
+      },
+      "route": "http://127.0.0.1:8105/en/timesheet/"
+    },
+    {
+      "id": "02-find",
+      "instruction": "In Kimai, find and report exactly the names of all projects whose name starts with 'Seed:'. Do not edit anything; verify the full names from the projects list.",
+      "skill": "s_604f0a",
+      "params": {},
+      "outputs": [
+        "projects_total_count",
+        "rows_in_list",
+        "projects_matching_prefix_count",
+        "project_total_count",
+        "project_list_name_1",
+        "project_list_name_2",
+        "project_list_name_3",
+        "matching_projects_1",
+        "matching_projects_2",
+        "matching_projects_3"
+      ],
+      "recorded": {
+        "projects_total_count": "3",
+        "rows_in_list": "3",
+        "projects_matching_prefix_count": "3",
+        "project_total_count": "3",
+        "project_list_name_1": "Seed: Annual audit",
+        "project_list_name_2": "Seed: Office move",
+        "project_list_name_3": "Seed: Website relaunch",
+        "matching_projects_1": "Seed: Annual audit",
+        "matching_projects_2": "Seed: Office move",
+        "matching_projects_3": "Seed: Website relaunch",
+        "url": "http://127.0.0.1:8105/en/admin/project/"
+      },
+      "route": "http://127.0.0.1:8105/en/admin/project/"
+    },
+    {
+      "id": "03-create",
+      "instruction": "Create and save exactly one new Kimai project named '{{runid}} Bench Project' with a description that includes the exact runid '{{runid}}'. Do not edit any seed project. Verify the saved project name and description; leave other project fields at defaults for now.",
+      "skill": "s_b81799",
+      "params": {
+        "v2": "{{runid}} Bench Project",
+        "v1": "{{runid}}"
+      },
+      "outputs": [
+        "saved_project_name",
+        "saved_project_description",
+        "saved_project_id",
+        "saved_project_url",
+        "projects_total_count_after_create",
+        "projects_total_count_before_create",
+        "customer_used",
+        "ref",
+        "projects_list_after_create_1",
+        "projects_list_after_create_2",
+        "projects_list_after_create_3",
+        "projects_list_after_create_4",
+        "seed_projects_unchanged_1",
+        "seed_projects_unchanged_2",
+        "seed_projects_unchanged_3"
+      ],
+      "recorded": {
+        "saved_project_name": "hbkm3-n1 Bench Project",
+        "saved_project_description": "Bench project created for runid hbkm3-n1 (automated verification run).",
+        "saved_project_id": "40016",
+        "saved_project_url": "http://127.0.0.1:8105/en/admin/project/40016/details",
+        "projects_total_count_after_create": "4",
+        "projects_total_count_before_create": "3",
+        "customer_used": "Bench Customer",
+        "ref": "hbkm3-n1",
+        "projects_list_after_create_1": "hbkm3-n1 Bench Project",
+        "projects_list_after_create_2": "Seed: Annual audit",
+        "projects_list_after_create_3": "Seed: Office move",
+        "projects_list_after_create_4": "Seed: Website relaunch",
+        "seed_projects_unchanged_1": "Seed: Annual audit",
+        "seed_projects_unchanged_2": "Seed: Office move",
+        "seed_projects_unchanged_3": "Seed: Website relaunch",
+        "url.p3": "40016"
+      },
+      "route": "http://127.0.0.1:8105/en/admin/project/",
+      "urlRoutes": {
+        "url.p3": "http://127.0.0.1:8105 p0=en p1=admin p2=project"
+      }
+    },
+    {
+      "id": "04-verify",
+      "instruction": "Ensure the saved project '{{runid}} Bench Project' is assigned to the existing customer exactly '{{03-create.customer_used}}' (not a similarly named customer). Verify the customer on the saved project details page, and save only if a change is needed.",
+      "skill": "s_ff76de",
+      "params": {
+        "v1": "{{runid}} Bench Project",
+        "v3": "{{03-create.customer_used}}",
+        "v2": "{{runid}}",
+        "v4": "{{03-create.url.p3}}"
+      },
+      "outputs": [
+        "project_details_url",
+        "project_name",
+        "assigned_customer_on_details_page",
+        "similarly_named_customers_exist",
+        "change_needed",
+        "save_performed",
+        "description_unchanged",
+        "project_id",
+        "customer_name_1",
+        "customer_name_2",
+        "all_customers_in_system_1",
+        "all_customers_in_system_2"
+      ],
+      "recorded": {
+        "project_details_url": "http://127.0.0.1:8105/en/admin/project/40016/details",
+        "project_name": "hbkm3-n1 Bench Project",
+        "assigned_customer_on_details_page": "Bench Customer",
+        "similarly_named_customers_exist": "yes",
+        "change_needed": "no",
+        "save_performed": "no (no change was required)",
+        "description_unchanged": "Bench project created for runid hbkm3-n1 (automated verification run).",
+        "project_id": "40016",
+        "customer_name_1": "Bench Customer Ltd",
+        "customer_name_2": "Bench Customers Group",
+        "all_customers_in_system_1": "Bench Customer Ltd",
+        "all_customers_in_system_2": "Bench Customers Group"
+      },
+      "route": "http://127.0.0.1:8105/en/admin/project/:id/details"
+    },
+    {
+      "id": "05-create",
+      "instruction": "Create and save exactly one timesheet entry on project '{{runid}} Bench Project' for 2026-09-16 from 09:00 to 11:30, with a description including exact runid '{{runid}}'. Choose the existing activity exactly 'Consulting' and set its only tag to the existing tag exactly 'onsite' (do not create a tag or choose similar names). Verify the saved entry's project, date, times, description, activity, and only tag.",
+      "skill": "s_8d39f5",
+      "params": {
+        "v1": "{{runid}} Bench Project",
+        "v2": "{{runid}}",
+        "v3": "Consulting",
+        "v4": "onsite"
+      },
+      "outputs": [
+        "timesheet_entry_id",
+        "saved_date",
+        "saved_begin_time",
+        "saved_end_time",
+        "saved_duration",
+        "saved_project",
+        "saved_customer",
+        "saved_activity",
+        "saved_description",
+        "saved_tags",
+        "rows_in_timesheet_list",
+        "list_row",
+        "date_placeholder",
+        "start_time_placeholder",
+        "end_time_placeholder",
+        "from_date_filled",
+        "from_time_filled",
+        "end_time_filled",
+        "duration_filled",
+        "date_now",
+        "date_after_retype",
+        "tags_select_value",
+        "selected_tag_label",
+        "begin_time_check",
+        "end_time_check",
+        "description_check",
+        "saved_tags_2",
+        "timesheet_entry_edit_url",
+        "ref"
+      ],
+      "recorded": {
+        "timesheet_entry_id": "10",
+        "saved_date": "9/16/2026",
+        "saved_begin_time": "9:00 AM",
+        "saved_end_time": "11:30 AM",
+        "saved_duration": "2:30",
+        "saved_project": "hbkm3-n1 Bench Project",
+        "saved_customer": "Bench Customer",
+        "saved_activity": "Consulting",
+        "saved_description": "Bench entry for runid hbkm3-n1 (automated verification run).",
+        "saved_tags": "onsite",
+        "rows_in_timesheet_list": "1",
+        "list_row": "9/16/2026\t9:00 AM\t11:30 AM\t2:30\tBench Customer\thbkm3-n1 Bench Project\tConsulting",
+        "date_placeholder": "M/D/YYYY",
+        "start_time_placeholder": "h:mm a",
+        "end_time_placeholder": "h:mm a",
+        "from_date_filled": "10/6/2026",
+        "from_time_filled": "9:00 AM",
+        "end_time_filled": "11:30 AM",
+        "duration_filled": "2:30",
+        "date_now": "10/6/2026",
+        "date_after_retype": "9/16/2026",
+        "tags_select_value": "1",
+        "selected_tag_label": "onsite",
+        "begin_time_check": "9:00 AM",
+        "end_time_check": "11:30 AM",
+        "description_check": "Bench entry for runid hbkm3-n1 (automated verification run).",
+        "saved_tags_2": "onsite",
+        "timesheet_entry_edit_url": "/en/timesheet/10/edit",
+        "ref": "hbkm3-n1",
+        "url": "http://127.0.0.1:8105/en/timesheet/10/edit",
+        "url.p2": "10"
+      },
+      "route": "http://127.0.0.1:8105/en/timesheet/:id/edit"
+    },
+    {
+      "id": "06-verify",
+      "instruction": "Resolve and verify the order date for the existing project '{{runid}} Bench Project' (id shown by its details URL). In the project edit form, set the actual Order date field to 2026-11-15 and save; then reopen the edit form and verify the date field still reads 2026-11-15, as well as confirming order number PO-4471. If the value will not persist, report exactly what the form shows and do not claim success.",
+      "skill": "s_acc92b",
+      "params": {
+        "v1": "{{runid}} Bench Project",
+        "v3": "PO-4471",
+        "v2": "{{runid}}",
+        "v4": "{{03-create.url.p3}}"
+      },
+      "outputs": [
+        "project_edit_url",
+        "project_name_field",
+        "saved_order_date",
+        "saved_order_number",
+        "order_date_requested",
+        "order_date_format",
+        "verification_method",
+        "other_projects_modified",
+        "project_id",
+        "order_number_current",
+        "order_date_placeholder",
+        "order_date_typed",
+        "order_number_typed_state",
+        "reloaded_order_date",
+        "reloaded_order_number",
+        "verified_order_date",
+        "ref",
+        "order_fields_visible_after_expanding_accordion"
+      ],
+      "recorded": {
+        "project_edit_url": "http://127.0.0.1:8105/en/admin/project/40016/edit",
+        "project_name_field": "hbkm3-n1 Bench Project",
+        "saved_order_date": "11/15/2026",
+        "saved_order_number": "PO-4471",
+        "order_date_requested": "2026-11-15",
+        "order_date_format": "M/D/YYYY",
+        "verification_method": "saved the full-page edit form, then re-loaded the same URL fresh and read the two order inputs off the server-rendered form (visible after expanding the collapsed section)",
+        "other_projects_modified": "none",
+        "project_id": "40016",
+        "order_number_current": "PO-4471",
+        "order_date_placeholder": "M/D/YYYY",
+        "order_date_typed": "11/15/2026",
+        "order_number_typed_state": "PO-4471",
+        "reloaded_order_date": "11/15/2026",
+        "reloaded_order_number": "PO-4471",
+        "verified_order_date": "11/15/2026",
+        "ref": "hbkm3-n1",
+        "order_fields_visible_after_expanding_accordion": "M/D/YYYY",
+        "url": "http://127.0.0.1:8105/en/admin/project/40016/edit"
+      },
+      "route": "http://127.0.0.1:8105/en/admin/project/:id/edit"
+    }
+  ],
+  "provenance": {
+    "session": "hbkm3-n1",
+    "created": "2026-10-09T16:20:32.407Z"
+  },
+  "omitted": [
+    {
+      "instruction": "Update and save the order number and order date on project 'hbkm3-n1 Bench Project': order number exactly 'PO-4471', order date 2026-11-15. Verify both values on the saved project details page afterward; do not modify any other project.",
+      "mutations": 10,
+      "status": "failure"
+    }
+  ]
+}
