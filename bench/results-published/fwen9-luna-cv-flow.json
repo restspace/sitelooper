@@ -1,0 +1,616 @@
+{
+  "name": "fwen9-luna-cv",
+  "origin": "http://127.0.0.1:8100",
+  "startUrl": "http://127.0.0.1:8100/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-signin",
+      "instruction": "Sign in to ERPNext at http://127.0.0.1:8100/ as Administrator using the password exactly as {{env:APP_PASSWORD}}. Verify that login succeeded and report the page reached.",
+      "skill": "s_4346e8",
+      "params": {
+        "v1": "http://127.0.0.1:8100/",
+        "v2": "Administrator",
+        "v3": "{{env:APP_PASSWORD}}"
+      },
+      "outputs": [
+        "login_email",
+        "landing_page",
+        "logged_in_user_shown"
+      ],
+      "recorded": {
+        "login_email": "Administrator",
+        "landing_page": "Home",
+        "page_url_after_login": "http://127.0.0.1:8100/app/home",
+        "logged_in_user_shown": "Administrator",
+        "url": "http://127.0.0.1:8100/app/home"
+      },
+      "route": "http://127.0.0.1:8100/app/home",
+      "outputEvidence": {
+        "login_email": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "landing_page": {
+          "same": 1,
+          "differed": 0
+        },
+        "page_url_after_login": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "logged_in_user_shown": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "02-find",
+      "instruction": "Read existing Sales Orders without modifying any. Find all orders whose displayed customer name starts with 'Seed:' and report the exact customer names as shown (deduplicate if multiple orders share a name).",
+      "skill": "s_180777",
+      "params": {},
+      "outputs": [
+        "unique_customer_name_count",
+        "list_total_shown",
+        "sales_order_list_url",
+        "seed_customer_name_row_1",
+        "sales_order_id_row_1",
+        "seed_customer_name_row_2",
+        "sales_order_id_row_2",
+        "seed_customer_name_row_3",
+        "sales_order_id_row_3",
+        "matching_customer_names_1",
+        "matching_customer_names_2",
+        "matching_customer_names_3",
+        "orders_seen_1",
+        "orders_seen_2",
+        "orders_seen_3",
+        "orders_seen_4",
+        "orders_seen_5",
+        "orders_seen_6"
+      ],
+      "recorded": {
+        "unique_customer_name_count": "3",
+        "list_total_shown": "3 of 3",
+        "sales_order_list_url": "http://127.0.0.1:8100/app/sales-order?customer_name=%5B%22like%22%2C%22Seed%3A%25%22%5D",
+        "seed_customer_name_row_1": "Seed: Cobalt Retail",
+        "sales_order_id_row_1": "SAL-ORD-2026-00003",
+        "seed_customer_name_row_2": "Seed: Beacon Supplies",
+        "sales_order_id_row_2": "SAL-ORD-2026-00002",
+        "seed_customer_name_row_3": "Seed: Alpha Traders",
+        "sales_order_id_row_3": "SAL-ORD-2026-00001",
+        "matching_customer_names_1": "Seed: Cobalt Retail",
+        "matching_customer_names_2": "Seed: Beacon Supplies",
+        "matching_customer_names_3": "Seed: Alpha Traders",
+        "orders_seen_1": "SAL-ORD-2026-00003",
+        "orders_seen_2": "Seed: Cobalt Retail",
+        "orders_seen_3": "SAL-ORD-2026-00002",
+        "orders_seen_4": "Seed: Beacon Supplies",
+        "orders_seen_5": "SAL-ORD-2026-00001",
+        "orders_seen_6": "Seed: Alpha Traders",
+        "url": "http://127.0.0.1:8100/app/sales-order"
+      },
+      "route": "http://127.0.0.1:8100/app/sales-order",
+      "outputEvidence": {
+        "unique_customer_name_count": {
+          "same": 1,
+          "differed": 0
+        },
+        "list_total_shown": {
+          "same": 1,
+          "differed": 0
+        },
+        "sales_order_list_url": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_customer_name_row_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "sales_order_id_row_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_customer_name_row_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "sales_order_id_row_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_customer_name_row_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "sales_order_id_row_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "matching_customer_names_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "matching_customer_names_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "matching_customer_names_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "orders_seen_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "orders_seen_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "orders_seen_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "orders_seen_4": {
+          "same": 1,
+          "differed": 0
+        },
+        "orders_seen_5": {
+          "same": 1,
+          "differed": 0
+        },
+        "orders_seen_6": {
+          "same": 1,
+          "differed": 0
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "03-create",
+      "instruction": "Create a customer named exactly '{{runid}} Bench Customer', leaving customer group and territory at their defaults. Save it and verify the saved customer record/name.",
+      "skill": "s_9be167",
+      "params": {
+        "v2": "{{runid}} Bench Customer",
+        "v1": "{{runid}}"
+      },
+      "outputs": [
+        "customer_name",
+        "document_name",
+        "customer_group",
+        "territory",
+        "status",
+        "saved_record_url",
+        "ref"
+      ],
+      "recorded": {
+        "customer_name": "fwen9-luna-n1 Bench Customer",
+        "document_name": "fwen9-luna-n1 Bench Customer",
+        "customer_group": "Commercial",
+        "territory": "United States",
+        "status": "Enabled",
+        "saved_record_url": "http://127.0.0.1:8100/app/customer/fwen9-luna-n1%20Bench%20Customer",
+        "ref": "fwen9-luna-n1",
+        "url": "http://127.0.0.1:8100/app/customer/fwen9-luna-n1%20Bench%20Customer"
+      },
+      "route": "http://127.0.0.1:8100/app/customer/fwen9-luna-n1%20Bench%20Customer"
+    },
+    {
+      "id": "04-create",
+      "instruction": "Create a Sales Order for the existing customer '{{runid}} Bench Customer', set Delivery Date to 2026-12-31, and add exactly two Items-table lines: choose the exact linked items 'Bench Widget' quantity 3 and 'Bench Gadget' quantity 2. Use each item's default rate without overriding it. Save as draft and verify customer, date, exactly these two chosen item records, quantities, and rates from the saved order.",
+      "skill": "s_10b90c",
+      "params": {
+        "v1": "{{runid}} Bench Customer",
+        "v3": "2026-12-31",
+        "v4": "Bench Widget",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "sales_order_id",
+        "customer",
+        "delivery_date",
+        "item_1",
+        "item_1_qty",
+        "item_1_amount",
+        "item_2",
+        "item_2_qty",
+        "item_2_amount",
+        "saved_record_url",
+        "customer_page_create_menu_entries",
+        "saved_sales_order_url",
+        "data_fieldname_items_gri",
+        "data_fieldname_items_gri_2",
+        "data_fieldname_items_gri_3",
+        "data_fieldname_items_gri_4",
+        "data_fieldname_items_gri_5",
+        "data_fieldname_items_gri_6",
+        "ref"
+      ],
+      "recorded": {
+        "sales_order_id": "SAL-ORD-2026-00004",
+        "customer": "fwen9-luna-n1 Bench Customer",
+        "delivery_date": "2026-12-31",
+        "item_1": "Bench Widget",
+        "item_1_qty": "3",
+        "item_1_rate": "40.00 USD (default)",
+        "item_1_amount": "120.00",
+        "item_2": "Bench Gadget",
+        "item_2_qty": "2",
+        "item_2_rate": "125.00 USD (default)",
+        "item_2_amount": "250.00",
+        "item_row_count": "2",
+        "document_status": "Draft (not submitted)",
+        "saved_record_url": "http://127.0.0.1:8100/app/sales-order/SAL-ORD-2026-00004",
+        "customer_page_create_menu_entries": "Pricing Rule",
+        "saved_sales_order_url": "http://127.0.0.1:8100/app/sales-order/SAL-ORD-2026-00004",
+        "data_fieldname_items_gri": "40.00",
+        "data_fieldname_items_gri_2": "125.00",
+        "data_fieldname_items_gri_3": "$ 40.00",
+        "data_fieldname_items_gri_4": "$ 125.00",
+        "data_fieldname_items_gri_5": "$ 120.00",
+        "data_fieldname_items_gri_6": "$ 250.00",
+        "ref": "fwen9-luna-n1",
+        "url": "http://127.0.0.1:8100/app/sales-order/SAL-ORD-2026-00004",
+        "url.p2": "SAL-ORD-2026-00004"
+      },
+      "route": "http://127.0.0.1:8100/app/sales-order/:id",
+      "outputEvidence": {
+        "sales_order_id": {
+          "same": 1,
+          "differed": 0
+        },
+        "customer": {
+          "same": 0,
+          "differed": 1
+        },
+        "delivery_date": {
+          "same": 1,
+          "differed": 0
+        },
+        "item_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "item_1_qty": {
+          "same": 1,
+          "differed": 0
+        },
+        "item_1_rate": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "item_1_amount": {
+          "same": 1,
+          "differed": 0
+        },
+        "item_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "item_2_qty": {
+          "same": 1,
+          "differed": 0
+        },
+        "item_2_rate": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "item_2_amount": {
+          "same": 1,
+          "differed": 0
+        },
+        "item_row_count": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "document_status": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "saved_record_url": {
+          "same": 1,
+          "differed": 0
+        },
+        "customer_page_create_menu_entries": {
+          "same": 1,
+          "differed": 0
+        },
+        "saved_sales_order_url": {
+          "same": 1,
+          "differed": 0
+        },
+        "data_fieldname_items_gri": {
+          "same": 1,
+          "differed": 0
+        },
+        "data_fieldname_items_gri_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "data_fieldname_items_gri_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "data_fieldname_items_gri_4": {
+          "same": 1,
+          "differed": 0
+        },
+        "data_fieldname_items_gri_5": {
+          "same": 1,
+          "differed": 0
+        },
+        "data_fieldname_items_gri_6": {
+          "same": 1,
+          "differed": 0
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        },
+        "url.p2": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "05-verify",
+      "instruction": "Submit the saved Sales Order for '{{runid}} Bench Customer' ({{04-create.url.p2}}) and confirm the submission when ERPNext asks. Verify the saved order now has Submitted status, not Draft, and report its exact page URL/ID.",
+      "skill": "s_4eb1e7",
+      "params": {
+        "v1": "{{runid}} Bench Customer",
+        "v3": "{{04-create.url.p2}}",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "confirm_modal_title",
+        "customer",
+        "page_head_text",
+        "record_url",
+        "sales_order_id",
+        "status_pill_after_submit",
+        "status_pill_before_submit",
+        "status_pill_css_class_after_submit",
+        "submit_button_class",
+        "submit_button_label",
+        "success_alert",
+        "final_sales_order_url",
+        "page_head_text_2",
+        "ref"
+      ],
+      "recorded": {
+        "cancel_button_present": "true",
+        "confirm_modal_title": "Confirm",
+        "customer": "fwen9-luna-n1 Bench Customer",
+        "page_head_text": "fwen9-luna-n1 Bench Customer | To Deliver and Bill | Status | Create | Update Items | Cancel",
+        "record_url": "http://127.0.0.1:8100/app/sales-order/SAL-ORD-2026-00004",
+        "sales_order_id": "SAL-ORD-2026-00004",
+        "status_pill_after_submit": "To Deliver and Bill",
+        "status_pill_before_submit": "Draft",
+        "status_pill_css_class_after_submit": "indicator-pill no-indicator-dot whitespace-nowrap orange",
+        "submit_button_class": "btn btn-primary btn-sm primary-action",
+        "submit_button_label": "Submit",
+        "submit_button_state_after_submit": "no longer offered",
+        "success_alert": "Sales Order has been submitted successfully",
+        "submit_button_after": "removed/disabled",
+        "document_status": "Draft",
+        "final_sales_order_url": "http://127.0.0.1:8100/app/sales-order/SAL-ORD-2026-00004",
+        "page_head_text_2": "fwen9-luna-n1 Bench Customer\nTo Deliver and Bill\nStatus\nCreate\nUpdate Items\nCancel",
+        "ref": "fwen9-luna-n1"
+      },
+      "route": "http://127.0.0.1:8100/app/sales-order/:id",
+      "outputEvidence": {
+        "cancel_button_present": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "confirm_modal_title": {
+          "same": 1,
+          "differed": 0
+        },
+        "customer": {
+          "same": 0,
+          "differed": 1
+        },
+        "page_head_text": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "record_url": {
+          "same": 1,
+          "differed": 0
+        },
+        "sales_order_id": {
+          "same": 1,
+          "differed": 0
+        },
+        "status_pill_after_submit": {
+          "same": 1,
+          "differed": 0
+        },
+        "status_pill_before_submit": {
+          "same": 1,
+          "differed": 0
+        },
+        "status_pill_css_class_after_submit": {
+          "same": 1,
+          "differed": 0
+        },
+        "submit_button_class": {
+          "same": 1,
+          "differed": 0
+        },
+        "submit_button_label": {
+          "same": 1,
+          "differed": 0
+        },
+        "submit_button_state_after_submit": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "success_alert": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "submit_button_after": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "document_status": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "final_sales_order_url": {
+          "same": 1,
+          "differed": 0
+        },
+        "page_head_text_2": {
+          "same": 0,
+          "differed": 1
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "06-add",
+      "instruction": "On the submitted Sales Order {{04-create.url.p2}}, add a timeline comment whose text includes the exact runid '{{runid}}'. Save/post the comment and verify its text is visible in the order timeline.",
+      "skill": "s_700b9b",
+      "params": {
+        "v1": "{{04-create.url.p2}}",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "sales_order_id",
+        "record_url",
+        "comment_text_posted",
+        "comment_timeline_entry",
+        "comment_text_typed",
+        "ref"
+      ],
+      "recorded": {
+        "sales_order_id": "SAL-ORD-2026-00004",
+        "record_url": "http://127.0.0.1:8100/app/sales-order/SAL-ORD-2026-00004",
+        "comment_text_posted": "runid fwen9-luna-n1",
+        "comment_timeline_entry": "Administrator",
+        "timeline_entry_visible": "true",
+        "comment_box_placeholder_used": "Type a reply / comment",
+        "comment_text_typed": "runid fwen9-luna-n1",
+        "ref": "fwen9-luna-n1"
+      },
+      "route": "http://127.0.0.1:8100/app/sales-order/:id",
+      "outputEvidence": {
+        "sales_order_id": {
+          "same": 1,
+          "differed": 0
+        },
+        "record_url": {
+          "same": 1,
+          "differed": 0
+        },
+        "comment_text_posted": {
+          "same": 0,
+          "differed": 1
+        },
+        "comment_timeline_entry": {
+          "same": 1,
+          "differed": 0
+        },
+        "timeline_entry_visible": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "comment_box_placeholder_used": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "comment_text_typed": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "ref": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "session": "fwen9-luna-n1",
+    "created": "2026-10-09T13:34:54.906Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "01-signin",
+      "outputs": [
+        "page_url_after_login"
+      ]
+    },
+    {
+      "stepId": "04-create",
+      "outputs": [
+        "item_1_rate",
+        "item_2_rate",
+        "item_row_count",
+        "document_status"
+      ]
+    },
+    {
+      "stepId": "05-verify",
+      "outputs": [
+        "cancel_button_present",
+        "submit_button_state_after_submit",
+        "submit_button_after",
+        "document_status"
+      ]
+    },
+    {
+      "stepId": "06-add",
+      "outputs": [
+        "timeline_entry_visible",
+        "comment_box_placeholder_used"
+      ]
+    }
+  ]
+}
