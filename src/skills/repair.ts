@@ -30,6 +30,8 @@ export interface DriftTicket {
   fallbackUsed: string | null;
   /** Chain index of the fallback that resolved (0 is the primary). */
   fallbackIndex?: number;
+  /** The replay already banked this primary's miss on the store (LocatorMiss.banked); folding the ticket must not count it again. */
+  banked?: true;
   /** The step went to model recovery. */
   recovered: boolean;
   /**
@@ -649,7 +651,8 @@ export function renderSnapshot(rows: readonly SnapshotRow[]): string {
 export function recordCandidateEvidence(
   store: SkillStore,
   skillId: string,
-  evidence: { step: string; key: string; hit: number; missed: number[] }[],
+  /** `hit` absent: a positional winner, which is never confirmed (replay.ts, fwrd26l); only the misses are banked. */
+  evidence: { step: string; key: string; hit?: number; missed: number[] }[],
 ): boolean {
   const skill = store.get(skillId);
   if (!skill || !evidence.length) return false;
@@ -665,7 +668,7 @@ export function recordCandidateEvidence(
       c.seen[field] += 1;
       touched = true;
     };
-    bump(e.hit, 'hit');
+    if (e.hit !== undefined) bump(e.hit, 'hit');
     for (const i of e.missed) bump(i, 'miss');
   }
   if (touched) store.put(skill);

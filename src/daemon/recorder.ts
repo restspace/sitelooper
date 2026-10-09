@@ -282,6 +282,11 @@ export interface RecordedStep {
   /** Set when the step was executed by replaying a stored skill, not chosen by the agent. */
   via?: { skill: string; step: number };
   /**
+   * Compile-internal: this read is one element of a list read, split out by
+   * compile's expandListReads (the list's element count). Never recorded.
+   */
+  listOf?: number;
+  /**
    * The index of the page this step ran on among the browser's open pages,
    * written only when more than one page was open (see SkillStep.page).
    */

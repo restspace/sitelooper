@@ -1154,7 +1154,10 @@ export function compileSkills(input: CompileInput): Skill[] {
         locators[key] = isRead && lostAnchor && kept.every(positional) ? [] : kept;
       }
       // A read whose recorded value carries a locating slot's value is scoped by that slot (readscope.ts, fwrd87).
-      scopeReadBySlot(step.result, step.tool, args, locators, textSlots, locating);
+      // ...led by the slot's text only where this page's reads never showed the value more than once (shownMoreThanOnce, fwen9-luna).
+      scopeReadBySlot(step.result, step.tool, args, locators, textSlots, locating, {
+        reads: sg.steps.slice(0, i + 1).filter((s) => s.tool === 'read' || s.tool === 'read_all'),
+      });
       const out: SkillStep = { tool: step.tool, args, locators };
       // Where each target lives and what the step did to its page travel
       // verbatim: a frame path names an iframe, not a record, so nothing in
@@ -3964,6 +3967,9 @@ export function expandListReads(steps: readonly RecordedStep[], values: Record<s
         locators: { ...step.locators, target: { ...step.locators.target, chain: chain.map((c) => ({ ...c, nth: index })) } },
         result: JSON.stringify(element),
         label: key,
+        // One of several like elements: the page shows its siblings beside it
+        // (readscope.ts shownMoreThanOnce, erpnext fwen9-luna s_1c570b step 3).
+        listOf: expanded.length,
       });
     }
   }

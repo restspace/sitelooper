@@ -389,6 +389,13 @@ export interface LocatorMiss {
   /** Which skill the miss belongs to, set when misses from a segment chain are aggregated. */
   skill?: string;
   /**
+   * The primary's miss is already banked on the store (the daemon folded it
+   * from `candidateEvidence` — an ambiguous named primary beneath a positional
+   * winner), so the ticket's fold must not bank it again (spec/repair.ts
+   * foldTicketEvidence): one run is one miss toward `retired()`.
+   */
+  banked?: true;
+  /**
    * The whole chain missed and the step ran on a locator proposed INLINE
    * (site B). `used` is that locator's expression, so every reader that
    * already understands "a fallback stood in" reads this one too; these three
@@ -478,9 +485,10 @@ export interface ReplayResult {
    * and which were rejected with the element demonstrably present. The caller
    * folds these onto the stored chain only if the run past this point
    * succeeded, so a candidate is retired for being repeatedly WRONG, never for
-   * looking wrong.
+   * looking wrong. `hit` is absent when the winner was positional: then only
+   * the named candidates that missed as AMBIGUOUS are banked (see the walk).
    */
-  candidateEvidence: { step: string; key: string; hit: number; missed: number[]; skill?: string }[];
+  candidateEvidence: { step: string; key: string; hit?: number; missed: number[]; skill?: string }[];
   /** Values this replay itself minted and bound ({{dN}} derived params), for later segments and callers. */
   derivedValues: Record<string, string>;
   /**
@@ -1280,6 +1288,19 @@ export async function replaySkill(
       // favour of `tr:nth-of-type(1)`.
       if (hit.missed.length && !structural(hit.candidate)) {
         res.candidateEvidence.push({ step: tag, key, hit: hit.index, missed: hit.missed });
+      } else if (structural(hit.candidate)) {
+        // ...but a NAMED candidate above the positional winner that matched
+        // SEVERAL elements is wrong whichever element the winner found: it does
+        // not name one thing on this page. erpnext fwen9-luna s_1c570b steps 3
+        // and 16: the synthesized `text "{{v4}}"` primary ("Bench Widget")
+        // was ambiguous on n2, n3, the spec and all three readiness runs, a
+        // positional css took the read every time, and with nothing banked the
+        // primary was never retired. Its miss is banked, for `retired()` alone;
+        // the winner gets no hit (the fwrd26l rule stands), and a named
+        // candidate that was merely ABSENT says nothing here — the positional
+        // winner may stand on another record.
+        const ambiguous = hit.ambiguous.filter((i) => chain[i] && !structural(chain[i]));
+        if (ambiguous.length) res.candidateEvidence.push({ step: tag, key, missed: ambiguous });
       }
       sink?.entries.push(`${key}=${candidateExpr(hit.candidate)}`);
       // Record what this action put on the page (see `interacted`). Only for
@@ -2472,7 +2493,7 @@ export async function resolveChain(
   policy: ResolvePolicy = {},
   /** What the candidates are built from: the page, or the recorded frame (context.ts rootFor). */
   root: Root = page,
-): Promise<{ locator: Locator; index: number; candidate: LocatorCandidate; missed: number[] } | null> {
+): Promise<{ locator: Locator; index: number; candidate: LocatorCandidate; missed: number[]; ambiguous: number[] } | null> {
   const { rawTarget = '', ...shared } = policy;
   const candidates = chain.length || !rawTarget || isRefTarget(rawTarget) ? chain : [{ kind: 'css', selector: rawTarget } as LocatorCandidate];
   // A candidate whose locator cannot even be BUILT (a malformed selector, a
@@ -2510,6 +2531,8 @@ export async function resolveChain(
     index: hit.index,
     candidate: hit.nth !== undefined ? { ...candidate, nth: hit.nth } : candidate,
     missed: hit.missed.map((m) => m.index),
+    /** The missed candidates that matched several elements (the shared MissReason 'ambiguous'). */
+    ambiguous: hit.missed.filter((m) => m.reason === 'ambiguous').map((m) => m.index),
   };
 }
 
