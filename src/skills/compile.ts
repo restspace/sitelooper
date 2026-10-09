@@ -18,10 +18,11 @@ import { collapseTogglePairs, dropSupersededSets, sameControl } from './toggles.
 import { namedHighlightPicks } from './highlight-pick.js';
 import { dropRestoredDetours } from './restored-field.js';
 import { dropRetriedSubmits } from './retried-submit.js';
-import { appMintedPositions, generaliseAppMinted, generaliseAppMintedDeep } from './app-minted-url.js';
+import { generaliseAppMinted, generaliseAppMintedDeep, sessionAppMintedPositions } from './app-minted-url.js';
 import { DEBOUNCE_MS, type JournalEvent } from '../daemon/journal-attribute.js';
 import { locatingSlots, scopeReadBySlot } from './readscope.js';
 import { keyPicks } from './key-pick.js';
+import { anchorEvidencedIds, shownBy, slotIdFragments } from './id-fragments.js';
 import type { ShadowRow } from './shadow.js';
 import { matchesShape, routeTemplateOf, valueClassFact, valueRoleFact, type SiteFacts } from '../execution/facts.js';
 
@@ -903,8 +904,11 @@ export function compileSkills(input: CompileInput): Skill[] {
   // Url positions the APP minted under this recording — a form instance's
   // made-up address (ERPNext's `new-sales-order-rxojnkvnht`, fwen1): every
   // pattern carrying one is written `:var`, and the seam rule below compares
-  // through it. Evidence only: see skills/app-minted-url.ts.
-  const appMinted = appMintedPositions(startUrl, steps, [input.instruction, ...Object.values(input.knownValues ?? {}).map(String)]);
+  // through it. Evidence only: see skills/app-minted-url.ts. The window is the
+  // session, not this instruction: a form an EARLIER instruction opened and
+  // this one finished carries the address that instruction watched the app
+  // mint (erpnext fwen8-luna 05-add, sessionAppMintedPositions).
+  const appMinted = sessionAppMintedPositions(input.before, startUrl, steps, [input.instruction, ...Object.values(input.knownValues ?? {}).map(String)]);
   // Page changes the app took back before the next gesture are not a step's
   // lasting effect (erpnext fwen4-luna 02-find): see takenBackLines.
   const takenBack = takenBackLines(steps);
@@ -1041,6 +1045,8 @@ export function compileSkills(input: CompileInput): Skill[] {
   // template, or binding an instruction to segment 1 would fail).
   let segOffset = 0;
   /** Slots some recorded candidate locates by: the reads scoped by a slot are scoped by these (readscope.ts, fwrd87). */
+  /** Everything the recording showed, for anchorEvidencedIds: the whole session up to and through this instruction, and the ledger's values. */
+  const shown = shownBy([...(input.before ?? []), ...input.entries], Object.values(input.knownValues ?? {}).map((v) => String(v ?? '')));
   const locating = locatingSlots(segments.map((sg) => sg.steps.map((st) => substituteDeep(Object.values(st.locators).map((l) => l.chain ?? []), textSlots))));
   const built = segments.map((sg) => {
     const base = segOffset;
@@ -1054,6 +1060,8 @@ export function compileSkills(input: CompileInput): Skill[] {
     const recordedObs = new WeakMap<SkillStep, RecordedEvidence>();
     /** What takenBackLines kept out of an expectation, noted once the segment's notes exist. */
     const takenNotes: TransformNote[] = [];
+    /** What anchorEvidencedIds rewrote or removed, noted the same way. */
+    const idNotes: TransformNote[] = [];
     const skillSteps: SkillStep[] = sg.steps.map((step, i) => {
       const g = base + i;
       // A minted value is a reference only DOWNSTREAM of its mint: in this
@@ -1094,7 +1102,7 @@ export function compileSkills(input: CompileInput): Skill[] {
       if (typeof args.target === 'string' && positionalUrlSlots.length && /^\s*role=/.test(args.target)) args.target = substituteHashIds(args.target, positionalUrlSlots);
       const locators: Record<string, LocatorCandidate[]> = {};
       for (const [key, loc] of Object.entries(step.locators)) {
-        const filled = (loc.chain ?? []).map((c) => {
+        const substituted = (loc.chain ?? []).map((c) => {
           const out = substituteDeep(substituteDeep(c, textSlots), mintedBefore) as LocatorCandidate;
           if (!positionalUrlSlots.length) return out;
           if (out.kind === 'css') return { ...out, selector: substituteHrefIds(out.selector, positionalUrlSlots) };
@@ -1102,6 +1110,14 @@ export function compileSkills(input: CompileInput): Skill[] {
           // NAME a control is found by (substituteHashIds, gitea fwgt27 05-open).
           return substituteHashIdsIn(out, positionalUrlSlots);
         });
+        // An id whose number the recording never showed as an address anchors
+        // nothing (`#issuecomment-11`, gitea fwgt35-luna's read-back drifts)
+        // while the chain keeps another non-point candidate: see
+        // skills/id-fragments.ts. (An id carrying the run's own url value is
+        // slotted after the segments are built — slotIdFragments below.)
+        const anchored = anchorEvidencedIds(substituted, shown, (c) => !stranded(c, runValues));
+        for (const reason of anchored.notes) idNotes.push({ name: 'anchorEvidencedIds', at: i + 1, reason });
+        const filled = anchored.chain;
         // An identity anchor still carrying THIS RUN's known value after
         // slotting (the recorded runid, because the value was typed in an
         // earlier instruction and so is not a slot here) can never match
@@ -1242,7 +1258,7 @@ export function compileSkills(input: CompileInput): Skill[] {
       return out;
     });
     const mintedForStart = mintedMap((m) => m.keptIndex < base);
-    const notes: TransformNote[] = [...takenNotes];
+    const notes: TransformNote[] = [...takenNotes, ...idNotes];
     // An assertion's waits are kept as recorded: every transform below removes
     // or folds steps on evidence about what an ACTION did, and a check that a
     // transform dropped is a check no run makes.
@@ -1269,6 +1285,27 @@ export function compileSkills(input: CompileInput): Skill[] {
   // A flash is not a step's effect (vikunja fwvk12): see dropFlashedLines.
   for (const b of built) dropFlashedLines(b.folded, steps, (s) => b.recordedDiffs.get(s), b.notes);
   if (built.length) built[0].notes.unshift(...recordingNotes);
+  // An id carrying the run's own url value below the text floor (`#issue-6`
+  // at `/issues/6`) is written as its slot — only where the segment already
+  // uses that param, so the marker never decides which params a skill keeps
+  // and never changes its url gates (skills/id-fragments.ts slotIdFragments).
+  if (positionalUrlSlots.length) {
+    for (const b of built) {
+      const usable = positionalUrlSlots.filter((s) => b.segParams[s.name]?.usedIn.length);
+      if (!usable.length) continue;
+      const visit = (list: SkillStep[]) =>
+        list.forEach((st, k) => {
+          for (const [key, chain] of Object.entries(st.locators ?? {})) {
+            const r = slotIdFragments(chain, usable);
+            if (r.chain === chain) continue;
+            st.locators[key] = r.chain;
+            for (const reason of r.notes) b.notes.push({ name: 'slotIdFragments', at: k + 1, reason });
+          }
+          if (st.body) visit(st.body);
+        });
+      visit(b.folded);
+    }
+  }
 
   // Derived-param metadata lands on the MINTING segment: which post-fold step
   // to bind from, and which url part to read there. Replay binds the value
