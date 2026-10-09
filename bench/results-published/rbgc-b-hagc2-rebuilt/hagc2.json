@@ -1,0 +1,190 @@
+{
+  "name": "hagc2",
+  "origin": "http://127.0.0.1:8106",
+  "startUrl": "http://127.0.0.1:8106/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-signin",
+      "instruction": "Sign in to Grocy at http://127.0.0.1:8106/ using username admin and password exactly {{env:APP_PASSWORD}}. Verify that the authenticated app is open.",
+      "skill": "s_a371cd",
+      "params": {
+        "v1": "http://127.0.0.1:8106/",
+        "v2": "admin",
+        "v3": "{{env:APP_PASSWORD}}"
+      },
+      "outputs": [
+        "page_title",
+        "logged_in_user",
+        "page_heading",
+        "stock_summary"
+      ],
+      "recorded": {
+        "page_title": "Stock overview | Grocy",
+        "logged_in_user": "admin",
+        "page_heading": "Stock overview",
+        "stock_summary": "0 Products, $0.00 total value",
+        "url": "http://127.0.0.1:8106/stockoverview",
+        "url.p0": "stockoverview"
+      },
+      "route": "http://127.0.0.1:8106/stockoverview"
+    },
+    {
+      "id": "02-find",
+      "instruction": "In Grocy, find and report the names of all products whose name starts exactly with 'Seed:'. Do not edit or change any products.",
+      "skill": "s_6ba256",
+      "params": {
+        "v1": "Seed:"
+      },
+      "outputs": [
+        "matching_product_count",
+        "product_list_entry_count",
+        "filter_used",
+        "filtered_info",
+        "product_list_entry_count_info",
+        "product_row_1_name",
+        "product_row_2_name",
+        "product_row_3_name",
+        "matching_products_1",
+        "matching_products_2",
+        "matching_products_3"
+      ],
+      "recorded": {
+        "matching_product_count": "3",
+        "product_list_entry_count": "Showing 1 to 3 of 3 entries",
+        "filter_used": "Seed:",
+        "filtered_info": "Showing 1 to 3 of 3 entries",
+        "product_list_entry_count_info": "Showing 1 to 3 of 3 entries",
+        "product_row_1_name": "Seed: Oat milk",
+        "product_row_2_name": "Seed: Orange juice",
+        "product_row_3_name": "Seed: Sparkling water",
+        "matching_products_1": "Seed: Oat milk",
+        "matching_products_2": "Seed: Orange juice",
+        "matching_products_3": "Seed: Sparkling water",
+        "url": "http://127.0.0.1:8106/products"
+      },
+      "route": "http://127.0.0.1:8106/products"
+    },
+    {
+      "id": "03-create",
+      "instruction": "Create and save a Grocy product named '{{runid}} Bench Product'. Set its description to a single paragraph containing exactly the runid text '{{runid}}', default location to the existing 'Pantry', product group to the existing 'Snacks', stock quantity unit to 'Pack', default purchase quantity unit to 'Pack', minimum stock amount to 4, default due days to 30, and barcode to '{{runid}}-0001'. Ensure the description paragraph is typed once in the rich-text editor, save the product, and report the saved product values and its product edit URL (/product/<id>).",
+      "skill": "s_129338",
+      "params": {
+        "v2": "{{runid}} Bench Product",
+        "v1": "{{runid}}",
+        "v3": "Pantry",
+        "v4": "Snacks",
+        "v5": "30",
+        "v6": "{{runid}}-0001"
+      },
+      "outputs": [
+        "barcode",
+        "barcode_table_state_before_add",
+        "default_due_days",
+        "default_location",
+        "description",
+        "description_paragraph_count",
+        "product_edit_url",
+        "product_group",
+        "product_id",
+        "product_name",
+        "quantity_unit_purchase",
+        "quantity_unit_stock",
+        "min_stock_amount_field_name",
+        "min_stock_amount_field_value",
+        "description_text",
+        "min_stock_amount",
+        "barcode_row",
+        "product_edit_url_2",
+        "product_name_confirmed",
+        "description_html",
+        "barcode_section_heading",
+        "barcode_input_field_name",
+        "add_barcode_button_label"
+      ],
+      "recorded": {
+        "barcode": "hagc2-n1-0001",
+        "barcode_table_state_before_add": "No data available in table",
+        "default_due_days": "30",
+        "default_location": "Pantry",
+        "description": "<p>hagc2-n1</p>",
+        "description_paragraph_count": "1",
+        "product_edit_url": "/product/358944",
+        "product_group": "Snacks",
+        "product_id": "358944",
+        "product_name": "hagc2-n1 Bench Product",
+        "quantity_unit_purchase": "Pack",
+        "quantity_unit_stock": "Pack",
+        "min_stock_amount_field_name": "min_stock_amount",
+        "min_stock_amount_field_value": "4",
+        "description_text": "hagc2-n1",
+        "min_stock_amount": "4",
+        "barcode_row": "hagc2-n1-0001",
+        "product_edit_url_2": "http://127.0.0.1:8106/product/358944",
+        "product_name_confirmed": "hagc2-n1 Bench Product",
+        "description_html": "<p>hagc2-n1</p>",
+        "barcode_section_heading": "Barcodes",
+        "barcode_input_field_name": "name",
+        "add_barcode_button_label": "Add",
+        "url": "http://127.0.0.1:8106/product/358944",
+        "url.p1": "358944"
+      },
+      "route": "http://127.0.0.1:8106/product/:id"
+    },
+    {
+      "id": "04-set",
+      "instruction": "Purchase the existing product '{{runid}} Bench Product' once: buy exactly 3 Packs into location 'Pantry' and set the due date to 2026-12-31. Select the existing product by its {{03-create.barcode_input_field_name}} (do not create a product or use barcode linking), save the purchase, then verify the resulting stock quantity, location, and due date.",
+      "skill": "s_09fd4b",
+      "params": {
+        "v1": "{{runid}} Bench Product",
+        "v3": "Pantry",
+        "v5": "2026-12-31",
+        "v4": "{{03-create.barcode_input_field_name}}",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "product_name",
+        "amount",
+        "quantity_unit",
+        "location",
+        "due_date",
+        "purchased_date",
+        "stock_overview_row",
+        "stock_overview_row_cells",
+        "run_id",
+        "stock_entry_product_name",
+        "stock_entry_quantity",
+        "stock_entry_due_date",
+        "stock_entry_location",
+        "stock_entry_unit_price",
+        "stock_entry_purchased_date"
+      ],
+      "recorded": {
+        "product_name": "hagc2-n1 Bench Product",
+        "amount": "3 Packs",
+        "quantity_unit": "Pack",
+        "location": "Pantry",
+        "due_date": "2026-12-31",
+        "purchased_date": "2026-10-06",
+        "stock_overview_row": "1  All  1 \thagc2-n1 Bench Product\t3 Packs\t2026-12-31 in 3 months",
+        "stock_overview_row_cells": "1  All  1\t, hagc2-n1 Bench Product, 3 Packs, 2026-12-31 in 3 months",
+        "run_id": "hagc2-n1",
+        "stock_entry_product_name": "hagc2-n1 Bench Product",
+        "stock_entry_quantity": "3 Packs",
+        "stock_entry_due_date": "2026-12-31 in 3 months",
+        "stock_entry_location": "Pantry",
+        "stock_entry_unit_price": "$0.00 per Pack",
+        "stock_entry_purchased_date": "2026-10-06 Today",
+        "url": "http://127.0.0.1:8106/stockentries",
+        "url.p0": "stockentries"
+      },
+      "route": "http://127.0.0.1:8106/stockentries"
+    }
+  ],
+  "provenance": {
+    "session": "hagc2-n1",
+    "created": "2026-10-09T16:18:27.961Z"
+  }
+}

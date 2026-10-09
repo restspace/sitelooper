@@ -1,0 +1,203 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/rbgc-a-hbgc2-2-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/rbgc-a-hbgc2-2-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/rbgc-a-hbgc2-2-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/bench/results/rbgc-a-hbgc2-2-spec-tmp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/rbgc-a-hbgc2-2-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "hbgc2.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/rbgc-a-hbgc2-2-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "hbgc2.spec.ts",
+      "file": "hbgc2.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "hbgc2",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 48994,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper step] 01-signin\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-find\n"
+                    },
+                    {
+                      "text": "[sitelooper recipe] filled via recipe contenteditable/set-value (r_7b1e49); value verified on the component\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-create\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-edit\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 05-edit\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 06-edit\n"
+                    },
+                    {
+                      "text": "[sitelooper drift] 07-create s_0c160d/10 target: primary getByText('rbgc-a-hbgc2-2 Bench Product', { exact: true }) missed; used #2 locator('#productcard-product-name') (#1 ambiguous)\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 07-create s_0c160d/10: read 'product_name' returned a value the skill itself set/selected ('rbgc-a-hbgc2-2 Bench Product') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 07-create: report value purchase_due_date is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 07-create\n"
+                    },
+                    {
+                      "text": "[sitelooper probe] 06-edit: http://127.0.0.1:8106/product/1176680 still shows what it saved\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-signin: Sign in to Grocy at http://127.0.0.1:8106/ with username admin and password exactly {{env:APP_PASSWORD}}. Verify that the signed-in Grocy page is reached.",
+                      "duration": 5887
+                    },
+                    {
+                      "title": "02-find: Find and report the exact names of all products whose name starts with 'Seed:' in Grocy. Do not modify any products.",
+                      "duration": 2766
+                    },
+                    {
+                      "title": "03-create: Create and save a product named exactly '{{runid}} Bench Product'. Its rich-text description must contain exactly one paragraph including the text '{{runid}}'. Verify the saved product and report its displayed name and description.",
+                      "duration": 10609
+                    },
+                    {
+                      "title": "04-edit: Edit '{{runid}} Bench Product' and set its default location to the existing location 'Pantry' and product group to the existing group 'Snacks'. Save and verify both displayed values.",
+                      "duration": 4316
+                    },
+                    {
+                      "title": "05-edit: Edit '{{runid}} Bench Product' so quantity unit for stock and default quantity unit for purchase are both the existing unit 'Pack', and minimum stock amount is 4. Save and verify all three values.",
+                      "duration": 4711
+                    },
+                    {
+                      "title": "06-edit: Edit '{{runid}} Bench Product' to set Default due days to 30 and add its barcode '{{runid}}-0001'. Save and verify both saved values, noting the product ID from its edit-page address.",
+                      "duration": 7308
+                    },
+                    {
+                      "title": "07-create: Make exactly one purchase of 3 Packs of '{{runid}} Bench Product' into location 'Pantry', with due date 2026-12-31. Ensure you select the existing product by name (do not create/link a product or add a barcode), save the purchase once, and verify the purchase and resulting stock amount.",
+                      "duration": 11872
+                    },
+                    {
+                      "title": "persistence: re-read what the flow saved",
+                      "duration": 688
+                    }
+                  ],
+                  "startTime": "2026-10-09T16:36:36.288Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "outputs",
+                      "contentType": "application/json",
+                      "body": "ewogICIwMS1zaWduaW4ucGFnZV90aXRsZSI6ICJTdG9jayBvdmVydmlldyB8IEdyb2N5IiwKICAiMDEtc2lnbmluLnNpZ25lZF9pbl91c2VyIjogImFkbWluIiwKICAiMDEtc2lnbmluLmxhbmRpbmdfcGFnZSI6ICJTdG9jayBvdmVydmlldyIsCiAgIjAxLXNpZ25pbi5zdG9ja19zdW1tYXJ5IjogIjAgUHJvZHVjdHMsICQwLjAwIHRvdGFsIHZhbHVlIiwKICAiMDItZmluZC5tYXRjaGluZ19wcm9kdWN0c18xIjogIlNlZWQ6IE9hdCBtaWxrIiwKICAiMDItZmluZC5tYXRjaGluZ19wcm9kdWN0c18yIjogIlNlZWQ6IE9yYW5nZSBqdWljZSIsCiAgIjAyLWZpbmQubWF0Y2hpbmdfcHJvZHVjdHNfMyI6ICJTZWVkOiBTcGFya2xpbmcgd2F0ZXIiLAogICIwMy1jcmVhdGUubWludGVkIjogIjExNzY2ODAiLAogICIwMy1jcmVhdGUuZGVzY3JpcHRpb25fdGV4dCI6ICJyYmdjLWEtaGJnYzItMiIsCiAgIjAzLWNyZWF0ZS5wcm9kdWN0X25hbWUiOiAicmJnYy1hLWhiZ2MyLTIgQmVuY2ggUHJvZHVjdCIsCiAgIjAzLWNyZWF0ZS5kZXNjcmlwdGlvbl9odG1sIjogIjxwPnJiZ2MtYS1oYmdjMi0yPC9wPiIsCiAgIjAzLWNyZWF0ZS5wcm9kdWN0X2lkIjogIjExNzY2ODAiLAogICIwMy1jcmVhdGUucHJvZHVjdF91cmwiOiAiaHR0cDovLzEyNy4wLjAuMTo4MTA2L3Byb2R1Y3QvMTE3NjY4MCIsCiAgIjAzLWNyZWF0ZS5wcm9kdWN0X2Rlc2NyaXB0aW9uIjogInJiZ2MtYS1oYmdjMi0yIiwKICAiMDMtY3JlYXRlLnVybC5wMSI6ICIxMTc2NjgwIiwKICAiMDQtZWRpdC5kZWZhdWx0X2xvY2F0aW9uX3ZhbHVlIjogIjMiLAogICIwNC1lZGl0LnByb2R1Y3RfZ3JvdXBfdmFsdWUiOiAiMiIsCiAgIjA0LWVkaXQuZGVmYXVsdF9sb2NhdGlvbl9zZWxlY3RfaWQiOiAibG9jYXRpb25faWQiLAogICIwNC1lZGl0LnByb2R1Y3RfZ3JvdXBfc2VsZWN0X2lkIjogInByb2R1Y3RfZ3JvdXBfaWQiLAogICIwNC1lZGl0LnByb2R1Y3RfcmVmZXJlbmNlIjogInJiZ2MtYS1oYmdjMi0yIiwKICAiMDQtZWRpdC5wcm9kdWN0X25hbWUiOiAicmJnYy1hLWhiZ2MyLTIgQmVuY2ggUHJvZHVjdCIsCiAgIjA0LWVkaXQucHJvZHVjdF9ncm91cF9kaXNwbGF5ZWQiOiAiU25hY2tzIiwKICAiMDQtZWRpdC5kZWZhdWx0X2xvY2F0aW9uX2lkX29wdGlvbiI6ICJzZWxlY3RlZCIsCiAgIjA0LWVkaXQucHJvZHVjdF9pZCI6ICIxMTc2NjgwIiwKICAiMDQtZWRpdC5kZWZhdWx0X2xvY2F0aW9uX2Rpc3BsYXllZCI6ICJQYW50cnkiLAogICIwNC1lZGl0LnNlbGVjdGVkX2RlZmF1bHRfbG9jYXRpb24iOiAiUGFudHJ5IiwKICAiMDQtZWRpdC5zZWxlY3RlZF9wcm9kdWN0X2dyb3VwIjogIlNuYWNrcyIsCiAgIjA1LWVkaXQucXVhbnRpdHlfdW5pdF9zdG9ja192YWx1ZSI6ICIzIiwKICAiMDUtZWRpdC5taW5pbXVtX3N0b2NrX2Ftb3VudCI6ICI0IiwKICAiMDUtZWRpdC5xdWFudGl0eV91bml0X3N0b2NrX2Rpc3BsYXllZCI6ICJQYWNrIiwKICAiMDUtZWRpdC5wcm9kdWN0X3JlZmVyZW5jZSI6ICJyYmdjLWEtaGJnYzItMiIsCiAgIjA1LWVkaXQucHJvZHVjdF9uYW1lIjogInJiZ2MtYS1oYmdjMi0yIEJlbmNoIFByb2R1Y3QiLAogICIwNS1lZGl0LnByb2R1Y3RfaWQiOiAiMTE3NjY4MCIsCiAgIjA1LWVkaXQuZGVmYXVsdF9xdWFudGl0eV91bml0X3B1cmNoYXNlX2Rpc3BsYXllZCI6ICJQYWNrIiwKICAiMDYtZWRpdC5kZWZhdWx0X2R1ZV9kYXlzIjogIjMwIiwKICAiMDYtZWRpdC5iYXJjb2RlIjogInJiZ2MtYS1oYmdjMi0yLTAwMDEiLAogICIwNi1lZGl0LnByb2R1Y3RfcmVmZXJlbmNlIjogInJiZ2MtYS1oYmdjMi0yIiwKICAiMDYtZWRpdC5wcm9kdWN0X25hbWUiOiAicmJnYy1hLWhiZ2MyLTIgQmVuY2ggUHJvZHVjdCIsCiAgIjA2LWVkaXQucHJvZHVjdF9pZF9mcm9tX2VkaXRfdXJsIjogIjExNzY2ODAiLAogICIwNi1lZGl0LmVkaXRfcGFnZV91cmwiOiAiaHR0cDovLzEyNy4wLjAuMTo4MTA2L3Byb2R1Y3QvMTE3NjY4MCIsCiAgIjA2LWVkaXQuYmFyY29kZV9zZWN0aW9uX3RhYmxlX3JvdyI6ICJyYmdjLWEtaGJnYzItMi0wMDAxIiwKICAiMDYtZWRpdC5iYXJjb2RlX3JvdyI6ICJyYmdjLWEtaGJnYzItMi0wMDAxIiwKICAiMDctY3JlYXRlLnB1cmNoYXNlX2xvY2F0aW9uX3NlbGVjdCI6ICIzIiwKICAiMDctY3JlYXRlLnByb2R1Y3RfcmVmZXJlbmNlIjogInJiZ2MtYS1oYmdjMi0yIiwKICAiMDctY3JlYXRlLnByb2R1Y3RfbmFtZSI6ICJyYmdjLWEtaGJnYzItMiBCZW5jaCBQcm9kdWN0IiwKICAiMDctY3JlYXRlLnByb2R1Y3RfaWQiOiAiMTE3NjY4MCIsCiAgIjA3LWNyZWF0ZS5wdXJjaGFzZV9hbW91bnQiOiAiMyBQYWNrcyIsCiAgIjA3LWNyZWF0ZS5wdXJjaGFzZWRfZGF0ZSI6ICIyMDI2LTEwLTA5IiwKICAiMDctY3JlYXRlLnN0b2NrX2VudHJ5X2lkIjogIjEiLAogICIwNy1jcmVhdGUucHVyY2hhc2VfbG9jYXRpb24iOiAiUGFudHJ5Igp9"
+                    },
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": "W3NpdGVsb29wZXIgZHJpZnRdIDA3LWNyZWF0ZSBzXzBjMTYwZC8xMCB0YXJnZXQ6IHByaW1hcnkgZ2V0QnlUZXh0KCdyYmdjLWEtaGJnYzItMiBCZW5jaCBQcm9kdWN0JywgeyBleGFjdDogdHJ1ZSB9KSBtaXNzZWQ7IHVzZWQgIzIgbG9jYXRvcignI3Byb2R1Y3RjYXJkLXByb2R1Y3QtbmFtZScpICgjMSBhbWJpZ3VvdXMp"
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "4956811aa01211058a96-2b3fbd33c4c9157e5e92",
+          "file": "hbgc2.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-09T16:36:33.010Z",
+    "duration": 52572.26,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

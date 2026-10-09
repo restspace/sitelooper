@@ -1,0 +1,42 @@
+
+=== hbgc1-n1 ===
+   1 success reads= 1  model-named=[page_title,logged_in_user,nav_items,stock_header]  would-ask=[]  backfilled=[]
+   2 success reads= 4  model-named=[product_rows_full,list_count_all,list_count_with_disabled_shown,entries_with_disabled_sh,seed_products_1,seed_products_2,seed_products_3]  would-ask=[]  backfilled=[]
+   3 success reads=20  model-named=[product_name,product_edit_page_url,saved_name,saved_location,saved_product_group,saved_stock_quantity_unit,saved_purchase_quantity_unit,saved_min_stock_amount,saved_default_due_days,saved_description_paragraphs,saved_description,id_field_name,product_id,description_text,product_name_field_value,minimum_stock_amount,default_due_days,location_id,product_group_id,stock_quantity_unit_id,purchase_quantity_unit_id,saved_stock_qu,saved_purchase_qu,saved_minimum_stock_amount,saved_default_best_befor,product_name_field_name,description_field_name,location_field_name,minimum_stock_field_name,default_due_days_field_name,product_group_field_name,stock_quantity_unit_field_name,ref,products_list_row_1,product_location,products_list_row_3,stock_quantity_unit,purchase_quantity_unit,product_group]  would-ask=[]  backfilled=[]
+   4 success reads= 8  model-named=[product_id,product_name,barcode_added,product_edit_page_url,barcode_rows_after_reload_1,product_edit_url,product_barcode,run_id]  would-ask=[]  backfilled=[]
+   5 success reads= 2  model-named=[product_name,product_id,purchased_amount,quantity_unit,location,due_date,stock_entry_id,stock_entry_row,stock_overview_header,stock_overview_amount,stock_overview_next_due_date,booked_purchase_date,purchase_form_state,run_id,quantity_label,stock_overview_table_pagination,stock_overview_product_name,stock_overview_quantity,stock_overview_due_date]  would-ask=[1  All  1 	hbgc1-n1 Bench Product	3 Packs	2026-12-31 in 3 months]  backfilled=[]
+      recorded ask: asked=[1  All  1 	hbgc1-n1 Bench Product	3 Packs	2026-12-31 in 3 months] named=true
+  flow: 5 step(s), 4 cross-step reference(s)
+  refs: {"{{runid}}":12,"{{env:APP_PASSWORD}}":2,"{{03-create.product_name_field_name}}":2,"{{03-create.url.p1}}":1,"{{01-signin.url.p0}}":1}
+    01-signin publishes [page_title,logged_in_user,nav_items,stock_header]
+    02-report publishes [product_rows_full,list_count_all,list_count_with_disabled_shown,entries_with_disabled_sh,seed_products_1,seed_products_2,seed_products_3]
+    03-create publishes [product_name,product_edit_page_url,saved_name,saved_location,saved_product_group,saved_stock_quantity_unit,saved_purchase_quantity_unit,saved_min_stock_amount,saved_default_due_days,saved_description_paragraphs,saved_description,id_field_name,product_id,description_text,product_name_field_value,minimum_stock_amount,default_due_days,location_id,product_group_id,stock_quantity_unit_id,purchase_quantity_unit_id,saved_stock_qu,saved_purchase_qu,saved_minimum_stock_amount,saved_default_best_befor,product_name_field_name,description_field_name,location_field_name,minimum_stock_field_name,default_due_days_field_name,product_group_field_name,stock_quantity_unit_field_name,form_input_form_select_f_8,ref,products_list_row_1,product_location,products_list_row_3,stock_quantity_unit,purchase_quantity_unit,product_group]
+    04-add publishes [product_id,product_name,barcode_added,product_edit_page_url,barcode_rows_after_reload_1,product_edit_url,product_barcode,run_id]
+    05-create publishes [product_name,product_id,purchased_amount,quantity_unit,location,due_date,stock_entry_id,stock_entry_row,stock_overview_header,stock_overview_amount,stock_overview_next_due_date,booked_purchase_date,purchase_form_state,run_id,quantity_label,stock_overview_table_pagination,stock_overview_product_name,stock_overview_quantity,stock_overview_due_date]
+  lint: {{03-create.product_name_field_name}} (used by 05-create) can only be re-observed by model recovery — consider re-recording so the value is read from the page.
+
+{
+  "tag": "hbgc1",
+  "runs": [
+    {
+      "runid": "hbgc1-n1",
+      "instructions": 5,
+      "withModelNames": 5,
+      "wouldAsk": 1,
+      "crossStepRefs": 4,
+      "stepsPublishing": 5,
+      "flowSteps": 5,
+      "adoptedSteps": 0,
+      "markers": [
+        "e61dba:{{v1}} = \"hbgc1-n1\"",
+        "e61dba:{{v2}} = \"hbgc1-n1 Bench Product\"",
+        "e61dba:{{v1}} = \"hbgc1-n1\"",
+        "e61dba:{{v2}} = \"hbgc1-n1 Bench Product\"",
+        "1ec755:{{v1}} = \"hbgc1-n1 Bench Product\"",
+        "1ec755:{{v2}} = \"hbgc1-n1\"",
+        "1ec755:{{v1}} = \"hbgc1-n1 Bench Product\"",
+        "1ec755:{{v2}} = \"hbgc1-n1\""
+      ]
+    }
+  ]
+}

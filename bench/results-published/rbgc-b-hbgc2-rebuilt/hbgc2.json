@@ -1,0 +1,265 @@
+{
+  "name": "hbgc2",
+  "origin": "http://127.0.0.1:8106",
+  "startUrl": "http://127.0.0.1:8106/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-signin",
+      "instruction": "Sign in to Grocy at http://127.0.0.1:8106/ with username admin and password exactly {{env:APP_PASSWORD}}. Verify that the signed-in Grocy page is reached.",
+      "skill": "s_9ba4d8",
+      "params": {
+        "v1": "http://127.0.0.1:8106/",
+        "v2": "admin",
+        "v3": "{{env:APP_PASSWORD}}"
+      },
+      "outputs": [
+        "page_title",
+        "signed_in_user",
+        "landing_page",
+        "stock_summary"
+      ],
+      "recorded": {
+        "page_title": "Stock overview | Grocy",
+        "signed_in_user": "admin",
+        "landing_page": "Stock overview",
+        "stock_summary": "0 Products, $0.00 total value",
+        "url": "http://127.0.0.1:8106/stockoverview",
+        "url.p0": "stockoverview"
+      },
+      "route": "http://127.0.0.1:8106/stockoverview"
+    },
+    {
+      "id": "02-find",
+      "instruction": "Find and report the exact names of all products whose name starts with 'Seed:' in Grocy. Do not modify any products.",
+      "skill": "s_b438dc",
+      "params": {},
+      "outputs": [
+        "matching_count",
+        "total_products_in_table",
+        "product_details",
+        "matching_products_1",
+        "matching_products_2",
+        "matching_products_3"
+      ],
+      "recorded": {
+        "matching_count": "3",
+        "total_products_in_table": "3",
+        "product_details": "Seed: Oat milk — location Fridge, stock 0, unit Piece, product group Beverages; Seed: Orange juice — Fridge, 0, Piece, Beverages; Seed: Sparkling water — Fridge, 0, Piece, Beverages",
+        "matching_products_1": "Seed: Oat milk",
+        "matching_products_2": "Seed: Orange juice",
+        "matching_products_3": "Seed: Sparkling water",
+        "url": "http://127.0.0.1:8106/products"
+      },
+      "route": "http://127.0.0.1:8106/products"
+    },
+    {
+      "id": "03-create",
+      "instruction": "Create and save a product named exactly '{{runid}} Bench Product'. Its rich-text description must contain exactly one paragraph including the text '{{runid}}'. Verify the saved product and report its displayed name and description.",
+      "skill": "s_205cc6",
+      "params": {
+        "v2": "{{runid}} Bench Product",
+        "v1": "{{runid}}"
+      },
+      "outputs": [
+        "product_name",
+        "product_id",
+        "product_url",
+        "description_text",
+        "description_html",
+        "description_paragraph_count",
+        "location",
+        "stock_amount",
+        "quantity_unit",
+        "list_row",
+        "product_description"
+      ],
+      "recorded": {
+        "product_name": "hbgc2-n1 Bench Product",
+        "product_id": "95708",
+        "product_url": "http://127.0.0.1:8106/product/95708",
+        "description_text": "hbgc2-n1",
+        "description_html": "<p>hbgc2-n1</p>",
+        "description_paragraph_count": "1",
+        "location": "Fridge",
+        "stock_amount": "0",
+        "quantity_unit": "Piece",
+        "list_row": "hbgc2-n1 Bench Product | Fridge | 0 | Piece | Piece",
+        "product_description": "hbgc2-n1",
+        "url": "http://127.0.0.1:8106/product/95708",
+        "url.p1": "95708"
+      },
+      "route": "http://127.0.0.1:8106/product/:id"
+    },
+    {
+      "id": "04-edit",
+      "instruction": "Edit '{{runid}} Bench Product' and set its default location to the existing location 'Pantry' and product group to the existing group 'Snacks'. Save and verify both displayed values.",
+      "skill": "s_69abdc",
+      "params": {
+        "v1": "{{runid}} Bench Product",
+        "v3": "Pantry",
+        "v4": "Snacks",
+        "v2": "{{runid}}",
+        "v5": "{{03-create.url.p1}}"
+      },
+      "outputs": [
+        "product_name",
+        "product_id",
+        "default_location_displayed",
+        "default_location_value",
+        "product_group_displayed",
+        "product_group_value",
+        "selected_default_location",
+        "selected_product_group",
+        "location_options",
+        "product_group_options",
+        "verified_after_reload",
+        "default_location_select_id",
+        "product_group_select_id",
+        "saved_default_location_value",
+        "saved_product_group_value",
+        "default_location_id_option",
+        "product_reference"
+      ],
+      "recorded": {
+        "product_name": "hbgc2-n1 Bench Product",
+        "product_id": "95708",
+        "default_location_displayed": "Pantry",
+        "default_location_value": "3",
+        "product_group_displayed": "Snacks",
+        "product_group_value": "2",
+        "selected_default_location": "Pantry",
+        "selected_product_group": "Snacks",
+        "location_options": "Fridge=2, Garage Pantry=5, Pantry=3, Pantry Shelf=4",
+        "product_group_options": "Beverages=1, Healthy Snacks=4, Snacks=2, Snacks & Sweets=3",
+        "verified_after_reload": "true",
+        "default_location_select_id": "location_id",
+        "product_group_select_id": "product_group_id",
+        "saved_default_location_value": "3",
+        "saved_product_group_value": "2",
+        "default_location_id_option": "selected",
+        "product_reference": "hbgc2-n1",
+        "url.p1": "95708"
+      },
+      "route": "http://127.0.0.1:8106/product/:id"
+    },
+    {
+      "id": "05-edit",
+      "instruction": "Edit '{{runid}} Bench Product' so quantity unit for stock and default quantity unit for purchase are both the existing unit 'Pack', and minimum stock amount is 4. Save and verify all three values.",
+      "skill": "s_c4add4",
+      "params": {
+        "v1": "{{runid}} Bench Product",
+        "v3": "Pack",
+        "v2": "{{runid}}",
+        "v4": "{{03-create.url.p1}}"
+      },
+      "outputs": [
+        "product_name",
+        "product_id",
+        "quantity_unit_stock_displayed",
+        "quantity_unit_stock_value",
+        "default_quantity_unit_purchase_displayed",
+        "default_quantity_unit_purchase_value",
+        "minimum_stock_amount",
+        "verified_after_reload",
+        "product_reference"
+      ],
+      "recorded": {
+        "product_name": "hbgc2-n1 Bench Product",
+        "product_id": "95708",
+        "quantity_unit_stock_displayed": "Pack",
+        "quantity_unit_stock_value": "3",
+        "default_quantity_unit_purchase_displayed": "Pack",
+        "default_quantity_unit_purchase_value": "3",
+        "minimum_stock_amount": "4",
+        "verified_after_reload": "true",
+        "product_reference": "hbgc2-n1",
+        "url.p1": "95708"
+      },
+      "route": "http://127.0.0.1:8106/product/:id"
+    },
+    {
+      "id": "06-edit",
+      "instruction": "Edit '{{runid}} Bench Product' to set Default due days to 30 and add its barcode '{{runid}}-0001'. Save and verify both saved values, noting the product ID from its edit-page address.",
+      "skill": "s_9112fe",
+      "params": {
+        "v1": "{{runid}} Bench Product",
+        "v3": "30",
+        "v4": "{{runid}}-0001",
+        "v2": "{{runid}}",
+        "v5": "{{03-create.url.p1}}"
+      },
+      "outputs": [
+        "product_name",
+        "product_id_from_edit_url",
+        "edit_page_url",
+        "default_due_days",
+        "barcode",
+        "barcode_section_table_row",
+        "barcode_row",
+        "product_reference"
+      ],
+      "recorded": {
+        "product_name": "hbgc2-n1 Bench Product",
+        "product_id_from_edit_url": "95708",
+        "edit_page_url": "http://127.0.0.1:8106/product/95708",
+        "default_due_days": "30",
+        "barcode": "hbgc2-n1-0001",
+        "barcode_section_table_row": "hbgc2-n1-0001",
+        "barcode_row": "hbgc2-n1-0001",
+        "product_reference": "hbgc2-n1",
+        "url.p1": "95708"
+      },
+      "route": "http://127.0.0.1:8106/product/:id"
+    },
+    {
+      "id": "07-create",
+      "instruction": "Make exactly one purchase of 3 Packs of '{{runid}} Bench Product' into location 'Pantry', with due date 2026-12-31. Ensure you select the existing product by name (do not create/link a product or add a barcode), save the purchase once, and verify the purchase and resulting stock amount.",
+      "skill": "s_8ddf5e",
+      "params": {
+        "v1": "{{runid}} Bench Product",
+        "v3": "Pantry",
+        "v4": "2026-12-31",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "product_name",
+        "product_id",
+        "purchase_amount",
+        "purchase_location",
+        "purchase_due_date",
+        "purchased_date",
+        "stock_entry_id",
+        "stock_entry_url",
+        "stock_entry_row",
+        "resulting_stock_amount",
+        "number_of_stock_entries",
+        "purchase_location_select",
+        "product_reference"
+      ],
+      "recorded": {
+        "product_name": "hbgc2-n1 Bench Product",
+        "product_id": "95708",
+        "purchase_amount": "3 Packs",
+        "purchase_location": "Pantry",
+        "purchase_due_date": "2026-12-31",
+        "purchased_date": "2026-10-06",
+        "stock_entry_id": "1",
+        "stock_entry_url": "http://127.0.0.1:8106/stockentry/1",
+        "stock_entry_row": "hbgc2-n1 Bench Product | 3 Packs | 2026-12-31 (in 3 months) | Pantry | $0.00 per Pack | 2026-10-06 (Today)",
+        "resulting_stock_amount": "3 Packs",
+        "number_of_stock_entries": "1",
+        "purchase_location_select": "3",
+        "product_reference": "hbgc2-n1",
+        "url": "http://127.0.0.1:8106/purchase?"
+      },
+      "route": "http://127.0.0.1:8106/purchase"
+    }
+  ],
+  "provenance": {
+    "session": "hbgc2-n1",
+    "created": "2026-10-09T16:18:31.782Z"
+  }
+}

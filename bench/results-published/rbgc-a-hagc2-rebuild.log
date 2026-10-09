@@ -1,0 +1,37 @@
+
+=== hagc2-n1 ===
+   1 success reads= 1  model-named=[page_title,logged_in_user,page_heading,stock_summary]  would-ask=[]  backfilled=[]
+   2 success reads= 5  model-named=[matching_product_count,product_list_entry_count,filter_used,filtered_info,product_list_entry_count_info,product_row_1_name,product_row_2_name,product_row_3_name,matching_products_1,matching_products_2,matching_products_3]  would-ask=[]  backfilled=[]
+   3 success reads=23  model-named=[barcode,barcode_table_state_before_add,default_due_days,default_location,description_paragraph_count,product_edit_url,product_group,product_id,product_name,quantity_unit_purchase,quantity_unit_stock,min_stock_amount_field_name,min_stock_amount_field_value,description_text,barcode_row,product_edit_url_2,product_name_confirmed,description_html,barcode_section_heading,barcode_input_field_name,add_barcode_button_label]  would-ask=[]  backfilled=[]
+      recorded ask: asked=[No data available in table] named=true
+   4 success reads= 3  model-named=[product_name,amount,quantity_unit,location,due_date,purchased_date,stock_overview_row,stock_overview_row_cells,run_id,stock_entry_product_name,stock_entry_quantity,stock_entry_due_date,stock_entry_location,stock_entry_unit_price,stock_entry_purchased_date]  would-ask=[hagc2-n1 Bench Product	3 Packs	2026-12-31 in 3 months	Pantry		$0.00 per Pack	2026-10-06 Today]  backfilled=[]
+      recorded ask: asked=[1  All  1 	hagc2-n1 Bench Product	3 Packs	2026-12-31 in 3 months | hagc2-n1 Bench Product	3 Packs	2026-12-31 in 3 months	Pantry		$0.00 per Pack	2026-10-06 Today] named=true
+  flow: 4 step(s), 2 cross-step reference(s)
+  refs: {"{{runid}}":9,"{{env:APP_PASSWORD}}":2,"{{03-create.barcode_input_field_name}}":2}
+    01-signin publishes [page_title,logged_in_user,page_heading,stock_summary]
+    02-find publishes [matching_product_count,product_list_entry_count,filter_used,filtered_info,product_list_entry_count_info,product_row_1_name,product_row_2_name,product_row_3_name,matching_products_1,matching_products_2,matching_products_3]
+    03-create publishes [barcode,barcode_table_state_before_add,default_due_days,default_location,description,description_paragraph_count,product_edit_url,product_group,product_id,product_name,quantity_unit_purchase,quantity_unit_stock,min_stock_amount_field_name,min_stock_amount_field_value,description_text,min_stock_amount,barcode_row,product_edit_url_2,product_name_confirmed,description_html,barcode_section_heading,barcode_input_field_name,add_barcode_button_label]
+    04-set publishes [product_name,amount,quantity_unit,location,due_date,purchased_date,stock_overview_row,stock_overview_row_cells,run_id,stock_entry_product_name,stock_entry_quantity,stock_entry_due_date,stock_entry_location,stock_entry_unit_price,stock_entry_purchased_date]
+
+{
+  "tag": "hagc2",
+  "runs": [
+    {
+      "runid": "hagc2-n1",
+      "instructions": 4,
+      "withModelNames": 4,
+      "wouldAsk": 1,
+      "crossStepRefs": 2,
+      "stepsPublishing": 4,
+      "flowSteps": 4,
+      "adoptedSteps": 0,
+      "markers": [
+        "84ab29:{{v1}} = \"hagc2-n1 Bench Product\"",
+        "84ab29:{{v2}} = \"hagc2-n1\"",
+        "84ab29:{{v1}} = \"hagc2-n1 Bench Product\"",
+        "84ab29:{{v2}} = \"hagc2-n1\"",
+        "84ab29:{{v3}} = \"Pantry\""
+      ]
+    }
+  ]
+}

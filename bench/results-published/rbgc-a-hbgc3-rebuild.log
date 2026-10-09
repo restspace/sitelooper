@@ -1,0 +1,61 @@
+
+=== hbgc3-n1 ===
+   1 success reads= 1  model-named=[page_title,signed_in_user,post_login_url,page_heading,stock_summary]  would-ask=[]  backfilled=[]
+   2 success reads= 4  model-named=[matching_products_count,table_info,show_disabled,first_product_name,second_product_name,third_product_name,product_names_1,product_names_2,product_names_3,source_page]  would-ask=[]  backfilled=[]
+   3 success reads= 2  model-named=[product_name,product_id,saved_description,form_url,list_position,current_url,ref]  would-ask=[]  backfilled=[]
+   4 success reads=11  model-named=[product_name,saved_default_location,saved_default_location_id,saved_product_group,saved_product_group_id,description_still_present,products_row_overview_link_class,products_row_delete_button_class,item_1,item_1_value,current_url,default_location_id,saved_location,saved_product_group_2,location_select_name,product_group_select_name,ref]  would-ask=[]  backfilled=[]
+      recorded ask: asked=[btn btn-info btn-sm | btn btn-danger btn-sm product-delete-button] named=true
+   5 success reads= 8  model-named=[product_name,product_id,stock_quantity_unit,default_purchase_quantity_unit,minimum_stock_amount,stock_qu_pre_save,purchase_qu_pre_save,min_stock_pre_save,stock_qu_saved,stock_qu_label_saved,purchase_qu_saved,purchase_qu_label_saved,min_stock_saved,ref]  would-ask=[]  backfilled=[]
+   6 success reads= 5  model-named=[product_name,due_days_field,barcode_added,barcode_table_rows,item_1,item_1_value,due_days_saved,barcode_rows,default_best_before_days_field,ref]  would-ask=[]  backfilled=[table]
+   7 success reads= 5  model-named=[product_name,product_id,stock_amount,quantity_unit,due_date,location,price_per_unit,purchased_date,stock_entry_count,amount_purchased,amount_before_save,due_date_before_save,location_before_save,ref,stock_entries_row_1,stock_entries_row_2,stock_entries_row_3,stock_entries_row_4,stock_entries_row_5,stock_entries_row_6]  would-ask=[hbgc3-n1 Bench Product	3 Packs	2026-12-31 in 3 months	Pantry		$0.00 per Pack	2026-10-06 Today]  backfilled=[]
+      recorded ask: asked=[hbgc3-n1 Bench Product	3 Packs	2026-12-31 in 3 months	Pantry		$0.00 per Pack	2026-10-06 Today] named=true
+   8 success reads= 8  model-named=[address_path,product_id,product_name_on_page,page_title,form_name_field_value,stock_entry_row_link,product_open_button_class,current_url,edit_page_url,ref]  would-ask=[]  backfilled=[]
+      recorded ask: asked=[http://127.0.0.1:8106/stockentry/5?embedded | btn btn-success btn-sm product-open-button] named=true
+  flow: 8 step(s), 3 cross-step reference(s)
+  refs: {"{{runid}}":22,"{{03-create.product_id}}":3,"{{env:APP_PASSWORD}}":2}
+    01-signin publishes [page_title,signed_in_user,post_login_url,page_heading,stock_summary]
+    02-report publishes [matching_products_count,table_info,show_disabled,first_product_name,second_product_name,third_product_name,product_names_1,product_names_2,product_names_3,source_page]
+    03-create publishes [product_name,product_id,saved_description,form_url,list_position,current_url,ref]
+    04-edit publishes [product_name,saved_default_location,saved_default_location_id,saved_product_group,saved_product_group_id,description_still_present,products_row_overview_link_class,products_row_delete_button_class,item_1,item_1_value,current_url,default_location_id,product_group_id,saved_location,saved_product_group_2,location_select_name,product_group_select_name,ref]
+    05-edit publishes [product_name,product_id,stock_quantity_unit,default_purchase_quantity_unit,minimum_stock_amount,stock_qu_pre_save,purchase_qu_pre_save,min_stock_pre_save,stock_qu_saved,stock_qu_label_saved,purchase_qu_saved,purchase_qu_label_saved,min_stock_saved,ref]
+    06-edit publishes [product_name,due_days_field,barcode_added,barcode_table_rows,item_1,item_1_value,due_days_saved,barcode_rows,default_best_before_days_field,table,ref]
+    07-create publishes [product_name,product_id,stock_amount,quantity_unit,due_date,location,price_per_unit,purchased_date,stock_entry_count,amount_purchased,amount_before_save,due_date_before_save,location_before_save,ref,stock_entries_row_1,stock_entries_row_2,stock_entries_row_3,stock_entries_row_4,stock_entries_row_5,stock_entries_row_6]
+    08-open publishes [address_path,product_id,product_name_on_page,page_title,form_name_field_value,stock_entry_row_link,product_open_button_class,current_url,edit_page_url,ref]
+  lint: {{03-create.product_id}} (used by 05-edit) can only be re-observed by model recovery — consider re-recording so the value is read from the page.
+
+{
+  "tag": "hbgc3",
+  "runs": [
+    {
+      "runid": "hbgc3-n1",
+      "instructions": 8,
+      "withModelNames": 8,
+      "wouldAsk": 1,
+      "crossStepRefs": 3,
+      "stepsPublishing": 8,
+      "flowSteps": 8,
+      "adoptedSteps": 0,
+      "markers": [
+        "590483:{{v1}} = \"hbgc3-n1 Bench Product\"",
+        "590483:{{v2}} = \"hbgc3-n1\"",
+        "590483:{{v1}} = \"hbgc3-n1 Bench Product\"",
+        "590483:{{v2}} = \"hbgc3-n1\"",
+        "590483:{{v1}} = \"hbgc3-n1 Bench Product\"",
+        "590483:{{v2}} = \"hbgc3-n1\"",
+        "0f8318:{{v1}} = \"hbgc3-n1 Bench Product\"",
+        "0f8318:{{v2}} = \"hbgc3-n1\"",
+        "0f8318:{{v1}} = \"hbgc3-n1 Bench Product\"",
+        "0f8318:{{v2}} = \"hbgc3-n1\"",
+        "48f496:{{v1}} = \"hbgc3-n1 Bench Product\"",
+        "48f496:{{v2}} = \"hbgc3-n1\"",
+        "d4d3dc:{{v1}} = \"hbgc3-n1 Bench Product\"",
+        "d4d3dc:{{v2}} = \"hbgc3-n1\"",
+        "d4d3dc:{{v3}} = \"Pantry\"",
+        "0bc66e:{{v1}} = \"hbgc3-n1 Bench Product\"",
+        "0bc66e:{{v2}} = \"hbgc3-n1\"",
+        "0bc66e:{{v1}} = \"hbgc3-n1 Bench Product\"",
+        "0bc66e:{{v2}} = \"hbgc3-n1\""
+      ]
+    }
+  ]
+}

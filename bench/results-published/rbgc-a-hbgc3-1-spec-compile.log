@@ -1,0 +1,14 @@
+facts http://127.0.0.1:8106: 0 relied (0 hard), 0 advisory
+error 05-edit: slot v4 is bound to {{03-create.product_id}}, and nothing has ever published product_id
+  why: nothing in 03-create's procedure reads product_id from the page, and no report value derives it from a parameter, so no run can publish it. The recording's own value is not a substitute: passing it would make every replay work run 1's record. 05-edit types or locates by v4, so the artifact would stop here on every run, part-way through the flow and with everything earlier already done.
+  fix: re-record 03-create so it reads product_id from an element (`sitelooper rerecord <flow file> 03-create`), or take {{03-create.product_id}} out of 05-edit's v4
+error 06-edit: slot v5 is bound to {{03-create.product_id}}, and nothing has ever published product_id
+  why: nothing in 03-create's procedure reads product_id from the page, and no report value derives it from a parameter, so no run can publish it. The recording's own value is not a substitute: passing it would make every replay work run 1's record. 06-edit types or locates by v5, so the artifact would stop here on every run, part-way through the flow and with everything earlier already done.
+  fix: re-record 03-create so it reads product_id from an element (`sitelooper rerecord <flow file> 03-create`), or take {{03-create.product_id}} out of 06-edit's v5
+error 08-open: slot v3 is bound to {{03-create.product_id}}, and nothing has ever published product_id
+  why: nothing in 03-create's procedure reads product_id from the page, and no report value derives it from a parameter, so no run can publish it. The recording's own value is not a substitute: passing it would make every replay work run 1's record. 08-open types or locates by v3, so the artifact would stop here on every run, part-way through the flow and with everything earlier already done.
+  fix: re-record 03-create so it reads product_id from an element (`sitelooper rerecord <flow file> 03-create`), or take {{03-create.product_id}} out of 08-open's v3
+
+nothing written: the error(s) above are about the RECORDING, not the app — a compiled spec would fail at a locator and read as drift.
+re-record the step(s) with the fix command above.
+sitelooper: refused: unsourced-ref — see the diagnostics above

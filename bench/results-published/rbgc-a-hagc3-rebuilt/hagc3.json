@@ -1,0 +1,315 @@
+{
+  "name": "hagc3",
+  "origin": "http://127.0.0.1:8106",
+  "startUrl": "http://127.0.0.1:8106/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-signin",
+      "instruction": "Sign in to Grocy at http://127.0.0.1:8106/ using username admin and password exactly {{env:APP_PASSWORD}}. Verify that the signed-in app is open and report the visible confirmation.",
+      "skill": "s_5c4ea0",
+      "params": {
+        "v1": "http://127.0.0.1:8106/",
+        "v2": "admin",
+        "v3": "{{env:APP_PASSWORD}}"
+      },
+      "outputs": [
+        "page_title",
+        "signed_in_user",
+        "stock_heading",
+        "stock_summary"
+      ],
+      "recorded": {
+        "page_title": "Stock overview | Grocy",
+        "signed_in_user": "admin",
+        "stock_heading": "Stock overview",
+        "stock_summary": "0 Products, $0.00 total value",
+        "url": "http://127.0.0.1:8106/stockoverview",
+        "url.p0": "stockoverview"
+      },
+      "route": "http://127.0.0.1:8106/stockoverview"
+    },
+    {
+      "id": "02-report",
+      "instruction": "Report the exact names of all existing products whose name starts with Seed:, without modifying any products. Verify names from the product list.",
+      "skill": "s_f4dd61",
+      "params": {
+        "v1": "Seed:"
+      },
+      "outputs": [
+        "matching_product_count",
+        "product_1",
+        "product_2",
+        "product_3",
+        "product_row_details"
+      ],
+      "recorded": {
+        "matching_product_count": "3",
+        "product_1": "Seed: Oat milk",
+        "product_2": "Seed: Orange juice",
+        "product_3": "Seed: Sparkling water",
+        "product_row_details": "Seed: Oat milk — Fridge, stock 0, Piece; Seed: Orange juice — Fridge, stock 0, Piece; Seed: Sparkling water — Fridge, stock 0, Piece",
+        "url": "http://127.0.0.1:8106/products"
+      },
+      "route": "http://127.0.0.1:8106/products"
+    },
+    {
+      "id": "03-create",
+      "instruction": "Create and save a product named '{{runid}} Bench Product' whose rich-text description contains exactly one paragraph that includes the text '{{runid}}'. Do not create or modify any other product. Verify the saved product and report its displayed name and description.",
+      "skill": "s_1f4220",
+      "params": {
+        "v2": "{{runid}} Bench Product",
+        "v1": "{{runid}}"
+      },
+      "outputs": [
+        "product_name",
+        "product_description_paragraph",
+        "product_list_row",
+        "product_id",
+        "default_location",
+        "stock_amount",
+        "other_product_names",
+        "description_placement",
+        "ref"
+      ],
+      "recorded": {
+        "product_name": "hagc3-n1 Bench Product",
+        "product_description_paragraph": "hagc3-n1 test product description.",
+        "product_list_row": "hagc3-n1 Bench Product\tFridge\t0\tPiece\tPiece",
+        "product_id": "61824",
+        "default_location": "Fridge",
+        "stock_amount": "0 Pieces",
+        "other_product_names": "List still contains only Seed: Oat milk, Seed: Orange juice, Seed: Sparkling water in addition to the new product",
+        "description_placement": "rich-text description field, rendered as a single paragraph",
+        "ref": "hagc3-n1",
+        "url": "http://127.0.0.1:8106/products?product=61824"
+      },
+      "route": "http://127.0.0.1:8106/products"
+    },
+    {
+      "id": "04-edit",
+      "instruction": "Edit the existing product '{{runid}} Bench Product' so its default location is the existing location 'Pantry' (not similarly named locations) and its product group is the existing group 'Snacks' (not similarly named groups). Save and verify both values on the product.",
+      "skill": "s_45936f",
+      "params": {
+        "v1": "{{runid}} Bench Product",
+        "v3": "Pantry",
+        "v4": "Snacks",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "product_name",
+        "product_edit_url",
+        "default_location",
+        "product_group",
+        "verified_row",
+        "verified_columns",
+        "save_action",
+        "form_button",
+        "ref"
+      ],
+      "recorded": {
+        "product_name": "hagc3-n1 Bench Product",
+        "product_edit_url": "http://127.0.0.1:8106/product/61824?returnto=%2Fproducts",
+        "default_location": "Pantry",
+        "product_group": "Snacks",
+        "verified_row": "hagc3-n1 Bench Product\tPantry\t0\tPiece\tPiece\tSnacks",
+        "verified_columns": "Name | Location | Min. stock amount | Default quantity unit purchase | Quantity unit stock | Product group",
+        "save_action": "Save & return to products (button on /product/61824)",
+        "form_button": "Save & return to products",
+        "ref": "hagc3-n1"
+      },
+      "route": "http://127.0.0.1:8106/products"
+    },
+    {
+      "id": "05-edit",
+      "instruction": "Edit '{{runid}} Bench Product' and set Quantity unit stock to the exact existing unit 'Pack', Default quantity unit purchase to the exact existing unit 'Pack', and Minimum stock amount to 4. Save and verify all three values from the saved product/list.",
+      "skill": "s_e56fb7",
+      "params": {
+        "v1": "{{runid}} Bench Product",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "product_name",
+        "quantity_unit_stock",
+        "default_quantity_unit_purchase",
+        "min_stock_amount",
+        "verified_columns",
+        "selected_quantity_unit",
+        "item_1",
+        "item_1_value",
+        "select",
+        "select_2",
+        "ref",
+        "verified_row_1",
+        "verified_row_2",
+        "verified_row_3",
+        "verified_row_4",
+        "verified_row_5",
+        "verified_row_6"
+      ],
+      "recorded": {
+        "product_name": "hagc3-n1 Bench Product",
+        "quantity_unit_stock": "Pack",
+        "default_quantity_unit_purchase": "Pack",
+        "min_stock_amount": "4",
+        "verified_columns": "Name | Location | Min. stock amount | Default quantity unit purchase | Quantity unit stock | Product group",
+        "selected_quantity_unit": "id 3, label \"Pack\" (same option id 3 chosen for both \"Quantity unit stock\" and \"Default quantity unit purchase\")",
+        "item_1": "product_id",
+        "item_1_value": "61824",
+        "select": "qu_id_stock",
+        "select_2": "qu_id_purchase",
+        "ref": "hagc3-n1",
+        "verified_row_1": "hagc3-n1 Bench Product",
+        "verified_row_2": "Pantry",
+        "verified_row_3": "4",
+        "verified_row_4": "Pack",
+        "verified_row_5": "Pack",
+        "verified_row_6": "Snacks"
+      },
+      "route": "http://127.0.0.1:8106/products"
+    },
+    {
+      "id": "06-edit",
+      "instruction": "Edit '{{runid}} Bench Product' to set Default due days to 30, save, then add barcode '{{runid}}-0001' to this saved product (barcodes are managed after first save). Verify both persisted values on the product.",
+      "skill": "s_d1b827",
+      "params": {
+        "v1": "{{runid}} Bench Product",
+        "v3": "30",
+        "v4": "{{runid}}-0001",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "product_name",
+        "default_due_days",
+        "default_due_days_field",
+        "barcode_added",
+        "verified_after_full_page_reload",
+        "min_stock_amount_still",
+        "barcode_add_route",
+        "item_1",
+        "item_1_value",
+        "barcode_table_rows_1",
+        "current_url",
+        "default_due_days_after_r",
+        "form_input_form_select",
+        "ref"
+      ],
+      "recorded": {
+        "product_name": "hagc3-n1 Bench Product",
+        "default_due_days": "30",
+        "default_due_days_field": "spinbutton \"Default due days\" (#default_best_before_days)",
+        "barcode_added": "hagc3-n1-0001",
+        "verified_after_full_page_reload": "Yes — reopened/refreshed the saved product form: Default due days = 30 and the Barcodes table contains hagc3-n1-0001",
+        "min_stock_amount_still": "4",
+        "barcode_add_route": "productbarcodes/new?embedded&product=61824 dialog (“Create Barcode Barcode for product hagc3-n1 Bench Product”), saved with its Save button",
+        "item_1": "product_id",
+        "item_1_value": "61824",
+        "barcode_table_rows_1": "hagc3-n1-0001",
+        "current_url": "http://127.0.0.1:8106/product/61824",
+        "default_due_days_after_r": "30",
+        "form_input_form_select": "default_best_before_days",
+        "ref": "hagc3-n1",
+        "url": "http://127.0.0.1:8106/product/61824"
+      },
+      "route": "http://127.0.0.1:8106/product/:id"
+    },
+    {
+      "id": "07-create",
+      "instruction": "Make exactly one purchase of 3 Packs of '{{runid}} Bench Product' into the existing location {{05-edit.verified_row_2}}, with due date 2026-12-31. Select the existing product by its name (do not create a product or link an unknown barcode), save the purchase once, then verify stock is 3 Packs and confirm the recorded purchase location and due date.",
+      "skill": "s_dec8ae",
+      "params": {
+        "v1": "{{runid}} Bench Product",
+        "v3": "{{05-edit.verified_row_2}}",
+        "v4": "2026-12-31",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "product",
+        "amount_purchased",
+        "quantity_unit",
+        "location",
+        "due_date",
+        "stock_amount_after",
+        "stock_entries_dialog_row",
+        "stock_entry_count",
+        "amount_value",
+        "due_date_value",
+        "location_value",
+        "stock_amount_overview",
+        "product_overview_2",
+        "stock_entry_row",
+        "stock_entry_due_date",
+        "stock_amount_overview_pa",
+        "form_input",
+        "ref",
+        "product_overview_1",
+        "product_overview_2_2",
+        "product_overview_3",
+        "product_overview_4",
+        "product_overview_5"
+      ],
+      "recorded": {
+        "product": "hagc3-n1 Bench Product",
+        "amount_purchased": "3 Packs",
+        "quantity_unit": "Pack",
+        "location": "Pantry",
+        "due_date": "2026-12-31",
+        "stock_amount_after": "3 Packs",
+        "stock_entries_dialog_row": "hagc3-n1 Bench Product | 3 Packs | 2026-12-31 in 3 months | Pantry | (no store) | $0.00 per Pack | 2026-10-06 Today",
+        "stock_entry_count": "1",
+        "amount_value": "3",
+        "due_date_value": "2026-12-31",
+        "location_value": "Pantry",
+        "stock_amount_overview": "Stock amount:",
+        "product_overview_2": "Product overview",
+        "stock_entry_row": "hagc3-n1 Bench Product\t3 Packs\t2026-12-31 in 3 months\tPantry\t\t$0.00 per Pack\t2026-10-06 Today",
+        "stock_entry_due_date": "2026-12-31 in 3 months",
+        "stock_amount_overview_pa": "Stock amount:",
+        "form_input": "amount",
+        "ref": "hagc3-n1",
+        "product_overview_1": "Stock amount: 3 Packs",
+        "product_overview_2_2": "Stock value: $0.00",
+        "product_overview_3": "Default location: Pantry",
+        "product_overview_4": "Last purchased: 2026-10-06 Today",
+        "product_overview_5": "Last price: $0.00 per Pack",
+        "url": "http://127.0.0.1:8106/purchase?"
+      },
+      "route": "http://127.0.0.1:8106/purchase"
+    },
+    {
+      "id": "08-open",
+      "instruction": "Open the edit page for '{{runid}} Bench Product', verify the address is /product/<id>, and report the exact product ID from the URL. Also verify the saved product name in the edit page.",
+      "skill": "s_e9b093",
+      "params": {
+        "v1": "{{runid}} Bench Product",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "product_id",
+        "product_edit_url",
+        "url_path",
+        "edit_page_name_field",
+        "page_heading",
+        "edit_page_name",
+        "ref"
+      ],
+      "recorded": {
+        "product_id": "61824",
+        "product_edit_url": "http://127.0.0.1:8106/product/61824?returnto=%2Fpurchase",
+        "url_path": "/product/61824",
+        "edit_page_name_field": "hagc3-n1 Bench Product",
+        "page_heading": "Edit product | Grocy",
+        "edit_page_name": "hagc3-n1 Bench Product",
+        "ref": "hagc3-n1",
+        "url": "http://127.0.0.1:8106/product/61824?returnto=%2Fpurchase"
+      },
+      "route": "http://127.0.0.1:8106/product/:id"
+    }
+  ],
+  "provenance": {
+    "session": "hagc3-n1",
+    "created": "2026-10-09T16:18:28.667Z"
+  }
+}

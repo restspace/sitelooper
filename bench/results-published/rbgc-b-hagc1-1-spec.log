@@ -1,0 +1,49 @@
+
+Running 1 test using 1 worker
+
+[sitelooper step] 01-signin
+  ✘  1 hagc1.spec.ts:9:1 › hagc1 (22.1s)
+
+
+  1) hagc1.spec.ts:9:1 › hagc1 › 02-report: Report the exact names of all products whose name starts with 'Seed:' as shown in Grocy. Do not modify any products. 
+
+    Error: 02-report s_20eb6c/8: the recorded page change did not appear
+
+    02-report s_20eb6c/8: the recorded page change did not appear
+
+    expect(received).toBeNull()
+
+    Received: "after step 02-report s_20eb6c/8 none of the 1 recorded page change(s) appeared (e.g. \"- checkbox \\\"Show disabled\\\" [checked]\") — the step ran but did not have its recorded effect"
+
+    Call Log:
+    - Timeout 5000ms exceeded while waiting on the predicate
+
+       at hagc1.flow.ts:16472
+
+      16470 |       { timeout: EXPECT_WAIT_MS, message: `${ctx.tag}: the recorded page change did not appear` },
+      16471 |     )
+    > 16472 |     .toBeNull();
+            |      ^
+      16473 |   for (const warning of last.warnings) console.log(`[sitelooper warn] ${warning}`);
+      16474 |   if (last.unobserved) console.log(`[sitelooper unobserved] ${ctx.tag}: the page could not be captured, or observed in full, after the action`);
+      16475 |   return last;
+        at expectChanges (/home/user/sitelooper/bench/results/rbgc-b-hagc1-1-spec-tmp/hagc1.flow.ts:16472:6)
+        at Object.verify (/home/user/sitelooper/bench/results/rbgc-b-hagc1-1-spec-tmp/hagc1.flow.ts:17394:37)
+        at runStepLifecycle (/home/user/sitelooper/bench/results/rbgc-b-hagc1-1-spec-tmp/hagc1.flow.ts:12226:24)
+        at Object.02-report (/home/user/sitelooper/bench/results/rbgc-b-hagc1-1-spec-tmp/hagc1.flow.ts:17355:9)
+        at /home/user/sitelooper/bench/results/rbgc-b-hagc1-1-spec-tmp/hagc1.flow.ts:21241:7
+        at runFlow (/home/user/sitelooper/bench/results/rbgc-b-hagc1-1-spec-tmp/hagc1.flow.ts:21240:5)
+        at /home/user/sitelooper/bench/results/rbgc-b-hagc1-1-spec-tmp/hagc1.spec.ts:14:21
+
+    attachment #2: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/hagc1-hagc1/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/hagc1-hagc1/error-context.md
+
+  1 failed
+    hagc1.spec.ts:9:1 › hagc1 ──────────────────────────────────────────────────────────────────────

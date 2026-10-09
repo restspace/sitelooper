@@ -1,0 +1,48 @@
+{
+  "arm": "spec",
+  "runid": "rbgc-b-hbgc2-1",
+  "target": "grocy",
+  "flow": "hbgc2.json",
+  "flowName": "hbgc2",
+  "skillsDir": "/tmp/rbgc-vsj7TI/run/b-hbgc2-1/skills",
+  "compiled": true,
+  "outputs": {
+    "01-signin.page_title": "Stock overview | Grocy",
+    "01-signin.signed_in_user": "admin",
+    "01-signin.landing_page": "Stock overview",
+    "01-signin.stock_summary": "0 Products, $0.00 total value",
+    "02-find.matching_products_1": "Seed: Oat milk",
+    "02-find.matching_products_2": "Seed: Orange juice",
+    "02-find.matching_products_3": "Seed: Sparkling water"
+  },
+  "finalText": "01-signin.page_title: Stock overview | Grocy\n01-signin.signed_in_user: admin\n01-signin.landing_page: Stock overview\n01-signin.stock_summary: 0 Products, $0.00 total value\n02-find.matching_products_1: Seed: Oat milk\n02-find.matching_products_2: Seed: Orange juice\n02-find.matching_products_3: Seed: Sparkling water",
+  "flowFile": "../../home/user/sitelooper/bench/results/rbgc-b-hbgc2-1-spec-tmp/hbgc2.flow.ts",
+  "specFile": "../../home/user/sitelooper/bench/results/rbgc-b-hbgc2-1-spec-tmp/hbgc2.spec.ts",
+  "wallMs": 30516,
+  "exitCode": 1,
+  "timedOut": false,
+  "costUsd": 0,
+  "stats": {
+    "total": 1,
+    "passed": 0,
+    "failed": 1,
+    "skipped": 0
+  },
+  "tests": [
+    {
+      "title": "hbgc2",
+      "status": "unexpected",
+      "ok": false,
+      "durationMs": 24135,
+      "error": "Error: 03-create s_384b81: identity: {{v1}} is not confirmed on this page",
+      "drift": []
+    }
+  ],
+  "drift": [],
+  "driftCount": 0,
+  "evidence": [
+    "rbgc-b-hbgc2-1-spec-failure.png",
+    "rbgc-b-hbgc2-1-spec-error-context.md"
+  ],
+  "logTail": "\nRunning 1 test using 1 worker\n\n[sitelooper step] 01-signin\n[sitelooper step] 02-find\n[sitelooper recipe] filled via recipe contenteditable/set-value (r_7b1e49); value verified on the component\n  ✘  1 hbgc2.spec.ts:9:1 › hbgc2 (24.1s)\n\n\n  1) hbgc2.spec.ts:9:1 › hbgc2 › 03-create: Create and save a product named exactly '{{runid}} Bench Product'. Its rich-text description must contain exactly one paragraph including the text '{{runid}}'. Verify the saved product and report its displayed name and description. \n\n    Error: 03-create s_384b81: identity: {{v1}} is not confirmed on this page\n\n       at hbgc2.flow.ts:16597\n\n      16595 |         const verdict = await identityMarkerVerdictWithFacts(siteFactsAt(page.url()), 'http://127.0.0.1:8106/product/:id', page.url(), p, `${p.v1}`, { presence: seen.presence, lines: async () => (await captureLines(page, 2).catch(() => null))?.lines ?? null, title: () => page.title() });\n      16596 |         if (verdict.warning) logWarning('03-create s_384b81: ' + verdict.warning);\n    > 16597 |         if (!verdict.pass) throw new Error('03-create s_384b81: identity: {{v1}} is not confirmed on this page');\n            |                                  ^\n      16598 |       }\n      16599 |     }\n      16600 |     // identity: this must be the record the flow is working on, not another of the same shape.\n        at Object.03-create (/home/user/sitelooper/bench/results/rbgc-b-hbgc2-1-spec-tmp/hbgc2.flow.ts:16597:34)\n        at /home/user/sitelooper/bench/results/rbgc-b-hbgc2-1-spec-tmp/hbgc2.flow.ts:19058:7\n        at runFlow (/home/user/sitelooper/bench/results/rbgc-b-hbgc2-1-spec-tmp/hbgc2.flow.ts:19057:5)\n        at /home/user/sitelooper/bench/results/rbgc-b-hbgc2-1-spec-tmp/hbgc2.spec.ts:14:21\n\n    attachment #2: sitelooper-drift (text/plain) ───────────────────────────────────────────────────\n    \n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    attachment #3: screenshot (image/png) ──────────────────────────────────────────────────────────\n    test-results/hbgc2-hbgc2/test-failed-1.png\n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    Error Context: test-results/hbgc2-hbgc2/error-context.md\n\n  1 failed\n    hbgc2.spec.ts:9:1 › hbgc2 ──────────────────────────────────────────────────────────────────────\n"
+}

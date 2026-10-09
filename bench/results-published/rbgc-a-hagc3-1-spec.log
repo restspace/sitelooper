@@ -1,0 +1,61 @@
+
+Running 1 test using 1 worker
+
+[sitelooper step] 01-signin
+[sitelooper step] 02-report
+[sitelooper recipe] filled via recipe contenteditable/set-value (r_7b1e49); value verified on the component
+[sitelooper drift] 03-create s_2fe356/5 target: primary getByText('rbgc-a-hagc3-1 Bench Product', { exact: true }) missed; used #2 locator('#productcard-product-name') (#1 ambiguous)
+[sitelooper step] 03-create
+[sitelooper drift] 04-edit s_76c025/4 target: primary getByText('rbgc-a-hagc3-1 Bench Product', { exact: true }) missed; used #2 locator('#products-table > tbody > tr:nth-of-type(4) > td:nth-of-type(2)') (#1 ambiguous)
+[sitelooper step] 04-edit
+[sitelooper warn] 05-edit s_d55d7c/4: read 'verified_row_3' returned a value the skill itself set/selected ('4') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper drift] 05-edit s_57573c/2 target: primary getByText('rbgc-a-hagc3-1 Bench Product', { exact: true }) missed; used #2 locator('#products-table > tbody > tr:nth-of-type(4) > td:nth-of-type(2)') (#1 ambiguous)
+[sitelooper drift] 05-edit s_57573c/8 target: primary getByText('rbgc-a-hagc3-1 Bench Product', { exact: true }) missed; used #2 locator('#products-table > tbody > tr:nth-of-type(4) > td:nth-of-type(2)') (#1 ambiguous)
+[sitelooper step] 05-edit
+[sitelooper warn] 06-edit s_bddb39/2: read 'default_due_days' returned a value the skill itself set/selected ('30') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper warn] 06-edit s_bddb39/7: read 'barcode_added' returned a value the skill itself set/selected ('rbgc-a-hagc3-1-0001') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper warn] 06-edit: report value default_due_days_after_r is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)
+[sitelooper warn] 06-edit: report value default_due_days_after_r_2 is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)
+[sitelooper step] 06-edit
+[sitelooper warn] 07-create s_19d556/5: read 'amount_value' returned a value the skill itself set/selected ('3') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper warn] 07-create s_19d556/6: read 'due_date' returned a value the skill itself set/selected ('2026-12-31') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper drift] 07-create s_19d556/21 target: primary getByText('rbgc-a-hagc3-1 Bench Product', { exact: true }) missed; used #2 locator('#productcard-product-name') (#1 ambiguous)
+[sitelooper warn] 07-create s_19d556/21: read 'product' returned a value the skill itself set/selected ('rbgc-a-hagc3-1 Bench Product') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper step] 07-create
+  ✘  1 hagc3.spec.ts:9:1 › hagc3 (2.2m)
+
+
+  1) hagc3.spec.ts:9:1 › hagc3 › 08-open: Open the edit page for '{{runid}} Bench Product', verify the address is /product/<id>, and report the exact product ID from the URL. Also verify the saved product name in the edit page. 
+
+    Error: after 08-open s_e9b093/1 expected url http://127.0.0.1:8106/product/:id?returnto=/purchase but browser is at http://127.0.0.1:8106/purchase
+
+       at hagc3.flow.ts:16017
+
+      16015 |   // (navigationTarget), whether or not the step goes on to stop.
+      16016 |   if (verdict.diffs) volatile.push(...verdict.diffs);
+    > 16017 |   if (verdict.stop) throw new Error(verdict.stop);
+            |                           ^
+      16018 | }
+      16019 |
+      16020 | /**
+        at urlEffect (/home/user/sitelooper/bench/results/rbgc-a-hagc3-1-spec-tmp/hagc3.flow.ts:16017:27)
+        at Object.verify (/home/user/sitelooper/bench/results/rbgc-a-hagc3-1-spec-tmp/hagc3.flow.ts:21397:9)
+        at runStepLifecycle (/home/user/sitelooper/bench/results/rbgc-a-hagc3-1-spec-tmp/hagc3.flow.ts:12326:24)
+        at Object.08-open (/home/user/sitelooper/bench/results/rbgc-a-hagc3-1-spec-tmp/hagc3.flow.ts:21360:5)
+        at /home/user/sitelooper/bench/results/rbgc-a-hagc3-1-spec-tmp/hagc3.flow.ts:21594:7
+        at runFlow (/home/user/sitelooper/bench/results/rbgc-a-hagc3-1-spec-tmp/hagc3.flow.ts:21593:5)
+        at /home/user/sitelooper/bench/results/rbgc-a-hagc3-1-spec-tmp/hagc3.spec.ts:14:21
+
+    attachment #2: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    [sitelooper drift] 03-create s_2fe356/5 target: primary getByText('rbgc-a-hagc3-1 Bench Product', { exact: true }) missed; used #2 locator('#productcard-product-name') (#1 ambiguous)
+    [sitelooper drift] 04-edit s_76c025/4 target: primary getByText('rbgc-a-hagc3-1 Bench Product', { exact: true }) miss...
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/hagc3-hagc3/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/hagc3-hagc3/error-context.md
+
+  1 failed
+    hagc3.spec.ts:9:1 › hagc3 ──────────────────────────────────────────────────────────────────────
