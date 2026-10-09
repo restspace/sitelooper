@@ -1,0 +1,37 @@
+
+=== hapk2-n1 ===
+   1 success reads= 1  model-named=[signed_in_user,email_used,visible_project]  would-ask=[]  backfilled=[]
+   2 success reads= 5  model-named=[board_name,project_name,seed_card_1,seed_card_2,seed_card_3,seed_card_count,list,board_url,board_link_name]  would-ask=[]  backfilled=[]
+   3 blocked reads= 6  model-named=[]  would-ask=[]  backfilled=[]
+   4 success reads= 7  model-named=[card_name,card_url,board,project,list,description_paragraph,label,member,card_id,card_list,due_date_2,assigned_member,assigned_label,ref,due_date]  would-ask=[]  backfilled=[]
+   5 success reads= 2  model-named=[card_title,comment_count,comment_text,card_id,card_url,ref]  would-ask=[]  backfilled=[]
+  flow: 4 step(s), 0 cross-step reference(s)
+  refs: {"{{runid}}":8,"{{env:APP_PASSWORD}}":2}
+    01-signin publishes [signed_in_user,email_used,visible_project]
+    02-report publishes [board_name,project_name,seed_card_1,seed_card_2,seed_card_3,seed_card_count,list,board_url,board_link_name]
+    03-create publishes [card_name,card_url,board,project,list,description_paragraph,label,member,card_id,card_list,due_date_2,assigned_member,assigned_label,ref,due_date]
+    04-add publishes [card_title,comment_count,comment_text,card_id,card_url,ref]
+
+{
+  "tag": "hapk2",
+  "runs": [
+    {
+      "runid": "hapk2-n1",
+      "instructions": 5,
+      "withModelNames": 4,
+      "wouldAsk": 0,
+      "crossStepRefs": 0,
+      "stepsPublishing": 4,
+      "flowSteps": 4,
+      "adoptedSteps": 0,
+      "markers": [
+        "682691:{{v1}} = \"Bench Project\"",
+        "972d46:{{v1}} = \"Bench Board\"",
+        "972d46:{{v3}} = \"hapk2-n1\"",
+        "972d46:{{v4}} = \"hapk2-n1 Bench Card\"",
+        "aa67b8:{{v1}} = \"hapk2-n1 Bench Card\"",
+        "aa67b8:{{v2}} = \"hapk2-n1\""
+      ]
+    }
+  ]
+}

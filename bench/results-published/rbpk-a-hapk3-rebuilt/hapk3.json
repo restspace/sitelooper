@@ -1,0 +1,144 @@
+{
+  "name": "hapk3",
+  "origin": "http://127.0.0.1:8104",
+  "startUrl": "http://127.0.0.1:8104/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-signin",
+      "instruction": "Sign in to Planka at http://127.0.0.1:8104/ using email admin@example.com and password exactly {{env:APP_PASSWORD}}; verify that the signed-in app is reached.",
+      "skill": "s_0ac8b1",
+      "params": {
+        "v1": "http://127.0.0.1:8104/",
+        "v2": "admin@example.com",
+        "v3": "{{env:APP_PASSWORD}}"
+      },
+      "outputs": [
+        "signed_in_account",
+        "visible_board",
+        "login_controls_status",
+        "authenticated_ui"
+      ],
+      "recorded": {
+        "signed_in_account": "Bench Admin",
+        "visible_board": "Bench Project",
+        "login_controls_status": "login form (PLANKA / Log In headings, Log in button) removed from the page",
+        "authenticated_ui": "Search projects... field, Create project button, Bench Project board link",
+        "url": "http://127.0.0.1:8104/"
+      },
+      "route": "http://127.0.0.1:8104/"
+    },
+    {
+      "id": "02-report",
+      "instruction": "On the Bench Board in Bench Project, report exactly the names of all cards whose name starts with 'Seed:'; do not edit any cards.",
+      "skill": "s_83f1ee",
+      "params": {
+        "v1": "Bench Project"
+      },
+      "outputs": [
+        "seed_card_1",
+        "seed_card_2",
+        "seed_card_3",
+        "seed_card_count",
+        "board_lists_summary",
+        "seed_card_scan_notes"
+      ],
+      "recorded": {
+        "seed_card_1": "Seed: Replace the office router",
+        "seed_card_2": "Seed: Order spare keyboards",
+        "seed_card_3": "Seed: Renew the domain name",
+        "seed_card_count": "3",
+        "board_lists_summary": "To Do (3 Seed: cards), In Progress (0 cards), Done (0 cards)",
+        "seed_card_scan_notes": "Live-DOM scan for elements whose text starts with 'Seed:' returned only these three; no list container is scrollable, so no hidden cards",
+        "url": "http://127.0.0.1:8104/boards/1879870515598853127",
+        "url.p1": "1879870515598853127"
+      },
+      "route": "http://127.0.0.1:8104/boards/:id"
+    },
+    {
+      "id": "03-create",
+      "instruction": "On Bench Board in Bench Project, create a card named '{{runid}} Bench Card' in the 'In Progress' list, save its description with exactly one paragraph that includes '{{runid}}', and configure the card so its only label is the existing exact label 'Hardware' and its only member is the existing exact user 'Bench Tester'. Set its due date to 2026-12-31. Verify the saved card details and report its page address/card ID.",
+      "skill": "s_c2e12e",
+      "params": {
+        "v1": "Bench Project",
+        "v3": "{{runid}} Bench Card",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "card_name",
+        "card_page_address",
+        "card_id_derivation_note",
+        "board_url",
+        "list",
+        "description",
+        "description_paragraph_count",
+        "labels_on_card",
+        "members_on_card",
+        "due_date",
+        "board_card_button_text",
+        "card_id",
+        "due_date_picker_month",
+        "due_date_input",
+        "card_name_unique_token"
+      ],
+      "recorded": {
+        "card_name": "hapk3-n1 Bench Card",
+        "card_page_address": "http://127.0.0.1:8104/cards/1879871169583121437",
+        "card_id_derivation_note": "1879871169583121437 — this is my own reading of the final path segment of the card's page address (the page itself does not display a separate ID string)",
+        "board_url": "http://127.0.0.1:8104/boards/1879870515598853127",
+        "list": "In Progress",
+        "description": "hapk3-n1 bench card created for the Planka verification run.",
+        "description_paragraph_count": "1",
+        "labels_on_card": "Hardware (only label shown in the modal Labels field and on the board card chip)",
+        "members_on_card": "Bench Tester (BT) — only member shown in the modal Members field",
+        "due_date": "December 31 at 12:00 PM",
+        "board_card_button_text": "hapk3-n1 Bench Card Hardware Dec 31 BT",
+        "card_id": "1879871169583121437",
+        "due_date_picker_month": "December 2026",
+        "due_date_input": "12/31/2026",
+        "card_name_unique_token": "hapk3-n1",
+        "url": "http://127.0.0.1:8104/cards/1879871169583121437",
+        "url.p1": "1879871169583121437"
+      },
+      "route": "http://127.0.0.1:8104/cards/:id"
+    },
+    {
+      "id": "04-open",
+      "instruction": "Open the card '{{runid}} Bench Card' from its own card page and add a comment whose text includes '{{runid}}'. Submit it, then verify the comment is visible on the card and report its exact text and the card page address/ID.",
+      "skill": "s_2dadae",
+      "params": {
+        "v1": "{{runid}} Bench Card",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "card_name",
+        "comment_text",
+        "comment_paragraph_read_back",
+        "card_page_address",
+        "card_id_derivation_note",
+        "comment_submit_action",
+        "card_page_address_2",
+        "ref",
+        "ref_2"
+      ],
+      "recorded": {
+        "card_name": "hapk3-n1 Bench Card",
+        "comment_text": "hapk3-n1 comment added for verification.",
+        "comment_paragraph_read_back": "hapk3-n1 comment added for verification.",
+        "card_page_address": "http://127.0.0.1:8104/cards/1879871169583121437 (read from the browser address bar via the read tool)",
+        "card_id_derivation_note": "1879871169583121437 — my own reading of the final path segment of the card page address; the page does not print a separate ID string",
+        "comment_submit_action": "clicked the \"Add comment\" button that appeared next to the composer (pressing Enter alone did not submit)",
+        "card_page_address_2": "http://127.0.0.1:8104/cards/1879871169583121437",
+        "ref": "hapk3-n1",
+        "ref_2": "18-digit"
+      },
+      "route": "http://127.0.0.1:8104/cards/:id"
+    }
+  ],
+  "provenance": {
+    "session": "hapk3-n1",
+    "created": "2026-10-09T16:19:19.998Z"
+  }
+}
