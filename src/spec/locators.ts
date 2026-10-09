@@ -272,6 +272,10 @@ export function candidateSource(c: LocatorCandidate, o: SourceOptions = {}): str
       // plain expression. See `observationSource`, which renders it with its
       // geometry. As a bare expression it has no form.
       return null;
+    default:
+      // A kind no recorder writes names nothing (knownCandidate): never
+      // `undefined.nth(0)` (hakm3-cv s_06578c step 13, `kind: "{{v3}}"`).
+      return null;
   }
   return c.nth !== undefined ? `${src}.nth(${c.nth})` : src;
 }
@@ -399,5 +403,18 @@ export function observationSource(c: LocatorCandidate, index: number, o: SourceO
 
 /** The whole chain as observations, one per candidate, in stored order with stored indices. */
 export function observationSources(chain: LocatorCandidate[], o: SourceOptions = {}): string[] {
-  return chain.map((c, index) => observationSource(c, index, o));
+  return chain.flatMap((c, index) => (knownCandidate(c) ? [observationSource(c, index, o)] : []));
+}
+
+const CANDIDATE_KINDS = new Set(['testid', 'role', 'label', 'placeholder', 'id', 'text', 'css', 'scoped', 'point']);
+
+/**
+ * A candidate of a kind some recorder writes. A store can hold one that is
+ * not — hakm3-cv s_06578c step 13 `{"kind":"{{v3}}"}`, a slot substituted
+ * into the kind before compile.ts substituteCandidate — and it names nothing:
+ * left out of the artifact's chain (stored indices kept), as the daemon's
+ * makeLocator throws for it and the shared walk records an error miss.
+ */
+export function knownCandidate(c: { kind?: unknown }): boolean {
+  return typeof c.kind === 'string' && CANDIDATE_KINDS.has(c.kind);
 }

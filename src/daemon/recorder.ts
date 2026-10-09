@@ -151,6 +151,10 @@ export function makeLocator(page: Root, c: LocatorCandidate): Locator {
       if (!isPage(page)) throw new Error('a recorded point cannot be resolved inside a frame');
       loc = pointLocator(page, c);
       break;
+    default:
+      // A kind no recorder writes (hakm3-cv `kind: "{{v3}}"`): the walk's
+      // locatorOf turns this into an error miss and tries the next candidate.
+      throw new Error(`no locator for candidate kind ${JSON.stringify((c as { kind?: unknown }).kind)}`);
   }
   return c.nth !== undefined ? loc.nth(c.nth) : loc;
 }

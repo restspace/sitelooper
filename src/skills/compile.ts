@@ -1047,7 +1047,7 @@ export function compileSkills(input: CompileInput): Skill[] {
   /** Slots some recorded candidate locates by: the reads scoped by a slot are scoped by these (readscope.ts, fwrd87). */
   /** Everything the recording showed, for anchorEvidencedIds: the whole session up to and through this instruction, and the ledger's values. */
   const shown = shownBy([...(input.before ?? []), ...input.entries], Object.values(input.knownValues ?? {}).map((v) => String(v ?? '')));
-  const locating = locatingSlots(segments.map((sg) => sg.steps.map((st) => substituteDeep(Object.values(st.locators).map((l) => l.chain ?? []), textSlots))));
+  const locating = locatingSlots(segments.map((sg) => sg.steps.map((st) => Object.values(st.locators).map((l) => (l.chain ?? []).map((c) => substituteCandidate(c, textSlots))))));
   const built = segments.map((sg) => {
     const base = segOffset;
     segOffset += sg.steps.length;
@@ -1103,7 +1103,7 @@ export function compileSkills(input: CompileInput): Skill[] {
       const locators: Record<string, LocatorCandidate[]> = {};
       for (const [key, loc] of Object.entries(step.locators)) {
         const substituted = (loc.chain ?? []).map((c) => {
-          const out = substituteDeep(substituteDeep(c, textSlots), mintedBefore) as LocatorCandidate;
+          const out = substituteCandidate(substituteCandidate(c, textSlots), mintedBefore);
           if (!positionalUrlSlots.length) return out;
           if (out.kind === 'css') return { ...out, selector: substituteHrefIds(out.selector, positionalUrlSlots) };
           // ...and, written as the app's own record number (`#4`), into the
@@ -3164,6 +3164,21 @@ export function substitute(text: string, slots: Map<string, string>): string {
     out = out.replace(re, `{{${name}}}`);
   }
   return out;
+}
+
+/**
+ * The fields of a locator candidate that carry a VALUE a slot can stand for.
+ * Everything else is structure — `kind`, a role's `role`, a testid's `attr`,
+ * `nth`, a point's geometry/tag — and is never a slot: hakm3-cv s_06578c
+ * step 13 stored `{"kind":"{{v3}}","text":"onsite"}` because v3's example was
+ * the word "text", and the artifact emitted `undefined.nth(0)` on every run.
+ */
+const CANDIDATE_VALUE_FIELDS = new Set(['text', 'name', 'label', 'placeholder', 'selector', 'value', 'container', 'hasText']);
+
+/** substituteDeep for one locator candidate: its value fields only (CANDIDATE_VALUE_FIELDS). */
+export function substituteCandidate<C extends LocatorCandidate>(c: C, slots: Map<string, string>): C {
+  if (!slots.size) return c;
+  return Object.fromEntries(Object.entries(c).map(([k, v]) => [k, CANDIDATE_VALUE_FIELDS.has(k) ? substituteDeep(v, slots) : v])) as C;
 }
 
 export function substituteDeep(value: unknown, slots: Map<string, string>): unknown {
