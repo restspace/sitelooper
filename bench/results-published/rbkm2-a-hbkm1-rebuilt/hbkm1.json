@@ -1,0 +1,279 @@
+{
+  "name": "hbkm1",
+  "origin": "http://127.0.0.1:8105",
+  "startUrl": "http://127.0.0.1:8105/en/login",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-signin",
+      "instruction": "Sign in to Kimai at http://127.0.0.1:8105/en/login as admin@example.com using the password exactly as the text {{env:APP_PASSWORD}}. Verify that sign-in succeeded and report the resulting page.",
+      "skill": "s_03936b",
+      "params": {
+        "v1": "http://127.0.0.1:8105/en/login",
+        "v2": "admin@example.com",
+        "v3": "{{env:APP_PASSWORD}}"
+      },
+      "outputs": [
+        "final_url",
+        "signed_in_user",
+        "page_heading",
+        "kimai_version",
+        "login_email"
+      ],
+      "recorded": {
+        "final_url": "http://127.0.0.1:8105/en/timesheet/",
+        "signed_in_user": "admin",
+        "page_heading": "My times",
+        "kimai_version": "2.68.0",
+        "login_email": "admin@example.com",
+        "url": "http://127.0.0.1:8105/en/timesheet/"
+      },
+      "route": "http://127.0.0.1:8105/en/timesheet/"
+    },
+    {
+      "id": "02-report",
+      "instruction": "Read and report the exact names of all Kimai projects whose names start with 'Seed:' without modifying any project.",
+      "skill": "s_0beacc",
+      "params": {},
+      "outputs": [
+        "project_count_total",
+        "project_1_name",
+        "project_2_name",
+        "project_3_name",
+        "page_listing"
+      ],
+      "recorded": {
+        "project_count_total": "3",
+        "project_1_name": "Seed: Annual audit",
+        "project_2_name": "Seed: Office move",
+        "project_3_name": "Seed: Website relaunch",
+        "page_listing": "Administration > Projects",
+        "url": "http://127.0.0.1:8105/en/admin/project/"
+      },
+      "route": "http://127.0.0.1:8105/en/admin/project/"
+    },
+    {
+      "id": "03-create",
+      "instruction": "Create and save exactly one new project named '{{runid}} Bench Project' with a description that includes the exact runid '{{runid}}'. Do not modify any seed project. If the form requires a customer to save, choose the exact existing customer 'Bench Customer'. Verify the saved project name, description, and its details-page URL.",
+      "skill": "s_77406c",
+      "params": {
+        "v2": "{{runid}} Bench Project",
+        "v1": "{{runid}}"
+      },
+      "outputs": [
+        "project_details_url",
+        "project_id",
+        "project_name",
+        "project_description",
+        "project_customer",
+        "seed_projects_untouched",
+        "runid",
+        "project_heading"
+      ],
+      "recorded": {
+        "project_details_url": "http://127.0.0.1:8105/en/admin/project/40014/details",
+        "project_id": "40014",
+        "project_name": "hbkm1-n1 Bench Project",
+        "project_description": "Bench project created by automation for runid hbkm1-n1",
+        "project_customer": "Bench Customer",
+        "seed_projects_untouched": "Seed: Annual audit, Seed: Office move, Seed: Website relaunch",
+        "runid": "hbkm1-n1",
+        "project_heading": "hbkm1-n1 Bench Project",
+        "url": "http://127.0.0.1:8105/en/admin/project/40014/details",
+        "url.p3": "40014"
+      },
+      "route": "http://127.0.0.1:8105/en/admin/project/:id/details"
+    },
+    {
+      "id": "04-edit",
+      "instruction": "Correct the order date for the existing project '{{runid}} Bench Project' to 2026-11-15. Inspect the project edit form carefully to identify the input explicitly associated with 'Order date' (not another duplicate-looking date input); enter the date in its accepted format and save. Verify by reopening/reloading the edit form that the Order date field itself contains 11/15/2026 (or the equivalent displayed date), and report its value. Keep order number PO-4471 and all other project data unchanged.",
+      "skill": "s_8cdc47",
+      "params": {
+        "v1": "{{runid}} Bench Project",
+        "v3": "2026-11-15",
+        "v5": "11/15/2026",
+        "v4": "PO-4471",
+        "v2": "{{runid}}",
+        "v6": "{{03-create.url.p3}}"
+      },
+      "outputs": [
+        "project_edit_url",
+        "project_details_url",
+        "project_name",
+        "order_date_saved_and_verified",
+        "order_number_unchanged_verified",
+        "details_page_order_date_row",
+        "edit_form_field",
+        "project_record_id_from_url",
+        "order_date_before_save",
+        "order_number_before_save",
+        "order_date_after_typing",
+        "order_date_after_blur",
+        "reloaded_order_date_field",
+        "reloaded_order_number_field",
+        "reloaded_project_name_field",
+        "ref",
+        "details_page_order_number_row_1",
+        "details_page_order_number_row_2"
+      ],
+      "recorded": {
+        "project_edit_url": "http://127.0.0.1:8105/en/admin/project/40014/edit",
+        "project_details_url": "http://127.0.0.1:8105/en/admin/project/40014/details",
+        "project_name": "hbkm1-n1 Bench Project",
+        "order_date_saved_and_verified": "11/15/2026",
+        "order_number_unchanged_verified": "PO-4471",
+        "details_page_order_date_row": "Order date\t11/15/2026",
+        "edit_form_field": "project_edit_form[orderDate] (label \"Order date\", section \"Invoices\", placeholder M/D/YYYY)",
+        "project_record_id_from_url": "40014",
+        "order_date_before_save": "11/15/2026",
+        "order_number_before_save": "PO-4471",
+        "order_date_after_typing": "11/15/2026",
+        "order_date_after_blur": "11/15/2026",
+        "reloaded_order_date_field": "11/15/2026",
+        "reloaded_order_number_field": "PO-4471",
+        "reloaded_project_name_field": "hbkm1-n1 Bench Project",
+        "ref": "hbkm1-n1",
+        "details_page_order_number_row_1": "Order number",
+        "details_page_order_number_row_2": "PO-4471",
+        "url": "http://127.0.0.1:8105/en/admin/project/40014/edit"
+      },
+      "route": "http://127.0.0.1:8105/en/admin/project/:id/edit"
+    },
+    {
+      "id": "05-create",
+      "instruction": "Create and save exactly one timesheet entry on project '{{runid}} Bench Project' for 2026-09-16 from 09:00 to 11:30, with description including exact runid '{{runid}}'. Select the existing activity exactly named 'Consulting' (not similarly named activities), and select only the existing tag exactly 'onsite' (do not create a tag). Use the signed-in user's displayed timezone as instructed. Verify the saved timesheet entry and report its date, start/end times, description, project, activity, and complete tag list.",
+      "skill": "s_476957",
+      "params": {
+        "v1": "{{runid}} Bench Project",
+        "v2": "{{runid}}",
+        "v3": "Consulting",
+        "v4": "onsite"
+      },
+      "outputs": [
+        "date",
+        "start_time",
+        "end_time",
+        "duration",
+        "description",
+        "project",
+        "customer",
+        "activity",
+        "tags_selected",
+        "list_row_text",
+        "reopened_edit_dialog",
+        "user_timezone_field",
+        "user_first_working_day",
+        "form_begin_date",
+        "form_begin_time",
+        "form_end_time",
+        "form_duration",
+        "form_description",
+        "form_tags_selected",
+        "form_project_selected_text",
+        "form_begin_date_typed",
+        "form_duration_after_date",
+        "saved_entry_from_date",
+        "saved_entry_from_time",
+        "saved_entry_end_time",
+        "saved_entry_duration",
+        "saved_entry_description",
+        "saved_entry_tag_count",
+        "saved_entry_tag_name",
+        "dropdown_menu_option",
+        "ref"
+      ],
+      "recorded": {
+        "date": "9/16/2026",
+        "start_time": "9:00 AM",
+        "end_time": "11:30 AM",
+        "duration": "2:30",
+        "description": "Bench timesheet entry for runid hbkm1-n1",
+        "project": "hbkm1-n1 Bench Project",
+        "customer": "Bench Customer",
+        "activity": "Consulting",
+        "tags_selected": "onsite (only option selected; tag list was offsite, onsite-remote, onsite)",
+        "list_row_text": "9/16/2026\t9:00 AM\t11:30 AM\t2:30\tBench Customer\thbkm1-n1 Bench Project\tConsulting",
+        "reopened_edit_dialog": "begin_date=9/16/2026, begin_time=9:00 AM, end_time=11:30 AM, duration=2:30, description='Bench timesheet entry for runid hbkm1-n1', selected tag text=onsite",
+        "user_timezone_field": "none displayed on /en/profile/admin or its Settings tab; times were entered and re-read in the app's own display, i.e. in the signed-in user's timezone",
+        "user_first_working_day": "9/16/2026",
+        "form_begin_date": "10/6/2026",
+        "form_begin_time": "9:00 AM",
+        "form_end_time": "11:30 AM",
+        "form_duration": "2:30",
+        "form_description": "Bench timesheet entry for runid hbkm1-n1",
+        "form_tags_selected": "1",
+        "form_project_selected_text": "hbkm1-n1 Bench Project",
+        "form_begin_date_typed": "9/16/2026",
+        "form_duration_after_date": "2:30",
+        "saved_entry_from_date": "9/16/2026",
+        "saved_entry_from_time": "9:00 AM",
+        "saved_entry_end_time": "11:30 AM",
+        "saved_entry_duration": "2:30",
+        "saved_entry_description": "Bench timesheet entry for runid hbkm1-n1",
+        "saved_entry_tag_count": "1",
+        "saved_entry_tag_name": "onsite",
+        "dropdown_menu_option": "Edit",
+        "ref": "hbkm1-n1",
+        "url": "http://127.0.0.1:8105/en/profile/admin"
+      },
+      "route": "http://127.0.0.1:8105/en/profile/admin"
+    },
+    {
+      "id": "06-verify",
+      "instruction": "Verify the details page for project '{{runid}} Bench Project' and report the exact numeric ID from its URL in the form /en/admin/project/<id>/details, plus the displayed customer, order number, and order date. Do not edit anything.",
+      "skill": "s_26a7e1",
+      "params": {
+        "v1": "{{runid}} Bench Project",
+        "v3": "admin",
+        "v2": "{{runid}}",
+        "v4": "{{03-create.url.p3}}"
+      },
+      "outputs": [
+        "project_details_url",
+        "numeric_id_parsed_from_url",
+        "project_name",
+        "displayed_customer",
+        "displayed_order_number",
+        "displayed_order_date",
+        "project_number",
+        "project_id",
+        "project_details_url_pattern",
+        "ref",
+        "details_rows_1",
+        "details_rows_2",
+        "details_rows_3",
+        "details_rows_4"
+      ],
+      "recorded": {
+        "project_details_url": "http://127.0.0.1:8105/en/admin/project/40014/details",
+        "numeric_id_parsed_from_url": "40014 (parsed by me from the URL above, not a separate page element)",
+        "project_name": "hbkm1-n1 Bench Project",
+        "displayed_customer": "Bench Customer",
+        "displayed_order_number": "PO-4471",
+        "displayed_order_date": "11/15/2026",
+        "project_number": "0005",
+        "project_id": "40014",
+        "project_details_url_pattern": "/en/admin/project/40014/details",
+        "ref": "hbkm1-n1",
+        "details_rows_1": "Customer Bench Customer 0",
+        "details_rows_2": "Order number PO-4471",
+        "details_rows_3": "Order date 11/15/2026",
+        "details_rows_4": "Project number 0005"
+      },
+      "route": "http://127.0.0.1:8105/en/admin/project/:id/details"
+    }
+  ],
+  "provenance": {
+    "session": "hbkm1-n1",
+    "created": "2026-10-09T19:49:45.103Z"
+  },
+  "omitted": [
+    {
+      "instruction": "Edit the existing project 'hbkm1-n1 Bench Project' to set its order number to 'PO-4471' and order date to 2026-11-15. Save once and verify the saved order number and date on the project page.",
+      "mutations": 12,
+      "status": "failure"
+    }
+  ]
+}

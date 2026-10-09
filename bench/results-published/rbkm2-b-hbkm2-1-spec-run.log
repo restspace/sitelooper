@@ -1,0 +1,19 @@
+[spec-replay] resetting kimai
+[spec-replay] compiling: /opt/node22/bin/node /tmp/before/bin/sitelooper.js compile /tmp/rbkm2-Nzw4OR/run/b-hbkm2-1/hbkm2.json --out /home/user/sitelooper/bench/results/rbkm2-b-hbkm2-1-spec-tmp --overwrite-spec
+flow: /home/user/sitelooper/bench/results/rbkm2-b-hbkm2-1-spec-tmp/hbkm2.flow.ts
+spec: /home/user/sitelooper/bench/results/rbkm2-b-hbkm2-1-spec-tmp/hbkm2.spec.ts
+facts http://127.0.0.1:8105: 0 relied (0 hard), 0 advisory
+warning the recording's instruction "Create and save exactly one project named 'hbkm2-n1 Bench Project'. Set its description to…" changed the app but is not in the flow — a spec may pass without that work
+  why: it ran 16 state-changing step(s) and reported failure, and no step of the flow carries them
+  fix: check the flow covers the work another way; if not, re-record so that instruction reports success
+warning the recording's instruction "Update the already-created project 'hbkm2-n1 Bench Project' only to ensure its order date …" changed the app but is not in the flow — a spec may pass without that work
+  why: it ran 42 state-changing step(s) and reported failure, and no step of the flow carries them
+  fix: check the flow covers the work another way; if not, re-record so that instruction reports success
+warning 03-create: it has no converged procedure, so the compiled spec throws here
+  why: nothing in the store resolves to a recorded procedure for this step; the emitted body is a throw, not a silent skip.
+  fix: sitelooper rerecord /tmp/rbkm2-Nzw4OR/run/b-hbkm2-1/hbkm2.json 03-create
+
+sitelooper: not compilable: 1 step(s) have no converged procedure: 03-create; TODO: no converged procedure for "Create and save exactly one timesheet record on project '{{runid}} Bench Project' for 2026-09-16 from 09:00 to 11:30, with a description containing literal runid {{runid}}. Choose the existing activit…"
+[spec-replay] rbkm2-b-hbkm2-1: not compilable — result written (exit 2)
+[reset] kimai: no timesheets to delete
+[reset] kimai: no projects to delete

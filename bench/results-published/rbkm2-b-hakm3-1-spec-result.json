@@ -1,0 +1,52 @@
+{
+  "arm": "spec",
+  "runid": "rbkm2-b-hakm3-1",
+  "target": "kimai",
+  "flow": "hakm3.json",
+  "flowName": "hakm3",
+  "skillsDir": "/tmp/rbkm2-Nzw4OR/run/b-hakm3-1/skills",
+  "compiled": true,
+  "outputs": {
+    "01-signin.avatar_initials": "AD",
+    "01-signin.profile_email_link": "mailto:admin@example.com",
+    "01-signin.account_username": "admin",
+    "01-signin.account_email": "admin@example.com",
+    "01-signin.login_url": "http://127.0.0.1:8105/en/login",
+    "02-find.projects_url": "http://127.0.0.1:8105/en/admin/project/",
+    "02-find.matching_project_count": "3",
+    "02-find.pagination_summary": "Show entries 1 to 3 from 3.",
+    "02-find.matching_projects_1": "Seed: Annual audit",
+    "02-find.matching_projects_2": "Seed: Office move",
+    "02-find.matching_projects_3": "Seed: Website relaunch"
+  },
+  "finalText": "01-signin.avatar_initials: AD\n01-signin.profile_email_link: mailto:admin@example.com\n01-signin.account_username: admin\n01-signin.account_email: admin@example.com\n01-signin.login_url: http://127.0.0.1:8105/en/login\n02-find.projects_url: http://127.0.0.1:8105/en/admin/project/\n02-find.matching_project_count: 3\n02-find.pagination_summary: Show entries 1 to 3 from 3.\n02-find.matching_projects_1: Seed: Annual audit\n02-find.matching_projects_2: Seed: Office move\n02-find.matching_projects_3: Seed: Website relaunch",
+  "flowFile": "../../home/user/sitelooper/bench/results/rbkm2-b-hakm3-1-spec-tmp/hakm3.flow.ts",
+  "specFile": "../../home/user/sitelooper/bench/results/rbkm2-b-hakm3-1-spec-tmp/hakm3.spec.ts",
+  "wallMs": 29948,
+  "exitCode": 1,
+  "timedOut": false,
+  "costUsd": 0,
+  "stats": {
+    "total": 1,
+    "passed": 0,
+    "failed": 1,
+    "skipped": 0
+  },
+  "tests": [
+    {
+      "title": "hakm3",
+      "status": "unexpected",
+      "ok": false,
+      "durationMs": 25124,
+      "error": "Error: after 03-create s_11f319/4 expected url http://127.0.0.1:8105/en/admin/project/:id/details but browser is at http://127.0.0.1:8105/en/admin/project",
+      "drift": []
+    }
+  ],
+  "drift": [],
+  "driftCount": 0,
+  "evidence": [
+    "rbkm2-b-hakm3-1-spec-failure.png",
+    "rbkm2-b-hakm3-1-spec-error-context.md"
+  ],
+  "logTail": "\nRunning 1 test using 1 worker\n\n[sitelooper step] 01-signin\n[sitelooper step] 02-find\n  ✘  1 hakm3.spec.ts:9:1 › hakm3 (25.1s)\n\n\n  1) hakm3.spec.ts:9:1 › hakm3 › 03-create: Create and save a Kimai project named '{{runid}} Bench Project' with a description that includes the exact runid '{{runid}}'. Do not change or edit any Seed: project. If the creation form requires a customer, choose the existing exact customer 'Bench Customer' (not similarly named alternatives) so the project can be saved. Verify the saved project name and description, and report whether a customer was required and selected. \n\n    Error: after 03-create s_11f319/4 expected url http://127.0.0.1:8105/en/admin/project/:id/details but browser is at http://127.0.0.1:8105/en/admin/project\n\n       at hakm3.flow.ts:16137\n\n      16135 |   // (navigationTarget), whether or not the step goes on to stop.\n      16136 |   if (verdict.diffs) volatile.push(...verdict.diffs);\n    > 16137 |   if (verdict.stop) throw new Error(verdict.stop);\n            |                           ^\n      16138 | }\n      16139 |\n      16140 | /**\n        at urlEffect (/home/user/sitelooper/bench/results/rbkm2-b-hakm3-1-spec-tmp/hakm3.flow.ts:16137:27)\n        at Object.verify (/home/user/sitelooper/bench/results/rbkm2-b-hakm3-1-spec-tmp/hakm3.flow.ts:17823:19)\n        at runStepLifecycle (/home/user/sitelooper/bench/results/rbkm2-b-hakm3-1-spec-tmp/hakm3.flow.ts:12441:24)\n        at Object.03-create (/home/user/sitelooper/bench/results/rbkm2-b-hakm3-1-spec-tmp/hakm3.flow.ts:17781:9)\n        at /home/user/sitelooper/bench/results/rbkm2-b-hakm3-1-spec-tmp/hakm3.flow.ts:22425:7\n        at runFlow (/home/user/sitelooper/bench/results/rbkm2-b-hakm3-1-spec-tmp/hakm3.flow.ts:22424:5)\n        at /home/user/sitelooper/bench/results/rbkm2-b-hakm3-1-spec-tmp/hakm3.spec.ts:14:21\n\n    attachment #2: sitelooper-drift (text/plain) ───────────────────────────────────────────────────\n    \n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    attachment #3: screenshot (image/png) ──────────────────────────────────────────────────────────\n    test-results/hakm3-hakm3/test-failed-1.png\n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    Error Context: test-results/hakm3-hakm3/error-context.md\n\n  1 failed\n    hakm3.spec.ts:9:1 › hakm3 ──────────────────────────────────────────────────────────────────────\n"
+}

@@ -1,0 +1,68 @@
+
+=== hbkm2-n1 ===
+   1 success reads= 0  model-named=[login_url,post_login_url,signed_in_user,page_heading,app_version,page_message]  would-ask=[]  backfilled=[]
+   2 success reads= 1  model-named=[matching_project_count,total_projects_listed,heading,project_name_1,project_name_2,project_name_3,matching_project_names_1,matching_project_names_2,matching_project_names_3]  would-ask=[]  backfilled=[]
+   3 blocked reads=13  model-named=[project_name,project_id,project_number,details_url,description,customer,order_number,order_date_entered,order_date_verified_on_details_page,customer_select_option_mapping]  would-ask=[]  backfilled=[input,input_2,input_3,form_name_project_edit_f,form_name_project_edit_f_2,form_name_project_edit_f_3,form_name_project_edit_f_4,form_name_project_edit_f_5]
+   4 failure reads= 5  model-named=[project_name,project_id,description,customer,order_number,order_date_entered,order_date_saved,details_url]  would-ask=[]  backfilled=[]
+   5 blocked reads=13  model-named=[project_name,project_id,details_url,description,customer,order_number,order_date_requested,order_date_actually_stored,order_date_field_format,save_button_selector,order_date_shown_on_details_page]  would-ask=[]  backfilled=[project_edit_form_orderd,role_dialog_button,project_edit_form_orderd_2]
+   6 failure reads= 6  model-named=[project_name,project_id,order_date_entered,order_date_persisted,save_outcome]  would-ask=[]  backfilled=[]
+   7 blocked reads=19  model-named=[entry_rows_found,row_text,date_saved,requested_date_rejected_because,entry2_edit_href,project,activity,customer,tag_selected_in_dialog,description_in_dialog,tags_and_description_on_saved_row]  would-ask=[]  backfilled=[input_name_timesheet_edi,input_name_timesheet_edi_2,input_name_timesheet_edi_3,role_dialog_button]
+   8 failure reads= 5  model-named=[existing_row_count,existing_row_values,attempted_date_value,post_save_date_verification,requested_description,activity,tag,entry_matching_all_requested_fields]  would-ask=[]  backfilled=[]
+   9 success reads=25  model-named=[repaired_entry_id,entry_edit_url,pick_datepicker_month_header_read,datepicker_library,verified_begin_date,verified_begin_time,verified_end_time,verified_duration,verified_description,verified_customer,verified_project,verified_activity,verified_tags,list_row_for_entry2,other_entry_id,other_entry_row_text_unchanged,new_entries_created,date_before_edit,date_after_fill,begin_date_after_fill,duration_now,end_time_now,begin_date_after_picker,begin_time_check,end_time_check,duration_check,ref]  would-ask=[]  backfilled=[tr_data_href,timesheet_edit_form_tags,timesheet_edit_form_tags_2]
+      recorded ask: asked=[September2026] named=true
+  10 success reads=12  model-named=[customer_unchanged,description_unchanged,details_url,details_page_row_order_date,new_projects_created,order_date_persisted_verified,order_date_verified_sources,order_date_was_before,order_number_unchanged,picker_month_header_read,project_name_heading,project_number_unchanged,verified_via,project_id,other_fields_changed,order_date_after_pick,order_number_value,project_name_value,url_after_save,dialog_order_date,dialog_order_number,ref,ref_2]  would-ask=[]  backfilled=[litepicker_month_item_he]
+  11 success reads=12  model-named=[deleted_entry_id,deleted_entry_date_was,delete_confirm_text,delete_confirm_target,remaining_entry_id,remaining_entry_edit_url,remaining_entry_date,remaining_entry_start_time,remaining_entry_end_time,remaining_entry_duration,remaining_entry_description,remaining_entry_customer,remaining_entry_project,remaining_entry_activity,remaining_entry_tags,remaining_row_text,remaining_rows_in_list,project_details_url,project_order_date_still_saved,project_order_number_still_saved,project_number_still_saved,project_working_hours_now,project_billable_now,new_entries_created,final_begin_date,final_begin_time,final_end_time,final_duration,final_description,ref]  would-ask=[/en/timesheet/2/edit]  backfilled=[tr_data_href,timesheet_edit_form_cust]
+      recorded ask: asked=[/en/timesheet/2/edit] named=true
+  flow: 5 step(s), 5 cross-step reference(s), adopted [03-create]
+  refs: {"{{runid}}":9,"{{env:APP_PASSWORD}}":2,"{{03-create.date_before_edit}}":2,"{{03-create.attempted_date_value}}":2,"{{04-verify.url.p3}}":1}
+    01-signin publishes [login_url,post_login_url,signed_in_user,page_heading,app_version,page_message]
+    02-report publishes [matching_project_count,total_projects_listed,heading,project_name_1,project_name_2,project_name_3,matching_project_names_1,matching_project_names_2,matching_project_names_3]
+    03-create publishes [existing_row_count,existing_row_values,attempted_date_value,post_save_date_verification,requested_description,activity,tag,entry_matching_all_requested_fields,repaired_entry_id,entry_edit_url,pick_datepicker_month_header_read,datepicker_library,verified_begin_date,verified_begin_time,verified_end_time,verified_duration,verified_description,verified_customer,verified_project,verified_activity,verified_tags,list_row_for_entry2,other_entry_id,other_entry_row_text_unchanged,new_entries_created,date_before_edit,date_after_fill,begin_date_after_fill,duration_now,end_time_now,begin_date_after_picker,begin_time_check,end_time_check,duration_check,tr_data_href,timesheet_edit_form_tags,ref]
+    04-verify publishes [customer_unchanged,description_unchanged,details_url,details_page_row_order_date,new_projects_created,order_date_persisted_verified,order_date_verified_sources,order_date_was_before,order_number_unchanged,picker_month_header_read,project_name_heading,project_number_unchanged,verified_via,project_id,other_fields_changed,order_date_after_pick,order_number_value,project_name_value,url_after_save,dialog_order_date,dialog_order_number,litepicker_month_item_he,ref,ref_2]
+    05-remove publishes [deleted_entry_id,deleted_entry_date_was,delete_confirm_text,delete_confirm_target,remaining_entry_id,remaining_entry_edit_url,remaining_entry_date,remaining_entry_start_time,remaining_entry_end_time,remaining_entry_duration,remaining_entry_description,remaining_entry_customer,remaining_entry_project,remaining_entry_activity,remaining_entry_tags,remaining_row_text,remaining_rows_in_list,project_details_url,project_order_date_still_saved,project_order_number_still_saved,project_number_still_saved,project_working_hours_now,project_billable_now,new_entries_created,final_begin_date,final_begin_time,final_end_time,final_duration,final_description,tr_data_href,timesheet_edit_form_cust,ref]
+  lint: {{03-create.date_before_edit}} (used by 05-remove) can only be re-observed by model recovery — consider re-recording so the value is read from the page.
+  lint: {{03-create.attempted_date_value}} (used by 05-remove) can only be re-observed by model recovery — consider re-recording so the value is read from the page.
+
+{
+  "tag": "hbkm2",
+  "runs": [
+    {
+      "runid": "hbkm2-n1",
+      "instructions": 11,
+      "withModelNames": 11,
+      "wouldAsk": 1,
+      "crossStepRefs": 5,
+      "stepsPublishing": 5,
+      "flowSteps": 5,
+      "adoptedSteps": 1,
+      "markers": [
+        "967453:{{v1}} = \"hbkm2-n1 Bench Project\"",
+        "967453:{{v2}} = \"hbkm2-n1\"",
+        "967453:{{v1}} = \"hbkm2-n1 Bench Project\"",
+        "967453:{{v2}} = \"hbkm2-n1\"",
+        "967453:{{v1}} = \"hbkm2-n1 Bench Project\"",
+        "967453:{{v2}} = \"hbkm2-n1\"",
+        "967453:{{v1}} = \"hbkm2-n1 Bench Project\"",
+        "967453:{{v2}} = \"hbkm2-n1\"",
+        "967453:{{v1}} = \"hbkm2-n1 Bench Project\"",
+        "967453:{{v2}} = \"hbkm2-n1\"",
+        "967453:{{v1}} = \"hbkm2-n1 Bench Project\"",
+        "967453:{{v2}} = \"hbkm2-n1\"",
+        "069ebf:{{v1}} = \"hbkm2-n1 Bench Project\"",
+        "069ebf:{{v2}} = \"hbkm2-n1\"",
+        "069ebf:{{v1}} = \"hbkm2-n1 Bench Project\"",
+        "069ebf:{{v2}} = \"hbkm2-n1\"",
+        "069ebf:{{v1}} = \"hbkm2-n1 Bench Project\"",
+        "069ebf:{{v2}} = \"hbkm2-n1\"",
+        "d8cbb4:{{v1}} = \"hbkm2-n1 Bench Project\"",
+        "d8cbb4:{{v2}} = \"hbkm2-n1\"",
+        "d8cbb4:{{v1}} = \"hbkm2-n1 Bench Project\"",
+        "d8cbb4:{{v2}} = \"hbkm2-n1\"",
+        "d8cbb4:{{v1}} = \"hbkm2-n1 Bench Project\"",
+        "d8cbb4:{{v2}} = \"hbkm2-n1\"",
+        "d8cbb4:{{v1}} = \"hbkm2-n1 Bench Project\"",
+        "d8cbb4:{{v2}} = \"hbkm2-n1\""
+      ]
+    }
+  ]
+}

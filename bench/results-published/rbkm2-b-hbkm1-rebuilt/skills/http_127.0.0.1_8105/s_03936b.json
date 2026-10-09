@@ -1,0 +1,206 @@
+{
+ "id": "s_03936b",
+ "origin": "http://127.0.0.1:8105",
+ "template": "Sign in to Kimai at {{v1}} as {{v2}} using the password exactly as the text {{v3}}. Verify that sign-in succeeded and report the resulting page.",
+ "params": {
+  "v1": {
+   "example": "http://127.0.0.1:8105/en/login",
+   "usedIn": [
+    1
+   ]
+  },
+  "v2": {
+   "example": "admin@example.com",
+   "usedIn": [
+    2
+   ]
+  },
+  "v3": {
+   "example": "{{env:APP_PASSWORD}}",
+   "usedIn": [
+    3
+   ]
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8105/en/login"
+ },
+ "steps": [
+  {
+   "tool": "goto",
+   "args": {
+    "url": "{{v1}}"
+   },
+   "locators": {}
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e13",
+    "value": "{{v2}}"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Username"
+     },
+     {
+      "kind": "label",
+      "label": "Username"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "Username"
+     },
+     {
+      "kind": "id",
+      "selector": "#username"
+     },
+     {
+      "kind": "css",
+      "selector": "#username"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 498,
+      "w": 366,
+      "h": 40,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8105/en/login",
+    "addedContains": [
+     "- textbox \"Username\": {{v2}}"
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e19",
+    "value": "{{v3}}"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Password I forgot my password"
+     },
+     {
+      "kind": "label",
+      "label": "Password I forgot my password"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "Password"
+     },
+     {
+      "kind": "id",
+      "selector": "#password"
+     },
+     {
+      "kind": "css",
+      "selector": "#password"
+     },
+     {
+      "kind": "point",
+      "x": 614,
+      "y": 582,
+      "w": 313,
+      "h": 40,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8105/en/login",
+    "addedContains": [
+     "- textbox \"Password\": {{v3}}"
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e27"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Log in"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > div > form > div:nth-of-type(3) > button"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 654,
+      "w": 366,
+      "h": 40,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8105/en/timesheet/",
+    "alertContains": "No entries were found based on your selected filters.",
+    "addedContains": [
+     "- link \"Dashboard\"",
+     "- button \"Time Tracking\"",
+     "- link \"Weekly hours\""
+    ],
+    "lineDialect": 2
+   }
+  }
+ ],
+ "contract": 4,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-10-09T19:49:45.345Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 4
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_f2e471",
+  "index": 0,
+  "of": 2
+ },
+ "provenance": {
+  "session": "rebuild",
+  "instruction": "Sign in to Kimai at http://127.0.0.1:8105/en/login as admin@example.com using the password exactly as the text {{env:APP_PASSWORD}}. Verify that sign-in succeeded and report the resulting page.",
+  "created": "2026-10-09T19:49:45.345Z",
+  "transforms": [
+   {
+    "name": "unfreezeExpectations",
+    "at": 4,
+    "reason": "recorded page change(s) only the recording run could produce: [\"- link \\\"Dashboard\\\"\",\"- link \\\"Dashboard\\\"\",\"- button \\\"Time Tracking\\\"\",\"- link \\\"My times\\\"\",\"- link \\\"Weekly hours\\\"\"] → [\"- link \\\"Dashboard\\\"\",\"- button \\\"Time Tracking\\\"\",\"- link \\\"Weekly hours\\\"\"]"
+   }
+  ]
+ },
+ "revision": 1
+}

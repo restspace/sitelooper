@@ -1,0 +1,48 @@
+{
+  "arm": "spec",
+  "runid": "rbkm2-a-hbkm1-1",
+  "target": "kimai",
+  "flow": "hbkm1.json",
+  "flowName": "hbkm1",
+  "skillsDir": "/tmp/rbkm2-Nzw4OR/run/a-hbkm1-1/skills",
+  "compiled": true,
+  "outputs": {
+    "01-signin.final_url": "http://127.0.0.1:8105/en/timesheet/",
+    "01-signin.signed_in_user": "admin",
+    "01-signin.page_heading": "My times",
+    "02-report.project_1_name": "Seed: Annual audit",
+    "02-report.project_2_name": "Seed: Office move",
+    "02-report.project_3_name": "Seed: Website relaunch",
+    "02-report.project_count_total": "3"
+  },
+  "finalText": "01-signin.final_url: http://127.0.0.1:8105/en/timesheet/\n01-signin.signed_in_user: admin\n01-signin.page_heading: My times\n02-report.project_1_name: Seed: Annual audit\n02-report.project_2_name: Seed: Office move\n02-report.project_3_name: Seed: Website relaunch\n02-report.project_count_total: 3",
+  "flowFile": "bench/results/rbkm2-a-hbkm1-1-spec-tmp/hbkm1.flow.ts",
+  "specFile": "bench/results/rbkm2-a-hbkm1-1-spec-tmp/hbkm1.spec.ts",
+  "wallMs": 26931,
+  "exitCode": 1,
+  "timedOut": false,
+  "costUsd": 0,
+  "stats": {
+    "total": 1,
+    "passed": 0,
+    "failed": 1,
+    "skipped": 0
+  },
+  "tests": [
+    {
+      "title": "hbkm1",
+      "status": "unexpected",
+      "ok": false,
+      "durationMs": 22640,
+      "error": "Error: after 03-create s_77406c/4 expected url http://127.0.0.1:8105/en/admin/project/:id/details but browser is at http://127.0.0.1:8105/en/admin/project",
+      "drift": []
+    }
+  ],
+  "drift": [],
+  "driftCount": 0,
+  "evidence": [
+    "rbkm2-a-hbkm1-1-spec-failure.png",
+    "rbkm2-a-hbkm1-1-spec-error-context.md"
+  ],
+  "logTail": "\nRunning 1 test using 1 worker\n\n[sitelooper warn] 01-signin: report value login_email is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)\n[sitelooper step] 01-signin\n[sitelooper step] 02-report\n  ✘  1 hbkm1.spec.ts:9:1 › hbkm1 (22.6s)\n\n\n  1) hbkm1.spec.ts:9:1 › hbkm1 › 03-create: Create and save exactly one new project named '{{runid}} Bench Project' with a description that includes the exact runid '{{runid}}'. Do not modify any seed project. If the form requires a customer to save, choose the exact existing customer 'Bench Customer'. Verify the saved project name, description, and its details-page URL. \n\n    Error: after 03-create s_77406c/4 expected url http://127.0.0.1:8105/en/admin/project/:id/details but browser is at http://127.0.0.1:8105/en/admin/project\n\n       at hbkm1.flow.ts:15581\n\n      15579 |   // (navigationTarget), whether or not the step goes on to stop.\n      15580 |   if (verdict.diffs) volatile.push(...verdict.diffs);\n    > 15581 |   if (verdict.stop) throw new Error(verdict.stop);\n            |                           ^\n      15582 | }\n      15583 |\n      15584 | /**\n        at urlEffect (/home/user/sitelooper/bench/results/rbkm2-a-hbkm1-1-spec-tmp/hbkm1.flow.ts:15581:27)\n        at Object.verify (/home/user/sitelooper/bench/results/rbkm2-a-hbkm1-1-spec-tmp/hbkm1.flow.ts:17131:19)\n        at runStepLifecycle (/home/user/sitelooper/bench/results/rbkm2-a-hbkm1-1-spec-tmp/hbkm1.flow.ts:12233:24)\n        at Object.03-create (/home/user/sitelooper/bench/results/rbkm2-a-hbkm1-1-spec-tmp/hbkm1.flow.ts:17089:9)\n        at /home/user/sitelooper/bench/results/rbkm2-a-hbkm1-1-spec-tmp/hbkm1.flow.ts:20871:7\n        at runFlow (/home/user/sitelooper/bench/results/rbkm2-a-hbkm1-1-spec-tmp/hbkm1.flow.ts:20870:5)\n        at /home/user/sitelooper/bench/results/rbkm2-a-hbkm1-1-spec-tmp/hbkm1.spec.ts:14:21\n\n    attachment #2: sitelooper-drift (text/plain) ───────────────────────────────────────────────────\n    \n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    attachment #3: screenshot (image/png) ──────────────────────────────────────────────────────────\n    test-results/hbkm1-hbkm1/test-failed-1.png\n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    Error Context: test-results/hbkm1-hbkm1/error-context.md\n\n  1 failed\n    hbkm1.spec.ts:9:1 › hbkm1 ──────────────────────────────────────────────────────────────────────\n"
+}

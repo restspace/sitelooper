@@ -1,0 +1,13 @@
+[spec-replay] resetting kimai
+[spec-replay] compiling: /opt/node22/bin/node /home/user/sitelooper/bin/sitelooper.js compile /tmp/rbkm2-Nzw4OR/run/a-hakm1-2/hakm1.json --out /home/user/sitelooper/bench/results/rbkm2-a-hakm1-2-spec-tmp --overwrite-spec
+facts http://127.0.0.1:8105: 0 relied (0 hard), 0 advisory
+error 04-create: its pinned procedure s_ebe743 ends early (sourcelessGoto) and drops 5 state-changing gesture(s) the recording made (click, click, click, click, click) — a compiled spec would pass without that work
+  why: goto http://127.0.0.1:8105/en/timesheet/1/edit reached a record no step supplies (p2=1); the procedure ends before it
+  fix: sitelooper rerecord /tmp/rbkm2-Nzw4OR/run/a-hakm1-2/hakm1.json 04-create
+
+nothing written: the error(s) above are about the RECORDING, not the app — a compiled spec would fail at a locator and read as drift.
+re-record the step(s) with the fix command above.
+sitelooper: refused: cut-procedure — see the diagnostics above
+[spec-replay] rbkm2-a-hakm1-2: not compilable — result written (exit 2)
+[reset] kimai: deleted 1 timesheet(s)
+[reset] kimai: deleted 1 project(s) (earlier runs' and non-seed)

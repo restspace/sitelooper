@@ -1,0 +1,194 @@
+{
+  "name": "hakm1",
+  "origin": "http://127.0.0.1:8105",
+  "startUrl": "http://127.0.0.1:8105/en/login",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-signin",
+      "instruction": "Sign in to Kimai at http://127.0.0.1:8105/en/login with username admin@example.com and password exactly {{env:APP_PASSWORD}}. Verify that the signed-in app is reached.",
+      "skill": "s_a61154",
+      "params": {
+        "v1": "http://127.0.0.1:8105/en/login",
+        "v2": "admin@example.com",
+        "v3": "{{env:APP_PASSWORD}}"
+      },
+      "outputs": [
+        "kimai_version",
+        "logged_in_url",
+        "profile_url",
+        "signed_in_email",
+        "signed_in_user",
+        "profile_email_link",
+        "profile_email_label",
+        "profile_email_href"
+      ],
+      "recorded": {
+        "kimai_version": "Kimai 2.68.0",
+        "logged_in_url": "http://127.0.0.1:8105/en/timesheet/",
+        "profile_url": "http://127.0.0.1:8105/en/profile/admin",
+        "signed_in_email": "admin@example.com",
+        "signed_in_user": "admin",
+        "profile_email_link": "mailto:admin@example.com",
+        "profile_email_label": "E-mail",
+        "profile_email_href": "mailto:admin@example.com",
+        "url": "http://127.0.0.1:8105/en/profile/admin"
+      },
+      "route": "http://127.0.0.1:8105/en/profile/admin"
+    },
+    {
+      "id": "02-report",
+      "instruction": "Read and report the exact names of all projects whose names start with Seed:, without modifying any projects.",
+      "skill": "s_168d88",
+      "params": {},
+      "outputs": [
+        "total_projects_shown",
+        "list_url",
+        "projects_matching_count",
+        "seed_annual_audit_project_name",
+        "seed_office_move_project_name",
+        "table_tbody_tr_td_first__3",
+        "projects_starting_with_Seed_1",
+        "projects_starting_with_Seed_2",
+        "projects_starting_with_Seed_3"
+      ],
+      "recorded": {
+        "total_projects_shown": "3",
+        "list_url": "http://127.0.0.1:8105/en/admin/project/",
+        "projects_matching_count": "3",
+        "seed_annual_audit_project_name": "Seed: Annual audit",
+        "seed_office_move_project_name": "Seed: Office move",
+        "table_tbody_tr_td_first__3": "Seed: Website relaunch",
+        "projects_starting_with_Seed_1": "Seed: Annual audit",
+        "projects_starting_with_Seed_2": "Seed: Office move",
+        "projects_starting_with_Seed_3": "Seed: Website relaunch",
+        "url": "http://127.0.0.1:8105/en/admin/project/"
+      },
+      "route": "http://127.0.0.1:8105/en/admin/project/"
+    },
+    {
+      "id": "03-create",
+      "instruction": "Create and save exactly one project named {{runid}} Bench Project. Set its description to include the exact runid {{runid}}, select the existing customer exactly named Bench Customer (not similarly named customers), set order number PO-4471 and order date 2026-11-15. Verify the saved project details, including its customer, description, order values, and details-page address/ID. Do not modify existing projects.",
+      "skill": "s_30fff5",
+      "params": {
+        "v2": "{{runid}} Bench Project",
+        "v1": "{{runid}}",
+        "v3": "Bench Customer",
+        "v4": "PO-4471"
+      },
+      "outputs": [
+        "project_name",
+        "project_id",
+        "details_url",
+        "customer_name",
+        "customer_id",
+        "customer_link",
+        "description",
+        "runid_in_description",
+        "order_number",
+        "order_date",
+        "project_number",
+        "activities_count",
+        "order_number_field",
+        "order_date_field2",
+        "customer_selected",
+        "name_field",
+        "customer_checked_option",
+        "project_details_table",
+        "saved_project_name",
+        "saved_project_description"
+      ],
+      "recorded": {
+        "project_name": "hakm1-n1 Bench Project",
+        "project_id": "40004",
+        "details_url": "http://127.0.0.1:8105/en/admin/project/40004/details",
+        "customer_name": "Bench Customer",
+        "customer_id": "1",
+        "customer_link": "/en/admin/customer/1/details",
+        "description": "Bench project for run hakm1-n1",
+        "runid_in_description": "hakm1-n1",
+        "order_number": "PO-4471",
+        "order_date": "2026-11-15 (displayed 11/15/2026)",
+        "project_number": "0005",
+        "activities_count": "0",
+        "order_number_field": "PO-4471",
+        "order_date_field2": "11/15/2026",
+        "customer_selected": "Bench Customer Ltd\nBench Customers Group\nBench Customer",
+        "name_field": "hakm1-n1 Bench Project",
+        "customer_checked_option": "Bench Customer",
+        "project_details_table": "Customer\tBench Customer\t0\t\n\nOrder number\tPO-4471\nOrder date\t11/15/2026\nProject number\t0005",
+        "saved_project_name": "hakm1-n1 Bench Project",
+        "saved_project_description": "Bench project for run hakm1-n1",
+        "url": "http://127.0.0.1:8105/en/admin/project/40004/details",
+        "url.p3": "40004"
+      },
+      "route": "http://127.0.0.1:8105/en/admin/project/:id/details"
+    },
+    {
+      "id": "04-create",
+      "instruction": "Create and save exactly one timesheet record for project {{runid}} Bench Project on 2026-09-16 from 09:00 to 11:30. Set the description to include exact runid {{runid}}. Select the existing activity exactly named Consulting (not Consulting Travel or Consultancy Review) and set its only tag to the existing tag onsite (not similar tags and do not create a tag). Verify the saved record shows the requested project, date, start/end times, description, exact activity, and only onsite as tag.",
+      "skill": "s_ebe743",
+      "params": {
+        "v1": "{{runid}} Bench Project",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "record_id",
+        "record_edit_url",
+        "api_url",
+        "project",
+        "customer",
+        "date",
+        "duration",
+        "description",
+        "runid_in_description",
+        "activity",
+        "tags",
+        "my_times_row",
+        "from_date_value",
+        "from_date_after_blur",
+        "begin_time_value",
+        "end_time_value",
+        "duration_value",
+        "my_times_rows",
+        "edit_from_date_value",
+        "my_times_rows_after_fix",
+        "start_time",
+        "end_time"
+      ],
+      "recorded": {
+        "record_id": "1",
+        "record_edit_url": "http://127.0.0.1:8105/en/timesheet/1/edit",
+        "api_url": "/api/timesheets/1",
+        "project": "hakm1-n1 Bench Project",
+        "customer": "Bench Customer",
+        "date": "2026-09-16 (displayed 9/16/2026)",
+        "duration": "2:30",
+        "description": "Bench timesheet for run hakm1-n1",
+        "runid_in_description": "hakm1-n1",
+        "activity": "Consulting",
+        "tags": "onsite",
+        "my_times_row": "9/16/2026 | 9:00 AM | 11:30 AM | 2:30 | Bench Customer | hakm1-n1 Bench Project | Consulting",
+        "from_date_value": "10/6/2026",
+        "from_date_after_blur": "09/16/2026",
+        "begin_time_value": "9:00 AM",
+        "end_time_value": "11:30 AM",
+        "duration_value": "2:30",
+        "my_times_rows": "10/6/2026\t9:00 AM\t11:30 AM\t2:30\tBench Customer\thakm1-n1 Bench Project\tConsulting",
+        "edit_from_date_value": "10/6/2026",
+        "my_times_rows_after_fix": "9/16/2026\t9:00 AM\t11:30 AM\t2:30\tBench Customer\thakm1-n1 Bench Project\tConsulting",
+        "start_time": "9:00 AM",
+        "end_time": "11:30 AM",
+        "url": "http://127.0.0.1:8105/en/timesheet/1/edit",
+        "url.p2": "1"
+      },
+      "route": "http://127.0.0.1:8105/en/timesheet/:id/edit"
+    }
+  ],
+  "provenance": {
+    "session": "hakm1-n1",
+    "created": "2026-10-09T19:49:41.825Z"
+  }
+}

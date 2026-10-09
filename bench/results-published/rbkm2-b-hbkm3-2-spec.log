@@ -1,0 +1,63 @@
+
+Running 1 test using 1 worker
+
+[sitelooper warn] 01-signin: report value login_email_used is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)
+[sitelooper step] 01-signin
+[sitelooper step] 02-find
+[sitelooper step] 03-create
+[sitelooper skip] 04-verify s_f0c9ec/1 target: read target not found — value left empty
+[sitelooper skip] 04-verify s_f0c9ec/2 target: read target not found — value left empty
+[sitelooper step] 04-verify
+[sitelooper drift] 05-create s_8cf305/7 target: used #3 locator('#timesheet_edit_form_begin_time') (#2 ambiguous)
+[sitelooper drift] 05-create s_8cf305/8 target: used #3 locator('#timesheet_edit_form_end_time') (#2 ambiguous)
+[sitelooper drift] 05-create s_8cf305/10 target: used #3 locator('#timesheet_edit_form_begin_time') (#2 ambiguous)
+[sitelooper drift] 05-create s_8cf305/11 target: used #3 locator('#timesheet_edit_form_end_time') (#2 ambiguous)
+[sitelooper warn] 05-create s_8cf305/12: read 'from_date_filled' returned '10/9/2026' from a control this step set, and nothing committed it since — it shows the control, however the app formats it, not what the app stored; dropped from the report's confident values
+[sitelooper drift] 05-create s_8cf305/13 target: used #3 locator('#timesheet_edit_form_begin_time') (#2 ambiguous)
+[sitelooper warn] 05-create s_8cf305/13: read 'saved_begin_time' returned a value the skill itself set/selected ('9:00 AM') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper drift] 05-create s_8cf305/14 target: used #3 locator('#timesheet_edit_form_end_time') (#2 ambiguous)
+[sitelooper warn] 05-create s_8cf305/14: read 'saved_end_time' returned a value the skill itself set/selected ('11:30 AM') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper warn] 05-create s_8cf305/16: read 'from_date_filled' returned '10/9/2026' from a control this step set, and nothing committed it since — it shows the control, however the app formats it, not what the app stored; dropped from the report's confident values
+[sitelooper warn] 05-create s_8cf305/20: read 'saved_date' returned a value the skill itself set/selected ('9/16/2026') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper warn] 05-create s_8cf305/22: read 'rows_in_timesheet_list' returned '1' from a control this step set, and nothing committed it since — it shows the control, however the app formats it, not what the app stored; dropped from the report's confident values
+[sitelooper warn] 05-create s_8cf305/23: read 'saved_tags' returned 'onsite' from a control this step set, and nothing committed it since — it shows the control, however the app formats it, not what the app stored; dropped from the report's confident values
+[sitelooper drift] 05-create s_8cf305/24 target: used #3 locator('#timesheet_edit_form_begin_time') (#2 ambiguous)
+[sitelooper warn] 05-create s_8cf305/24: read 'saved_begin_time' returned a value the skill itself set/selected ('9:00 AM') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper drift] 05-create s_8cf305/25 target: used #3 locator('#timesheet_edit_form_end_time') (#2 ambiguous)
+[sitelooper warn] 05-create s_8cf305/25: read 'saved_end_time' returned a value the skill itself set/selected ('11:30 AM') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper warn] 05-create s_8cf305/26: read 'saved_description' returned a value the skill itself set/selected ('Bench entry for runid rbkm2-b-hbkm3-2 (automated verificatio…') — confirms the control, not persistence; dropped from the report's confident values
+  ✘  1 hbkm3.spec.ts:9:1 › hbkm3 (58.5s)
+
+
+  1) hbkm3.spec.ts:9:1 › hbkm3 › 05-create: Create and save exactly one timesheet entry on project '{{runid}} Bench Project' for 2026-09-16 from 09:00 to 11:30, with a description including exact runid '{{runid}}'. Choose the existing activity exactly 'Consulting' and set its only tag to the existing tag exactly 'onsite' (do not create a tag or choose similar names). Verify the saved entry's project, date, times, description, activity, and only tag. 
+
+    Error: 05-create s_13c99d: identity: {{v1}} is not confirmed on this page
+
+       at hbkm3.flow.ts:19609
+
+      19607 |         const verdict = await identityMarkerVerdictWithFacts(siteFactsAt(page.url()), 'http://127.0.0.1:8105/en/timesheet/:id/edit', page.url(), p, `${p.v1}`, { presence: seen.presence, lines: async () => (await captureLines(page, 2).catch(() => null))?.lines ?? null, title: () => page.title() });
+      19608 |         if (verdict.warning) logWarning('05-create s_13c99d: ' + verdict.warning);
+    > 19609 |         if (!verdict.pass) throw new Error('05-create s_13c99d: identity: {{v1}} is not confirmed on this page');
+            |                                  ^
+      19610 |       }
+      19611 |     }
+      19612 |     // identity: this must be the record the flow is working on, not another of the same shape.
+        at Object.05-create (/home/user/sitelooper/bench/results/rbkm2-b-hbkm3-2-spec-tmp/hbkm3.flow.ts:19609:34)
+        at /home/user/sitelooper/bench/results/rbkm2-b-hbkm3-2-spec-tmp/hbkm3.flow.ts:20892:7
+        at runFlow (/home/user/sitelooper/bench/results/rbkm2-b-hbkm3-2-spec-tmp/hbkm3.flow.ts:20891:5)
+        at /home/user/sitelooper/bench/results/rbkm2-b-hbkm3-2-spec-tmp/hbkm3.spec.ts:14:21
+
+    attachment #2: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    [sitelooper drift] 05-create s_8cf305/7 target: used #3 locator('#timesheet_edit_form_begin_time') (#2 ambiguous)
+    [sitelooper drift] 05-create s_8cf305/8 target: used #3 locator('#timesheet_edit_form_end_time') (#2 ambiguous)
+    [sitelooper drift] 05-create s_8cf305/10 target: used #3 locator('#timeshe...
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/hbkm3-hbkm3/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/hbkm3-hbkm3/error-context.md
+
+  1 failed
+    hbkm3.spec.ts:9:1 › hbkm3 ──────────────────────────────────────────────────────────────────────
