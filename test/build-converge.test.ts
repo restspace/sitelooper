@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { messageAnchor } from '../src/spec/check.js';
-import { converge, failingStep, rerecordSteps, roundLine, type ConvergeCheck, type ConvergeCompile, type ConvergeRerecord, type ConvergeSeams } from '../src/spec/converge.js';
+import { converge, failingStep, omittedToRecover, rerecordSteps, roundLine, type ConvergeCheck, type ConvergeCompile, type ConvergeRerecord, type ConvergeSeams } from '../src/spec/converge.js';
 import type { Diagnostic } from '../src/spec/diagnostics.js';
 import type { DriftFlow } from '../src/spec/drift-class.js';
 
@@ -235,5 +235,71 @@ describe('build --converge: a passing check is clean only by readiness rules', (
     const r = await converge(f.seams, { ...opts, modelAvailable: false });
     expect(r.status).toBe('unavailable');
     expect(r.why).toContain('05-open needs a re-record (the spec passed but 1 blocking locator fallbacks');
+  });
+});
+
+// kimai hbkm3 (results/rbkm2): "Update and save the order number and order
+// date…" blocked, its retry failed, and a later instruction fixed the date
+// only. The flow left both out (Flow.omitted) and the spec passed with no
+// order number. Converge puts the instruction back as a step and records it.
+describe('build --converge: omitted work is redone before the spec is checked', () => {
+  const lostDiag = (): Diagnostic => ({
+    code: 'omitted-work', what: 'the recording\'s instruction "Update and save the order number…" changed the app but is not in the flow', why: 'w', severity: 'warning',
+    action: { command: 'recover', args: ['04-verify', 'Update and save the order number on {{runid}} Bench Project'], step: '04b-verify' },
+  });
+  const withLost = (): ConvergeCompile => ({ ...compiled(), diagnostics: [lostDiag()] });
+  const recovering = (q: Parameters<typeof fakes>[0], answers: ConvergeRerecord[] = []) => {
+    const f = fakes(q);
+    const recovered: Array<{ step: string; after: string | null; instruction: string; runs: number }> = [];
+    f.seams.recover = async (o) => { f.calls.push(`recover ${o.step}`); recovered.push(o); return answers.shift() ?? ok(7); };
+    return { ...f, recovered };
+  };
+
+  it('inserts and records the step, then compiles and checks the result', async () => {
+    const f = recovering({ compile: [withLost(), compiled()], check: [pass()] });
+    const r = await converge(f.seams, opts);
+    expect(r.status).toBe('converged');
+    expect(f.calls).toEqual(['compile', 'recover 04b-verify', 'compile', 'reset', 'check']);
+    expect(f.recovered).toEqual([{ step: '04b-verify', after: '04-verify', instruction: 'Update and save the order number on {{runid}} Bench Project', runs: 2 }]);
+    expect(r.rounds[0].rerecord).toMatchObject({ step: '04b-verify', ok: true, turns: 7 });
+    expect(r.rounds[0].check).toBeUndefined();
+    expect(roundLine(r.rounds[0])).toContain('re-record 04b-verify ok');
+  });
+
+  it('never calls a spec converged while the work is still out: two refused attempts stop it', async () => {
+    const f = recovering({ compile: [withLost(), withLost(), withLost()] }, [refused(), refused()]);
+    const r = await converge(f.seams, opts);
+    expect(r.status).toBe('stuck-repin');
+    expect(f.recovered.map((x) => x.runs)).toEqual([2, 3]);
+    expect(f.calls).not.toContain('check');
+  });
+
+  it('is exhausted, saying what is missing, when the last round still has it', async () => {
+    // The re-record was kept, yet the next compile still names the work as out.
+    const f = recovering({ compile: [withLost(), withLost()] }, [ok()]);
+    const r = await converge(f.seams, { maxRounds: 1, rerecordRuns: 2 });
+    expect(r.status).toBe('exhausted');
+    expect(r.why).toContain('still not in the flow');
+  });
+
+  it('a compile refusal is dealt with first', async () => {
+    const f = recovering({ compile: [{ ...refusal('02-create'), diagnostics: [...refusal('02-create').diagnostics, lostDiag()] }, withLost(), compiled()], check: [pass()] });
+    const r = await converge(f.seams, opts);
+    expect(r.status).toBe('converged');
+    expect(f.calls).toEqual(['compile', 'rerecord 02-create', 'compile', 'recover 04b-verify', 'compile', 'reset', 'check']);
+  });
+
+  it('without a model it stops unavailable, naming the step', async () => {
+    const f = recovering({ compile: [withLost()] });
+    const r = await converge(f.seams, { ...opts, modelAvailable: false });
+    expect(r.status).toBe('unavailable');
+    expect(r.why).toContain('04b-verify');
+  });
+
+  it('an omission compile cannot place, or a loop with no recover seam, is left a warning', async () => {
+    const plain: Diagnostic = { code: 'omitted-work', what: 'w', why: 'w', severity: 'warning' };
+    expect(omittedToRecover([plain])).toBeNull();
+    const f = fakes({ compile: [withLost()], check: [pass()] });
+    expect((await converge(f.seams, opts)).status).toBe('converged');
   });
 });

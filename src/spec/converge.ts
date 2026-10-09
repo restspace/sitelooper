@@ -32,6 +32,13 @@
  *  - The last re-record is compiled and checked too: the loop must not end on
  *    an untested recording (fwgt15-cv2).
  *
+ *  - Work the recording did that the flow left out (Flow.omitted, compile's
+ *    `omitted-work`) is REDONE before the spec is checked: the instruction is
+ *    inserted as a step where it was recorded and re-recorded like any other.
+ *    A spec that passes without it proves nothing (kimai hbkm3: the order
+ *    number was only ever set by a blocked instruction and its failed retry;
+ *    the spec passed with none).
+ *
  * Every effect is a seam, so the loop is driven with fakes in
  * test/build-converge.test.ts; src/cli.ts wires the real compile, spec check,
  * re-record and reset command.
@@ -82,6 +89,12 @@ export interface ConvergeSeams {
   check(flowFile: string): ConvergeCheck;
   /** Re-record one step. `outputs`: values a later step needs, to be read from the page. */
   rerecord(step: string, o: { runs: number; outputs: string[] }): Promise<ConvergeRerecord>;
+  /**
+   * Insert the omitted instruction as step `step` after `after` (null: first)
+   * when the flow has no such step yet, then re-record it. On success the
+   * flow's omitted entry goes. Absent: omitted work is left as a warning.
+   */
+  recover?(o: { step: string; after: string | null; instruction: string; runs: number }): Promise<ConvergeRerecord>;
   /** Puts the app back before every check (the `--reset-cmd`); absent when there is none. */
   reset?(): void;
   /** One progress line per event; the CLI prints them to stderr. */
@@ -163,6 +176,16 @@ export function rerecordSteps(diagnostics: Diagnostic[], order: string[]): strin
   return [...new Set(named)].sort((a, b) => (at.get(a) ?? 1e9) - (at.get(b) ?? 1e9));
 }
 
+/** The first omitted instruction a compile says `build` can redo (ir.ts omittedDiagnostics' `recover` action). */
+export function omittedToRecover(diagnostics: Diagnostic[]): { step: string; after: string | null; instruction: string } | null {
+  for (const d of diagnostics) {
+    if (d.code !== 'omitted-work' || d.action?.command !== 'recover' || !d.action.step) continue;
+    const [after, instruction] = d.action.args;
+    if (instruction) return { step: d.action.step, after: after || null, instruction };
+  }
+  return null;
+}
+
 /** Playwright's own whole-test budget message, as opposed to a locator or expect timeout inside a step. */
 const TEST_BUDGET = /\bTest timeout of \d+\s*ms exceeded\b/i;
 
@@ -238,7 +261,7 @@ export async function converge(seams: ConvergeSeams, o: ConvergeOptions): Promis
     rounds.push(round);
 
     // A step to re-record: with the reason, the outputs a later step needs read there.
-    const rerecordStep = async (step: string, why: string, outputs: string[]): Promise<ConvergeResult | null> => {
+    const rerecordStep = async (step: string, why: string, outputs: string[], run: (runs: number) => Promise<ConvergeRerecord> = (runs) => seams.rerecord(step, { runs, outputs })): Promise<ConvergeResult | null> => {
       if (o.modelAvailable === false) {
         return done('unavailable', `${step} needs a re-record (${why}), and no model API key is configured: set one (see \`sitelooper doctor\`) and run build again, or pass --no-converge`);
       }
@@ -248,7 +271,7 @@ export async function converge(seams: ConvergeSeams, o: ConvergeOptions): Promis
       }
       const runs = before ? Math.max(o.rerecordRuns, 3) : o.rerecordRuns;
       say(`converge round ${k}: re-recording ${step} (${why}), ${runs} run(s)${before ? ' — refused before' : ''}`);
-      const r = await seams.rerecord(step, { runs, outputs });
+      const r = await run(runs);
       if (!r.ok) refused.set(step, before + 1);
       const turns = r.runs.reduce((n, x) => n + (x.turns ?? 0), 0);
       modelTurns += turns;
@@ -262,6 +285,18 @@ export async function converge(seams: ConvergeSeams, o: ConvergeOptions): Promis
       if (!steps.length) return done('stuck', `compile refused with no re-record action${round.compile.blockers.length ? `: ${round.compile.blockers[0]}` : ''}`);
       if (final) return done('stuck', 'the last re-record did not clear the compile refusal');
       const stop = await rerecordStep(steps[0], `compile refusal${steps.length > 1 ? `; also named: ${steps.slice(1).join(', ')}` : ''}`, missingOutputs(c.diagnostics).get(steps[0]) ?? []);
+      if (stop) return stop;
+      continue;
+    }
+
+    // Work the flow left out is redone before the spec is asked anything: a
+    // pass without it is not a pass of the recording's task.
+    const lost = seams.recover ? omittedToRecover(c.diagnostics) : null;
+    if (lost) {
+      const quoted = `"${lost.instruction.slice(0, 70)}${lost.instruction.length > 70 ? '…' : ''}"`;
+      say(`converge round ${k}: the recording's instruction ${quoted} is not in the flow; redoing it as ${lost.step}`);
+      if (final) return done('exhausted', `${o.maxRounds} round(s); the recording's instruction ${quoted} changed the app and is still not in the flow`);
+      const stop = await rerecordStep(lost.step, `omitted work, recorded after ${lost.after ?? 'the start'}`, [], (runs) => (seams.recover as NonNullable<ConvergeSeams['recover']>)({ ...lost, runs }));
       if (stop) return stop;
       continue;
     }

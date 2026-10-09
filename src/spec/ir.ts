@@ -421,6 +421,15 @@ function noopDiagnostics(flow: Flow, flowFile: string | undefined): Diagnostic[]
  * a passing spec does not prove that work was done. A flow saved before
  * `omitted` was stored carries none and gets none.
  */
+/**
+ * Omitted work `build` can redo: the export placed it (Flow.omitted `step`,
+ * `text`), it was not undone, and no pinned step of that id already carries it.
+ */
+function recoverable(flow: Flow, w: NonNullable<Flow['omitted']>[number]): boolean {
+  if (!w.step || !w.text || w.undoneBy !== undefined) return false;
+  return !flow.steps.some((s) => s.id === w.step && s.skill);
+}
+
 function omittedDiagnostics(flow: Flow): Diagnostic[] {
   return (flow.omitted ?? []).map((w) => {
     const quoted = `"${w.instruction.slice(0, 90)}${w.instruction.length > 90 ? '…' : ''}"`;
@@ -431,7 +440,12 @@ function omittedDiagnostics(flow: Flow): Diagnostic[] {
       why: w.undoneBy !== undefined
         ? `it ran ${w.mutations} state-changing step(s) and reported ${w.status}; the next instruction put back what it changed, so neither is a step`
         : `it ran ${w.mutations} state-changing step(s) and reported ${w.status === 'none' ? 'nothing' : w.status}, and no step of the flow carries them`,
-      fix: 'check the flow covers the work another way; if not, re-record so that instruction reports success',
+      fix: recoverable(flow, w)
+        ? `sitelooper build redoes it as step ${w.step} (converge re-records it with the model); or check the flow covers the work another way`
+        : 'check the flow covers the work another way; if not, re-record so that instruction reports success',
+      // Structured for `build` (spec/converge.ts): the step to insert after
+      // `args[0]` ('' = first) with the instruction `args[1]`, then re-record.
+      ...(recoverable(flow, w) ? { action: { command: 'recover', args: [w.after ?? '', w.text as string], step: w.step as string } } : {}),
       severity: 'warning' as const,
       line: what,
     };

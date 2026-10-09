@@ -90,6 +90,22 @@ export interface OmittedWork {
   status: string;
   /** The next instruction, when it put back what this one changed (undoneByNext): the pair nets to nothing. */
   undoneBy?: string;
+  /**
+   * Where this work belongs in the flow, so it can be RECOVERED rather than
+   * only named (`sitelooper build` converge, spec/converge.ts): the id of the
+   * flow step it followed in the recording (null: before the first), the id a
+   * step that redoes it takes, and its instruction referenced as a flow
+   * step's is ({{var}} and earlier {{step.output}} values). Absent on an
+   * undone pair (nothing to recover) and on flows built before it was stored.
+   *
+   * kimai hbkm3: "Update and save the order number and order date…" blocked,
+   * its retry failed, and a later instruction fixed the date only — the
+   * order number lived in the two dropped instructions and the compiled spec
+   * passed without it.
+   */
+  after?: string | null;
+  step?: string;
+  text?: string;
 }
 
 export interface FlowStep {
@@ -469,7 +485,8 @@ export function buildFlow(
   if (!groups.length) return null;
   // What the flow leaves out rides on it (Flow.omitted), stripped of the
   // export line's carried count.
-  const omitted: OmittedWork[] = omittedWork(entries).map(({ carried: _carried, ...w }) => w);
+  const left = omittedWork(entries, Object.values(opts.vars));
+  const omitted: OmittedWork[] = left.map(({ carried: _carried, ledgerIndex: _ledgerIndex, superseded: _superseded, ...w }) => w);
 
   const steps: FlowStep[] = [];
   const warnings: string[] = [];
@@ -522,7 +539,28 @@ export function buildFlow(
   let prevGroup: Group | undefined;
   /** Which flow step each kept instruction became, by its ledger index. */
   const byLedger = new Map<string, string>();
+  // Each omitted instruction is placed after the last kept step recorded
+  // before it, and referenced with what the flow had produced by then.
+  const placed = new Set<number>();
+  const placeOmitted = (before: number, after: string | null): void => {
+    const taken = new Map<string, string>();
+    left.forEach((w, k) => {
+      if (placed.has(k) || w.ledgerIndex >= before) return;
+      placed.add(k);
+      if (w.undoneBy !== undefined || w.superseded) return;
+      let text = w.instruction;
+      for (const [name, value] of varEntries) text = replaceToken(text, value, `{{${name}}}`);
+      for (const p of [...produced].sort((a, b) => b.value.length - a.value.length)) {
+        if (p.value.length >= 2) text = threadOutsideQuotes(text, p.value, `{{${p.stepId}.${p.output}}}`, threadsAnywhere(p.value));
+      }
+      // A retry of the same instruction is the same step (hbkm3's blocked attempt and its failed re-issue).
+      const id = taken.get(w.instruction) ?? omittedStepId(after, w.instruction, taken.size);
+      taken.set(w.instruction, id);
+      Object.assign(omitted[k], { after, step: id, text });
+    });
+  };
   groups.forEach((g, i) => {
+    placeOmitted(g.ledgerIndex, steps[steps.length - 1]?.id ?? null);
     // An assertion is not expected to change anything or to report a value,
     // so neither lint is asked of it — and it does not stand between the two
     // steps the contradiction lint compares: it looked, and moved nothing.
@@ -921,6 +959,7 @@ export function buildFlow(
     }
   });
 
+  placeOmitted(Infinity, steps[steps.length - 1]?.id ?? null);
   return {
     name: opts.name,
     origin: opts.origin,
@@ -2536,7 +2575,7 @@ export function staleInstructionIds(entries: RecordedEntry[], flow: Flow): strin
  * `mutations` counts the steps left out — those a later procedure carried in
  * front of its own (carryOpener) are in the flow, and counted out.
  */
-export function omittedWork(entries: RecordedEntry[]): (OmittedWork & { carried: number })[] {
+export function omittedWork(entries: RecordedEntry[], vars: readonly string[] = []): (OmittedWork & { carried: number; ledgerIndex: number; superseded: boolean })[] {
   const groups = groupByInstruction(entries);
   resolveGroups(groups); // marks `adopted` in place, and takes merged groups out
   // A dead instruction's gestures that a later, successful instruction's
@@ -2559,7 +2598,8 @@ export function omittedWork(entries: RecordedEntry[]): (OmittedWork & { carried:
   // The undoing half of a pair undoneByNext dropped is said with the half it
   // undid (a tail pair's undoer reported no success either).
   const undoers = new Set(groups.map((g) => g.undoneBy).filter((g): g is Group => Boolean(g)));
-  const out: (OmittedWork & { carried: number })[] = [];
+  const out: (OmittedWork & { carried: number; ledgerIndex: number; superseded: boolean })[] = [];
+  const keptLater = (g: Group): Group[] => groups.slice(groups.indexOf(g) + 1).filter((h) => !h.instruction.assert && (h.report?.status === 'success' || h.adopted));
   for (const g of groups) {
     if (g.instruction.assert || g.report?.status === 'success' || g.adopted || !g.mutations || undoers.has(g)) continue;
     const taken = g.acts.filter((a) => carried.has(a)).length;
@@ -2570,10 +2610,56 @@ export function omittedWork(entries: RecordedEntry[]): (OmittedWork & { carried:
       mutations: g.undoneBy ? g.mutations : left,
       status: g.report ? g.report.status : 'none',
       carried: taken,
+      ledgerIndex: g.ledgerIndex,
+      superseded: supersededLater(g, keptLater(g), vars),
       ...(g.undoneBy ? { undoneBy: g.undoneBy.instruction.text } : {}),
     });
   }
   return out;
+}
+
+/**
+ * Whether the flow's later steps already carry what an omitted instruction
+ * did, so putting it back as a step (OmittedWork.step) would do the work
+ * twice. Most omissions are this: the session abandoned an attempt and did it
+ * another way. Judged on the VALUES it entered, against every kept instruction
+ * recorded after it:
+ *  - it entered none: nothing says what a redo would restore (picks and
+ *    openers alone are not put back);
+ *  - a later step made one of its in-place picks again: these toggle, and a
+ *    redo would flip them back (gitea fwgt1-n1, reappliedByNext);
+ *  - every value it entered was entered again later: superseded outright;
+ *  - a value entered again later carries a declared var (the run's own name
+ *    for its record): the later step made that record itself, and a redo
+ *    makes a second one (gitea fwgt20's duplicate issue).
+ * Otherwise some of its values live nowhere else in the flow: kimai hbkm3's
+ * blocked "order number … order date" — a later step typed the date again,
+ * nothing ever entered PO-4471 again, and the spec passed without it.
+ */
+function supersededLater(g: Group, later: readonly Group[], vars: readonly string[]): boolean {
+  const choices = g.acts.filter(isChoice);
+  const values = choices.filter((c) => choiceValue(c) !== undefined);
+  if (!values.length) return true;
+  const entry = (tool: string): boolean => tool === 'fill' || tool === 'type';
+  const again = (c: RecordedStep): boolean =>
+    later.some((h) => h.acts.some((x) => sameChoice(c, entry(c.tool) && entry(x.tool) ? { ...x, tool: c.tool } : x)));
+  // A pick is made again only on the page it was made on: the same control
+  // name on another page is another control (hbkm3's project form "Save" and
+  // the timesheet form's).
+  const where = new Map<RecordedStep, string | undefined>();
+  for (const h of [g, ...later]) {
+    let at = h.instruction.url;
+    for (const st of h.steps) {
+      where.set(st, at);
+      at = st.diff?.url ?? at;
+    }
+  }
+  const pickedAgain = (c: RecordedStep): boolean =>
+    later.some((h) => h.acts.some((x) => sameChoice(c, x) && samePage(where.get(c), where.get(x))));
+  if (choices.some((c) => choiceValue(c) === undefined && pickedAgain(c))) return true;
+  const redone = values.filter(again);
+  if (redone.length === values.length) return true;
+  return redone.some((c) => vars.some((v) => v.length >= 2 && (choiceValue(c) as string).includes(v)));
 }
 
 /** omittedWork, as the export's warning lines. */
@@ -2590,6 +2676,16 @@ export function unbankedMutations(entries: RecordedEntry[]): string[] {
         `but reported ${w.status === 'none' ? 'nothing' : w.status} — its work is NOT in the flow` +
         (w.carried ? ` (${w.carried} more were carried into the next instruction's procedure)` : ''),
   );
+}
+
+/**
+ * The id of a step that redoes omitted work recorded after `after`: the
+ * step it follows, lettered (`04b-set`), so no existing id moves — later
+ * steps reference outputs by id.
+ */
+export function omittedStepId(after: string | null, text: string, nth = 0): string {
+  const verb = stepId(text, 0).slice(3);
+  return `${/^\d+/.exec(after ?? '')?.[0] ?? '00'}${String.fromCharCode(98 + nth)}-${verb}`;
 }
 
 function stepId(text: string, i: number, assert = false): string {
