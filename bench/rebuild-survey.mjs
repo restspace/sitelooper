@@ -85,6 +85,8 @@ const summarise = (skill) => {
   // n1's own record id (hakm1 `/timesheet/1/edit`, compile-g1 item 1b) is
   // slotted or turned into a link click, and neither shows in the patterns.
   lines.push(`${at} tools ${(skill.steps ?? []).map((s) => s.tool).join(',')}`);
+  // A procedure compile cut short before state-changing work (TransformNote.cut): compile refuses it (cut-procedure).
+  for (const t of skill.provenance?.transforms ?? []) if (t.cut?.length) lines.push(`${at} CUT ${t.name} ${t.cut.join(',')}`);
   (skill.steps ?? []).forEach((s, i) => {
     if (s.tool === 'goto') lines.push(`${at}/${i + 1} goto ${s.args?.url ?? '?'}`);
   });

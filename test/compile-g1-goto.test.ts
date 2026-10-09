@@ -22,7 +22,9 @@ import { parseScript, type RecordedEntry, type RecordedStep } from '../src/daemo
 import { compileSkills } from '../src/skills/compile.js';
 import { learnFromInstruction, reachedGateRefusal } from '../src/skills/learn.js';
 import { unseenGotoParts } from '../src/skills/ledger.js';
+import type { Flow } from '../src/skills/flow.js';
 import { SkillStore, type Skill } from '../src/skills/store.js';
+import { flowToSpec } from '../src/spec/ir.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const load = (name: string): RecordedEntry[] => parseScript(fs.readFileSync(path.join(here, 'fixture', name), 'utf8').replace(/\r\n/g, '\n')).entries;
@@ -78,6 +80,15 @@ describe('1b. a goto record id is sourced only by an address, an instruction or 
     expect(transforms(skills).find((t) => t.name === 'sourcelessGoto')?.reason).toContain('p2=1');
     // It still saves the timesheet: the last step is the list read after the save.
     expect(stepsOf(skills).some((s) => s.tool === 'click' && JSON.stringify(s.locators.target ?? []).includes('Save'))).toBe(true);
+  });
+
+  // The rebuild A/B (results/rbkm): with the goto cut, the date fix and its
+  // Save went with it, and the spec PASSED with today's date (obj 5 FAIL).
+  it('hakm1-n1 04-create: the cut names the state-changing gestures it dropped', () => {
+    const skills = compileOne(load('hakm1-n1-04-create.jsonl'), { 'var:runid': 'hakm1-n1', 'output:i3:project_name': 'hakm1-n1 Bench Project' });
+    const cut = transforms(skills).find((t) => t.name === 'sourcelessGoto')?.cut ?? [];
+    expect(cut.length).toBeGreaterThan(0);
+    expect(cut.every((tool) => tool === 'click')).toBe(true);
   });
 
   it('grocy hbgc3-n1 04-edit: `goto /product/298407` (known only as an output) becomes a click on the product row\'s link', () => {
@@ -231,5 +242,39 @@ describe('1a. a reached chain segment\'s gate refusal is banked as a stop at ste
     const s = store.get('s_545c55')!;
     expect(s.stats).toMatchObject({ uses: 1, successes: 1, failedAtStep: {} });
     expect(s.stats.stopStreak).toBeUndefined();
+  });
+});
+
+describe('cut-procedure: compile refuses a procedure cut short before state-changing work', () => {
+  const FWOD34 = path.resolve('bench/results-published/fwod34.json');
+  const FWOD34_SKILLS = path.resolve('bench/results-published/fwod34-skills');
+  const flow = JSON.parse(fs.readFileSync(FWOD34, 'utf8')) as Flow;
+  const dirs: string[] = [];
+  afterAll(() => {
+    for (const d of dirs) fs.rmSync(d, { recursive: true, force: true });
+  });
+  const storeWith = (transforms: NonNullable<Skill['provenance']['transforms']>) => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sl-cut-'));
+    dirs.push(dir);
+    fs.cpSync(FWOD34_SKILLS, dir, { recursive: true });
+    const s = new SkillStore(dir);
+    const skill = s.get('s_d654ba')!;
+    s.put({ ...skill, provenance: { ...skill.provenance, transforms: [...(skill.provenance.transforms ?? []), ...transforms] } });
+    return new SkillStore(dir);
+  };
+  const cutOf = (store: SkillStore) => flowToSpec(flow, store, { flowFile: FWOD34 }).diagnostics.filter((x) => x.code === 'cut-procedure');
+
+  it('names the step and the dropped gestures, as an error with the rerecord fix', () => {
+    const reason = 'goto http://x/timesheet/1/edit reached a record no step supplies (p2=1); the procedure ends before it';
+    const ds = cutOf(storeWith([{ name: 'sourcelessGoto', at: 22, reason, cut: ['click', 'click'] }]));
+    expect(ds).toHaveLength(1);
+    expect(ds[0]).toMatchObject({ step: '03-open', severity: 'error', why: reason, fix: `sitelooper rerecord ${FWOD34} 03-open` });
+    expect(ds[0].what).toContain('drops 2 state-changing gesture(s) the recording made (click, click)');
+    expect(ds[0].action).toBeDefined();
+  });
+
+  it('says nothing for a cut that dropped only reads, or a store with no cut', () => {
+    expect(cutOf(storeWith([{ name: 'sourcelessGoto', at: 3, reason: 'the procedure ends before it' }]))).toEqual([]);
+    expect(cutOf(new SkillStore(FWOD34_SKILLS))).toEqual([]);
   });
 });
