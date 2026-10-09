@@ -33,6 +33,8 @@ const opt = (n, d) => { const i = process.argv.indexOf(`--${n}`); return i >= 0 
 const target = opt('target');
 const code = opt('code');
 const runs = Number(opt('runs', '2'));
+/** The run prefix and published base: rb<code> unless a rerun names its own (--base rbkm2). */
+const pre = opt('base', `rb${code}`);
 if (!target || !code) { console.error('usage: rebuild-ab.mjs --target <t> --code <pk|km|gc> [--runs 2]'); process.exit(2); }
 for (const root of [afterRoot, beforeRoot]) {
   if (!fs.existsSync(path.join(root, 'dist', 'cli.js'))) { console.error(`not built: ${root}`); process.exit(2); }
@@ -41,9 +43,9 @@ for (const root of [afterRoot, beforeRoot]) {
 
 const out = path.join(afterRoot, 'bench', 'results');
 fs.mkdirSync(out, { recursive: true });
-const work = fs.mkdtempSync(path.join(os.tmpdir(), `rb${code}-`));
+const work = fs.mkdtempSync(path.join(os.tmpdir(), `${pre}-`));
 const sh = (cmd, args, o = {}) => spawnSync(cmd, args, { encoding: 'utf8', maxBuffer: 64 << 20, ...o });
-const log = (m) => { console.log(`[rebuild-ab] ${m}`); fs.appendFileSync(path.join(out, `rb${code}-run.log`), `${m}\n`); };
+const log = (m) => { console.log(`[rebuild-ab] ${m}`); fs.appendFileSync(path.join(out, `${pre}-run.log`), `${m}\n`); };
 
 const bases = ['a', 'b'].flatMap((arm) => [1, 2, 3].map((r) => `h${arm}${code}${r}`));
 sh('git', ['fetch', '-q', 'origin', ...bases.map((b) => `+refs/heads/results/${b}:refs/remotes/origin/results/${b}`)], { cwd: afterRoot });
@@ -71,10 +73,10 @@ function rebuild(version, base, recDir) {
     cwd: root,
     env: { ...process.env, REBUILD_STORE_DIR: store, REBUILD_DUMP: flow },
   });
-  fs.writeFileSync(path.join(out, `rb${code}-${version}-${base}-rebuild.log`), (r.stdout ?? '') + (r.stderr ?? ''));
+  fs.writeFileSync(path.join(out, `${pre}-${version}-${base}-rebuild.log`), (r.stdout ?? '') + (r.stderr ?? ''));
   if (!fs.existsSync(flow) || !fs.existsSync(store)) return null;
   // Published for inspection: the rebuilt flow and store each version compiled.
-  fs.cpSync(dir, path.join(out, `rb${code}-${version}-${base}-rebuilt`), { recursive: true });
+  fs.cpSync(dir, path.join(out, `${pre}-${version}-${base}-rebuilt`), { recursive: true });
   return { flow, store };
 }
 
@@ -106,7 +108,7 @@ function verdict(text, runid) {
 
 function runOne(version, base, k, built) {
   const root = version === 'a' ? afterRoot : beforeRoot;
-  const tag = `rb${code}-${version}-${base}-${k}`;
+  const tag = `${pre}-${version}-${base}-${k}`;
   if (!built) {
     log(`${tag}: rebuild produced no flow/store`);
     return { tag, version, base, k, rebuildFailed: true, compiled: false, refusal: ['rebuild failed'] };
@@ -158,7 +160,7 @@ const tally = (v) => {
   return { runs: r.length, stateClean: r.filter((x) => x.stateClean).length, refused: r.filter((x) => !x.compiled).length, pwPassed: r.filter((x) => x.pwPassed).length, silentPasses: r.filter((x) => x.silentPass).length, honest: r.filter((x) => x.compiled && x.pwPassed === x.stateClean).length, compiled: r.filter((x) => x.compiled).length, drift: r.reduce((n, x) => n + (x.driftCount ?? 0), 0) };
 };
 const summary = { target, code, runs, at: new Date().toISOString(), after: tally('a'), before: tally('b'), rows };
-fs.writeFileSync(path.join(out, `rb${code}-summary.json`), JSON.stringify(summary, null, 2));
+fs.writeFileSync(path.join(out, `${pre}-summary.json`), JSON.stringify(summary, null, 2));
 log(`after:  ${JSON.stringify(summary.after)}`);
 log(`before: ${JSON.stringify(summary.before)}`);
 fs.rmSync(work, { recursive: true, force: true });
