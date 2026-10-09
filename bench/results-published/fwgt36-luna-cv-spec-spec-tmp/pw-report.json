@@ -1,0 +1,212 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwgt36-luna-cv-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwgt36-luna-cv-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwgt36-luna-cv-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/bench/results/fwgt36-luna-cv-spec-spec-tmp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwgt36-luna-cv-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwgt36-luna-cv.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwgt36-luna-cv-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwgt36-luna-cv.spec.ts",
+      "file": "fwgt36-luna-cv.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwgt36-luna-cv",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 50492,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper step] 01-signin\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-find\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-create\n"
+                    },
+                    {
+                      "text": "[sitelooper skip] 04-open s_945839/14 target: no locator recorded — value left empty\n"
+                    },
+                    {
+                      "text": "[sitelooper skip] 04-open s_945839/16 target: no locator recorded — value left empty\n"
+                    },
+                    {
+                      "text": "[sitelooper skip] 04-open s_945839/17 target: no locator recorded — value left empty\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-open\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 05-verify s_8da405/4: read 'assignee_option_class_after_click' returned 'item checked' from a control this step set, and nothing committed it since — it shows the control, however the app formats it, not what the app stored; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper drift] 05-verify s_8da405/8 target: primary locator('#issuecomment-3 > span:nth-of-type(2) > a') missed; used #2 locator('[data-sitelooper-point=\"207,486\"]') (#1 absent)\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 05-verify\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 06-set\n"
+                    },
+                    {
+                      "text": "[sitelooper drift] 07-add s_913c4f/7 target: primary locator('#issue-4 > div > div:nth-of-type(2) > div:nth-of-type(1) > p') missed; used #2 locator('[data-sitelooper-point=\"510,317\"]') (#1 absent)\n"
+                    },
+                    {
+                      "text": "[sitelooper drift] 07-add s_913c4f/9 target: primary locator('#issue-4 > div > div:nth-of-type(2) > div:nth-of-type(1) > ul > li:nth-of-type(2)') missed; used #2 locator('[data-sitelooper-point=\"524,378\"]') (#1 absent)\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 07-add\n"
+                    },
+                    {
+                      "text": "[sitelooper probe] 03-create: http://127.0.0.1:8095/bench/bench-repo/issues/12 still shows what it saved\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-signin: Sign in to the Gitea site at http://127.0.0.1:8095/ as username admin, entering the password exactly as {{env:APP_PASSWORD}}. Verify that the authenticated site is open and report the visible signed-in identity.",
+                      "duration": 6933
+                    },
+                    {
+                      "title": "02-find: In repository bench/bench-repo, find and report the exact titles of all OPEN issues whose title starts with 'Seed:'. Do not edit or modify any issue. Verify they are open and report the titles exactly as displayed.",
+                      "duration": 14205
+                    },
+                    {
+                      "title": "03-create: In bench/bench-repo create an issue titled '{{runid}} Bench Issue' with a markdown description that includes the exact text '{{runid}}'. Submit it and verify the new issue page shows that exact title and description text; report its displayed issue number (#...).",
+                      "duration": 10407
+                    },
+                    {
+                      "title": "04-open: On issue {{03-create.issue_number}} titled '{{runid}} Bench Issue' in bench/bench-repo, use the issue sidebar labels picker to apply exactly the two labels 'bug' and 'priority-high' and no other labels. Ensure each picker selection is applied (not merely ticked in an open menu), then verify the issue page displays exactly bug and priority-high as its labels.",
+                      "duration": 3916
+                    },
+                    {
+                      "title": "05-verify: On issue {{03-create.issue_number}} '{{runid}} Bench Issue' in bench/bench-repo, use the Assignees picker to assign user 'bench-assignee'. Commit/apply the picker selection, then verify the assigned user is displayed on the issue sidebar.",
+                      "duration": 3811
+                    },
+                    {
+                      "title": "06-set: On issue {{03-create.issue_number}} '{{runid}} Bench Issue' in bench/bench-repo, set the sidebar milestone to 'Bench Milestone' using the milestone picker. Commit/apply the choice, then verify Bench Milestone is visibly displayed on the issue.",
+                      "duration": 2230
+                    },
+                    {
+                      "title": "07-add: On issue {{03-create.issue_number}} '{{runid}} Bench Issue' in bench/bench-repo, add a markdown comment whose text includes the exact runid '{{runid}}'. Submit the comment and verify that this exact text appears as a posted comment in the issue timeline.",
+                      "duration": 8240
+                    },
+                    {
+                      "title": "persistence: re-read what the flow saved",
+                      "duration": 302
+                    }
+                  ],
+                  "startTime": "2026-10-09T13:14:22.418Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "outputs",
+                      "contentType": "application/json",
+                      "body": "ewogICIwMS1zaWduaW4uc2lnbmVkX2luX2lkZW50aXR5XzIiOiAiUHJvZmlsZSBhbmQgU2V0dGluZ3PigKYiLAogICIwMS1zaWduaW4ucGFnZV90aXRsZSI6ICJhZG1pbiAtIERhc2hib2FyZCAtIEdpdGVhOiBHaXQgd2l0aCBhIGN1cCBvZiB0ZWEiLAogICIwMS1zaWduaW4uYXV0aGVudGljYXRlZF91cmwiOiAiaHR0cDovLzEyNy4wLjAuMTo4MDk1LyIsCiAgIjAxLXNpZ25pbi5zaXRlX25hbWVfbWV0YSI6ICJHaXRlYSAtIEdpdCB3aXRoIGEgY3VwIG9mIHRlYSIsCiAgIjAxLXNpZ25pbi5yZXBvc2l0b3JpZXNfc2hvd24iOiAiUmVwb3NpdG9yaWVzXG4xIiwKICAiMDEtc2lnbmluLnByb2ZpbGVfbGlua190ZXh0IjogIlByb2ZpbGUiLAogICIwMS1zaWduaW4uZGFzaGJvYXJkX2hlYWRpbmciOiAiYWRtaW4gLSBEYXNoYm9hcmQiLAogICIwMS1zaWduaW4ucHJvZmlsZV9tZW51X2l0ZW1zIjogIlByb2ZpbGUsIGFkbWluIiwKICAiMDEtc2lnbmluLnNpZ25lZF9pbl9pZGVudGl0eSI6ICJhZG1pbiIsCiAgIjAxLXNpZ25pbi5jdXJyZW50X3VybCI6ICJodHRwOi8vMTI3LjAuMC4xOjgwOTUvIiwKICAiMDItZmluZC5jbG9zZWRfaXNzdWVzX3RhYiI6ICIwIENsb3NlZCIsCiAgIjAyLWZpbmQucmVwb19pc3N1ZV9jb3VudHNfMiI6ICIwIENsb3NlZCIsCiAgIjAyLWZpbmQuaXNzdWVzX2xpc3RfdXJsIjogImh0dHA6Ly8xMjcuMC4wLjE6ODA5NS9iZW5jaC9iZW5jaC1yZXBvL2lzc3VlcyIsCiAgIjAyLWZpbmQub3Blbl9zZWVkX2lzc3Vlc19saXN0X3VybCI6ICJodHRwOi8vMTI3LjAuMC4xOjgwOTUvYmVuY2gvYmVuY2gtcmVwby9pc3N1ZXM/dHlwZT1hbGwmc3RhdGU9b3BlbiIsCiAgIjAyLWZpbmQuY2xvc2VkX2lzc3Vlc19jb3VudCI6ICIwIiwKICAiMDItZmluZC5vcGVuX3NlZWRfaXNzdWVzX2NvdW50IjogIjMiLAogICIwMi1maW5kLmFfaHJlZl9iZW5jaF9iZW5jaF9yZXBvXyI6ICJTZWVkOiBzaGlwIHJlcGFpcmVkIGRldmljZSIsCiAgIjAyLWZpbmQuYV9ocmVmX2JlbmNoX2JlbmNoX3JlcG9fXzIiOiAiU2VlZDogb3JkZXIgbWlzc2luZyBwYXJ0cyIsCiAgIjAyLWZpbmQuYV9ocmVmX2JlbmNoX2JlbmNoX3JlcG9fXzMiOiAiU2VlZDogdHJpYWdlIGluYm94IiwKICAiMDItZmluZC5vcGVuX3NlZWRfaXNzdWVfdGl0bGVzXzEiOiAiU2VlZDogc2hpcCByZXBhaXJlZCBkZXZpY2UiLAogICIwMi1maW5kLm9wZW5fc2VlZF9pc3N1ZV90aXRsZXNfMiI6ICJTZWVkOiBvcmRlciBtaXNzaW5nIHBhcnRzIiwKICAiMDItZmluZC5vcGVuX3NlZWRfaXNzdWVfdGl0bGVzXzMiOiAiU2VlZDogdHJpYWdlIGluYm94IiwKICAiMDItZmluZC5yZXBvX2lzc3VlX2NvdW50c18xIjogIjMgT3BlbiIsCiAgIjAyLWZpbmQuc2VlZF9pc3N1ZV8xXzEiOiAiU2VlZDogdHJpYWdlIGluYm94IiwKICAiMDItZmluZC5zZWVkX2lzc3VlXzFfMiI6ICIjMSIsCiAgIjAyLWZpbmQuc2VlZF9pc3N1ZV8yXzEiOiAiU2VlZDogb3JkZXIgbWlzc2luZyBwYXJ0cyIsCiAgIjAyLWZpbmQuc2VlZF9pc3N1ZV8yXzIiOiAiIzIiLAogICIwMi1maW5kLnNlZWRfaXNzdWVfM18xIjogIlNlZWQ6IHNoaXAgcmVwYWlyZWQgZGV2aWNlIiwKICAiMDItZmluZC5zZWVkX2lzc3VlXzNfMiI6ICIjMyIsCiAgIjAyLWZpbmQucmVwb19pc3N1ZXNfdGFiIjogIklzc3Vlc1xuMyIsCiAgIjAzLWNyZWF0ZS5taW50ZWQiOiAiMTIiLAogICIwMy1jcmVhdGUuZGVzY3JpcHRpb25fZXhhY3RfdGV4dF9wcmVzZW50IjogIlRoaXMgaXMgYSBtYXJrZG93biBkZXNjcmlwdGlvbiBmb3IgZndndDM2LWx1bmEtY3Ytc3BlYy4iLAogICIwMy1jcmVhdGUuaXNzdWVfbnVtYmVyIjogIiMxMiIsCiAgIjAzLWNyZWF0ZS5pc3N1ZV90aXRsZV9hc19kaXNwbGF5ZWQiOiAiZndndDM2LWx1bmEtY3Ytc3BlYyBCZW5jaCBJc3N1ZSIsCiAgIjAzLWNyZWF0ZS5wYWdlX3RpdGxlIjogIiMxMiAtIGZ3Z3QzNi1sdW5hLWN2LXNwZWMgQmVuY2ggSXNzdWUgLSBiZW5jaC1yZXBvIC0gR2l0ZWE6IEdpdCB3aXRoIGEgY3VwIG9mIHRlYSIsCiAgIjAzLWNyZWF0ZS5pc3N1ZV9zdGF0ZSI6ICJPcGVuIiwKICAiMDMtY3JlYXRlLnJlcG9faXNzdWVzX2NvdW50X2FmdGVyIjogIklzc3Vlc1xuNCIsCiAgIjAzLWNyZWF0ZS5hdXRob3IiOiAiYWRtaW4iLAogICIwMy1jcmVhdGUuZGVzY3JpcHRpb25fbWFya2VyX3RleHQiOiAiZndndDM2LWx1bmEtY3Ytc3BlYyIsCiAgIjAzLWNyZWF0ZS5zdWJtaXR0ZWRfdXJsIjogImh0dHA6Ly8xMjcuMC4wLjE6ODA5NS9iZW5jaC9iZW5jaC1yZXBvL2lzc3Vlcy8xMiIsCiAgIjAzLWNyZWF0ZS51cmwucDMiOiAiMTIiLAogICIwNC1vcGVuLmN1cnJlbnRfdXJsX2FmdGVyX2J1Z19jbCI6ICJodHRwOi8vMTI3LjAuMC4xOjgwOTUvYmVuY2gvYmVuY2gtcmVwby9pc3N1ZXMvMTIiLAogICIwNC1vcGVuLm5vX2xhYmVsc19wbGFjZWhvbGRlcl9jbGFzcyI6ICJpdGVtIGVtcHR5LWxpc3QgdHctaGlkZGVuIiwKICAiMDQtb3Blbi5pc3N1ZV90aXRsZSI6ICJmd2d0MzYtbHVuYS1jdi1zcGVjIEJlbmNoIElzc3VlIiwKICAiMDQtb3Blbi5hdmFpbGFibGVfbGFiZWxfZG9jdW1lbnRhdGlvbiI6ICJkb2N1bWVudGF0aW9uIiwKICAiMDQtb3Blbi5hdmFpbGFibGVfbGFiZWxfZW5oYW5jZW1lbnQiOiAiZW5oYW5jZW1lbnQiLAogICIwNC1vcGVuLnJlcG9zaXRvcnlfb3duZXIiOiAiYmVuY2giLAogICIwNC1vcGVuLmlzc3VlX3JlZmVyZW5jZSI6ICIiLAogICIwNC1vcGVuLnJlZiI6ICJmd2d0MzYtbHVuYS1jdi1zcGVjIiwKICAiMDQtb3Blbi5hdmFpbGFibGVfbGFiZWxfYnVnIjogIiIsCiAgIjA0LW9wZW4uYXZhaWxhYmxlX2xhYmVsX3ByaW9yaXR5X2hpZ2giOiAiIiwKICAiMDUtdmVyaWZ5LnVybF9hZnRlcl9hc3NpZ25lZV9jbGljayI6ICJodHRwOi8vMTI3LjAuMC4xOjgwOTUvYmVuY2gvYmVuY2gtcmVwby9pc3N1ZXMvMTIiLAogICIwNS12ZXJpZnkuYXNzaWduZWVfb3B0aW9uX2NsYXNzX2FmdGVyX2NsaWNrIjogIml0ZW0gY2hlY2tlZCIsCiAgIjA1LXZlcmlmeS5hc3NpZ25lZV91c2VyX2lkIjogIjMiLAogICIwNS12ZXJpZnkuaXNzdWVfdGl0bGUiOiAiZndndDM2LWx1bmEtY3Ytc3BlYyBCZW5jaCBJc3N1ZSIsCiAgIjA1LXZlcmlmeS5hc3NpZ25lZV9kaXNwbGF5ZWRfaW5fc2lkZWJhciI6ICJiZW5jaC1hc3NpZ25lZSIsCiAgIjA1LXZlcmlmeS5yZXBvc2l0b3J5X293bmVyIjogImJlbmNoIiwKICAiMDUtdmVyaWZ5Lmlzc3VlX3JlZmVyZW5jZSI6ICJiZW5jaC1yZXBvIzEyIiwKICAiMDUtdmVyaWZ5LnJlZiI6ICJmd2d0MzYtbHVuYS1jdi1zcGVjIiwKICAiMDYtc2V0LnVybF9hZnRlcl9taWxlc3RvbmVfY2xpYyI6ICJodHRwOi8vMTI3LjAuMC4xOjgwOTUvYmVuY2gvYmVuY2gtcmVwby9pc3N1ZXMvMTIiLAogICIwNi1zZXQuaXNzdWVfdGl0bGUiOiAiZndndDM2LWx1bmEtY3Ytc3BlYyBCZW5jaCBJc3N1ZSIsCiAgIjA2LXNldC5taWxlc3RvbmVfaWQiOiAiMSIsCiAgIjA2LXNldC5hdmFpbGFibGVfbWlsZXN0b25lX2JhY2tsb2ciOiAiQmFja2xvZyIsCiAgIjA2LXNldC5taWxlc3RvbmVfcGlja2VyX2VtcHR5X29wdGlvbiI6ICJObyBNaWxlc3RvbmUiLAogICIwNi1zZXQucmVwb3NpdG9yeV9vd25lciI6ICJiZW5jaCIsCiAgIjA2LXNldC5pc3N1ZV9yZWZlcmVuY2UiOiAiYmVuY2gtcmVwbyMxMiIsCiAgIjA2LXNldC5yZWYiOiAiZndndDM2LWx1bmEtY3Ytc3BlYyIsCiAgIjA2LXNldC5taWxlc3RvbmVfYXBwbGllZCI6ICJCZW5jaCBNaWxlc3RvbmUiLAogICIwNy1hZGQubWludGVkIjogImlzc3VlY29tbWVudC02MSIsCiAgIjA3LWFkZC5pc3N1ZV90aXRsZSI6ICJmd2d0MzYtbHVuYS1jdi1zcGVjIEJlbmNoIElzc3VlIiwKICAiMDctYWRkLmNvbW1lbnRfcG9zdGVkX2V4YWN0X3RleHRfMSI6ICJDb21tZW50IGZvciBydW5pZCBmd2d0MzYtbHVuYS1jdi1zcGVjIiwKICAiMDctYWRkLmNvbW1lbnRfcG9zdGVkX2V4YWN0X3RleHRfMiI6ICJ2ZXJpZnlpbmcgdGhlIG1hcmtkb3duIGNvbW1lbnQgcGF0aCBpbiB0aGUgaXNzdWUgdGltZWxpbmUuIiwKICAiMDctYWRkLnJlcG9zaXRvcnlfb3duZXIiOiAiYmVuY2giLAogICIwNy1hZGQuaXNzdWVfcmVmZXJlbmNlIjogImJlbmNoLXJlcG8jMTIiLAogICIwNy1hZGQuaXNzdWVfZmluYWxfc3RhdGUiOiAiT3BlbiIsCiAgIjA3LWFkZC50aW1lbGluZV92aXNpYmxlX2NvbW1lbnRfYm9kaWVzXzEiOiAiVGhpcyBpcyBhIG1hcmtkb3duIGRlc2NyaXB0aW9uIGZvciBmd2d0MzYtbHVuYS1jdi1zcGVjLiIsCiAgIjA3LWFkZC50aW1lbGluZV92aXNpYmxlX2NvbW1lbnRfYm9kaWVzXzIiOiAibWFya2VyOiBmd2d0MzYtbHVuYS1jdi1zcGVjIiwKICAiMDctYWRkLnRpbWVsaW5lX3Zpc2libGVfY29tbWVudF9ib2RpZXNfMyI6ICJjcmVhdGVkIHZpYSB0aGUgR2l0ZWEgd2ViIFVJIiwKICAiMDctYWRkLnRpbWVsaW5lX3Zpc2libGVfY29tbWVudF9ib2RpZXNfNCI6ICJDb21tZW50IGZvciBydW5pZCBmd2d0MzYtbHVuYS1jdi1zcGVjIiwKICAiMDctYWRkLnRpbWVsaW5lX3Zpc2libGVfY29tbWVudF9ib2RpZXNfNSI6ICJ2ZXJpZnlpbmcgdGhlIG1hcmtkb3duIGNvbW1lbnQgcGF0aCBpbiB0aGUgaXNzdWUgdGltZWxpbmUuIiwKICAiMDctYWRkLmNvbW1lbnRfaWQiOiAiaXNzdWVjb21tZW50LTYxIiwKICAiMDctYWRkLnJ1bmlkX2V4YWN0X3RleHRfcHJlc2VudCI6ICJmd2d0MzYtbHVuYS1jdi1zcGVjIgp9"
+                    },
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": "W3NpdGVsb29wZXIgZHJpZnRdIDA1LXZlcmlmeSBzXzhkYTQwNS84IHRhcmdldDogcHJpbWFyeSBsb2NhdG9yKCcjaXNzdWVjb21tZW50LTMgPiBzcGFuOm50aC1vZi10eXBlKDIpID4gYScpIG1pc3NlZDsgdXNlZCAjMiBsb2NhdG9yKCdbZGF0YS1zaXRlbG9vcGVyLXBvaW50PSIyMDcsNDg2Il0nKSAoIzEgYWJzZW50KQpbc2l0ZWxvb3BlciBkcmlmdF0gMDctYWRkIHNfOTEzYzRmLzcgdGFyZ2V0OiBwcmltYXJ5IGxvY2F0b3IoJyNpc3N1ZS00ID4gZGl2ID4gZGl2Om50aC1vZi10eXBlKDIpID4gZGl2Om50aC1vZi10eXBlKDEpID4gcCcpIG1pc3NlZDsgdXNlZCAjMiBsb2NhdG9yKCdbZGF0YS1zaXRlbG9vcGVyLXBvaW50PSI1MTAsMzE3Il0nKSAoIzEgYWJzZW50KQpbc2l0ZWxvb3BlciBkcmlmdF0gMDctYWRkIHNfOTEzYzRmLzkgdGFyZ2V0OiBwcmltYXJ5IGxvY2F0b3IoJyNpc3N1ZS00ID4gZGl2ID4gZGl2Om50aC1vZi10eXBlKDIpID4gZGl2Om50aC1vZi10eXBlKDEpID4gdWwgPiBsaTpudGgtb2YtdHlwZSgyKScpIG1pc3NlZDsgdXNlZCAjMiBsb2NhdG9yKCdbZGF0YS1zaXRlbG9vcGVyLXBvaW50PSI1MjQsMzc4Il0nKSAoIzEgYWJzZW50KQ=="
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "2d4f0027f5e9d1387dfd-2f6e991025a5baca5a06",
+          "file": "fwgt36-luna-cv.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-09T13:14:20.471Z",
+    "duration": 52631.502,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}
