@@ -631,6 +631,24 @@ export function flowToSpec(
           line: `step ${step.id} compiles ${member.id}, which stopped at step ${at ?? '?'} on its latest replay and has not replayed clean since`,
         });
       }
+      // Compile ended this procedure early and cut work that changes the app
+      // (TransformNote.cut). Replay recovers past the end with the model; the
+      // artifact simply runs the shorter procedure and passes. kimai hakm1's
+      // rebuild cut `goto /timesheet/1/edit`, the date fix and its Save, and
+      // the spec passed while the timesheet kept today's date.
+      for (const t of member.provenance?.transforms ?? []) {
+        if (!t.cut?.length) continue;
+        diagnostics.push({
+          code: 'cut-procedure',
+          step: step.id,
+          what: `its pinned procedure ${member.id} ends early (${t.name}) and drops ${t.cut.length} state-changing gesture(s) the recording made (${t.cut.join(', ')}) — a compiled spec would pass without that work`,
+          why: t.reason,
+          fix: rerecordFix(fixFile, step.id),
+          action: rerecordAction(fixFile, step.id),
+          severity: 'error',
+          line: `step ${step.id} compiles ${member.id}, which compile cut short before ${t.cut.length} state-changing gesture(s)`,
+        });
+      }
     }
     // A literal binding on a step whose instruction threads references is
     // replay debt (an adoption froze that run's values into the pin): align

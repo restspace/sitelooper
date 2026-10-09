@@ -65,6 +65,19 @@ export interface TransformNote {
   /** 1-based index into the steps the transform was GIVEN. */
   at: number;
   reason: string;
+  /**
+   * The state-changing gestures (tools) a transform that ENDS the procedure
+   * early cut off with it (sourcelessGoto, mintedFill). Absent when nothing
+   * that changes the app followed. Compile refuses such a procedure
+   * (`cut-procedure`): kimai hakm1's rebuild cut `goto /timesheet/1/edit` and
+   * the date fix and Save after it, and the spec passed with today's date.
+   */
+  cut?: string[];
+}
+
+/** The state-changing gestures among the steps a procedure loses when it ends before `steps[0]`. */
+function cutGestures(steps: readonly RecordedStep[]): string[] {
+  return steps.filter((s) => isMutatingAction(s.tool)).map((s) => s.tool);
 }
 
 /** Args whose string values are candidates for parameter slots. */
@@ -2185,6 +2198,7 @@ function sourcelessGoto(kept: RecordedStep[], input: CompileInput, notes: Transf
       name: 'sourcelessGoto',
       at: i + 1,
       reason: `goto ${s.args.url} reached a record no step supplies (${unseen.map((p) => `${p.label}=${p.value}`).join(', ')}); the procedure ends before it`,
+      ...(cutGestures(kept.slice(i + 1)).length ? { cut: cutGestures(kept.slice(i + 1)) } : {}),
     });
     return kept.slice(0, i);
   }
@@ -2251,6 +2265,8 @@ function mintedFill(kept: RecordedStep[], input: CompileInput, slots: Map<string
       name: 'mintedFill',
       at: i + 1,
       reason: `${s.tool} typed ${JSON.stringify(v)}, a value the app minted in the recording's run (an alert named it before any step typed it; no instruction states it and no published source supplies it): the procedure ends before it`,
+      // The lookup fill itself changes nothing; what follows it may (fwsi29-luna's edits never ran).
+      ...(cutGestures(kept.slice(i + 1)).length ? { cut: cutGestures(kept.slice(i + 1)) } : {}),
     });
     return kept.slice(0, i);
   }
