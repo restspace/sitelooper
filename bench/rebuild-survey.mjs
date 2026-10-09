@@ -81,6 +81,13 @@ const summarise = (skill) => {
   const instr = String(skill.provenance?.instruction ?? '?').replace(/\s+/g, ' ').slice(0, 40);
   const at = `[${instr}]${skill.seq ? `.${skill.seq.index ?? ''}` : ''}`;
   if (skill.preconditions?.urlPattern) lines.push(`${at} start ${skill.preconditions.urlPattern}`);
+  // Which tool each step runs, and where every goto goes: a goto that carries
+  // n1's own record id (hakm1 `/timesheet/1/edit`, compile-g1 item 1b) is
+  // slotted or turned into a link click, and neither shows in the patterns.
+  lines.push(`${at} tools ${(skill.steps ?? []).map((s) => s.tool).join(',')}`);
+  (skill.steps ?? []).forEach((s, i) => {
+    if (s.tool === 'goto') lines.push(`${at}/${i + 1} goto ${s.args?.url ?? '?'}`);
+  });
   (skill.steps ?? []).forEach((s, i) => {
     if (s.expect?.urlPattern) lines.push(`${at}/${i + 1} ${s.tool} expect ${s.expect.urlPattern}`);
     for (const [slot, cands] of Object.entries(s.locators ?? {})) {

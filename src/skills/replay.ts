@@ -575,6 +575,16 @@ export interface ReplayResult {
    */
   wrongRecord?: string;
   /**
+   * The refusal was this procedure's own START GATE judging the page — its
+   * precondition (not as past its start) or its identity marker on a capture
+   * that saw the page — with nothing run. Absent on every other refusal: a
+   * contract or context-contract mismatch, a missing param, an identity the
+   * capture could not see. What lets a chain walk bank a segment it REACHED
+   * and whose gate refused as a stop at step 1 (server.ts, learn.ts;
+   * notes/CONTRACT-compile-g1.md item 1a).
+   */
+  gateRefused?: boolean;
+  /**
    * Which EXPECTATION gate stopped this replay after its step ran (StopGate).
    * Absent on every other stop — a refusal, a locator miss, an assertion's
    * miss — and on a stop inside a loop body.
@@ -886,7 +896,10 @@ export async function replaySkill(
     }
     if (passed && requireText?.length) passed = await checkIdentity();
     if (passed) return true;
+    // The page was judged and refused (an unconfirmable capture is not a judgement).
+    if (res.refused && !res.pastStart && !res.unobserved.includes('identity')) res.gateRefused = true;
     if (res.acted) {
+      res.gateRefused = undefined;
       res.refused = false;
       res.failedAt = n;
       res.url = page.url();
