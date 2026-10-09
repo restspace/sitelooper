@@ -327,6 +327,13 @@ export interface SkillRecord {
   repaired: boolean;
   /** Replay refused to start (wrong page / bad params). */
   refused: boolean;
+  /**
+   * `refused` was the start gate of a chain segment the walk REACHED by
+   * replaying every segment before it (ReplayResult.gateRefused): not the head
+   * nor a sibling candidate tried at the start. Learning banks it against
+   * `invoked` as a stop at step 1 (learn.ts; notes/CONTRACT-compile-g1.md 1a).
+   */
+  reachedRefusal?: boolean;
   fallthroughs: number;
   similarity: number | null;
   /** Structured locator misses from the replay (drift telemetry). */

@@ -9,7 +9,7 @@ import { executeTool } from '../agent/tools.js';
 import { urlPattern as compiledUrlPattern, carryOpener, dropAbsentReadLocators, dropDeadReadLocators, fillParams, markReadsProven, stranded, stripRunValueCandidates, urlMatches, urlParts } from '../skills/compile.js';
 import type { DriftTicket } from '../skills/repair.js';
 import type { Page } from 'playwright-core';
-import { MAX_STRAY_GESTURES_FOR_PIN, agentGesturesOutsideReplay, bindSkill, canAdoptPin, decideRepin, instructionEntry, learnFromInstruction, matchTemplate, pinCarriesFailedStep, pinEndsElsewhere, pinStartsElsewhere, pinStatus, publishedOutputs, replayReport, selectCandidates } from '../skills/learn.js';
+import { MAX_STRAY_GESTURES_FOR_PIN, agentGesturesOutsideReplay, bindSkill, canAdoptPin, decideRepin, instructionEntry, learnFromInstruction, matchTemplate, pinCarriesFailedStep, pinEndsElsewhere, pinStartsElsewhere, pinStatus, publishedOutputs, reachedGateRefusal, replayReport, selectCandidates } from '../skills/learn.js';
 import { threadStepParams } from '../skills/rethread.js';
 import { buildFlow, consumedReportedOutputs, consumedUrlOutputs, ignorableRefs, jsonLeaves, lintFlowRefs, lintUnboundParams, lintUnpublishedOutputs, listFlows, liveReadsFor, liveReadsForRecovery, loadFlow, loadFlowFile, lookupOutput, mutatingIntent, noteOutputEvidence, pruneUnsourcedOutputs, recoveryRoute, remapParams, resolveInstruction, resolveStepParams, softResolveInstruction, saveFlow, staleInstructionIds, taskConstants, textMints, unbankedMutations, unreportedOutputs, urlOutputs, varyingValues, type RunSpecific, commentaryReport } from '../skills/flow.js';
 import { applyRelabelToEntries, applyRelabelToSkills, relabelCases, requestRelabelPlan, runValueKeyRenames } from '../skills/relabel.js';
@@ -3249,6 +3249,14 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
       stepsReplayed: replay.ok ? agg.stepsRun : replay.stepsRun,
       stepsTotal: replay.ok ? agg.stepsTotal : replay.stepsTotal,
       refused: Boolean(replay.refused),
+      // A later segment's own gate refused the page the chain brought it to:
+      // the procedure stopped there as surely as a step that failed, and only
+      // a refusal of the head or of a sibling candidate (handled above, never
+      // reaching here) is "nothing ran". kimai hakm1/hbkm3, grocy hbgc2/hbgc3:
+      // n2 and n3 both refused the segment after a literal goto (identity
+      // `{{v1}} is not confirmed`), and its stats still read uses 1, successes
+      // 1 — unproven-pin never fired and the compiled spec failed there.
+      ...(reachedGateRefusal(replay, last.id, match.skill.id) ? { reachedRefusal: true } : {}),
       fallthroughs: agg.fallthroughs,
       similarity: replay.similarity,
       ...(agg.misses.length ? { misses: agg.misses } : {}),
