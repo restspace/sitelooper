@@ -2552,6 +2552,7 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
           driftTickets.push({
             flow: flow.name, step: step.id, skill: m.skill ?? sk.invoked, atStep: m.step, key: m.key,
             similarity: sk.similarity, missedLocator: m.primary, fallbackUsed: m.used, ...(m.usedIndex !== undefined ? { fallbackIndex: m.usedIndex } : {}), recovered,
+            ...(m.banked ? { banked: true as const } : {}),
             // Site B: an inline heal travels as EVIDENCE — the proposal the step
             // ran on and the page rows it was picked from — so the ordinary drain
             // can patch the chain without a model, and so every repair becomes a
@@ -3240,6 +3241,13 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
         bySkill.set(e.skill, [...(bySkill.get(e.skill) ?? []), e]);
       }
       for (const [id, list] of bySkill) recordCandidateEvidence(store, id, list);
+      // A primary banked here as an ambiguous miss beneath a positional winner
+      // is the same miss its drift ticket reports; say so on the miss, so the
+      // ticket fold does not count this run twice (foldTicketEvidence).
+      for (const e of agg.evidence) {
+        if (e.hit !== undefined || !e.missed.includes(0)) continue;
+        for (const m of agg.misses) if (m.skill === e.skill && m.step === e.step && m.key === e.key && m.used !== null) m.banked = true;
+      }
     }
 
     const record: Partial<SkillRecord> = {
