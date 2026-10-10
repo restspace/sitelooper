@@ -1,0 +1,42 @@
+
+Running 1 test using 1 worker
+
+[sitelooper warn] 01-signin: report value login_email is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)
+[sitelooper step] 01-signin
+[sitelooper step] 02-report
+[sitelooper skip] 03-create s_647d09/1 target: read target not found — value left empty
+[sitelooper skip] 03-create s_647d09/2 target: read target not found — value left empty
+[sitelooper skip] 03-create s_647d09/3 target: read target not found — value left empty
+  ✘  1 rvkm-hbkm1-cv.spec.ts:9:1 › rvkm-hbkm1-cv (23.0s)
+
+
+  1) rvkm-hbkm1-cv.spec.ts:9:1 › rvkm-hbkm1-cv › 03-create: Create and save exactly one new project named '{{runid}} Bench Project' with a description that includes the exact runid '{{runid}}'. Do not modify any seed project. If the form requires a customer to save, choose the exact existing customer 'Bench Customer'. Verify the saved project name, description, and its details-page URL. 
+
+    Error: s_647d09: every read of this read-only procedure was skipped — the page is not the one it was recorded reading
+
+       at rvkm-hbkm1-cv.flow.ts:22284
+
+      22282 |
+      22283 |     if (observedNothing([{"tool":"read","args":{"what":"text"},"locators":{"target":[0]},"label":"projects_list_rows_1"},{"tool":"read","args":{"what":"text"},"locators":{"target":[0]},"label":"projects_list_rows_2"},{"tool":"read","args":{"what":"text"},"locators":{"target":[0]},"label":"projects_list_rows_3"},{"tool":"goto","args":{"what":"text"},"locators":{"target":[]}}], skippedReads.length - readsBefore3)) {
+    > 22284 |       throw new Error('s_647d09: every read of this read-only procedure was skipped — the page is not the one it was recorded reading');
+            |             ^
+      22285 |     }
+      22286 |
+      22287 |     // s_97630b: Create and save exactly one new project named '{{v2}}' with a description that includes the exact runid '{{v1}}'. Do not modify any seed project. If the form requires a customer to save, choose the ex…
+        at Object.03-create (/home/user/sitelooper/bench/results/rvkm-hbkm1-cv-spec-spec-tmp/rvkm-hbkm1-cv.flow.ts:22284:13)
+        at /home/user/sitelooper/bench/results/rvkm-hbkm1-cv-spec-spec-tmp/rvkm-hbkm1-cv.flow.ts:28772:7
+        at runFlow (/home/user/sitelooper/bench/results/rvkm-hbkm1-cv-spec-spec-tmp/rvkm-hbkm1-cv.flow.ts:28771:5)
+        at /home/user/sitelooper/bench/results/rvkm-hbkm1-cv-spec-spec-tmp/rvkm-hbkm1-cv.spec.ts:14:21
+
+    attachment #2: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/rvkm-hbkm1-cv-rvkm-hbkm1-cv/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/rvkm-hbkm1-cv-rvkm-hbkm1-cv/error-context.md
+
+  1 failed
+    rvkm-hbkm1-cv.spec.ts:9:1 › rvkm-hbkm1-cv ──────────────────────────────────────────────────────

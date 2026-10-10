@@ -1,0 +1,98 @@
+{
+ "id": "s_097d4d",
+ "origin": "http://127.0.0.1:8105",
+ "template": "Create and save exactly one timesheet entry on project '{{v1}}' for 2026-09-16 from 09:00 to 11:30, with description including exact runid '{{v2}}'. Select the existing activity exactly named '{{v3}}' (not similarly named activities), and select only the existing tag exactly '{{v4}}' (do not create a tag). Use the signed-in user's displayed timezone as instructed. Verify the saved timesheet entry and report its date, start/end times, description, project, activity, and complete tag list.",
+ "params": {
+  "v1": {
+   "example": "rvkm-hbkm1-cvn0 Bench Project",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i3:project_name"
+  },
+  "v2": {
+   "example": "rvkm-hbkm1-cvn0",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v3": {
+   "example": "Consulting",
+   "usedIn": []
+  },
+  "v4": {
+   "example": "onsite",
+   "usedIn": []
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8105/en/admin/project/:id/edit"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e23"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#times > div > div > div > a:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 120,
+      "y": 170,
+      "w": 240,
+      "h": 36,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8105/en/timesheet/",
+    "alertContains": "No entries were found based on your selected filters.",
+    "addedContains": [
+     "- heading \"My times\"",
+     "- link \"Customize display\"",
+     "- button \"Search filter\"",
+     "- textbox \"Search\"",
+     "- button \"Search\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_476957",
+    "step": 1
+   }
+  }
+ ],
+ "contract": 2,
+ "stats": {
+  "uses": 3,
+  "successes": 3,
+  "partial": 0,
+  "created": "2026-10-09T23:47:16.290Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2,
+  "lastUsed": "2026-10-09T23:59:45.294Z",
+  "stopStreak": 0
+ },
+ "status": "validated",
+ "seq": {
+  "chain": "s_18a285",
+  "index": 0,
+  "of": 2
+ },
+ "provenance": {
+  "session": "rerecord-mv1m3ckw-0",
+  "instruction": "Create and save exactly one timesheet entry on project 'rvkm-hbkm1-cvn0 Bench Project' for 2026-09-16 from 09:00 to 11:30, with description including exact runid 'rvkm-hbkm1-cvn0'. Select the existing activity exactly named 'Consulting' (not similarly named activities), and select only the existing tag exactly 'onsite' (do not create a tag). Use the signed-in user's displayed timezone as instructed. Verify the saved timesheet entry and report its date, start/end times, description, project, activity, and complete tag list.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-10-09T23:47:16.290Z"
+ },
+ "revision": 3
+}

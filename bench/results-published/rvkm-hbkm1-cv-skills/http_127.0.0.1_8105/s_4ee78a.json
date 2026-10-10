@@ -1,0 +1,97 @@
+{
+ "id": "s_4ee78a",
+ "origin": "http://127.0.0.1:8105",
+ "template": "Edit the existing project '{{v1}}' to set its order number to '{{v3}}' and order date to 2026-11-15. Save once and verify the saved order number and date on the project page.",
+ "params": {
+  "v1": {
+   "example": "rvkm-hbkm1-cvn1 Bench Project",
+   "usedIn": [],
+   "known": true,
+   "binding": "03-create.project_name"
+  },
+  "v2": {
+   "example": "rvkm-hbkm1-cvn1",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v3": {
+   "example": "PO-4471",
+   "usedIn": []
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8105/en/admin/project/"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e137"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div > table > tbody > tr:nth-of-type(1) > td:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 710,
+      "y": 202,
+      "w": 905.5,
+      "h": 45,
+      "role": null,
+      "tag": "td",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "mints": {
+    "at": "p3"
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8105/en/admin/project/{{d1}}/details",
+    "addedContains": [
+     "- link \"Edit\"",
+     "- link \"Permissions\"",
+     "- button \"Filter data\"",
+     "- link \"Create copy\"",
+     "- link \"Project details\""
+    ],
+    "lineDialect": 2
+   }
+  }
+ ],
+ "derived": {
+  "d1": {
+   "step": 1,
+   "at": "p3",
+   "example": "40014"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-10-09T23:52:29.681Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_4c81ca",
+  "index": 0,
+  "of": 2
+ },
+ "provenance": {
+  "session": "rerecord-mv1ma1vy-1",
+  "instruction": "Edit the existing project 'rvkm-hbkm1-cvn1 Bench Project' to set its order number to 'PO-4471' and order date to 2026-11-15. Save once and verify the saved order number and date on the project page.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-10-09T23:52:29.681Z"
+ },
+ "revision": 1
+}

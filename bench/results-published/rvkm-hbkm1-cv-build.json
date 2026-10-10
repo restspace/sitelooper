@@ -1,0 +1,111 @@
+{
+  "exit": 4,
+  "wallMs": 1047058,
+  "result": {
+    "converge": {
+      "status": "exhausted",
+      "why": "3 round(s) and the last re-record still fail at 03-create",
+      "rounds": [
+        {
+          "round": 1,
+          "compile": {
+            "refused": false,
+            "outcome": "compiled",
+            "codes": [],
+            "steps": [],
+            "blockers": [],
+            "flowFile": "/home/user/sitelooper/bench/results/.rvkm-hbkm1-cv-compiled-WmyZLC/rvkm-hbkm1-cv.flow.ts"
+          },
+          "rerecord": {
+            "step": "03b-edit",
+            "why": "omitted work, recorded after 03-create",
+            "ok": true,
+            "attempt": 0,
+            "runs": 2,
+            "pinned": "s_99dbbc",
+            "turns": 28,
+            "diagnostics": []
+          }
+        },
+        {
+          "round": 2,
+          "compile": {
+            "refused": true,
+            "outcome": "refused",
+            "codes": [
+              "unproven-pin@03-create",
+              "demoted-pin@05-create"
+            ],
+            "steps": [
+              "03-create",
+              "05-create"
+            ],
+            "blockers": [],
+            "flowFile": null
+          },
+          "rerecord": {
+            "step": "03-create",
+            "why": "compile refusal; also named: 05-create",
+            "ok": true,
+            "attempt": 0,
+            "runs": 2,
+            "pinned": "s_2510de",
+            "turns": 9,
+            "diagnostics": []
+          }
+        },
+        {
+          "round": 3,
+          "compile": {
+            "refused": true,
+            "outcome": "refused",
+            "codes": [
+              "demoted-pin@05-create"
+            ],
+            "steps": [
+              "05-create"
+            ],
+            "blockers": [],
+            "flowFile": null
+          },
+          "rerecord": {
+            "step": "05-create",
+            "why": "compile refusal",
+            "ok": true,
+            "attempt": 0,
+            "runs": 2,
+            "pinned": "s_ac8ecb",
+            "turns": 64,
+            "diagnostics": []
+          }
+        },
+        {
+          "round": 4,
+          "final": true,
+          "compile": {
+            "refused": false,
+            "outcome": "compiled",
+            "codes": [],
+            "steps": [],
+            "blockers": [],
+            "flowFile": "/home/user/sitelooper/bench/results/.rvkm-hbkm1-cv-compiled-WmyZLC/rvkm-hbkm1-cv.flow.ts"
+          },
+          "check": {
+            "ran": true,
+            "passed": false,
+            "timedOut": false,
+            "step": "03-create",
+            "anchor": "03-create s_647d09/4",
+            "error": "Error: s_647d09: every read of this read-only procedure was skipped — the page is not the one it was recorded reading"
+          }
+        }
+      ],
+      "flowFile": null,
+      "modelTurns": 101
+    },
+    "schemaVersion": 1,
+    "stage": "converge",
+    "outcome": "not-converged",
+    "nextActions": []
+  }
+}

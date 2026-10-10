@@ -1,0 +1,284 @@
+{
+ "id": "s_2510de",
+ "origin": "http://127.0.0.1:8105",
+ "template": "Create and save exactly one new project named '{{v2}}' with a description that includes the exact runid '{{v1}}'. Do not modify any seed project. If the form requires a customer to save, choose the exact existing customer '{{v3}}'. Verify the saved project name, description, and its details-page URL.",
+ "params": {
+  "v1": {
+   "example": "rvkm-hbkm1-cvn0",
+   "usedIn": [
+    3
+   ],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v2": {
+   "example": "rvkm-hbkm1-cvn0 Bench Project",
+   "usedIn": [
+    2
+   ],
+   "known": true
+  },
+  "v3": {
+   "example": "Bench Customer",
+   "usedIn": [
+    4
+   ]
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8105/en/admin/project/"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e119"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div > div:nth-of-type(2) > div > div:nth-of-type(1) > a:nth-of-type(1)",
+      "nth": 0
+     },
+     {
+      "kind": "point",
+      "x": 1103,
+      "y": 101,
+      "w": 103.2,
+      "h": 40,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8105/en/admin/project/",
+    "addedContains": [
+     "- dialog \"\"",
+     "- heading \"Create project\"",
+     "- button \"Close\"",
+     "- textbox \"Name\"",
+     "- combobox \"Color\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_77406c",
+    "step": 1
+   }
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e186",
+    "value": "{{v2}}"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "label",
+      "label": "Name"
+     },
+     {
+      "kind": "id",
+      "selector": "#project_edit_form_name"
+     },
+     {
+      "kind": "css",
+      "selector": "#project_edit_form_name"
+     },
+     {
+      "kind": "point",
+      "x": 554,
+      "y": 157,
+      "w": 498.5,
+      "h": 40,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8105/en/admin/project/",
+    "addedContains": [
+     "- textbox \"Name\": {{v2}}"
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_77406c",
+    "step": 2
+   }
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e195",
+    "value": "Bench project created by automation for runid {{v1}}"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Description"
+     },
+     {
+      "kind": "label",
+      "label": "Description"
+     },
+     {
+      "kind": "id",
+      "selector": "#project_edit_form_comment"
+     },
+     {
+      "kind": "css",
+      "selector": "#project_edit_form_comment"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 251,
+      "w": 670,
+      "h": 60,
+      "role": "textbox",
+      "tag": "textarea",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8105/en/admin/project/",
+    "addedContains": [
+     "- textbox \"Description\": Bench project created by automation for runid {{v1}}"
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_77406c",
+    "step": 3
+   }
+  },
+  {
+   "tool": "select",
+   "args": {
+    "option": "{{v3}}",
+    "target": "@e200"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "id",
+      "selector": "#project_edit_form_customer"
+     },
+     {
+      "kind": "css",
+      "selector": "#project_edit_form_customer"
+     },
+     {
+      "kind": "point",
+      "x": 306,
+      "y": 241,
+      "w": 1,
+      "h": 20,
+      "role": "combobox",
+      "tag": "select",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8105/en/admin/project/",
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e296"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Save"
+     },
+     {
+      "kind": "id",
+      "selector": "#form_modal_save"
+     },
+     {
+      "kind": "css",
+      "selector": "#form_modal_save"
+     },
+     {
+      "kind": "point",
+      "x": 858,
+      "y": 833,
+      "w": 66.8,
+      "h": 40,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "mints": {
+    "at": "p3"
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8105/en/admin/project/{{d1}}/details",
+    "addedContains": [
+     "- link \"Edit\"",
+     "- link \"Permissions\"",
+     "- button \"Filter data\"",
+     "- link \"Create copy\"",
+     "- link \"Project details\""
+    ],
+    "lineDialect": 2
+   }
+  }
+ ],
+ "derived": {
+  "d1": {
+   "step": 5,
+   "at": "p3",
+   "example": "40011"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 6,
+  "successes": 6,
+  "partial": 0,
+  "created": "2026-10-09T23:44:43.142Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2,
+  "lastUsed": "2026-10-09T23:58:56.636Z",
+  "stopStreak": 0
+ },
+ "status": "validated",
+ "seq": {
+  "chain": "s_79dddf",
+  "index": 0,
+  "of": 4
+ },
+ "variantOf": "s_77406c",
+ "provenance": {
+  "session": "rerecord-mv1m3ckw-0",
+  "instruction": "Create and save exactly one new project named 'rvkm-hbkm1-cvn0 Bench Project' with a description that includes the exact runid 'rvkm-hbkm1-cvn0'. Do not modify any seed project. If the form requires a customer to save, choose the exact existing customer 'Bench Customer'. Verify the saved project name, description, and its details-page URL.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-10-09T23:44:43.142Z"
+ },
+ "revision": 6
+}
