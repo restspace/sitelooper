@@ -48,8 +48,10 @@ no executables. Everything below is done by the sitelooper CLI, which Claude run
 - **TypeSafe.** If you set a TypeSafe API key (`SITELOOPER_JEV_API_KEY` or `TYPESAFE_API_KEY`), an
   optional tier sends typed questions about page state to TypeSafe's API. With no key it is off.
 - **The sites you test.** The browser opens only the URLs you or Claude give it.
-- **Your disk.** Sessions, browser profiles, learned procedures and flows are kept under
-  `~/.sitelooper/` (or `SITELOOPER_HOME`). Compiled specs and their config go in your project.
+- **Your disk.** Sessions, browser profiles, learned procedures, flows, and any screenshots or
+  videos you ask for are kept under `~/.sitelooper/` (or `SITELOOPER_HOME`). Recordings can contain
+  values the app displayed, such as names or emails in test records. Compiled specs and their config
+  go in your project.
 - **Nothing else.** sitelooper has no telemetry and sends nothing to its authors.
 
 Use it only on apps you operate or are authorised to test. It does not solve CAPTCHAs or evade
