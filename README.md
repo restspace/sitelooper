@@ -151,6 +151,14 @@ check against a clean app, so it compiles and runs readiness exactly as before a
 Re-recording calls the model: with no API key configured, `build` compiles and checks once and stops
 with status `unavailable` if a re-record is needed. `--no-converge` restores compile plus readiness only.
 
+Convergence also redoes work the recording did that the flow left out. An instruction that changed
+the app but did not report success is not a flow step (`omitted` in the flow file, an `omitted-work`
+warning at compile); when nothing later in the flow entered its values again, `build` puts the
+instruction back as a step where it was recorded (`04b-…` after `04-…`, so no existing step id
+moves), re-records it with the model, and drops the omission once the step is pinned. Without
+convergence `build` stops before readiness and says which instruction is missing: a spec that passes
+without that work does not show the task was done. Plain `compile` still only warns.
+
 The gate requires three clean executions with retries disabled. Each run starts from state
 prepared by the reset command or by declared fixtures, and it uses at least two distinct datasets
 (`{n}` becomes `1`, `2`, `3`). No step may be skipped or unresolved, and no locator fallback may

@@ -386,6 +386,9 @@ export function foldTicketEvidence(store: SkillStore, tickets: DriftTicket[]): n
     // A non-structural fallback that won is already banked by replay; banking
     // it again here would double-count and retire on one run instead of two.
     if (t.fallbackUsed !== null && !positionalExpr(t.fallbackUsed)) continue;
+    // ...and so is an AMBIGUOUS named primary beneath a positional winner
+    // (replay.ts, fwen9-luna s_1c570b): the ticket says so.
+    if (t.banked) continue;
     const skill = store.get(t.skill);
     if (!skill) continue;
     const step = stepByTag(skill, t.atStep);

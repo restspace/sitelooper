@@ -17,7 +17,7 @@ import { drainDrift, llmProposer, triage, type DrainSummary, type DriftTicket } 
 import { cascadeProposer } from './skills/repair-jev.js';
 import { buildSystemOne, resolveSystemOneConfig } from './agent/system-one.js';
 import { compileFlow } from './spec/index.js';
-import { converge, decideBuildConvergence, roundLine } from './spec/converge.js';
+import { converge, decideBuildConvergence, omittedToRecover, roundLine } from './spec/converge.js';
 import { foldTicketEvidence, mintVars, notConverged, reorderByEvidence } from './spec/repair.js';
 import { emitFlowFile } from './spec/emit.js';
 import { carryFactSnapshot, carryFingerprints, carryRecipeSnapshot, flowToSpec, type SpecFlow } from './spec/ir.js';
@@ -37,6 +37,8 @@ import {
   formatRerecordDiagnostic,
   RerecordError,
   rerecordVerdict,
+  insertOmittedStep,
+  dropRecoveredOmission,
   recordedFromRuns,
   rethreadUrlRefs,
   chainToRetire,
@@ -1348,6 +1350,19 @@ async function buildCommand(positional: string[], flags: Map<string, string | bo
     }
     process.exit(2);
   }
+  // Work the recording did that the flow left out, which converge would redo
+  // (spec/converge.ts): without convergence the spec cannot be called ready,
+  // because it passes without that work (kimai hbkm3's order number).
+  const lost = omittedToRecover(result.diagnostics);
+  if (lost) {
+    const why = `the recording's instruction "${lost.instruction.slice(0, 90)}${lost.instruction.length > 90 ? '…' : ''}" changed the app and is not in the flow, so a passing spec would not prove the task was done; run build with convergence (a reset command and a model key) to redo it as step ${lost.step}`;
+    if (json) emitJson({ ...extra, compilation: result, omitted: lost }, 'compiled', 'blocked', result.diagnostics.flatMap((d) => d.action ? [d.action] : []));
+    else {
+      for (const d of result.diagnostics.filter((x) => x.code === 'omitted-work')) console.error(formatDiagnostic(d));
+      console.error(`not ready: ${why}`);
+    }
+    process.exit(2);
+  }
   if (!json) console.log(`compiled ${result.flowFile}; verifying emitted Playwright code`);
   readinessCommand(result.flowFile, flags, json, onProgress, result, extra);
 }
@@ -1389,6 +1404,18 @@ async function convergeBuild(positional: string[], flags: Map<string, string | b
         sub.set('instruction', `${base}\n\nA later step of this flow uses these values, so before you report, read each one from the page with \`read\` (label=<name>) and report it under exactly this name: ${o.outputs.join(', ')}.`);
       }
       const { ok, payload } = await rerecordFlow([positional[0], step], sub, json, onProgress, false);
+      return {
+        ok,
+        pinned: payload.pinned ?? null,
+        runs: payload.runs ?? [],
+        diagnostics: (payload.diagnostics ?? []).map((d: Diagnostic) => `${d.code}: ${d.what}`.slice(0, 300)),
+      };
+    },
+    recover: async (lost) => {
+      const sub = new Map(flags);
+      sub.delete('converge');
+      sub.set('runs', String(lost.runs));
+      const { ok, payload } = await rerecordFlow([positional[0], lost.step], sub, json, onProgress, false, { after: lost.after, instruction: lost.instruction });
       return {
         ok,
         pinned: payload.pinned ?? null,
@@ -2144,6 +2171,8 @@ async function rerecordFlow(
   json: boolean,
   onProgress: ((m: string) => void) | undefined,
   report: boolean,
+  /** `build` converge only: the omitted instruction this step redoes, inserted when the flow has no such step yet. */
+  recover?: { after: string | null; instruction: string },
 ): Promise<{ ok: boolean; payload: Record<string, any> }> {
   const usage =
     'usage: rerecord <flow-name-or-path> <step-id> [--instruction "<text>"] [--var k=v ...] [--runs n] [--reset-cmd "<cmd>"] [--json]';
@@ -2152,7 +2181,14 @@ async function rerecordFlow(
 
   const projectConfig = loadProjectConfig();
   const input = resolveRerecordInput(nameOrPath, fs.existsSync(projectConfig.snapshotFile) ? projectConfig.snapshotFile : undefined);
-  const { flow, file } = input;
+  const { file } = input;
+  let flow = input.flow;
+  try {
+    if (recover) flow = insertOmittedStep(flow, stepId, recover.after, recover.instruction);
+  } catch (err) {
+    if (err instanceof RerecordError) return fail(err.message, 2);
+    throw err;
+  }
 
   const runsWanted = flags.has('runs') ? Number(flags.get('runs')) : 2;
   if (!Number.isInteger(runsWanted) || runsWanted < 1) fail('--runs takes a positive integer', 2);
@@ -2261,7 +2297,10 @@ async function rerecordFlow(
     const endOrigin = endUrl ? originOf(endUrl) : null;
     const rethreaded = rethreadUrlRefs(loadedAfter.flow, stepId, endUrl, endOrigin ? factStoreFor(stagedInput.store.dir).snapshot(endOrigin) : undefined);
     for (const line of rethreaded.rewired) say(`  ${stepId}: ${line} (a url part both runners publish)`);
-    if (recorded || rethreaded.rewired.length) saveFlow(rethreaded.flow, stagedInput.flowFile);
+    // The omitted work this step redoes is in the flow now (build converge).
+    const kept = dropRecoveredOmission(rethreaded.flow, stepId);
+    if (kept !== rethreaded.flow) say(`  ${stepId}: carries the work the recording had left out of the flow`);
+    if (recorded || rethreaded.rewired.length || kept !== rethreaded.flow) saveFlow(kept, stagedInput.flowFile);
   }
   const persisted = persistRerecordInput(input, stagedInput, verdict.ok);
   // The recipe snapshot the rewritten file now carries, where it moved.

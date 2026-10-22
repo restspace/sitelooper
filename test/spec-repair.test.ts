@@ -846,6 +846,13 @@ describe('foldTicketEvidence / reorderByEvidence', () => {
     expect(store.get('s_1')!.steps[0].locators.target[0].seen).toEqual({ hit: 0, miss: 1 });
   });
 
+  it('leaves a structural fallthrough the replay already banked (an ambiguous named primary, fwen9-luna) alone', () => {
+    const store = staged();
+    const t = ticket({ fallbackUsed: "page.locator('#view > section > header > button')", fallbackIndex: 2, banked: true });
+    expect(foldTicketEvidence(store, [t])).toBe(0);
+    expect(store.get('s_1')!.steps[0].locators.target[0].seen).toBeUndefined();
+  });
+
   it('never invents a hit — only ever a miss', () => {
     const store = staged();
     foldTicketEvidence(store, [ticket(), ticket(), ticket()]);

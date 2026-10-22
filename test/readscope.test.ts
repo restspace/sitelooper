@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { LocatorCandidate, RecordedEntry, RecordedStep } from '../src/daemon/recorder.js';
 import { compileSkills } from '../src/skills/compile.js';
-import { scopeReadBySlot } from '../src/skills/readscope.js';
+import { scopeReadBySlot, shownMoreThanOnce } from '../src/skills/readscope.js';
 import { markFrame } from '../src/execution/text.js';
 import { scopedRead } from '../src/execution/observe.js';
 import { emitFlowFile } from '../src/spec/emit.js';
@@ -79,6 +79,109 @@ describe('scopeReadBySlot (fwrd87)', () => {
     scopeReadBySlot(undefined, 'read', args, locators, slots, new Set(['v4']));
     expect(args).toEqual({ target: 'td', what: 'text' });
     expect(locators.target).toEqual([positional]);
+  });
+});
+
+/**
+ * compile-g1 item 2, erpnext fwen9-luna s_1c570b steps 3 and 16: item_1 was
+ * one element of a read_all of the item_code column that returned
+ * ["Bench Widget","Bench Gadget"], and step 16 read the same value back. The
+ * synthesized `text "{{v4}}"` primary was ambiguous on every replay (the
+ * item's name shows in its code AND name columns); a positional css took the
+ * read every time and the readiness runs warned.
+ */
+describe('a value the recording shows more than once does not lead the chain (fwen9-luna)', () => {
+  const WIDGET = 'Bench Widget';
+  const benchSlots = new Map([['v4', WIDGET]]);
+  const column: LocatorCandidate = { kind: 'css', selector: '[data-fieldname="items"] .grid-body .grid-row .col[data-fieldname="item_code"] .static-area', nth: 0 };
+  const link: LocatorCandidate = { kind: 'css', selector: 'div:nth-of-type(1) > div:nth-of-type(1) > div > div:nth-of-type(3) > div:nth-of-type(2) > a' };
+  const point: LocatorCandidate = { kind: 'point', x: 418, y: 686, w: 104.6, h: 19.5, role: 'link', tag: 'a', vw: 1280, vh: 900 };
+  const listElement = { tool: 'read', result: JSON.stringify(WIDGET), listOf: 2 };
+
+  it('keeps the text candidate behind the recorded css, and the point last, for a list element and its read-back', () => {
+    const args: Record<string, unknown> = { target: '(read-back)', what: 'text' };
+    const step3 = { target: [column] };
+    scopeReadBySlot(JSON.stringify(WIDGET), 'read', args, step3, benchSlots, new Set(['v4']), { reads: [listElement] });
+    expect(args.scopedBy).toBe('v4');
+    expect(step3.target).toEqual([column, { kind: 'text', text: '{{v4}}' }]);
+
+    const back: Record<string, unknown> = { target: '(read-back)', what: 'text' };
+    const step16 = { target: [link, point] };
+    scopeReadBySlot(JSON.stringify(WIDGET), 'read', back, step16, benchSlots, new Set(['v4']), {
+      reads: [listElement, { tool: 'read', result: JSON.stringify('Bench Gadget'), listOf: 2 }, { tool: 'read', result: JSON.stringify(WIDGET) }],
+    });
+    expect(back.scopedBy).toBe('v4');
+    expect(step16.target).toEqual([link, { kind: 'text', text: '{{v4}}' }, point]);
+  });
+
+  it('counts a list read that shows the value in two of its elements', () => {
+    expect(shownMoreThanOnce(WIDGET, { reads: [{ tool: 'read_all', result: JSON.stringify([WIDGET, `${WIDGET} Pro`]) }] })).toBe(true);
+    expect(shownMoreThanOnce(WIDGET, { reads: [{ tool: 'read_all', result: JSON.stringify([WIDGET, 'Bench Gadget']) }] })).toBe(false);
+  });
+
+  it('negative: a value read once, or read and read back by plain reads, still leads the chain', () => {
+    const plain = { tool: 'read', result: JSON.stringify(WIDGET) };
+    expect(shownMoreThanOnce(WIDGET, { reads: [plain, plain] })).toBe(false);
+    const args: Record<string, unknown> = { target: '(read-back)', what: 'text' };
+    const locators = { target: [link, point] };
+    scopeReadBySlot(JSON.stringify(WIDGET), 'read', args, locators, benchSlots, new Set(['v4']), { reads: [plain, plain] });
+    expect(locators.target).toEqual([{ kind: 'text', text: '{{v4}}' }, link, point]);
+  });
+
+  it('compiles the fwen9 n1 shape: the read_all split into item_1/item_2, and the read-back, with the css first', () => {
+    const url = 'http://127.0.0.1:8100/app/sales-order/SAL-ORD-2026-00004';
+    const instruction = "Create a Sales Order with the exact linked items 'Bench Widget' quantity 3 and 'Bench Gadget' quantity 2, save it, and verify the chosen items from the saved order.";
+    const colSel = '[data-fieldname="items"] .grid-body .grid-row .col[data-fieldname="item_code"] .static-area';
+    const entries: RecordedEntry[] = [
+      { k: 'instruction', text: instruction, url },
+      {
+        k: 'step',
+        tool: 'type',
+        args: { target: 'role=combobox[name="Item Code"]', text: WIDGET },
+        locators: { target: { expr: 'x', verified: true, raw: 'role=combobox[name="Item Code"]', chain: [{ kind: 'role', role: 'combobox', name: 'Item Code' }] } },
+        diff: { url, alerts: [], added: [`- combobox "Item Code": ${WIDGET}`], dialect: 2 },
+      },
+      {
+        k: 'step',
+        tool: 'click',
+        args: { target: '@e722' },
+        locators: { target: { expr: 'x', verified: true, raw: '@e722', chain: [{ kind: 'role', role: 'option', name: `${WIDGET} ${WIDGET}, Products` }, { kind: 'css', selector: '#awesomplete_list_31 > div:nth-of-type(1)' }] } },
+        diff: { url, alerts: [], added: ['- link "Open Link"'], dialect: 2 },
+      },
+      {
+        k: 'step',
+        tool: 'read_all',
+        args: { target: colSel, what: 'text' },
+        locators: { target: { expr: 'x', verified: false, raw: colSel, chain: [{ kind: 'css', selector: colSel }] } },
+        result: JSON.stringify([WIDGET, 'Bench Gadget']),
+      },
+      {
+        k: 'step',
+        tool: 'read',
+        args: { target: '(read-back)', what: 'text' },
+        locators: { target: { expr: 'x', verified: true, raw: '(read-back)', chain: [link, point] } },
+        result: JSON.stringify(WIDGET),
+        label: 'item_1_back',
+      },
+    ];
+    const [skill] = compileSkills({
+      entries,
+      instruction,
+      report: { status: 'success', summary: 'saved', evidence: { values: { item_1: WIDGET, item_2: 'Bench Gadget', item_1_back: WIDGET } } },
+      session: 's',
+      knownValues: {},
+    });
+    const v = Object.entries(skill.params).find(([, p]) => p.example === WIDGET)?.[0];
+    expect(v, JSON.stringify(skill.params)).toBeDefined();
+    const item1 = skill.steps.find((s) => s.label === 'item_1')!;
+    expect(item1, JSON.stringify(skill.steps.map((s) => s.label))).toBeDefined();
+    expect(item1.args.scopedBy).toBe(v);
+    expect(item1.locators.target).toEqual([{ kind: 'css', selector: colSel, nth: 0 }, { kind: 'text', text: `{{${v}}}` }]);
+    const back = skill.steps.find((s) => s.label === 'item_1_back')!;
+    expect(back.args.scopedBy).toBe(v);
+    expect(back.locators.target[0]).toEqual(link);
+    expect(back.locators.target[1]).toEqual({ kind: 'text', text: `{{${v}}}` });
+    expect(back.locators.target.at(-1)!.kind).toBe('point');
   });
 });
 

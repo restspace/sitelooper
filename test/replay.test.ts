@@ -1171,6 +1171,9 @@ d('segment chains (two fixture pages)', () => {
     // gating: the tail must refuse before touching anything on page 1
     const refused = await run('run_skill', { id: b.id, params });
     expect(refused.replay?.refused).toBe(true);
+    // …and it was the gate judging the page, which a chain walk that REACHED
+    // this segment banks as a stop at step 1 (compile-g1 item 1a).
+    expect(refused.replay?.gateRefused).toBe(true);
     // composition: head then tail, each on its own page
     const first = await run('run_skill', { id: a.id, params });
     expect(first.replay?.ok).toBe(true);

@@ -9,7 +9,7 @@ import { executeTool } from '../agent/tools.js';
 import { urlPattern as compiledUrlPattern, carryOpener, dropAbsentReadLocators, dropDeadReadLocators, fillParams, markReadsProven, stranded, stripRunValueCandidates, urlMatches, urlParts } from '../skills/compile.js';
 import type { DriftTicket } from '../skills/repair.js';
 import type { Page } from 'playwright-core';
-import { MAX_STRAY_GESTURES_FOR_PIN, agentGesturesOutsideReplay, bindSkill, canAdoptPin, decideRepin, instructionEntry, learnFromInstruction, matchTemplate, pinCarriesFailedStep, pinEndsElsewhere, pinStartsElsewhere, pinStatus, publishedOutputs, replayReport, selectCandidates } from '../skills/learn.js';
+import { MAX_STRAY_GESTURES_FOR_PIN, agentGesturesOutsideReplay, bindSkill, canAdoptPin, decideRepin, instructionEntry, learnFromInstruction, matchTemplate, pinCarriesFailedStep, pinEndsElsewhere, pinStartsElsewhere, pinStatus, publishedOutputs, reachedGateRefusal, replayReport, selectCandidates } from '../skills/learn.js';
 import { threadStepParams } from '../skills/rethread.js';
 import { buildFlow, consumedReportedOutputs, consumedUrlOutputs, ignorableRefs, jsonLeaves, lintFlowRefs, lintUnboundParams, lintUnpublishedOutputs, listFlows, liveReadsFor, liveReadsForRecovery, loadFlow, loadFlowFile, lookupOutput, mutatingIntent, noteOutputEvidence, pruneUnsourcedOutputs, recoveryRoute, remapParams, resolveInstruction, resolveStepParams, softResolveInstruction, saveFlow, staleInstructionIds, taskConstants, textMints, unbankedMutations, unreportedOutputs, urlOutputs, varyingValues, type RunSpecific, commentaryReport } from '../skills/flow.js';
 import { applyRelabelToEntries, applyRelabelToSkills, relabelCases, requestRelabelPlan, runValueKeyRenames } from '../skills/relabel.js';
@@ -2552,6 +2552,7 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
           driftTickets.push({
             flow: flow.name, step: step.id, skill: m.skill ?? sk.invoked, atStep: m.step, key: m.key,
             similarity: sk.similarity, missedLocator: m.primary, fallbackUsed: m.used, ...(m.usedIndex !== undefined ? { fallbackIndex: m.usedIndex } : {}), recovered,
+            ...(m.banked ? { banked: true as const } : {}),
             // Site B: an inline heal travels as EVIDENCE — the proposal the step
             // ran on and the page rows it was picked from — so the ordinary drain
             // can patch the chain without a model, and so every repair becomes a
@@ -3240,6 +3241,13 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
         bySkill.set(e.skill, [...(bySkill.get(e.skill) ?? []), e]);
       }
       for (const [id, list] of bySkill) recordCandidateEvidence(store, id, list);
+      // A primary banked here as an ambiguous miss beneath a positional winner
+      // is the same miss its drift ticket reports; say so on the miss, so the
+      // ticket fold does not count this run twice (foldTicketEvidence).
+      for (const e of agg.evidence) {
+        if (e.hit !== undefined || !e.missed.includes(0)) continue;
+        for (const m of agg.misses) if (m.skill === e.skill && m.step === e.step && m.key === e.key && m.used !== null) m.banked = true;
+      }
     }
 
     const record: Partial<SkillRecord> = {
@@ -3249,6 +3257,14 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
       stepsReplayed: replay.ok ? agg.stepsRun : replay.stepsRun,
       stepsTotal: replay.ok ? agg.stepsTotal : replay.stepsTotal,
       refused: Boolean(replay.refused),
+      // A later segment's own gate refused the page the chain brought it to:
+      // the procedure stopped there as surely as a step that failed, and only
+      // a refusal of the head or of a sibling candidate (handled above, never
+      // reaching here) is "nothing ran". kimai hakm1/hbkm3, grocy hbgc2/hbgc3:
+      // n2 and n3 both refused the segment after a literal goto (identity
+      // `{{v1}} is not confirmed`), and its stats still read uses 1, successes
+      // 1 — unproven-pin never fired and the compiled spec failed there.
+      ...(reachedGateRefusal(replay, last.id, match.skill.id) ? { reachedRefusal: true } : {}),
       fallthroughs: agg.fallthroughs,
       similarity: replay.similarity,
       ...(agg.misses.length ? { misses: agg.misses } : {}),

@@ -81,12 +81,40 @@ const summarise = (skill) => {
   const instr = String(skill.provenance?.instruction ?? '?').replace(/\s+/g, ' ').slice(0, 40);
   const at = `[${instr}]${skill.seq ? `.${skill.seq.index ?? ''}` : ''}`;
   if (skill.preconditions?.urlPattern) lines.push(`${at} start ${skill.preconditions.urlPattern}`);
+  // Which tool each step runs, and where every goto goes: a goto that carries
+  // n1's own record id (hakm1 `/timesheet/1/edit`, compile-g1 item 1b) is
+  // slotted or turned into a link click, and neither shows in the patterns.
+  lines.push(`${at} tools ${(skill.steps ?? []).map((s) => s.tool).join(',')}`);
+  // A procedure compile cut short before state-changing work (TransformNote.cut): compile refuses it (cut-procedure).
+  for (const t of skill.provenance?.transforms ?? []) if (t.cut?.length) lines.push(`${at} CUT ${t.name} ${t.cut.join(',')}`);
+  (skill.steps ?? []).forEach((s, i) => {
+    if (s.tool === 'goto') lines.push(`${at}/${i + 1} goto ${s.args?.url ?? '?'}`);
+  });
   (skill.steps ?? []).forEach((s, i) => {
     if (s.expect?.urlPattern) lines.push(`${at}/${i + 1} ${s.tool} expect ${s.expect.urlPattern}`);
     for (const [slot, cands] of Object.entries(s.locators ?? {})) {
       for (const c of cands ?? []) if (c.kind === 'css' || c.kind === 'id') lines.push(`${at}/${i + 1} ${s.tool} ${slot} ${c.kind} ${c.selector ?? c.id ?? ''}`);
       // A chain left with nothing but a screen position finds its element by where it was drawn.
       if (cands?.length && cands.every((c) => c.kind === 'point')) lines.push(`${at}/${i + 1} ${s.tool} ${slot} POINT-ONLY`);
+      // A READ's chain head and where its text candidates sit: what a change to
+      // readscope.ts (the synthesized `text "{{vN}}"` primary) moves, which the
+      // css/id lines above cannot show (compile-g1 item 2).
+      if ((s.tool === 'read' || s.tool === 'read_all') && cands?.length) {
+        const brief = ({ seen: _s, ...c }) => JSON.stringify(c);
+        lines.push(`${at}/${i + 1} ${s.tool} ${slot} first ${brief(cands[0])}`);
+        cands.forEach((c, k) => { if (c.kind === 'text') lines.push(`${at}/${i + 1} ${s.tool} ${slot} text#${k + 1}/${cands.length} ${brief(c)}`); });
+        // The order the shared resolver WALKS a chain with a text candidate
+        // (execution/resolve.ts orderCandidates: identity, handle, path,
+        // point; stored order within a class), so a reordering that changes
+        // only which candidate is "primary" reads apart from one that changes
+        // what is tried first.
+        if (cands.some((c) => c.kind === 'text')) {
+          const structural = (c) => c.nth !== undefined || c.kind === 'point' || (c.kind === 'css' && /[>+~]|:nth-|:(?:first|last|only)-(?:child|of-type)/i.test(c.selector ?? ''));
+          const rank = (c) => (c.kind === 'scoped' ? 0 : c.kind === 'point' ? 3 : structural(c) ? 2 : 1);
+          const walk = cands.map((c, k) => ({ c, k })).sort((a, b) => rank(a.c) - rank(b.c) || a.k - b.k).map(({ c }) => c.kind);
+          lines.push(`${at}/${i + 1} ${s.tool} ${slot} walk ${walk.join(',')}`);
+        }
+      }
     }
   });
   return lines;

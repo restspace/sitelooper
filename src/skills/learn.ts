@@ -83,6 +83,18 @@ function replacesParent(store: SkillStore, variant: Skill): boolean {
  * compile the recording into a new skill, a variant, or a stat bump on one
  * that already exists.
  */
+/**
+ * Whether a chain walk's stop is a segment it REACHED whose own start gate
+ * refused the page (SkillRecord.reachedRefusal): the refusal came from the
+ * gate judging the page (ReplayResult.gateRefused — not a contract, a missing
+ * param, or a capture that could not see), not as past its start, and the
+ * refusing segment is not the head the walk began with (the head and its
+ * sibling candidates refuse during selection, where "nothing ran" is true).
+ */
+export function reachedGateRefusal(replay: { refused?: boolean; gateRefused?: boolean; pastStart?: boolean }, segment: string, head: string): boolean {
+  return Boolean(replay.refused && replay.gateRefused && !replay.pastStart && segment !== head);
+}
+
 export function learnFromInstruction(
   store: SkillStore,
   input: {
@@ -136,6 +148,20 @@ export function learnFromInstruction(
   // demoted pin refuses the flow's compile — the check would be retired for
   // working. Its clean replays still count, which is how it validates.
   const missedAssert = Boolean(sk?.invoked && sk.stepsReplayed !== sk.stepsTotal && store.get(sk.invoked)?.assert);
+
+  // A chain segment the walk REACHED and whose own start gate refused the
+  // page (SkillRecord.reachedRefusal): a stop at its step 1, banked as one —
+  // a strike and the stop streak — so two such replays demote it, unproven-pin
+  // refuses its compile and `build --converge` re-records it. Nothing about
+  // the run itself changes: the refusal stopped it before this.
+  if (sk?.invoked && sk.refused && sk.reachedRefusal && !missedAssert) {
+    const updated = store.recordOutcome(
+      sk.invoked,
+      { ok: false, failedAt: 1, fallthroughs: sk.fallthroughs, instructionSucceeded: succeeded, unobserved: sk.unobserved?.length ?? 0 },
+      input.now,
+    );
+    if (updated) out.outcome = { skill: updated.id, status: updated.status, ok: false };
+  }
 
   if (sk?.invoked && !sk.refused && !missedAssert) {
     const ok = sk.stepsReplayed === sk.stepsTotal;

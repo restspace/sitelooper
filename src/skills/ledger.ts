@@ -213,10 +213,20 @@ function partFact(facts: SiteFacts | undefined, url: string, label: string, iden
  * after a click, a row, or an instruction had shown 4 is a navigation to a
  * known record, which stays what it was.
  */
-export function unseenGotoParts(url: string, before: readonly RecordedEntry[]): { label: string; value: string }[] {
+export function unseenGotoParts(
+  url: string,
+  before: readonly RecordedEntry[],
+  /**
+   * `sourced`: only what can SOURCE a record id counts as having shown it — an
+   * address the run was at or sent to, an instruction's words, a value a step
+   * typed. Not a page line, an alert, a read's result or a report (compile's
+   * sourcelessGoto; see addressedIn).
+   */
+  opts: { sourced?: boolean } = {},
+): { label: string; value: string }[] {
   const parts = urlPartsOf(url).filter((p) => pathDigitPart(p) || idPositionPart(p));
   if (!parts.length) return [];
-  const shown = shownIn(before);
+  const shown = opts.sourced ? addressedIn(before, url) : shownIn(before);
   return parts.filter((p) => !shown(p.value));
 }
 
@@ -242,7 +252,110 @@ function shownIn(before: readonly RecordedEntry[]): (value: string) => boolean {
     }
   }
   const text = texts.join('\n');
+  // Whole tokens, unguarded: this net also keeps a seed's id out of
+  // linkMintedParts, and kanboard fwkb41's seed project `#1` was "shown"
+  // before its list click only by `127.0.0.1` — guarding numbers here made
+  // `project_id=1` a mint (test/link-mint.test.ts). The guards live in
+  // addressedIn, where a goto is SOURCED.
   return (value) => urlValues.has(value) || occursAsToken(text, value);
+}
+
+/**
+ * The SOURCES a goto's record id may have had: the parts of every address the
+ * run was at or sent to (an instruction's url, a landing, a navigation's
+ * argument), a whole token of an instruction's words, and a value a step
+ * typed whole. Not what a page line, an alert, a read or a report happened
+ * to contain: a value the procedure just read off the page and went to is
+ * fwsi7's `eval` then `goto /hardware/4` — no replay re-reads it, and "the
+ * text appeared somewhere" names no source (notes/CONTRACT-compile-g1.md item
+ * 1b). One exception, an ADDRESS an earlier instruction's page, read or report
+ * spelled out: the goto's own path up to the part (`/tasks/3`), never its bare
+ * value — a bare `1` stood in kimai hakm1's earlier reports as a customer id
+ * and a select's value. vikunja fwvk6-n1 07-verify went `goto /tasks/3`, a
+ * seed task 02-report had listed ("/tasks/3 | Seed: ship repaired device");
+ * it stays a navigation.
+ *
+ * kimai hakm1-n1 04-create: the save added the run's first timesheet, a
+ * `read_all` of the rows' hrefs (#100, a read compile drops) returned
+ * `/en/timesheet/1/edit`, and the model went `goto …/timesheet/1/edit`. shownIn
+ * counted `1` shown — by that read, by `- combobox "…": 1` (the activity
+ * select's value) and by `127.0.0.1` — so the goto stayed literal; n2 and n3
+ * (records 2 and 3) opened n1's record, the next segment's identity gate
+ * refused it, and both fell back (8-47 turns; the compiled spec failed there).
+ * An address carries a record the run had REACHED, which the url-id machinery
+ * slots (a known value, a {{dN}}); a seeded record is reached by what the
+ * instruction names.
+ */
+function addressedIn(before: readonly RecordedEntry[], url: string): (value: string) => boolean {
+  const urlValues = new Set<string>();
+  const typed = new Set<string>();
+  const texts: string[] = [];
+  const addUrl = (u: unknown): void => {
+    if (typeof u !== 'string' || !u) return;
+    for (const p of urlPartsOf(u)) urlValues.add(p.value);
+  };
+  // What earlier instructions' pages, reads and reports said (not the goto's own instruction).
+  const earlier: string[] = [];
+  let own = before.length;
+  while (own > 0 && before[own - 1].k !== 'instruction') own--;
+  own = Math.max(0, own - 1);
+  for (const [i, e] of before.entries()) {
+    if (i < own && e.k === 'report') earlier.push(e.summary ?? '', JSON.stringify(e.values ?? {}));
+    if (i < own && e.k === 'step') earlier.push(...(e.diff?.added ?? []), ...(e.diff?.alerts ?? []), e.result ?? '');
+    if (e.k === 'instruction') {
+      addUrl(e.url);
+      texts.push(e.text ?? '');
+    } else if (e.k === 'step') {
+      addUrl(e.diff?.url);
+      addUrl(e.afterUrl);
+      addUrl(e.args?.url);
+      for (const key of ['value', 'text', 'option'] as const) {
+        const v = e.args?.[key];
+        if (typeof v === 'string' && v.trim()) typed.add(v.trim());
+      }
+    }
+  }
+  const text = texts.join('\n');
+  const earlierText = earlier.join('\n');
+  const path = urlShapeOf(url)?.path ?? [];
+  /** An earlier instruction spelled the goto's path through the segment holding `value` (`/tasks/3`, then a non-word character or the end). */
+  const spelled = (value: string): boolean => {
+    const at = path.indexOf(value);
+    if (at < 1) return false;
+    const route = `/${path.slice(0, at + 1).join('/')}`;
+    for (let k = earlierText.indexOf(route); k >= 0; k = earlierText.indexOf(route, k + 1)) {
+      const next = earlierText[k + route.length];
+      const word = next !== undefined && ((next >= '0' && next <= '9') || next.toLowerCase() !== next.toUpperCase() || next === '_' || next === '-');
+      if (!word) return true;
+    }
+    return false;
+  };
+  return (value) => urlValues.has(value) || typed.has(value) || occursAsShownNumber(text, value) || spelled(value);
+}
+
+/**
+ * occursAsToken, with substitute()'s guards for a bare number (compile.ts): a
+ * number is not shown by an index (`nth=1`, `:nth-of-type(1)`) nor from inside
+ * a dotted, colon, slash or comma run of numbers — an address, a version, a
+ * clock, a date. kimai hakm1-n1: every recorded url's `127.0.0.1` "showed"
+ * the record id 1.
+ */
+function occursAsShownNumber(text: string, value: string): boolean {
+  if (!/^\d+$/.test(value)) return occursAsToken(text, value);
+  const re = tokenRe(value, 'g');
+  const joins = '.:/,';
+  const digit = (c: string | undefined): boolean => c !== undefined && c >= '0' && c <= '9';
+  for (let m = re.exec(text); m; m = re.exec(text)) {
+    const at = m.index;
+    const end = at + value.length;
+    const prev = text[at - 1];
+    const next = text[end];
+    if (prev === '(' || prev === '=') continue;
+    if (prev !== undefined && joins.includes(prev) && digit(text[at - 2])) continue;
+    if (next !== undefined && joins.includes(next) && digit(text[end + 1])) continue;
+    return true;
+  }
+  return false;
 }
 
 /**

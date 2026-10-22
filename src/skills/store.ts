@@ -133,7 +133,7 @@ export interface Skill {
      * done once, is recompiling every published recording under two builds
      * and diffing the stores.
      */
-    transforms?: { name: string; at: number; reason: string }[];
+    transforms?: { name: string; at: number; reason: string; cut?: string[] }[];
   };
   /**
    * The execution contract this procedure was written under. Absent means 1,
