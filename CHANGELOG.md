@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.7.0 — unreleased
+## 0.7.0 — 2026-10-22
 
 ### MCP server
 - `sitelooper mcp` runs a stdio MCP server, so Claude Code, Cursor, VS Code, Claude Desktop and
