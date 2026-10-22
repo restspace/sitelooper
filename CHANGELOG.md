@@ -1,6 +1,42 @@
 # Changelog
 
-## 0.5.1 — unreleased
+## 0.6.0 — 2026-10-22
+
+### Assertions
+- `sitelooper assert "<condition>"` checks a sentence against the page and never acts. Exit `0`
+  held, `1` did not hold, `2` could not check. In a `--learn` session a passing assert becomes a
+  strict flow step (visible, hidden, text equals or contains, count, field value, url contains)
+  that replays and compiles with no model, no recovery and no skip. The expected value must be
+  written in the sentence, as a literal, a declared var or an earlier step's output.
+
+### Build and convergence
+- `build` converges by default when a reset command is available: it runs the compiled spec once
+  and re-records the step that a refusal, a failure or a blocking locator fallback names (2 rounds;
+  `--converge N`, `--no-converge`). Readiness and convergence apply the same rule for what counts
+  as clean.
+- Work the recording did that the flow left out (an instruction that changed the app but did not
+  report success) is put back as its own step (`04b-…`) and re-recorded by convergence. Without
+  convergence `build` stops before readiness and names the missing instruction.
+- Replays learn from recoveries, with calibration across runs, and a run that passes without
+  doing the work it recorded is refused rather than reported green.
+
+### Compile
+- A procedure cut short before state-changing work is refused (`cut-procedure`) instead of
+  compiling to a spec that passes without that work.
+- Gate refusals of a reached segment count against its pin, and a `goto` never carries the
+  recording's own record id unless the run showed or addressed it.
+- An ambiguous synthesized text locator no longer goes first in a chain, and evidence from a miss
+  that a structural candidate covered is banked so the candidate order can settle.
+- Slot substitution never rewrites a locator candidate's structure (`undefined.nth(0)`), and an
+  unknown candidate kind names nothing.
+- An id's number is the run's slot, an address the run showed, or nothing; url positions the app
+  minted are variables, including positions a click opened.
+- Escaped run values in goto urls, recorded goto landings, redirect detours, %-valued list filters,
+  marker-anchored row edits and chain-aware graduation (ERPNext sweeps).
+
+### Replays
+- A gesture the recording saw the page move after is held that long, a rendered-only walk goes past
+  the element cap, and an sr-only status region is not an alert.
 
 ### Claude Code plugin
 - The repository is a Claude Code plugin marketplace: `/plugin marketplace add restspace/sitelooper`,
@@ -9,7 +45,7 @@
   is now `plugin/skills/sitelooper`, and the npm package ships all three.
 - `sitelooper --version` prints the installed version.
 
-### Compile
+### Compile (EspoCRM)
 - A read's kind (`what`) and attribute, a wait's state, a click's modifiers and a dialog's answer
   are never slotted, even when a value the run reported spells the same word. EspoCRM fwec17
   reported a field value "text", and compile turned every later read's `what: "text"` into
