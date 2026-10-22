@@ -287,6 +287,10 @@ const ALLOWLIST: Record<string, { hits: string[]; answers: string }> = {
     hits: ['[0-9a-f]{8', '[0-9a-z]{1', '[0-9a-z]{1'],
     answers: 'GENERATED_ID_HEX_RUN page-side (3C); React useId `_r8b_`, node- and page-side — framework ids, only demoted',
   },
+  'src/mcp/tools.ts': {
+    hits: ['[A-Za-z0-9_-]{0', '[A-Za-z0-9_]*', '[A-Za-z0-9_]*', '[A-Za-z0-9._-]*'],
+    answers: 'validates MCP tool inputs (session, variable and flow names) before they become CLI arguments (syntax)',
+  },
   'src/shared/paths.ts': { hits: ['[A-Za-z0-9_-]{1'], answers: 'validates a session/file name (syntax)' },
   'src/shared/secrets.ts': { hits: ['[A-Za-z0-9_]*'], answers: 'parses {{env:NAME}} (syntax)' },
   'src/skills/compile.ts': {

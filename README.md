@@ -290,6 +290,64 @@ The skills are in [plugin/skills/](plugin/skills/), and they also ship in the np
 them without the plugin, copy each folder to `~/.claude/skills/`. See
 [plugin/README.md](plugin/README.md) for what the plugin runs and sends.
 
+### MCP server
+
+`sitelooper mcp` is a stdio MCP server. It gives an MCP client tools to open a page, run `do` and
+`assert`, build and check a flow, and repair or re-record a step. It runs the CLI underneath, so
+sessions are shared with your terminal. Set your model key (for example `OPENROUTER_API_KEY`) in
+your own environment. Prefer inheriting it or a prompted input to writing it into a JSON file.
+
+Claude Code:
+
+```
+claude mcp add --transport stdio sitelooper -- npx -y sitelooper@0.7.0 mcp
+```
+
+Add `--scope project` to share it through `.mcp.json`, or `--scope user` for all projects. The key is
+inherited from the shell that starts Claude Code. On native Windows, use
+`-- cmd /c npx -y sitelooper@0.7.0 mcp`.
+
+Cursor (`.cursor/mcp.json`, or `~/.cursor/mcp.json` for all projects), Claude Desktop
+(`claude_desktop_config.json`) and Windsurf (`mcp_config.json`) use the same shape:
+
+```json
+{
+  "mcpServers": {
+    "sitelooper": {
+      "command": "npx",
+      "args": ["-y", "sitelooper@0.7.0", "mcp"],
+      "env": { "OPENROUTER_API_KEY": "${env:OPENROUTER_API_KEY}" }
+    }
+  }
+}
+```
+
+`${env:NAME}` reads the variable from your environment in Cursor and Windsurf. In Claude Desktop,
+leave `env` out and set the key as a user environment variable before you start the app.
+
+VS Code (`.vscode/mcp.json`) uses `servers` and can prompt for the key without storing it:
+
+```json
+{
+  "inputs": [
+    { "type": "promptString", "id": "sl-key", "description": "Model API key", "password": true }
+  ],
+  "servers": {
+    "sitelooper": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "sitelooper@0.7.0", "mcp"],
+      "env": { "OPENROUTER_API_KEY": "${input:sl-key}" }
+    }
+  }
+}
+```
+
+Tools: `open`, `do`, `assert`, `set_var`, `peek`, `screenshot`, `save_flow`, `list_flows`,
+`build_start`, `check`, `repair_propose`, `repair_apply`, `rerecord`, `job_status`, `sessions`,
+`stop`, `doctor`. Builds and other long runs return a `job_id` to poll with `job_status`. See
+[docs/mcp.md](docs/mcp.md) for inputs, safety rules and troubleshooting.
+
 ## Reference
 
 ### Providers
