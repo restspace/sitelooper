@@ -17,6 +17,7 @@ import { drainDrift, llmProposer, triage, type DrainSummary, type DriftTicket } 
 import { cascadeProposer } from './skills/repair-jev.js';
 import { buildSystemOne, resolveSystemOneConfig } from './agent/system-one.js';
 import { compileFlow } from './spec/index.js';
+import { compilerProvenance } from './spec/bundle.js';
 import { converge, decideBuildConvergence, omittedToRecover, roundLine } from './spec/converge.js';
 import { foldTicketEvidence, mintVars, notConverged, reorderByEvidence } from './spec/repair.js';
 import { emitFlowFile } from './spec/emit.js';
@@ -76,6 +77,7 @@ Authoring:
   screenshot [path]
   var <name>=<value>
   session list | stop [--all] [--save-flow <name>]
+  --version                                # print the installed version
 
 Compile and verify (no daemon or model):
   compile <flow-or-bundle> [--out <dir>] [--allow-demoted] [--overwrite-spec]
@@ -533,6 +535,10 @@ async function main(): Promise<void> {
   aliasLegacyEnv(); // honor legacy BROWSER_PILOT_* env vars — see paths.ts
   const { command, positional, flags } = parseArgv(process.argv.slice(2));
   activeCommand = command;
+  if (flags.has('version') || command === 'version') {
+    console.log(compilerProvenance().version);
+    return;
+  }
   if (!command || flags.has('help') || command === 'help') {
     console.log(USAGE);
     process.exit(command ? 0 : 2);

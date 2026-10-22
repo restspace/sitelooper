@@ -2,6 +2,13 @@
 
 ## 0.5.1 — unreleased
 
+### Claude Code plugin
+- The repository is a Claude Code plugin marketplace: `/plugin marketplace add restspace/sitelooper`,
+  then `/plugin install sitelooper@sitelooper`. The plugin (in `plugin/`) has three skills:
+  `write-browser-test`, `fix-browser-test` and `sitelooper`. The single skill that was in `skills/`
+  is now `plugin/skills/sitelooper`, and the npm package ships all three.
+- `sitelooper --version` prints the installed version.
+
 ### Compile
 - A read's kind (`what`) and attribute, a wait's state, a click's modifiers and a dialog's answer
   are never slotted, even when a value the run reported spells the same word. EspoCRM fwec17

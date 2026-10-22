@@ -275,8 +275,20 @@ resuming. Snapshots, retries and tool chatter stay inside the daemon.
 Exit codes: `0` success, `1` agent/recording failure, `2` invalid input, `3` replay convergence
 failure, `4` compiled-spec/readiness failure.
 
-A Claude Code skill ships in `skills/sitelooper/SKILL.md`. Copy it to
-`~/.claude/skills/sitelooper/`.
+### Claude Code plugin
+
+The `sitelooper` plugin teaches Claude to write browser tests, repair them and drive the browser
+with this CLI. It has three skills (`write-browser-test`, `fix-browser-test`, `sitelooper`) and no
+hooks or servers:
+
+```
+/plugin marketplace add restspace/sitelooper
+/plugin install sitelooper@sitelooper
+```
+
+The skills are in [plugin/skills/](plugin/skills/), and they also ship in the npm package. To use
+them without the plugin, copy each folder to `~/.claude/skills/`. See
+[plugin/README.md](plugin/README.md) for what the plugin runs and sends.
 
 ## Reference
 
