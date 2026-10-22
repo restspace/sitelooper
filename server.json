@@ -1,0 +1,35 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.restspace/sitelooper",
+  "description": "Record a browser flow once with a model, then compile it to a Playwright spec that needs no model.",
+  "repository": {
+    "url": "https://github.com/restspace/sitelooper",
+    "source": "github"
+  },
+  "version": "0.7.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "sitelooper",
+      "version": "0.7.0",
+      "runtimeHint": "npx",
+      "transport": {
+        "type": "stdio"
+      },
+      "packageArguments": [
+        {
+          "type": "positional",
+          "value": "mcp"
+        }
+      ],
+      "environmentVariables": [
+        {
+          "name": "OPENROUTER_API_KEY",
+          "description": "API key for the default model provider (OpenRouter). Not needed if another provider's key variable is set; run `sitelooper doctor` to see which one is used.",
+          "isRequired": false,
+          "isSecret": true
+        }
+      ]
+    }
+  ]
+}

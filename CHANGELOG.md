@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.7.0 — 2026-10-22
+
+### MCP server
+- `sitelooper mcp` runs a stdio MCP server, so Claude Code, Cursor, VS Code, Claude Desktop and
+  Windsurf can record, assert, build, check, repair and re-record through tools instead of shell
+  commands. It is a thin wrapper that runs the CLI with `--json`; sessions are shared with the terminal.
+- 17 tools: `open`, `do`, `assert`, `set_var`, `peek`, `screenshot`, `save_flow`, `list_flows`,
+  `build_start`, `check`, `repair_propose`, `repair_apply`, `rerecord`, `job_status`, `sessions`,
+  `stop`, `doctor`. Long operations return a `job_id` that `job_status` polls.
+- `do` and `assert` send MCP progress notifications while they run.
+- The server never takes an API key as an argument and does not accept a reset command from tool
+  arguments unless `SITELOOPER_MCP_ALLOW_RESET_CMD=1` is set.
+- `server.json` and `mcpName` for the official MCP registry (`io.github.restspace/sitelooper`).
+- See [docs/mcp.md](docs/mcp.md).
+
 ## 0.6.0 — 2026-10-22
 
 ### Assertions

@@ -128,6 +128,7 @@ Advanced:
   skills repair --drift <file.json> [--dry-run] [--model M]
   doctor                                  # inspect browser, Node and provider setup
   config | config set <key> <value>         # provider/model defaults
+  mcp                                      # MCP server over stdio (Claude Code, Cursor, VS Code, Claude Desktop)
 
 Global options:
   --session <name> --json --progress --verbose --headed --record --learn --script
@@ -537,6 +538,11 @@ async function main(): Promise<void> {
   activeCommand = command;
   if (flags.has('version') || command === 'version') {
     console.log(compilerProvenance().version);
+    return;
+  }
+  if (command === 'mcp') {
+    const { runMcpServer } = await import('./mcp/server.js');
+    await runMcpServer();
     return;
   }
   if (!command || flags.has('help') || command === 'help') {
