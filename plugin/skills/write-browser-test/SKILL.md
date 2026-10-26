@@ -92,11 +92,18 @@ what a run acts on. Evidence goes to `<name>.readiness.json`.
 - If there is no reset command and no fixtures, say plainly that readiness cannot be verified, and
   run `sitelooper compile ticket` for an unverified spec only if the user wants one.
 
+If the test will be contributed to another project or reviewed by people, add `--style readable`
+to `build` (or `"style": "readable"` in `sitelooper.config.json`). The `.flow.ts` is then plain
+Playwright code a reviewer can read, with one locator per action and no run-time fallback, so an
+app change fails the test at the step that broke. The default (`runtime`) file heals small locator
+changes but is large and not meant to be read. A recompile keeps the file's style.
+
 ## 4. Hand over
 
 Tell the user what was produced and what to commit:
 
-- `tests/sitelooper/ticket.flow.ts`: generated. sitelooper refreshes it on every compile.
+- `tests/sitelooper/ticket.flow.ts`: generated. sitelooper refreshes it on every compile. A readable
+  one is still generated: change it by re-recording, not by editing it.
 - `tests/sitelooper/ticket.spec.ts`: theirs. Add business assertions and fixtures here; recompiling
   never overwrites it.
 - `.sitelooper/procedures.json` and `sitelooper.config.json`: needed to recompile on another machine.

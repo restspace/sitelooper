@@ -1362,7 +1362,7 @@ describe('cli: --check-spec and the check command', () => {
 
   it('puts the verdict in the --json report as specCheck', () => {
     expect(cliSource).toMatch(/\r?\n    specCheck,\r?\n/);
-    expect(cliSource).toContain("emitJson({ file, specCheck: result }, 'spec-check'");
+    expect(cliSource).toContain("emitJson({ file, style: fileStyle(file), specCheck: result }, 'spec-check'");
   });
 });
 

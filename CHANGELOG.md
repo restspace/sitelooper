@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.8.0 — unreleased
+
+### Readable specs
+- `--style readable` on `compile`, `build`, `rerecord` and `repair` writes the `.flow.ts` as plain
+  Playwright code: one function per step, one locator per action, relative URLs, waits only where
+  the recording shows them. It has no run-time locator fallback and no drift lines, on purpose.
+  `--style runtime` (the default) is the existing self-healing file.
+- `"style"` in `sitelooper.config.json` sets the style of new files. A recompile keeps the style an
+  existing file has unless `--style` is given; build's convergence recompiles in that style too.
+- The recording stays in the bundle. A readable file names it on a `// @sitelooper-source` line
+  (with a hash of the spec it was generated from), and `compile`, `build`, `rerecord`, `repair`,
+  `check` and readiness all find it from there, then from the project snapshot, then the user
+  store. A file whose bundle changed since it was compiled is reported as stale.
+- `rerecord <name.flow.ts> <step>` on a readable file re-records into its bundle and recompiles
+  the file. `repair` on a readable file runs the spec, re-records the step it fails at and
+  recompiles; `--propose`, `--dry-run` and `--out` are refused for readable files in this release.
+- The readable file exports the same names as the runtime one, so an existing `.spec.ts` keeps
+  working when a project switches style. `--json` result documents include `style`.
+
 ## 0.7.0 — 2026-10-22
 
 ### MCP server

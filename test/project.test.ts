@@ -31,6 +31,7 @@ describe('project config', () => {
       negativeSpec: 'test/fault.spec.ts',
       outputDir: 'test/generated',
       snapshotFile: '.sitelooper/demo.bundle.json',
+      style: 'readable',
     }));
 
     expect(findProjectConfig(nested)).toBe(path.join(root, 'sitelooper.config.json'));
@@ -47,6 +48,7 @@ describe('project config', () => {
       negativeSpec: path.join(root, 'test/fault.spec.ts'),
       outputDir: path.join(root, 'test/generated'),
       snapshotFile: path.join(root, '.sitelooper/demo.bundle.json'),
+      style: 'readable',
     });
   });
 
@@ -61,7 +63,15 @@ describe('project config', () => {
       verificationRuns: 3,
       outputDir: path.join(root, 'tests/sitelooper'),
       snapshotFile: path.join(root, '.sitelooper/procedures.json'),
+      // The readable style is opt-in in this release.
+      style: 'runtime',
     });
+  });
+
+  it('rejects a style that is neither readable nor runtime', () => {
+    const root = project();
+    fs.writeFileSync(path.join(root, 'sitelooper.config.json'), JSON.stringify({ style: 'pretty' }));
+    expect(() => loadProjectConfig(root)).toThrow(/style must be "readable" or "runtime"/);
   });
 
   it('rejects invalid readiness settings with a useful field name', () => {

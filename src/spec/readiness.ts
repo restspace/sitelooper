@@ -1,7 +1,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
-import { liftFlowFile } from './lift.js';
+import { isReadableFlowFile, liftFlowFile } from './lift.js';
+import { liftReadableFlowFile } from './index.js';
+import type { SpecFlow } from './ir.js';
 import { assertionCounts } from './ir.js';
 import { envName, runSpecCheck, inputEnvCollisions, type SpecCheckOptions, type SpecCheckResult } from './check.js';
 import { classifyDrift, describeDrift, type DriftFlow } from './drift-class.js';
@@ -18,6 +20,8 @@ export interface ReadinessOptions extends SpecCheckOptions {
   /** Alternatively inject an explicit fault and require a specific assertion error. */
   negativeCheck?: { vars?: Record<string, string>; env?: Record<string, string>; expectedError: string };
   evidenceFile?: string;
+  /** The project snapshot: where a readable flow file's recording is looked for when its own bundle is missing. */
+  snapshotFile?: string;
 }
 
 export interface ReadinessRun {
@@ -146,18 +150,31 @@ export function runReadinessCheck(o: ReadinessOptions, check: typeof runSpecChec
   const requiredSteps = [...new Set([...generatedSteps, ...(o.requiredSteps ?? [])])];
   // What each drift line's site is (gesture, consumed read, report-only read); without it every line blocks.
   let flow: DriftFlow | null = null;
-  if (source.includes('// @sitelooper-flow-begin')) {
+  // A readable file has no FLOW constant: its recording is the bundle its
+  // source line names. Its metadata exports, `// @step` markers and
+  // `[sitelooper step]` lines are what the runs below read, so a recording that
+  // cannot be found costs the assertion counts and step cross-check only.
+  let spec: SpecFlow | null = null;
+  if (isReadableFlowFile(source)) {
     try {
-      const { spec } = liftFlowFile(source);
-      flow = spec;
-      report.assertions = assertionCounts(spec);
-      for (const name of spec.vars) if (!requiredInputs.includes(name)) requiredInputs.push(name);
-      for (const step of spec.steps) {
-        if (!requiredSteps.includes(step.id)) requiredSteps.push(step.id);
-        if (!step.segments.length || step.segments.some((segment) => !segment.steps.length)) report.blockers.push(`Step ${step.id} has no complete recorded procedure`);
-      }
-      if (!spec.steps.length) report.blockers.push('Compiled flow has no required steps');
-    } catch (error) { report.blockers.push(`Compiled metadata is invalid: ${(error as Error).message}`); }
+      const lifted = liftReadableFlowFile(flowFile, { snapshotFile: o.snapshotFile });
+      spec = lifted.spec;
+      report.warnings.push(...lifted.warnings);
+    } catch (error) {
+      report.warnings.push(`The recording behind this readable spec could not be loaded, so its assertions and steps were not cross-checked against it: ${(error as Error).message}`);
+    }
+  } else if (source.includes('// @sitelooper-flow-begin')) {
+    try { spec = liftFlowFile(source).spec; } catch (error) { report.blockers.push(`Compiled metadata is invalid: ${(error as Error).message}`); }
+  }
+  if (spec) {
+    flow = spec;
+    report.assertions = assertionCounts(spec);
+    for (const name of spec.vars) if (!requiredInputs.includes(name)) requiredInputs.push(name);
+    for (const step of spec.steps) {
+      if (!requiredSteps.includes(step.id)) requiredSteps.push(step.id);
+      if (!step.segments.length || step.segments.some((segment) => !segment.steps.length)) report.blockers.push(`Step ${step.id} has no complete recorded procedure`);
+    }
+    if (!spec.steps.length) report.blockers.push('Compiled flow has no required steps');
   }
   if (!requiredSteps.length) report.blockers.push('Required-step metadata is missing; regenerate the compiled flow or supply requiredSteps');
   const todos = source.split(/\r?\n/).map((line) => line.trim()).filter((line) => line.startsWith('// TODO:'));

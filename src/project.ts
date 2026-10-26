@@ -22,9 +22,15 @@ export interface ProjectConfig {
   outputDir?: string;
   /** Portable procedure bundle used instead of the user-level skill store. */
   snapshotFile?: string;
+  /**
+   * The style `compile`/`build` write a NEW flow file in: `runtime` (the
+   * self-healing file, the default) or `readable` (plain Playwright code).
+   * An existing file keeps its own style unless `--style` is given.
+   */
+  style?: 'readable' | 'runtime';
 }
 
-export interface ResolvedProjectConfig extends Omit<ProjectConfig, 'playwright' | 'outputDir' | 'snapshotFile' | 'negativeSpec'> {
+export interface ResolvedProjectConfig extends Omit<ProjectConfig, 'playwright' | 'outputDir' | 'snapshotFile' | 'negativeSpec' | 'style'> {
   file: string | null;
   root: string;
   playwright: { config?: string; project?: string };
@@ -34,6 +40,7 @@ export interface ResolvedProjectConfig extends Omit<ProjectConfig, 'playwright' 
   requiredVars: string[];
   vars: Record<string, string>;
   verificationRuns: number;
+  style: 'readable' | 'runtime';
 }
 
 /** Find the nearest project config, walking from startDir to the filesystem root. */
@@ -76,6 +83,10 @@ function parseConfig(raw: unknown, file: string): ProjectConfig {
   cfg.negativeSpec = optionalString(input.negativeSpec, 'negativeSpec');
   cfg.outputDir = optionalString(input.outputDir, 'outputDir');
   cfg.snapshotFile = optionalString(input.snapshotFile, 'snapshotFile');
+  if (input.style !== undefined) {
+    if (input.style !== 'readable' && input.style !== 'runtime') throw new Error('style must be "readable" or "runtime"');
+    cfg.style = input.style;
+  }
 
   if (input.requiredVars !== undefined) {
     if (!Array.isArray(input.requiredVars) || input.requiredVars.some((v) => typeof v !== 'string' || !v.trim())) {
@@ -132,6 +143,7 @@ export function loadProjectConfig(startDir: string = process.cwd(), explicitFile
     requiredVars: cfg.requiredVars ?? [],
     vars: cfg.vars ?? {},
     verificationRuns: cfg.verificationRuns ?? 3,
+    style: cfg.style ?? 'runtime',
     playwright: {
       ...(cfg.playwright?.config ? { config: resolveFrom(root, cfg.playwright.config, '') } : {}),
       ...(cfg.playwright?.project ? { project: cfg.playwright.project } : {}),

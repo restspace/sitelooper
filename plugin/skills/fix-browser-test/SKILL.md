@@ -18,6 +18,26 @@ shell. Never ask for the key in the conversation or put it in a file or command 
 be running, ideally with a reset command (`--reset-cmd` or `resetCommand` in
 `sitelooper.config.json`) so each repair run starts from fresh state.
 
+## Readable or runtime
+
+Look at the top of the `.flow.ts`. A file with `// @sitelooper-readable` is the readable style
+(compiled with `--style readable`, usually because it is contributed or reviewed): plain Playwright
+code with no locator fallback, whose recording is in the bundle its `// @sitelooper-source` line
+names. For one of those:
+
+- There are no `[sitelooper drift]` lines; the test fails at the step that broke.
+- `sitelooper repair <name.flow.ts>` runs it once, re-records the failing step and recompiles it
+  readable, then checks it. `--propose`, `--dry-run` and `--out` are refused for readable files.
+- To pick the step yourself, re-record it. That writes the bundle and recompiles the file readable;
+  show the user the diff of the regenerated file. `compile <bundle> --style readable` regenerates
+  it again at any time.
+
+  ```sh
+  sitelooper rerecord tests/sitelooper/ticket.flow.ts <step-id> --reset-cmd "npm run reset:e2e"
+  ```
+
+The rest of this skill is about the runtime style, which is the default.
+
 ## 1. Read the failure
 
 In the Playwright report, look for:

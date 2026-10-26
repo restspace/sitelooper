@@ -4,6 +4,8 @@ import { loadFlowFile } from '../skills/flow.js';
 import { ComponentStore } from '../skills/components.js';
 import { SkillStore } from '../skills/store.js';
 import { emitFlowFile, emitSpecFile } from './emit.js';
+import { emitReadableFlowFile } from './emit-readable.js';
+import { flowFileStyle, LiftError, readableSource, readableSpecHash, type FlowFileStyle } from './lift.js';
 import { flowToSpec, type SpecFlow } from './ir.js';
 import { hasError, type Diagnostic } from './diagnostics.js';
 import { ambiguousCredentialFor, ambiguousCredentialsIn, rewriteLiteralCredentials } from '../shared/secrets.js';
@@ -23,6 +25,8 @@ export type { Diagnostic, DiagnosticCode } from './diagnostics.js';
 export { emitFlowFile, emitSpecFile } from './emit.js';
 export { flowToSpec } from './ir.js';
 export { formatDiagnostic, diagnosticLine, hasError } from './diagnostics.js';
+export { flowFileStyle, isReadableFlowFile, readableSource, readableSpecHash } from './lift.js';
+export type { FlowFileStyle, ReadableSource } from './lift.js';
 export { BundleSkillStore, compilerProvenance, exportFlowBundle, isFlowBundle, loadFlowBundle } from './bundle.js';
 export type { CompilerProvenance, ExportFlowBundleResult, FlowBundle } from './bundle.js';
 
@@ -31,8 +35,36 @@ function safeName(name: string): string {
   return name.replace(/[^A-Za-z0-9._-]+/g, '_') || 'flow';
 }
 
+/** The two output styles of `compile`: the self-healing runtime file, or plain Playwright code (emit-readable.ts). */
+export type SpecStyle = FlowFileStyle;
+
+export function isSpecStyle(value: unknown): value is SpecStyle {
+  return value === 'runtime' || value === 'readable';
+}
+
+/** The style of the flow file at `file`, or null when there is none (or it is not a sitelooper flow file). */
+export function existingStyle(file: string): SpecStyle | null {
+  try {
+    return flowFileStyle(fs.readFileSync(file, 'utf8'));
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Which style a compile writes. `--style` decides when given; otherwise a
+ * file already on disk keeps the style it was generated in (a project that
+ * switched one flow to readable does not have it switched back by the next
+ * recompile); otherwise the project config's `style`; otherwise runtime.
+ */
+export function resolveStyle(o: { explicit?: SpecStyle; existing?: SpecStyle | null; configured?: SpecStyle }): SpecStyle {
+  return o.explicit ?? o.existing ?? o.configured ?? 'runtime';
+}
+
 export interface CompileResult {
   compiler: CompilerProvenance;
+  /** The style the flow file was (or would have been) written in. */
+  style: SpecStyle;
   spec: SpecFlow;
   /** null when an ERROR diagnostic refused the write and `allowDemoted` was not set. */
   flowFile: string | null;
@@ -156,6 +188,124 @@ function compilationBlockers(spec: SpecFlow, source: string): string[] {
   return blockers;
 }
 
+/** Where a compile's recording comes from, and the SpecFlow built from it. */
+export interface RecordedSpec {
+  spec: SpecFlow;
+  warnings: string[];
+  diagnostics: Diagnostic[];
+  /** The bundle the procedures were read from (absolute), or null for the user-level store. */
+  bundleFile: string | null;
+}
+
+/**
+ * Build the SpecFlow a compile emits, from a bundle path, a flow name/path, or
+ * a flow named by the project snapshot. The one place this happens: compile
+ * uses it, and so does lifting a readable flow file (liftReadableFlowFile),
+ * so a lifted spec is the spec the file was emitted from.
+ */
+export function recordedSpec(
+  flowNameOrPath: string,
+  o: { store?: SkillStore; snapshotFile?: string; components?: ComponentStore } = {},
+): RecordedSpec {
+  let bundle: FlowBundle | undefined;
+  if (fs.existsSync(flowNameOrPath)) {
+    try {
+      const parsed = JSON.parse(fs.readFileSync(flowNameOrPath, 'utf8')) as unknown;
+      if (isFlowBundle(parsed)) bundle = parsed;
+    } catch {
+      // The normal flow loader below owns errors for ordinary flow files.
+    }
+  }
+  const bundleFromPath = Boolean(bundle);
+  const found = bundle ? { flow: bundle.flow, file: flowNameOrPath } : loadFlowFile(flowNameOrPath);
+  const snapshot = bundle ?? (o.snapshotFile ? loadFlowBundle(o.snapshotFile) : undefined);
+  if (!fs.existsSync(flowNameOrPath) && snapshot && snapshot.flow.name === flowNameOrPath) {
+    bundle = snapshot;
+  }
+  const source = bundle ? { flow: bundle.flow, file: fs.existsSync(flowNameOrPath) ? flowNameOrPath : o.snapshotFile! } : found;
+  if (!source) throw new Error(`no flow named ${JSON.stringify(flowNameOrPath)} (looked in the flows dir, as a path, and in the procedure snapshot)`);
+  const { flow, file } = source;
+  const store = o.store ?? (snapshot ? new BundleSkillStore(snapshot) : new SkillStore());
+  const { spec: recorded, warnings, diagnostics } = flowToSpec(flow, store, { flowFile: file, components: o.components ?? new ComponentStore() });
+  const spec = withCredentialMarkers(recorded, diagnostics);
+  // The bundle a readable file names on its source line: the file the
+  // procedures came from, when they came from one.
+  const bundleFile = o.store ? null : bundleFromPath ? path.resolve(flowNameOrPath) : snapshot && o.snapshotFile ? path.resolve(o.snapshotFile) : null;
+  return { spec, warnings, diagnostics, bundleFile };
+}
+
+/** What a readable flow file's source line resolves to: the recording to compile or lift. */
+export interface ReadableTarget {
+  /** The flow name the file was generated from. */
+  flow: string;
+  /** What to hand compileFlow / recordedSpec: a bundle path, or the flow name. */
+  target: string;
+  /** The bundle in use (absolute), or null for the user-level store. */
+  bundleFile: string | null;
+  specHash: string;
+}
+
+/**
+ * Find the recording behind a readable flow file: the bundle its source line
+ * names (relative to the file), else the project snapshot when it holds that
+ * flow, else the flow of that name in the user-level store.
+ */
+export function readableTarget(file: string, o: { snapshotFile?: string } = {}): ReadableTarget {
+  const meta = readableSource(fs.readFileSync(file, 'utf8'));
+  if (meta.bundle) {
+    const named = path.resolve(path.dirname(path.resolve(file)), meta.bundle);
+    if (fs.existsSync(named)) return { flow: meta.flow, target: named, bundleFile: named, specHash: meta.specHash };
+  }
+  if (o.snapshotFile && fs.existsSync(o.snapshotFile)) {
+    let holds = false;
+    try {
+      holds = loadFlowBundle(o.snapshotFile).flow.name === meta.flow;
+    } catch {
+      // An unreadable snapshot is not this file's recording; the user store is next.
+    }
+    if (holds) {
+      const snapshot = path.resolve(o.snapshotFile);
+      return { flow: meta.flow, target: snapshot, bundleFile: snapshot, specHash: meta.specHash };
+    }
+  }
+  if (loadFlowFile(meta.flow)) return { flow: meta.flow, target: meta.flow, bundleFile: null, specHash: meta.specHash };
+  throw new LiftError(
+    `cannot find the recording of flow "${meta.flow}" behind ${file}: ` +
+      `${meta.bundle ? `its bundle ${meta.bundle} is missing, ` : ''}the project snapshot does not hold it, and the user store has no flow of that name`,
+  );
+}
+
+/**
+ * Lift a readable flow file back to the SpecFlow it was emitted from, by
+ * loading its recording (readableTarget) and rebuilding the spec the way
+ * compileFlow does (recordedSpec). The stored specHash is checked against the
+ * rebuilt spec: a mismatch means the recording moved on since the file was
+ * written (a rerecord without a recompile, or another machine's component or
+ * site-facts store), and is a warning, not a refusal: the bundle is the recording.
+ */
+export function liftReadableFlowFile(
+  file: string,
+  o: { snapshotFile?: string; store?: SkillStore; components?: ComponentStore } = {},
+): { spec: SpecFlow; warnings: string[]; target: ReadableTarget } {
+  const target = readableTarget(file, o);
+  const built = recordedSpec(target.target, { store: o.store, components: o.components });
+  const warnings: string[] = [];
+  if (readableSpecHash(built.spec) !== target.specHash) {
+    const where = target.bundleFile ? path.relative(process.cwd(), target.bundleFile) || target.bundleFile : `the user store (flow "${target.flow}")`;
+    warnings.push(
+      `${path.basename(file)} is stale: the recording in ${where} no longer matches the spec the file was generated from; ` +
+        `using the recording. Regenerate it with \`sitelooper compile ${file} --style readable\``,
+    );
+  }
+  return { spec: built.spec, warnings, target };
+}
+
+/** A path relative to `fromDir`, with forward slashes, for a line written into a generated file. */
+function relativeFrom(fromDir: string, file: string): string {
+  const rel = path.relative(path.resolve(fromDir), path.resolve(file)).split(path.sep).join('/');
+  return rel.startsWith('.') ? rel : `./${rel}`;
+}
+
 /**
  * Compile a converged flow to a reviewable Playwright spec.
  *
@@ -190,29 +340,39 @@ export function compileFlow(
      * machine would have driven the widgets with.
      */
     components?: ComponentStore;
+    /** `--style`: the style to write, whatever the file on disk is. */
+    style?: SpecStyle;
+    /** The project config's `style`: used for a file that does not exist yet. */
+    defaultStyle?: SpecStyle;
   },
 ): CompileResult {
-  let bundle: FlowBundle | undefined;
-  if (fs.existsSync(flowNameOrPath)) {
-    try {
-      const parsed = JSON.parse(fs.readFileSync(flowNameOrPath, 'utf8')) as unknown;
-      if (isFlowBundle(parsed)) bundle = parsed;
-    } catch {
-      // The normal flow loader below owns errors for ordinary flow files.
-    }
+  // A readable flow file names its own recording (`// @sitelooper-source`):
+  // compiling it again compiles that recording, next to the file.
+  let outDir = o.outDir;
+  if (/\.ts$/.test(flowNameOrPath) && existingStyle(flowNameOrPath) === 'readable') {
+    const target = readableTarget(flowNameOrPath, { snapshotFile: o.snapshotFile });
+    outDir ??= path.dirname(flowNameOrPath);
+    flowNameOrPath = target.target;
   }
-  const found = bundle ? { flow: bundle.flow, file: flowNameOrPath } : loadFlowFile(flowNameOrPath);
-  const snapshot = bundle ?? (o.snapshotFile ? loadFlowBundle(o.snapshotFile) : undefined);
-  if (!fs.existsSync(flowNameOrPath) && snapshot && snapshot.flow.name === flowNameOrPath) {
-    bundle = snapshot;
-  }
-  const source = bundle ? { flow: bundle.flow, file: fs.existsSync(flowNameOrPath) ? flowNameOrPath : o.snapshotFile! } : found;
-  if (!source) throw new Error(`no flow named ${JSON.stringify(flowNameOrPath)} (looked in the flows dir, as a path, and in the procedure snapshot)`);
-  const { flow, file } = source;
-  const store = o.store ?? (snapshot ? new BundleSkillStore(snapshot) : new SkillStore());
-  const { spec: recorded, warnings, diagnostics } = flowToSpec(flow, store, { flowFile: file, components: o.components ?? new ComponentStore() });
-  const spec = withCredentialMarkers(recorded, diagnostics);
-  const emitted = emitFlowFile(spec, { tier: o.tier ?? 'plain', diagnostics });
+  const { spec, warnings, diagnostics, bundleFile } = recordedSpec(flowNameOrPath, { store: o.store, snapshotFile: o.snapshotFile, components: o.components });
+  const base = safeName(spec.name);
+  outDir ??= '.';
+  const flowFile = path.join(outDir, `${base}.flow.ts`);
+  const style = resolveStyle({ explicit: o.style, existing: existingStyle(flowFile), configured: o.defaultStyle });
+  const compiler = compilerProvenance();
+  const emitted: { source: string; warnings: string[]; diagnostics: Diagnostic[] } =
+    style === 'readable'
+      ? (() => {
+          // The readable file carries its own "Generated by" header and the
+          // source line that leads lift, rerecord and repair back to the bundle.
+          const readable: { source: string; warnings: string[]; diagnostics?: Diagnostic[] } =
+            emitReadableFlowFile(spec, { compilerVersion: compiler.version, bundleRelPath: bundleFile ? relativeFrom(outDir, bundleFile) : null });
+          return { source: readable.source, warnings: readable.warnings, diagnostics: readable.diagnostics ?? [] };
+        })()
+      : (() => {
+          const runtime = emitFlowFile(spec, { tier: o.tier ?? 'plain', diagnostics });
+          return { ...runtime, source: `// Generated by ${compiler.name} ${compiler.version}\n${runtime.source}` };
+        })();
 
   // `--allow-demoted` is about demoted pins and nothing else. It used to
   // clear EVERY error, so any future error-severity diagnostic would be
@@ -229,11 +389,10 @@ export function compileFlow(
   const refused = [...diagnostics, ...emitted.diagnostics].some(
     (d) => d.severity === 'error' && !((d.code === 'demoted-pin' || d.code === 'unproven-pin') && o.allowDemoted),
   );
-  const base = safeName(spec.name);
-  const compiler = compilerProvenance();
   const compileBlockers = compilationBlockers(spec, emitted.source);
   const result: CompileResult = {
     compiler,
+    style,
     spec,
     flowFile: null,
     specFile: null,
@@ -247,10 +406,8 @@ export function compileFlow(
   };
   if (refused) return result;
 
-  const outDir = o.outDir ?? '.';
   fs.mkdirSync(outDir, { recursive: true });
-  const flowFile = path.join(outDir, `${base}.flow.ts`);
-  fs.writeFileSync(flowFile, `// Generated by ${compiler.name} ${compiler.version}\n${emitted.source}`);
+  fs.writeFileSync(flowFile, emitted.source);
   result.flowFile = flowFile;
 
   const specPath = path.join(outDir, `${base}.spec.ts`);

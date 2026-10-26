@@ -226,7 +226,8 @@ defaults, and CLI flags override them. Never put credentials in this file.
   "playwright": { "config": "playwright.config.ts", "project": "chromium" },
   "verificationRuns": 3,
   "outputDir": "tests/sitelooper",
-  "snapshotFile": ".sitelooper/procedures.json"
+  "snapshotFile": ".sitelooper/procedures.json",
+  "style": "runtime"
 }
 ```
 
@@ -261,6 +262,41 @@ re-record just that step in isolation.
 
 Override flags are kept separate: `--allow-demoted` accepts a diagnosed demoted procedure, and
 `--overwrite-spec` replaces the user scaffold.
+
+### Readable specs
+
+By default `compile` writes the runtime style: a `.flow.ts` that carries the recording and the
+code that replays it, with fallback locators and drift reporting. It works, but it is large and
+nobody reviews it by reading it. `--style readable` writes plain Playwright code instead, one
+function per step and one locator per action, the kind of file you would write by hand:
+
+```sh
+sitelooper compile .sitelooper/procedures.json --style readable
+sitelooper build ticket --var runid=test-{n} --reset-cmd "npm run reset:e2e" --style readable
+```
+
+Use it for code that will be contributed to another project or reviewed by people. The readable
+file gives up two things on purpose: there is no locator fallback at run time, and no drift
+lines. When the app changes, the test fails at the step that broke, like any hand-written test.
+
+The recording stays in the bundle (`flow export`, or the project's `snapshotFile`). The readable
+file names it on a `// @sitelooper-source` line, and it is still generated: it is rewritten on
+every compile, `rerecord` and `repair`, so edit the bundle (by re-recording) rather than the file.
+Your `.spec.ts` is unchanged and works with either style.
+
+- A file keeps its style. A recompile writes the style the existing file has, unless you pass
+  `--style`. `"style": "readable"` in `sitelooper.config.json` sets the style of new files; the
+  default is still `runtime`.
+- `compile`, `build`, `rerecord` and `repair` accept the readable `<name>.flow.ts` itself and
+  find the bundle from it (then the project snapshot, then your user store).
+- `rerecord <name.flow.ts> <step>` re-records the step into the bundle and recompiles the file.
+- `repair <name.flow.ts>` on a readable file runs the spec once, re-records the step it fails
+  at, recompiles and checks again (`--converge N` rounds). It needs a model key. `--propose`,
+  `--dry-run` and `--out` are not supported for readable files yet; use `rerecord` and then
+  `compile --style readable`, and review the diff.
+- `check` and readiness work the same way on both styles. A readable file whose bundle has
+  changed since it was compiled is reported as stale (a warning) until you recompile it.
+- `--json` result documents include `style`.
 
 ### Calling from another agent
 
