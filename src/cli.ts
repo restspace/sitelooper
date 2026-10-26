@@ -82,7 +82,9 @@ Authoring:
   --version                                # print the installed version
 
 Compile and verify (no daemon or model):
-  compile <flow-or-bundle> [--out <dir>] [--allow-demoted] [--overwrite-spec] [--style readable|runtime]
+  compile <flow-or-bundle> [--out <dir>] [--allow-demoted] [--overwrite-spec] [--style readable|runtime] [--standalone]
+      # --standalone (with --style readable) hands the file over: no regenerate header, no link to
+      # the recording; sitelooper never overwrites it again. For specs contributed to other projects.
       # --style readable writes plain Playwright code (no run-time locator fallback); runtime, the
       # default, writes the self-healing file. A recompile keeps an existing file's style unless
       # --style says otherwise; the project config's "style" applies to new files. compile, build,
@@ -239,6 +241,7 @@ function parseArgv(argv: string[]): ParsedArgs {
     'progress',
     'record',
     'script',
+    'standalone',
     'verbose',
     'version',
   ]);
@@ -1249,9 +1252,10 @@ function fileStyle(file: string): SpecStyle {
 
 async function compileCommand(positional: string[], flags: Map<string, string | boolean>, json: boolean): Promise<void> {
   const flowNameOrPath = positional[0];
-  if (!flowNameOrPath) fail('usage: compile <flow-or-bundle> [--out <dir>] [--allow-demoted] [--overwrite-spec] [--style readable|runtime] [--json]', 2);
+  if (!flowNameOrPath) fail('usage: compile <flow-or-bundle> [--out <dir>] [--allow-demoted] [--overwrite-spec] [--style readable|runtime] [--standalone] [--json]', 2);
   const project = loadProjectConfig();
-  const options = compileOptions(flowNameOrPath, flags, project);
+  const options = { ...compileOptions(flowNameOrPath, flags, project), standalone: flags.has('standalone') };
+  if (options.standalone && options.style !== 'readable') fail('--standalone hands over a readable file: pass --style readable with it', 2);
   let result: ReturnType<typeof compileFlow>;
   try {
     result = compileFlow(flowNameOrPath, options);

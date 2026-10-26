@@ -550,3 +550,23 @@ describe('references, minted values and url outputs', () => {
     expect(out.source).toContain("throw new Error('01-a: slot v1 has no flow binding — re-record this step');");
   });
 });
+
+describe('standalone readable files', () => {
+  it('drops the regenerate header, marker and source line, and is no longer a sitelooper file', async () => {
+    const { emitReadableFlowFile } = await import('../src/spec/emit-readable.js');
+    const { flowFileStyle } = await import('../src/spec/lift.js');
+    const fsMod = await import('node:fs');
+    const spec = JSON.parse(fsMod.readFileSync(new URL('./fixture/readable-snipeit.spec.json', import.meta.url), 'utf8'));
+    const owned = emitReadableFlowFile(spec, { compilerVersion: '0.8.0', bundleRelPath: '../.sitelooper/procedures.json' }).source;
+    const handed = emitReadableFlowFile(spec, { compilerVersion: '0.8.0', bundleRelPath: '../.sitelooper/procedures.json', standalone: true }).source;
+    expect(handed.split('\n').slice(0, 2)).toEqual([
+      '// Written with sitelooper 0.8.0 from the recorded flow "asset-checkout".',
+      '// Plain @playwright/test with no other dependency: edit it like any other test.',
+    ]);
+    expect(handed).not.toContain('@sitelooper-readable');
+    expect(handed).not.toContain('@sitelooper-source');
+    expect(flowFileStyle(handed)).toBeNull();
+    // Everything after the header is the same code.
+    expect(handed.split('\n').slice(2).join('\n')).toBe(owned.split('\n').slice(4).join('\n'));
+  });
+});
