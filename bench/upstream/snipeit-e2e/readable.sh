@@ -40,7 +40,7 @@ BUILD=$?; log "build exit $BUILD"
 wc -l specs/*.flow.ts | tee -a "$OUT/steps.log"
 
 PLAIN=0
-for i in 1 2; do
+for i in 1 2 3 4 5; do
   bash "$HERE/seed.sh" >>"$OUT/seed.log" 2>&1
   t0=$(date +%s)
   RUNID="plain$i-$(date +%s)" npx playwright test --reporter=list >"$OUT/03-plain-$i.txt" 2>&1; rc=$?

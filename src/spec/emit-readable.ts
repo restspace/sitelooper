@@ -60,7 +60,10 @@ export const NO_FALLBACK_WARNING =
   'readable style: each action uses one recorded locator and has no run-time fallback — when the app changes, re-record the step (sitelooper rerecord) and compile again';
 
 const BUDGET_BASE_MS = 30_000;
-const BUDGET_PER_ACTION_MS = 10_000;
+const BUDGET_PER_ACTION_MS = 5_000;
+/** A stuck action fails in this long instead of waiting out the test budget (RECORDED_USE.actionTimeout). */
+const ACTION_TIMEOUT_MS = 15_000;
+const NAVIGATION_TIMEOUT_MS = 30_000;
 const BUDGET_MAX_MS = 600_000;
 
 /** First synthetic slot number: far above any recorded `{{vN}}`, so the two never meet. */
@@ -195,7 +198,7 @@ interface FileState {
   spec: SpecFlow;
   warnings: string[];
   diagnostics: Diagnostic[];
-  helpers: Set<'need' | 'visit' | 'totp' | 'escapeRe'>;
+  helpers: Set<'need' | 'visit' | 'pick' | 'totp' | 'escapeRe'>;
   /** `{{<step>.<output>}}` references the flow's params make, by key. */
   consumed: Set<string>;
   /** Whether a step moves the procedure to another page (a popup, a close, a tab switch). */
@@ -1067,6 +1070,84 @@ function emitLoop(scope: Scope, p: Planned, outputs: readonly string[]): Emitted
   return { lines };
 }
 
+// --- dropdowns: opener and option as one pick --------------------------------------
+
+interface EmittedItem {
+  p: Planned;
+  /** The segment comment that goes above this item, when it starts a segment. */
+  header?: string;
+  lines: string[];
+}
+
+/** Lines a listbox or menu shows when it opens. */
+const OPENS_LIST = /^- (?:listbox|option|menu|menuitem|menuitemcheckbox|menuitemradio)\b/;
+/** …and, for a typed-search dropdown, the box the search is typed into. */
+const OPENS_SEARCH = /^- (?:listbox|option|menu|menuitem|combobox|searchbox|textbox)\b/;
+const CLICK_LINE = /^await (.+)\.click\(\);$/;
+const OPTION_TARGET = /getByRole\('(?:option|menuitem|menuitemcheckbox|menuitemradio)'/;
+
+/** A plain click (marker + one call, nothing after) that opened something, stayed on its page and did nothing else. */
+function openerOf(item: EmittedItem, lines: RegExp): string | null {
+  const s = item.p.step;
+  if (s.tool !== 'click' || item.p.visit || !stayed(item.p) || sideEffects(item.p) || item.lines.length !== 2) return null;
+  if (!(s.expect?.addedContains ?? []).some((l) => lines.test(l))) return null;
+  return CLICK_LINE.exec(item.lines[1])?.[1] ?? null;
+}
+
+/** A click on an option or menu item: its locator, when the item is marker + the click (+ whatever follows it). */
+function optionOf(item: EmittedItem | undefined): string | null {
+  if (!item || item.header || item.p.step.tool !== 'click' || item.p.visit || item.lines.length < 2) return null;
+  const target = CLICK_LINE.exec(item.lines[1])?.[1];
+  return target && OPTION_TARGET.test(target) ? target : null;
+}
+
+/**
+ * An opener and the option chosen from it, as one `pick(...)`: the opener's
+ * click can land before the page's script has wired the dropdown up (Snipe-IT
+ * select2, 1 run in 5 on sie2e3), and a plain second line would then wait out
+ * the whole budget for an option that never comes. Only when the recording
+ * shows the click opening a list (its added lines) and the very next action
+ * picking an option; a typed-search dropdown (opener, typing, option) the same
+ * way. Both `@step` markers stay above the call.
+ */
+function mergePicks(items: EmittedItem[], file: FileState, stepId: string): EmittedItem[] {
+  const out: EmittedItem[] = [];
+  for (let i = 0; i < items.length; i++) {
+    const [a, b, c] = [items[i], items[i + 1], items[i + 2]];
+    const direct = openerOf(a, OPENS_LIST);
+    const option = optionOf(b);
+    if (direct && option) {
+      file.helpers.add('pick');
+      out.push({ p: a.p, header: a.header, lines: [a.lines[0], b.lines[0], `await pick(page, ${direct}, ${option});`, ...b.lines.slice(2)] });
+      i += 1;
+      continue;
+    }
+    const opener = openerOf(a, OPENS_SEARCH);
+    const typed = b && !b.header && b.lines.length === 2 ? typedSearch(b) : null;
+    const searched = optionOf(c);
+    if (opener && typed && searched) {
+      file.helpers.add('pick');
+      out.push({ p: a.p, header: a.header, lines: [a.lines[0], b.lines[0], c!.lines[0], `await pick(page, ${opener}, ${searched}, ${typed});`, ...c!.lines.slice(2)] });
+      i += 2;
+      continue;
+    }
+    out.push(a);
+  }
+  void stepId;
+  return out;
+}
+
+/** A fill or a typed search into a box, as pick's `search` argument. */
+function typedSearch(item: EmittedItem): string | null {
+  const s = item.p.step;
+  if ((s.tool !== 'fill' && s.tool !== 'type') || sideEffects(item.p) || (s.expect?.urlPattern && !stayed(item.p))) return null;
+  const fill = /^await (.+)\.fill\((.+)\);$/.exec(item.lines[1]);
+  if (fill) return `{ search: ${fill[1]}, text: ${fill[2]} }`;
+  const typed = /^await (.+)\.pressSequentially\((.+?)(?:, \{ delay: (\d+) \})?\);$/.exec(item.lines[1]);
+  if (typed) return `{ search: ${typed[1]}, text: ${typed[2]}, delay: ${typed[3] ?? 0} }`;
+  return null;
+}
+
 // --- one flow step ---------------------------------------------------------------
 
 interface StepCode {
@@ -1157,26 +1238,30 @@ function emitFlowStep(file: FileState, step: SpecStep, fn: string): StepCode {
   }
 
   let current: SpecSegment | null = null;
+  const items: EmittedItem[] = [];
   for (const p of planned) {
     if (p.pruned) continue;
     if (isRead(p.step.tool) && !p.keptRead) continue;
     if (p.step.tool === 'screenshot') continue;
+    let header: string | undefined;
     if (p.segment !== current) {
       current = p.segment;
       scope.segment = current;
-      body.push(`// ${current.id} — recorded on ${describePage(scope, current.preconditions.urlPattern)}`);
+      header = `// ${current.id} — recorded on ${describePage(scope, current.preconditions.urlPattern)}`;
     }
     const message = p.step.assert ? (sharedMessage ?? assertMessage(p.step)) : null;
     const e = p.step.tool === 'loop' ? emitLoop(scope, p, outputs) : emitStep(scope, p, message, outputs);
-    body.push(...e.lines);
+    const lines = [...e.lines];
     // A value a read minted ({{dN}} with `read`) is bound from what it published.
     for (const [slot, d] of Object.entries(p.segment.derived ?? {})) {
       if (d.step !== p.index || !d.read || scope.captured.has(slot)) continue;
       const name = local(scope, d.read);
-      body.push(`const ${name} = outputs[${quote(`${step.id}.${d.read}`)}];`);
+      lines.push(`const ${name} = outputs[${quote(`${step.id}.${d.read}`)}];`);
       scope.captured.set(slot, name);
     }
+    items.push({ p, header, lines });
   }
+  for (const item of mergePicks(items, file, step.id)) body.push(...(item.header ? [item.header] : []), ...item.lines);
 
   // What later steps refer to this one by, published.
   const published = new Set<string>();
@@ -1257,6 +1342,26 @@ const HELPERS: Record<string, string[]> = {
     '  const value = outputs[key];',
     "  if (!value) throw new Error(`${by} needs {{${key}}}, and this run never published it`);",
     '  return value;',
+    '}',
+  ],
+  pick: [
+    '/**',
+    " * Opens a dropdown and chooses an option. The opener's click can land before the page's script has",
+    ' * wired the dropdown up, and then nothing opens: it is clicked again until the option shows — but',
+    ' * not while a list is already open (a second click would close it), and a typed search is typed again.',
+    ' */',
+    'async function pick(page: Page, opener: Locator, option: Locator, typed?: { search: Locator; text: string; delay?: number }): Promise<void> {',
+    '  await expect(async () => {',
+    '    if (!(await option.isVisible())) {',
+    '      if (typed) {',
+    '        if (!(await typed.search.isVisible())) await opener.click();',
+    '        if (typed.delay === undefined) await typed.search.fill(typed.text);',
+    "        else await typed.search.fill('').then(() => typed.search.pressSequentially(typed.text, { delay: typed.delay }));",
+    "      } else if (!(await page.getByRole('listbox').or(page.getByRole('menu')).first().isVisible())) await opener.click();",
+    '    }',
+    '    await expect(option).toBeVisible({ timeout: 3_000 });',
+    '  }).toPass({ timeout: 30_000 });',
+    '  await option.click();',
     '}',
   ],
   visit: [
@@ -1361,6 +1466,8 @@ export function emitReadableFlowFile(spec: SpecFlow, o: ReadableEmitOptions): Re
     ...(browser.isMobile !== undefined ? { isMobile: browser.isMobile } : {}),
     ...(browser.hasTouch !== undefined ? { hasTouch: browser.hasTouch } : {}),
     ...(browser.userAgent !== undefined ? { userAgent: browser.userAgent } : {}),
+    actionTimeout: ACTION_TIMEOUT_MS,
+    navigationTimeout: NAVIGATION_TIMEOUT_MS,
   };
   const startParts = parseUrl(spec.startUrl);
   const startPath = startParts && startParts.origin === spec.origin ? spec.startUrl.slice(startParts.origin.length) || '/' : spec.startUrl;
@@ -1379,7 +1486,7 @@ export function emitReadableFlowFile(spec: SpecFlow, o: ReadableEmitOptions): Re
       ];
   const out: string[] = [
     ...header,
-    `import { expect, test, type Page } from '@playwright/test';`,
+    `import { expect, test, ${file.helpers.has('pick') ? 'type Locator, ' : ''}type Page } from '@playwright/test';`,
     '',
     '// The one Node global this file reads, declared so it type-checks without @types/node.',
     'declare const process: { env: Record<string, string | undefined> };',
@@ -1398,9 +1505,9 @@ export function emitReadableFlowFile(spec: SpecFlow, o: ReadableEmitOptions): Re
     'export interface FlowRun { drift: string[]; warnings: string[]; echoed: string[] }',
     'export interface RunOptions { startUrl?: string; run?: FlowRun }',
     '',
-    `/** 30 s plus 10 s for each of the flow's ${file.actions} recorded actions. */`,
+    `/** 30 s plus 5 s for each of the flow's ${file.actions} recorded actions: with no fallback to try, a run either goes through or stops at its first stuck action. */`,
     `export const BUDGET_MS = ${budget};`,
-    '/** The browser the flow was recorded in; the generated .spec.ts applies it with test.use(). */',
+    `/** The browser the flow was recorded in, applied by the generated .spec.ts with test.use(); a stuck action or navigation fails after ${ACTION_TIMEOUT_MS / 1000} s / ${NAVIGATION_TIMEOUT_MS / 1000} s, naming its step, instead of using up BUDGET_MS. */`,
     `export const RECORDED_USE = ${JSON.stringify(use)};`,
     '/** Where the app was when this flow was recorded: used only when neither startUrl nor the project baseURL says. */',
     `export const RECORDED_ORIGIN = ${quote(spec.origin)};`,
@@ -1433,6 +1540,11 @@ export function emitReadableFlowFile(spec: SpecFlow, o: ReadableEmitOptions): Re
   }
   out.push('  return ctx.outputs;', '}', '');
   out.push('export const steps = {', ...steps.map((st) => `  ${quote(st.id)}: ${st.fn},`), '};');
+  // Helpers sit above the first `@step` marker: a stack frame inside one then has no marker above it,
+  // and check.ts walks on to the caller's frame, the step line that called it.
+  for (const name of ['need', 'visit', 'pick', 'escapeRe', 'totp'] as const) {
+    if (file.helpers.has(name)) out.push('', ...HELPERS[name]);
+  }
 
   for (const st of steps) {
     const spStep = spec.steps.find((s) => s.id === st.id)!;
@@ -1444,9 +1556,6 @@ export function emitReadableFlowFile(spec: SpecFlow, o: ReadableEmitOptions): Re
     if (needsCtx && used.length) out.push(`  const { ${used.join(', ')} } = ctx;`);
     for (const line of st.lines) out.push(...line.split('\n').map((l) => (l ? `  ${l}` : l)));
     out.push('}');
-  }
-  for (const name of ['need', 'visit', 'escapeRe', 'totp'] as const) {
-    if (file.helpers.has(name)) out.push('', ...HELPERS[name]);
   }
   out.push('');
   return { source: out.join('\n'), warnings: file.warnings, diagnostics: file.diagnostics };

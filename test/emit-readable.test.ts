@@ -105,7 +105,7 @@ describe('the Snipe-IT pilot', () => {
     expect(head[2]).toBe('// @sitelooper-readable v1');
     expect(isReadableFlowFile(out.source)).toBe(true);
     expect(readableSource(out.source)).toEqual({ flow: 'asset-checkout', bundle: '../.sitelooper/procedures.json', specHash: readableSpecHash(SNIPEIT) });
-    expect(out.source.match(/^import .*$/gm)).toEqual(["import { expect, test, type Page } from '@playwright/test';"]);
+    expect(out.source.match(/^import .*$/gm)).toEqual(["import { expect, test, type Locator, type Page } from '@playwright/test';"]);
   });
 
   it('exports the metadata readiness parses, in its exact syntax', () => {
@@ -114,7 +114,6 @@ describe('the Snipe-IT pilot', () => {
     expect(metadata('requiredInputNames')).toEqual(['runid']);
     expect(metadata('requiredEnvNames')).toEqual(['E2E_ADMIN_PASSWORD', 'E2E_ADMIN_USERNAME']);
     for (const name of ['createFlowRun', 'runFlow', 'steps', 'BUDGET_MS', 'RECORDED_USE']) expect(out.source).toMatch(new RegExp(`export (?:async )?(?:function|const) ${name}\\b`));
-    expect(out.source).toContain('export const RECORDED_USE = {"viewport":{"width":1280,"height":900}};');
   });
 
   it('writes relative urls: the recorded origin appears only as the last-resort fallback', () => {
@@ -144,9 +143,10 @@ describe('the Snipe-IT pilot', () => {
     expect(l).toContain("await page.getByRole('button', { name: 'Save', exact: true }).first().click();");
     // Only the primary was checked against the element; the label after it is unverified.
     expect(l).toContain('await page.locator(\'input[name="name"]\').fill(`${vars.runid} E2E Laptop`);');
-    expect(l).toContain("await page.locator('.select2-container').nth(1).click();");
+    expect(l).toContain("await pick(page, page.locator('.select2-container').nth(1), page.getByRole('option', { name: 'E2E Assignee (e2e-assignee)', exact: true }));");
     expect(out.source).not.toMatch(/@[ef]\d+/);
-    expect(out.source).not.toContain('.or(');
+    // One locator per action: no unions in the step bodies (the pick helper's own listbox-or-menu check aside).
+    expect(out.source.slice(out.source.indexOf('async function step01Signin'))).not.toContain('.or(');
   });
 
   it('reads secrets from the environment and names no value', () => {
@@ -225,20 +225,31 @@ describe('the Snipe-IT pilot', () => {
     expect(markers.length).toBe(32);
     for (const [line, i] of markers) {
       expect(line).toMatch(/^\/\/ @step [\w-]+ s_[0-9a-f]{6}\/\d+$/);
-      // The line under the marker (the action) anchors to it, as a stack frame there would.
-      expect(findStepAnchor(out.source, i + 2)).toBe(line.slice('// @step '.length));
+      // The next code line under the marker anchors to the nearest marker above it — this one, or for a
+      // pick (opener and option markers stacked over one call) the option's.
+      const code = src.findIndex((l, k) => k > i && !l.trim().startsWith('//'));
+      const anchor = findStepAnchor(out.source, code + 1)!;
+      const stacked = src[i + 1].trim().startsWith('// @step') ? src[i + 1].trim().slice('// @step '.length) : null;
+      expect(anchor).toBe(stacked ?? line.slice('// @step '.length));
     }
     const at = src.findIndex((l) => l.includes("await page.getByRole('button', { name: 'Login', exact: true }).click();"));
     expect(findStepAnchor(out.source, at + 1)).toBe('01-signin s_6e55ea/3');
+    // A frame inside a helper has no marker above it, so check.ts walks on to the calling step line.
+    for (const helper of ['function need(', 'async function visit(', 'async function pick(']) {
+      const h = src.findIndex((l) => l.startsWith(helper));
+      expect(h).toBeGreaterThan(0);
+      expect(findStepAnchor(out.source, h + 3)).toBeNull();
+    }
     for (const id of ['01-signin', '02-create', '03-verify', '04-assert']) {
       expect(out.source).toContain(`  console.log('[sitelooper step] ${id}');`);
     }
     expect(out.source).toContain("await test.step('01-signin: Sign in as {{env:E2E_ADMIN_USERNAME}} with password {{env:E2E_ADMIN_PASSWORD}} and verify the dashboard opens', () => step01Signin(page, ctx));");
   });
 
-  it('budgets 30 s plus 10 s per action, capped at 10 minutes', () => {
-    expect(out.source).toContain('export const BUDGET_MS = 350000;');
-    const many = flow([fstep('01-a', [seg('s_aaaaaa', '/', Array.from({ length: 80 }, () => ({ tool: 'press', args: { key: 'Tab' }, locators: {} })))])]);
+  it('budgets 30 s plus 5 s per action, capped at 10 minutes, and fails a stuck action fast', () => {
+    expect(out.source).toContain('export const BUDGET_MS = 190000;');
+    expect(out.source).toContain('export const RECORDED_USE = {"viewport":{"width":1280,"height":900},"actionTimeout":15000,"navigationTimeout":30000};');
+    const many = flow([fstep('01-a', [seg('s_aaaaaa', '/', Array.from({ length: 200 }, () => ({ tool: 'press', args: { key: 'Tab' }, locators: {} })))])]);
     expect(emit(many).source).toContain('export const BUDGET_MS = 600000;');
   });
 
@@ -569,4 +580,58 @@ describe('standalone readable files', () => {
     // Everything after the header is the same code.
     expect(handed.split('\n').slice(2).join('\n')).toBe(owned.split('\n').slice(4).join('\n'));
   });
+});
+
+describe('a dropdown opener and its option are one pick', () => {
+  const opener = (added = ['- listbox "Sizes"', '- option "Large"']): SkillStep => click([css('.select2-container >> nth=1')], { addedContains: added });
+  const option = click([css('role=option[name="Large"]'), role('option', 'Large')]);
+  const save = click([role('button', 'Save')], { urlPattern: `${ORIGIN}/done` });
+  const one = (steps: SkillStep[]) => emit(flow([fstep('01-a', [seg('s_aaaaaa', '/form', steps)])]));
+  const body = (source: string) => lines(source.slice(source.indexOf('async function step01A')));
+  const PICK = "await pick(page, page.locator('.select2-container').nth(1), page.getByRole('option', { name: 'Large', exact: true }));";
+
+  it('writes the opener and the option as one pick, both markers above it, with the helper once', () => {
+    const r = one([opener(), option, save]);
+    expect(body(r.source).slice(2, 5)).toEqual(['// @step 01-a s_aaaaaa/1', '// @step 01-a s_aaaaaa/2', PICK]);
+    expect(r.source.match(/^async function pick\(/gm)).toHaveLength(1);
+    expect(r.source).toContain("import { expect, test, type Locator, type Page } from '@playwright/test';");
+    const src = r.source.split('\n');
+    expect(findStepAnchor(r.source, src.findIndex((l) => l.trim() === PICK) + 1)).toBe('01-a s_aaaaaa/2');
+  });
+
+  it('near misses stay two plain clicks: no list opened, a navigation, something between, not an option next', () => {
+    const plain = (steps: SkillStep[]) => expect(one(steps).source).not.toContain('pick(');
+    plain([opener(['- textbox "Notes"']), option, save]);
+    plain([click([css('#tab')], { urlPattern: `${ORIGIN}/other`, addedContains: ['- listbox "Sizes"'] }), option, save]);
+    plain([opener(), { tool: 'press', args: { key: 'ArrowDown' }, locators: {} }, option, save]);
+    plain([opener(), save]);
+    plain([opener(), click([role('button', 'Large')]), save]);
+    // …and a click that reveals something the next action targets, not a list, is left to auto-waiting.
+    plain([click([css('#optional_info')], { addedContains: ['- textbox "Warranty"'] }), { tool: 'fill', args: { value: '3' }, locators: { target: [role('textbox', 'Warranty')] } }]);
+    expect(one([opener(), save]).source).not.toContain('async function pick(');
+  });
+
+  it('writes a typed-search dropdown (opener, typing, option) as one pick that types again', () => {
+    const add = click([role('button', 'Add a product')], { addedContains: ['- combobox "Type to find a product..."'] });
+    const type: SkillStep = { tool: 'type', args: { text: 'Desk', delay_ms: 50 }, locators: { target: [role('combobox', 'Type to find a product...')] } };
+    const desk = click([role('option', '[FURN_1118] Corner Desk')]);
+    const r = one([add, type, desk, save]);
+    expect(body(r.source).slice(2, 6)).toEqual([
+      '// @step 01-a s_aaaaaa/1',
+      '// @step 01-a s_aaaaaa/2',
+      '// @step 01-a s_aaaaaa/3',
+      "await pick(page, page.getByRole('button', { name: 'Add a product', exact: true }), page.getByRole('option', { name: '[FURN_1118] Corner Desk', exact: true }), { search: page.getByRole('combobox', { name: 'Type to find a product...', exact: true }), text: 'Desk', delay: 50 });",
+    ]);
+    const fill: SkillStep = { tool: 'fill', args: { value: 'prod' }, locators: { target: [role('combobox', 'Type to find a product...')] } };
+    expect(one([add, fill, desk]).source).toContain(", { search: page.getByRole('combobox', { name: 'Type to find a product...', exact: true }), text: 'prod' });");
+    // near miss: the opener's effect showed no list or search box
+    const other = click([role('button', 'Add a product')], { addedContains: ['- row "New line"'] });
+    expect(one([other, type, desk]).source).not.toContain('pick(');
+  });
+
+  it('type-checks with the helper', () => {
+    const add = click([role('button', 'Add a product')], { addedContains: ['- combobox "Find"'] });
+    const type: SkillStep = { tool: 'type', args: { text: 'Desk' }, locators: { target: [role('combobox', 'Find')] } };
+    expect(typeErrors({ 'pick.flow.ts': one([opener(), option, add, type, click([role('option', 'Desk')]), save]).source })).toEqual([]);
+  }, 60_000);
 });

@@ -2,7 +2,7 @@
 //   sitelooper compile asset-checkout --style readable
 // @sitelooper-readable v1
 // @sitelooper-source {"flow":"asset-checkout","bundle":"../.sitelooper/procedures.json","specHash":"97e533cf02a6919e48ef33ff6989a8adefcfcfb9c144af0780509906ae22b1ca"}
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Locator, type Page } from '@playwright/test';
 
 // The one Node global this file reads, declared so it type-checks without @types/node.
 declare const process: { env: Record<string, string | undefined> };
@@ -21,10 +21,10 @@ export interface StepContext { vars: Vars; env: Env; outputs: Outputs }
 export interface FlowRun { drift: string[]; warnings: string[]; echoed: string[] }
 export interface RunOptions { startUrl?: string; run?: FlowRun }
 
-/** 30 s plus 10 s for each of the flow's 32 recorded actions. */
-export const BUDGET_MS = 350000;
-/** The browser the flow was recorded in; the generated .spec.ts applies it with test.use(). */
-export const RECORDED_USE = {"viewport":{"width":1280,"height":900}};
+/** 30 s plus 5 s for each of the flow's 32 recorded actions: with no fallback to try, a run either goes through or stops at its first stuck action. */
+export const BUDGET_MS = 190000;
+/** The browser the flow was recorded in, applied by the generated .spec.ts with test.use(); a stuck action or navigation fails after 15 s / 30 s, naming its step, instead of using up BUDGET_MS. */
+export const RECORDED_USE = {"viewport":{"width":1280,"height":900},"actionTimeout":15000,"navigationTimeout":30000};
 /** Where the app was when this flow was recorded: used only when neither startUrl nor the project baseURL says. */
 export const RECORDED_ORIGIN = 'http://127.0.0.1:8000';
 
@@ -64,6 +64,37 @@ export const steps = {
   '04-assert': step04Assert,
 };
 
+/** A value an earlier step published; stops the step before it runs when that step did not. */
+function need(outputs: Outputs, key: string, by: string): string {
+  const value = outputs[key];
+  if (!value) throw new Error(`${by} needs {{${key}}}, and this run never published it`);
+  return value;
+}
+
+/** Opens a path of the app on the origin this run is on (startUrl, or the project baseURL). */
+async function visit(page: Page, path: string): Promise<void> {
+  await page.goto(new URL(path, page.url()).href);
+}
+
+/**
+ * Opens a dropdown and chooses an option. The opener's click can land before the page's script has
+ * wired the dropdown up, and then nothing opens: it is clicked again until the option shows — but
+ * not while a list is already open (a second click would close it), and a typed search is typed again.
+ */
+async function pick(page: Page, opener: Locator, option: Locator, typed?: { search: Locator; text: string; delay?: number }): Promise<void> {
+  await expect(async () => {
+    if (!(await option.isVisible())) {
+      if (typed) {
+        if (!(await typed.search.isVisible())) await opener.click();
+        if (typed.delay === undefined) await typed.search.fill(typed.text);
+        else await typed.search.fill('').then(() => typed.search.pressSequentially(typed.text, { delay: typed.delay }));
+      } else if (!(await page.getByRole('listbox').or(page.getByRole('menu')).first().isVisible())) await opener.click();
+    }
+    await expect(option).toBeVisible({ timeout: 3_000 });
+  }).toPass({ timeout: 30_000 });
+  await option.click();
+}
+
 /** Sign in as {{env:E2E_ADMIN_USERNAME}} with password {{env:E2E_ADMIN_PASSWORD}} and verify the dashboard opens */
 async function step01Signin(page: Page, { env, outputs }: StepContext): Promise<void> {
   // s_6e55ea — recorded on /login
@@ -92,17 +123,14 @@ async function step02Create(page: Page, { vars, outputs }: StepContext): Promise
   // @step 02-create s_bfea11/1
   await page.locator('#optional_info').click();
   // @step 02-create s_bfea11/2
-  await page.locator('.select2-container').nth(1).click();
   // @step 02-create s_bfea11/3
-  await page.getByRole('option', { name: 'E2E Laptops - E2E Manufacturer E2E Laptop Model', exact: true }).click();
+  await pick(page, page.locator('.select2-container').nth(1), page.getByRole('option', { name: 'E2E Laptops - E2E Manufacturer E2E Laptop Model', exact: true }));
   // @step 02-create s_bfea11/4
-  await page.locator('.select2-container').nth(2).click();
   // @step 02-create s_bfea11/5
-  await page.getByRole('option', { name: 'Ready to Deploy', exact: true }).click();
+  await pick(page, page.locator('.select2-container').nth(2), page.getByRole('option', { name: 'Ready to Deploy', exact: true }));
   // @step 02-create s_bfea11/6
-  await page.locator('.select2-container').nth(7).click();
   // @step 02-create s_bfea11/7
-  await page.getByRole('option', { name: 'E2E Office', exact: true }).click();
+  await pick(page, page.locator('.select2-container').nth(7), page.getByRole('option', { name: 'E2E Office', exact: true }));
   // @step 02-create s_bfea11/8
   await page.locator('input[name="name"]').fill(`${vars.runid} E2E Laptop`);
   // @step 02-create s_bfea11/9
@@ -138,9 +166,8 @@ async function step03Verify(page: Page, { vars, outputs }: StepContext): Promise
   // @step 03-verify s_d9fe3e/1
   await expect(page.locator('select[name="assigned_user"]')).toBeVisible({ timeout: 8000 });
   // @step 03-verify s_d9fe3e/2
-  await page.locator('.select2-container').nth(1).click();
   // @step 03-verify s_d9fe3e/3
-  await page.getByRole('option', { name: 'E2E Assignee (e2e-assignee)', exact: true }).click();
+  await pick(page, page.locator('.select2-container').nth(1), page.getByRole('option', { name: 'E2E Assignee (e2e-assignee)', exact: true }));
   // @step 03-verify s_d9fe3e/4
   await page.getByRole('textbox', { name: 'Notes', exact: true }).fill(`${vars.runid} checkout`);
   // @step 03-verify s_d9fe3e/7
@@ -167,16 +194,4 @@ async function step04Assert(page: Page, { vars }: StepContext): Promise<void> {
   await expect(page.getByRole('link', { name: 'E2E Assignee', exact: true }), failed).toBeVisible();
   // @step 04-assert s_3133ba/3
   await expect(page.locator('h1'), failed).toContainText(`${vars.runid} E2E Laptop`, { useInnerText: true });
-}
-
-/** A value an earlier step published; stops the step before it runs when that step did not. */
-function need(outputs: Outputs, key: string, by: string): string {
-  const value = outputs[key];
-  if (!value) throw new Error(`${by} needs {{${key}}}, and this run never published it`);
-  return value;
-}
-
-/** Opens a path of the app on the origin this run is on (startUrl, or the project baseURL). */
-async function visit(page: Page, path: string): Promise<void> {
-  await page.goto(new URL(path, page.url()).href);
 }
