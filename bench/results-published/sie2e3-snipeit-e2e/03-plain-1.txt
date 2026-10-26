@@ -1,0 +1,47 @@
+
+Running 1 test using 1 worker
+
+[sitelooper step] 01-signin
+  ✘  1 [chromium] › specs/asset-checkout.spec.ts:9:5 › asset-checkout (5.9m)
+
+
+  1) [chromium] › specs/asset-checkout.spec.ts:9:5 › asset-checkout › 02-create: Create an asset named '{{runid}} E2E Laptop' of model 'E2E Laptop Model' with status 'Ready to Deploy', default location 'E2E Office' and purchase date 2026-03-15. Save it, verify its asset page opens, and report its asset tag. 
+
+    Test timeout of 350000ms exceeded.
+
+    Error: locator.click: Test timeout of 350000ms exceeded.
+    Call log:
+      - waiting for getByRole('option', { name: 'E2E Laptops - E2E Manufacturer E2E Laptop Model', exact: true })
+
+
+       at asset-checkout.flow.ts:97
+
+       95 |   await page.locator('.select2-container').nth(1).click();
+       96 |   // @step 02-create s_bfea11/3
+    >  97 |   await page.getByRole('option', { name: 'E2E Laptops - E2E Manufacturer E2E Laptop Model', exact: true }).click();
+          |                                                                                                            ^
+       98 |   // @step 02-create s_bfea11/4
+       99 |   await page.locator('.select2-container').nth(2).click();
+      100 |   // @step 02-create s_bfea11/5
+        at step02Create (/tmp/sie2e3/tests/e2e/specs/asset-checkout.flow.ts:97:108)
+        at runFlow (/tmp/sie2e3/tests/e2e/specs/asset-checkout.flow.ts:51:3)
+        at /tmp/sie2e3/tests/e2e/specs/asset-checkout.spec.ts:14:21
+
+    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/asset-checkout-asset-checkout-chromium/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/asset-checkout-asset-checkout-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/asset-checkout-asset-checkout-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  Slow test file: [chromium] › specs/asset-checkout.spec.ts (5.9m)
+  Consider running tests from slow files in parallel. See: https://playwright.dev/docs/test-parallel
+  1 failed
+    [chromium] › specs/asset-checkout.spec.ts:9:5 › asset-checkout ─────────────────────────────────
