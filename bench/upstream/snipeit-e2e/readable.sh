@@ -44,9 +44,14 @@ for i in 1 2 3 4 5; do
   bash "$HERE/seed.sh" >>"$OUT/seed.log" 2>&1
   t0=$(date +%s)
   RUNID="plain$i-$(date +%s)" npx playwright test --reporter=list >"$OUT/03-plain-$i.txt" 2>&1; rc=$?
-  log "plain playwright run $i exit $rc in $(( $(date +%s) - t0 ))s"; [ $rc -ne 0 ] && PLAIN=$rc
+  log "plain playwright run $i exit $rc in $(( $(date +%s) - t0 ))s (started $(date -u -d @$t0 +%H:%M:%S))"; [ $rc -ne 0 ] && PLAIN=$rc
+  # A failed run's trace (network, DOM snapshots) and error context: the evidence for what the page did.
+  [ $rc -ne 0 ] && cp -r test-results "$OUT/03-plain-$i-test-results" 2>/dev/null
 done
 
+# What the app saw: Apache's access lines (status codes of the UI's own /api/v1 calls) and Laravel's log.
+docker logs --timestamps snipeit-e2e-app-1 >"$OUT/app-container.log" 2>&1
+docker exec snipeit-e2e-app-1 sh -c 'tail -n 400 /var/www/html/storage/logs/laravel.log 2>/dev/null' >"$OUT/laravel-tail.log" 2>&1
 mkdir -p "$OUT/tests-e2e"
 tar --exclude=node_modules --exclude=test-results --exclude=playwright-report -cf - . | tar -xf - -C "$OUT/tests-e2e"
 log "done: build=$BUILD plain=$PLAIN"
