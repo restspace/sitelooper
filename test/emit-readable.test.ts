@@ -121,7 +121,7 @@ describe('the Snipe-IT pilot', () => {
     expect(out.source.split('http://127.0.0.1:8000').length - 1).toBe(1);
     expect(out.source).toContain("export const RECORDED_ORIGIN = 'http://127.0.0.1:8000';");
     const l = lines(out.source);
-    expect(l).toContain('await expect(page).toHaveURL(/\\/hardware\\/create$/);');
+    expect(l).toContain("await visit(page, '/hardware/create');");
     expect(l).toContain('await expect(page).toHaveURL(/:\\/\\/[^/]+\\/$/);');
     expect(l).toContain('await visit(page, `/hardware/${hardwareId}`);');
   });
@@ -160,7 +160,9 @@ describe('the Snipe-IT pilot', () => {
     // The option click's alert is not a submit's: no wait for it.
     expect(out.source).not.toContain('This asset can be checked out');
     // The checkout page's start pattern and its actions' expectations name one page: no url wait between them.
-    expect(out.source.match(/toHaveURL\(/g)).toHaveLength(8);
+    // Login, Save, the asset link, Checkout, and the checkout link (whose url carries the asset id); the
+    // unlabelled nav links are visits, which wait for their own load.
+    expect(out.source.match(/toHaveURL\(/g)).toHaveLength(5);
     expect(out.source).toContain("await expect(page.locator('select[name=\"assigned_user\"]')).toBeVisible({ timeout: 8000 });");
   });
 
@@ -179,14 +181,31 @@ describe('the Snipe-IT pilot', () => {
     expect(out.source).not.toMatch(/login_flash|page_title|asset_tag|item_1_value|purchase_date'\]|02-create\.asset_name/);
   });
 
-  it('prunes the nav dropdown opened and closed with nothing between, and keeps the licenses detour', () => {
-    expect(out.warnings).toContain('02-create: left out s_50255e/1, s_50255e/2 (toggle opened and closed again: the recording shows they changed nothing)');
-    expect(out.source).not.toContain('// @step 02-create s_50255e/1\n');
-    expect(out.source).not.toContain('// @step 02-create s_50255e/2\n');
-    expect(out.source).toContain('// @step 02-create s_50255e/3\n');
-    // A navigation away (to /licenses) followed by a goto somewhere ELSE than where it left (/hardware) is not a round trip.
-    expect(out.source).toContain('// @step 03-verify s_130a91/1\n');
-    expect(out.source).toContain('// @step 03-verify s_ead73d/1\n');
+  it('turns the unlabelled nav clicks into visits and prunes what that leaves dead, reporting each', () => {
+    expect(out.warnings.slice(1)).toEqual([
+      '02-create: s_499c57/1 recorded as a click on an unlabelled link (header > nav > div:nth-of-type(2) > ul > li:nth-of-type(2) > a) — written as a visit to where it went',
+      '02-create: s_50255e/4 recorded as a click on an unlabelled link (div:nth-of-type(2) > ul > li:nth-of-type(9) > ul > li:nth-of-type(1) > a) — written as a visit to where it went',
+      '02-create: left out s_50255e/1, s_50255e/2 (toggle opened and closed again: the recording shows it changed nothing)',
+      '02-create: left out s_50255e/3 (opened a menu only for the step after it, which is now a visit)',
+      '02-create: left out s_499c57/1 (a visit followed at once by another visit)',
+      '03-verify: s_130a91/1 recorded as a click on an unlabelled link (header > nav > div:nth-of-type(2) > ul > li:nth-of-type(3) > a) — written as a visit to where it went',
+      '03-verify: left out s_d9fe3e/5, s_d9fe3e/6 (opened a dropdown and dismissed it with Escape, choosing nothing)',
+      '03-verify: left out s_130a91/1 (a visit followed at once by another visit)',
+    ]);
+    const kept = [...out.source.matchAll(/\/\/ @step (\S+ s_\w+\/\d+)/g)].map((m) => m[1]);
+    for (const gone of ['02-create s_499c57/1', '02-create s_50255e/1', '02-create s_50255e/2', '02-create s_50255e/3', '03-verify s_d9fe3e/5', '03-verify s_d9fe3e/6', '03-verify s_130a91/1']) {
+      expect(kept).not.toContain(gone);
+    }
+    // 02-create now opens the create form directly, as a person would write it.
+    const create = lines(out.source.slice(out.source.indexOf('async function step02Create')));
+    expect(create.slice(1, 5)).toEqual([
+      '// s_50255e — recorded on /hardware',
+      '// @step 02-create s_50255e/4',
+      '// recorded as a click on an unlabelled link (div:nth-of-type(2) > ul > li:nth-of-type(9) > ul > li:nth-of-type(1) > a)',
+      "await visit(page, '/hardware/create');",
+    ]);
+    // The Escape after the date fill closes the date picker: it follows a fill, not a dropdown, and stays.
+    expect(kept).toContain('02-create s_bfea11/13');
   });
 
   it("writes the assertion's checks as expects with its sentence, none skippable", () => {
@@ -203,7 +222,7 @@ describe('the Snipe-IT pilot', () => {
   it('puts a findStepAnchor-parsable @step marker above every action, and a [sitelooper step] line after each step', () => {
     const src = out.source.split('\n');
     const markers = src.map((l, i) => [l.trim(), i] as const).filter(([l]) => l.startsWith('// @step'));
-    expect(markers.length).toBe(37);
+    expect(markers.length).toBe(32);
     for (const [line, i] of markers) {
       expect(line).toMatch(/^\/\/ @step [\w-]+ s_[0-9a-f]{6}\/\d+$/);
       // The line under the marker (the action) anchors to it, as a stack frame there would.
@@ -218,7 +237,7 @@ describe('the Snipe-IT pilot', () => {
   });
 
   it('budgets 30 s plus 10 s per action, capped at 10 minutes', () => {
-    expect(out.source).toContain('export const BUDGET_MS = 400000;');
+    expect(out.source).toContain('export const BUDGET_MS = 350000;');
     const many = flow([fstep('01-a', [seg('s_aaaaaa', '/', Array.from({ length: 80 }, () => ({ tool: 'press', args: { key: 'Tab' }, locators: {} })))])]);
     expect(emit(many).source).toContain('export const BUDGET_MS = 600000;');
   });
@@ -275,7 +294,7 @@ describe('noise pruning only where the recording proves a no-op', () => {
   });
 
   it('(b) drops a navigation away and a goto straight back with nothing done on the page between', () => {
-    const away = click([css('header a.licenses')], { urlPattern: `${ORIGIN}/licenses` });
+    const away = click([role('link', 'Licenses')], { urlPattern: `${ORIGIN}/licenses` });
     const back: SkillStep = { tool: 'goto', args: { url: `${ORIGIN}/` }, locators: {} };
     const r = one([away, back, go]);
     expect(markers(r.source)).toEqual([3]);
@@ -283,7 +302,7 @@ describe('noise pruning only where the recording proves a no-op', () => {
   });
 
   it('(b) near misses are kept: a goto somewhere else, or a read on the page between', () => {
-    const away = click([css('header a.licenses')], { urlPattern: `${ORIGIN}/licenses` });
+    const away = click([role('link', 'Licenses')], { urlPattern: `${ORIGIN}/licenses` });
     const elsewhere: SkillStep = { tool: 'goto', args: { url: `${ORIGIN}/hardware/1` }, locators: {} };
     expect(markers(one([away, elsewhere]).source)).toEqual([1, 2]);
     const back: SkillStep = { tool: 'goto', args: { url: `${ORIGIN}/` }, locators: {} };
@@ -293,11 +312,88 @@ describe('noise pruning only where the recording proves a no-op', () => {
   });
 });
 
+describe('writing it the way a person would', () => {
+  const linkPoint = { ...point, role: 'link', tag: 'a' };
+  const navLink = (sel: string, to: string, extra: Partial<SkillStep> = {}): SkillStep => ({ ...click([css(sel), linkPoint], { urlPattern: `${ORIGIN}${to}` }), ...extra });
+  const name: SkillStep = { tool: 'fill', args: { value: 'x' }, locators: { target: [role('textbox', 'Name')] } };
+  const escape: SkillStep = { tool: 'press', args: { key: 'Escape' }, locators: {} };
+  const one = (steps: SkillStep[], url = '/') => emit(flow([fstep('01-a', [seg('s_aaaaaa', url, steps)])]));
+  const markers = (source: string) => [...source.matchAll(/\/\/ @step 01-a s_aaaaaa\/(\d+)/g)].map((m) => Number(m[1]));
+  const body = (source: string) => lines(source.slice(source.indexOf('async function step01A')));
+
+  it('(1) writes a click on an unlabelled link to a literal page as a visit, with no url wait', () => {
+    const r = one([navLink('nav > li:nth-of-type(2) > a', '/hardware'), name]);
+    expect(body(r.source).slice(2, 5)).toEqual(['// @step 01-a s_aaaaaa/1', '// recorded as a click on an unlabelled link (nav > li:nth-of-type(2) > a)', "await visit(page, '/hardware');"]);
+    expect(r.source).not.toContain('toHaveURL');
+    expect(r.warnings).toContain('01-a: s_aaaaaa/1 recorded as a click on an unlabelled link (nav > li:nth-of-type(2) > a) — written as a visit to where it went');
+    // No point at all, or a point with no role, is still an unlabelled link.
+    expect(one([{ ...click([css('a.x')], { urlPattern: `${ORIGIN}/hardware` }) }, name]).source).toContain("await visit(page, '/hardware');");
+    expect(one([{ ...click([css('a.x'), point], { urlPattern: `${ORIGIN}/hardware` }) }, name]).source).toContain("await visit(page, '/hardware');");
+  });
+
+  it('(1) near misses stay clicks: a named target, a run-dependent url, no navigation, another effect, a non-link point', () => {
+    const stays = (s: SkillStep, url = '/') => expect(one([s, name], url).source).not.toContain('await visit(');
+    stays({ ...click([css('nav a'), role('link', 'Assets'), linkPoint], { urlPattern: `${ORIGIN}/hardware` }) });
+    stays({ ...click([css('role=link[name="Assets"]'), linkPoint], { urlPattern: `${ORIGIN}/hardware` }) });
+    stays(navLink('nav a', '/hardware/:id'));
+    stays(navLink('nav a', '/hardware/{{v1}}'));
+    stays(navLink('nav a', '/hardware'), '/hardware');
+    stays(navLink('nav a', '/hardware', { expect: { urlPattern: `${ORIGIN}/hardware`, alertContains: 'Saved' } }));
+    stays(navLink('nav a', '/hardware', { mints: { at: 'p1' } }));
+    stays({ ...click([css('div.tile'), { ...point, role: 'button', tag: 'div' }], { urlPattern: `${ORIGIN}/hardware` }) });
+  });
+
+  it('(2) drops a visit followed at once by another visit; anything between keeps it', () => {
+    const goto = (to: string): SkillStep => ({ tool: 'goto', args: { url: `${ORIGIN}${to}` }, locators: {} });
+    const r = one([goto('/a'), goto('/b'), name]);
+    expect(markers(r.source)).toEqual([2, 3]);
+    expect(r.warnings).toContain('01-a: left out s_aaaaaa/1 (a visit followed at once by another visit)');
+    expect(markers(one([navLink('nav a', '/licenses'), goto('/b'), name]).source)).toEqual([2, 3]);
+    // near misses: an action, a wait or a kept read between
+    expect(markers(one([goto('/a'), name, goto('/b')]).source)).toEqual([1, 2, 3]);
+    const wait: SkillStep = { tool: 'wait_for', args: { state: 'visible' }, locators: { target: [css('h1')] } };
+    expect(markers(one([goto('/a'), wait, goto('/b')]).source)).toEqual([1, 2, 3]);
+    const read: SkillStep = { tool: 'read', args: { what: 'url' }, label: 'u', locators: {} };
+    const kept = emit(flow([fstep('01-a', [seg('s_aaaaaa', '/', [goto('/a'), read, goto('/b')])], { outputs: ['u'] })]));
+    expect(markers(kept.source)).toEqual([1, 2, 3]);
+  });
+
+  it('(3) drops the menu opener whose next step became a visit — and only then', () => {
+    const opener = click([css('nav li:nth-of-type(9) > a'), linkPoint], { addedContains: ['- link "Asset"', '- link "License"'] });
+    const r = one([opener, navLink('nav li:nth-of-type(9) li > a', '/hardware/create'), name], '/hardware');
+    expect(markers(r.source)).toEqual([2, 3]);
+    expect(r.warnings).toContain('01-a: left out s_aaaaaa/1 (opened a menu only for the step after it, which is now a visit)');
+    // near misses: the next step is still a click (named), or the opener added more than a menu
+    expect(markers(one([opener, click([role('link', 'Asset')], { urlPattern: `${ORIGIN}/hardware/create` }), name], '/hardware').source)).toEqual([1, 2, 3]);
+    const panel = click([css('#more')], { addedContains: ['- link "Asset"', '- textbox "Notes"'] });
+    expect(markers(one([panel, navLink('nav a', '/hardware/create'), name], '/hardware').source)).toEqual([1, 2, 3]);
+  });
+
+  it('(4) drops a dropdown opened and dismissed with Escape, choosing nothing', () => {
+    const dropdown = click([css('#checkout_form div.redirect')], { addedContains: ['- listbox "Return to all Assets Go to Asset"', '- option "Return to all Assets"', '- option "Go to Asset"'] });
+    const submit = click([role('button', 'Checkout')], { urlPattern: `${ORIGIN}/hardware` });
+    const r = one([name, dropdown, escape, submit], '/checkout');
+    expect(markers(r.source)).toEqual([1, 4]);
+    expect(r.warnings).toContain('01-a: left out s_aaaaaa/2, s_aaaaaa/3 (opened a dropdown and dismissed it with Escape, choosing nothing)');
+  });
+
+  it('(4) near misses are kept: Escape after a fill (a date picker), a pick after the Escape, more than a listbox, nothing dismissed', () => {
+    const dropdown = click([css('.select2-container')], { addedContains: ['- listbox "Sizes"', '- option "Large"'] });
+    const date: SkillStep = { tool: 'fill', args: { value: '2026-03-15' }, locators: { target: [css('input[name="purchase_date"]')] }, expect: { addedContains: ['- row "March 2026"'] } };
+    const submit = click([role('button', 'Save')], { urlPattern: `${ORIGIN}/done` });
+    expect(markers(one([date, escape, submit], '/form').source)).toEqual([1, 2, 3]);
+    expect(markers(one([dropdown, escape, click([role('option', 'Large')]), submit], '/form').source)).toEqual([1, 2, 3, 4]);
+    const panel = click([css('.select2-container')], { addedContains: ['- listbox "Sizes"', '- textbox "Search"'] });
+    expect(markers(one([panel, escape, submit], '/form').source)).toEqual([1, 2, 3]);
+    expect(markers(one([dropdown, name, escape, submit], '/form').source)).toEqual([1, 2, 3, 4]);
+  });
+});
+
 describe('every recorded tool', () => {
   const steps: SkillStep[] = [
-    { tool: 'goto', args: { url: `${ORIGIN}/items?tab=all` }, locators: {} },
     { tool: 'goto', args: { url: 'https://other.example/login' }, locators: {} },
     { tool: 'back', args: {}, locators: {} },
+    { tool: 'goto', args: { url: `${ORIGIN}/items?tab=all` }, locators: {} },
     { tool: 'fill', args: { value: '{{v1}}' }, locators: { target: [{ kind: 'label', label: 'Name' }] } },
     { tool: 'type', args: { text: 'hello', delay_ms: 20 }, locators: { target: [{ kind: 'placeholder', placeholder: 'Search' }] } },
     { tool: 'press', args: { key: 'Enter', target: 'x' }, locators: { target: [{ kind: 'testid', attr: 'data-testid', value: 'search' }] } },

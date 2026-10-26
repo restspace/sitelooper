@@ -21,8 +21,8 @@ export interface StepContext { vars: Vars; env: Env; outputs: Outputs }
 export interface FlowRun { drift: string[]; warnings: string[]; echoed: string[] }
 export interface RunOptions { startUrl?: string; run?: FlowRun }
 
-/** 30 s plus 10 s for each of the flow's 37 recorded actions. */
-export const BUDGET_MS = 400000;
+/** 30 s plus 10 s for each of the flow's 32 recorded actions. */
+export const BUDGET_MS = 350000;
 /** The browser the flow was recorded in; the generated .spec.ts applies it with test.use(). */
 export const RECORDED_USE = {"viewport":{"width":1280,"height":900}};
 /** Where the app was when this flow was recorded: used only when neither startUrl nor the project baseURL says. */
@@ -84,16 +84,10 @@ async function step01Signin(page: Page, { env, outputs }: StepContext): Promise<
 
 /** Create an asset named '{{runid}} E2E Laptop' of model 'E2E Laptop Model' with status 'Ready to Deploy', default location 'E2E Office' and purchase date 2026-03-15. Save it, verify its asset page opens, and report its asset tag. */
 async function step02Create(page: Page, { vars, outputs }: StepContext): Promise<void> {
-  // s_499c57 — recorded on /
-  // @step 02-create s_499c57/1
-  await page.locator('header > nav > div:nth-of-type(2) > ul > li:nth-of-type(2) > a').click();
-  await expect(page).toHaveURL(/\/hardware$/);
   // s_50255e — recorded on /hardware
-  // @step 02-create s_50255e/3
-  await page.locator('header > nav > div:nth-of-type(2) > ul > li:nth-of-type(9) > a').click();
   // @step 02-create s_50255e/4
-  await page.locator('div:nth-of-type(2) > ul > li:nth-of-type(9) > ul > li:nth-of-type(1) > a').click();
-  await expect(page).toHaveURL(/\/hardware\/create$/);
+  // recorded as a click on an unlabelled link (div:nth-of-type(2) > ul > li:nth-of-type(9) > ul > li:nth-of-type(1) > a)
+  await visit(page, '/hardware/create');
   // s_bfea11 — recorded on /hardware/create
   // @step 02-create s_bfea11/1
   await page.locator('#optional_info').click();
@@ -149,18 +143,10 @@ async function step03Verify(page: Page, { vars, outputs }: StepContext): Promise
   await page.getByRole('option', { name: 'E2E Assignee (e2e-assignee)', exact: true }).click();
   // @step 03-verify s_d9fe3e/4
   await page.getByRole('textbox', { name: 'Notes', exact: true }).fill(`${vars.runid} checkout`);
-  // @step 03-verify s_d9fe3e/5
-  await page.locator('#checkout_form > div > div:nth-of-type(3) > div > div:nth-of-type(2) > div').click();
-  // @step 03-verify s_d9fe3e/6
-  await page.keyboard.press('Escape');
   // @step 03-verify s_d9fe3e/7
   await page.getByRole('button', { name: 'Checkout', exact: true }).click();
   await expect(page).toHaveURL(/\/hardware$/);
   await expect(page.getByText('Asset checked out successfully.')).toBeVisible();
-  // s_130a91 — recorded on /hardware
-  // @step 03-verify s_130a91/1
-  await page.locator('header > nav > div:nth-of-type(2) > ul > li:nth-of-type(3) > a').click();
-  await expect(page).toHaveURL(/\/licenses$/);
   // s_ead73d — recorded on /licenses
   // @step 03-verify s_ead73d/1
   await visit(page, `/hardware/${hardwareId}`);

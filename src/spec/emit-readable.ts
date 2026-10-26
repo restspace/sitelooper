@@ -578,6 +578,8 @@ interface Planned {
   pruned?: string;
   /** A read this file emits. */
   keptRead?: boolean;
+  /** A click on an unlabelled link, written as a visit to where it went (rule 1). */
+  visit?: { url: string; selector: string };
 }
 
 const landing = (s: SkillStep): string | undefined => (s.tool === 'goto' && typeof s.args?.url === 'string' ? s.args.url : s.expect?.urlPattern);
@@ -614,20 +616,114 @@ function wentAndCameBack(a: Planned, b: Planned): boolean {
   return norm(b.step.args.url) === norm(a.before);
 }
 
-function prune(planned: Planned[]): void {
-  const live = () => planned.filter((p) => !p.pruned && (!isRead(p.step.tool) || p.keptRead));
-  let changed = true;
-  while (changed) {
-    changed = false;
-    const seq = live();
-    for (let i = 0; i + 1 < seq.length; i++) {
-      const [a, b] = [seq[i], seq[i + 1]];
-      const rule = toggledBack(a, b) ? 'toggle opened and closed again' : wentAndCameBack(a, b) ? 'navigated away and straight back' : null;
-      if (!rule) continue;
-      a.pruned = b.pruned = rule;
-      changed = true;
-      break;
+/** A candidate that names its element in words a reader recognises (a role selector counts). */
+const named = (c: LocatorCandidate) =>
+  c.kind === 'role' || c.kind === 'label' || c.kind === 'placeholder' || c.kind === 'testid' || c.kind === 'text' || c.kind === 'scoped' || ((c.kind === 'css' || c.kind === 'id') && roleSelector(c.selector) !== null);
+
+/** A url with nothing run-dependent in it: no `{{slot}}`, no `:id`/`:var`, no wildcard. */
+const literalUrl = (url: string) => !/\{\{|\/:(?:id|var)(?=[/?#]|$)|\*/.test(url);
+
+/**
+ * (1) A click on an unlabelled link that went to a literal page: no candidate
+ * names the element (css, id, a recorded point only), the point — when there
+ * is one — is a link, an `<a>` or has no role, the recorded effect is a
+ * navigation to a url with nothing run-dependent in it, and the click did
+ * nothing else the steps after it could depend on (no alert, no mint, no
+ * minted value, no page effect). Going to that url is the same step, readably.
+ */
+function anonymousLink(p: Planned): Planned['visit'] | undefined {
+  if (p.step.tool !== 'click' || p.step.contexts?.target?.frame?.length) return undefined;
+  const chain = (p.step.locators?.target ?? []).filter((c) => knownCandidate(c));
+  if (!chain.length || chain.some(named)) return undefined;
+  const pt = chain.find((c) => c.kind === 'point');
+  if (pt && pt.kind === 'point' && !(pt.role === 'link' || pt.tag === 'a' || pt.role === null || pt.role === undefined)) return undefined;
+  const to = p.step.expect?.urlPattern;
+  if (!to || !literalUrl(to) || p.before === null || samePage(p.before, to)) return undefined;
+  if (sideEffects(p) || p.step.expect?.removedContains?.length) return undefined;
+  const sel = chain.find((c) => c.kind === 'css' || c.kind === 'id');
+  return { url: to, selector: sel && (sel.kind === 'css' || sel.kind === 'id') ? sel.selector : 'a recorded position' };
+}
+
+const MENU_LINE = /^- (?:link|menuitem|menuitemcheckbox|menuitemradio|menu|listbox|option|button)\b/;
+const LISTBOX_LINE = /^- (?:listbox|option)\b/;
+const isGoto = (p: Planned) => p.step.tool === 'goto' || Boolean(p.visit);
+/** A click whose recorded effect stayed on its page. */
+const stayed = (p: Planned) => !p.step.expect?.urlPattern || (p.before !== null && samePage(p.before, p.step.expect.urlPattern));
+
+/**
+ * (3) An opener left with nothing to open for: a click that stayed on its
+ * page, added only menu or link lines, and whose next step — the one that
+ * acted in what it opened — is now a visit or was left out.
+ */
+function orphanedOpener(a: Planned, next: Planned | undefined): boolean {
+  if (!next || a.step.tool !== 'click' || a.visit || !stayed(a) || sideEffects(a)) return false;
+  const added = a.step.expect?.addedContains ?? [];
+  if (!added.length || !added.every((l) => MENU_LINE.test(l))) return false;
+  return Boolean(next.visit || (next.pruned && next.pruned !== 'detour'));
+}
+
+/**
+ * (4) A dropdown opened and dismissed: a click that stayed on its page and
+ * added only a listbox and its options, then Escape (no target), and the step
+ * after does not act on an option.
+ */
+function dismissedDropdown(a: Planned, b: Planned, after: Planned | undefined): boolean {
+  if (a.step.tool !== 'click' || a.visit || !stayed(a) || sideEffects(a)) return false;
+  const added = a.step.expect?.addedContains ?? [];
+  if (!added.length || !added.every((l) => LISTBOX_LINE.test(l))) return false;
+  if (b.step.tool !== 'press' || b.step.args?.key !== 'Escape' || b.step.args?.target || (b.step.locators?.target ?? []).length) return false;
+  const inList = (after?.step.locators?.target ?? []).some((c) => (c.kind === 'role' && c.role === 'option') || ((c.kind === 'css' || c.kind === 'id') && /option|results/.test(c.selector)));
+  return !inList;
+}
+
+/** (2) A visit straight after another visit: the first one's page is never used. */
+function deadVisit(a: Planned, b: Planned): boolean {
+  return isGoto(a) && isGoto(b) && !sideEffects(a);
+}
+
+/**
+ * Noise pruning, only on recorded proof, within one flow step. Rule (1)
+ * rewrites first; then, to a fixed point, the pair rules (toggle, round trip,
+ * orphaned opener, dismissed dropdown) and — only when none of them applies —
+ * the dead visit, so an opener between two visits goes before the first visit.
+ * Returns each drop, in the order it was made.
+ */
+function prune(planned: Planned[]): string[] {
+  const notes: string[] = [];
+  const where = (p: Planned) => `${p.segment.id}/${p.index}`;
+  const emitted = (p: Planned) => (!isRead(p.step.tool) || p.keptRead) && p.step.tool !== 'screenshot';
+  for (const p of planned) {
+    if (p.pruned || !emitted(p)) continue;
+    const visit = anonymousLink(p);
+    if (visit) {
+      p.visit = visit;
+      notes.push(`${where(p)} recorded as a click on an unlabelled link (${visit.selector}) — written as a visit to where it went`);
     }
+  }
+  const drop = (ps: Planned[], rule: string) => {
+    for (const p of ps) p.pruned = rule;
+    notes.push(`left out ${ps.map(where).join(', ')} (${rule})`);
+  };
+  for (;;) {
+    const seq = planned.filter((p) => !p.pruned && emitted(p));
+    let fired = false;
+    for (let i = 0; i < seq.length && !fired; i++) {
+      const [a, b, c] = [seq[i], seq[i + 1], seq[i + 2]];
+      // The step after `a` as recorded, whatever has been done to it since.
+      const next = planned.slice(planned.indexOf(a) + 1).find(emitted);
+      if (b && !a.visit && !b.visit && toggledBack(a, b)) drop([a, b], 'toggle opened and closed again: the recording shows it changed nothing');
+      else if (b && !b.visit && wentAndCameBack(a, b)) drop([a, b], 'navigated away and straight back with nothing done between');
+      else if (orphanedOpener(a, next)) drop([a], 'opened a menu only for the step after it, which is now a visit');
+      else if (b && dismissedDropdown(a, b, c)) drop([a, b], 'opened a dropdown and dismissed it with Escape, choosing nothing');
+      else continue;
+      fired = true;
+    }
+    for (let i = 0; i + 1 < seq.length && !fired; i++) {
+      if (!deadVisit(seq[i], seq[i + 1])) continue;
+      drop([seq[i]], 'a visit followed at once by another visit');
+      fired = true;
+    }
+    if (!fired) return notes;
   }
 }
 
@@ -752,6 +848,9 @@ function emitStep(scope: Scope, p: Planned, message: string | null, outputs: rea
   const out: string[] = [`// @step ${where}`];
   scope.file.actions += 1;
   const s = (name: string) => String(args[name] ?? '');
+  if (p.visit) {
+    return { lines: [...out, `// recorded as a click on an unlabelled link (${commentText(p.visit.selector)})`, gotoLine(scope, p.visit.url)] };
+  }
   if (!KNOWN_TOOLS.has(step.tool)) {
     return { lines: [...out, ...unsupported(scope, where, `uses tool ${step.tool}, which has no plain Playwright form`, `re-record ${stepId}, or use the runtime style for this flow`)] };
   }
@@ -1029,11 +1128,7 @@ function emitFlowStep(file: FileState, step: SpecStep, fn: string): StepCode {
       else if (s.tool === 'back') before = null;
     }
   }
-  prune(planned);
-  const pruned = planned.filter((p) => p.pruned && p.pruned !== 'detour');
-  if (pruned.length) {
-    file.warnings.push(`${step.id}: left out ${pruned.map((p) => `${p.segment.id}/${p.index}`).join(', ')} (${[...new Set(pruned.map((p) => p.pruned))].join('; ')}: the recording shows they changed nothing)`);
-  }
+  for (const note of prune(planned)) file.warnings.push(`${step.id}: ${note}`);
   for (const segment of step.segments) {
     if (planned.some((p) => p.segment === segment && p.pruned === 'detour')) {
       file.warnings.push(`${step.id}: segment ${segment.id} is a detour the recording took when a goto was redirected; the readable style does not emit detours`);
