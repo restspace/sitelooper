@@ -14,7 +14,7 @@ OUT="$REPO/bench/results/$BOX-snipeit-e2e"
 PROJ="/tmp/$BOX/tests/e2e"
 SL="node $REPO/bin/sitelooper.js"
 mkdir -p "$OUT" "$PROJ"
-log() { echo "[readable] $*" | tee -a "$OUT/steps.log"; }
+log() { echo "[readable $(date -u +%H:%M:%S)] $*" | tee -a "$OUT/steps.log"; }
 
 export E2E_ADMIN_USERNAME=e2e-admin
 export E2E_ADMIN_PASSWORD=e2e-ci-password
@@ -43,14 +43,22 @@ PLAIN=0
 for i in 1 2 3 4 5; do
   bash "$HERE/seed.sh" >>"$OUT/seed.log" 2>&1
   t0=$(date +%s)
-  RUNID="plain$i-$(date +%s)" npx playwright test --reporter=list >"$OUT/03-plain-$i.txt" 2>&1; rc=$?
+  RUNID="plain$i-$(date +%s)" npx playwright test --reporter=list --trace on >"$OUT/03-plain-$i.txt" 2>&1; rc=$?
   log "plain playwright run $i exit $rc in $(( $(date +%s) - t0 ))s (started $(date -u -d @$t0 +%H:%M:%S))"; [ $rc -ne 0 ] && PLAIN=$rc
   # A failed run's trace (network, DOM snapshots) and error context: the evidence for what the page did.
   [ $rc -ne 0 ] && cp -r test-results "$OUT/03-plain-$i-test-results" 2>/dev/null
+  # Every run, pass or fail: each /api/ call's status and X-RateLimit-Remaining, from the trace.
+  python3 "$HERE/api-summary.py" trace $(find test-results -name trace.zip) >"$OUT/03-plain-$i-api.txt" 2>&1
+  log "run $i api: $(sed -n 2p "$OUT/03-plain-$i-api.txt")"
 done
 
 # What the app saw: Apache's access lines (status codes of the UI's own /api/v1 calls) and Laravel's log.
 docker logs --timestamps snipeit-e2e-app-1 >"$OUT/app-container.log" 2>&1
+# Apache writes access lines to a file in this image, not to the container's output: find and copy it.
+docker exec snipeit-e2e-app-1 sh -c 'grep -rhE "^[[:space:]]*CustomLog" /etc/apache2 2>/dev/null; ls -la /var/log/apache2 2>&1' >"$OUT/apache-log-config.txt" 2>&1
+docker exec snipeit-e2e-app-1 sh -c 'cat /var/log/apache2/*access*.log 2>/dev/null' >"$OUT/apache-access.log" 2>&1
+log "apache access lines: $(wc -l <"$OUT/apache-access.log")"
+python3 "$HERE/api-summary.py" access "$OUT/apache-access.log" >"$OUT/apache-api-per-minute.txt" 2>&1
 docker exec snipeit-e2e-app-1 sh -c 'tail -n 400 /var/www/html/storage/logs/laravel.log 2>/dev/null' >"$OUT/laravel-tail.log" 2>&1
 mkdir -p "$OUT/tests-e2e"
 tar --exclude=node_modules --exclude=test-results --exclude=playwright-report -cf - . | tar -xf - -C "$OUT/tests-e2e"
