@@ -1,0 +1,56 @@
+
+Running 1 test using 1 worker
+
+[1/1] [chromium] › specs/asset-checkout.spec.ts:9:5 › asset-checkout
+[chromium] › specs/asset-checkout.spec.ts:9:5 › asset-checkout
+[sitelooper step] 01-signin
+
+[sitelooper drift] 02-create s_006a45/1 target: none of 3 recorded locators resolved; navigated to the step's recorded destination instead (http://127.0.0.1:8000/hardware/create)
+
+  1) [chromium] › specs/asset-checkout.spec.ts:9:5 › asset-checkout › 02-create: Create an asset named '{{runid}} E2E Laptop' of model 'E2E Laptop Model' with status 'Ready to Deploy', default location 'E2E Office' and purchase date 2026-03-15. Save it, verify its asset page opens, and report its asset tag. 
+
+    Error: 02-create s_c4179d/1: the recorded page change did not appear
+
+    02-create s_c4179d/1: the recorded page change did not appear
+
+    expect(received).toBeNull()
+
+    Received: "after step 02-create s_c4179d/1 none of the 1 recorded page change(s) appeared (e.g. \"- listbox \\\"\\\"\") — the step ran but did not have its recorded effect"
+
+    Call Log:
+    - Timeout 5000ms exceeded while waiting on the predicate
+
+       at asset-checkout.flow.ts:14504
+
+      14502 |       { timeout: EXPECT_WAIT_MS, message: `${ctx.tag}: the recorded page change did not appear` },
+      14503 |     )
+    > 14504 |     .toBeNull();
+            |      ^
+      14505 |   for (const warning of last.warnings) console.log(`[sitelooper warn] ${warning}`);
+      14506 |   if (last.unobserved) console.log(`[sitelooper unobserved] ${ctx.tag}: the page could not be captured, or observed in full, after the action`);
+      14507 |   return last;
+        at expectChanges (/tmp/sie2e1/tests/e2e/specs/asset-checkout.flow.ts:14504:6)
+        at Object.verify (/tmp/sie2e1/tests/e2e/specs/asset-checkout.flow.ts:15001:36)
+        at runStepLifecycle (/tmp/sie2e1/tests/e2e/specs/asset-checkout.flow.ts:10478:24)
+        at Object.02-create (/tmp/sie2e1/tests/e2e/specs/asset-checkout.flow.ts:14949:9)
+        at /tmp/sie2e1/tests/e2e/specs/asset-checkout.flow.ts:17389:7
+        at runFlow (/tmp/sie2e1/tests/e2e/specs/asset-checkout.flow.ts:17388:5)
+        at /tmp/sie2e1/tests/e2e/specs/asset-checkout.spec.ts:14:21
+
+    attachment #2: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    [sitelooper drift] 02-create s_006a45/1 target: none of 3 recorded locators resolved; navigated to the step's recorded destination instead (http://127.0.0.1:8000/hardware/create)
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: specs/.sitelooper-check-pk23bJ/test-results/asset-checkout-asset-checkout-chromium/error-context.md
+
+    attachment #4: trace (application/zip) ─────────────────────────────────────────────────────────
+    specs/.sitelooper-check-pk23bJ/test-results/asset-checkout-asset-checkout-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace specs/.sitelooper-check-pk23bJ/test-results/asset-checkout-asset-checkout-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+
+  1 failed
+    [chromium] › specs/asset-checkout.spec.ts:9:5 › asset-checkout ─────────────────────────────────

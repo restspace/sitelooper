@@ -1,0 +1,90 @@
+{
+  "report": {
+    "summary": "The condition holds on the current page. On http://127.0.0.1:8000/hardware/1 the page heading reads \"Assets  demo E2E Laptop #E2E-00001 - E2E Laptop Model  Details\", and the checked-out-to link in the asset's summary block reads exactly \"E2E Assignee\" and is visible. Asserted with wait_for: text_equals \"E2E Assignee\" on the link, visible on the same link, and text_contains \"demo E2E Laptop\" on the h1.",
+    "status": "success",
+    "evidence": {
+      "url": "http://127.0.0.1:8000/hardware/1",
+      "values": {
+        "checked_out_to_link_text": "E2E Assignee",
+        "asset_heading": "Assets  demo E2E Laptop #E2E-00001 - E2E Laptop Model  Details",
+        "asset_tag": "E2E-00001"
+      }
+    }
+  },
+  "turns": 3,
+  "usage": {
+    "promptTokens": 77050,
+    "completionTokens": 975,
+    "cachedTokens": 54400
+  },
+  "timing": {
+    "totalMs": 10613,
+    "modelMs": 10229,
+    "toolMs": 178,
+    "modelCalls": 3,
+    "turns": [
+      {
+        "modelMs": 4293,
+        "toolMs": 117,
+        "tools": [
+          "wait_for",
+          "wait_for"
+        ]
+      },
+      {
+        "modelMs": 2347,
+        "toolMs": 61,
+        "tools": [
+          "wait_for"
+        ]
+      },
+      {
+        "modelMs": 3589,
+        "toolMs": 0,
+        "tools": []
+      }
+    ]
+  },
+  "screenshots": [],
+  "skill": {
+    "listed": [
+      "s_089d13"
+    ],
+    "stepsReplayed": 0,
+    "stepsTotal": 0,
+    "repaired": false,
+    "refused": false,
+    "fallthroughs": 0,
+    "similarity": null,
+    "deterministicActions": 0,
+    "totalActions": 3
+  },
+  "assertions": [
+    {
+      "state": "text_equals",
+      "target": "link \"E2E Assignee\"",
+      "text": "E2E Assignee",
+      "held": true
+    },
+    {
+      "state": "visible",
+      "target": "link \"E2E Assignee\"",
+      "held": true
+    },
+    {
+      "state": "text_contains",
+      "target": "h1",
+      "text": "demo E2E Laptop",
+      "held": true
+    }
+  ],
+  "model": "deepseek/deepseek-v4.1-flash",
+  "fallbackModel": "z-ai/glm-5.3",
+  "learned": {
+    "compiled": "s_3133ba"
+  },
+  "schemaVersion": 1,
+  "stage": "assert",
+  "outcome": "success",
+  "nextActions": []
+}
