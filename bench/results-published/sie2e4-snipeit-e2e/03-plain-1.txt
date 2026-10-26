@@ -1,0 +1,54 @@
+
+Running 1 test using 1 worker
+
+[sitelooper step] 01-signin
+  ✘  1 [chromium] › specs/asset-checkout.spec.ts:9:5 › asset-checkout (32.3s)
+
+
+  1) [chromium] › specs/asset-checkout.spec.ts:9:5 › asset-checkout › 02-create: Create an asset named '{{runid}} E2E Laptop' of model 'E2E Laptop Model' with status 'Ready to Deploy', default location 'E2E Office' and purchase date 2026-03-15. Save it, verify its asset page opens, and report its asset tag. 
+
+    Error: expect(locator).toBeVisible() failed
+
+    Locator: getByRole('option', { name: 'E2E Laptops - E2E Manufacturer E2E Laptop Model', exact: true })
+    Expected: visible
+    Timeout: 3000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toBeVisible" getByRole('option', { name: 'E2E Laptops - E2E Manufacturer E2E Laptop Model', exact: true }) with timeout 3000ms
+      - waiting for getByRole('option', { name: 'E2E Laptops - E2E Manufacturer E2E Laptop Model', exact: true })
+
+
+    Call Log:
+    - Timeout 30000ms exceeded while waiting on the predicate
+
+       at asset-checkout.flow.ts:94
+
+      92 |     }
+      93 |     await expect(option).toBeVisible({ timeout: 3_000 });
+    > 94 |   }).toPass({ timeout: 30_000 });
+         |      ^
+      95 |   await option.click();
+      96 | }
+      97 |
+        at pick (/tmp/sie2e4/tests/e2e/specs/asset-checkout.flow.ts:94:6)
+        at step02Create (/tmp/sie2e4/tests/e2e/specs/asset-checkout.flow.ts:127:9)
+        at runFlow (/tmp/sie2e4/tests/e2e/specs/asset-checkout.flow.ts:51:3)
+        at /tmp/sie2e4/tests/e2e/specs/asset-checkout.spec.ts:14:21
+
+    attachment #1: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/asset-checkout-asset-checkout-chromium/error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results/asset-checkout-asset-checkout-chromium/trace.zip
+    Usage:
+
+        npx playwright show-trace test-results/asset-checkout-asset-checkout-chromium/trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  1 failed
+    [chromium] › specs/asset-checkout.spec.ts:9:5 › asset-checkout ─────────────────────────────────
