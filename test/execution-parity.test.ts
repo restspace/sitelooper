@@ -83,6 +83,8 @@ interface Outcome {
   warnings?: string[];
   /** The artifact's outputs a later step may use but the run never observed (run.referenceOnly, step prefix stripped). */
   referenceOnly?: string[];
+  /** Shadow findings (replay's shadow; the artifact's `[sitelooper shadow]` lines, `<step> <segment>: ` prefix stripped). */
+  shadow?: string[];
 }
 
 d('execution parity (daemon replay vs emitted artifact)', () => {
@@ -266,7 +268,7 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
       // No replay at all means the tool refused before running: surface that
       // rather than letting it read as an ordinary failure.
       if (!replay) return { ok: false, reason: `run_skill returned no replay: ${out.result}`, outputs: {}, echoed: [] };
-      return { ok: replay.ok, reason: replay.reason ?? null, outputs: replay.values, echoed: replay.echoedValues, created: replay.created, drift: replay.misses.filter((m) => m.used).map((m) => m.step), outcome: replay.outcome, warnings: replay.warnings };
+      return { ok: replay.ok, reason: replay.reason ?? null, outputs: replay.values, echoed: replay.echoedValues, created: replay.created, drift: replay.misses.filter((m) => m.used).map((m) => m.step), outcome: replay.outcome, warnings: replay.warnings, shadow: replay.shadow };
     } finally {
       await session.close();
     }
@@ -305,10 +307,12 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
     // The artifact's warnings go to the console — on STDOUT, so a killed run
     // still carries them (src/spec/emit.ts logWarning); keep them for the outcome.
     const warnings: string[] = [];
+    const shadow: string[] = [];
     const log = console.log;
     console.log = (...args: unknown[]) => {
       const line = args.map(String).join(' ');
       if (line.startsWith('[sitelooper warn] ')) warnings.push(line.slice('[sitelooper warn] '.length));
+      if (line.startsWith('[sitelooper shadow] ')) shadow.push(line.replace(/^\[sitelooper shadow\] \S+ \S+: /, ''));
       log(...args);
     };
     try {
@@ -320,7 +324,7 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
         await mod.steps[id](page, params, run.outputs, run);
       }
       const referenceOnly = ((run as { referenceOnly?: string[] }).referenceOnly ?? []).map((key) => key.slice(key.indexOf('.') + 1));
-      return { ok: true, reason: null, outputs: run.outputs as Record<string, string>, echoed: run.echoed.map((key) => key.slice(key.indexOf('.') + 1)), created: run.created, drift: [...run.drift], warnings, referenceOnly };
+      return { ok: true, reason: null, outputs: run.outputs as Record<string, string>, echoed: run.echoed.map((key) => key.slice(key.indexOf('.') + 1)), created: run.created, drift: [...run.drift], warnings, referenceOnly, shadow };
     } catch (err) {
       return { ok: false, reason: err instanceof Error ? err.message : String(err), outputs: {}, echoed: [], warnings };
     } finally {
@@ -1050,6 +1054,33 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
       };
       expect(replay.values).toEqual(want);
       expect(published(emitted)).toEqual(want);
+    }, 120_000);
+
+    it('both runners report the same read shadow finding, and only for a fixed template the read contradicts', async () => {
+      // ticket_reference reads "RD-1016"; its template is this run's ref then
+      // " Closed": fixed for the run, and contradicted by the read.
+      const shadowValues = { ticket_reference: '{{v1}} Closed' };
+      const skill: Skill = { ...ticketSkill(), reportTemplate: { summary: '', values: shadowValues } };
+      const flow = ticketFlow();
+      flow.steps[0].segments[0].report = { summary: '', values: shadowValues };
+      reset(13);
+      const replay = await replayOf(skill, params);
+      reset(13);
+      const emitted = await emittedOf(flow, params);
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      const want = ['[shadow:read] step 1: label ticket_reference read "RD-1016", recorded template "{{v1}} Closed" = "RD-1016 Closed" this run'];
+      expect(replay.shadow).toEqual(want);
+      expect(emitted.shadow).toEqual(want);
+
+      const quiet = { ticket_reference: '{{v1}}' };
+      const agreeing: Skill = { ...ticketSkill(), reportTemplate: { summary: '', values: quiet } };
+      const agreeingFlow = ticketFlow();
+      agreeingFlow.steps[0].segments[0].report = { summary: '', values: quiet };
+      reset(13);
+      expect((await replayOf(agreeing, params)).shadow).toEqual([]);
+      reset(13);
+      expect((await emittedOf(agreeingFlow, params)).shadow).toEqual([]);
     }, 120_000);
 
     it("neither runner publishes the recording's date or count once the app has moved on", async () => {

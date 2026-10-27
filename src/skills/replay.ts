@@ -61,6 +61,7 @@ import { appliedPickCandidates, armKeyboardPick, closeBeforeReopen, keyboardPick
 import { alreadyAddedLines, positionalClickVerdict, recordedAccessibleName } from '../execution/positional.js';
 import { mayNavigateToDestination, navigateToDestination, textHeldElsewhere } from '../execution/recover.js';
 import { assertFailure, assertFailureKind, type AssertFailureKind } from '../execution/assert.js';
+import { readShadowLines, shadowEnabled, shadowReadLabels, shadowReadTemplates } from '../execution/shadow.js';
 import { CONTEXT_CONTRACT, contractOf, contractVerdict, isVerified, originOf, stepsCarryContext, type Skill, type SkillStep } from './store.js';
 import { armPageEffect, describeFramePath, pageIndexVerdict, rootFor, stepEffect, type Root } from '../execution/context.js';
 
@@ -111,9 +112,10 @@ export interface ReplayOptions {
    * question a missing param asks: does a step of it act by that slot
    * (slotActs)? A slot unused here but typed by a later segment must refuse
    * the chain before its first step, not strand it part-way. Absent: this
-   * segment alone.
+   * segment alone. Its report templates (the chain's sits on its last
+   * segment) are what the read shadow rule judges this segment's reads by.
    */
-  chain?: ReadonlyArray<Pick<Skill, 'params' | 'preconditions'>>;
+  chain?: ReadonlyArray<Pick<Skill, 'params' | 'preconditions'> & Partial<Pick<Skill, 'reportTemplate'>>>;
   /**
    * The echo ledger of the flow step's whole chain (round 61): what every
    * segment so far set, and where, so a read of a control an EARLIER segment
@@ -2122,6 +2124,13 @@ export async function replaySkill(
     res.failedAt = first;
     res.reason = `every read of this read-only procedure was skipped (${readsSkipped}) — the page is not the one it was recorded reading`;
     res.lines.push(`${first}. → FAILED: ${res.reason}`);
+  }
+  // Shadow (execution/shadow.ts, kind 'read'): each value this completed
+  // segment read against its recorded report template, where that template
+  // is fixed for this run. Reported only; nothing above changes. The artifact
+  // asks the same after the segment's body (spec/emit.ts shadowReadLines).
+  if (res.ok && shadowEnabled()) {
+    res.shadow.push(...readShadowLines(shadowReadLabels(skill.steps), shadowReadTemplates(chain), params, res.values, res.echoedValues));
   }
   res.url = page.url();
   return res;
