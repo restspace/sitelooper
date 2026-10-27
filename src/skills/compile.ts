@@ -947,6 +947,8 @@ export function compileSkills(input: CompileInput): Skill[] {
    *  (substituteUrlId) and bound by origin, never matched in prose, a
    *  selector or a page line, where a lone digit stands everywhere. */
   const textSlots = new Map([...slots].filter(([, v]) => v.length >= 2));
+  /** The run's identifiers a recorded page line may glue to other text (gluedPattern; espocrm fwec21-dg). */
+  const glue = gluedIdentifiers(input.knownValues);
   /** The url-origin slots written ONLY by position (not in textSlots). */
   const positionalUrlSlots = urlIdSlots.filter((u) => !textSlots.has(u.name));
   /** The caller's values for THIS run — a runid, a record it vouched for. */
@@ -1238,9 +1240,9 @@ export function compileSkills(input: CompileInput): Skill[] {
       const recordedAt = taken ? steps.findIndex((r) => r.diff === step.diff) : -1;
       const vital = Boolean(mintedHereOnly) || (recordedAt >= 0 && commitsWork(steps, recordedAt));
       const slotsHere = new Map([...textSlots, ...mintedHere]);
-      const expect = expectationFor(step, slotsHere, popupHide, taken ? { lines: taken, vital } : undefined);
+      const expect = expectationFor(step, slotsHere, popupHide, taken ? { lines: taken, vital } : undefined, glue);
       if (taken) {
-        const whole = expectationFor(step, slotsHere, popupHide)?.addedContains ?? [];
+        const whole = expectationFor(step, slotsHere, popupHide, undefined, glue)?.addedContains ?? [];
         const dropped = whole.filter((l) => !(expect?.addedContains ?? []).includes(l));
         if (dropped.length) {
           takenNotes.push({ name: 'takenBackLines', at: i + 1, reason: `page change(s) the app took back before the next gesture, by the recording's own gap diff — not this step's lasting effect: ${JSON.stringify(dropped)}` });
@@ -1260,7 +1262,10 @@ export function compileSkills(input: CompileInput): Skill[] {
       // recovery with the reference blank.
       const targetless = step.tool === 'read' && (step.args.what === 'url' || step.args.what === 'title');
       if (label && (targetless || Object.values(locators).some((chain) => chain.length))) out.label = label;
-      if (step.via) out.via = step.via;
+      // A replayed step that stopped this replay survives to here only when
+      // it did its work (landedWhereRecoveryContinued): say so, or the re-pin
+      // gate condemns the chain for carrying the stopped step (fwec21-dg).
+      if (step.via) out.via = input.stoppedAt && step.via.skill === input.stoppedAt.skill && step.via.step === input.stoppedAt.step ? { ...step.via, regated: true } : step.via;
       // Args and locators are use; expectations are NOT. Counting them (f24bdf9)
       // kept a slot the procedure never types — a price the recording saw in
       // a row, a uid in a post-save url — as a param bound by ORIGIN, and
@@ -3220,12 +3225,23 @@ function locatorValues(chain: LocatorCandidate[]): string[] {
   return out.filter(Boolean);
 }
 
-/** Replace every slot value in `text` by its "{{vN}}" marker, longest values first. */
-export function substitute(text: string, slots: Map<string, string>): string {
+/**
+ * Replace every slot value in `text` by its "{{vN}}" marker, longest values first.
+ *
+ * `glue` (a recorded PAGE LINE only, never a selector or a url): the run's
+ * identifiers (gluedIdentifiers); a value carrying one is slotted even where
+ * the page glued it to other text — see gluedPattern.
+ */
+export function substitute(text: string, slots: Map<string, string>, opts: { glue?: readonly string[] } = {}): string {
   let out = text;
   const byLength = [...slots].sort((a, b) => b[1].length - a[1].length);
   for (const [name, value] of byLength) {
     if (!value) continue;
+    const glued = opts.glue?.length ? gluedPattern(value, opts.glue) : null;
+    if (glued) {
+      out = out.replace(glued, `{{${name}}}`);
+      continue;
+    }
     // Whole-token only (shape.ts `tokenPattern`: a word's '-' and '_' bind, so
     // "form" never rewrites the middle of `o_form_view_group`). A bare number
     // additionally never rewrites a selector index — a cost of "25" must not
@@ -3246,6 +3262,62 @@ export function substitute(text: string, slots: Map<string, string>): string {
     out = out.replace(re, `{{${name}}}`);
   }
   return out;
+}
+
+/** The shortest run identifier a page line may glue to other text (gluedIdentifiers). */
+const MIN_GLUED_LEN = 6;
+
+/**
+ * The run's own IDENTIFIERS, by provenance: the values of its declared vars
+ * (`var:` known values — the runid on every bench flow), one unbroken token of
+ * MIN_GLUED_LEN characters or more with a digit in it. Declared per run, so a
+ * page line showing one shows THIS run's record, wherever it stands — and a
+ * token that long with a digit is not found glued inside an ordinary word by
+ * coincidence ("admin" in "administrator" is why the floor and the digit).
+ * See gluedPattern.
+ */
+export function gluedIdentifiers(knownValues: Record<string, unknown> | undefined): string[] {
+  return Object.entries(knownValues ?? {})
+    .filter(([key]) => key.startsWith('var:'))
+    .map(([, v]) => String(v ?? ''))
+    .filter((v) => v.length >= MIN_GLUED_LEN && v.trim() === v && !/\s/.test(v) && /\d/.test(v));
+}
+
+/**
+ * A slot value as it may stand in a recorded PAGE LINE where the page glued
+ * it to the text beside it — or null when only the whole-token rule
+ * (tokenPattern) may place it.
+ *
+ * EspoCRM's record header is a breadcrumb whose two spans the snapshot joins
+ * with nothing between them: fwec21-dg-n1 04-find recorded
+ * `- heading "Opportunitiesfwec21-dg-n1 Bench Opportunity"`. The whole-token
+ * rule refused the record's name there (an 's' is glued to its first letter)
+ * and the runid inside it alike, the line kept n1's record, and n2 stopped on
+ * it ("the step ran but probably acted on the wrong element") and paid 18
+ * recovery turns.
+ *
+ * Only an edge where one of the run's identifiers (gluedIdentifiers) is the
+ * value's own edge may be glued: a page that renders a runid flush against a
+ * label still shows the run's record. Even there, never digit against digit —
+ * `fwec21-dg-n1` must not take the head of `fwec21-dg-n10` (IDENTITY_EDGE's
+ * case). Every other edge keeps the whole-token boundary, so a value never
+ * ends inside a longer word ("…Bench Customer" is not "…Bench Customers"),
+ * and a value with no identifier at an edge gets no pattern at all. Page
+ * lines only: a selector or a url keeps the whole-token rule.
+ */
+export function gluedPattern(value: string, identifiers: readonly string[]): RegExp | null {
+  const v = value.trim();
+  if (v !== value) return null;
+  const leads = identifiers.some((id) => v.startsWith(id));
+  const ends = identifiers.some((id) => v.endsWith(id));
+  if (!leads && !ends) return null;
+  // A word edge binds as tokenPattern binds a word: letters, digits, '-' and '_'.
+  const binds = 'A-Za-z0-9_-';
+  const edge = (glued: boolean, ch: string, look: '?<!' | '?!'): string => {
+    if (!glued) return `(${look}[${binds}])`;
+    return /\d/.test(ch) ? `(${look}\\d)` : '';
+  };
+  return new RegExp(`${edge(leads, v[0], '?<!')}${escapeRe(v)}${edge(ends, v[v.length - 1], '?!')}`, 'g');
 }
 
 /**
@@ -3392,6 +3464,8 @@ function expectationFor(
   popupHide = false,
   /** Added lines the page took back before the next gesture (takenBackLines); `vital` when they may not ALL go. */
   takenBack?: { lines: ReadonlySet<string>; vital: boolean },
+  /** The run's identifiers a page line may glue to other text (gluedIdentifiers). */
+  glue: readonly string[] = [],
 ): StepExpectation | undefined {
   // A navigation's diff is its LANDING — the next segment's start url,
   // fingerprint and startText — not an effect to assert: none of it becomes
@@ -3405,7 +3479,7 @@ function expectationFor(
   // saw". Kept as the step's expected alert only; one a replay's landing does
   // not raise stays soft, as every recorded alert does.
   if (!step.diff) return undefined;
-  if (NAVIGATION_TOOLS.has(step.tool)) return step.diff.alerts[0] ? { alertContains: substitute(step.diff.alerts[0], slots).slice(0, 120) } : undefined;
+  if (NAVIGATION_TOOLS.has(step.tool)) return step.diff.alerts[0] ? { alertContains: substitute(step.diff.alerts[0], slots, { glue }).slice(0, 120) } : undefined;
   const out: StepExpectation = {};
   // A fill or a type never navigates: a url seen after one is where the page
   // happened to be while it settled, so only its path is evidence. snipeit
@@ -3414,7 +3488,7 @@ function expectationFor(
   // the clear's settle, and every replay stopped on `…/hardware?…search=Seed:…`
   // against a browser at `…/hardware`.
   if (step.diff.url) out.urlPattern = urlPattern(step.diff.url, slots, VALUE_ENTRY_TOOLS.has(step.tool) ? { query: false } : {});
-  if (step.diff.alerts[0]) out.alertContains = substitute(step.diff.alerts[0], slots).slice(0, 120);
+  if (step.diff.alerts[0]) out.alertContains = substitute(step.diff.alerts[0], slots, { glue }).slice(0, 120);
   if (step.diff.added.length) {
     // A status or progress indicator is the page in transit, not where the
     // step left it: fwgr25's sign-in recorded `- status "Loading"` as its
@@ -3434,7 +3508,7 @@ function expectationFor(
     const compiled = (added: readonly string[]): string[] =>
       added
         .filter((l) => !TRANSIENT_LINE.test(l))
-        .map((l) => maskPopupItem(maskForeignValue(maskMinted(maskVolatile(substitute(l, slots))), typed)))
+        .map((l) => maskPopupItem(maskForeignValue(maskMinted(maskVolatile(substitute(l, slots, { glue }))), typed)))
         .filter((l) => !identifiesNothing(l));
     // A line the page took back before the next gesture is the page in
     // transit too, by the recording's own gap diff (takenBackLines) — dropped
@@ -3457,7 +3531,7 @@ function expectationFor(
   const removed = inert
     ? (step.diff.removed ?? [])
         .filter((l) => !TRANSIENT_LINE.test(l))
-        .map((l) => maskMinted(maskVolatile(substitute(l, slots))))
+        .map((l) => maskMinted(maskVolatile(substitute(l, slots, { glue }))))
         .filter((l) => DIALOG_LINE.test(l) || !identifiesNothing(l))
     : [];
   // A removal is a consequence too. Snapshot lines are flat, so what a step
@@ -3481,7 +3555,7 @@ function expectationFor(
   if (!consequential && (hides || removed.some((l) => DIALOG_LINE.test(l)))) out.removedContains = removed.slice(0, MAX_ADDED_LINES).map((l) => l.slice(0, 120));
   // The records this gesture took away, waited out (StepExpectation.goneContains).
   // Never beside removedContains: those lines already have their own meaning.
-  const gone = popupHide || out.removedContains ? [] : goneRecords(step, slots);
+  const gone = popupHide || out.removedContains ? [] : goneRecords(step, slots, glue);
   if (gone.length) out.goneContains = gone;
   if (!Object.keys(out).length) return undefined;
   // The recording's dialect travels with its lines, so replay and the artifact
@@ -3518,13 +3592,13 @@ const GONE_GESTURES: ReadonlySet<string> = new Set(['click', 'dblclick', 'press'
  * the page. A line the recorder's 120-char cap cut is left out: without its
  * closing quote it would match longer lines that are not it.
  */
-function goneRecords(step: RecordedStep, slots: Map<string, string>): string[] {
+function goneRecords(step: RecordedStep, slots: Map<string, string>, glue: readonly string[] = []): string[] {
   if (!step.diff || !GONE_GESTURES.has(step.tool) || step.fingerprintAfter || step.effect) return [];
   const back = new Set(step.diff.added.map((l) => l.trim()));
   const out: string[] = [];
   for (const raw of step.diff.removed ?? step.obs?.removed ?? []) {
     if (back.has(raw.trim())) continue;
-    const line = maskMinted(maskVolatile(substitute(raw, slots)));
+    const line = maskMinted(maskVolatile(substitute(raw, slots, { glue })));
     if (line.length > 120 || !RECORD_LINE.test(line) || !SLOT_LINE.test(line) || identifiesNothing(line) || out.includes(line)) continue;
     out.push(line);
   }

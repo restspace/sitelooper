@@ -81,6 +81,12 @@ describe('B: the stopped step is kept when its action landed where the recovery 
     expect(url).not.toContain(N2);
   });
 
+  it('marks the kept step regated, so the re-pin gate does not condemn the chain for it (fwec21-dg)', () => {
+    const steps = compileRecovery().flatMap((s) => s.steps);
+    expect(steps[0].via).toEqual({ skill: 's_9433ad', step: 1, regated: true });
+    expect(steps.slice(1).every((s) => !s.via?.regated)).toBe(true);
+  });
+
   it('a click that went nowhere the recovery used is still dropped (the recovery navigated first)', () => {
     const entries = recovery();
     // the recovery went back to the list and opened the post itself
