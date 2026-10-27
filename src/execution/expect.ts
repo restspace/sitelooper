@@ -283,6 +283,12 @@ export interface ChangeObservation {
    * one dialect judged against lines in another would miss by construction.
    */
   live: (look?: FullNameLook) => Promise<LiveLines | null>;
+  /**
+   * The page as the step found it, in the same dialect — the diff's before
+   * leg. Only the delta shadow rule reads it (execution/delta.ts
+   * preexistingLines); absent or null, that rule has no evidence.
+   */
+  before?: string[] | null;
 }
 
 /** The roles recorded lines name (`- row "…"` → row): what a FullNameLook names in full. */
@@ -368,6 +374,13 @@ export interface ChangeVerdict {
    * same rule as a url generalisation); the artifact only warns.
    */
   generalised?: { from: string; to: string };
+  /**
+   * Shadow evidence only (execution/delta.ts rule 1), never a verdict: the
+   * recorded lines (filled) a group was accepted on from the live page
+   * rather than the diff, when every one the page showed was already in the
+   * step's before look — state this run did not produce.
+   */
+  preexisting?: string[];
 }
 
 /**
@@ -463,10 +476,10 @@ async function changesVerdict(
   // virtualised list) is NOT absence: the stop below still stands — nothing
   // established the effect — but it is marked unobserved and says why, and a
   // conditional branch (the absent dialog) is never taken on it.
-  const look = async (lines: string[]): Promise<{ shown: boolean; complete: boolean; why: string }> => {
+  const look = async (lines: string[]): Promise<{ shown: boolean; complete: boolean; why: string; seen?: string[] }> => {
     const live = await obs.live();
     if (!live) return { shown: false, complete: false, why: 'the page could not be read' };
-    if (lineShows(live.lines, lines)) return { shown: true, complete: live.complete, why: '' };
+    if (lineShows(live.lines, lines)) return { shown: true, complete: live.complete, why: '', seen: live.lines };
     // A NAME PAST THE CAP (round 63, openproject fwop17 04-create): an
     // element named by its text is observed with no name once that text is
     // longer than NAME_CAP, and an attribute name is cut there, so a line
@@ -479,7 +492,7 @@ async function changesVerdict(
       const full = await obs.live({ fullNameRoles: roles });
       if (full && lineShows(full.lines, lines)) {
         warnings.push(`step ${tag}: its recorded page change was found only by its full name, which is longer than the ${NAME_CAP} characters a look names an element by`);
-        return { shown: true, complete: full.complete, why: '' };
+        return { shown: true, complete: full.complete, why: '', seen: full.lines };
       }
     }
     return { shown: false, complete: live.complete, why: live.complete ? '' : live.coverage ? describeCoverage(live.coverage) || 'coverage unknown' : 'coverage unknown' };
@@ -532,6 +545,13 @@ async function changesVerdict(
     );
   }
   if (!parameterised.length && !plain.length) return { warnings };
+  // Shadow evidence (execution/delta.ts rule 1): lines accepted from the live
+  // page that the step's before look already showed. Never read by a verdict.
+  const preexisting: string[] = [];
+  const notePreexisting = (group: string[], seen: string[] | undefined) => {
+    for (const l of preexistingLines(group, seen, obs.before)) if (!preexisting.includes(l)) preexisting.push(l);
+  };
+  const withShadow = (v: ChangeVerdict): ChangeVerdict => (preexisting.length ? { ...v, preexisting } : v);
   // A positionally-resolved fill must prove itself with a CONSEQUENTIAL
   // change: its own echo in a same-role element is what the wrong element
   // produces too (see consequentialExpectations). When the echo is all the
@@ -555,6 +575,7 @@ async function changesVerdict(
       }
       return { warnings, stop: `after step ${tag} the page did not show ${shown} as it did when recorded — the step ran but probably acted on the wrong element` };
     }
+    notePreexisting(parameterised, seen.seen);
   }
   if (plain.length && !(added !== null && lineShows(added, plain))) {
     confirmed = false;
@@ -615,9 +636,23 @@ async function changesVerdict(
       return { warnings, stop: `after step ${tag} none of the ${plain.length} recorded page change(s) appeared (e.g. ${JSON.stringify(plain[0])}) — the step ran but did not have its recorded effect` };
     }
     warnings.push(`step ${tag}: none of the ${plain.length} expected page change(s) appeared in the step diff (found on the page instead)`);
+    notePreexisting(plain, seen.seen);
   }
-  if (added === null) return { warnings, unobserved: true };
-  return confirmed ? { warnings, confirmed: true } : { warnings };
+  if (added === null) return withShadow({ warnings, unobserved: true });
+  return withShadow(confirmed ? { warnings, confirmed: true } : { warnings });
+}
+
+/**
+ * Shadow evidence for the delta rule (execution/delta.ts rule 1): the lines
+ * of `group` the live page shows, when every one of them was already in the
+ * step's `before` look; else []. A line that arrived late — in neither the
+ * before look nor the diff — is a real effect, and makes it [].
+ */
+export function preexistingLines(group: readonly string[], live: readonly string[] | null | undefined, before: readonly string[] | null | undefined): string[] {
+  if (!before || !live) return [];
+  const shown = group.filter((l) => lineShows(live as string[], [l]));
+  if (!shown.length || !shown.every((l) => lineShows(before as string[], [l]))) return [];
+  return shown;
 }
 
 /** Any `{{…}}` marker but the wildcard: a slot, a derived value, a secret. A line carrying one is never generalised. */
@@ -841,12 +876,25 @@ export function dismissalAlreadyInEffect(
  * the url with their own window, and a url the gate would accept as volatile
  * would never strictly match here, so every such step would sit out the whole
  * effect window first.
+ *
+ * `gone` (StepExpectation.goneContains): the records carrying this run's
+ * values that the gesture took off the page. While any of them still shows,
+ * the effect has not landed (false), whatever else shows — the app may
+ * repaint a beat after the mutation, and the next step must not read the page
+ * from before it (repairdesk fwrd63's read after the second Delete part
+ * published both rows). Once none shows, the step holds on its added lines
+ * as before, or at once when it has none. A WAIT only: no gate reads this
+ * probe, so a record that never goes costs the effect window and the step
+ * runs on to its own checks exactly as it would have. Absence on a look that
+ * did not cover the page counts: only a line that SHOWS keeps the wait going,
+ * so a long page is not made to sit out the window on every delete.
  */
 export function effectExpectation(
   page: Page,
   recorded: readonly string[] | undefined,
   params: Record<string, string>,
   d: LineDialect = 1,
+  gone?: readonly string[],
 ): { holds(): Promise<boolean | null> } | undefined {
   // The same three exclusions the effect gate makes, for the same reasons: a
   // popup item is never the hard half, and a line identifying nothing or one
@@ -856,11 +904,17 @@ export function effectExpectation(
   const hard = liveLines((recorded ?? []).filter((l) => SLOT_LINE.test(l) && !TRANSIENT_LINE.test(l) && !popupItem(l)), params).filter(
     (l) => !identifiesNothing(l) && !unfilledSlot(l),
   );
-  if (!hard.length) return undefined;
+  // The records to see go: filled for this run, and never one that names
+  // nothing or that this run could not fill — either would match the wrong
+  // thing, or nothing, for the whole window.
+  const away = liveLines((gone ?? []).filter((l) => SLOT_LINE.test(l)), params).filter((l) => !identifiesNothing(l) && !unfilledSlot(l));
+  if (!hard.length && !away.length) return undefined;
   return {
     holds: async () => {
       const live = await captureLines(page, d);
       if (!live) return null;
+      if (away.length && lineShows(live.lines, away)) return false;
+      if (!hard.length) return true;
       if (lineShows(live.lines, hard)) return true;
       return live.complete ? false : null;
     },

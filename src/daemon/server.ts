@@ -13,6 +13,7 @@ import { MAX_STRAY_GESTURES_FOR_PIN, agentGesturesOutsideReplay, bindSkill, canA
 import { threadStepParams } from '../skills/rethread.js';
 import { buildFlow, consumedReportedOutputs, consumedUrlOutputs, ignorableRefs, jsonLeaves, lintFlowRefs, lintUnboundParams, lintUnpublishedOutputs, listFlows, liveReadsFor, liveReadsForRecovery, loadFlow, loadFlowFile, lookupOutput, mutatingIntent, noteOutputEvidence, pruneUnsourcedOutputs, recoveryRoute, remapParams, resolveInstruction, resolveStepParams, softResolveInstruction, saveFlow, staleInstructionIds, taskConstants, textMints, unbankedMutations, unreportedOutputs, urlOutputs, varyingValues, type RunSpecific, commentaryReport } from '../skills/flow.js';
 import { applyRelabelToEntries, applyRelabelToSkills, relabelCases, requestRelabelPlan, runValueKeyRenames } from '../skills/relabel.js';
+import { goalNamesRunValue, runIdsOf, runSlotsOf } from '../execution/delta.js';
 import { goalSatisfied, pastDetours, renderChainStop, structural, type ReplayResult } from '../skills/replay.js';
 import { detourSkippedNote } from '../execution/gates.js';
 import { drainDrift, llmProposer, recordCandidateEvidence } from '../skills/repair.js';
@@ -2023,6 +2024,14 @@ ${describeLeaks(certain.slice(0, 30))}${certain.length > 30 ? `\n  … and ${cer
         } catch {
           /* browser gone or capture failed — fall through to the normal path */
         }
+        // Strict delta rule (execution/delta.ts rule 3): goal text that names no
+        // value of this run may have been on the page before the run — every
+        // such skip on record was a false pass (fwgr39/50, fwod74, fwrd69). The
+        // step replays instead; a retry whose work is truly done falls back.
+        if (done.satisfied && !goalNamesRunValue(tail.goal.requireText, bound.params, runSlotsOf(pinned.params, tail.params), runIdsOf(bound.params, pinned.params, tail.params))) {
+          opts.progress(`[flow ${flow.name}] ${step.id}: page shows ${done.shown.map((x) => JSON.stringify(x)).join(', ')}, but that names no value of this run — replaying rather than skipping`);
+          done = { satisfied: false, shown: [] };
+        }
         if (done.satisfied) {
           const idTexts = (pinned.preconditions.requireText ?? []).map((m) => fillParams(m, bound.params));
           const values: Record<string, string> = {};
@@ -2680,6 +2689,8 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
         // What the replay noticed on the way (a refill, a skipped toggle, a
         // fallback locator), quotable from the flow run record.
         ...(sk?.warnings?.length ? { warnings: sk.warnings.slice(0, MAX_STEP_WARNINGS) } : {}),
+        // Uncapped: a sweep counts these (execution/shadow.ts).
+        ...(sk?.shadow?.length ? { shadow: sk.shadow } : {}),
         ...(repinned ? { repinned } : {}),
         ...(repinParams ? { repinParams } : {}),
         // A success missing what the step declares it reports: a zero-model
@@ -3136,6 +3147,7 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
       // run's step record carries them (fwvk2 n2 01-open fell back with no
       // record of whether a refill had been tried).
       warnings: replay.warnings.map((w) => `${replay!.skill}: ${w}`),
+      shadow: replay.shadow.map((w) => `${replay!.skill}: ${w}`),
       evidence: replay.candidateEvidence.map((e) => ({ ...e, skill: match!.skill.id })),
       values: { ...replay.values },
       echoed: [...replay.echoedValues],
@@ -3211,6 +3223,7 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
       agg.fallthroughs += r.fallthroughs;
       agg.misses.push(...r.misses.map((m) => ({ ...m, skill: next.id })));
       agg.warnings.push(...r.warnings.map((w) => `${next.id}: ${w}`));
+      agg.shadow.push(...r.shadow.map((w) => `${next.id}: ${w}`));
       agg.evidence.push(...r.candidateEvidence.map((e) => ({ ...e, skill: next.id })));
       Object.assign(agg.values, r.values);
       agg.echoed.push(...r.echoedValues);
@@ -3269,6 +3282,7 @@ ${direct.prelude}` : recoveryText) + blankNote + resetNote + namesNote,
       similarity: replay.similarity,
       ...(agg.misses.length ? { misses: agg.misses } : {}),
       ...(agg.warnings.length ? { warnings: agg.warnings } : {}),
+      ...(agg.shadow.length ? { shadow: agg.shadow } : {}),
       ...(agg.skipped.length ? { skippedReads: [...new Set(agg.skipped)] } : {}),
       ...(replay.reason ? { failReason: replay.reason } : {}),
       ...(replay.failedAt !== undefined ? { failedAt: replay.failedAt } : {}),

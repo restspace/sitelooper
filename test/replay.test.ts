@@ -239,7 +239,51 @@ d('skill replay (fixture page)', () => {
     session.learn!.remove(skill.id);
     expect(out.replay?.ok).toBe(true);
     expect(out.replay?.warnings.some((w) => /already in effect/.test(w))).toBe(true);
+    // The delta shadow rule: this replay's first click opened the menu the
+    // skip rested on — the segment started with it shut — so nothing to report.
+    expect(out.replay?.shadow).toEqual([]);
     expect(await page.locator('h2', { hasText: 'Created' }).count()).toBe(1);
+  }, 30_000);
+
+  /**
+   * The delta shadow rule (execution/delta.ts rule 2), warn-only: an opener
+   * skipped because its popup was ALREADY open when the segment started rests
+   * on state this run did not produce (fwod98's company menu, on every page).
+   * The skip and the result are unchanged; the finding is carried apart.
+   */
+  it('reports, never refuses, an opener skip whose popup was open as the segment started', async () => {
+    const page = await session.getPage();
+    await page.goto(fixtureUrl);
+    await page.evaluate(() => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.textContent = 'New';
+      const menu = document.createElement('div');
+      menu.setAttribute('role', 'menu');
+      menu.setAttribute('aria-label', 'Actions');
+      const link = document.createElement('a');
+      link.href = '#';
+      link.textContent = 'New dashboard';
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const h = document.createElement('h2');
+        h.textContent = 'Created';
+        document.body.append(h);
+      });
+      menu.append(link);
+      btn.addEventListener('click', () => (menu.hidden = !menu.hidden));
+      document.body.append(btn, menu);
+    });
+    const skill = clickSkill('s_toggle_open', [
+      { name: 'New', role: 'button', added: ['- menu "Actions"'] },
+      { name: 'New dashboard', role: 'link', added: ['- heading "Created"'] },
+    ]);
+    session.learn!.put(skill);
+    const out = await run('run_skill', { id: skill.id, params: {} });
+    session.learn!.remove(skill.id);
+    expect(out.replay?.ok).toBe(true);
+    expect(out.replay?.warnings.some((w) => /already in effect/.test(w))).toBe(true);
+    expect(out.replay?.shadow).toEqual(['[shadow:delta] step 1: skipped as already in effect (a popup opener), on evidence ("- menu \\"Actions\\"") already showing when this segment started — this run did not produce it']);
   }, 30_000);
 
   /**
@@ -305,6 +349,8 @@ d('skill replay (fixture page)', () => {
       const out = await replay(skillOf('s_welcome_absent', { name: 'Close', removed: WELCOME }));
       expect(out.replay?.ok).toBe(true);
       expect(out.replay?.warnings.some((w) => /closes the dialog "Welcome to the app".*already in effect/.test(w))).toBe(true);
+      // The delta shadow rule: the dialog was absent when the segment started too.
+      expect(out.replay?.shadow).toEqual([expect.stringMatching(/^\[shadow:delta\] step 1: skipped as already in effect \(a dismissal of a dialog not open\)/)]);
       expect(await page.locator('h2', { hasText: 'Created' }).count()).toBe(1);
     }, 30_000);
 

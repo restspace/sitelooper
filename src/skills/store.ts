@@ -562,6 +562,19 @@ export interface StepExpectation {
    */
   removalRequired?: true;
   /**
+   * Records carrying this run's own value (`{{vN}}`) that the step's gesture
+   * took OFF the page: the row or cell of the part a Delete confirm removed.
+   * A WAIT, never a verdict: the action's observation (execution/expect.ts
+   * effectExpectation) polls until none of them shows, within the effect
+   * window, and a page that keeps one costs that window and nothing else.
+   * An app that repaints a beat after the mutation would otherwise hand the
+   * next read the table as it was (repairdesk fwrd63: the read after the
+   * second delete published both rows). Compile sets it (expectationFor). An
+   * optional field, so no SKILL_CONTRACT bump: a build that ignores it waits
+   * as it did before.
+   */
+  goneContains?: string[];
+  /**
    * The line dialect `addedContains` and `alertContains` are written in
    * (src/execution/snapshot.ts LineDialect); absent = 1, every expectation
    * compiled before dialects existed. Per step, not per skill: a repair can

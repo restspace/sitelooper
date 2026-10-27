@@ -2108,6 +2108,28 @@ export function onOwnLine(raw: string, want: string): boolean {
   });
 }
 
+/**
+ * A row anchor whose text IS the read value, kept because that value is one
+ * this instruction typed or declared (an identity hint), not one the page
+ * chose. RepairDesk fwrd58/71/74/87: the skill recorded adding "Part A", the
+ * only row, then replayed adding "Part B" as a second row. The name cell's
+ * anchor `tr hasText "Part A"` was dropped as circular, so the read fell to
+ * `tbody > tr > td:nth-of-type(1)` — the FIRST row — and every replay
+ * published Part A as the part it had just added, while the cost reads beside
+ * it (anchored by the same row, a different cell) were right.
+ *
+ * Circularity is about a value the page decides: locating "125.00" by
+ * "125.00" re-reads whatever shows there next run. A vouched value is
+ * different — compile slots it in the anchor and in the read alike, so the
+ * replay looks for ITS OWN record's row and reads the cell there; a row that
+ * is missing fails the read instead of reporting another record. Only the
+ * whole value counts: a cell that merely contains a hint still decides the
+ * rest of its text, and stays refused.
+ */
+function echoAnchor(c: LocatorCandidate, want: string): boolean {
+  return c.kind === 'scoped' && identityHints.some((h) => foldValue(h) === want);
+}
+
 /** Derive a durable, non-circular read step for `value` from a live element. */
 async function readBackFromHandle(page: Page, handle: ElementHandle<Node>, v: string, what: 'text' | 'value' = 'text', frame?: string): Promise<RecordedStep | null> {
   const info = (await handle.evaluate(describeInPage)) as ElementInfo;
@@ -2122,7 +2144,7 @@ async function readBackFromHandle(page: Page, handle: ElementHandle<Node>, v: st
     // circular as one named "bench", and an exact comparison here would let it
     // through.
     const identity = candidateIdentity(candidate.spec);
-    if (identity && foldValue(identity) === want) continue;
+    if (identity && foldValue(identity) === want && !echoAnchor(candidate.spec, want)) continue;
     // Same uniqueness rule as verifiedChain: an ambiguous anchor is not identity.
     if (candidate.spec.kind === 'scoped' && (await candidate.make(page).count().catch(() => 0)) !== 1) continue;
     if (candidate.spec.kind === 'point') {

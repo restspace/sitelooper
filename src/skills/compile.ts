@@ -3479,11 +3479,56 @@ function expectationFor(
   // (execution/toggle.ts hideEffectLines).
   const hides = step.tool === 'click' && removed.length > 0;
   if (!consequential && (hides || removed.some((l) => DIALOG_LINE.test(l)))) out.removedContains = removed.slice(0, MAX_ADDED_LINES).map((l) => l.slice(0, 120));
+  // The records this gesture took away, waited out (StepExpectation.goneContains).
+  // Never beside removedContains: those lines already have their own meaning.
+  const gone = popupHide || out.removedContains ? [] : goneRecords(step, slots);
+  if (gone.length) out.goneContains = gone;
   if (!Object.keys(out).length) return undefined;
   // The recording's dialect travels with its lines, so replay and the artifact
   // render the live page the way these lines were written.
   if (step.diff.dialect === 2) out.lineDialect = 2;
   return out;
+}
+
+/** The gestures whose record removals are waited out (goneRecords). */
+const GONE_GESTURES: ReadonlySet<string> = new Set(['click', 'dblclick', 'press']);
+
+/**
+ * THE RECORD A GESTURE TOOK AWAY (StepExpectation.goneContains).
+ *
+ * repairdesk fwrd63, s_1758ad: "delete BOTH parts … verify both rows are
+ * gone". Each Delete part confirm closed the dialog and the app repainted the
+ * parts table a beat later; the confirm compiled to a url pattern alone,
+ * because what it took off the page is a consequence (`consequential` above)
+ * and never becomes `removedContains`, and it added nothing that names this
+ * run. With nothing to wait for, the replay's read right after the second
+ * confirm published both rows where the recording had read "No parts on this
+ * ticket yet." — a green run with a stale table. (That app also announces
+ * "Refreshing…", which the settle now holds for — action.ts
+ * ACTION_ANNOUNCE_WAIT_MS — but an app that repaints without saying so is
+ * the same bug.)
+ *
+ * So a click or key press whose recorded removals include a RECORD line
+ * (row, cell, list item… — RECORD_LINE) carrying this run's own value (a
+ * `{{vN}}` slot once substituted) keeps those lines, and both runners' action
+ * observation polls until none of them shows. Recorded facts only: the full
+ * removals (`diff.removed`, or phase A's `obs.removed` where the diff kept
+ * none), minus anything the same capture added back. Not for a gesture that
+ * moved to another page template or raised/closed a page — its lines go with
+ * the page. A line the recorder's 120-char cap cut is left out: without its
+ * closing quote it would match longer lines that are not it.
+ */
+function goneRecords(step: RecordedStep, slots: Map<string, string>): string[] {
+  if (!step.diff || !GONE_GESTURES.has(step.tool) || step.fingerprintAfter || step.effect) return [];
+  const back = new Set(step.diff.added.map((l) => l.trim()));
+  const out: string[] = [];
+  for (const raw of step.diff.removed ?? step.obs?.removed ?? []) {
+    if (back.has(raw.trim())) continue;
+    const line = maskMinted(maskVolatile(substitute(raw, slots)));
+    if (line.length > 120 || !RECORD_LINE.test(line) || !SLOT_LINE.test(line) || identifiesNothing(line) || out.includes(line)) continue;
+    out.push(line);
+  }
+  return out.slice(0, MAX_ADDED_LINES);
 }
 
 /**
@@ -3867,7 +3912,7 @@ export function unfreezeExpectations(
         if (cut) step.expect!.alertContains = cut;
         else {
           delete step.expect!.alertContains;
-          if (!step.expect!.addedContains?.length && !step.expect!.removedContains) delete step.expect!.lineDialect;
+          if (!step.expect!.addedContains?.length && !step.expect!.removedContains && !step.expect!.goneContains) delete step.expect!.lineDialect;
           if (!Object.keys(step.expect!).length) delete step.expect;
         }
         notes.push({ name: 'unfreezeExpectations', at: si + 1, reason: `recorded alert carried a value only the recording run could produce: ${JSON.stringify(alert)} → ${JSON.stringify(cut)}` });
@@ -3895,7 +3940,7 @@ export function unfreezeExpectations(
       // lineDialect describes addedContains, alertContains and
       // removedContains; with none left it describes nothing, and an
       // expectation of nothing but a dialect is no expectation.
-      if (!step.expect!.alertContains && !step.expect!.removedContains) delete step.expect!.lineDialect;
+      if (!step.expect!.alertContains && !step.expect!.removedContains && !step.expect!.goneContains) delete step.expect!.lineDialect;
       if (!Object.keys(step.expect!).length) delete step.expect;
     }
     notes.push({
@@ -4440,7 +4485,7 @@ function dropFlashedLines(
     if (kept.length) step.expect!.addedContains = kept;
     else {
       delete step.expect!.addedContains;
-      if (!step.expect!.alertContains && !step.expect!.removedContains) delete step.expect!.lineDialect;
+      if (!step.expect!.alertContains && !step.expect!.removedContains && !step.expect!.goneContains) delete step.expect!.lineDialect;
       if (!Object.keys(step.expect!).length) delete step.expect;
     }
     notes.push({ name: 'dropFlashedLines', at: si + 1, reason: `line(s) a later step recorded appearing again, never recorded going: a flash, not this step's effect: ${JSON.stringify(drop)}` });

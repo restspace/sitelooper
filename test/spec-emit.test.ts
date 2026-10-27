@@ -2503,6 +2503,22 @@ describe('a click that opens a popup is a toggle', () => {
   });
 
   /**
+   * The delta shadow rule (execution/delta.ts rule 2): the segment looks at
+   * its starting page once, before step 1, as replay does, and the skip
+   * branch reports when the popup and its work already showed there. The
+   * skip itself is unchanged.
+   */
+  it('reports, never refuses, a skip whose evidence showed as the segment started', () => {
+    expect(source).toContain('const deltaStart1 = await segmentStart(page, 1);');
+    expect(source).toContain(
+      "{ const shadow = inEffectShadow(deltaStart1, 1, '01-do s_test1/1', 'a popup opener', { shown: { any: liveLines(['- dialog \"Edit the task\"'], p), all: liveLines(['- button \"Save\"'], p) } }); if (shadow) console.log(`[sitelooper shadow] ${shadow}`); }",
+    );
+    expect(source.indexOf('const deltaStart1')).toBeLessThan(source.indexOf('if (await openerAlreadyShowing('));
+    expect(source).toContain('async function segmentStart(page: Page, dialect: LineDialect | null)');
+    expect(syntaxErrors(source)).toEqual([]);
+  });
+
+  /**
    * Replay resolves the target FIRST (a miss is a stop, or the navigation
    * fallback) and asks "already in effect?" of a resolved control. The
    * artifact used to wrap the pick in the guard too, so a click whose popup
@@ -2538,22 +2554,23 @@ describe('a click that opens a popup is a toggle', () => {
     const dbl: SkillStep = { ...opener, tool: 'dblclick' };
     const out = emit(specOf([dbl]));
     expect(out).toContain('await click(hit1.locator, { dbl: true, obs: obs1 }).catch(actionFailed);');
-    expect(out).not.toContain('already in effect');
     // The step BODIES only: a shared execution module the artifact embeds has
-    // branches of its own, and they are not this step's guard.
+    // branches (and, the delta shadow rule, wording) of its own, and they are
+    // not this step's guard.
+    expect(stepBodies(out)).not.toContain('already in effect');
     expect(stepBodies(out)).not.toContain('} else {');
   });
 
   it('leaves a click with no popup effect alone', () => {
     const plain: SkillStep = { ...opener, expect: { addedContains: ['- text: Saved', '- button "Save"'] } };
     const out = emit(specOf([plain]));
-    expect(out).not.toContain('already in effect');
+    expect(stepBodies(out)).not.toContain('already in effect');
     expect(stepBodies(out)).not.toContain('} else {');
   });
 
   it("ignores a popup line only this run's own value produced", () => {
     const parameterised: SkillStep = { ...opener, expect: { addedContains: ['- dialog "{{v1}}"'] } };
-    expect(emit(specOf([parameterised]))).not.toContain('already in effect');
+    expect(stepBodies(emit(specOf([parameterised])))).not.toContain('already in effect');
   });
 });
 
@@ -3026,7 +3043,10 @@ describe('emitFlowFile: the already-satisfied guard', () => {
       // (markersBound — a slot bound to '' proves nothing, and compile cannot
       // see the value), the page template the goal was read on (the shared
       // urlMatches, unconditionally), then the page itself.
-      "if (markersBound(['{{v1}}', '{{v3}}', 'Cancelled'], p) && urlMatches('http://app.test/odoo/sales/21', page.url(), p) && await satisfied(page, [`${p.v1}`, `${p.v3}`], ['Cancelled'])) {",
+      // ...and the strict delta rule (execution/delta.ts rule 3): the goal
+      // must name a `known` slot or the run id. v1/v3 are known here; the
+      // literal "Cancelled" names neither, so at run time this step replays.
+      "if (markersBound(['{{v1}}', '{{v3}}', 'Cancelled'], p) && urlMatches('http://app.test/odoo/sales/21', page.url(), p) && goalNamesRunValue(['Cancelled'], p, [\"v1\",\"v3\"], runIdsOf(p, {})) && await satisfied(page, [`${p.v1}`, `${p.v3}`], ['Cancelled'])) {",
       "console.log('[sitelooper satisfied] 08-open — page shows \"Cancelled\"; nothing to do');",
       // The template stands in for the read-backs through the shared rule, on
       // the page just judged: recorded text publishes only where it shows (fwrd86).

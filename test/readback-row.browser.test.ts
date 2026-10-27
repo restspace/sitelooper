@@ -13,7 +13,7 @@
  */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { BrowserSession } from '../src/daemon/browser.js';
-import { captureReadBack } from '../src/daemon/recorder.js';
+import { captureReadBack, makeLocator, setIdentityHints, type LocatorCandidate } from '../src/daemon/recorder.js';
 import { pinPart } from '../src/agent/readback.js';
 
 const enabled = process.env.BP_BROWSER_TESTS === '1';
@@ -69,6 +69,68 @@ d('captureReadBack: one record showing one value twice', () => {
     expect(step).not.toBeNull();
     expect(step!.label).toBe('col');
     expect(JSON.parse(step!.result!)).toBe('Ready');
+  });
+});
+
+/**
+ * A read of the value the instruction itself typed, in the row that value
+ * created (RepairDesk fwrd58/71/74/87). Recorded adding "Part A" — the only
+ * row — the name cell's anchor `tr hasText "Part A"` was refused as circular,
+ * so `part_name` fell to `tbody > tr > td:nth-of-type(1)`; replayed adding
+ * "Part B" as a second row, it read the FIRST row and published Part A.
+ */
+const PARTS = (rows: string[]) => `
+  <section><div><table><tbody>
+    ${rows.map((r) => `<tr><td>${r}</td><td>12.50</td><td>25%</td></tr>`).join('')}
+  </tbody></table></div></section>`;
+
+d('captureReadBack: a typed value read from the row it created', () => {
+  let session: BrowserSession;
+  beforeAll(async () => {
+    session = new BrowserSession({ session: `readback-echo-${Date.now()}`, persist: false });
+  });
+  afterAll(async () => {
+    setIdentityHints([]);
+    await session?.close();
+  });
+
+  it('anchors the read to the typed value’s row, so a second record re-binds to its own', async () => {
+    const page = await session.getPage();
+    await page.setContent(PARTS(['Part A']));
+    setIdentityHints(['Part A']); // typed during the instruction
+    const step = await captureReadBack(page, 'Part A', 'part_name');
+    expect(step).not.toBeNull();
+    const chain = step!.locators.target.chain ?? [];
+    expect(chain[0].kind).toBe('scoped');
+    expect((chain[0] as { hasText: string }).hasText).toBe('Part A');
+    // Compile slots the typed value in the anchor; the next run adds Part B
+    // BELOW Part A and must read Part B's row, not row 1.
+    await page.setContent(PARTS(['Part A', 'Part B']));
+    const replayed = { ...chain[0], hasText: 'Part B' } as LocatorCandidate;
+    expect((await makeLocator(page, replayed).innerText()).trim()).toBe('Part B');
+  });
+
+  it('still refuses a row anchor naming a value nobody typed (the circularity rule)', async () => {
+    const page = await session.getPage();
+    await page.setContent(PARTS(['Part A']));
+    setIdentityHints([]);
+    const step = await captureReadBack(page, 'Part A', 'part_name');
+    expect((step?.locators.target.chain ?? []).some((c) => c.kind === 'scoped')).toBe(false);
+  });
+
+  it('still refuses an anchor whose cell only CONTAINS a typed value', async () => {
+    const page = await session.getPage();
+    await page.setContent(PARTS(['fwrd58 Part A']));
+    setIdentityHints(['fwrd58']); // the runid, not the whole value read
+    const step = await captureReadBack(page, 'fwrd58 Part A', 'part_name');
+    expect((step?.locators.target.chain ?? []).some((c) => c.kind === 'scoped')).toBe(false);
+  });
+
+  it('refuses the anchor when two rows show the typed value (an earlier run’s record)', async () => {
+    const page = await session.getPage();
+    await page.setContent(PARTS(['Part A', 'Part A']));
+    setIdentityHints(['Part A']);
+    expect(await captureReadBack(page, 'Part A', 'part_name')).toBeNull();
   });
 });
 

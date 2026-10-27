@@ -83,6 +83,8 @@ interface Outcome {
   warnings?: string[];
   /** The artifact's outputs a later step may use but the run never observed (run.referenceOnly, step prefix stripped). */
   referenceOnly?: string[];
+  /** Shadow findings (replay's shadow; the artifact's `[sitelooper shadow]` lines, `<step> <segment>: ` prefix stripped). */
+  shadow?: string[];
 }
 
 d('execution parity (daemon replay vs emitted artifact)', () => {
@@ -266,7 +268,7 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
       // No replay at all means the tool refused before running: surface that
       // rather than letting it read as an ordinary failure.
       if (!replay) return { ok: false, reason: `run_skill returned no replay: ${out.result}`, outputs: {}, echoed: [] };
-      return { ok: replay.ok, reason: replay.reason ?? null, outputs: replay.values, echoed: replay.echoedValues, created: replay.created, drift: replay.misses.filter((m) => m.used).map((m) => m.step), outcome: replay.outcome, warnings: replay.warnings };
+      return { ok: replay.ok, reason: replay.reason ?? null, outputs: replay.values, echoed: replay.echoedValues, created: replay.created, drift: replay.misses.filter((m) => m.used).map((m) => m.step), outcome: replay.outcome, warnings: replay.warnings, shadow: replay.shadow };
     } finally {
       await session.close();
     }
@@ -305,10 +307,12 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
     // The artifact's warnings go to the console — on STDOUT, so a killed run
     // still carries them (src/spec/emit.ts logWarning); keep them for the outcome.
     const warnings: string[] = [];
+    const shadow: string[] = [];
     const log = console.log;
     console.log = (...args: unknown[]) => {
       const line = args.map(String).join(' ');
       if (line.startsWith('[sitelooper warn] ')) warnings.push(line.slice('[sitelooper warn] '.length));
+      if (line.startsWith('[sitelooper shadow] ')) shadow.push(line.replace(/^\[sitelooper shadow\] \S+ \S+: /, ''));
       log(...args);
     };
     try {
@@ -320,7 +324,7 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
         await mod.steps[id](page, params, run.outputs, run);
       }
       const referenceOnly = ((run as { referenceOnly?: string[] }).referenceOnly ?? []).map((key) => key.slice(key.indexOf('.') + 1));
-      return { ok: true, reason: null, outputs: run.outputs as Record<string, string>, echoed: run.echoed.map((key) => key.slice(key.indexOf('.') + 1)), created: run.created, drift: [...run.drift], warnings, referenceOnly };
+      return { ok: true, reason: null, outputs: run.outputs as Record<string, string>, echoed: run.echoed.map((key) => key.slice(key.indexOf('.') + 1)), created: run.created, drift: [...run.drift], warnings, referenceOnly, shadow };
     } catch (err) {
       return { ok: false, reason: err instanceof Error ? err.message : String(err), outputs: {}, echoed: [], warnings };
     } finally {
@@ -1052,6 +1056,45 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
       expect(published(emitted)).toEqual(want);
     }, 120_000);
 
+    it('both runners report the same read shadow finding, and only for a fixed template the read contradicts', async () => {
+      // ticket_reference reads "RD-1016"; its template is this run's ref then
+      // " Closed": fixed for the run, and contradicted by the read.
+      const shadowOf = async (skill: Skill): Promise<{ ok: boolean; reason: string | null; shadow: string[] }> => {
+        const session = new BrowserSession({ session: `parity-shadow-${Date.now()}`, persist: false, learn: true });
+        try {
+          const page = await session.getPage();
+          await page.goto(`${origin}/tickets`);
+          session.learn!.put(skill);
+          const replay = (await executeTool(session, 'run_skill', { id: skill.id, params }, os.tmpdir())).replay as ReplayResult | undefined;
+          return { ok: Boolean(replay?.ok), reason: replay?.reason ?? null, shadow: replay?.shadow ?? [] };
+        } finally {
+          await session.close();
+        }
+      };
+      const shadowValues = { ticket_reference: '{{v1}} Closed' };
+      const skill: Skill = { ...ticketSkill(), reportTemplate: { summary: '', values: shadowValues } };
+      const flow = ticketFlow();
+      flow.steps[0].segments[0].report = { summary: '', values: shadowValues };
+      reset(13);
+      const replay = await shadowOf(skill);
+      reset(13);
+      const emitted = await emittedOf(flow, params);
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      const want = ['[shadow:read] step 1: label ticket_reference read "RD-1016", recorded template "{{v1}} Closed" = "RD-1016 Closed" this run'];
+      expect(replay.shadow).toEqual(want);
+      expect(emitted.shadow).toEqual(want);
+
+      const quiet = { ticket_reference: '{{v1}}' };
+      const agreeing: Skill = { ...ticketSkill(), reportTemplate: { summary: '', values: quiet } };
+      const agreeingFlow = ticketFlow();
+      agreeingFlow.steps[0].segments[0].report = { summary: '', values: quiet };
+      reset(13);
+      expect((await shadowOf(agreeing)).shadow).toEqual([]);
+      reset(13);
+      expect((await emittedOf(agreeingFlow, params)).shadow).toEqual([]);
+    }, 120_000);
+
     it("neither runner publishes the recording's date or count once the app has moved on", async () => {
       reset(16);
       fx.listing.date = '2026-09-24';
@@ -1249,6 +1292,69 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
     const emittedLog = [...fx.log];
     return { replay, emitted, replayLog, emittedLog };
   }
+
+  it('both runners wait for the records a confirm took away before reading the table (fwrd63)', async () => {
+    // Deleted on the confirm, repainted 900ms later: no request, no live
+    // region — nothing but the recorded removal says the page is still moving.
+    const PAGE = `<!doctype html><html><body><main><h1>Ticket</h1>
+<table><tbody id="parts"></tbody></table>
+<dialog id="confirm"><h2>Confirm</h2><button id="yes">Delete part</button></dialog>
+</main><script>
+let parts = ['Bench Part A', 'Bench Part B'];
+let pending = null;
+function paint() {
+  document.getElementById('parts').innerHTML = parts.length
+    ? parts.map((p, i) => '<tr><td>' + p + '</td><td><button data-i="' + i + '">Delete</button></td></tr>').join('')
+    : '<tr><td>No parts on this ticket yet.</td></tr>';
+}
+paint();
+document.getElementById('parts').addEventListener('click', (e) => {
+  const b = e.target.closest('button');
+  if (!b) return;
+  pending = parts[Number(b.dataset.i)];
+  document.getElementById('confirm').showModal();
+});
+document.getElementById('yes').addEventListener('click', () => {
+  document.getElementById('confirm').close();
+  const gone = pending;
+  setTimeout(() => { parts = parts.filter((p) => p !== gone); paint(); }, 900);
+});
+</script></body></html>`;
+    const onPage: PageHook = async (page) => {
+      await page.route(`${origin}/`, (route) => route.fulfill({ contentType: 'text/html', body: PAGE }));
+    };
+    const open = (slot: string): SkillStep => ({
+      tool: 'click',
+      args: { target: '@e1' },
+      locators: { target: [{ kind: 'scoped', container: 'tr', hasText: `{{${slot}}}`, selector: 'button' }] },
+      expect: { addedContains: ['- button "Delete part"'], lineDialect: 2 },
+    });
+    const confirm = (slot: string): SkillStep => ({
+      tool: 'click',
+      args: { target: '@e2' },
+      locators: { target: [{ kind: 'role', role: 'button', name: 'Delete part' }] },
+      expect: { goneContains: [`- cell "{{${slot}}}"`], lineDialect: 2 },
+    });
+    const steps: SkillStep[] = [
+      open('v1'),
+      confirm('v1'),
+      open('v2'),
+      confirm('v2'),
+      { tool: 'read', args: { target: 'tbody', what: 'text', label: 'parts_after' }, locators: { target: [{ kind: 'css', selector: 'tbody' }] }, label: 'parts_after' },
+    ];
+    const params = { v1: 'Bench Part A', v2: 'Bench Part B' };
+    const declared = { v1: { example: params.v1, usedIn: [1], known: true }, v2: { example: params.v2, usedIn: [3], known: true } };
+    const skill: Skill = { ...skillOf(steps), id: 's_parity_gone', template: 'delete {{v1}} and {{v2}}', params: declared };
+    const spec = specOf(steps);
+    spec.steps[0].segments[0] = { ...spec.steps[0].segments[0], id: 's_parity_gone', template: 'delete {{v1}} and {{v2}}', params: declared };
+    const replay = await replayOf(skill, params, onPage);
+    const emitted = await emittedOf(spec, params, onPage);
+    for (const [run, read] of [[replay, replay.outputs.parts_after], [emitted, emitted.outputs['01-clear.parts_after']]] as const) {
+      expect(run.ok, run.reason ?? '').toBe(true);
+      expect(read).toContain('No parts on this ticket yet.');
+      expect(read).not.toContain('Bench Part');
+    }
+  }, 120_000);
 
   it('both runners enforce a back step URL gate before allowing the next mutation', async () => {
     const steps: SkillStep[] = [
