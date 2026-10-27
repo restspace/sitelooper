@@ -1,0 +1,109 @@
+
+[sweep] run 1/3: fwgr90-dg-n1 (store: /home/user/sitelooper/bench/results/fwgr90-dg-skills)
+[harness] grafana: defaulting APP_URL
+[harness] grafana: defaulting APP_EMAIL
+[harness] grafana: defaulting APP_PASSWORD
+[reset] grafana: deleted leftover dashboard "Service Health" (400)
+[harness] grafana responded 302 at http://127.0.0.1:3000/
+stopped: fwgr90-dg-n1
+  flow "fwgr90-dg" saved: 8 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwgr90-dg.json
+  warning: note: 01-signin no longer publishes login_alert — no replay reads it from the page and the recording showed no line to read
+  warning: note: 02-open no longer publishes panel_count, dashboard_title_breadcru — no replay reads them from the page and the recording showed no line to read
+  warning: note: 04-add no longer publishes save_confirmation, panel_visualization, button, button_2 — no replay reads them from the page and the recording showed no line to read
+  warning: note: 05-set no longer publishes persisted_time_in_json_model, persisted_version, update_default_time_range_checkbox, time_range_from_value, time_range_to_value, time_range_reference — no replay reads them from the page and the recording showed no line to read
+  warning: note: 06-set no longer publishes refresh_menu_options, save_result, refresh_selector_text — no replay reads them from the page and the recording showed no line to read
+  warning: note: 07-verify no longer publishes datasource_logo_alt, datasource_control_text, query_row_datasource — no replay reads them from the page and the recording showed no line to read
+  warning: note: 08-report no longer publishes time_range_reference — no replay reads it from the page and the recording showed no line to read
+  warning: note: 1 step(s) adopted from non-success instruction(s) whose work the session continued from (03-create) — they replay model-first with doubled budget, and a non-success there does not halt the flow
+  warning: warning: 224 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[0].instruction: "admin" (output) in "Sign in to the Grafana app at http://127.0.0.1:3000/ with username admin and password exactly {{env:APP_PASSWORD}}. Verify that the authenticated Grafana page i"
+  flow.steps[0].params.v2: "admin" (output) in "admin"
+  flow.steps[2].instruction: "Bench" (output) in "Create a new Grafana dashboard titled '{{runid}} Bench Dashboard' and add a Stat panel titled '{{runid}} Availability'. Configure that panel's query to use the "
+  flow.steps[2].instruction: "Stat" (output) in "Create a new Grafana dashboard titled '{{runid}} Bench Dashboard' and add a Stat panel titled '{{runid}} Availability'. Configure that panel's query to use the "
+  flow.steps[2].route: "fg2iid9ohiio0f" (url) in "http://127.0.0.1:3000/d/fg2iid9ohiio0f/:id"
+  warning: {{05-set.persisted_timezone}} (used by 08-report) can only be re-observed by model recovery — consider re-recording so the value is read from the page.
+  warning: 05-set reports persisted_timezone, but no segment of the procedure it pins (s_a9c6d2, with any later segment of its chain) re-reads it from the page — a replay without the model will succeed without that value; re-record so a read for it lands in that procedure's last segment.
+arm=sitelooper model=openai/gpt-6-luna runid=fwgr90-dg-n1 stop=completed
+turns=9 wall=690.3s
+commands=8 cmdTime=653.0s cmdBytes=14258 timeouts=0
+orchestrator in=7219 cw=0 cr=34999 out=1353
+inner prompt=4549305 cached=4249775 completion=34265
+spend=$0.0773 maxUsd=3
+learn: A_n=0 replayed=0/8 full=0 repaired=0 compiled=7 variants=0
+-> /home/user/sitelooper/bench/results/fwgr90-dg-n1-sitelooper-result.json
+
+fwgr90-dg-n1: objectives passed 6/6
+  obj 1: PASS — all 3 provisioned titles reported
+  obj 2: PASS — type=stat, datasource ok=true
+  obj 3: PASS — type=text, content includes runid=true
+  obj 4: PASS — tags=["bench"], time=now-6h..now
+  obj 5: PASS — refresh="1m"
+  obj 6: PASS — uid fg2iid9ohiio0f reported
+
+[sweep] run 2/3: fwgr90-dg-n2 (replay flow fwgr90-dg, no orchestrator)
+[reset] grafana: deleted leftover dashboard "fwgr90-dg-n1 Bench Dashboard" (200)
+[reset] grafana: deleted leftover dashboard "Service Health" (400)
+[sweep] fwgr90-dg-n2: 7 drift ticket(s) → fwgr90-dg-n2-drift.json
+
+fwgr90-dg-n2: objectives passed 6/6
+  obj 1: PASS — all 3 provisioned titles reported
+  obj 2: PASS — type=stat, datasource ok=true
+  obj 3: PASS — type=text, content includes runid=true
+  obj 4: PASS — tags=["bench"], time=now-6h..now
+  obj 5: PASS — refresh="1m"
+  obj 6: PASS — uid bg2ij9nh00ohsf reported
+[sweep] fwgr90-dg-n2: 03-create has no pinned skill — 50 model turn(s), on every replay
+
+[sweep] run 3/3: fwgr90-dg-n3 (replay flow fwgr90-dg, no orchestrator)
+[reset] grafana: deleted leftover dashboard "fwgr90-dg-n2 Bench Dashboard" (200)
+[reset] grafana: deleted leftover dashboard "Service Health" (400)
+[sweep] fwgr90-dg-n3: 6 drift ticket(s) → fwgr90-dg-n3-drift.json
+
+fwgr90-dg-n3: objectives passed 6/6
+  obj 1: PASS — all 3 provisioned titles reported
+  obj 2: PASS — type=stat, datasource ok=true
+  obj 3: PASS — type=text, content includes runid=true
+  obj 4: PASS — tags=["bench"], time=now-6h..now
+  obj 5: PASS — refresh="1m"
+  obj 6: PASS — uid ag2ijogb0s45ca reported
+
+Learning sweep fwgr90-dg (K=3)
+┌─────────┬───┬────────────────┬──────────┬─────────────┬───────┬──────┬───────────┬──────┬──────────────┬────────┐
+│ (index) │ n │ runid          │ verified │ stop        │ turns │ cmds │ total_usd │ A_n  │ replayed     │ wall_s │
+├─────────┼───┼────────────────┼──────────┼─────────────┼───────┼──────┼───────────┼──────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwgr90-dg-n1' │ '6/6'    │ 'completed' │ 9     │ 8    │ 0.0773    │ 0    │ '0/8'        │ 690    │
+│ 1       │ 2 │ 'fwgr90-dg-n2' │ '6/6'    │ 'success'   │ 79    │ 8    │ 0.0251    │ 0.75 │ '8/8 (flow)' │ 337    │
+│ 2       │ 3 │ 'fwgr90-dg-n3' │ '6/6'    │ 'success'   │ 0     │ 8    │ 0         │ 1    │ '8/8 (flow)' │ 154    │
+└─────────┴───┴────────────────┴──────────┴─────────────┴───────┴──────┴───────────┴──────┴──────────────┴────────┘
+http://127.0.0.1:3000
+  s_594ffc  validated   12 steps  3/3 (100%)
+           Navigate to the saved dashboard '{{v1}}' and read the current {{v4}} page URL directly from the address bar af…
+  s_835e9e  validated    7 steps  3/3 (100%)
+           Sign in to the Grafana app at {{v1}} with username {{v2}} and password exactly {{v3}}. Verify that the authent…
+  s_a9c6d2  validated   22 steps  3/3 (100%)
+           Set the dashboard '{{v1}}' tag to include '{{v4}}' and set the dashboard time range to the last 6 hours. Expli…
+  s_cc5d99  demoted     20 steps  1/3 (33%)
+           On the existing dashboard titled '{{v1}}', add a Text panel titled '{{v4}}' whose text content includes the ex…
+  s_da52a2  validated   12 steps  3/3 (100%)
+           Open the provisioned dashboard named Service health and report the titles of its panels exactly as shown on th…
+  s_e0ff42  validated    2 steps  3/3 (100%)
+           Open the provisioned dashboard named Service health and report the titles of its panels exactly as shown on th…
+  s_e468c5  validated    1 steps  3/3 (100%)
+           Sign in to the Grafana app at {{v1}} with username {{v2}} and password exactly {{v3}}. Verify that the authent…
+  s_eb83cc  validated   16 steps  3/3 (100%)
+           Verify the saved panel '{{v1}}' on dashboard '{{v3}}' is a {{v5}} visualization and its query is using the Tes…
+  s_f23f81  validated    9 steps  3/3 (100%)
+           Set the dashboard '{{v1}}' auto-refresh interval to exactly 1m and save the dashboard. Verify after saving/rel…
+  s_f97121  validated    6 steps  3/3 (100%)
+           Sign in to the Grafana app at {{v1}} with username {{v2}} and password exactly {{v3}}. Verify that the authent…
+  s_111a99  validated    2 steps  2/2 (100%)
+           Create a new Grafana dashboard titled '{{v3}}' and add a {{v4}} panel titled '{{v5}}'. Configure that panel's …
+  s_26afcb  validated   16 steps  2/2 (100%)  variant of s_cc5d99
+           On the existing dashboard titled '{{v1}}', add a {{v4}} panel titled '{{v5}}' whose text content includes the …
+  s_4ee7a1  validated   12 steps  2/2 (100%)
+           Create a new Grafana dashboard titled '{{v3}}' and add a {{v4}} panel titled '{{v5}}'. Configure that panel's …
+  s_b2e1ad  validated   15 steps  2/2 (100%)
+           Create a new Grafana dashboard titled '{{v3}}' and add a {{v4}} panel titled '{{v5}}'. Configure that panel's …
+store: /home/user/sitelooper/bench/results/fwgr90-dg-skills
+
+summary: /home/user/sitelooper/bench/results/fwgr90-dg-sweep.json
