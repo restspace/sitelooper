@@ -68,6 +68,48 @@ describe('readShadowFinding', () => {
     expect(readShadowFinding('landing', '{{v1}}?first_time_user=true', { v1: 'http://h/' }, 'http://h/')).toBeNull();
   });
 
+  it('gives no judgement on an in-progress status, either side (Ghost "Saving..." vs "Draft - Saved")', () => {
+    expect(readShadowFinding('post_status', 'Draft - Saved', {}, 'Saving...')).toBeNull();
+    expect(readShadowFinding('save_status_final', 'Saving...', {}, 'Draft - Saved')).toBeNull();
+    expect(readShadowFinding('header', 'Posts\nDraft - Saved\nPreview\nPublish', {}, 'Posts\nSaving...\nPreview\nPublish')).toBeNull();
+    expect(readShadowFinding('s', 'Ready', {}, 'Loading…')).toBeNull();
+    // a word alone, with no ellipsis, is not a progress status
+    expect(readShadowFinding('post_status', 'Draft - Saved', {}, 'Saving failed')).not.toBeNull();
+    expect(readShadowFinding('post_status', 'Draft - Saved', {}, 'Published')).not.toBeNull();
+  });
+
+  it('agrees on the same words in another order, never on a word missing or extra (GitHub-like fwgt16)', () => {
+    expect(readShadowFinding('timeline_item_2', 'admin added the \npriority-high\nbug\n labels', {}, 'admin added the \nbug\npriority-high\n labels')).toBeNull();
+    expect(readShadowFinding('t', 'admin added the bug label', {}, 'admin added the \nbug\npriority-high\n labels')).not.toBeNull();
+    expect(readShadowFinding('t', 'admin added the \npriority-high\nbug\n labels', {}, 'admin added the \nbug\n labels')).not.toBeNull();
+    expect(readShadowFinding('t', 'bug bug feature', {}, 'feature bug feature')).not.toBeNull();
+  });
+
+  it("gives no judgement where a whole-slot template was bound to something not of the read's kind", () => {
+    // a whole table row bound where the read is one cell (Odoo fwod50, fwod39)
+    const row = ' | [FURN_6666] Acoustic Bloc Screens | [FURN_6666] Acoustic Bloc Screens | 3.00 | 295.00 | 20% | £ 885.00 | ';
+    expect(readShadowFinding('first_line_product', '{{v4}}', { v4: row }, '[FURN_6666] Acoustic Bloc Screens')).toBeNull();
+    expect(readShadowFinding('first_line_product', '{{v4}}', { v4: row }, row.replace('3.00', '5.00'))).toBeNull();
+    expect(readShadowFinding('line2_product', '{{v6}}', { v6: '[FURN_7777] Office Chair 1.00 70.00' }, '[FURN_7777] Office Chair')).toBeNull();
+    // a param that was never a value (Odoo fwod47)
+    expect(readShadowFinding('unit_price', '{{v6}}', { v6: 'null' }, '85.00')).toBeNull();
+    // a minted reference against the run id or a page title (RepairDesk fwrd49, Odoo fwod48)
+    expect(readShadowFinding('ticket_reference', '{{v3}}', { v3: 'fwrd49-n3' }, 'RD-1019')).toBeNull();
+    expect(readShadowFinding('so_reference', '{{v3}}', { v3: 'Quotations' }, 'S00022')).toBeNull();
+  });
+
+  it("still judges a whole-slot template bound to a value of the read's kind", () => {
+    // ERPNext fwen2: the item the run chose, read as another
+    expect(readShadowFinding('item_name_1', '{{v2}}', { v2: 'Bench Widget' }, 'Bench Gadget')).not.toBeNull();
+    // a minted reference bound to a minted reference, read as another
+    expect(readShadowFinding('ref', '{{v3}}', { v3: 'RD-1017' }, 'RD-1019')).not.toBeNull();
+    // a slot with more around it is not a whole-slot binding
+    expect(readShadowFinding('title', '{{v1}} Bench', { v1: 'Bench Task | x' }, 'Other')).not.toBeNull();
+    // the slot's value neither contains the read nor is a list
+    expect(readShadowFinding('part_name', '{{v4}}', { v4: 'fwrd53-n3 RD Part B' }, 'fwrd53-n3 RD Part A')).not.toBeNull();
+    expect(readShadowFinding('part_name', '{{v4}}', { v4: 'fwrd53-n3 RD Part A' }, 'No parts on this ticket yet.')).not.toBeNull();
+  });
+
   it('compares multi-line and list reads by their words', () => {
     expect(readWords('Sales Order\nQuotation Sent\n  Quotation')).toEqual(['sales', 'order', 'quotation', 'sent', 'quotation']);
     expect(readShadowFinding('s', 'Seed: A, Seed: B', {}, 'Seed: A | Seed: B')).toBeNull();
@@ -99,6 +141,25 @@ describe('readShadowLines', () => {
   it('judges read, templated, non-echoed labels only', () => {
     const lines = readShadowLines(shadowReadLabels(steps), { status: 'Cancelled', customer: '{{v2}}', other: 'x' }, { v2: 'fwod98-n3 Bench Customer' }, { status: 'Sales Order', customer: 'someone else', other: 'y' }, ['customer']);
     expect(lines).toEqual(['[shadow:read] step 4: label status read "Sales Order", recorded template "Cancelled"']);
+  });
+
+  it('drops sibling labels that swapped values (GitHub-like fwgt16 sidebar labels)', () => {
+    const labels = { sidebar_label_priority_high: 2, sidebar_label_bug: 3, status: 4 };
+    const templates = { sidebar_label_priority_high: 'priority-high', sidebar_label_bug: 'bug', status: 'Open' };
+    expect(readShadowLines(labels, templates, {}, { sidebar_label_priority_high: 'bug', sidebar_label_bug: 'priority-high', status: 'Open' }, [])).toEqual([]);
+    // a swap does not hide a sibling's own wrong value
+    expect(readShadowLines(labels, templates, {}, { sidebar_label_priority_high: 'bug', sidebar_label_bug: 'priority-high', status: 'Closed' }, [])).toEqual([
+      '[shadow:read] step 4: label status read "Closed", recorded template "Open"',
+    ]);
+  });
+
+  it('still flags siblings that read the same wrong value, or only half a swap', () => {
+    const labels = { a: 1, b: 2 };
+    const templates = { a: '{{v1}} RD Part A', b: '{{v1}} RD Part B' };
+    const params = { v1: 'fwrd55-n3' };
+    expect(readShadowLines(labels, templates, params, { a: 'fwrd55-n3 RD Part A', b: 'fwrd55-n3 RD Part A' }, [])).toHaveLength(1);
+    expect(readShadowLines(labels, { a: 'bug', b: 'priority-high' }, {}, { a: 'priority-high', b: 'enhancement' }, [])).toHaveLength(2);
+    expect(readShadowLines(labels, { a: 'bug', b: 'priority-high' }, {}, { a: 'priority-high', b: 'priority-high' }, [])).toHaveLength(1);
   });
 });
 

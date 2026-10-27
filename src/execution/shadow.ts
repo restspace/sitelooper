@@ -66,31 +66,49 @@ function wordsWithin(inner: readonly string[], outer: readonly string[]): boolea
 }
 
 /**
- * The read shadow rule, for ONE published value: null when there is nothing
- * to judge or the read agrees, otherwise the finding's text.
- *
- * Judged only when the recorded template is FIXED for this run:
- *  - every `{{vN}}` slot is one of this run's params, none bound to '';
- *  - after filling them no `{{` marker is left (a derived `{{dN}}`, a `{{=}}`
- *    frame, the `{{*}}` wildcard, an `{{env:…}}` secret, an unknown slot);
- *  - the filled template is not a url (nor about:blank);
- *  - the template's own recorded text (outside its slots) carries no number,
- *    unless that number is one of this run's params written another way
- *    (EspoCRM fwec10's "$12,500.00" for an amount typed as 12500). Any other
- *    recorded number is the recording's moment — a minted id ("#4",
- *    "S00021", "RD-1015"), a clock time, a total over rows that vary — and
- *    published templates keep hundreds of them (the offline measurement over
- *    485 sweeps flagged most green runs on exactly these).
- * A value the replay did not read (undefined, or empty as a skipped read
- * leaves it in either runner) is not judged.
- *
- * Agreement is the template's words occurring, in order and contiguous,
- * among the read's words (readWords): a read whose element also shows a
- * heading or a neighbour still shows the recorded value. A read that is a
- * PART of the template is a finding — Odoo fwod98's status bar read without
- * the "Cancelled" its template begins with.
+ * An in-progress status ("Saving...", "Loading…"): what the page showed while
+ * a save or load was under way, which a read catches or misses by timing
+ * alone (Ghost's editor header reads "Saving..." or "Draft - Saved" on runs
+ * the app's verifier passed alike). Kept to a few generic progress verbs.
  */
-export function readShadowFinding(label: string, template: string, params: Record<string, string>, read: string | undefined): string | null {
+const TRANSIENT_STATUS = /\b(?:saving|loading|updating|processing|submitting)\s*(?:\.{2,}|…)/i;
+
+/** A minted reference as an app shows one: letters then digits ("RD-1019", "S00022", "INV/2026/0007"). */
+const MINTED_ID = /^[A-Za-z]{1,6}[-_/#]?\d[\d/-]*\d$/;
+
+/** Words as a multiset key: the same words in any order give the same key. */
+function wordBag(words: readonly string[]): string {
+  return [...words].sort().join(' ');
+}
+
+/**
+ * Whether a template made of ONE slot was bound to something that is not a
+ * value of the read's kind, so a mismatch says nothing about the app. The
+ * binding is the recorder's guess at which typed or chosen value the read
+ * shows; when the guess is wrong the template was never fixed:
+ *  - the slot's value is "null"/"undefined" (a param that was never a value,
+ *    Odoo fwod47's unit price);
+ *  - the slot's value is a " | "-joined list: a read_all's whole table row
+ *    bound where the read is one cell (Odoo fwod50's first_line_product);
+ *  - the slot's value CONTAINS the read word-wise: the read is one cell of
+ *    the row the slot holds (Odoo fwod39's "[FURN_7777] Office Chair");
+ *  - the read is a minted reference ("RD-1019", "S00022") and the slot's
+ *    value is not one (RepairDesk's run id "fwrd49-n3", Odoo's page title
+ *    "Quotations"): an id the app mints is never one the run typed.
+ * A slot bound to a value of the read's kind ("Bench Widget" read as "Bench
+ * Gadget") is still judged.
+ */
+function badSlotBinding(value: string, read: string): boolean {
+  const v = value.trim();
+  if (/^(?:null|undefined)$/i.test(v)) return true;
+  if (v.includes(' | ')) return true;
+  const cell = readWords(read);
+  if (cell.length && wordsWithin(cell, readWords(v))) return true;
+  return MINTED_ID.test(read.trim()) && !MINTED_ID.test(v);
+}
+
+/** readShadowFinding's judgement, with the filled template readShadowLines compares siblings by. */
+function readShadowMismatch(label: string, template: string, params: Record<string, string>, read: string | undefined): { filled: string; why: string } | null {
   if (typeof read !== 'string' || !read.trim()) return null;
   if (typeof template !== 'string' || !template.trim()) return null;
   let unfilled = false;
@@ -107,6 +125,8 @@ export function readShadowFinding(label: string, template: string, params: Recor
   // value the procedure published about the app's state: 30 of the green
   // runs' findings were a sign-in step's "initial page url".
   if (/^(?:https?:\/\/|about:|file:|data:)\S*$/i.test(filled.trim())) return null;
+  // A progress status on either side was caught mid-save: timing, not state.
+  if (TRANSIENT_STATUS.test(filled) || TRANSIENT_STATUS.test(read)) return null;
   const given = new Set(
     Object.values(params)
       .map((v) => plainNumbers(String(v).trim()))
@@ -115,10 +135,51 @@ export function readShadowFinding(label: string, template: string, params: Recor
   const recordedNumbers = plainNumbers(template.replace(/\{\{v\d+\}\}/g, ' ')).match(/\d+(?:\.\d+)?/g) ?? [];
   if (recordedNumbers.some((n) => !given.has(n))) return null;
   const want = readWords(filled);
-  if (!want.length || wordsWithin(want, readWords(read))) return null;
+  const got = readWords(read);
+  if (!want.length || wordsWithin(want, got)) return null;
+  // The same words in another order: a list the app orders its own way
+  // ("added the bug, priority-high labels" either way round). Only an equal
+  // multiset agrees — a word missing or extra still flags.
+  if (wordBag(want) === wordBag(got)) return null;
+  const whole = /^\s*\{\{(v\d+)\}\}\s*$/.exec(template);
+  if (whole && badSlotBinding(params[whole[1]], read)) return null;
   const show = (s: string) => JSON.stringify(s.length > 120 ? s.slice(0, 120) + '…' : s);
   const recorded = filled === template ? `recorded template ${show(template)}` : `recorded template ${show(template)} = ${show(filled)} this run`;
-  return `label ${label} read ${show(read)}, ${recorded}`;
+  return { filled, why: `label ${label} read ${show(read)}, ${recorded}` };
+}
+
+/**
+ * The read shadow rule, for ONE published value: null when there is nothing
+ * to judge or the read agrees, otherwise the finding's text.
+ *
+ * Judged only when the recorded template is FIXED for this run:
+ *  - every `{{vN}}` slot is one of this run's params, none bound to '';
+ *  - after filling them no `{{` marker is left (a derived `{{dN}}`, a `{{=}}`
+ *    frame, the `{{*}}` wildcard, an `{{env:…}}` secret, an unknown slot);
+ *  - the filled template is not a url (nor about:blank);
+ *  - neither the template nor the read is an in-progress status
+ *    (TRANSIENT_STATUS);
+ *  - the template's own recorded text (outside its slots) carries no number,
+ *    unless that number is one of this run's params written another way
+ *    (EspoCRM fwec10's "$12,500.00" for an amount typed as 12500). Any other
+ *    recorded number is the recording's moment — a minted id ("#4",
+ *    "S00021", "RD-1015"), a clock time, a total over rows that vary — and
+ *    published templates keep hundreds of them (the offline measurement over
+ *    485 sweeps flagged most green runs on exactly these);
+ *  - a template that is one whole slot had that slot bound to a value of the
+ *    read's kind (see badSlotBinding).
+ * A value the replay did not read (undefined, or empty as a skipped read
+ * leaves it in either runner) is not judged.
+ *
+ * Agreement is the template's words occurring, in order and contiguous,
+ * among the read's words (readWords): a read whose element also shows a
+ * heading or a neighbour still shows the recorded value. Exactly the same
+ * words in another order agree too. A read that is a PART of the template is
+ * a finding — Odoo fwod98's status bar read without the "Cancelled" its
+ * template begins with.
+ */
+export function readShadowFinding(label: string, template: string, params: Record<string, string>, read: string | undefined): string | null {
+  return readShadowMismatch(label, template, params, read)?.why ?? null;
 }
 
 /**
@@ -160,11 +221,22 @@ export function readShadowLines(
   values: Record<string, string | undefined>,
   echoed: readonly string[],
 ): string[] {
-  const out: string[] = [];
+  const found: { at: number; read: string; filled: string; why: string }[] = [];
   for (const [label, at] of Object.entries(labels)) {
     if (!Object.prototype.hasOwnProperty.call(templates, label) || echoed.includes(label)) continue;
-    const why = readShadowFinding(label, templates[label], params, values[label]);
-    if (why) out.push(shadowLine('read', String(at), why));
+    const m = readShadowMismatch(label, templates[label], params, values[label]);
+    if (m) found.push({ at, read: String(values[label]), filled: m.filled, why: m.why });
   }
-  return out;
+  // Sibling labels swapped: reads of one segment that each found what ANOTHER
+  // finding's template recorded (GitHub-like fwgt16's sidebar_label_bug read
+  // "priority-high" while sidebar_label_priority_high read "bug": the app
+  // listed the same labels in another order). Those findings are dropped
+  // only when their reads and their templates are the same multiset, so two
+  // reads of the same wrong value ("Part A", "Part A" for "Part B", "Part B")
+  // still flag.
+  const key = (s: string) => wordBag(readWords(s));
+  const swapped = found.filter((f) => found.some((g) => g !== f && key(f.read) === key(g.filled)));
+  const bag = (keys: string[]) => keys.sort().join('\n');
+  const swap = swapped.length >= 2 && bag(swapped.map((f) => key(f.read))) === bag(swapped.map((f) => key(f.filled)));
+  return found.filter((f) => !(swap && swapped.includes(f))).map((f) => shadowLine('read', String(f.at), f.why));
 }
