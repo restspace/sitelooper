@@ -153,10 +153,3 @@ export function goalNamesRunValue(goal: readonly string[], params: Record<string
     return ids.some((id) => filled.includes(id));
   });
 }
-
-/** Rule 3 in one call: the finding when the satisfied goal names nothing of this run, else null. */
-export function goalSkipShadow(tag: string, goal: readonly string[], params: Record<string, string>, runSlots: readonly string[], runIds: readonly string[] = []): string | null {
-  if (!shadowEnabled() || !goal.length || goalNamesRunValue(goal, params, runSlots, runIds)) return null;
-  const shown = goal.map((g) => g.replace(GOAL_SLOT, (all, name: string) => params[name] ?? all));
-  return shadowLine('delta', tag, `skipped as already satisfied on goal text ${quoted(shown)}, which names no value of this run — it may have been on the page before the run`);
-}

@@ -3035,7 +3035,7 @@ describe('emitFlowFile: the already-satisfied guard', () => {
   it('opens the step body with the guard, its log line and the report values', () => {
     const source = emit(cancelStep());
     const body = source.slice(source.indexOf("async '08-open'"));
-    const lines = body.split('\n').slice(1, 11).map((l) => l.trim());
+    const lines = body.split('\n').slice(1, 10).map((l) => l.trim());
     expect(lines).toEqual([
       '// goal: the page already showing "Cancelled" for this record means the step\'s work is done —',
       '// the same check replay makes before it acts (goalSatisfied, src/skills/replay.ts).',
@@ -3043,11 +3043,11 @@ describe('emitFlowFile: the already-satisfied guard', () => {
       // (markersBound — a slot bound to '' proves nothing, and compile cannot
       // see the value), the page template the goal was read on (the shared
       // urlMatches, unconditionally), then the page itself.
-      "if (markersBound(['{{v1}}', '{{v3}}', 'Cancelled'], p) && urlMatches('http://app.test/odoo/sales/21', page.url(), p) && await satisfied(page, [`${p.v1}`, `${p.v3}`], ['Cancelled'])) {",
+      // ...and the strict delta rule (execution/delta.ts rule 3): the goal
+      // must name a `known` slot or the run id. v1/v3 are known here; the
+      // literal "Cancelled" names neither, so at run time this step replays.
+      "if (markersBound(['{{v1}}', '{{v3}}', 'Cancelled'], p) && urlMatches('http://app.test/odoo/sales/21', page.url(), p) && goalNamesRunValue(['Cancelled'], p, [\"v1\",\"v3\"], runIdsOf(p, {})) && await satisfied(page, [`${p.v1}`, `${p.v3}`], ['Cancelled'])) {",
       "console.log('[sitelooper satisfied] 08-open — page shows \"Cancelled\"; nothing to do');",
-      // The delta shadow rule (execution/delta.ts rule 3), reported only: the
-      // goal names no `known` slot and no run id. v1/v3 are known here.
-      "{ const shadow = goalSkipShadow('08-open', ['Cancelled'], p, [\"v1\",\"v3\"], runIdsOf(p, {})); if (shadow) console.log(`[sitelooper shadow] ${shadow}`); }",
       // The template stands in for the read-backs through the shared rule, on
       // the page just judged: recorded text publishes only where it shows (fwrd86).
       'const satisfiedShown = await shownForReport(page).catch(() => null);',

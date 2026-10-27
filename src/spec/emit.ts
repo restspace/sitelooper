@@ -3757,15 +3757,14 @@ function markerBound(marker: string, segment: SpecSegment): boolean {
  * simply leaves the step running exactly as it does today.
  */
 /**
- * The delta shadow rule's report for an "already satisfied" skip (execution/
- * delta.ts rule 3), asked at run time as the daemon asks it: the goal names a
- * value of this run — a `known` param or the run id — or it is reported.
+ * The strict delta rule for an "already satisfied" skip (execution/delta.ts
+ * rule 3), asked at run time as the daemon asks it: the goal must name a value
+ * of this run — a `known` param or the run id — or the step replays instead.
  */
-function goalShadowLines(step: SpecStep, head: SpecSegment, last: SpecSegment, goal: readonly string[]): string[] {
+function goalNamesRunCondition(head: SpecSegment, last: SpecSegment, goal: readonly string[]): string {
   const runSlots = runSlotsOf(head.params, last.params);
   const ids = Object.fromEntries(Object.entries({ ...head.params, ...last.params }).filter(([, prm]) => prm?.binding === 'var:runid').map(([name]) => [name, { binding: 'var:runid' }]));
-  const call = 'goalSkipShadow(' + q(step.id) + ', [' + goal.map(q).join(', ') + '], p, ' + JSON.stringify(runSlots) + ', runIdsOf(p, ' + JSON.stringify(ids) + '))';
-  return ['  { const shadow = ' + call + '; ' + SHADOW_LOG];
+  return 'goalNamesRunValue([' + goal.map(q).join(', ') + '], p, ' + JSON.stringify(runSlots) + ', runIdsOf(p, ' + JSON.stringify(ids) + ')) && ';
 }
 
 function satisfiedGuard(step: SpecStep, ctx: Ctx, consumed: ReadonlySet<string> = new Set()): string[] {
@@ -3794,12 +3793,12 @@ function satisfiedGuard(step: SpecStep, ctx: Ctx, consumed: ReadonlySet<string> 
   noteSlots(head.preconditions.urlPattern, ctx);
   const raw = [...identity, ...goal].map(q).join(', ');
   const onPage = `markersBound([${raw}], p) && urlMatches(${q(head.preconditions.urlPattern)}, page.url(), p) && `;
+  const namesRun = goalNamesRunCondition(head, last, goal);
   const out = [
     `// goal: the page already showing ${shown} for this record means the step's work is done —`,
     '// the same check replay makes before it acts (goalSatisfied, src/skills/replay.ts).',
-    `if (${onPage}await satisfied(page, [${identity.map(src).join(', ')}], [${goal.map(src).join(', ')}])) {`,
+    `if (${onPage}${namesRun}await satisfied(page, [${identity.map(src).join(', ')}], [${goal.map(src).join(', ')}])) {`,
     `  console.log(${src(say)});`,
-    ...goalShadowLines(step, head, last, goal),
   ];
   // The read-backs never run, so the report template stands in for them: the
   // same output keys, filled from this run's own params — through the shared

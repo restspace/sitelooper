@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import type { Page } from 'playwright-core';
 import { expectedChangesVerdict, openerPopupLines, openerWorkLines, preexistingLines, type ChangeObservation } from '../src/execution/expect.js';
-import { goalNamesRunValue, goalSkipShadow, heldAtStart, inEffectShadow, preexistingShadow, runIdsOf, runSlotsOf, segmentStart, type SegmentStart } from '../src/execution/delta.js';
+import { goalNamesRunValue, heldAtStart, inEffectShadow, preexistingShadow, runIdsOf, runSlotsOf, segmentStart, type SegmentStart } from '../src/execution/delta.js';
 import { segmentStartDialect } from '../src/execution/toggle.js';
 import { documentOf, isObserveArg } from './fixture/observation.js';
 
@@ -139,37 +139,39 @@ describe('rule 2: an in-effect skip whose evidence already held as the segment s
   });
 });
 
-describe('rule 3: an "already satisfied" skip on goal text that names no value of this run', () => {
+describe('rule 3 (strict): an "already satisfied" skip needs goal text naming a value of this run', () => {
   // grafana fwgr50: the previous step's toast; odoo fwod74: a product code
-  // the previous step showed. Both goals are literals.
+  // the previous step showed. Both goals are literals, both skips were false passes.
   const params = { v1: 'S00021', v2: 'fwod74-n2 Bench Customer', v3: 'fwod74-n2' };
   const known = { v1: { known: true }, v2: { known: true }, v3: { known: true, binding: 'var:runid' }, v7: {} };
 
-  it('reports a literal goal', () => {
+  it('refuses a literal goal', () => {
     const slots = runSlotsOf(known);
     expect(slots).toEqual(['v1', 'v2', 'v3']);
     expect(goalNamesRunValue(['FURN_6666'], params, slots, runIdsOf(params, known))).toBe(false);
-    expect(goalSkipShadow('05-open', ['Dashboard saved'], params, slots)).toBe(
-      '[shadow:delta] step 05-open: skipped as already satisfied on goal text "Dashboard saved", which names no value of this run — it may have been on the page before the run',
-    );
+    expect(goalNamesRunValue(['Dashboard saved'], params, slots)).toBe(false);
   });
 
-  it('says nothing of a goal naming a known slot, bound', () => {
+  it('allows a goal naming a known slot, bound', () => {
     const slots = runSlotsOf(known);
-    expect(goalSkipShadow('06-open', ['{{v1}} Cancelled'], params, slots)).toBeNull();
+    expect(goalNamesRunValue(['{{v1}} Cancelled'], params, slots)).toBe(true);
     // a slot nobody vouched for is not this run's
-    expect(goalSkipShadow('06-open', ['{{v7}}'], { ...params, v7: 'Acoustic' }, slots)).not.toBeNull();
+    expect(goalNamesRunValue(['{{v7}}'], { ...params, v7: 'Acoustic' }, slots)).toBe(false);
     // nor one bound to nothing
-    expect(goalSkipShadow('06-open', ['{{v1}}'], { ...params, v1: '' }, slots)).not.toBeNull();
+    expect(goalNamesRunValue(['{{v1}}'], { ...params, v1: '' }, slots)).toBe(false);
   });
 
-  it('says nothing of a goal whose text carries the run id', () => {
+  it('allows a goal whose text carries the run id', () => {
     expect(runIdsOf(params, known)).toEqual(['fwod74-n2']);
-    expect(goalSkipShadow('06-open', ['Notes for fwod74-n2'], params, [], ['fwod74-n2'])).toBeNull();
+    expect(goalNamesRunValue(['Notes for fwod74-n2'], params, [], ['fwod74-n2'])).toBe(true);
   });
 
-  it('is silent when shadow rules are off', () => {
+  it('is not switched off with the shadow rules', () => {
     process.env.SITELOOPER_SHADOW = 'off';
-    expect(goalSkipShadow('05-open', ['Dashboard saved'], params, [])).toBeNull();
+    try {
+      expect(goalNamesRunValue(['Dashboard saved'], params, [])).toBe(false);
+    } finally {
+      delete process.env.SITELOOPER_SHADOW;
+    }
   });
 });
