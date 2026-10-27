@@ -3359,7 +3359,8 @@ function emitSkillAction(step: SkillStep, segment: SpecSegment, index: number, c
  * a failure with its outcome (actionFailed). The options are replay's runStep
  * options: whether the tool may navigate (the url wait), whether it is an
  * input (the start grace from the dispatch), and the step's expected effect
- * (the shared effectExpectation over its recorded `{{vN}}` lines).
+ * (the shared effectExpectation over its recorded `{{vN}}` lines, and the
+ * records it took away).
  */
 function observeAction(step: SkillStep, ctx: Ctx, out: string[]): void {
   if (!ctx.obs || !isMutatingAction(step.tool) || !out.length) return;
@@ -3368,7 +3369,13 @@ function observeAction(step: SkillStep, ctx: Ctx, out: string[]): void {
   if (isNavigatingAction(step.tool)) options.push('navigating: true');
   if (INPUT_TOOLS.has(step.tool)) options.push('graceFromDispatch: true');
   const hard = recordedChanges(step).filter((l) => SLOT_LINE.test(l));
-  if (hard.length) {
+  // The records the gesture took away (StepExpectation.goneContains), waited
+  // out by the same probe replay builds.
+  const gone = (step.expect?.goneContains ?? []).filter((l) => SLOT_LINE.test(l));
+  if (gone.length) {
+    noteSlots([...hard, ...gone], ctx);
+    options.push(`expect: effectExpectation(page, [${hard.map(q).join(', ')}], p, ${step.expect?.lineDialect === 2 ? 2 : 1}, [${gone.map(q).join(', ')}])`);
+  } else if (hard.length) {
     noteSlots(hard, ctx);
     options.push(`expect: effectExpectation(page, [${hard.map(q).join(', ')}], p${dialectArg(step)})`);
   }

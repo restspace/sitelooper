@@ -1293,6 +1293,69 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
     return { replay, emitted, replayLog, emittedLog };
   }
 
+  it('both runners wait for the records a confirm took away before reading the table (fwrd63)', async () => {
+    // Deleted on the confirm, repainted 900ms later: no request, no live
+    // region — nothing but the recorded removal says the page is still moving.
+    const PAGE = `<!doctype html><html><body><main><h1>Ticket</h1>
+<table><tbody id="parts"></tbody></table>
+<dialog id="confirm"><h2>Confirm</h2><button id="yes">Delete part</button></dialog>
+</main><script>
+let parts = ['Bench Part A', 'Bench Part B'];
+let pending = null;
+function paint() {
+  document.getElementById('parts').innerHTML = parts.length
+    ? parts.map((p, i) => '<tr><td>' + p + '</td><td><button data-i="' + i + '">Delete</button></td></tr>').join('')
+    : '<tr><td>No parts on this ticket yet.</td></tr>';
+}
+paint();
+document.getElementById('parts').addEventListener('click', (e) => {
+  const b = e.target.closest('button');
+  if (!b) return;
+  pending = parts[Number(b.dataset.i)];
+  document.getElementById('confirm').showModal();
+});
+document.getElementById('yes').addEventListener('click', () => {
+  document.getElementById('confirm').close();
+  const gone = pending;
+  setTimeout(() => { parts = parts.filter((p) => p !== gone); paint(); }, 900);
+});
+</script></body></html>`;
+    const onPage: PageHook = async (page) => {
+      await page.route(`${origin}/`, (route) => route.fulfill({ contentType: 'text/html', body: PAGE }));
+    };
+    const open = (slot: string): SkillStep => ({
+      tool: 'click',
+      args: { target: '@e1' },
+      locators: { target: [{ kind: 'scoped', container: 'tr', hasText: `{{${slot}}}`, selector: 'button' }] },
+      expect: { addedContains: ['- button "Delete part"'], lineDialect: 2 },
+    });
+    const confirm = (slot: string): SkillStep => ({
+      tool: 'click',
+      args: { target: '@e2' },
+      locators: { target: [{ kind: 'role', role: 'button', name: 'Delete part' }] },
+      expect: { goneContains: [`- cell "{{${slot}}}"`], lineDialect: 2 },
+    });
+    const steps: SkillStep[] = [
+      open('v1'),
+      confirm('v1'),
+      open('v2'),
+      confirm('v2'),
+      { tool: 'read', args: { target: 'tbody', what: 'text', label: 'parts_after' }, locators: { target: [{ kind: 'css', selector: 'tbody' }] }, label: 'parts_after' },
+    ];
+    const params = { v1: 'Bench Part A', v2: 'Bench Part B' };
+    const declared = { v1: { example: params.v1, usedIn: [1], known: true }, v2: { example: params.v2, usedIn: [3], known: true } };
+    const skill: Skill = { ...skillOf(steps), id: 's_parity_gone', template: 'delete {{v1}} and {{v2}}', params: declared };
+    const spec = specOf(steps);
+    spec.steps[0].segments[0] = { ...spec.steps[0].segments[0], id: 's_parity_gone', template: 'delete {{v1}} and {{v2}}', params: declared };
+    const replay = await replayOf(skill, params, onPage);
+    const emitted = await emittedOf(spec, params, onPage);
+    for (const [run, read] of [[replay, replay.outputs.parts_after], [emitted, emitted.outputs['01-clear.parts_after']]] as const) {
+      expect(run.ok, run.reason ?? '').toBe(true);
+      expect(read).toContain('No parts on this ticket yet.');
+      expect(read).not.toContain('Bench Part');
+    }
+  }, 120_000);
+
   it('both runners enforce a back step URL gate before allowing the next mutation', async () => {
     const steps: SkillStep[] = [
       { tool: 'goto', args: { url: `${origin}/record/previous` }, locators: {} },
