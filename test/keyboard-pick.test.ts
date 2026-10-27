@@ -100,3 +100,20 @@ describe('fwgt13-n1: every keyboard pick compiles as a named selection', () => {
     expect(source.split('\n').filter((l) => l.includes("await keyboardPickVerdict(page, { role: 'div', name: 'enhancement' })"))).toHaveLength(1);
   });
 });
+
+// gitea fwgt37-dg 05-change: the journal's name is the option's text, which
+// Playwright's role name is not when an avatar <img title> sits inside it.
+describe('a named key pick also finds its option by text', () => {
+  it('carries a role-scoped exact text candidate behind the role', () => {
+    const steps: SkillStep[] = [
+      { tool: 'press', args: { key: 'ArrowDown' }, locators: {} },
+      { tool: 'press', args: { key: 'Enter' }, locators: {}, picks: { role: 'link', name: 'bench-assignee (Bench Assignee)' } },
+    ];
+    const [click] = namedKeyPicks(steps);
+    expect(click.tool).toBe('click');
+    expect(click.locators.target).toEqual([
+      { kind: 'role', role: 'link', name: 'bench-assignee (Bench Assignee)' },
+      { kind: 'css', selector: 'role=link >> internal:has-text="bench-assignee (Bench Assignee)"s' },
+    ]);
+  });
+});

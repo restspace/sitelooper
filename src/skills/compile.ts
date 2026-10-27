@@ -16,6 +16,7 @@ import { hideEffectLines } from '../execution/toggle.js';
 import { recordedDoubled } from '../execution/refill.js';
 import { collapseTogglePairs, dropSupersededSets, sameControl } from './toggles.js';
 import { namedHighlightPicks } from './highlight-pick.js';
+import { dropDiscardedDetours } from './discarded-detour.js';
 import { dropRestoredDetours } from './restored-field.js';
 import { dropRetriedSubmits } from './retried-submit.js';
 import { generaliseAppMinted, generaliseAppMintedDeep, sessionAppMintedPositions } from './app-minted-url.js';
@@ -846,7 +847,7 @@ export function compileSkills(input: CompileInput): Skill[] {
   // whose value the run actually reported; drop the rest.
   /** What the recording-level passes dropped, noted on the first segment (built below). */
   const recordingNotes: TransformNote[] = [];
-  const replayable = dropSupersededSets(collapseTogglePairs(expandListReads(dropEvalAssignedCandidates(creditUncreditedPopups(dropRetriedSubmits(dropRestoredDetours(namedHighlightPicks(steps))), recordingNotes), recordingNotes), reportValues))).filter((step) => {
+  const replayable = dropSupersededSets(collapseTogglePairs(expandListReads(dropEvalAssignedCandidates(creditUncreditedPopups(dropRetriedSubmits(dropRestoredDetours(dropDiscardedDetours(namedHighlightPicks(steps), recordingNotes))), recordingNotes), recordingNotes), reportValues))).filter((step) => {
     if (step.tool === 'screenshot' || step.tool === 'eval') return false;
     // A bare tab listing (`tabs` with no switch_to) is the agent looking, like
     // a screenshot: it changes nothing and publishes nothing. openproject
@@ -5207,6 +5208,19 @@ export function foldLoops(steps: SkillStep[], instruction = '', notes?: Transfor
   return out;
 }
 
+/**
+ * An element of `role` whose whole text is `text`, as a css candidate:
+ * Playwright's own spelling of `getByRole(role).filter({ hasText })` with an
+ * exact, case-sensitive match (`"…"s`). For a name the page's TEXT gives but
+ * Playwright's accessible name does not — an avatar `<img title>` inside a
+ * link is part of the latter (gitea fwgt37-dg's assignee options). The
+ * recorder verifies it where a role candidate misses (verifiedChain);
+ * namedKeyPicks puts it behind the role it names.
+ */
+export function roleTextSelector(role: string, text: string): string {
+  return `role=${role} >> internal:has-text=${JSON.stringify(text)}s`;
+}
+
 /** ARIA roles a named click can find an option by (a journal describing a bare `div` or `li` names no role to click). */
 const PICKABLE_ROLE = /^(option|menuitem|menuitemcheckbox|menuitemradio|checkbox|radio|switch|treeitem|link|tab|gridcell|row|listitem|button)$/;
 
@@ -5234,7 +5248,18 @@ export function namedKeyPicks(steps: SkillStep[], notes?: TransformNote[]): Skil
       out.pop();
       notes?.push({ name: 'namedKeyPicks', at: i, reason: `an arrow press that only moved the highlight onto ${JSON.stringify(pick.name)}, which step ${i + 1} now picks by name` });
     }
-    const chain: LocatorCandidate[] = [{ kind: 'role', role: pick.role, name: pick.name }];
+    // The journal's name is the page's TEXT, not always Playwright's
+    // accessible name: gitea fwgt37-dg's assignee option is
+    // `<a><img title="Bench Assignee"> bench-assignee (Bench Assignee)</a>`,
+    // which the journal calls link "bench-assignee (Bench Assignee)" and the
+    // role engine "Bench Assignee bench-assignee (Bench Assignee)" (the img's
+    // title). The role candidate alone matched nothing on n1, n2 or n3. The
+    // second finds the same role by its whole text instead (`…s`: exact,
+    // case-sensitive, as Playwright writes `filter({ hasText })` itself).
+    const chain: LocatorCandidate[] = [
+      { kind: 'role', role: pick.role, name: pick.name },
+      { kind: 'css', selector: roleTextSelector(pick.role, pick.name) },
+    ];
     const { picks: _picks, ...rest } = step;
     out.push({ ...rest, tool: 'click', args: { target: `role=${pick.role}[name=${JSON.stringify(pick.name)}]` }, locators: { target: chain } });
     notes?.push({ name: 'namedKeyPicks', at: i + 1, reason: `${String(step.args.key)} picked ${pick.role} ${JSON.stringify(pick.name)} (journal): compiled as a click on it by name` });
