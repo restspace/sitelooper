@@ -1,0 +1,753 @@
+{
+  "name": "fwec21-dg",
+  "origin": "http://127.0.0.1:8097",
+  "startUrl": "http://127.0.0.1:8097/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-signin",
+      "instruction": "Sign in to EspoCRM at http://127.0.0.1:8097/ using username admin and password exactly {{env:APP_PASSWORD}}. Verify that the CRM is signed in and report the visible result.",
+      "skill": "s_2d7c17",
+      "params": {
+        "v1": "http://127.0.0.1:8097/",
+        "v2": "admin",
+        "v3": "{{env:APP_PASSWORD}}"
+      },
+      "outputs": [
+        "final_url",
+        "signed_in_user",
+        "login_username",
+        "user_navigation_link",
+        "user_menu_admin",
+        "user_menu_administration",
+        "user_menu_preferences",
+        "user_menu_about",
+        "user_menu_log_out"
+      ],
+      "recorded": {
+        "final_url": "http://127.0.0.1:8097/",
+        "signed_in_user": "Admin",
+        "login_username": "admin",
+        "dashboard_panels_visible": "Stream (No Data), My Activities",
+        "user_navigation_link": "Users",
+        "user_menu_admin": "Admin",
+        "user_menu_administration": "Administration",
+        "user_menu_preferences": "Preferences",
+        "user_menu_about": "About",
+        "user_menu_log_out": "Log Out",
+        "url": "http://127.0.0.1:8097/"
+      },
+      "route": "http://127.0.0.1:8097/",
+      "outputEvidence": {
+        "final_url": {
+          "same": 2,
+          "differed": 0
+        },
+        "signed_in_user": {
+          "same": 2,
+          "differed": 0
+        },
+        "login_username": {
+          "same": 0,
+          "differed": 2
+        },
+        "dashboard_panels_visible": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "user_navigation_link": {
+          "same": 2,
+          "differed": 0
+        },
+        "user_menu_admin": {
+          "same": 2,
+          "differed": 0
+        },
+        "user_menu_administration": {
+          "same": 2,
+          "differed": 0
+        },
+        "user_menu_preferences": {
+          "same": 2,
+          "differed": 0
+        },
+        "user_menu_about": {
+          "same": 2,
+          "differed": 0
+        },
+        "user_menu_log_out": {
+          "same": 2,
+          "differed": 0
+        },
+        "url": {
+          "same": 2,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "02-open",
+      "instruction": "Open the Opportunities list and report the exact names of every opportunity whose name starts with Seed:. Do not modify any opportunities.",
+      "skill": "s_7961aa",
+      "params": {},
+      "outputs": [
+        "pagination",
+        "opportunity_1",
+        "opportunity_2",
+        "opportunity_3"
+      ],
+      "recorded": {
+        "pagination": "1–3 / 3",
+        "opportunity_1": "Seed: training package",
+        "opportunity_2": "Seed: pilot expansion",
+        "opportunity_3": "Seed: annual support renewal",
+        "total_opportunities": "3",
+        "seed_prefixed_count": "3",
+        "url": "http://127.0.0.1:8097/#Opportunity"
+      },
+      "route": "http://127.0.0.1:8097/#Opportunity",
+      "outputEvidence": {
+        "pagination": {
+          "same": 2,
+          "differed": 0
+        },
+        "opportunity_1": {
+          "same": 2,
+          "differed": 0
+        },
+        "opportunity_2": {
+          "same": 2,
+          "differed": 0
+        },
+        "opportunity_3": {
+          "same": 2,
+          "differed": 0
+        },
+        "total_opportunities": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "seed_prefixed_count": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "url": {
+          "same": 2,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "03-create",
+      "instruction": "Create a new opportunity named {{runid}} Bench Opportunity, link it to the actual account Bench Account by selecting the matching account suggestion/dialog record (not merely typing), and set its description to include {{runid}}. Save it, then verify the opportunity page/list shows the saved name, linked account, and description.",
+      "skill": "s_14e02e",
+      "params": {
+        "v2": "{{runid}} Bench Opportunity",
+        "v3": "Bench Account",
+        "v1": "{{runid}}"
+      },
+      "outputs": [
+        "opportunity_name",
+        "linked_account",
+        "linked_account_record_url",
+        "description_saved",
+        "amount",
+        "close_date",
+        "list_total_after_save",
+        "detail_heading",
+        "current_url",
+        "autocomplete_list_li_sug",
+        "autocomplete_list_li_sug_2",
+        "linked_account_record_id",
+        "amount_field_value",
+        "task_reference"
+      ],
+      "recorded": {
+        "opportunity_name": "fwec21-dg-n1 Bench Opportunity",
+        "linked_account": "Bench Account",
+        "linked_account_record_url": "#Account/view/6ae0e3d4d7042e361",
+        "description_saved": "Created via operator task fwec21-dg-n1.",
+        "amount": "$1,000.00",
+        "close_date": "Dec 31, 2025",
+        "list_total_after_save": "1–4 / 4",
+        "list_total_before_save": "1–3 / 3",
+        "detail_heading": "Opportunitiescreate",
+        "current_url": "http://127.0.0.1:8097/#Opportunity/create",
+        "autocomplete_list_li_sug": "Account",
+        "autocomplete_list_li_sug_2": "Opportunity",
+        "linked_account_record_id": "6ae0e3d4d7042e361",
+        "amount_field_value": "1,000.00",
+        "task_reference": "fwec21-dg-n1",
+        "url.h2": "6ae0e4951d6e30037"
+      },
+      "route": "http://127.0.0.1:8097/#Opportunity",
+      "urlRoutes": {
+        "url.h2": "http://127.0.0.1:8097 h0=Opportunity h1=view"
+      },
+      "outputEvidence": {
+        "opportunity_name": {
+          "same": 0,
+          "differed": 2
+        },
+        "linked_account": {
+          "same": 2,
+          "differed": 0
+        },
+        "linked_account_record_url": {
+          "same": 2,
+          "differed": 0
+        },
+        "description_saved": {
+          "same": 0,
+          "differed": 2
+        },
+        "amount": {
+          "same": 2,
+          "differed": 0
+        },
+        "close_date": {
+          "same": 2,
+          "differed": 0
+        },
+        "list_total_after_save": {
+          "same": 2,
+          "differed": 0
+        },
+        "list_total_before_save": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "detail_heading": {
+          "same": 2,
+          "differed": 0
+        },
+        "current_url": {
+          "same": 2,
+          "differed": 0
+        },
+        "autocomplete_list_li_sug": {
+          "same": 2,
+          "differed": 0
+        },
+        "autocomplete_list_li_sug_2": {
+          "same": 2,
+          "differed": 0
+        },
+        "linked_account_record_id": {
+          "same": 2,
+          "differed": 0
+        },
+        "amount_field_value": {
+          "same": 2,
+          "differed": 0
+        },
+        "task_reference": {
+          "same": 0,
+          "differed": 2
+        },
+        "url.h2": {
+          "same": 0,
+          "differed": 2
+        }
+      }
+    },
+    {
+      "id": "04-find",
+      "instruction": "Find the opportunity named {{runid}} Bench Opportunity, edit and save its Stage as Negotiation, and verify the saved stage on the record.",
+      "skill": "s_73f411",
+      "params": {
+        "v1": "{{runid}} Bench Opportunity",
+        "v2": "{{runid}}",
+        "v3": "Opportunity"
+      },
+      "outputs": [
+        "opportunity_name",
+        "stage_before",
+        "stage_saved",
+        "linked_account",
+        "probability_after",
+        "task_reference"
+      ],
+      "recorded": {
+        "opportunity_name": "fwec21-dg-n1 Bench Opportunity",
+        "stage_before": "Prospecting",
+        "stage_saved": "Negotiation",
+        "linked_account": "Bench Account",
+        "probability_after": "80",
+        "task_reference": "fwec21-dg-n1",
+        "url": "http://127.0.0.1:8097/#Opportunity/view/6ae0e4951d6e30037"
+      },
+      "route": "http://127.0.0.1:8097/#Opportunity/view/:id",
+      "outputEvidence": {
+        "opportunity_name": {
+          "same": 0,
+          "differed": 1
+        },
+        "stage_before": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "stage_saved": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "linked_account": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "probability_after": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "task_reference": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "05-edit",
+      "instruction": "Edit the opportunity {{runid}} Bench Opportunity and save Amount as 12500 and Close Date as 2026-12-31. Verify both saved values on its detail page.",
+      "skill": "s_33c4af",
+      "params": {
+        "v1": "{{runid}} Bench Opportunity",
+        "v4": "12500",
+        "v5": "2026-12-31",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "opportunity_name",
+        "amount_before",
+        "close_date_before",
+        "amount_stored_value",
+        "close_date_saved_display",
+        "close_date_stored_value",
+        "stage",
+        "linked_account",
+        "task_reference",
+        "amount_saved_display_1",
+        "amount_saved_display_2"
+      ],
+      "recorded": {
+        "opportunity_name": "fwec21-dg-n1 Bench Opportunity",
+        "amount_before": "1,000.00",
+        "close_date_before": "2025-12-31",
+        "amount_stored_value": "12,500.00",
+        "close_date_saved_display": "Dec 31",
+        "close_date_stored_value": "2026-12-31",
+        "stage": "Negotiation",
+        "linked_account": "Bench Account",
+        "amount_field_value": "1,000.00",
+        "close_date_full_text": "Dec 31",
+        "task_reference": "fwec21-dg-n1",
+        "amount_saved_display_1": "$12",
+        "amount_saved_display_2": "500.00"
+      },
+      "route": "http://127.0.0.1:8097/#Opportunity/view/:id",
+      "outputEvidence": {
+        "opportunity_name": {
+          "same": 0,
+          "differed": 1
+        },
+        "amount_before": {
+          "same": 1,
+          "differed": 0
+        },
+        "close_date_before": {
+          "same": 1,
+          "differed": 0
+        },
+        "amount_stored_value": {
+          "same": 1,
+          "differed": 0
+        },
+        "close_date_saved_display": {
+          "same": 1,
+          "differed": 0
+        },
+        "close_date_stored_value": {
+          "same": 1,
+          "differed": 0
+        },
+        "stage": {
+          "same": 1,
+          "differed": 0
+        },
+        "linked_account": {
+          "same": 1,
+          "differed": 0
+        },
+        "amount_field_value": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "close_date_full_text": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "task_reference": {
+          "same": 0,
+          "differed": 1
+        },
+        "amount_saved_display_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "amount_saved_display_2": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "06-edit",
+      "instruction": "Edit opportunity {{runid}} Bench Opportunity, assign it to the actual user Bench Assignee by selecting that record from the link suggestions or select dialog (not merely typing), save, and verify the saved assignee.",
+      "skill": "s_2216d1",
+      "params": {
+        "v1": "{{runid}} Bench Opportunity",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "opportunity_name",
+        "assigned_user_saved",
+        "assigned_user_id",
+        "assigned_user_href",
+        "assigned_user_field_rendered",
+        "selection_method",
+        "stage",
+        "amount",
+        "task_reference"
+      ],
+      "recorded": {
+        "opportunity_name": "fwec21-dg-n1 Bench Opportunity",
+        "assigned_user_before": "None",
+        "assigned_user_saved": "Bench Assignee",
+        "assigned_user_id": "6ae0e3d6571d3fd6e",
+        "assigned_user_href": "#User/view/6ae0e3d6571d3fd6e",
+        "assigned_user_field_rendered": "avatar",
+        "selection_method": "Users select dialog (Select · Users) record pick, not free typing",
+        "stage": "Negotiation",
+        "amount": "$12,500.00",
+        "close_date": "2026-12-31",
+        "assigned_user_detail": "Bench Assignee",
+        "task_reference": "fwec21-dg-n1"
+      },
+      "route": "http://127.0.0.1:8097/#Opportunity/view/:id",
+      "outputEvidence": {
+        "opportunity_name": {
+          "same": 0,
+          "differed": 1
+        },
+        "assigned_user_before": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "assigned_user_saved": {
+          "same": 1,
+          "differed": 0
+        },
+        "assigned_user_id": {
+          "same": 1,
+          "differed": 0
+        },
+        "assigned_user_href": {
+          "same": 1,
+          "differed": 0
+        },
+        "assigned_user_field_rendered": {
+          "same": 1,
+          "differed": 0
+        },
+        "selection_method": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "stage": {
+          "same": 1,
+          "differed": 0
+        },
+        "amount": {
+          "same": 1,
+          "differed": 0
+        },
+        "close_date": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "assigned_user_detail": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "task_reference": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "07-open",
+      "instruction": "Open the Stream for opportunity {{runid}} Bench Opportunity, publish a post whose text includes {{runid}}, and verify the post appears in the opportunity Stream.",
+      "skill": "s_ff9255",
+      "params": {
+        "v1": "{{runid}} Bench Opportunity",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "opportunity_name",
+        "stream_post_text",
+        "post_author",
+        "post_time",
+        "stream_entry_as_rendered",
+        "stream_panel_contents",
+        "task_reference"
+      ],
+      "recorded": {
+        "opportunity_name": "fwec21-dg-n1 Bench Opportunity",
+        "stream_post_text": "fwec21-dg-n1 stream post: opportunity stage progressed to Negotiation with Bench Assignee.",
+        "post_author": "Admin",
+        "post_time": "17:54",
+        "stream_entry_as_rendered": "Admin\n\nfwec21-dg-n1 stream post: opportunity stage progressed to Negotiation with Bench Assignee.\n\n17:54",
+        "stream_panel_contents": "Stream: [new post] 17:54; Admin assigned this opportunity to Bench Assignee 17:54; Admin updated this opportunity (Amount, Close Date) 17:52; Admin updated this opportunity (Negotiation) 17:52; Admin created this opportunity (Prospecting) 17:51",
+        "task_reference": "fwec21-dg-n1"
+      },
+      "route": "http://127.0.0.1:8097/#Opportunity/view/:id",
+      "outputEvidence": {
+        "opportunity_name": {
+          "same": 0,
+          "differed": 1
+        },
+        "stream_post_text": {
+          "same": 0,
+          "differed": 1
+        },
+        "post_author": {
+          "same": 1,
+          "differed": 0
+        },
+        "post_time": {
+          "same": 0,
+          "differed": 1
+        },
+        "stream_entry_as_rendered": {
+          "same": 0,
+          "differed": 1
+        },
+        "stream_panel_contents": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "task_reference": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "08-report",
+      "instruction": "Report the exact record ID from the current opportunity page URL for {{runid}} Bench Opportunity, in the form #Opportunity/view/<id>. Verify the page is for that named record and report its key saved fields.",
+      "skill": "s_5b0aa3",
+      "params": {
+        "v1": "{{runid}} Bench Opportunity",
+        "v3": "Opportunity",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "opportunity_record_url",
+        "opportunity_name_field",
+        "breadcrumb_heading",
+        "account",
+        "stage",
+        "amount",
+        "probability",
+        "close_date_displayed",
+        "description",
+        "assigned_user",
+        "teams",
+        "opportunity_record_path",
+        "opportunity_url",
+        "task_reference"
+      ],
+      "recorded": {
+        "opportunity_record_url": "http://127.0.0.1:8097/#Opportunity/view/6ae0e4951d6e30037",
+        "opportunity_name_field": "fwec21-dg-n1 Bench Opportunity",
+        "breadcrumb_heading": "Opportunities › fwec21-dg-n1 Bench Opportunity",
+        "account": "Bench Account",
+        "stage": "Negotiation",
+        "amount": "$12,500.00",
+        "probability": "80",
+        "close_date_displayed": "Dec 31",
+        "description": "Created via operator task fwec21-dg-n1.",
+        "assigned_user": "Bench Assignee",
+        "teams": "None",
+        "created": "Today 17:51 by Admin",
+        "modified": "Today 17:54 by Admin",
+        "opportunity_record_path": "#Opportunity/view/6ae0e4951d6e30037",
+        "opportunity_record_id": "6ae0e4951d6e30037",
+        "close_date_stored": "2026-12-31",
+        "opportunity_url": "http://127.0.0.1:8097/#Opportunity/view/6ae0e4951d6e30037",
+        "task_reference": "fwec21-dg-n1"
+      },
+      "outputEvidence": {
+        "opportunity_record_url": {
+          "same": 0,
+          "differed": 2
+        },
+        "opportunity_name_field": {
+          "same": 0,
+          "differed": 2
+        },
+        "breadcrumb_heading": {
+          "same": 0,
+          "differed": 2
+        },
+        "account": {
+          "same": 2,
+          "differed": 0
+        },
+        "stage": {
+          "same": 2,
+          "differed": 0
+        },
+        "amount": {
+          "same": 2,
+          "differed": 0
+        },
+        "probability": {
+          "same": 2,
+          "differed": 0
+        },
+        "close_date_displayed": {
+          "same": 2,
+          "differed": 0
+        },
+        "description": {
+          "same": 0,
+          "differed": 2
+        },
+        "assigned_user": {
+          "same": 2,
+          "differed": 0
+        },
+        "teams": {
+          "same": 2,
+          "differed": 0
+        },
+        "created": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "modified": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "opportunity_record_path": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "opportunity_record_id": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "close_date_stored": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "opportunity_url": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "task_reference": {
+          "same": 0,
+          "differed": 2
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "session": "fwec21-dg-n1",
+    "created": "2026-10-27T17:55:37.641Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "warnings": [
+    "noop-step: 08-report changed nothing: its instruction asks to save, the recording made no state-changing action, and the page already showed 'fwec21-dg-n1 Bench Opportunity' before it ran. The step may be redundant."
+  ],
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "01-signin",
+      "outputs": [
+        "dashboard_panels_visible"
+      ]
+    },
+    {
+      "stepId": "02-open",
+      "outputs": [
+        "total_opportunities",
+        "seed_prefixed_count"
+      ]
+    },
+    {
+      "stepId": "03-create",
+      "outputs": [
+        "list_total_before_save"
+      ]
+    },
+    {
+      "stepId": "05-edit",
+      "outputs": [
+        "amount_field_value",
+        "close_date_full_text"
+      ]
+    },
+    {
+      "stepId": "06-edit",
+      "outputs": [
+        "assigned_user_before",
+        "close_date",
+        "assigned_user_detail"
+      ]
+    },
+    {
+      "stepId": "08-report",
+      "outputs": [
+        "created",
+        "modified",
+        "opportunity_record_id",
+        "close_date_stored"
+      ]
+    }
+  ]
+}

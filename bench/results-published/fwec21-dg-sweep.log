@@ -1,0 +1,111 @@
+
+[sweep] run 1/3: fwec21-dg-n1 (store: /home/user/sitelooper/bench/results/fwec21-dg-skills)
+[harness] espocrm: defaulting APP_URL
+[harness] espocrm: defaulting APP_EMAIL
+[harness] espocrm: defaulting APP_PASSWORD
+[reset] espocrm: no leftover bench opportunities
+[harness] espocrm responded 200 at http://127.0.0.1:8097/
+stopped: fwec21-dg-n1
+  flow "fwec21-dg" saved: 8 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwec21-dg.json
+  warning: note: 01-signin no longer publishes dashboard_panels_visible — no replay reads it from the page and the recording showed no line to read
+  warning: note: 02-open no longer publishes total_opportunities, seed_prefixed_count — no replay reads them from the page and the recording showed no line to read
+  warning: note: 03-create no longer publishes list_total_before_save — no replay reads it from the page and the recording showed no line to read
+  warning: note: 05-edit no longer publishes amount_field_value, close_date_full_text — no replay reads them from the page and the recording showed no line to read
+  warning: note: 06-edit no longer publishes assigned_user_before, close_date, assigned_user_detail — no replay reads them from the page and the recording showed no line to read
+  warning: warning: 08-report's instruction asks to report opportunity_record_id, and no replay can publish it: nothing in its procedure reads it from the page, so export dropped it — re-record the step so the value is read, not only reported
+  warning: note: 08-report no longer publishes created, modified, close_date_stored — no replay reads them from the page and the recording showed no line to read
+  warning: warning: noop-step: 08-report changed nothing: its instruction asks to save, the recording made no state-changing action, and the page already showed 'fwec21-dg-n1 Bench Opportunity' before it ran. The step may be redundant.
+  warning: warning: 1 value(s) KNOWN to be this run's survived unslotted — a replay will act on or wait for the recording's value (non-fatal outside locators):
+  flow.warnings[0]: "fwec21-dg-n1" (var) in "noop-step: 08-report changed nothing: its instruction asks to save, the recording made no state-changing action, and the page already showed 'fwec21-dg-n1 Bench"
+  warning: warning: 366 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.startUrl: "http://127.0.0.1:8097/" (output) in "http://127.0.0.1:8097/"
+  flow.steps[0].instruction: "http://127.0.0.1:8097/" (output) in "Sign in to EspoCRM at http://127.0.0.1:8097/ using username admin and password exactly {{env:APP_PASSWORD}}. Verify that the CRM is signed in and report the vis"
+  flow.steps[0].instruction: "admin" (output) in "Sign in to EspoCRM at http://127.0.0.1:8097/ using username admin and password exactly {{env:APP_PASSWORD}}. Verify that the CRM is signed in and report the vis"
+  flow.steps[0].params.v1: "http://127.0.0.1:8097/" (output) in "http://127.0.0.1:8097/"
+  flow.steps[0].params.v2: "admin" (output) in "admin"
+arm=sitelooper model=openai/gpt-6-luna runid=fwec21-dg-n1 stop=completed
+turns=9 wall=401.7s
+commands=8 cmdTime=361.1s cmdBytes=9475 timeouts=0
+orchestrator in=6069 cw=0 cr=31427 out=995
+inner prompt=2722838 cached=2566272 completion=20432
+spend=$0.0452 maxUsd=3
+learn: A_n=0 replayed=0/8 full=0 repaired=0 compiled=8 variants=0
+-> /home/user/sitelooper/bench/results/fwec21-dg-n1-sitelooper-result.json
+
+fwec21-dg-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: PASS — id=6ae0e4951d6e30037, account=Bench Account, description includes runid=true
+  obj 3: PASS — stage=Negotiation
+  obj 4: PASS — amount=12500 USD, closeDate=2026-12-31
+  obj 5: PASS — assignedUser=Bench Assignee
+  obj 6: PASS — 1 post(s), 1 carrying the runid
+  obj 7: PASS — record id 6ae0e4951d6e30037 reported
+
+[sweep] run 2/3: fwec21-dg-n2 (replay flow fwec21-dg, no orchestrator)
+[reset] espocrm: deleted 1 leftover bench opportunit(ies)
+[sweep] fwec21-dg-n2: 2 drift ticket(s) → fwec21-dg-n2-drift.json
+
+fwec21-dg-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: PASS — id=6ae0e5cd102be0bfb, account=Bench Account, description includes runid=true
+  obj 3: PASS — stage=Negotiation
+  obj 4: PASS — amount=12500 USD, closeDate=2026-12-31
+  obj 5: PASS — assignedUser=Bench Assignee
+  obj 6: PASS — 1 post(s), 1 carrying the runid
+  obj 7: PASS — record id 6ae0e5cd102be0bfb reported
+
+[sweep] run 3/3: fwec21-dg-n3 (replay flow fwec21-dg, no orchestrator)
+[reset] espocrm: deleted 1 leftover bench opportunit(ies)
+[sweep] fwec21-dg-n3: 3 drift ticket(s) → fwec21-dg-n3-drift.json
+
+fwec21-dg-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: PASS — id=6ae0e687b39480b01, account=Bench Account, description includes runid=true
+  obj 3: PASS — stage=Negotiation
+  obj 4: PASS — amount=12500 USD, closeDate=2026-12-31
+  obj 5: PASS — assignedUser=Bench Assignee
+  obj 6: PASS — 1 post(s), 1 carrying the runid
+  obj 7: PASS — record id 6ae0e687b39480b01 reported
+
+Learning sweep fwec21-dg (K=3)
+┌─────────┬───┬────────────────┬──────────┬─────────────┬───────┬──────┬───────────┬──────┬──────────────┬────────┐
+│ (index) │ n │ runid          │ verified │ stop        │ turns │ cmds │ total_usd │ A_n  │ replayed     │ wall_s │
+├─────────┼───┼────────────────┼──────────┼─────────────┼───────┼──────┼───────────┼──────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwec21-dg-n1' │ '7/7'    │ 'completed' │ 9     │ 8    │ 0.0452    │ 0    │ '0/8'        │ 402    │
+│ 1       │ 2 │ 'fwec21-dg-n2' │ '7/7'    │ 'success'   │ 18    │ 8    │ 0.0049    │ 0.88 │ '8/8 (flow)' │ 177    │
+│ 2       │ 3 │ 'fwec21-dg-n3' │ '7/7'    │ 'success'   │ 0     │ 8    │ 0         │ 1    │ '8/8 (flow)' │ 141    │
+└─────────┴───┴────────────────┴──────────┴─────────────┴───────┴──────┴───────────┴──────┴──────────────┴────────┘
+http://127.0.0.1:8097
+  s_09a4be  validated    7 steps  3/3 (100%)
+           Open the Opportunities list and report the exact names of every opportunity whose name starts with Seed:. Do n…
+  s_14e02e  validated    1 steps  3/3 (100%)
+           Create a new opportunity named {{v2}}, link it to the actual account {{v3}} by selecting the matching account …
+  s_2216d1  validated   15 steps  3/3 (100%)
+           Edit opportunity {{v1}}, assign it to the actual user Bench Assignee by selecting that record from the link su…
+  s_2d7c17  validated   16 steps  3/3 (100%)
+           Sign in to EspoCRM at {{v1}} using username {{v2}} and password exactly {{v3}}. Verify that the CRM is signed …
+  s_3216bb  validated   21 steps  3/3 (100%)
+           Create a new opportunity named {{v2}}, link it to the actual account {{v3}} by selecting the matching account …
+  s_33c4af  validated   26 steps  3/3 (100%)
+           Edit the opportunity {{v1}} and save Amount as {{v4}} and Close Date as {{v5}}. Verify both saved values on it…
+  s_5b0aa3  validated   12 steps  3/3 (100%)
+           Report the exact record ID from the current opportunity page URL for {{v1}}, in the form #{{v3}}/view/<id>. Ve…
+  s_77e537  validated    7 steps  3/3 (100%)
+           Create a new opportunity named {{v2}}, link it to the actual account {{v3}} by selecting the matching account …
+  s_7961aa  validated    1 steps  3/3 (100%)
+           Open the Opportunities list and report the exact names of every opportunity whose name starts with Seed:. Do n…
+  s_945583  validated    8 steps  3/3 (100%)
+           Create a new opportunity named {{v2}}, link it to the actual account {{v3}} by selecting the matching account …
+  s_ff9255  validated    8 steps  3/3 (100%)
+           Open the Stream for opportunity {{v1}}, publish a post whose text includes {{v2}}, and verify the post appears…
+  s_0c5352  validated    1 steps  2/2 (100%)  variant of s_73f411
+           Find the opportunity named {{v1}}, edit and save its Stage as Negotiation, and verify the saved stage on the r…
+  s_73f411  demoted      1 steps  1/2 (50%)
+           Find the opportunity named {{v1}}, edit and save its Stage as Negotiation, and verify the saved stage on the r…
+  s_e70fa5  validated   11 steps  2/2 (100%)  variant of s_73f411
+           Find the opportunity named {{v1}}, edit and save its Stage as Negotiation, and verify the saved stage on the r…
+  s_9e376e  provisional 17 steps  1/1 (100%)
+           Find the opportunity named {{v1}}, edit and save its Stage as Negotiation, and verify the saved stage on the r…
+store: /home/user/sitelooper/bench/results/fwec21-dg-skills
+
+summary: /home/user/sitelooper/bench/results/fwec21-dg-sweep.json

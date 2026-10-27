@@ -1,0 +1,502 @@
+{
+ "id": "s_2d7c17",
+ "origin": "http://127.0.0.1:8097",
+ "template": "Sign in to EspoCRM at {{v1}} using username {{v2}} and password exactly {{v3}}. Verify that the CRM is signed in and report the visible result.",
+ "params": {
+  "v1": {
+   "example": "http://127.0.0.1:8097/",
+   "usedIn": [
+    1
+   ]
+  },
+  "v2": {
+   "example": "admin",
+   "usedIn": [
+    2
+   ]
+  },
+  "v3": {
+   "example": "{{env:APP_PASSWORD}}",
+   "usedIn": [
+    3
+   ]
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8097/"
+ },
+ "steps": [
+  {
+   "tool": "goto",
+   "args": {
+    "url": "{{v1}}"
+   },
+   "locators": {}
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e13",
+    "value": "{{v2}}"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Username"
+     },
+     {
+      "kind": "label",
+      "label": "Username"
+     },
+     {
+      "kind": "id",
+      "selector": "#field-userName"
+     },
+     {
+      "kind": "css",
+      "selector": "#field-userName"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 262,
+      "w": 370,
+      "h": 36,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8097/",
+    "addedContains": [
+     "- textbox \"Username\": {{v2}}"
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e17",
+    "value": "{{v3}}"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Password"
+     },
+     {
+      "kind": "label",
+      "label": "Password"
+     },
+     {
+      "kind": "id",
+      "selector": "#field-password"
+     },
+     {
+      "kind": "css",
+      "selector": "#field-password"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 334,
+      "w": 370,
+      "h": 36,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8097/",
+    "addedContains": [
+     "- textbox \"Password\": {{v3}}"
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e21"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Log in"
+     },
+     {
+      "kind": "id",
+      "selector": "#btn-login"
+     },
+     {
+      "kind": "css",
+      "selector": "#btn-login"
+     },
+     {
+      "kind": "point",
+      "x": 495,
+      "y": 386,
+      "w": 80,
+      "h": 36,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8097/",
+    "addedContains": [
+     "- searchbox \"Search\"",
+     "- button \"Last Viewed\"",
+     "- button \"Create\"",
+     "- button \"Notifications\"",
+     "- button \"Menu\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "what": "url",
+    "label": "final_url"
+   },
+   "locators": {},
+   "label": "final_url"
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e110"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "id",
+      "selector": "#nav-menu-dropdown"
+     },
+     {
+      "kind": "css",
+      "selector": "#nav-menu-dropdown"
+     },
+     {
+      "kind": "point",
+      "x": 1252,
+      "y": 16,
+      "w": 34,
+      "h": 32,
+      "role": "button",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8097/",
+    "addedContains": [
+     "- menu \"{{*}} {{*}} {{*}} {{*}} {{*}}\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "what": "text",
+    "target": "a[href*=\"User\"]",
+    "label": "a_href_user"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "a[href*=\"User\"]",
+      "nth": 0
+     }
+    ]
+   },
+   "label": "user_navigation_link"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "what": "text",
+    "target": "a[href*=\"User\"]",
+    "label": "signed_in_user"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "a[href*=\"User\"]",
+      "nth": 1
+     }
+    ]
+   },
+   "label": "signed_in_user"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "ul > li:nth-of-type(5) > ul > li:nth-of-type(1) > a > span"
+     },
+     {
+      "kind": "point",
+      "x": 1155,
+      "y": 53,
+      "w": 70.9,
+      "h": 17,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "signed_in_user"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "ul > li:nth-of-type(5) > ul > li:nth-of-type(1) > a > span"
+     },
+     {
+      "kind": "point",
+      "x": 1155,
+      "y": 53,
+      "w": 70.9,
+      "h": 17,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "login_username"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "ul > li:nth-of-type(17) > ul > li:nth-of-type(7) > a > span:nth-of-type(2)"
+     }
+    ]
+   },
+   "label": "user_navigation_link"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "ul > li:nth-of-type(5) > ul > li:nth-of-type(1) > a > span"
+     },
+     {
+      "kind": "point",
+      "x": 1155,
+      "y": 53,
+      "w": 70.9,
+      "h": 17,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "user_menu_admin"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "ul > li:nth-of-type(5) > ul > li:nth-of-type(4) > a > span:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 1191,
+      "y": 104,
+      "w": 105.3,
+      "h": 17,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "user_menu_administration"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "ul > li:nth-of-type(5) > ul > li:nth-of-type(5) > a > span:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 1183,
+      "y": 134,
+      "w": 90.1,
+      "h": 17,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "user_menu_preferences"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "ul > li:nth-of-type(5) > ul > li:nth-of-type(7) > a > span"
+     },
+     {
+      "kind": "point",
+      "x": 1163,
+      "y": 185,
+      "w": 49.5,
+      "h": 17,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "user_menu_about"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "ul > li:nth-of-type(5) > ul > li:nth-of-type(8) > a > span:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 1169,
+      "y": 215,
+      "w": 62.4,
+      "h": 17,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "user_menu_log_out"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "Signed in to EspoCRM at {{v1}} using username \"{{v2}}\" and the supplied password. After submitting the login form the page navigated to the application dashboard (URL unchanged at {{v1}}), showing the full CRM shell: left nav with Home, Accounts, Contacts, Leads, Opportunities, Emails, Meetings, Calls, Tasks, Calendar, Cases, Knowledge Base, a global Search box, and the dashboard panels \"Stream\" (currently \"No Data\") and \"My Activities\". Opening the top-right avatar menu confirmed an authenticated session for the user \"Admin\", with links Administration / Preferences / About and a \"Log Out\" button, plus a \"Users\" entry visible in the page.",
+  "values": {
+   "final_url": "{{v1}}",
+   "signed_in_user": "Admin",
+   "login_username": "{{v2}}",
+   "dashboard_panels_visible": "Stream (No Data), My Activities",
+   "user_navigation_link": "Users",
+   "user_menu_admin": "Admin",
+   "user_menu_administration": "Administration",
+   "user_menu_preferences": "Preferences",
+   "user_menu_about": "About",
+   "user_menu_log_out": "Log Out"
+  }
+ },
+ "contract": 4,
+ "stats": {
+  "uses": 3,
+  "successes": 3,
+  "partial": 0,
+  "created": "2026-10-27T17:49:38.522Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 4,
+  "lastUsed": "2026-10-27T17:59:06.238Z",
+  "stopStreak": 0
+ },
+ "status": "validated",
+ "provenance": {
+  "session": "fwec21-dg-n1",
+  "instruction": "Sign in to EspoCRM at http://127.0.0.1:8097/ using username admin and password exactly {{env:APP_PASSWORD}}. Verify that the CRM is signed in and report the visible result.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-10-27T17:49:38.522Z",
+  "transforms": [
+   {
+    "name": "unfreezeExpectations",
+    "at": 6,
+    "reason": "recorded page change(s) only the recording run could produce: [\"- menu \\\"Admin Administration Preferences About Log Out\\\"\",\"- link \\\"Admin\\\"\",\"- link \\\"Administration\\\"\",\"- link \\\"Preferences\\\"\",\"- link \\\"About\\\"\"] → [\"- menu \\\"{{*}} {{*}} {{*}} {{*}} {{*}}\\\"\"]"
+   }
+  ]
+ },
+ "revision": 4
+}
