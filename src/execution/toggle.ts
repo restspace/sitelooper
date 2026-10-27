@@ -1,5 +1,5 @@
 import type { Page } from 'playwright-core';
-import { DIALOG_LINE, SLOT_LINE, TRANSIENT_LINE, identifiesNothing, liveLines, type LiveLines } from './expect.js';
+import { DIALOG_LINE, SLOT_LINE, TRANSIENT_LINE, identifiesNothing, liveLines, openerPopupLines, type DialogControlStep, type LiveLines } from './expect.js';
 import { captureLines, lineShows, presence, type LineDialect } from './snapshot.js';
 
 /**
@@ -347,4 +347,40 @@ export async function keyboardPickVerdict(page: Page, want: { role: string; name
   if (named) return null;
   const got = fold(picked.label || picked.text).slice(0, 80);
   return `the press was recorded picking ${recorded} and picked ${JSON.stringify(got)} — a key press picks by position, and this position holds another item; stopped rather than keep the wrong pick`;
+}
+
+/**
+ * The delta shadow rule's segment-start look (execution/delta.ts rule 2) is
+ * taken in the dialect of a segment's first step that a page-reading rule can
+ * skip as already in effect — a popup opener, a disclosure toggle, a hide, a
+ * dismissal — loop bodies included; null when it has none: no look is taken.
+ * Here beside the step-shape rules it reads, so delta.ts stays out of an
+ * artifact's toggle dependency.
+ */
+interface InEffectShape extends DialogControlStep {
+  tool: string;
+  toggle?: unknown;
+  mints?: unknown;
+  body?: readonly InEffectShape[];
+  expect?: { addedContains?: readonly string[]; removedContains?: readonly string[]; alertContains?: string; lineDialect?: number };
+}
+
+/** Can this step be skipped as already in effect by a rule that reads the page (opener, toggle, hide, dismissal)? */
+function inEffectCandidate(step: InEffectShape): boolean {
+  if (step.tool === 'click' && openerPopupLines(step.expect?.addedContains).length) return true;
+  if (step.tool === 'click' && step.toggle && toggleEffectLines(step.expect?.addedContains).length) return true;
+  if (hideEffectLines(step).length) return true;
+  return !step.mints && Boolean(step.expect?.removedContains?.some((l) => DIALOG_LINE.test(l)));
+}
+
+/** The dialect a segment's start is looked at in: that of its first step that can skip as in effect (loop bodies included), or null — no look. */
+export function segmentStartDialect(steps: readonly InEffectShape[]): LineDialect | null {
+  for (const step of steps) {
+    if (inEffectCandidate(step)) return step.expect?.lineDialect === 2 ? 2 : 1;
+    if (Array.isArray(step.body)) {
+      const inner = segmentStartDialect(step.body);
+      if (inner !== null) return inner;
+    }
+  }
+  return null;
 }

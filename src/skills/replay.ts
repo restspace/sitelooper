@@ -57,7 +57,8 @@ import { offRecordReadReason, readsRecordedKind, recordedKinds } from '../execut
 import { candidateNames, judgeEcho, markActed, noteCommit, noteInteraction, setsSomething } from '../execution/echo.js';
 import { documentOf, fillLost, guardedTyping, noteFill, rearmStandingFills, restoreStandingFills, standingFills, standingFillsLost } from '../execution/refill.js';
 import { hasTotpMarker, resolveSecrets, resolveSecretsAsync } from '../shared/secrets.js';
-import { appliedPickCandidates, armKeyboardPick, closeBeforeReopen, keyboardPickVerdict, isNavigation, pickAlreadyApplied, pickBaseline, hideBefore, hideEffectLines, hideVerdict, pressHadNoEffect, toggleAlreadyShown, toggleEffectLines } from '../execution/toggle.js';
+import { appliedPickCandidates, armKeyboardPick, closeBeforeReopen, keyboardPickVerdict, isNavigation, pickAlreadyApplied, pickBaseline, hideBefore, hideEffectLines, hideVerdict, pressHadNoEffect, segmentStartDialect, toggleAlreadyShown, toggleEffectLines } from '../execution/toggle.js';
+import { inEffectShadow, preexistingShadow, segmentStart, type InEffectEvidence, type SegmentStart } from '../execution/delta.js';
 import { alreadyAddedLines, positionalClickVerdict, recordedAccessibleName } from '../execution/positional.js';
 import { mayNavigateToDestination, navigateToDestination, textHeldElsewhere } from '../execution/recover.js';
 import { assertFailure, assertFailureKind, type AssertFailureKind } from '../execution/assert.js';
@@ -1037,6 +1038,13 @@ export async function replaySkill(
   // goto lands on is a new start — only for a procedure with a candidate.
   const pickSteps = appliedPickCandidates(skill.steps);
   let pickStart: string[] | null | undefined;
+  /** The page as this segment started, for the delta shadow rule (execution/delta.ts); set before step 1. */
+  let deltaStart: SegmentStart | null = null;
+  /** An in-effect skip's shadow finding, when its evidence already held as the segment started. */
+  const noteInEffect = (d: LineDialect, tag: string, what: string, evidence: InEffectEvidence) => {
+    const finding = inEffectShadow(deltaStart, d, tag, what, evidence);
+    if (finding) res.shadow.push(finding);
+  };
   let pickStale = true;
 
   const runStepBody = async (
@@ -1427,6 +1435,7 @@ export async function replaySkill(
       if (!step.contexts?.target?.frame?.length && !step.contexts?.source?.frame?.length && step.expect?.removedContains?.length) {
         const done = dismissalAlreadyInEffect(step, await captureLines(page, dialectOf(step)), params);
         if (done) {
+          noteInEffect(dialectOf(step), tag, 'a dismissal of a dialog not open', { dismissed: { step, params } });
           res.warnings.push(`step ${tag}: skipped — it closes the dialog ${JSON.stringify(done.dialog)} with ${JSON.stringify(done.control)}, and that dialog is not open this time: already in effect`);
           res.lines.push(`${head} → skipped (dialog ${JSON.stringify(done.dialog)} not open — already in effect)`);
           return 'skipped';
@@ -1442,6 +1451,7 @@ export async function replaySkill(
       if (hiddenMiss.length && !step.expect?.removalRequired) {
         const gone = await hideBefore(page, hiddenMiss, false, params, tag, dialectOf(step));
         if (gone.skip) {
+          noteInEffect(dialectOf(step), tag, 'a hide whose target is gone', { absent: liveLines(hiddenMiss, params) });
           res.warnings.push(`step ${tag}: its target is gone with what this click was recorded removing (${clip(hiddenMiss[0], 60)}), and none of that is on the page — skipped as already in effect`);
           res.lines.push(`${head} → skipped (already in effect)`);
           return 'skipped';
@@ -1529,6 +1539,7 @@ export async function replaySkill(
     // "Set to Quotation" button only a cancelled order shows, and the menu
     // alone skipped the click on every replay.
     else if (opener.length && (await openerAlreadyShowing(page, opener, liveLines(openerWorkLines(step.expect?.addedContains), params), dialectOf(step)))) {
+      noteInEffect(dialectOf(step), tag, 'a popup opener', { shown: { any: opener, all: liveLines(openerWorkLines(step.expect?.addedContains), params) } });
       res.warnings.push(`step ${tag}: the recorded effect (${clip(opener[0], 60)}) is already showing — a click would toggle it away; skipped as already in effect`);
       res.lines.push(`${head} → skipped (already in effect)`);
       return 'skipped';
@@ -1538,6 +1549,7 @@ export async function replaySkill(
     // which must show (the shared toggleAlreadyShown, which the artifact asks).
     const toggled = step.tool === 'click' && step.toggle ? toggleEffectLines(step.expect?.addedContains) : [];
     if (toggled.length && (await toggleAlreadyShown(page, toggled, params, dialectOf(step)))) {
+      noteInEffect(dialectOf(step), tag, 'a disclosure toggle', { shown: { any: [], all: liveLines(toggled, params) } });
       res.warnings.push(`step ${tag}: the panel this toggle shows (${clip(toggled[0], 60)}) is already showing — a click would hide it; skipped as already in effect`);
       res.lines.push(`${head} → skipped (already in effect)`);
       return 'skipped';
@@ -1552,6 +1564,7 @@ export async function replaySkill(
     const hidden = hideEffectLines(step);
     const before = hidden.length ? await hideBefore(page, hidden, Boolean(step.expect?.removalRequired), params, tag, dialectOf(step)) : {};
     if (before.skip) {
+      noteInEffect(dialectOf(step), tag, 'a hide', { absent: liveLines(hidden, params) });
       res.warnings.push(`step ${tag}: what this click was recorded removing (${clip(hidden[0], 60)}) is not on the page — a click would bring it back; skipped as already in effect`);
       res.lines.push(`${head} → skipped (already in effect)`);
       return 'skipped';
@@ -1822,6 +1835,7 @@ export async function replaySkill(
           // (retargetNavigation), whether or not the step went on to stop.
           if (verdict.volatile) volatileUrl.push(...verdict.volatile);
           if (verdict.warnings) warnings.push(...verdict.warnings);
+          if (verdict.shadow) res.shadow.push(...verdict.shadow);
           if (verdict.generalise) res.generalisations.push(verdict.generalise);
           if (verdict.absentDialog !== undefined) absentDialog = verdict.absentDialog;
           if (verdict.unobserved && !res.unobserved.includes(tag)) res.unobserved.push(tag);
@@ -2097,6 +2111,10 @@ export async function replaySkill(
     return 'ran';
   };
 
+  // The delta shadow rule's one look at where this segment starts (execution/
+  // delta.ts rule 2), after the first gate, before step 1 — where the artifact
+  // takes it. Only for a segment with a step that can skip as in effect.
+  deltaStart = await segmentStart(page, segmentStartDialect(skill.steps));
   for (const [i, step] of skill.steps.entries()) {
     const n = i + 1;
     if (n > 1 && n === gate.at && !(await passGate(n))) return res;
@@ -2180,6 +2198,8 @@ interface StepVerdict {
   inDiff?: string[];
   /** Url positions this step watched vary, which a later navigation of this replay may retarget by. */
   volatile?: readonly UrlSegDiff[];
+  /** Shadow findings (execution/shadow.ts): never a stop, carried to ReplayResult.shadow. */
+  shadow?: string[];
 }
 
 type StepGate = (g: StepGateInput) => Promise<StepVerdict | null> | StepVerdict | null;
@@ -2322,16 +2342,21 @@ const expectedChanges: StepGate = async ({ outcome, step, params, tag, failIndex
       counters: countersAt(facts, page.url()),
       leftByLink: leftByLink(step.expect.urlPattern, page.url(), params, outcome.link),
     },
-    { added: outcome.captureFailed ? null : added, live: (look) => captureLines(page, d, look) },
+    // The before leg is the delta shadow rule's evidence only (execution/delta.ts rule 1).
+    { added: outcome.captureFailed ? null : added, live: (look) => captureLines(page, d, look), before: obs && !outcome.captureFailed ? renderLines(obs.before, d) : null },
   );
   // A line the verdict matched only by generalising it (survey T1: a number
   // the recording froze) is staged like a url generalisation and kept once the
   // replay walks past the step (tools.ts). Top-level steps only: a loop body's
   // tag ("9.2.1") names a step `failIndex` does not, and the loop is left alone.
-  const { generalised, ...rest } = verdict;
+  const { generalised, preexisting, ...kept } = verdict;
+  // Rule 1 of the delta shadow rule: a change accepted from the live page that
+  // was there before the step. Reported apart, never part of the verdict.
+  const finding = preexistingShadow(tag, preexisting);
+  const rest: StepVerdict = finding ? { ...kept, shadow: [finding] } : kept;
   const generalise = generalised && tag === String(failIndex) ? { kind: 'line' as const, step: failIndex, from: generalised.from, to: generalised.to } : undefined;
   if (generalise) return { ...rest, generalise };
-  return rest.stop || rest.unobserved || rest.absentDialog || rest.confirmed || rest.inDiff || rest.warnings.length ? rest : null;
+  return rest.stop || rest.unobserved || rest.absentDialog || rest.confirmed || rest.inDiff || rest.warnings?.length || rest.shadow ? rest : null;
 };
 
 /**

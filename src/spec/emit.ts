@@ -3,7 +3,8 @@ import { DEFAULT_BROWSER_PROFILE, isNavigatingAction, type BrowserProfile } from
 import { setsSomething } from '../execution/echo.js';
 import { standingFillRole } from '../execution/refill.js';
 import { DEFAULT_ACTION_TIMEOUT_MS } from '../execution/browser.js';
-import { appliedPickCandidates, hideEffectLines, isNavigation, toggleEffectLines } from '../execution/toggle.js';
+import { appliedPickCandidates, hideEffectLines, isNavigation, segmentStartDialect, toggleEffectLines } from '../execution/toggle.js';
+import { runSlotsOf } from '../execution/delta.js';
 import { alreadyAddedLines, recordedAccessibleName, recordedKinds } from '../execution/positional.js';
 import { derivesFromParams, givenPartialReason, givenWarning, reportNeedsPage, templateMarkers, templateSource, typedSlots, typedWarning } from '../execution/report.js';
 import { askedOutputs } from '../daemon/step-verdict.js';
@@ -1317,6 +1318,7 @@ const HELPERS: { token: string; source: string[] }[] = [
       '        last = await expectedChangesVerdict(recorded, p, { ...ctx, counters: counterNames(siteFactsAt(page.url()), page.url()) }, {',
       '          added: addedLines(linesBefore, linesAfter ?? (await capturePageLines(page, dialect))),',
       '          live: (look) => captureLines(page, dialect, look),',
+      '          before: linesBefore,',
       '        });',
       '        return last.stop ?? null;',
       '      },',
@@ -1324,6 +1326,9 @@ const HELPERS: { token: string; source: string[] }[] = [
       '    )',
       '    .toBeNull();',
       '  for (const warning of last.warnings) console.log(`[sitelooper warn] ${warning}`);',
+      '  // The delta shadow rule (rule 1): a change accepted from the live page that was there before the step. Reported only.',
+      '  const preexisting = preexistingShadow(ctx.tag, last.preexisting);',
+      '  if (preexisting) console.log(`[sitelooper shadow] ${preexisting}`);',
       '  if (last.unobserved) console.log(`[sitelooper unobserved] ${ctx.tag}: the page could not be captured, or observed in full, after the action`);',
       '  return last;',
       '}',
@@ -1384,6 +1389,7 @@ const HELPERS: { token: string; source: string[] }[] = [
       '  p: Record<string, string>,',
       '  where: string,',
       '  dialect: LineDialect = 1,',
+      '  start: SegmentStart | null = null,',
       '): Promise<boolean> {',
       '  for (let waited = 0; ; waited += RESOLVE_POLL_MS) {',
       '    for (const candidate of candidates) {',
@@ -1395,6 +1401,8 @@ const HELPERS: { token: string; source: string[] }[] = [
       '  }',
       '  const done = dismissalAlreadyInEffect(step, await captureLines(page, dialect), p);',
       '  if (!done) return false;',
+      "  const shadow = inEffectShadow(start, dialect, where, 'a dismissal of a dialog not open', { dismissed: { step, params: p } });",
+      '  if (shadow) console.log(`[sitelooper shadow] ${shadow}`);',
       '  console.log(`[sitelooper skip] ${where}: closes the dialog ${JSON.stringify(done.dialog)} with ${JSON.stringify(done.control)}, which is not open — already in effect`);',
       '  return true;',
       '}',
@@ -1455,7 +1463,7 @@ const HELPERS: { token: string; source: string[] }[] = [
       ' * day in the date picker its fill opened. Waits the same window for a visible',
       ' * target first; a target that shows up is acted on by the pick below.',
       ' */',
-      'async function hideGoneSkip(page: Page, candidates: Locator[], lines: string[], p: Record<string, string>, where: string, dialect: LineDialect = 1): Promise<boolean> {',
+      'async function hideGoneSkip(page: Page, candidates: Locator[], lines: string[], p: Record<string, string>, where: string, dialect: LineDialect = 1, start: SegmentStart | null = null): Promise<boolean> {',
       '  for (let waited = 0; ; waited += RESOLVE_POLL_MS) {',
       '    for (const candidate of candidates) {',
       '      const n = await candidate.count().catch(() => 0);',
@@ -1465,6 +1473,8 @@ const HELPERS: { token: string; source: string[] }[] = [
       '    await page.waitForTimeout(RESOLVE_POLL_MS);',
       '  }',
       '  if (!(await hideBefore(page, lines, false, p, where, dialect)).skip) return false;',
+      "  const shadow = inEffectShadow(start, dialect, where, 'a hide whose target is gone', { absent: liveLines(lines, p) });",
+      '  if (shadow) console.log(`[sitelooper shadow] ${shadow}`);',
       '  console.log(`[sitelooper skip] ${where}: its target is gone with what this click removes, and none of that is on the page — skipped as already in effect`);',
       '  return true;',
       '}',
@@ -1674,6 +1684,8 @@ interface Ctx {
   appliedPicks?: Map<number, { role: string; name: string }>;
   /** The variable holding this segment's starting page lines, when it has an applied-pick candidate. */
   pickStart?: string;
+  /** The variable holding this segment's starting page (execution/delta.ts segmentStart), when a step of it can skip as in effect. */
+  deltaStart?: string;
   /** A segment of this flow step named the step's echo ledger: the body declares it once, at its top (round 61). */
   stepEchoUsed?: boolean;
   /**
@@ -2048,6 +2060,7 @@ function wrapAlreadyInEffect(step: SkillStep, ctx: Ctx, out: string[], actionAt:
     ...work.map((l) => `//   (work) ${commentSafe(l)}`),
     `if (await openerAlreadyShowing(page, liveLines([${opener.map(q).join(', ')}], p), liveLines([${work.map(q).join(', ')}], p)${step.expect?.lineDialect === 2 ? ', 2' : ''})) {`,
     '  // already in effect: the popup is on the page, so the recorded click has nothing left to do.',
+    ...inEffectShadowLines(step, ctx, where, 'a popup opener', `{ shown: { any: liveLines([${opener.map(q).join(', ')}], p), all: liveLines([${work.map(q).join(', ')}], p) } }`),
     // A skipped click is invisible in a passing-until-it-isn't spec, and a
     // guard that fires for the WRONG reason (one of these lines is on the page
     // for some other reason than "the popup is open") silently drops the step
@@ -2086,6 +2099,7 @@ function wrapToggle(step: SkillStep, ctx: Ctx, out: string[], actionAt: number):
     '// is skipped when every line it adds is already on the page (as replay skips it):',
     ...lines.map((l) => `//   ${commentSafe(l)}`),
     `if (await toggleAlreadyShown(page, [${lines.map(q).join(', ')}], p${step.expect?.lineDialect === 2 ? ', 2' : ''})) {`,
+    ...inEffectShadowLines(step, ctx, where, 'a disclosure toggle', `{ shown: { any: [], all: liveLines([${lines.map(q).join(', ')}], p) } }`),
     `  console.log(${q(`[sitelooper skip] ${where}: toggled panel already showing — click skipped`)});`,
     "  return { status: 'skipped' };",
     '} else {',
@@ -2117,6 +2131,7 @@ function wrapHide(step: SkillStep, ctx: Ctx, out: string[], actionAt: number): v
     `const hide${ctx.urls} = await hideBefore(page, [${lines.map(q).join(', ')}], ${Boolean(step.expect?.removalRequired)}, p, ${q(where)}${step.expect?.lineDialect === 2 ? ', 2' : ''});`,
     `if (hide${ctx.urls}.stop) throw new Error(hide${ctx.urls}.stop);`,
     `if (hide${ctx.urls}.skip) {`,
+    ...inEffectShadowLines(step, ctx, where, 'a hide', `{ absent: liveLines([${lines.map(q).join(', ')}], p) }`),
     `  console.log(${q(`[sitelooper skip] ${where}: what this click removes is not on the page — click skipped`)});`,
     "  return { status: 'skipped' };",
     '} else {',
@@ -2163,6 +2178,31 @@ function resolutionLines(
  * rather than a statement it cannot target.
  */
 /**
+ * The trailing dialect argument of an in-effect helper call, and the segment's
+ * starting page after it when the delta shadow rule took one (execution/
+ * delta.ts rule 2) — so a segment without one emits exactly as before.
+ */
+/** The tail of an emitted shadow block: print the finding held in `shadow`, as `[sitelooper warn]` lines are printed. */
+const SHADOW_LOG = "if (shadow) console.log(`[sitelooper shadow] ${shadow}`); }";
+
+function dialectAndStart(step: SkillStep, ctx: Ctx): string {
+  const d = step.expect?.lineDialect === 2 ? 2 : 1;
+  if (ctx.deltaStart) return ', ' + d + ', ' + ctx.deltaStart;
+  return d === 2 ? ', 2' : '';
+}
+
+/**
+ * The delta shadow rule's report for an in-effect skip (execution/delta.ts
+ * rule 2), as a line inside the skip's branch: nothing when the segment took
+ * no starting look. `evidence` is source text of an InEffectEvidence.
+ */
+function inEffectShadowLines(step: SkillStep, ctx: Ctx, where: string, what: string, evidence: string): string[] {
+  if (!ctx.deltaStart) return [];
+  const d = step.expect?.lineDialect === 2 ? 2 : 1;
+  return ['  { const shadow = inEffectShadow(' + ctx.deltaStart + ', ' + d + ', ' + q(where) + ', ' + q(what) + ', ' + evidence + '); ' + SHADOW_LOG];
+}
+
+/**
  * The already-in-effect guard for a dismissal (dismissalSkip, over the shared
  * dismissalAlreadyInEffect): nothing for a step that recorded closing no
  * dialog, a read, a minting step, or one inside a loop body or a frame (the
@@ -2187,7 +2227,7 @@ function dismissalLines(step: SkillStep, chain: LocatorCandidate[], ctx: Ctx): s
   const where = `${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex}`;
   const guard = JSON.stringify({ locators, expect: { removedContains: removed } });
   return [
-    `if (await dismissalSkip(page, [${sources.join(', ')}], ${guard}, p, ${q(where)}${step.expect?.lineDialect === 2 ? ', 2' : ''})) return { status: 'skipped' };`,
+    `if (await dismissalSkip(page, [${sources.join(', ')}], ${guard}, p, ${q(where)}${dialectAndStart(step, ctx)})) return { status: 'skipped' };`,
   ];
 }
 
@@ -2206,7 +2246,7 @@ function hideGoneLines(step: SkillStep, chain: LocatorCandidate[], ctx: Ctx): st
   noteSlots(lines, ctx);
   const where = `${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex}`;
   return [
-    `if (await hideGoneSkip(page, [${sources.join(', ')}], [${lines.map(q).join(', ')}], p, ${q(where)}${step.expect?.lineDialect === 2 ? ', 2' : ''})) return { status: 'skipped' };`,
+    `if (await hideGoneSkip(page, [${sources.join(', ')}], [${lines.map(q).join(', ')}], p, ${q(where)}${dialectAndStart(step, ctx)})) return { status: 'skipped' };`,
   ];
 }
 
@@ -3715,6 +3755,18 @@ function markerBound(marker: string, segment: SpecSegment): boolean {
  * nothing, and a guard that cannot be sure is not emitted at all, which
  * simply leaves the step running exactly as it does today.
  */
+/**
+ * The delta shadow rule's report for an "already satisfied" skip (execution/
+ * delta.ts rule 3), asked at run time as the daemon asks it: the goal names a
+ * value of this run — a `known` param or the run id — or it is reported.
+ */
+function goalShadowLines(step: SpecStep, head: SpecSegment, last: SpecSegment, goal: readonly string[]): string[] {
+  const runSlots = runSlotsOf(head.params, last.params);
+  const ids = Object.fromEntries(Object.entries({ ...head.params, ...last.params }).filter(([, prm]) => prm?.binding === 'var:runid').map(([name]) => [name, { binding: 'var:runid' }]));
+  const call = 'goalSkipShadow(' + q(step.id) + ', [' + goal.map(q).join(', ') + '], p, ' + JSON.stringify(runSlots) + ', runIdsOf(p, ' + JSON.stringify(ids) + '))';
+  return ['  { const shadow = ' + call + '; ' + SHADOW_LOG];
+}
+
 function satisfiedGuard(step: SpecStep, ctx: Ctx, consumed: ReadonlySet<string> = new Set()): string[] {
   const head = step.segments[0];
   const last = step.segments[step.segments.length - 1];
@@ -3746,6 +3798,7 @@ function satisfiedGuard(step: SpecStep, ctx: Ctx, consumed: ReadonlySet<string> 
     '// the same check replay makes before it acts (goalSatisfied, src/skills/replay.ts).',
     `if (${onPage}await satisfied(page, [${identity.map(src).join(', ')}], [${goal.map(src).join(', ')}])) {`,
     `  console.log(${src(say)});`,
+    ...goalShadowLines(step, head, last, goal),
   ];
   // The read-backs never run, so the report template stands in for them: the
   // same output keys, filled from this run's own params — through the shared
@@ -4017,6 +4070,11 @@ function emitSegment(segment: SpecSegment, ctx: Ctx): string[] {
   // The applied-pick rule's starting page, taken before the first step as
   // replay takes it (gitea fwgt12 03-set).
   if (ctx.pickStart) out.push(`let ${ctx.pickStart}: string[] | null = null;`);
+  // The delta shadow rule's one look at where this segment starts (execution/
+  // delta.ts rule 2), before step 1 and after a gate placed there — where
+  // replay takes it. Only for a segment with a step that can skip as in effect.
+  const deltaDialect = segmentStartDialect(segment.steps);
+  ctx.deltaStart = deltaDialect === null ? undefined : `deltaStart${ctx.segments}`;
   for (const [i, step] of segment.steps.entries()) {
     // …taken before the first step that is not a navigation and again after
     // each navigation, where replay takes it.
@@ -4024,6 +4082,7 @@ function emitSegment(segment: SpecSegment, ctx: Ctx): string[] {
       out.push(`${ctx.pickStart} = await pickBaseline(page);`);
     }
     if (i + 1 === gate.at) out.push('', ...segmentGateLines(segment, ctx, gate.afterNavigation));
+    if (i === 0 && ctx.deltaStart) out.push(`const ${ctx.deltaStart} = await segmentStart(page, ${deltaDialect});`);
     out.push('');
     const lines =
       (segment.assert || ctx.assertStep) && step.tool !== 'wait_for'

@@ -13,6 +13,7 @@ import { MAX_STRAY_GESTURES_FOR_PIN, agentGesturesOutsideReplay, bindSkill, canA
 import { threadStepParams } from '../skills/rethread.js';
 import { buildFlow, consumedReportedOutputs, consumedUrlOutputs, ignorableRefs, jsonLeaves, lintFlowRefs, lintUnboundParams, lintUnpublishedOutputs, listFlows, liveReadsFor, liveReadsForRecovery, loadFlow, loadFlowFile, lookupOutput, mutatingIntent, noteOutputEvidence, pruneUnsourcedOutputs, recoveryRoute, remapParams, resolveInstruction, resolveStepParams, softResolveInstruction, saveFlow, staleInstructionIds, taskConstants, textMints, unbankedMutations, unreportedOutputs, urlOutputs, varyingValues, type RunSpecific, commentaryReport } from '../skills/flow.js';
 import { applyRelabelToEntries, applyRelabelToSkills, relabelCases, requestRelabelPlan, runValueKeyRenames } from '../skills/relabel.js';
+import { goalSkipShadow, runIdsOf, runSlotsOf } from '../execution/delta.js';
 import { goalSatisfied, pastDetours, renderChainStop, structural, type ReplayResult } from '../skills/replay.js';
 import { detourSkippedNote } from '../execution/gates.js';
 import { drainDrift, llmProposer, recordCandidateEvidence } from '../skills/repair.js';
@@ -2054,6 +2055,9 @@ ${describeLeaks(certain.slice(0, 30))}${certain.length > 30 ? `\n  … and ${cer
             }
           }
           const shown = done.shown.map((s) => JSON.stringify(s)).join(', ');
+          // The delta shadow rule (execution/delta.ts rule 3): a goal naming no
+          // value of this run may be a leftover of an earlier step. Reported only.
+          const goalShadow = goalSkipShadow(step.id, tail.goal.requireText, bound.params, runSlotsOf(pinned.params, tail.params), runIdsOf(bound.params, pinned.params, tail.params));
           opts.progress(`[flow ${flow.name}] ${step.id}: already satisfied — page shows ${shown} for ${idTexts.join(', ')}; nothing to do`);
           // Bank outputs exactly as a replayed step does, so a later step's
           // {{step.output}} reference threads through a step that ran nothing.
@@ -2072,6 +2076,7 @@ ${describeLeaks(certain.slice(0, 30))}${certain.length > 30 ? `\n  … and ${cer
             values,
             tier: 'A',
             satisfied: true,
+            ...(goalShadow ? { shadow: [goalShadow] } : {}),
             replayed: null,
             repaired: false,
             turns: 0,
