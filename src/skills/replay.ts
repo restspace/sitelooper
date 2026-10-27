@@ -1666,7 +1666,7 @@ export async function replaySkill(
           const landing = await armPageEffect(page, stepEffect(step), `step ${tag}`);
           // The step's expected effect is what its action observation polls for
           // (effect-verified), in the step's own line dialect.
-          const expect = effectExpectation(page, step.expect?.addedContains, params, dialectOf(step));
+          const expect = effectExpectation(page, step.expect?.addedContains, params, dialectOf(step), step.expect?.goneContains);
           const dispatch = () => opts.exec(step.tool, args, resolved, { skill: skill.id, step: failIndex }, expect ? { expect } : undefined);
           // A `type` never lands on a copy of its own value, and a typed or
           // filled field holding its value twice over stops (the shared
