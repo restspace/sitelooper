@@ -461,6 +461,12 @@ export interface ReplayResult {
   /** Soft-expectation misses: logged, never fatal in Stage 1. */
   warnings: string[];
   /**
+   * Shadow findings (execution/shadow.ts): what a stricter rule under trial
+   * would have refused, each `[shadow:<kind>] step <tag>: …`. Never fatal and
+   * never a warning: carried apart so a sweep can count them.
+   */
+  shadow: string[];
+  /**
    * Steps whose effect evidence could not be captured at all — the page
    * signature race timed out, the frame went away mid-navigation. The step's
    * REQUIRED expectations are still evaluated against the live page (see
@@ -648,6 +654,7 @@ export async function replaySkill(
     committed: [],
     lines: [],
     warnings: [],
+    shadow: [],
     unobserved: [],
     fallthroughs: 0,
     misses: [],

@@ -348,6 +348,8 @@ export interface SkillRecord {
   failReason?: string;
   /** The replay's own warnings, per segment, prefixed with the segment's skill id (tier A only). */
   warnings?: string[];
+  /** Shadow findings (ReplayResult.shadow), per segment, prefixed with the segment's skill id. */
+  shadow?: string[];
   /** Labels of the replay's labelled reads that were skipped — nothing observed (ReplayResult.skippedReads; tier A only). */
   skippedReads?: string[];
   /** Report values made only of params that the replay withheld as given, not observed (ReplayReport.given, round 60; tier A only). */
@@ -1874,6 +1876,7 @@ function accountActions(skill: SkillRecord, name: string, args: Record<string, u
       if (r.unobserved.length) skill.unobserved = r.unobserved;
       if (r.reason) skill.failReason = r.reason;
       if (r.warnings.length) skill.warnings = r.warnings.map((w) => `${r.skill}: ${w}`);
+      if (r.shadow.length) skill.shadow = r.shadow.map((w) => `${r.skill}: ${w}`);
       if (r.failedAt !== undefined) skill.failedAt = r.failedAt;
       skill.replayUrl = r.url;
     }

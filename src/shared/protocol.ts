@@ -159,6 +159,10 @@ export interface FlowStepResult {
   reason?: string;
   /** An assertion step that missed (status 'assert-failed'): which way, and the message raised (execution/assert.ts). */
   assert?: { kind: 'failed' | 'unlocatable'; message: string };
+  /** What the replay noticed on the way, per segment (capped). */
+  warnings?: string[];
+  /** Shadow findings: what a stricter rule under trial would have refused (execution/shadow.ts). Never fatal. */
+  shadow?: string[];
 }
 
 /** The `run` command's result payload. */
