@@ -8,7 +8,7 @@ import { factsFor, reliable, renderings, routeTemplateOf, type SiteFacts } from 
 import { pointLocator } from '../execution/point.js';
 import { dispatchesFirstMatch } from '../execution/lifecycle.js';
 import { rootFor, type FramePath, type PageEffect, type Root } from '../execution/context.js';
-import { takenBackLines, urlPattern } from '../skills/compile.js';
+import { roleTextSelector, takenBackLines, urlPattern } from '../skills/compile.js';
 import { foldValue } from '../skills/flow.js';
 import { isRefTarget, refHint, refOf, resolveTarget } from './refs.js';
 import { tagComponent } from '../skills/components.js';
@@ -2437,8 +2437,19 @@ async function verifiedChain(
       chain.push(candidate.spec);
       continue;
     }
-    const loc = candidate.make(page);
-    const match = await matchIndex(loc, handle);
+    let spec = candidate.spec;
+    let match = await matchIndex(candidate.make(page), handle);
+    // A role whose name is the element's TEXT but not Playwright's accessible
+    // name (gitea fwgt37-dg: an avatar `<img title="Bench Assignee">` inside
+    // the assignee option and the bulk Assignee menu item is part of the
+    // latter) misses its own element; the same role by its whole text names
+    // it, where the chain otherwise fell to a generated id
+    // (`#_aria_dropdown_item_73`) and a point. Only where the role missed.
+    if (match === null && spec.kind === 'role') {
+      const byText: LocatorCandidate = { kind: 'css', selector: roleTextSelector(spec.role, spec.name) };
+      match = await matchIndex(makeLocator(page, byText), handle);
+      spec = byText;
+    }
     if (match === null) continue;
     // Record the index whenever the locator is AMBIGUOUS, including index 0.
     // `match === 0` used to mean "no nth needed", conflating "unique" with
@@ -2449,7 +2460,7 @@ async function verifiedChain(
     // record row, which is the shape behind every wrong-record bug this plan
     // exists to stop. An ambiguous candidate needs its index to be
     // reproducible, exactly as an ambiguous anchor needs to be unique.
-    winner = match.count > 1 || match.index !== 0 ? { ...candidate.spec, nth: match.index } : candidate.spec;
+    winner = match.count > 1 || match.index !== 0 ? { ...spec, nth: match.index } : spec;
     chain.push(winner);
   }
   return { winner, chain };
