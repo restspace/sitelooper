@@ -1,0 +1,646 @@
+{
+  "name": "fwec22-eg",
+  "origin": "http://127.0.0.1:8097",
+  "startUrl": "http://127.0.0.1:8097/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-signin",
+      "instruction": "Sign in to EspoCRM at http://127.0.0.1:8097/ using username admin and password exactly {{env:APP_PASSWORD}}. Verify that the authenticated app is open and report the visible page.",
+      "skill": "s_25f573",
+      "params": {
+        "v1": "http://127.0.0.1:8097/",
+        "v2": "admin",
+        "v3": "{{env:APP_PASSWORD}}"
+      },
+      "outputs": [
+        "final_url",
+        "page_title",
+        "logged_in_user",
+        "screenshots",
+        "stream_panel_heading",
+        "my_activities_panel_heading"
+      ],
+      "recorded": {
+        "final_url": "http://127.0.0.1:8097/",
+        "page_title": "EspoCRM",
+        "logged_in_user": "Admin",
+        "dashboard_panels": "Stream (No Data), My Activities",
+        "nav_items": "Home, Accounts, Contacts, Leads, Opportunities, Emails, Meetings, Calls, Tasks, Calendar, Cases, Knowledge Base",
+        "screenshots": "espcrm_home.png, espcrm_user_menu.png",
+        "stream_panel_heading": "Stream",
+        "my_activities_panel_heading": "My Activities",
+        "url": "http://127.0.0.1:8097/"
+      },
+      "route": "http://127.0.0.1:8097/",
+      "outputEvidence": {
+        "final_url": {
+          "same": 1,
+          "differed": 0
+        },
+        "page_title": {
+          "same": 1,
+          "differed": 0
+        },
+        "logged_in_user": {
+          "same": 1,
+          "differed": 0
+        },
+        "dashboard_panels": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "nav_items": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "screenshots": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "stream_panel_heading": {
+          "same": 1,
+          "differed": 0
+        },
+        "my_activities_panel_heading": {
+          "same": 1,
+          "differed": 0
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "02-find",
+      "instruction": "In the Opportunities list, find and report the exact names of all opportunities whose name starts with 'Seed:'. Do not edit any records.",
+      "skill": "s_6c66f2",
+      "params": {},
+      "outputs": [
+        "opportunities_list_url",
+        "record_count_indicator",
+        "matching_count",
+        "opportunity_name_1",
+        "opportunity_name_2",
+        "opportunity_name_3",
+        "matching_opportunity_names_1",
+        "matching_opportunity_names_2",
+        "matching_opportunity_names_3"
+      ],
+      "recorded": {
+        "opportunities_list_url": "http://127.0.0.1:8097/#Opportunity",
+        "record_count_indicator": "1–3 / 3",
+        "matching_count": "3",
+        "opportunity_name_1": "Seed: training package",
+        "opportunity_name_2": "Seed: pilot expansion",
+        "opportunity_name_3": "Seed: annual support renewal",
+        "matching_opportunity_names_1": "Seed: training package",
+        "matching_opportunity_names_2": "Seed: pilot expansion",
+        "matching_opportunity_names_3": "Seed: annual support renewal",
+        "url": "http://127.0.0.1:8097/#Opportunity"
+      },
+      "route": "http://127.0.0.1:8097/#Opportunity",
+      "outputEvidence": {
+        "opportunities_list_url": {
+          "same": 1,
+          "differed": 0
+        },
+        "record_count_indicator": {
+          "same": 1,
+          "differed": 0
+        },
+        "matching_count": {
+          "same": 1,
+          "differed": 0
+        },
+        "opportunity_name_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "opportunity_name_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "opportunity_name_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "matching_opportunity_names_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "matching_opportunity_names_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "matching_opportunity_names_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "03-create",
+      "instruction": "Create an opportunity named '{{runid}} Bench Opportunity', link it to the existing account named 'Bench Account' by choosing the actual matching record from suggestions or a select dialog, and set a description that includes the exact runid {{runid}}. Save the record and verify its displayed name, linked account, and description.",
+      "skill": "s_8f1244",
+      "params": {
+        "v2": "{{runid}} Bench Opportunity",
+        "v3": "Bench Account",
+        "v1": "{{runid}}"
+      },
+      "outputs": [
+        "record_url",
+        "opportunity_id",
+        "displayed_name",
+        "linked_account",
+        "amount",
+        "close_date",
+        "description",
+        "runid_in_description",
+        "screenshots",
+        "close_date_value",
+        "amount_value",
+        "name_field_label",
+        "account_field_label",
+        "amount_field_label",
+        "close_date_field_label",
+        "description_field_label"
+      ],
+      "recorded": {
+        "record_url": "http://127.0.0.1:8097/#Opportunity/view/6ae13918ecf0b8e1e",
+        "opportunity_id": "6ae13918ecf0b8e1e",
+        "displayed_name": "fwec22-eg-n1 Bench Opportunity",
+        "linked_account": "Bench Account",
+        "account_id_selected": "6ae0e3a9ba74b1038",
+        "amount": "$1,000.00",
+        "close_date": "Dec 31, 2025",
+        "description": "Run ID: fwec22-eg-n1 — bench opportunity created for account Bench Account.",
+        "runid_in_description": "fwec22-eg-n1",
+        "screenshots": "opportunity_form_filled.png, opportunity_form_ready.png, opportunity_detail_saved.png",
+        "close_date_value": "2025-12-31",
+        "amount_value": "1,000",
+        "name_field_label": "Name",
+        "account_field_label": "Account",
+        "amount_field_label": "Amount",
+        "close_date_field_label": "Close Date",
+        "description_field_label": "Description",
+        "url": "http://127.0.0.1:8097/#Opportunity/view/6ae13918ecf0b8e1e",
+        "url.h2": "6ae13918ecf0b8e1e"
+      },
+      "route": "http://127.0.0.1:8097/#Opportunity/view/:id",
+      "outputEvidence": {
+        "record_url": {
+          "same": 0,
+          "differed": 1
+        },
+        "opportunity_id": {
+          "same": 0,
+          "differed": 1
+        },
+        "displayed_name": {
+          "same": 0,
+          "differed": 1
+        },
+        "linked_account": {
+          "same": 1,
+          "differed": 0
+        },
+        "account_id_selected": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "amount": {
+          "same": 1,
+          "differed": 0
+        },
+        "close_date": {
+          "same": 1,
+          "differed": 0
+        },
+        "description": {
+          "same": 0,
+          "differed": 1
+        },
+        "runid_in_description": {
+          "same": 0,
+          "differed": 1
+        },
+        "screenshots": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "close_date_value": {
+          "same": 1,
+          "differed": 0
+        },
+        "amount_value": {
+          "same": 1,
+          "differed": 0
+        },
+        "name_field_label": {
+          "same": 1,
+          "differed": 0
+        },
+        "account_field_label": {
+          "same": 1,
+          "differed": 0
+        },
+        "amount_field_label": {
+          "same": 1,
+          "differed": 0
+        },
+        "close_date_field_label": {
+          "same": 1,
+          "differed": 0
+        },
+        "description_field_label": {
+          "same": 1,
+          "differed": 0
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        },
+        "url.h2": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "04-edit",
+      "instruction": "Edit the existing opportunity '{{runid}} Bench Opportunity' and set its stage to 'Negotiation'. Save, then verify the displayed stage on the record.",
+      "skill": "s_fa16e4",
+      "params": {
+        "v1": "{{runid}} Bench Opportunity",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "record_url_after_stage_edit",
+        "opportunity_name",
+        "displayed_stage",
+        "linked_account",
+        "screenshots",
+        "ref"
+      ],
+      "recorded": {
+        "record_url_after_stage_edit": "http://127.0.0.1:8097/#Opportunity/view/6ae13918ecf0b8e1e",
+        "opportunity_name": "fwec22-eg-n1 Bench Opportunity",
+        "displayed_stage": "Negotiation",
+        "stage_dropdown_options_seen": "Prospecting, Qualification, Proposal, Negotiation, Closed Won, Closed Lost",
+        "linked_account": "Bench Account",
+        "screenshots": "opportunity_edit_stage.png, opportunity_detail_stage.png",
+        "stage_field_text": "Negotiation",
+        "ref": "fwec22-eg-n1",
+        "ref_2": "6ae13918ecf0b8e1e"
+      },
+      "route": "http://127.0.0.1:8097/#Opportunity/view/:id",
+      "outputEvidence": {
+        "record_url_after_stage_edit": {
+          "same": 0,
+          "differed": 1
+        },
+        "opportunity_name": {
+          "same": 0,
+          "differed": 1
+        },
+        "displayed_stage": {
+          "same": 1,
+          "differed": 0
+        },
+        "stage_dropdown_options_seen": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "linked_account": {
+          "same": 1,
+          "differed": 0
+        },
+        "screenshots": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "stage_field_text": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "ref_2": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        }
+      }
+    },
+    {
+      "id": "05-edit",
+      "instruction": "Edit the existing opportunity '{{runid}} Bench Opportunity' and set Amount to 12500 in the default currency and {{03-create.close_date_field_label}} to 2026-12-31. Save and verify both values on the record detail page.",
+      "skill": "s_9fb817",
+      "params": {
+        "v1": "{{runid}} Bench Opportunity",
+        "v3": "Amount",
+        "v5": "12500",
+        "v4": "{{03-create.close_date_field_label}}",
+        "v6": "2026-12-31",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "amount_input_value",
+        "close_date_input_value",
+        "displayed_amount",
+        "displayed_close_date",
+        "saved_amount_input",
+        "saved_close_date_input",
+        "ref"
+      ],
+      "recorded": {
+        "amount_input_value": "12,500",
+        "close_date_input_value": "2026-12-31",
+        "displayed_amount": "$12,500.00",
+        "displayed_close_date": "Dec 31",
+        "saved_amount_input": "12,500.00",
+        "saved_close_date_input": "2026-12-31",
+        "detail_amount_after_canc": "$12,500.00",
+        "ref": "fwec22-eg-n1",
+        "ref_2": "6ae13918ecf0b8e1e",
+        "url.h2": "6ae13918ecf0b8e1e"
+      },
+      "route": "http://127.0.0.1:8097/#Opportunity/view/:id",
+      "outputEvidence": {
+        "amount_input_value": {
+          "same": 1,
+          "differed": 0
+        },
+        "close_date_input_value": {
+          "same": 1,
+          "differed": 0
+        },
+        "displayed_amount": {
+          "same": 1,
+          "differed": 0
+        },
+        "displayed_close_date": {
+          "same": 1,
+          "differed": 0
+        },
+        "saved_amount_input": {
+          "same": 1,
+          "differed": 0
+        },
+        "saved_close_date_input": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "detail_amount_after_canc": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "ref_2": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "url.h2": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "06-edit",
+      "instruction": "Edit the existing opportunity '{{runid}} Bench Opportunity' and assign it to the existing user 'Bench Assignee'. Select the actual matching user record from suggestions or the select dialog, save, and verify the displayed assignee.",
+      "skill": "s_ba102b",
+      "params": {
+        "v1": "{{runid}} Bench Opportunity",
+        "v3": "Bench Assignee",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "opportunity_name",
+        "record_url_after_assignee",
+        "previous_assigned_user",
+        "displayed_assigned_user",
+        "screenshots",
+        "ref"
+      ],
+      "recorded": {
+        "opportunity_name": "fwec22-eg-n1 Bench Opportunity",
+        "opportunity_id": "6ae13918ecf0b8e1e",
+        "record_url_after_assignee": "http://127.0.0.1:8097/#Opportunity/view/6ae13918ecf0b8e1e",
+        "previous_assigned_user": "None (stream log showed \"Admin assigned Admin\")",
+        "displayed_assigned_user": "Bench Assignee",
+        "assigned_user_id_committed": "6ae0e3aad5ebe7988",
+        "screenshots": "opportunity_edit_assignee.png, opportunity_detail_assignee.png",
+        "ref": "fwec22-eg-n1"
+      },
+      "route": "http://127.0.0.1:8097/#Opportunity/view/:id",
+      "outputEvidence": {
+        "opportunity_name": {
+          "same": 0,
+          "differed": 1
+        },
+        "opportunity_id": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "record_url_after_assignee": {
+          "same": 0,
+          "differed": 1
+        },
+        "previous_assigned_user": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "displayed_assigned_user": {
+          "same": 1,
+          "differed": 0
+        },
+        "assigned_user_id_committed": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "screenshots": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "07-verify",
+      "instruction": "On the Stream for opportunity '{{runid}} Bench Opportunity', publish a post whose text includes the exact runid '{{runid}}'. Submit it and verify the posted text is visible in this opportunity's Stream.",
+      "skill": "s_0a59bd",
+      "params": {
+        "v1": "Stream",
+        "v2": "{{runid}} Bench Opportunity",
+        "v3": "{{runid}}"
+      },
+      "outputs": [
+        "opportunity_name",
+        "posted_text",
+        "posted_note_url",
+        "post_author",
+        "post_time",
+        "stream_entries_visible_top_down",
+        "runid_in_post",
+        "screenshots",
+        "post_text_input"
+      ],
+      "recorded": {
+        "opportunity_name": "fwec22-eg-n1 Bench Opportunity",
+        "posted_text": "Bench stream post for runid fwec22-eg-n1 — opportunity fwec22-eg-n1 Bench Opportunity.",
+        "posted_note_url": "#Note/view/6ae139b7898b713cd",
+        "post_author": "Admin",
+        "post_time": "23:54",
+        "stream_entries_visible_top_down": "post (23:54), Admin assigned this opportunity to Bench Assignee (23:54), updated this opportunity: Amount, Close Date (23:53), updated this opportunity: Negotiation (23:52), created this opportunity: Prospecting (23:51)",
+        "runid_in_post": "fwec22-eg-n1",
+        "screenshots": "stream_post_typed.png, stream_post_published.png",
+        "post_text_input": "Bench stream post for runid fwec22-eg-n1 — opportunity fwec22-eg-n1 Bench Opportunity.",
+        "ref": "6ae13918ecf0b8e1e",
+        "ref_2": "6ae139b7898b713cd",
+        "url.h2": "6ae13918ecf0b8e1e"
+      },
+      "route": "http://127.0.0.1:8097/#Opportunity/view/:id",
+      "outputEvidence": {
+        "opportunity_name": {
+          "same": 0,
+          "differed": 1
+        },
+        "posted_text": {
+          "same": 0,
+          "differed": 1
+        },
+        "posted_note_url": {
+          "same": 0,
+          "differed": 1
+        },
+        "post_author": {
+          "same": 1,
+          "differed": 0
+        },
+        "post_time": {
+          "same": 0,
+          "differed": 1
+        },
+        "stream_entries_visible_top_down": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "runid_in_post": {
+          "same": 0,
+          "differed": 1
+        },
+        "screenshots": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "post_text_input": {
+          "same": 0,
+          "differed": 1
+        },
+        "ref": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "ref_2": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "url.h2": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "session": "fwec22-eg-n1",
+    "created": "2026-10-27T23:54:54.198Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "01-signin",
+      "outputs": [
+        "dashboard_panels",
+        "nav_items"
+      ]
+    },
+    {
+      "stepId": "03-create",
+      "outputs": [
+        "account_id_selected"
+      ]
+    },
+    {
+      "stepId": "04-edit",
+      "outputs": [
+        "stage_dropdown_options_seen",
+        "stage_field_text",
+        "ref_2"
+      ]
+    },
+    {
+      "stepId": "05-edit",
+      "outputs": [
+        "detail_amount_after_canc",
+        "ref_2"
+      ]
+    },
+    {
+      "stepId": "06-edit",
+      "outputs": [
+        "opportunity_id",
+        "assigned_user_id_committed"
+      ]
+    },
+    {
+      "stepId": "07-verify",
+      "outputs": [
+        "ref",
+        "ref_2"
+      ]
+    }
+  ]
+}
