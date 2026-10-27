@@ -1,0 +1,290 @@
+{
+  "flow": "fwod106-dg",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_450a10; observed authenticated_app_url=http://127.0.0.1:8069/web#action=123&cids=1&menu_id=81, authenticated_page_title=Odoo - Discuss, company=YourCompany, landing_app=Discuss.",
+      "values": {
+        "authenticated_app_url": "http://127.0.0.1:8069/web#action=123&cids=1&menu_id=81",
+        "authenticated_page_title": "Odoo - Discuss",
+        "company": "YourCompany",
+        "landing_app": "Discuss"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "7/7",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_8de29c; observed customer_record_id=45, customer_record_url=http://127.0.0.1:8069/web#cids=1&menu_id=109&action=156&model=res.partner&view_type=form&id=45, customer_name_field=fwod106-dg-n2 Bench Customer, company_type=Company, customer_page_title=Odoo - fwod106-dg-n2 Bench Customer, customer_reference=fwod106-dg-n2.",
+      "values": {
+        "customer_record_id": "45",
+        "customer_record_url": "http://127.0.0.1:8069/web#cids=1&menu_id=109&action=156&model=res.partner&view_type=form&id=45",
+        "customer_name_field": "fwod106-dg-n2 Bench Customer",
+        "company_type": "Company",
+        "customer_page_title": "Odoo - fwod106-dg-n2 Bench Customer",
+        "customer_reference": "fwod106-dg-n2"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "15/15",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_8de29c: step 1: skipped read — no element matched any known locator for target (none recorded)",
+        "s_8de29c: step 2: read 'customer_name' returned a value the skill itself set/selected ('fwod106-dg-n2 Bench Customer') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_8de29c: step 3: read 'city' returned a value the skill itself set/selected ('Benchville') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_8de29c: report value city_field is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)"
+      ],
+      "unreported": [
+        "customer_name",
+        "city",
+        "city_field"
+      ]
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_e65f3e; observed sales_order_url=http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=22, customer_reference=fwod106-dg-n2, quotation_reference=S00022, customer_city=Benchville, product_name=[FURN_6666] Acoustic Bloc Screens, product_quantity=3.00, unit_price=295.00, row_tax=20%, tax_amount=£ 177.00, total=£ 1,062.00, tax_label=TAX 20%, tax_amount_display=£ 177.00, total_label=Total, total_display_integer=£ 1, total_display_fraction=062.00, status=Quotation, untaxed_amount_label=Untaxed Amount\t£ 885.00.",
+      "unanswered": [
+        "customer_shown"
+      ],
+      "values": {
+        "sales_order_url": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=22",
+        "customer_reference": "fwod106-dg-n2",
+        "quotation_reference": "S00022",
+        "customer_city": "Benchville",
+        "product_name": "[FURN_6666] Acoustic Bloc Screens",
+        "product_quantity": "3.00",
+        "unit_price": "295.00",
+        "row_tax": "20%",
+        "tax_amount": "£ 177.00",
+        "total": "£ 1,062.00",
+        "tax_label": "TAX 20%",
+        "tax_amount_display": "£ 177.00",
+        "total_label": "Total",
+        "total_display_integer": "£ 1",
+        "total_display_fraction": "062.00",
+        "status": "Quotation",
+        "untaxed_amount_label": "Untaxed Amount\t£ 885.00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "30/30",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_e65f3e: step 2: skipped read — no element matched any known locator for target (none recorded)",
+        "s_e65f3e: step 3: read 'customer_name' returned a value the skill itself set/selected ('fwod106-dg-n2 Bench Customer') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_e65f3e: report value customer_shown is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)"
+      ],
+      "unreported": [
+        "customer_name",
+        "customer_shown"
+      ]
+    },
+    {
+      "id": "04-add",
+      "status": "success",
+      "summary": "Replayed stored procedure s_fb51ec; observed customer_reference=fwod106-dg-n2, quotation_reference=S00022, customer_name=fwod106-dg-n2 Bench Customer, line_1_product=[FURN_6666] Acoustic Bloc Screens, line_1_quantity=3.00, line_1_unit_price=295.00, line_1_subtotal=£ 885.00, line_2_product=[FURN_7777] Office Chair, line_2_quantity=2.00, line_2_unit_price=70.00, line_2_subtotal=£ 140.00, untaxed_amount=£ 1,025.00, tax_amount=£ 205.00, total=£ 1,230.00, first_line_subtotal_display=£ 885.00, second_line_subtotal_display=£ 140.00, tax_label=TAX 20%, tax_amount_display=£ 205.00, status=Quotation, untaxed_amount_label=Untaxed Amount\t£ 1,025.00, total_display=Total\t£ 1,230.00.",
+      "values": {
+        "customer_reference": "fwod106-dg-n2",
+        "quotation_reference": "S00022",
+        "customer_name": "fwod106-dg-n2 Bench Customer",
+        "line_1_product": "[FURN_6666] Acoustic Bloc Screens",
+        "line_1_quantity": "3.00",
+        "line_1_unit_price": "295.00",
+        "line_1_subtotal": "£ 885.00",
+        "line_2_product": "[FURN_7777] Office Chair",
+        "line_2_quantity": "2.00",
+        "line_2_unit_price": "70.00",
+        "line_2_subtotal": "£ 140.00",
+        "untaxed_amount": "£ 1,025.00",
+        "tax_amount": "£ 205.00",
+        "total": "£ 1,230.00",
+        "first_line_subtotal_display": "£ 885.00",
+        "second_line_subtotal_display": "£ 140.00",
+        "tax_label": "TAX 20%",
+        "tax_amount_display": "£ 205.00",
+        "status": "Quotation",
+        "untaxed_amount_label": "Untaxed Amount\t£ 1,025.00",
+        "total_display": "Total\t£ 1,230.00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "29/29",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_fb51ec: step 10: skipped read — no element matched any known locator for target (none recorded)"
+      ],
+      "unreported": [
+        "sales_order_url"
+      ]
+    },
+    {
+      "id": "05-edit",
+      "status": "success",
+      "summary": "Replayed stored procedure s_1e46e3; observed initial_line_1_quantity=3.00, quotation_reference=S00022, customer_name=fwod106-dg-n2 Bench Customer, line_1_product=[FURN_6666] Acoustic Bloc Screens, line_1_quantity=5.00, line_1_unit_price=295.00, line_1_subtotal=£ 1,475.00, line_2_product=[FURN_7777] Office Chair, line_2_quantity=2.00, line_2_unit_price=70.00, line_2_subtotal=£ 140.00, untaxed_amount=£ 1,615.00, tax_amount=£ 323.00, total=£ 1,938.00, first_line_subtotal_display=£ 1,475.00, second_line_subtotal_display=£ 140.00, tax_label=TAX 20%, tax_amount_display=£ 323.00, status=Quotation, untaxed_amount_label=Untaxed Amount\t£ 1,615.00, total_display=Total\t£ 1,938.00.",
+      "values": {
+        "initial_line_1_quantity": "3.00",
+        "quotation_reference": "S00022",
+        "customer_name": "fwod106-dg-n2 Bench Customer",
+        "line_1_product": "[FURN_6666] Acoustic Bloc Screens",
+        "line_1_quantity": "5.00",
+        "line_1_unit_price": "295.00",
+        "line_1_subtotal": "£ 1,475.00",
+        "line_2_product": "[FURN_7777] Office Chair",
+        "line_2_quantity": "2.00",
+        "line_2_unit_price": "70.00",
+        "line_2_subtotal": "£ 140.00",
+        "untaxed_amount": "£ 1,615.00",
+        "tax_amount": "£ 323.00",
+        "total": "£ 1,938.00",
+        "first_line_subtotal_display": "£ 1,475.00",
+        "second_line_subtotal_display": "£ 140.00",
+        "tax_label": "TAX 20%",
+        "tax_amount_display": "£ 323.00",
+        "status": "Quotation",
+        "untaxed_amount_label": "Untaxed Amount\t£ 1,615.00",
+        "total_display": "Total\t£ 1,938.00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "27/27",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_1e46e3: step 7: skipped read — no element matched any known locator for target (none recorded)"
+      ],
+      "unreported": [
+        "sales_order_url"
+      ]
+    },
+    {
+      "id": "06-verify",
+      "status": "success",
+      "summary": "Replayed stored procedure s_acb632; observed order_reference=S00022, order_status=Sales Order, untaxed_amount=£ 1,615.00, tax_amount=£ 323.00, total=£ 1,938.00, order_date=10/27/2026 17:57:58, customer_1=fwod106-dg-n2 Bench Customer, customer_2=Benchville, tax_label=TAX 20%, tax_amount_display=£ 323.00, total_display=Total\t£ 1,938.00, ref=fwod106-dg-n2.",
+      "values": {
+        "order_reference": "S00022",
+        "order_status": "Sales Order",
+        "untaxed_amount": "£ 1,615.00",
+        "tax_amount": "£ 323.00",
+        "total": "£ 1,938.00",
+        "order_date": "10/27/2026 17:57:58",
+        "customer_1": "fwod106-dg-n2 Bench Customer",
+        "customer_2": "Benchville",
+        "tax_label": "TAX 20%",
+        "tax_amount_display": "£ 323.00",
+        "total_display": "Total\t£ 1,938.00",
+        "ref": "fwod106-dg-n2"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "13/13",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "07-verify",
+      "status": "success",
+      "summary": "Replayed stored procedure s_a548e6; observed sales_order_id=22, previous_status=Sales Order, status_options=Sales Order\nQuotation Sent\nQuotation, observed_status=Cancelled, order_reference=S00022, available_button_after_cancel=Set to Quotation, untaxed_amount=£ 1,615.00, total=£ 1,938.00, customer_1=fwod106-dg-n2 Bench Customer, customer_2=Benchville, customer_reference=fwod106-dg-n2.",
+      "values": {
+        "sales_order_id": "22",
+        "previous_status": "Sales Order",
+        "status_options": "Sales Order\nQuotation Sent\nQuotation",
+        "observed_status": "Cancelled",
+        "order_reference": "S00022",
+        "available_button_after_cancel": "Set to Quotation",
+        "untaxed_amount": "£ 1,615.00",
+        "total": "£ 1,938.00",
+        "customer_1": "fwod106-dg-n2 Bench Customer",
+        "customer_2": "Benchville",
+        "customer_reference": "fwod106-dg-n2"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "21/21",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 7,
+  "total": 7,
+  "repinned": 0,
+  "drift": 4,
+  "driftTickets": [
+    {
+      "flow": "fwod106-dg",
+      "step": "02-create",
+      "skill": "s_8de29c",
+      "atStep": "1",
+      "key": "target",
+      "similarity": 0.995,
+      "missedLocator": "(none recorded)",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=res.partner&view_type=form",
+      "pageUrl": "http://127.0.0.1:8069/web#cids=1&menu_id=109&action=156&model=res.partner&view_type=form&id=45"
+    },
+    {
+      "flow": "fwod106-dg",
+      "step": "03-create",
+      "skill": "s_e65f3e",
+      "atStep": "2",
+      "key": "target",
+      "similarity": 1.002,
+      "missedLocator": "(none recorded)",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "pageUrl": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=22"
+    },
+    {
+      "flow": "fwod106-dg",
+      "step": "04-add",
+      "skill": "s_fb51ec",
+      "atStep": "10",
+      "key": "target",
+      "similarity": 1.002,
+      "missedLocator": "(none recorded)",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "pageUrl": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=22"
+    },
+    {
+      "flow": "fwod106-dg",
+      "step": "05-edit",
+      "skill": "s_1e46e3",
+      "atStep": "7",
+      "key": "target",
+      "similarity": 1.002,
+      "missedLocator": "(none recorded)",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "pageUrl": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=22"
+    }
+  ],
+  "wallMs": 131363,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "cachedTokens": 0
+  },
+  "usageByModel": {},
+  "servedByModel": {},
+  "recoveryModel": "openai/gpt-6-luna",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

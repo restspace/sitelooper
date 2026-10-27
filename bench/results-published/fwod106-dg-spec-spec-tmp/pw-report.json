@@ -1,0 +1,199 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwod106-dg-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwod106-dg-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwod106-dg-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/bench/results/fwod106-dg-spec-spec-tmp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwod106-dg-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwod106-dg.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwod106-dg-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwod106-dg.spec.ts",
+      "file": "fwod106-dg.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwod106-dg",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 98258,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper step] 01-signin\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 02-create s_8de29c/2: read 'customer_name' returned a value the skill itself set/selected ('fwod106-dg-spec Bench Customer') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 02-create s_8de29c/3: read 'city' returned a value the skill itself set/selected ('Benchville') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 02-create: report value city_field is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-create\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 03-create s_e65f3e/3: read 'customer_name' returned a value the skill itself set/selected ('fwod106-dg-spec Bench Customer') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 03-create: report value customer_shown is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-create\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-add\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 05-edit\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 06-verify\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 07-verify\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-signin: Sign in to the Odoo 17 app at http://127.0.0.1:8069/ using login admin and password exactly {{env:APP_PASSWORD}}; report when the authenticated app is visibly loaded.",
+                      "duration": 5866
+                    },
+                    {
+                      "title": "02-create: Create a customer named {{runid}} Bench Customer and set City to Benchville. Save it, and verify the customer record shows that exact name and city.",
+                      "duration": 8835
+                    },
+                    {
+                      "title": "03-create: Create a new quotation for customer {{runid}} Bench Customer with exactly one order line: choose any actual product from the catalogue dropdown and set quantity 3. Save the quotation and report its chosen product, the displayed unit price, and untaxed amount shown by Odoo.",
+                      "duration": 30105
+                    },
+                    {
+                      "title": "04-add: On the existing quotation {{03-create.quotation_reference}} for {{runid}} Bench Customer, add exactly one second order line using a different actual catalogue product selected from the dropdown, with quantity 2. Save/update the quotation and verify the two product lines and new untaxed amount; report the second product and amount.",
+                      "duration": 22924
+                    },
+                    {
+                      "title": "05-edit: Edit quotation {{03-create.quotation_reference}} so the first line {{03-create.product_name}} changes from quantity 3 to quantity 5, leaving the Office Chair line unchanged. Save and verify quantities and the resulting untaxed amount.",
+                      "duration": 10225
+                    },
+                    {
+                      "title": "06-verify: Confirm quotation {{03-create.quotation_reference}} into a sales order. Verify the form shows its order reference and the resulting status, and report both concrete values.",
+                      "duration": 1892
+                    },
+                    {
+                      "title": "07-verify: Cancel sales order {{03-create.quotation_reference}} so it is no longer active. Perform the cancellation and verify the status shown on the order afterward; report the observed status.",
+                      "duration": 17577
+                    }
+                  ],
+                  "startTime": "2026-10-27T18:00:59.971Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "outputs",
+                      "contentType": "application/json",
+                      "body": "ewogICIwMS1zaWduaW4ubWludGVkIjogIjEyMyIsCiAgIjAxLXNpZ25pbi5hdXRoZW50aWNhdGVkX3BhZ2VfdGl0bGUiOiAiT2RvbyAtIERpc2N1c3MiLAogICIwMS1zaWduaW4uY29tcGFueSI6ICJZb3VyQ29tcGFueSIsCiAgIjAxLXNpZ25pbi5sYW5kaW5nX2FwcCI6ICJEaXNjdXNzIiwKICAiMDEtc2lnbmluLmF1dGhlbnRpY2F0ZWRfYXBwX3VybCI6ICJodHRwOi8vMTI3LjAuMC4xOjgwNjkvd2ViI2FjdGlvbj0xMjMmY2lkcz0xJm1lbnVfaWQ9ODEiLAogICIwMi1jcmVhdGUubWludGVkIjogIjQ3IiwKICAiMDItY3JlYXRlLmN1c3RvbWVyX3JlY29yZF91cmwiOiAiaHR0cDovLzEyNy4wLjAuMTo4MDY5L3dlYiNjaWRzPTEmbWVudV9pZD0xMDkmYWN0aW9uPTE1NiZtb2RlbD1yZXMucGFydG5lciZ2aWV3X3R5cGU9Zm9ybSZpZD00NyIsCiAgIjAyLWNyZWF0ZS5jdXN0b21lcl9uYW1lIjogImZ3b2QxMDYtZGctc3BlYyBCZW5jaCBDdXN0b21lciIsCiAgIjAyLWNyZWF0ZS5jaXR5IjogIkJlbmNodmlsbGUiLAogICIwMi1jcmVhdGUuY29tcGFueV90eXBlIjogIkNvbXBhbnkiLAogICIwMi1jcmVhdGUuY3VzdG9tZXJfcGFnZV90aXRsZSI6ICJPZG9vIC0gZndvZDEwNi1kZy1zcGVjIEJlbmNoIEN1c3RvbWVyIiwKICAiMDItY3JlYXRlLmN1c3RvbWVyX3JlZmVyZW5jZSI6ICJmd29kMTA2LWRnLXNwZWMiLAogICIwMi1jcmVhdGUuY3VzdG9tZXJfcmVjb3JkX2lkIjogIjQ3IiwKICAiMDItY3JlYXRlLmN1c3RvbWVyX25hbWVfZmllbGQiOiAiZndvZDEwNi1kZy1zcGVjIEJlbmNoIEN1c3RvbWVyIiwKICAiMDMtY3JlYXRlLm1pbnRlZCI6ICIyNCIsCiAgIjAzLWNyZWF0ZS5xdW90YXRpb25fcmVmZXJlbmNlIjogIlMwMDAyNCIsCiAgIjAzLWNyZWF0ZS5zYWxlc19vcmRlcl91cmwiOiAiaHR0cDovLzEyNy4wLjAuMTo4MDY5L3dlYiNjaWRzPTEmbWVudV9pZD0xOTQmYWN0aW9uPTMxNiZtb2RlbD1zYWxlLm9yZGVyJnZpZXdfdHlwZT1mb3JtJmlkPTI0IiwKICAiMDMtY3JlYXRlLmN1c3RvbWVyX25hbWUiOiAiZndvZDEwNi1kZy1zcGVjIEJlbmNoIEN1c3RvbWVyIiwKICAiMDMtY3JlYXRlLmN1c3RvbWVyX2NpdHkiOiAiQmVuY2h2aWxsZSIsCiAgIjAzLWNyZWF0ZS5wcm9kdWN0X25hbWUiOiAiW0ZVUk5fNjY2Nl0gQWNvdXN0aWMgQmxvYyBTY3JlZW5zIiwKICAiMDMtY3JlYXRlLnByb2R1Y3RfcXVhbnRpdHkiOiAiMy4wMCIsCiAgIjAzLWNyZWF0ZS51bml0X3ByaWNlIjogIjI5NS4wMCIsCiAgIjAzLWNyZWF0ZS5yb3dfdGF4IjogIjIwJSIsCiAgIjAzLWNyZWF0ZS50YXhfYW1vdW50IjogIsKjwqAxNzcuMDAiLAogICIwMy1jcmVhdGUudG90YWwiOiAiwqPCoDEsMDYyLjAwIiwKICAiMDMtY3JlYXRlLnRheF9sYWJlbCI6ICJUQVggMjAlIiwKICAiMDMtY3JlYXRlLnRheF9hbW91bnRfZGlzcGxheSI6ICLCo8KgMTc3LjAwIiwKICAiMDMtY3JlYXRlLnRvdGFsX2xhYmVsIjogIlRvdGFsIiwKICAiMDMtY3JlYXRlLnRvdGFsX2Rpc3BsYXlfaW50ZWdlciI6ICLCoyAxIiwKICAiMDMtY3JlYXRlLnRvdGFsX2Rpc3BsYXlfZnJhY3Rpb24iOiAiMDYyLjAwIiwKICAiMDMtY3JlYXRlLnN0YXR1cyI6ICJRdW90YXRpb24iLAogICIwMy1jcmVhdGUudW50YXhlZF9hbW91bnRfbGFiZWwiOiAiVW50YXhlZCBBbW91bnRcdMKjwqA4ODUuMDAiLAogICIwMy1jcmVhdGUuY3VzdG9tZXJfcmVmZXJlbmNlIjogImZ3b2QxMDYtZGctc3BlYyIsCiAgIjAzLWNyZWF0ZS51cmwucS5pZCI6ICIyNCIsCiAgIjA0LWFkZC5xdW90YXRpb25fcmVmZXJlbmNlIjogIlMwMDAyNCIsCiAgIjA0LWFkZC5zYWxlc19vcmRlcl91cmwiOiAiaHR0cDovLzEyNy4wLjAuMTo4MDY5L3dlYiNjaWRzPTEmbWVudV9pZD0xOTQmYWN0aW9uPTMxNiZtb2RlbD1zYWxlLm9yZGVyJnZpZXdfdHlwZT1mb3JtJmlkPTI0IiwKICAiMDQtYWRkLmN1c3RvbWVyX25hbWUiOiAiZndvZDEwNi1kZy1zcGVjIEJlbmNoIEN1c3RvbWVyIiwKICAiMDQtYWRkLmxpbmVfMV9wcm9kdWN0IjogIltGVVJOXzY2NjZdIEFjb3VzdGljIEJsb2MgU2NyZWVucyIsCiAgIjA0LWFkZC5saW5lXzFfcXVhbnRpdHkiOiAiMy4wMCIsCiAgIjA0LWFkZC5saW5lXzFfdW5pdF9wcmljZSI6ICIyOTUuMDAiLAogICIwNC1hZGQubGluZV8xX3N1YnRvdGFsIjogIsKjwqA4ODUuMDAiLAogICIwNC1hZGQubGluZV8yX3Byb2R1Y3QiOiAiW0ZVUk5fNzc3N10gT2ZmaWNlIENoYWlyIiwKICAiMDQtYWRkLmxpbmVfMl9xdWFudGl0eSI6ICIyLjAwIiwKICAiMDQtYWRkLmxpbmVfMl91bml0X3ByaWNlIjogIjcwLjAwIiwKICAiMDQtYWRkLmxpbmVfMl9zdWJ0b3RhbCI6ICLCo8KgMTQwLjAwIiwKICAiMDQtYWRkLnVudGF4ZWRfYW1vdW50IjogIsKjwqAxLDAyNS4wMCIsCiAgIjA0LWFkZC50YXhfYW1vdW50IjogIsKjwqAyMDUuMDAiLAogICIwNC1hZGQudG90YWwiOiAiwqPCoDEsMjMwLjAwIiwKICAiMDQtYWRkLmZpcnN0X2xpbmVfc3VidG90YWxfZGlzcGxheSI6ICLCo8KgODg1LjAwIiwKICAiMDQtYWRkLnNlY29uZF9saW5lX3N1YnRvdGFsX2Rpc3BsYXkiOiAiwqPCoDE0MC4wMCIsCiAgIjA0LWFkZC50YXhfbGFiZWwiOiAiVEFYIDIwJSIsCiAgIjA0LWFkZC50YXhfYW1vdW50X2Rpc3BsYXkiOiAiwqPCoDIwNS4wMCIsCiAgIjA0LWFkZC5zdGF0dXMiOiAiUXVvdGF0aW9uIiwKICAiMDQtYWRkLnVudGF4ZWRfYW1vdW50X2xhYmVsIjogIlVudGF4ZWQgQW1vdW50XHTCo8KgMSwwMjUuMDAiLAogICIwNC1hZGQudG90YWxfZGlzcGxheSI6ICJUb3RhbFx0wqPCoDEsMjMwLjAwIiwKICAiMDQtYWRkLmN1c3RvbWVyX3JlZmVyZW5jZSI6ICJmd29kMTA2LWRnLXNwZWMiLAogICIwNS1lZGl0LmluaXRpYWxfbGluZV8xX3F1YW50aXR5IjogIjMuMDAiLAogICIwNS1lZGl0LnNhbGVzX29yZGVyX3VybCI6ICJodHRwOi8vMTI3LjAuMC4xOjgwNjkvd2ViI2NpZHM9MSZtZW51X2lkPTE5NCZhY3Rpb249MzE2Jm1vZGVsPXNhbGUub3JkZXImdmlld190eXBlPWZvcm0maWQ9MjQiLAogICIwNS1lZGl0LnF1b3RhdGlvbl9yZWZlcmVuY2UiOiAiUzAwMDI0IiwKICAiMDUtZWRpdC5jdXN0b21lcl9uYW1lIjogImZ3b2QxMDYtZGctc3BlYyBCZW5jaCBDdXN0b21lciIsCiAgIjA1LWVkaXQubGluZV8xX3Byb2R1Y3QiOiAiW0ZVUk5fNjY2Nl0gQWNvdXN0aWMgQmxvYyBTY3JlZW5zIiwKICAiMDUtZWRpdC5saW5lXzFfcXVhbnRpdHkiOiAiNS4wMCIsCiAgIjA1LWVkaXQubGluZV8xX3VuaXRfcHJpY2UiOiAiMjk1LjAwIiwKICAiMDUtZWRpdC5saW5lXzFfc3VidG90YWwiOiAiwqPCoDEsNDc1LjAwIiwKICAiMDUtZWRpdC5saW5lXzJfcHJvZHVjdCI6ICJbRlVSTl83Nzc3XSBPZmZpY2UgQ2hhaXIiLAogICIwNS1lZGl0LmxpbmVfMl9xdWFudGl0eSI6ICIyLjAwIiwKICAiMDUtZWRpdC5saW5lXzJfdW5pdF9wcmljZSI6ICI3MC4wMCIsCiAgIjA1LWVkaXQubGluZV8yX3N1YnRvdGFsIjogIsKjwqAxNDAuMDAiLAogICIwNS1lZGl0LnVudGF4ZWRfYW1vdW50IjogIsKjwqAxLDYxNS4wMCIsCiAgIjA1LWVkaXQudGF4X2Ftb3VudCI6ICLCo8KgMzIzLjAwIiwKICAiMDUtZWRpdC50b3RhbCI6ICLCo8KgMSw5MzguMDAiLAogICIwNS1lZGl0LmZpcnN0X2xpbmVfc3VidG90YWxfZGlzcGxheSI6ICLCo8KgMSw0NzUuMDAiLAogICIwNS1lZGl0LnNlY29uZF9saW5lX3N1YnRvdGFsX2Rpc3BsYXkiOiAiwqPCoDE0MC4wMCIsCiAgIjA1LWVkaXQudGF4X2xhYmVsIjogIlRBWCAyMCUiLAogICIwNS1lZGl0LnRheF9hbW91bnRfZGlzcGxheSI6ICLCo8KgMzIzLjAwIiwKICAiMDUtZWRpdC5zdGF0dXMiOiAiUXVvdGF0aW9uIiwKICAiMDUtZWRpdC51bnRheGVkX2Ftb3VudF9sYWJlbCI6ICJVbnRheGVkIEFtb3VudFx0wqPCoDEsNjE1LjAwIiwKICAiMDUtZWRpdC50b3RhbF9kaXNwbGF5IjogIlRvdGFsXHTCo8KgMSw5MzguMDAiLAogICIwNi12ZXJpZnkub3JkZXJfcmVmZXJlbmNlIjogIlMwMDAyNCIsCiAgIjA2LXZlcmlmeS5vcmRlcl9zdGF0dXMiOiAiU2FsZXMgT3JkZXIiLAogICIwNi12ZXJpZnkudW50YXhlZF9hbW91bnQiOiAiwqPCoDEsNjE1LjAwIiwKICAiMDYtdmVyaWZ5LnRheF9hbW91bnQiOiAiwqPCoDMyMy4wMCIsCiAgIjA2LXZlcmlmeS50b3RhbCI6ICLCo8KgMSw5MzguMDAiLAogICIwNi12ZXJpZnkub3JkZXJfZGF0ZSI6ICIxMC8yNy8yMDI2IDE4OjAyOjE5IiwKICAiMDYtdmVyaWZ5LmN1c3RvbWVyXzEiOiAiZndvZDEwNi1kZy1zcGVjIEJlbmNoIEN1c3RvbWVyIiwKICAiMDYtdmVyaWZ5LmN1c3RvbWVyXzIiOiAiQmVuY2h2aWxsZSIsCiAgIjA2LXZlcmlmeS50YXhfbGFiZWwiOiAiVEFYIDIwJSIsCiAgIjA2LXZlcmlmeS50YXhfYW1vdW50X2Rpc3BsYXkiOiAiwqPCoDMyMy4wMCIsCiAgIjA2LXZlcmlmeS50b3RhbF9kaXNwbGF5IjogIlRvdGFsXHTCo8KgMSw5MzguMDAiLAogICIwNi12ZXJpZnkucmVmIjogImZ3b2QxMDYtZGctc3BlYyIsCiAgIjA3LXZlcmlmeS5wcmV2aW91c19zdGF0dXMiOiAiU2FsZXMgT3JkZXIiLAogICIwNy12ZXJpZnkuc3RhdHVzX29wdGlvbnMiOiAiU2FsZXMgT3JkZXJcblF1b3RhdGlvbiBTZW50XG5RdW90YXRpb24iLAogICIwNy12ZXJpZnkub2JzZXJ2ZWRfc3RhdHVzIjogIkNhbmNlbGxlZCIsCiAgIjA3LXZlcmlmeS5vcmRlcl9yZWZlcmVuY2UiOiAiUzAwMDI0IiwKICAiMDctdmVyaWZ5LmF2YWlsYWJsZV9idXR0b25fYWZ0ZXJfY2FuY2VsIjogIlNldCB0byBRdW90YXRpb24iLAogICIwNy12ZXJpZnkudW50YXhlZF9hbW91bnQiOiAiwqPCoDEsNjE1LjAwIiwKICAiMDctdmVyaWZ5LnRvdGFsIjogIsKjwqAxLDkzOC4wMCIsCiAgIjA3LXZlcmlmeS5jdXN0b21lcl8xIjogImZ3b2QxMDYtZGctc3BlYyBCZW5jaCBDdXN0b21lciIsCiAgIjA3LXZlcmlmeS5jdXN0b21lcl8yIjogIkJlbmNodmlsbGUiLAogICIwNy12ZXJpZnkuY3VzdG9tZXJfcmVmZXJlbmNlIjogImZ3b2QxMDYtZGctc3BlYyIsCiAgIjA3LXZlcmlmeS5zYWxlc19vcmRlcl9pZCI6ICIyNCIKfQ=="
+                    },
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": ""
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "db4e4c3716c028556383-55b849ded9ce9d77e073",
+          "file": "fwod106-dg.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-27T18:00:57.606Z",
+    "duration": 100844.959,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}
