@@ -1,0 +1,114 @@
+
+[sweep] run 1/3: fwgt37-dg-n1 (store: /home/user/sitelooper/bench/results/fwgt37-dg-skills)
+[harness] gitea: defaulting APP_URL
+[harness] gitea: defaulting APP_EMAIL
+[harness] gitea: defaulting APP_PASSWORD
+[reset] gitea: no leftover bench issues
+[harness] gitea responded 200 at http://127.0.0.1:8095/
+stopped: fwgt37-dg-n1
+  flow "fwgt37-dg" saved: 7 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwgt37-dg.json
+  warning: note: 04-set no longer publishes sidebar_labels, priority_high_picker_item_state — no replay reads them from the page and the recording showed no line to read
+  warning: note: 05-change no longer publishes assignee_sidebar_text, labels_unchanged — no replay reads them from the page and the recording showed no line to read
+  warning: note: 06-set no longer publishes sidebar_milestone_text, no_milestone_still_shown — no replay reads them from the page and the recording showed no line to read
+  warning: note: 07-add no longer publishes comment_timeline_text, comment_author — no replay reads them from the page and the recording showed no line to read
+  warning: note: 04-set: added a read for sidebar_label_chip_1 to s_015495 (page.getByRole('link', { name: 'bug', exact: true }); seen on the instruction's own page)
+  warning: note: 04-set: added a read for sidebar_label_chip_2 to s_015495 (page.getByRole('link', { name: 'priority-high', exact: true }); seen on the instruction's own page)
+  warning: warning: instruction "On issue 'fwgt37-dg-n1 Bench Issue' in bench/bench-repo, assign it to …" ran 14 state-changing step(s) but reported blocked — its work is NOT in the flow
+  warning: warning: 1 value(s) KNOWN to be this run's survived unslotted — a replay will act on or wait for the recording's value (non-fatal outside locators):
+  flow.omitted[0].instruction: "fwgt37-dg-n1" (var) in "On issue 'fwgt37-dg-n1 Bench Issue' in bench/bench-repo, assign it to the user bench-assignee from the sidebar assignee picker. Ensure the choice is applied and"
+  warning: warning: 199 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.startUrl: "http://127.0.0.1:8095/" (output) in "http://127.0.0.1:8095/"
+  flow.steps[0].instruction: "http://127.0.0.1:8095/" (output) in "Sign in to Gitea at http://127.0.0.1:8095/ using username admin and the password exactly as the literal text {{env:APP_PASSWORD}} (the browser fills it when typ"
+  flow.steps[0].instruction: "admin" (output) in "Sign in to Gitea at http://127.0.0.1:8095/ using username admin and the password exactly as the literal text {{env:APP_PASSWORD}} (the browser fills it when typ"
+  flow.steps[0].params.v1: "http://127.0.0.1:8095/" (output) in "http://127.0.0.1:8095/"
+  flow.steps[0].params.v2: "admin" (output) in "admin"
+arm=sitelooper model=openai/gpt-6-luna runid=fwgt37-dg-n1 stop=completed
+turns=9 wall=462.4s
+commands=8 cmdTime=426.2s cmdBytes=9798 timeouts=0
+orchestrator in=6009 cw=0 cr=31041 out=969
+inner prompt=3005426 cached=2745314 completion=22098
+spend=$0.0597 maxUsd=3
+learn: A_n=0 replayed=0/8 full=0 repaired=0 compiled=7 variants=0
+-> /home/user/sitelooper/bench/results/fwgt37-dg-n1-sitelooper-result.json
+
+fwgt37-dg-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — #4, state=closed, description includes runid=true
+  obj 3: PASS — labels=[bug, priority-high], want [bug, priority-high]
+  obj 4: PASS — assignees=[bench-assignee]
+  obj 5: PASS — milestone=Bench Milestone
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — issue #4 reported
+
+[sweep] run 2/3: fwgt37-dg-n2 (replay flow fwgt37-dg, no orchestrator)
+[reset] gitea: deleted 1 leftover bench issue(s)
+[sweep] fwgt37-dg-n2: 8 drift ticket(s) → fwgt37-dg-n2-drift.json
+
+fwgt37-dg-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — #5, state=closed, description includes runid=true
+  obj 3: PASS — labels=[bug, priority-high], want [bug, priority-high]
+  obj 4: PASS — assignees=[bench-assignee]
+  obj 5: PASS — milestone=Bench Milestone
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — issue #5 reported
+
+[sweep] run 3/3: fwgt37-dg-n3 (replay flow fwgt37-dg, no orchestrator)
+[reset] gitea: deleted 1 leftover bench issue(s)
+[sweep] fwgt37-dg-n3: 8 drift ticket(s) → fwgt37-dg-n3-drift.json
+
+fwgt37-dg-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — #6, state=closed, description includes runid=true
+  obj 3: PASS — labels=[bug, priority-high], want [bug, priority-high]
+  obj 4: PASS — assignees=[bench-assignee]
+  obj 5: PASS — milestone=Bench Milestone
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — issue #6 reported
+
+Learning sweep fwgt37-dg (K=3)
+┌─────────┬───┬────────────────┬──────────┬─────────────┬───────┬──────┬───────────┬──────┬──────────────┬────────┐
+│ (index) │ n │ runid          │ verified │ stop        │ turns │ cmds │ total_usd │ A_n  │ replayed     │ wall_s │
+├─────────┼───┼────────────────┼──────────┼─────────────┼───────┼──────┼───────────┼──────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwgt37-dg-n1' │ '7/7'    │ 'completed' │ 9     │ 8    │ 0.0597    │ 0    │ '0/8'        │ 462    │
+│ 1       │ 2 │ 'fwgt37-dg-n2' │ '7/7'    │ 'success'   │ 30    │ 7    │ 0.0141    │ 0.86 │ '7/7 (flow)' │ 164    │
+│ 2       │ 3 │ 'fwgt37-dg-n3' │ '7/7'    │ 'success'   │ 21    │ 7    │ 0.0118    │ 0.86 │ '7/7 (flow)' │ 151    │
+└─────────┴───┴────────────────┴──────────┴─────────────┴───────┴──────┴───────────┴──────┴──────────────┴────────┘
+http://127.0.0.1:8095
+  s_015495  validated   17 steps  3/3 (100%)
+           On issue '{{v1}}' in bench/bench-repo, set its labels to exactly bug and priority-high, with no other labels. …
+  s_0914f1  validated    2 steps  3/3 (100%)
+           Add a comment to issue '{{v1}}' in {{v3}}/bench-repo whose text includes the exact runid {{v2}}. Submit it and…
+  s_12b53d  validated    8 steps  3/3 (100%)
+           In repository bench/bench-repo, create an issue titled exactly '{{v2}}' with a markdown description that inclu…
+  s_183dc8  validated    4 steps  3/3 (100%)
+           Add a comment to issue '{{v1}}' in {{v3}}/bench-repo whose text includes the exact runid {{v2}}. Submit it and…
+  s_285031  validated    1 steps  3/3 (100%)
+           In repository bench/bench-repo, create an issue titled exactly '{{v2}}' with a markdown description that inclu…
+  s_3e607e  validated    3 steps  3/3 (100%)
+           Sign in to Gitea at {{v1}} using username {{v2}} and the password exactly as the literal text {{v3}} (the brow…
+  s_7403e0  validated    9 steps  3/3 (100%)
+           On issue '{{v1}}' in {{v3}}/bench-repo, set the milestone to 'Bench Milestone' using the sidebar milestone pic…
+  s_788b12  validated    1 steps  3/3 (100%)
+           Sign in to Gitea at {{v1}} using username {{v2}} and the password exactly as the literal text {{v3}} (the brow…
+  s_84e01d  validated    2 steps  3/3 (100%)
+           Sign in to Gitea at {{v1}} using username {{v2}} and the password exactly as the literal text {{v3}} (the brow…
+  s_ac9042  validated    1 steps  3/3 (100%)
+           In repository bench/bench-repo, identify and report the exact titles of all open issues whose title starts wit…
+  s_db788c  demoted     10 steps  1/3 (33%)
+           Complete the assignment objective for issue '{{v1}}' in {{v3}}/bench-repo: assign user bench-assignee. The pri…
+  s_df6036  validated    9 steps  3/3 (100%)
+           In repository bench/bench-repo, identify and report the exact titles of all open issues whose title starts wit…
+  s_ea0cd7  validated    4 steps  3/3 (100%)
+           In repository bench/bench-repo, create an issue titled exactly '{{v2}}' with a markdown description that inclu…
+  s_0f2504  provisional 20 steps  1/1 (100%)  variant of s_db788c
+           Complete the assignment objective for issue '{{v1}}' in {{v3}}/bench-repo: assign user bench-assignee. The pri…
+  s_309e4d  provisional 22 steps  1/1 (100%)  variant of s_db788c
+           Complete the assignment objective for issue '{{v1}}' in {{v3}}/bench-repo: assign user bench-assignee. The pri…
+  s_8f9150  provisional  4 steps  1/1 (100%)
+           Complete the assignment objective for issue '{{v1}}' in {{v3}}/bench-repo: assign user bench-assignee. The pri…
+  s_c0b5fc  provisional  4 steps  1/1 (100%)
+           Complete the assignment objective for issue '{{v1}}' in {{v3}}/bench-repo: assign user bench-assignee. The pri…
+store: /home/user/sitelooper/bench/results/fwgt37-dg-skills
+
+summary: /home/user/sitelooper/bench/results/fwgt37-dg-sweep.json

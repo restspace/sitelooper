@@ -1,0 +1,15 @@
+[spec-replay] resetting gitea
+[reset] gitea: deleted 1 leftover bench issue(s)
+[spec-replay] compiling: /opt/node22/bin/node /home/user/sitelooper/bin/sitelooper.js compile bench/results/flows/fwgt37-dg.json --out /home/user/sitelooper/bench/results/fwgt37-dg-spec-spec-tmp --overwrite-spec
+flow: /home/user/sitelooper/bench/results/fwgt37-dg-spec-spec-tmp/fwgt37-dg.flow.ts
+spec: /home/user/sitelooper/bench/results/fwgt37-dg-spec-spec-tmp/fwgt37-dg.spec.ts
+facts http://127.0.0.1:8095: 69 relied (21 hard), 49 advisory
+warning the recording's instruction "On issue 'fwgt37-dg-n1 Bench Issue' in bench/bench-repo, assign it to the user bench-assig…" changed the app but is not in the flow — a spec may pass without that work
+  why: it ran 14 state-changing step(s) and reported blocked, and no step of the flow carries them
+  fix: check the flow covers the work another way; if not, re-record so that instruction reports success
+
+  warning: 04-set: step 15 (read repository_issue_reference) has no locator left — it publishes nothing, as replay skips it
+  warning: 04-set: step 16 (read sidebar_label_chip_1) has no locator left — it publishes nothing, as replay skips it
+  warning: 04-set: step 17 (read sidebar_label_chip_2) has no locator left — it publishes nothing, as replay skips it
+[spec-replay] running: npx playwright test --config /home/user/sitelooper/bench/results/fwgt37-dg-spec-spec-tmp/playwright.config.mjs
+[spec-replay] fwgt37-dg-spec: 1/1 passed, exit=0, 42s, 4 drift line(s) — result written
