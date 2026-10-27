@@ -10,6 +10,7 @@ import { derivesFromParams, givenPartialReason, givenWarning, reportNeedsPage, t
 import { askedOutputs } from '../daemon/step-verdict.js';
 import { observedNothing, scopeSetBy } from '../execution/observe.js';
 import { segmentGate } from '../execution/gates.js';
+import { shadowReadLabels, shadowReadTemplates } from '../execution/shadow.js';
 import { typedControls } from '../execution/facts-display.js';
 /**
  * The IR as `@playwright/test` source (Tier 2: no sitelooper runtime).
@@ -3824,6 +3825,31 @@ function satisfiedGuard(step: SpecStep, ctx: Ctx, consumed: ReadonlySet<string> 
 }
 
 /**
+ * Shadow (execution/shadow.ts, kind 'read'), after a segment's body: each
+ * value the segment's own reads published, judged against the report
+ * template of the chain from this segment on (its last segment carries it),
+ * as replay judges a completed segment (skills/replay.ts). Only the labels
+ * that have a template are carried, as a literal map; printed as
+ * `[sitelooper shadow] …` and never thrown. Empty when there is nothing to
+ * judge, so most segments carry nothing.
+ */
+function shadowReadLines(step: SpecStep, index: number): string[] {
+  const segment = step.segments[index];
+  const templates = shadowReadTemplates(step.segments.slice(index).map((s) => ({ reportTemplate: s.report })));
+  const labels = Object.fromEntries(Object.entries(shadowReadLabels(segment.steps)).filter(([label]) => Object.prototype.hasOwnProperty.call(templates, label)));
+  if (!Object.keys(labels).length) return [];
+  const carried = Object.fromEntries(Object.keys(labels).map((label) => [label, templates[label]]));
+  const prefix = `${step.id}.`;
+  const values = `{ ${Object.keys(labels).map((label) => `${q(label)}: outputs[${q(prefix + label)}] as string | undefined`).join(', ')} }`;
+  const echoed = `run.echoed.filter((k) => k.startsWith(${q(prefix)})).map((k) => k.slice(${prefix.length}))`;
+  return [
+    '',
+    `// Shadow: this segment's reads against their recorded report templates (reported, never thrown).`,
+    `if (shadowEnabled()) for (const line of readShadowLines(${JSON.stringify(labels)}, ${JSON.stringify(carried)}, p, ${values}, ${echoed})) console.log(${q(`[sitelooper shadow] ${step.id} ${segment.id}: `)} + line);`,
+  ];
+}
+
+/**
  * After the step's last segment: every report-template value built from the
  * caller's own `{{vN}}`, filled for this run and published unless a live read
  * of the step already published it — the daemon's synthesizeReport over the
@@ -4638,6 +4664,7 @@ export function emitFlowFile(spec: SpecFlow, o: EmitOptions): { source: string; 
       for (const [i, segment] of step.segments.entries()) {
         if (i) lines.push('');
         const body = emitSegment(segment, ctx);
+        body.push(...shadowReadLines(step, i));
         // A detour segment with nothing to do on this run is passed over
         // (SpecSegment.detour): the shared detourGiven, asked before the
         // segment's first step as the daemon's chain walk asks it (replay.ts
