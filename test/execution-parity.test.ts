@@ -1059,12 +1059,24 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
     it('both runners report the same read shadow finding, and only for a fixed template the read contradicts', async () => {
       // ticket_reference reads "RD-1016"; its template is this run's ref then
       // " Closed": fixed for the run, and contradicted by the read.
+      const shadowOf = async (skill: Skill): Promise<{ ok: boolean; reason: string | null; shadow: string[] }> => {
+        const session = new BrowserSession({ session: `parity-shadow-${Date.now()}`, persist: false, learn: true });
+        try {
+          const page = await session.getPage();
+          await page.goto(`${origin}/tickets`);
+          session.learn!.put(skill);
+          const replay = (await executeTool(session, 'run_skill', { id: skill.id, params }, os.tmpdir())).replay as ReplayResult | undefined;
+          return { ok: Boolean(replay?.ok), reason: replay?.reason ?? null, shadow: replay?.shadow ?? [] };
+        } finally {
+          await session.close();
+        }
+      };
       const shadowValues = { ticket_reference: '{{v1}} Closed' };
       const skill: Skill = { ...ticketSkill(), reportTemplate: { summary: '', values: shadowValues } };
       const flow = ticketFlow();
       flow.steps[0].segments[0].report = { summary: '', values: shadowValues };
       reset(13);
-      const replay = await replayOf(skill, params);
+      const replay = await shadowOf(skill);
       reset(13);
       const emitted = await emittedOf(flow, params);
       expect(replay.ok, replay.reason ?? '').toBe(true);
@@ -1078,7 +1090,7 @@ d('execution parity (daemon replay vs emitted artifact)', () => {
       const agreeingFlow = ticketFlow();
       agreeingFlow.steps[0].segments[0].report = { summary: '', values: quiet };
       reset(13);
-      expect((await replayOf(agreeing, params)).shadow).toEqual([]);
+      expect((await shadowOf(agreeing)).shadow).toEqual([]);
       reset(13);
       expect((await emittedOf(agreeingFlow, params)).shadow).toEqual([]);
     }, 120_000);

@@ -106,7 +106,7 @@ export function readShadowFinding(label: string, template: string, params: Recor
   // A url (or about:blank) is where the page happened to be routed, not a
   // value the procedure published about the app's state: 30 of the green
   // runs' findings were a sign-in step's "initial page url".
-  if (/^[a-z][a-z0-9+.-]*:\S*$/i.test(filled.trim())) return null;
+  if (/^(?:https?:\/\/|about:|file:|data:)\S*$/i.test(filled.trim())) return null;
   const given = new Set(
     Object.values(params)
       .map((v) => plainNumbers(String(v).trim()))
