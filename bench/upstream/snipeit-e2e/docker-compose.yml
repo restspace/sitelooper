@@ -53,6 +53,9 @@ services:
       DB_USERNAME: snipeit
       DB_PASSWORD: e2e-db-pass
       MAIL_MAILER: log
+      # The UI's pages call /api/v1 (about 30 calls a test run); the default 120 a
+      # minute per user ran out after build's back-to-back runs (sie2e6: 429s).
+      API_THROTTLE_PER_MINUTE: "10000"
       MAIL_FROM_ADDR: e2e@example.com
       MAIL_FROM_NAME: E2E
       MAIL_REPLYTO_ADDR: e2e@example.com
