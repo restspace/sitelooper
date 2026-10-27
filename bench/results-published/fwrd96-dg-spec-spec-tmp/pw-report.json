@@ -1,0 +1,200 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwrd96-dg-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwrd96-dg-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwrd96-dg-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/bench/results/fwrd96-dg-spec-spec-tmp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwrd96-dg-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwrd96-dg.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwrd96-dg-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwrd96-dg.spec.ts",
+      "file": "fwrd96-dg.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwrd96-dg",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 41159,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper step] 01-signin\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-create\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-add\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-add\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 05-edit s_dfdb63/11: read 'f_cost_f_markup_f_name' returned a value the skill itself set/selected ('150') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 05-edit\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 06-change s_1efcc4/15: read 'supplier_set_on_both_parts' returned a value the skill itself set/selected ('Bench Supply Co') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 06-change\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 07-remove: report value parts_removed is given, not observed: it is built only from the step's own parameters, and neither this run's page nor any of its reads shows it — withheld\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 07-remove\n"
+                    },
+                    {
+                      "text": "[sitelooper probe] 02-create: http://127.0.0.1:4180/#/tickets/t15 still shows what it saved\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-signin: Sign in to the repair-desk app at http://127.0.0.1:4180/ using email bench@example.com and password exactly {{env:APP_PASSWORD}}. Verify the signed-in page is visible and report its identifying text.",
+                      "duration": 6238
+                    },
+                    {
+                      "title": "02-create: Create a repair ticket titled exactly '{{runid}} RD Bench Ticket'. Complete any required fields, submit, then wait for the refreshed list/detail state and report the ticket's visible title and reference.",
+                      "duration": 5290
+                    },
+                    {
+                      "title": "03-add: On ticket '{{runid}} RD Bench Ticket' ({{02-create.ticket_reference}}), add a part named exactly '{{runid}} RD Part A' with cost 100 and markup 25. Submit, wait for refreshed ticket details, and report the app-computed price shown for Part A.",
+                      "duration": 5478
+                    },
+                    {
+                      "title": "04-add: On ticket '{{runid}} RD Bench Ticket' ({{02-create.ticket_reference}}), add a second part named exactly '{{runid}} RD Part B' with cost 200 and markup 25. Submit, wait for refreshed ticket details, and report Part B's app-computed price.",
+                      "duration": 5504
+                    },
+                    {
+                      "title": "05-edit: On ticket '{{runid}} RD Bench Ticket' ({{02-create.ticket_reference}}), edit Part A '{{runid}} RD Part A' so its cost changes from 100 to 150, leaving markup 25 unchanged. Save, wait for the refreshed parts table, and report the new computed Part A price.",
+                      "duration": 3157
+                    },
+                    {
+                      "title": "06-change: On ticket '{{runid}} RD Bench Ticket' ({{02-create.ticket_reference}}), change its status to Ready. Discover any enforced preconditions from the app; satisfy them as needed, retry the status change, and verify the final status. Report exactly each required precondition and how it was satisfied.",
+                      "duration": 7934
+                    },
+                    {
+                      "title": "07-remove: On ticket '{{runid}} RD Bench Ticket' ({{02-create.ticket_reference}}), remove both parts '{{runid}} RD Part A' and '{{runid}} RD Part B', wait for the parts table to refresh and verify it is empty, then archive the ticket. Verify the ticket is archived/not active and report the confirmation or resulting state.",
+                      "duration": 6543
+                    },
+                    {
+                      "title": "persistence: re-read what the flow saved",
+                      "duration": 126
+                    }
+                  ],
+                  "startTime": "2026-10-27T17:57:29.850Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "outputs",
+                      "contentType": "application/json",
+                      "body": "ewogICIwMS1zaWduaW4ucGFnZV9oZWFkaW5nIjogIlJlcGFpciB0aWNrZXRzIiwKICAiMDEtc2lnbmluLnNpZ25lZF9pbl91c2VyIjogIkJlbmNoIFVzZXIiLAogICIwMS1zaWduaW4udXJsX2FmdGVyX3NpZ25faW4iOiAiaHR0cDovLzEyNy4wLjAuMTo0MTgwLyMvdGlja2V0cyIsCiAgIjAxLXNpZ25pbi50aWNrZXRfcmVmZXJlbmNlIjogIlJELTEwMTQiLAogICIwMS1zaWduaW4ucmVmXzIiOiAiUkQtMTAxMiIsCiAgIjAxLXNpZ25pbi50aWNrZXRfY291bnRfdGV4dCI6ICJTaG93aW5nIDHigJMxMCBvZiAxMyIsCiAgIjAxLXNpZ25pbi5jdXJyZW50X3VybCI6ICJodHRwOi8vMTI3LjAuMC4xOjQxODAvIy90aWNrZXRzIiwKICAiMDItY3JlYXRlLm1pbnRlZCI6ICJ0MTUiLAogICIwMi1jcmVhdGUudGlja2V0X3RpdGxlIjogImZ3cmQ5Ni1kZy1zcGVjIFJEIEJlbmNoIFRpY2tldCIsCiAgIjAyLWNyZWF0ZS50aWNrZXRfcmVmZXJlbmNlIjogIlJELTEwMTgiLAogICIwMi1jcmVhdGUuZGV0YWlsX21ldGEiOiAiQ3VzdG9tZXI6IEJlbmNoIEN1c3RvbWVyIMK3IFJhaXNlZCAyMDI2LTEwLTI3IiwKICAiMDItY3JlYXRlLnRpY2tldF9jdXN0b21lciI6ICJCZW5jaCBDdXN0b21lciIsCiAgIjAyLWNyZWF0ZS50aWNrZXRfc3RhdHVzIjogIkRyYWZ0IiwKICAiMDItY3JlYXRlLnJhaXNlX2RhdGUiOiAiMjAyNi0xMC0yNyIsCiAgIjAyLWNyZWF0ZS50aWNrZXRfdGl0bGVfcHJlZml4IjogImZ3cmQ5Ni1kZy1zcGVjIiwKICAiMDItY3JlYXRlLmRldGFpbF91cmwiOiAiaHR0cDovLzEyNy4wLjAuMTo0MTgwLyMvdGlja2V0cy90MTUiLAogICIwMi1jcmVhdGUuZGV0YWlsX3RpdGxlIjogImZ3cmQ5Ni1kZy1zcGVjIFJEIEJlbmNoIFRpY2tldCIsCiAgIjAzLWFkZC5jb21wdXRlZF9wcmljZSI6ICIkMTI1LjAwIiwKICAiMDMtYWRkLnRpY2tldF9yZWZlcmVuY2UiOiAiUkQtMTAxOCIsCiAgIjAzLWFkZC50aWNrZXRfdGl0bGUiOiAiZndyZDk2LWRnLXNwZWMgUkQgQmVuY2ggVGlja2V0IiwKICAiMDMtYWRkLnBhcnRfbmFtZSI6ICJmd3JkOTYtZGctc3BlYyBSRCBQYXJ0IEEiLAogICIwMy1hZGQuY29zdCI6ICIkMTAwLjAwIiwKICAiMDMtYWRkLm1hcmt1cCI6ICIyNSUiLAogICIwMy1hZGQucXVhbnRpdHkiOiAiMSIsCiAgIjAzLWFkZC5zdXBwbGllciI6ICJObyBzdXBwbGllciIsCiAgIjAzLWFkZC50aWNrZXRfdGl0bGVfcHJlZml4IjogImZ3cmQ5Ni1kZy1zcGVjIiwKICAiMDQtYWRkLmNvbXB1dGVkX3ByaWNlIjogIiQzNzUuMDAiLAogICIwNC1hZGQudGlja2V0X3JlZmVyZW5jZSI6ICJSRC0xMDE4IiwKICAiMDQtYWRkLnRpY2tldF90aXRsZSI6ICJmd3JkOTYtZGctc3BlYyBSRCBCZW5jaCBUaWNrZXQiLAogICIwNC1hZGQucGFydF9uYW1lIjogImZ3cmQ5Ni1kZy1zcGVjIFJEIFBhcnQgQiIsCiAgIjA0LWFkZC5jb3N0IjogIiQyMDAuMDAiLAogICIwNC1hZGQubWFya3VwIjogIjI1JSIsCiAgIjA0LWFkZC5xdWFudGl0eSI6ICIxIiwKICAiMDQtYWRkLnN1cHBsaWVyIjogIk5vIHN1cHBsaWVyIiwKICAiMDQtYWRkLnRpY2tldF90aXRsZV9wcmVmaXgiOiAiZndyZDk2LWRnLXNwZWMiLAogICIwNS1lZGl0LnRpY2tldF9yZWZlcmVuY2UiOiAiUkQtMTAxOCIsCiAgIjA1LWVkaXQucGFydF9hX25hbWUiOiAiZndyZDk2LWRnLXNwZWMgUkQgUGFydCBBIiwKICAiMDUtZWRpdC5wYXJ0X2FfY29zdF9uZXciOiAiJDE1MC4wMCIsCiAgIjA1LWVkaXQucGFydF9hX21hcmt1cF91bmNoYW5nZWQiOiAiMjUlIiwKICAiMDUtZWRpdC5wYXJ0X2FfcHJpY2VfbmV3IjogIiQxODcuNTAiLAogICIwNS1lZGl0LnBhcnRfYV9xdWFudGl0eSI6ICIxIiwKICAiMDUtZWRpdC5wYXJ0c190b3RhbCI6ICIkNDM3LjUwIiwKICAiMDUtZWRpdC5mX2Nvc3RfZl9tYXJrdXBfZl9uYW1lIjogIjE1MCIsCiAgIjA1LWVkaXQucGFydF9iX3Jvd191bmNoYW5nZWRfMSI6ICJmd3JkOTYtZGctc3BlYyBSRCBQYXJ0IEIiLAogICIwNS1lZGl0LnBhcnRfYl9yb3dfdW5jaGFuZ2VkXzIiOiAiJDIwMC4wMCIsCiAgIjA1LWVkaXQucGFydF9iX3Jvd191bmNoYW5nZWRfMyI6ICIxIiwKICAiMDUtZWRpdC5wYXJ0X2Jfcm93X3VuY2hhbmdlZF80IjogIk5vIHN1cHBsaWVyIiwKICAiMDUtZWRpdC5wYXJ0X2Jfcm93X3VuY2hhbmdlZF81IjogIiQyNTAuMDAiLAogICIwNS1lZGl0LnBhcnRzX3RhYmxlX3Jvd3MiOiAiZndyZDk2LWRnLXNwZWMgUkQgUGFydCBBXHQkMTUwLjAwXHQyNSVcdDFcdE5vIHN1cHBsaWVyXHQkMTg3LjUwLCBmd3JkOTYtZGctc3BlYyBSRCBQYXJ0IEJcdCQyMDAuMDBcdDI1JVx0MVx0Tm8gc3VwcGxpZXJcdCQyNTAuMDAiLAogICIwNi1jaGFuZ2UuZmluYWxfc3RhdHVzIjogIlJlYWR5IiwKICAiMDYtY2hhbmdlLnRpY2tldF9yZWZlcmVuY2UiOiAiUkQtMTAxOCIsCiAgIjA2LWNoYW5nZS50aWNrZXRfdGl0bGUiOiAiZndyZDk2LWRnLXNwZWMgUkQgQmVuY2ggVGlja2V0IiwKICAiMDYtY2hhbmdlLnBhcnRzX3RvdGFsIjogIiQ0MzcuNTAiLAogICIwNi1jaGFuZ2Uuc3VwcGxpZXJfc2V0X29uX2JvdGhfcGFydHMiOiAiQmVuY2ggU3VwcGx5IENvIiwKICAiMDYtY2hhbmdlLnBhcnRfYV9yb3ciOiAiZndyZDk2LWRnLXNwZWMgUkQgUGFydCBBICQxNTAuMDAgMjUlIDEgQmVuY2ggU3VwcGx5IENvICQxODcuNTAiLAogICIwNi1jaGFuZ2UucGFydF9iX3JvdyI6ICJmd3JkOTYtZGctc3BlYyBSRCBQYXJ0IEIgJDIwMC4wMCAyNSUgMSBCZW5jaCBTdXBwbHkgQ28gJDI1MC4wMCIsCiAgIjA2LWNoYW5nZS50aWNrZXRfdGl0bGVfcHJlZml4IjogImZ3cmQ5Ni1kZy1zcGVjIiwKICAiMDctcmVtb3ZlLmRldGFpbF9iYWRnZXMiOiAiUmVhZHkgfCBBcmNoaXZlZCIsCiAgIjA3LXJlbW92ZS50aWNrZXRfcmVmZXJlbmNlIjogIlJELTEwMTgiLAogICIwNy1yZW1vdmUucGFydHNfY291bnRfb25fZGV0YWlsIjogIjAiLAogICIwNy1yZW1vdmUudGlja2V0X2N1c3RvbWVyIjogIkJlbmNoIEN1c3RvbWVyIiwKICAiMDctcmVtb3ZlLnRpY2tldF9hcmNoaXZlX3N0YXR1cyI6ICJBcmNoaXZlZCIsCiAgIjA3LXJlbW92ZS5saXN0X3dpdGhfYXJjaGl2ZWRfY2hlY2tlZCI6ICJTaG93aW5nIDHigJMxMCBvZiAxNSIsCiAgIjA3LXJlbW92ZS50aWNrZXRfdGl0bGUiOiAiZndyZDk2LWRnLXNwZWMgUkQgQmVuY2ggVGlja2V0IiwKICAiMDctcmVtb3ZlLnRpY2tldF90aXRsZV9wcmVmaXgiOiAiZndyZDk2LWRnLXNwZWMiLAogICIwNy1yZW1vdmUudGlja2V0X3N0YXR1cyI6ICJSZWFkeSIKfQ=="
+                    },
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": ""
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fd3124284e058eb6cecb-4db959f678b5f3762f6d",
+          "file": "fwrd96-dg.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-27T17:57:25.681Z",
+    "duration": 45764.554,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}
