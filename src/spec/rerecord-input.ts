@@ -9,7 +9,8 @@ import { carryFactSnapshot, carryFingerprints, carryRecipeSnapshot, flowToSpec, 
 import { ComponentStore } from '../skills/components.js';
 import { SiteFactStore, siteFactStore } from '../skills/facts.js';
 import type { Diagnostic } from './diagnostics.js';
-import { liftFlowFile } from './lift.js';
+import { isReadableFlowFile, liftFlowFile } from './lift.js';
+import { compileFlow, readableTarget, type CompileResult, type SpecStyle } from './index.js';
 import { specToFlow } from './lower.js';
 import type { RecipeSnapshot } from '../execution/recipes.js';
 
@@ -24,6 +25,13 @@ export interface RerecordInput {
   recipes?: RecipeSnapshot;
   /** A compiled artifact's lifted spec: its per-segment page fingerprints are carried onto the re-emitted file (carryFingerprints). */
   lifted?: SpecFlow;
+  /**
+   * A readable flow file named as the target: its recording (the bundle its
+   * `// @sitelooper-source` line names, or the user store's flow) is what is
+   * re-recorded, as `kind` says, and the file is recompiled from it after a
+   * successful re-record (recompileAfterRerecord).
+   */
+  readable?: { flowFile: string };
 }
 
 export interface StagedRerecordInput {
@@ -61,9 +69,37 @@ function fromCompiled(file: string): RerecordInput | null {
   }
 }
 
+/**
+ * A readable flow file carries no recording of its own: the bundle (or user
+ * store flow) its source line leads to is the input, re-recorded in place.
+ * Throws when the file is readable but its recording cannot be found, rather
+ * than falling through to "not a flow": the file says what it is.
+ */
+function fromReadable(file: string, snapshotFile?: string): RerecordInput | null {
+  let source: string;
+  try {
+    source = fs.readFileSync(file, 'utf8');
+  } catch {
+    return null;
+  }
+  if (!isReadableFlowFile(source)) return null;
+  const target = readableTarget(file, { snapshotFile });
+  const readable = { flowFile: path.resolve(file) };
+  if (target.bundleFile) {
+    const bundle = fromBundle(target.bundleFile);
+    if (!bundle) throw new Error(`${JSON.stringify(target.bundleFile)}, the bundle ${file} was compiled from, is not a procedure snapshot`);
+    return { ...bundle, readable };
+  }
+  const loaded = loadFlowFile(target.target);
+  if (!loaded?.flow || !Array.isArray(loaded.flow.steps)) throw new Error(`no rerecordable flow ${JSON.stringify(target.target)} behind ${file}`);
+  return { flow: loaded.flow, file: path.resolve(loaded.file), kind: 'flow', readable };
+}
+
 /** Resolve every artifact diagnostics may name back into the replayable Flow shape. */
 export function resolveRerecordInput(nameOrPath: string, snapshotFile?: string): RerecordInput {
   if (fs.existsSync(nameOrPath)) {
+    const readable = fromReadable(nameOrPath, snapshotFile);
+    if (readable) return readable;
     const bundle = fromBundle(nameOrPath);
     if (bundle) return bundle;
     const compiled = fromCompiled(nameOrPath);
@@ -170,4 +206,25 @@ export function persistRerecordInput(
   fs.writeFileSync(tmp, source);
   fs.renameSync(tmp, input.file);
   return { file: input.file, wrote: true, recipeChanges: [...carried.changes, ...fingerprints.changes, ...factLines], diagnostics: found };
+}
+
+/**
+ * Recompile after a successful re-record, so the generated file matches the
+ * recording it now has. A readable target is recompiled next to itself in
+ * `style` (default readable); a bundle or flow given with `--style` is
+ * compiled into `outDir` in that style. Returns null when there is nothing to
+ * recompile (a runtime `.flow.ts` is rewritten by persistRerecordInput itself,
+ * and a bundle or flow without `--style` stays a recording only).
+ */
+export function recompileAfterRerecord(
+  input: RerecordInput,
+  o: { style?: SpecStyle; outDir?: string; snapshotFile?: string },
+): CompileResult | null {
+  const source = input.kind === 'compiled' ? null : input.file;
+  if (!source) return null;
+  if (input.readable) {
+    return compileFlow(source, { outDir: path.dirname(input.readable.flowFile), style: o.style ?? 'readable' });
+  }
+  if (!o.style) return null;
+  return compileFlow(source, { outDir: o.outDir, style: o.style, snapshotFile: o.snapshotFile });
 }

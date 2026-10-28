@@ -749,3 +749,27 @@ export function rerecordDiagnostics(input: CoverageInput): Map<string, Diagnosti
   }
   return out;
 }
+
+// --- readable specs ------------------------------------------------------------
+
+/**
+ * What `repair` cannot do for a readable flow file in this release, as the
+ * message that refuses it, or null when the request is supported. Repair on a
+ * readable file is the converge loop over its recording (a triage run, a
+ * re-record of the failing step, a readable recompile and a check); that
+ * re-record writes the bundle, so a proposal of the flow file alone
+ * (`--propose`), a preview (`--dry-run`) or a write elsewhere (`--out`) would
+ * leave the bundle and the file disagreeing. The commands that do the same
+ * thing by hand are named instead.
+ */
+export function readableRepairRefusal(file: string, o: { propose?: boolean; dryRun?: boolean; out?: boolean }): string | null {
+  const flags = [o.propose ? '--propose' : null, o.dryRun ? '--dry-run' : null, o.out ? '--out' : null].filter(Boolean);
+  if (!flags.length) return null;
+  return (
+    `repair ${flags.join(', ')} is not supported for a readable spec (${file}) in this release: ` +
+    `its recording lives in the bundle, and a re-record changes the bundle. ` +
+    `Re-record the failing step with \`sitelooper rerecord ${file} <step-id>\` (it rewrites the bundle and recompiles the file), ` +
+    `or recompile by hand with \`sitelooper compile <bundle> --style readable\`, and review the diff of the regenerated file; ` +
+    `\`sitelooper repair ${file}\` without ${flags.join('/')} runs that loop for you`
+  );
+}

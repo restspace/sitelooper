@@ -10,6 +10,7 @@
 // FLOW constant is (see emit.ts's header comment, which this module trusts
 // verbatim). Lift only has to find that one JSON literal between two marker
 // comments and validate its shape.
+import { createHash } from 'node:crypto';
 import type { SpecFlow } from './ir.js';
 import { FINGERPRINT_DIMS } from '../execution/fingerprint.js';
 
@@ -31,6 +32,69 @@ export function isOwnedFlowFile(source: string): boolean {
   return source.includes(OWNED_HEADER) && source.includes(BEGIN_MARKER) && source.includes(END_MARKER);
 }
 
+// --- the readable style (src/spec/emit-readable.ts) ---------------------------
+//
+// A readable `.flow.ts` is ordinary Playwright code with no FLOW constant: the
+// recording it was generated from stays in the bundle. What lets every tool
+// find that recording again is two comment lines the emitter writes:
+//
+//   // @sitelooper-readable v1
+//   // @sitelooper-source {"flow":"<name>","bundle":"<relative path or null>","specHash":"<sha256>"}
+//
+// Lifting one is therefore a LOAD, not a parse: index.ts liftReadableFlowFile
+// reads the bundle the source line names and rebuilds the SpecFlow the way
+// compileFlow does. This module only reads the two lines.
+
+export const READABLE_MARKER = '// @sitelooper-readable';
+const SOURCE_MARKER = '// @sitelooper-source ';
+
+export type FlowFileStyle = 'readable' | 'runtime';
+
+/** True when `source` is a readable-style flow file (its marker line). */
+export function isReadableFlowFile(source: string): boolean {
+  return source.split(/\r?\n/).some((line) => line.trim().startsWith(READABLE_MARKER));
+}
+
+/** The style a flow file on disk was generated in; null when it is not there or not a sitelooper flow file. */
+export function flowFileStyle(source: string): FlowFileStyle | null {
+  if (isReadableFlowFile(source)) return 'readable';
+  return source.includes(BEGIN_MARKER) || source.includes(OWNED_HEADER) ? 'runtime' : null;
+}
+
+export interface ReadableSource {
+  flow: string;
+  /** The bundle the file was compiled from, relative to the file itself; null when it came from the user store. */
+  bundle: string | null;
+  specHash: string;
+}
+
+/**
+ * The `// @sitelooper-source {json}` line of a readable flow file. Throws
+ * `LiftError` naming what is wrong when the file is readable but the line is
+ * missing or malformed: without it there is no way back to the recording.
+ */
+export function readableSource(source: string): ReadableSource {
+  const line = source.split(/\r?\n/).map((l) => l.trim()).find((l) => l.startsWith(SOURCE_MARKER));
+  if (!line) throw new LiftError(`no "${SOURCE_MARKER.trim()}" line: this readable flow file does not say which recording it was generated from; compile it again from its bundle`);
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(line.slice(SOURCE_MARKER.length));
+  } catch (e) {
+    throw new LiftError(`"${SOURCE_MARKER.trim()}" is not valid JSON (the file may have been hand-edited): ${(e as Error).message}`);
+  }
+  const v = parsed as Record<string, unknown> | null;
+  if (!v || typeof v !== 'object' || Array.isArray(v)) throw new LiftError(`"${SOURCE_MARKER.trim()}" must be a JSON object`);
+  if (typeof v.flow !== 'string' || !v.flow) throw new LiftError(`"${SOURCE_MARKER.trim()}" needs a string "flow"`);
+  if (v.bundle !== null && (typeof v.bundle !== 'string' || !v.bundle)) throw new LiftError(`"${SOURCE_MARKER.trim()}" "bundle" must be a path or null`);
+  if (typeof v.specHash !== 'string') throw new LiftError(`"${SOURCE_MARKER.trim()}" needs a string "specHash"`);
+  return { flow: v.flow, bundle: v.bundle as string | null, specHash: v.specHash };
+}
+
+/** The hash a readable file's source line carries: sha256 of the SpecFlow JSON it was emitted from. */
+export function readableSpecHash(spec: SpecFlow): string {
+  return createHash('sha256').update(JSON.stringify(spec)).digest('hex');
+}
+
 /**
  * Extracts and validates the `FLOW` constant from an emitted `.flow.ts`
  * source string, returning the `SpecFlow` it encodes. Throws `LiftError`
@@ -42,6 +106,9 @@ export function isOwnedFlowFile(source: string): boolean {
 export function liftFlowFile(source: string): { spec: SpecFlow; version: 1 | 2 } {
   const beginIdx = source.indexOf(BEGIN_MARKER);
   const endIdx = source.indexOf(END_MARKER);
+  if (beginIdx === -1 && endIdx === -1 && isReadableFlowFile(source)) {
+    throw new LiftError('this is a readable-style flow file: it carries no FLOW constant, and its recording is read from the bundle its "// @sitelooper-source" line names (liftReadableFlowFile)');
+  }
   if (beginIdx === -1 && endIdx === -1) {
     throw new LiftError(
       `neither "${BEGIN_MARKER}" nor "${END_MARKER}" found: this does not look like a sitelooper-generated .flow.ts`,

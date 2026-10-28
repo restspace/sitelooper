@@ -1,0 +1,68 @@
+# Snipe-IT for recording the upstream e2e contribution (bench/upstream/snipeit-e2e/README.md).
+#
+# Differs from bench/thirdparty/snipeit on purpose:
+#   - image v8.8.3 (latest release, closest to the develop branch the PR targets);
+#   - served at http://127.0.0.1:8000, the origin the CI job serves with
+#     `php artisan serve`. A compiled spec pins the origin it was recorded on;
+#   - its own compose project and volumes, so it never touches the bench target.
+#
+#   up:   docker compose -p snipeit-e2e -f bench/upstream/snipeit-e2e/docker-compose.yml up -d
+#   seed: bash bench/upstream/snipeit-e2e/seed.sh   (copies E2eSeeder in and runs it; idempotent)
+services:
+  db:
+    image: mariadb:11.4.13
+    environment:
+      MARIADB_DATABASE: snipeit
+      MARIADB_USER: snipeit
+      MARIADB_PASSWORD: e2e-db-pass
+      MARIADB_ROOT_PASSWORD: e2e-db-root-pass
+    command:
+      - --innodb-buffer-pool-size=64M
+      - --performance-schema=OFF
+      - --max-connections=40
+    volumes:
+      - db:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  app:
+    image: snipe/snipe-it:v8.8.3
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:8000:80"
+    environment:
+      APP_ENV: production
+      APP_DEBUG: "false"
+      # Fixed, because a recording box is thrown away; public on purpose.
+      APP_KEY: base64:ZTJlLXNuaXBlaXQtYXBwLWtleS0wMTIzNDU2Nzg5YWI=
+      APP_URL: http://127.0.0.1:8000
+      APP_TIMEZONE: UTC
+      APP_LOCALE: en-US
+      APP_FORCE_TLS: "false"
+      SECURE_COOKIES: "false"
+      DB_CONNECTION: mysql
+      DB_HOST: db
+      DB_PORT: "3306"
+      DB_DATABASE: snipeit
+      DB_USERNAME: snipeit
+      DB_PASSWORD: e2e-db-pass
+      MAIL_MAILER: log
+      # The UI's pages call /api/v1 (about 30 calls a test run); the default 120 a
+      # minute per user ran out after build's back-to-back runs (sie2e6: 429s).
+      API_THROTTLE_PER_MINUTE: "10000"
+      MAIL_FROM_ADDR: e2e@example.com
+      MAIL_FROM_NAME: E2E
+      MAIL_REPLYTO_ADDR: e2e@example.com
+      MAIL_REPLYTO_NAME: E2E
+    volumes:
+      - data:/var/lib/snipeit
+
+volumes:
+  db:
+  data:

@@ -16,7 +16,7 @@ import { listFlows, loadFlow, loadFlowFile, saveFlow, type Flow } from './skills
 import { drainDrift, llmProposer, triage, type DrainSummary, type DriftTicket } from './skills/repair.js';
 import { cascadeProposer } from './skills/repair-jev.js';
 import { buildSystemOne, resolveSystemOneConfig } from './agent/system-one.js';
-import { compileFlow } from './spec/index.js';
+import { compileFlow, existingStyle, isSpecStyle, type SpecStyle } from './spec/index.js';
 import { compilerProvenance } from './spec/bundle.js';
 import { converge, decideBuildConvergence, omittedToRecover, roundLine } from './spec/converge.js';
 import { foldTicketEvidence, mintVars, notConverged, reorderByEvidence } from './spec/repair.js';
@@ -32,7 +32,9 @@ import { runReadinessCheck } from './spec/readiness.js';
 import { applyProposal, saveProposal, sourceHash, stageProposal } from './spec/proposal.js';
 import { loadProjectConfig } from './project.js';
 import { exportFlowBundle } from './spec/index.js';
-import { resolveRerecordInput, stageRerecordInput, persistRerecordInput } from './spec/rerecord-input.js';
+import { resolveRerecordInput, stageRerecordInput, persistRerecordInput, recompileAfterRerecord } from './spec/rerecord-input.js';
+import { isReadableFlowFile } from './spec/lift.js';
+import { readableRepairRefusal } from './spec/repair.js';
 import {
   backupFlowFile,
   formatRerecordDiagnostic,
@@ -80,8 +82,14 @@ Authoring:
   --version                                # print the installed version
 
 Compile and verify (no daemon or model):
-  compile <flow-or-bundle> [--out <dir>] [--allow-demoted] [--overwrite-spec]
-  build <flow-or-bundle> [--out <dir>] [--converge [N] | --no-converge] [--rerecord-runs n]
+  compile <flow-or-bundle> [--out <dir>] [--allow-demoted] [--overwrite-spec] [--style readable|runtime] [--standalone]
+      # --standalone (with --style readable) hands the file over: no regenerate header, no link to
+      # the recording; sitelooper never overwrites it again. For specs contributed to other projects.
+      # --style readable writes plain Playwright code (no run-time locator fallback); runtime, the
+      # default, writes the self-healing file. A recompile keeps an existing file's style unless
+      # --style says otherwise; the project config's "style" applies to new files. compile, build,
+      # rerecord and repair also take a readable <name>.flow.ts, which leads back to its bundle.
+  build <flow-or-bundle> [--out <dir>] [--converge [N] | --no-converge] [--rerecord-runs n] [--style readable|runtime]
       # compile, then readiness gate (3 clean runs). With a reset command (--reset-cmd or the
       # project config) build converges first by default: it runs the compiled spec once and
       # re-records the step a refusal, failure or blocking fallback names, up to 2 rounds (--converge N sets the
@@ -115,11 +123,16 @@ Repair:
   repair apply <proposal.json>             # apply the exact checked candidate; no browser run
   repair <name.flow.ts> [--out <file>] [--converge N] [--dry-run] [--no-check-spec]
   rerecord <flow> <step-id> [--instruction "<text>" | --instruction-file <file> | --stdin]
-           [--runs N] [--var k=v] [--reset-cmd "<command>"]
+           [--runs N] [--var k=v] [--reset-cmd "<command>"] [--style readable|runtime]
+      # a readable <name>.flow.ts re-records its bundle, then is recompiled readable in place;
+      # a bundle or flow given with --style is also compiled (into --out or the project outputDir)
   Repair performs 1 triage run, N convergence runs (default 1), then a compiled-spec check.
   --dry-run still executes against the app; it previews file changes. --propose stages a
   checked candidate for review. Repair never rewrites your .spec.ts. --force is rejected:
   use --allow-demoted or --overwrite-spec separately when compiling.
+  On a readable spec, repair runs the spec once, re-records the step it fails at, recompiles
+  readable and checks it again (--converge N rounds, default 1; needs a model key). --propose,
+  --dry-run and --out are not supported there: use rerecord, then compile --style readable.
 
 Advanced:
   run <flow> [--var k=v]                    # adaptive replay with agent recovery
@@ -190,6 +203,7 @@ function parseArgv(argv: string[]): ParsedArgs {
     'instruction-file',
     'propose',
     'report',
+    'style',
   ]);
   /**
    * Every flag that takes no value. Unknown options are rejected rather than
@@ -227,6 +241,7 @@ function parseArgv(argv: string[]): ParsedArgs {
     'progress',
     'record',
     'script',
+    'standalone',
     'verbose',
     'version',
   ]);
@@ -1196,14 +1211,54 @@ function flowCommand(positional: string[], json: boolean): void {
 
 // --- compile (reads the flow + skill store directly; no daemon involved) ---
 
+/** `--style readable|runtime`, validated; undefined when absent. */
+function styleFlag(flags: Map<string, string | boolean>): SpecStyle | undefined {
+  if (!flags.has('style')) return undefined;
+  const value = String(flags.get('style') ?? '');
+  if (!isSpecStyle(value)) fail(`--style takes readable or runtime (got ${JSON.stringify(value)})`, 2);
+  return value;
+}
+
+/** True when `target` is a readable `.flow.ts` on disk. */
+function isReadableTarget(target: string): boolean {
+  return /\.ts$/.test(target) && existingStyle(target) === 'readable';
+}
+
+/**
+ * Where a compile writes: `--out`, else next to a readable flow file named as
+ * the target (it is regenerated in place), else the project outputDir.
+ */
+function compileOutDir(target: string, flags: Map<string, string | boolean>, outputDir: string): string | undefined {
+  if (flags.get('out')) return String(flags.get('out'));
+  return isReadableTarget(target) ? undefined : outputDir;
+}
+
+/** The compile options every compiling command shares: style, outDir, snapshot, the two waivers. */
+function compileOptions(target: string, flags: Map<string, string | boolean>, project: ReturnType<typeof loadProjectConfig>) {
+  return {
+    outDir: compileOutDir(target, flags, project.outputDir),
+    snapshotFile: fs.existsSync(project.snapshotFile) ? project.snapshotFile : undefined,
+    allowDemoted: flags.has('allow-demoted'),
+    overwriteSpec: flags.has('overwrite-spec'),
+    style: styleFlag(flags),
+    defaultStyle: project.style,
+  };
+}
+
+/** The style of a flow file on disk, for result documents; runtime when it cannot be told. */
+function fileStyle(file: string): SpecStyle {
+  return existingStyle(file) ?? 'runtime';
+}
+
 async function compileCommand(positional: string[], flags: Map<string, string | boolean>, json: boolean): Promise<void> {
   const flowNameOrPath = positional[0];
-  if (!flowNameOrPath) fail('usage: compile <flow-or-bundle> [--out <dir>] [--allow-demoted] [--overwrite-spec] [--json]', 2);
+  if (!flowNameOrPath) fail('usage: compile <flow-or-bundle> [--out <dir>] [--allow-demoted] [--overwrite-spec] [--style readable|runtime] [--standalone] [--json]', 2);
   const project = loadProjectConfig();
-  const outDir = flags.get('out') ? String(flags.get('out')) : project.outputDir;
+  const options = { ...compileOptions(flowNameOrPath, flags, project), standalone: flags.has('standalone') };
+  if (options.standalone && options.style !== 'readable') fail('--standalone hands over a readable file: pass --style readable with it', 2);
   let result: ReturnType<typeof compileFlow>;
   try {
-    result = compileFlow(flowNameOrPath, { outDir, snapshotFile: fs.existsSync(project.snapshotFile) ? project.snapshotFile : undefined, allowDemoted: flags.has('allow-demoted'), overwriteSpec: flags.has('overwrite-spec') });
+    result = compileFlow(flowNameOrPath, options);
   } catch (err) {
     fail(`compile failed: ${(err as Error).message}`, 2);
   }
@@ -1222,7 +1277,7 @@ async function compileCommand(positional: string[], flags: Map<string, string | 
       const onlyDemoted = result.diagnostics.every((d) => d.severity !== 'error' || d.code === 'demoted-pin' || d.code === 'unproven-pin');
       console.error(`re-record the step(s) with the fix command above${onlyDemoted ? ', or pass --allow-demoted to compile the demoted or unproven pin anyway' : ''}.`);
     } else {
-      console.log(`flow: ${result.flowFile}`);
+      console.log(`flow: ${result.flowFile}${result.style === 'readable' ? ' (readable style)' : ''}`);
       console.log(result.specFile ? `spec: ${result.specFile}` : 'spec: unchanged (already exists — pass --overwrite-spec to overwrite)');
     }
     // Anything the emitter said that no diagnostic above already carries.
@@ -1276,8 +1331,8 @@ function checkSpecCommand(
     onProgress: onProgress ?? ((m) => console.error(m)),
   });
   const outcome = !result.ran ? 'unavailable' : result.passed ? 'passed' : 'failed';
-  writeReport(reportPath(flags), { file, specCheck: result }, 'spec-check', outcome);
-  if (json) emitJson({ file, specCheck: result }, 'spec-check', outcome);
+  writeReport(reportPath(flags), { file, style: fileStyle(file), specCheck: result }, 'spec-check', outcome);
+  if (json) emitJson({ file, style: fileStyle(file), specCheck: result }, 'spec-check', outcome);
   else {
     console.log(result.verdict);
     for (const d of result.drift) console.log(`  ${d}`);
@@ -1316,9 +1371,10 @@ function readinessCommand(file: string, flags: Map<string, string | boolean>, js
     fixtureIsolation: flags.has('fixture-isolation') || config.fixtureIsolation,
     requiredInputs: config.requiredVars,
     negativeSpec: flags.get('negative-spec') ? path.resolve(String(flags.get('negative-spec'))) : config.negativeSpec,
+    snapshotFile: fs.existsSync(config.snapshotFile) ? config.snapshotFile : undefined,
     onProgress: onProgress ?? ((m: string) => console.error(m)),
   });
-  if (json) emitJson({ ...extra, ...(compilation ? { compilation } : {}), readiness: result }, result.state, result.outcome);
+  if (json) emitJson({ style: compilation?.style ?? fileStyle(file), ...extra, ...(compilation ? { compilation } : {}), readiness: result }, result.state, result.outcome);
   else {
     console.log(`readiness: ${result.outcome} (${result.runs.length} execution(s))`);
     console.log(`execution: ${result.executionVerified ? 'verified' : 'not verified'}`);
@@ -1349,13 +1405,9 @@ async function buildCommand(positional: string[], flags: Map<string, string | bo
   if (decision.mode === 'converge') return convergeBuild(positional, flags, json, onProgress, decision.maxRounds, decision.modelAvailable);
   if (decision.skipped && !json) console.log(decision.skipped);
   const extra = decision.skipped ? { convergence: { skipped: true, why: decision.skipped } } : {};
-  const result = compileFlow(positional[0], {
-    outDir: flags.get('out') ? String(flags.get('out')) : config.outputDir,
-    snapshotFile: fs.existsSync(config.snapshotFile) ? config.snapshotFile : undefined,
-    allowDemoted: flags.has('allow-demoted'), overwriteSpec: flags.has('overwrite-spec'),
-  });
+  const result = compileFlow(positional[0], compileOptions(positional[0], flags, config));
   if (result.refused || !result.compilable || !result.flowFile) {
-    if (json) emitJson({ compilation: result }, 'compiled', 'blocked', result.diagnostics.flatMap((d) => d.action ? [d.action] : []));
+    if (json) emitJson({ style: result.style, compilation: result }, 'compiled', 'blocked', result.diagnostics.flatMap((d) => d.action ? [d.action] : []));
     else {
       for (const d of result.diagnostics) console.error(formatDiagnostic(d));
       for (const blocker of result.compileBlockers) console.error(`  ${blocker}`);
@@ -1368,7 +1420,7 @@ async function buildCommand(positional: string[], flags: Map<string, string | bo
   const lost = omittedToRecover(result.diagnostics);
   if (lost) {
     const why = `the recording's instruction "${lost.instruction.slice(0, 90)}${lost.instruction.length > 90 ? '…' : ''}" changed the app and is not in the flow, so a passing spec would not prove the task was done; run build with convergence (a reset command and a model key) to redo it as step ${lost.step}`;
-    if (json) emitJson({ ...extra, compilation: result, omitted: lost }, 'compiled', 'blocked', result.diagnostics.flatMap((d) => d.action ? [d.action] : []));
+    if (json) emitJson({ style: result.style, ...extra, compilation: result, omitted: lost }, 'compiled', 'blocked', result.diagnostics.flatMap((d) => d.action ? [d.action] : []));
     else {
       for (const d of result.diagnostics.filter((x) => x.code === 'omitted-work')) console.error(formatDiagnostic(d));
       console.error(`not ready: ${why}`);
@@ -1386,21 +1438,44 @@ async function buildCommand(positional: string[], flags: Map<string, string | bo
  * spec then gets the same readiness verification `build` gives.
  */
 async function convergeBuild(positional: string[], flags: Map<string, string | boolean>, json: boolean, onProgress: ((m: string) => void) | undefined, maxRounds: number, modelAvailable: boolean): Promise<void> {
+  const { result, last } = await convergeLoop(positional, flags, json, onProgress, maxRounds, modelAvailable);
+  const summary = { style: last?.style ?? styleFlag(flags) ?? 'runtime', converge: result };
+  if (result.status === 'converged' && last) {
+    if (!json) {
+      for (const r of result.rounds) console.log(roundLine(r));
+      console.log(`converged: compiled ${result.flowFile}; verifying emitted Playwright code`);
+    }
+    return readinessCommand(result.flowFile as string, flags, json, onProgress, last, summary);
+  }
+  if (json) emitJson(summary, 'converge', result.status === 'unavailable' ? 'unavailable' : 'not-converged');
+  else {
+    for (const r of result.rounds) console.log(roundLine(r));
+    console.log(`not converged (${result.status}): ${result.why}`);
+  }
+  process.exit(result.status === 'unavailable' || result.status === 'stuck' ? 2 : 4);
+}
+
+/**
+ * The converge loop's real seams (spec/converge.ts): compile in the style the
+ * flags, the file on disk or the project config say (compileFlow resolves it,
+ * so a readable file is re-recorded and recompiled readable), check, re-record.
+ * `build --converge` and `repair` on a readable spec both run it.
+ */
+async function convergeLoop(positional: string[], flags: Map<string, string | boolean>, json: boolean, onProgress: ((m: string) => void) | undefined, maxRounds: number, modelAvailable: boolean): Promise<{ result: Awaited<ReturnType<typeof converge>>; last: ReturnType<typeof compileFlow> | null }> {
   const config = loadProjectConfig();
   const rerecordRuns = flags.has('rerecord-runs') ? Number(flags.get('rerecord-runs')) : 2;
   if (!Number.isInteger(rerecordRuns) || rerecordRuns < 1) fail('--rerecord-runs takes a positive integer', 2);
   const resetCmd = flags.get('reset-cmd') ? String(flags.get('reset-cmd')) : config.resetCommand;
   const say = (m: string) => console.error(m);
   const snapshotFile = fs.existsSync(config.snapshotFile) ? config.snapshotFile : undefined;
+  // Resolved once, before the first compile writes anything: a readable file
+  // named as the target stays the target (and its directory the output) every round.
+  const options = compileOptions(positional[0], flags, config);
   let last: ReturnType<typeof compileFlow> | null = null;
   const result = await converge({
     compile: () => {
       // --allow-demoted is honoured only when given: a demoted pin is a recording to fix, not to ship.
-      last = compileFlow(positional[0], {
-        outDir: flags.get('out') ? String(flags.get('out')) : config.outputDir,
-        snapshotFile,
-        allowDemoted: flags.has('allow-demoted'), overwriteSpec: flags.has('overwrite-spec'),
-      });
+      last = compileFlow(positional[0], options);
       return last;
     },
     // The reset runs in `reset`, once per check, so the runner does not reset again.
@@ -1437,21 +1512,7 @@ async function convergeBuild(positional: string[], flags: Map<string, string | b
     },
     say,
   }, { maxRounds, rerecordRuns, modelAvailable });
-
-  const summary = { converge: result };
-  if (result.status === 'converged' && last) {
-    if (!json) {
-      for (const r of result.rounds) console.log(roundLine(r));
-      console.log(`converged: compiled ${result.flowFile}; verifying emitted Playwright code`);
-    }
-    return readinessCommand(result.flowFile as string, flags, json, onProgress, last, summary);
-  }
-  if (json) emitJson(summary, 'converge', result.status === 'unavailable' ? 'unavailable' : 'not-converged');
-  else {
-    for (const r of result.rounds) console.log(roundLine(r));
-    console.log(`not converged (${result.status}): ${result.why}`);
-  }
-  process.exit(result.status === 'unavailable' || result.status === 'stuck' ? 2 : 4);
+  return { result, last };
 }
 
 async function listSessions(json: boolean): Promise<void> {
@@ -1706,6 +1767,7 @@ async function repairFlowCommand(
   } catch (err) {
     return fail(`could not read ${file}: ${(err as Error).message}`, 2);
   }
+  if (isReadableFlowFile(source)) return repairReadableCommand(file, flags, json, onProgress);
   let before: SpecFlow;
   try {
     before = liftFlowFile(source).spec;
@@ -2142,6 +2204,38 @@ async function repairFlowCommand(
   }
 }
 
+/**
+ * `repair <name.flow.ts>` on a READABLE spec. The readable file has no
+ * run-time fallback and no FLOW constant to adapt locators in, so repair is
+ * the converge loop over its recording: run the spec once (the triage run),
+ * re-record the step it fails at through the ordinary rerecord path, recompile
+ * readable, check again. --converge N is the round count (default 1).
+ * --propose, --dry-run and --out are refused (spec/repair.ts
+ * readableRepairRefusal): a re-record changes the bundle, which a staged
+ * proposal of the flow file alone cannot carry.
+ */
+async function repairReadableCommand(file: string, flags: Map<string, string | boolean>, json: boolean, onProgress?: (m: string) => void): Promise<void> {
+  const refusal = readableRepairRefusal(file, { propose: flags.has('propose'), dryRun: flags.has('dry-run'), out: flags.has('out') });
+  if (refusal) fail(refusal, 2);
+  const rounds = flags.has('converge') ? Number(flags.get('converge')) : 1;
+  if (!Number.isInteger(rounds) || rounds < 1) fail('--converge takes a positive round count on a readable spec', 2);
+  let hasModelKey = false;
+  try { hasModelKey = Boolean(resolveProviderConfig({ provider: flags.get('provider') ? String(flags.get('provider')) : undefined, model: flags.get('model') ? String(flags.get('model')) : undefined }).apiKey); } catch { /* unknown provider: no usable model */ }
+  const sub = new Map(flags);
+  // The repair's own --converge is the round count, read above; the target keeps its style unless --style says otherwise.
+  sub.delete('converge');
+  if (!json) console.log(`repairing ${file} (readable style): triage run, then re-record the failing step and recompile`);
+  const { result, last } = await convergeLoop([file], sub, json, onProgress, rounds, hasModelKey);
+  const style = last?.style ?? 'readable';
+  const outcome = result.status === 'converged' ? 'repaired' : result.status === 'unavailable' ? 'unavailable' : 'not-converged';
+  if (json) emitJson({ schemaVersion: 1, stage: 'repair', file, style, wrote: result.status === 'converged' ? result.flowFile : null, converge: result }, 'repair', outcome);
+  else {
+    for (const r of result.rounds) console.log(roundLine(r));
+    console.log(result.status === 'converged' ? `repaired: ${result.flowFile} passes (${style} style; the .spec.ts was not touched)` : `not repaired (${result.status}): ${result.why}`);
+  }
+  if (result.status !== 'converged') process.exit(result.status === 'unavailable' || result.status === 'stuck' ? 2 : 4);
+}
+
 // --- rerecord one step of a saved flow (the recording is wrong, not the app) ---
 
 /**
@@ -2318,9 +2412,29 @@ async function rerecordFlow(
   // The recipe snapshot the rewritten file now carries, where it moved.
   for (const line of persisted.recipeChanges ?? []) say(`  ${line}`);
   for (const d of persisted.diagnostics ?? []) console.error(`  warning: ${d.line}`);
+  // A readable target (or --style) is recompiled from the recording it now
+  // has. Not under build's converge loop (report: false), which compiles
+  // after every re-record itself.
+  let recompiled: ReturnType<typeof compileFlow> | null = null;
+  if (verdict.ok && report) {
+    try {
+      recompiled = recompileAfterRerecord(input, {
+        style: styleFlag(flags),
+        outDir: compileOutDir(nameOrPath, flags, projectConfig.outputDir),
+        snapshotFile: fs.existsSync(projectConfig.snapshotFile) ? projectConfig.snapshotFile : undefined,
+      });
+    } catch (err) {
+      console.error(`  warning: the re-record succeeded but recompiling failed: ${(err as Error).message}`);
+    }
+    if (input.kind === 'compiled' && styleFlag(flags)) console.error(`  warning: --style is not applied to a runtime .flow.ts named directly (it carries its own recording and was rewritten as runtime); compile its bundle with --style ${styleFlag(flags)}`);
+    if (recompiled?.flowFile) say(`  recompiled ${recompiled.flowFile} (${recompiled.style} style)`);
+    else if (recompiled) say(`  recompile refused: ${[...recompiled.diagnostics.filter((d) => d.severity === 'error').map((d) => d.code), ...recompiled.compileBlockers].join('; ')}`);
+  }
   const payload = {
     flow: flow.name,
     file,
+    style: recompiled?.style ?? (input.readable ? 'readable' : input.kind === 'compiled' ? 'runtime' : null),
+    ...(recompiled ? { recompiled: { flowFile: recompiled.flowFile, style: recompiled.style, refused: recompiled.refused, compilable: recompiled.compilable } } : {}),
     step: stepId,
     backup,
     workspace: stagedInput.workspace,
