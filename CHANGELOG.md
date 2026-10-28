@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.8.0 — unreleased
+## 0.8.0 — 2026-10-28
 
 ### Readable specs
 - `--style readable` on `compile`, `build`, `rerecord` and `repair` writes the `.flow.ts` as plain
@@ -18,6 +18,26 @@
   recompiles; `--propose`, `--dry-run` and `--out` are refused for readable files in this release.
 - The readable file exports the same names as the runtime one, so an existing `.spec.ts` keeps
   working when a project switches style. `--json` result documents include `style`.
+- `compile --style readable --standalone` hands the file over as your own code: no regenerate
+  header, marker or `@sitelooper-source` line, and nothing in it depends on sitelooper. A later
+  compile refuses to overwrite a `.flow.ts` it did not generate.
+- A dropdown's opener and option become one retrying `pick()`, and actions time out after 15 s, so a
+  slow option list is retried and a stuck action fails fast instead of hanging.
+
+### Replay and compile fixes
+- An "already satisfied" skip needs goal text naming a value of this run.
+- Warn-only checks under trial flag a step whose success rests on state the run did not produce,
+  or a published value that doesn't match its recorded template.
+- A confirm that removed a record waits for it to go before the next step reads.
+- The recorder keeps a row anchor whose text is the typed value it reads.
+- A run id glued into a line of page text fills its slot, and a clean replay of a re-gated chain
+  takes the pin.
+- Compile drops gestures that a page load threw away.
+- Named picks and recorded roles also find an option by its whole text.
+
+### Plugin
+- The plugin is 0.8.0: its skills suggest `--style readable` for tests that will be contributed or
+  reviewed, and cover repairing a readable file.
 
 ## 0.7.0 — 2026-10-22
 

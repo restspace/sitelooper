@@ -6,7 +6,7 @@ recordings and specs are the same files the terminal commands use. You can start
 your editor and carry on from a terminal with the same `--session` name.
 
 Setup for each client is in the [README](../README.md#mcp-server). Use the pinned command
-`npx -y sitelooper@0.7.0 mcp`.
+`npx -y sitelooper@0.8.0 mcp`.
 
 The server reads the model key from its environment. It never accepts a key as a tool argument.
 Put the key in your shell or use your client's prompted input. Avoid writing it into a JSON file.
@@ -98,11 +98,11 @@ The same order as the `write-browser-test` skill in [plugin/skills/](../plugin/s
   per-server `timeout` (milliseconds, in `.mcp.json`) is a hard limit, and progress does not extend it.
   Raise it, or split the instruction into smaller steps. Long operations are jobs, so they are not affected.
 - **Server does not start on native Windows.** Some clients cannot spawn `npx` directly because it is
-  `npx.cmd`. Use `cmd /c`: `claude mcp add --transport stdio sitelooper -- cmd /c npx -y sitelooper@0.7.0 mcp`,
-  or `"command": "cmd", "args": ["/c", "npx", "-y", "sitelooper@0.7.0", "mcp"]` in JSON.
+  `npx.cmd`. Use `cmd /c`: `claude mcp add --transport stdio sitelooper -- cmd /c npx -y sitelooper@0.8.0 mcp`,
+  or `"command": "cmd", "args": ["/c", "npx", "-y", "sitelooper@0.8.0", "mcp"]` in JSON.
 - **"No API key".** The server inherits the environment of the client process. Set the variable
   before starting the client, or use a prompted input. `doctor` shows what the server sees.
-- **Garbled protocol errors.** Something wrote to stdout. Run `npx -y sitelooper@0.7.0 mcp` in a terminal;
+- **Garbled protocol errors.** Something wrote to stdout. Run `npx -y sitelooper@0.8.0 mcp` in a terminal;
   it should print nothing until a client connects.
 - **Claude Desktop logs.** `%APPDATA%\Claude\logs` on Windows, `~/Library/Logs/Claude` on macOS.
   `mcp-server-sitelooper.log` holds the server's stderr.
