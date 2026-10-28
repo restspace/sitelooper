@@ -1386,7 +1386,14 @@ export function decideRepin(input: {
   }
   if (input.startsElsewhere) return { refused: `not re-pinning ${cand.skill} — ${input.startsElsewhere}` };
   if (input.endsElsewhere) return { refused: `not re-pinning ${cand.skill} — ${input.endsElsewhere}` };
-  if (input.failedStep) return { refused: `not re-pinning ${cand.skill} — ${input.failedStep}` };
+  // ...unless this very run replayed the candidate's chain in full: the
+  // demoted skill's failure is evidence about ITS step, and a clean replay of
+  // the candidate's copy is newer evidence about this one. espocrm fwec21-dg
+  // 04-find: n2's recovery kept s_73f411's click (it opened the record; only
+  // its frozen heading line stopped it — landedWhereRecoveryContinued), n3
+  // replayed the variant chain s_0c5352 → s_e70fa5 12/12 with no model, and
+  // the pin stayed on demoted s_73f411, so the compile refused the flow.
+  if (input.failedStep && !replayed) return { refused: `not re-pinning ${cand.skill} — ${input.failedStep}` };
   if (input.reportStatus !== 'success' || !input.adoptable || cand.status === 'demoted') return null;
   // An adopted step graduates on its first clean recovery whatever the
   // candidate's status: it now owns a skill that completed it, and keeping
@@ -1407,6 +1414,12 @@ export function decideRepin(input: {
  * `goto /hardware/4` via {skill: s_5dcb48, step: 1} — the step s_5dcb48 had
  * just stopped at (failedAtStep {1: 2}, demoted). The artifact died on it.
  * Evidence from the store, not the step's shape. Null when none does.
+ *
+ * A step marked `regated` is not that step: compile kept it because its
+ * action did the work and only its GATE stopped the replay, and gave it the
+ * recovery's own expectation (compile.ts landedWhereRecoveryContinued, ghost
+ * fwgh14). Counted here, the rule that kept it made the chain unpinnable —
+ * espocrm fwec21-dg 04-find stayed on demoted s_73f411 after a clean recovery.
  */
 export function pinCarriesFailedStep(store: SkillStore, candidateId: string): string | null {
   const cand = store.get(candidateId);
@@ -1414,7 +1427,7 @@ export function pinCarriesFailedStep(store: SkillStore, candidateId: string): st
   const chain = cand.seq ? store.list(cand.origin).filter((s) => s.seq?.chain === cand.seq!.chain) : [cand];
   for (const seg of chain) {
     for (const step of seg.steps) {
-      if (!step.via) continue;
+      if (!step.via || step.via.regated) continue;
       const src = store.get(step.via.skill);
       if (!src || src.status !== 'demoted' || !(src.stats.failedAtStep?.[step.via.step] ?? 0)) continue;
       return `its segment ${seg.id} replays step ${step.via.step} of ${src.id}, a demoted procedure that failed there`;

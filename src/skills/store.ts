@@ -450,8 +450,15 @@ export interface SkillStep {
   expect?: StepExpectation;
   /** For read/read_all steps: which report value this read supplied, if any. */
   label?: string;
-  /** Step-level provenance: executed by replay of another skill, or chosen by the agent. */
-  via?: { skill: string; step: number };
+  /**
+   * Step-level provenance: executed by replay of another skill, or chosen by the agent.
+   * `regated`: the replayed step that STOPPED its replay, kept because its
+   * action did the work and only its gate refused (compile.ts
+   * landedWhereRecoveryContinued); its expectation was compiled from the
+   * recovery's recording, so the stop is not this step's (learn.ts
+   * pinCarriesFailedStep).
+   */
+  via?: { skill: string; step: number; regated?: true };
   /**
    * Step-level provenance, the other kind: this step was SYNTHESIZED, never
    * recorded. The flow export appends a read for a value the producing skill
