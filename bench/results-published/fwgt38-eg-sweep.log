@@ -1,0 +1,117 @@
+
+[sweep] run 1/3: fwgt38-eg-n1 (store: /home/user/sitelooper/bench/results/fwgt38-eg-skills)
+[harness] gitea: defaulting APP_URL
+[harness] gitea: defaulting APP_EMAIL
+[harness] gitea: defaulting APP_PASSWORD
+[reset] gitea: no leftover bench issues
+[harness] gitea responded 200 at http://127.0.0.1:8095/
+stopped: fwgt38-eg-n1
+  flow "fwgt38-eg" saved: 8 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwgt38-eg.json
+  warning: note: dropped 6 locator candidate(s) carrying a value this run minted (known only by export time)
+  warning: note: 03-create no longer publishes markdown_editor_ref — no replay reads it from the page and the recording showed no line to read
+  warning: note: 05-verify no longer publishes issue, final_displayed_labels, commit_requests, selected_label_ids — no replay reads them from the page and the recording showed no line to read
+  warning: note: 06-verify no longer publishes issue, assignee_selection, labels_still_applied — no replay reads them from the page and the recording showed no line to read
+  warning: note: 07-set no longer publishes issue, server_confirmation, picker_options_seen, labels_still_applied — no replay reads them from the page and the recording showed no line to read
+  warning: note: 08-add no longer publishes labels_intact, milestone_intact, assignee_intact — no replay reads them from the page and the recording showed no line to read
+  warning: note: 07-set: added a read for milestone_displayed to s_0e0e4d (page.getByRole('link', { name: 'Bench Milestone', exact: true }); seen on the next instruction's start page)
+  warning: note: 1 step(s) adopted from non-success instruction(s) whose work the session continued from (04-report) — they replay model-first with doubled budget, and a non-success there does not halt the flow
+  warning: warning: 243 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.startUrl: "http://127.0.0.1:8095/" (output) in "http://127.0.0.1:8095/"
+  flow.steps[0].instruction: "http://127.0.0.1:8095/" (output) in "Sign in to Gitea at http://127.0.0.1:8095/ with username admin and password exactly {{env:APP_PASSWORD}}; verify that the authenticated page is displayed."
+  flow.steps[0].instruction: "admin" (output) in "Sign in to Gitea at http://127.0.0.1:8095/ with username admin and password exactly {{env:APP_PASSWORD}}; verify that the authenticated page is displayed."
+  flow.steps[0].params.v1: "http://127.0.0.1:8095/" (output) in "http://127.0.0.1:8095/"
+  flow.steps[0].params.v2: "admin" (output) in "admin"
+  warning: {{04-report.extra_label}} (used by 05-verify) can only be re-observed by model recovery, and 05-verify's procedure types or locates by it — so `sitelooper spec` will REFUSE to compile this flow (unsourced-ref) until 04-report reads extra_label from an element. Re-record 04-report now, while this session is still open.
+arm=sitelooper model=openai/gpt-6-luna runid=fwgt38-eg-n1 stop=completed
+turns=9 wall=494.5s
+commands=8 cmdTime=462.6s cmdBytes=11161 timeouts=0
+orchestrator in=6264 cw=0 cr=32409 out=1024
+inner prompt=3115360 cached=2881070 completion=29862
+spend=$0.0613 maxUsd=3
+learn: A_n=0 replayed=0/8 full=0 repaired=0 compiled=7 variants=0
+-> /home/user/sitelooper/bench/results/fwgt38-eg-n1-sitelooper-result.json
+
+fwgt38-eg-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — #4, state=closed, description includes runid=true
+  obj 3: PASS — labels=[bug, priority-high], want [bug, priority-high]
+  obj 4: PASS — assignees=[bench-assignee]
+  obj 5: PASS — milestone=Bench Milestone
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — issue #4 reported
+
+[sweep] run 2/3: fwgt38-eg-n2 (replay flow fwgt38-eg, no orchestrator)
+[reset] gitea: deleted 1 leftover bench issue(s)
+[sweep] fwgt38-eg-n2: 2 drift ticket(s) → fwgt38-eg-n2-drift.json
+
+fwgt38-eg-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — #5, state=closed, description includes runid=true
+  obj 3: PASS — labels=[bug, priority-high], want [bug, priority-high]
+  obj 4: PASS — assignees=[bench-assignee]
+  obj 5: PASS — milestone=Bench Milestone
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — issue #5 reported
+[sweep] fwgt38-eg-n2: 04-report has no pinned skill — 52 model turn(s), on every replay
+
+[sweep] run 3/3: fwgt38-eg-n3 (replay flow fwgt38-eg, no orchestrator)
+[reset] gitea: deleted 1 leftover bench issue(s)
+[sweep] fwgt38-eg-n3: 2 drift ticket(s) → fwgt38-eg-n3-drift.json
+
+fwgt38-eg-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — #6, state=closed, description includes runid=true
+  obj 3: PASS — labels=[bug, priority-high], want [bug, priority-high]
+  obj 4: PASS — assignees=[bench-assignee]
+  obj 5: PASS — milestone=Bench Milestone
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — issue #6 reported
+
+Learning sweep fwgt38-eg (K=3)
+┌─────────┬───┬────────────────┬──────────┬─────────────┬───────┬──────┬───────────┬──────┬──────────────┬────────┐
+│ (index) │ n │ runid          │ verified │ stop        │ turns │ cmds │ total_usd │ A_n  │ replayed     │ wall_s │
+├─────────┼───┼────────────────┼──────────┼─────────────┼───────┼──────┼───────────┼──────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwgt38-eg-n1' │ '7/7'    │ 'completed' │ 9     │ 8    │ 0.0613    │ 0    │ '0/8'        │ 495    │
+│ 1       │ 2 │ 'fwgt38-eg-n2' │ '7/7'    │ 'success'   │ 62    │ 8    │ 0.0243    │ 0.75 │ '8/8 (flow)' │ 233    │
+│ 2       │ 3 │ 'fwgt38-eg-n3' │ '7/7'    │ 'success'   │ 16    │ 8    │ 0.0054    │ 0.88 │ '8/8 (flow)' │ 92     │
+└─────────┴───┴────────────────┴──────────┴─────────────┴───────┴──────┴───────────┴──────┴──────────────┴────────┘
+http://127.0.0.1:8095
+  s_0e0e4d  validated    6 steps  3/3 (100%)
+           On issue #4 '{{v1}}' in {{v3}}/{{v4}}, set its milestone to 'Bench Milestone' using the issue sidebar mileston…
+  s_23d23a  validated    5 steps  3/3 (100%)
+           On issue #4 '{{v1}}' in {{v3}}/{{v4}}, assign it to the user bench-assignee using the issue sidebar assignee p…
+  s_253336  validated   10 steps  3/3 (100%)
+           In bench/bench-repo create a new issue titled '{{v2}}' with a markdown description that includes the exact tex…
+  s_2b82dc  validated    1 steps  3/3 (100%)
+           In bench/bench-repo create a new issue titled '{{v2}}' with a markdown description that includes the exact tex…
+  s_36d2f6  validated    1 steps  3/3 (100%)
+           On issue #4 '{{v1}}' in {{v3}}/{{v4}}, add a comment whose text includes the exact runid '{{v2}}'. Submit the …
+  s_3b5dfb  validated    1 steps  3/3 (100%)
+           In repository bench/bench-repo, find and report exactly the titles of all open issues whose title starts with …
+  s_3c7a5f  validated    5 steps  3/3 (100%)
+           On issue #4 '{{v1}}' in {{v3}}/{{v4}}, add a comment whose text includes the exact runid '{{v2}}'. Submit the …
+  s_692bf9  validated    1 steps  3/3 (100%)
+           Sign in to Gitea at {{v1}} with username {{v2}} and password exactly {{v3}}; verify that the authenticated pag…
+  s_95e711  validated    2 steps  3/3 (100%)
+           Sign in to Gitea at {{v1}} with username {{v2}} and password exactly {{v3}}; verify that the authenticated pag…
+  s_d8d2ac  validated    2 steps  3/3 (100%)
+           On issue #4 '{{v1}}' in {{v3}}/{{v4}}, add a comment whose text includes the exact runid '{{v2}}'. Submit the …
+  s_da7cfd  validated    3 steps  3/3 (100%)
+           Sign in to Gitea at {{v1}} with username {{v2}} and password exactly {{v3}}; verify that the authenticated pag…
+  s_daf27d  validated    1 steps  3/3 (100%)
+           In repository bench/bench-repo, find and report exactly the titles of all open issues whose title starts with …
+  s_e52b09  validated    5 steps  3/3 (100%)
+           In bench/bench-repo create a new issue titled '{{v2}}' with a markdown description that includes the exact tex…
+  s_e946bf  validated   10 steps  3/3 (100%)
+           In repository bench/bench-repo, find and report exactly the titles of all open issues whose title starts with …
+  s_e6be3b  validated   33 steps  2/2 (100%)
+           On issue #4, '{{v1}}' in {{v3}}/{{v4}}, apply exactly the two labels 'bug' and 'priority-high' from the issue …
+  s_0ae7c0  provisional 10 steps  1/1 (100%)
+           On issue #4 '{{v1}}' in {{v3}}/{{v4}}, make the issue display exactly the labels {{v5}} and {{v6}} by removing…
+  s_2b9f91  provisional  9 steps  1/1 (100%)
+           On issue #4 '{{v1}}' in {{v3}}/{{v4}}, make the issue display exactly the labels {{v5}} and {{v6}} by removing…
+  s_8ff089  provisional 10 steps  1/1 (100%)
+           On issue #4 '{{v1}}' in {{v3}}/{{v4}}, make the issue display exactly the labels bug and priority-high by remo…
+store: /home/user/sitelooper/bench/results/fwgt38-eg-skills
+
+summary: /home/user/sitelooper/bench/results/fwgt38-eg-sweep.json

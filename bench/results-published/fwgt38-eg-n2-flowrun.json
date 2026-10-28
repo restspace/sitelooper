@@ -1,0 +1,260 @@
+{
+  "flow": "fwgt38-eg",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_692bf9; observed signed_in_user=admin, final_url=http://127.0.0.1:8095/, page_title=admin - Dashboard - Gitea: Git with a cup of tea.",
+      "values": {
+        "signed_in_user": "admin",
+        "final_url": "http://127.0.0.1:8095/",
+        "page_title": "admin - Dashboard - Gitea: Git with a cup of tea"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "6/6",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "authenticated_indicators"
+      ]
+    },
+    {
+      "id": "02-find",
+      "status": "success",
+      "summary": "Replayed stored procedure s_e946bf; observed issue_1_title=Seed: triage inbox, issue_2_title=Seed: order missing parts, issue_3_title=Seed: ship repaired device, match_count=3, all_issues_state=open, matching_open_issue_titles_1=Seed: ship repaired device, matching_open_issue_titles_2=Seed: order missing parts, matching_open_issue_titles_3=Seed: triage inbox, open_count=3 Open, closed_count=0 Closed.",
+      "values": {
+        "issue_1_title": "Seed: triage inbox",
+        "issue_2_title": "Seed: order missing parts",
+        "issue_3_title": "Seed: ship repaired device",
+        "match_count": "3",
+        "all_issues_state": "open",
+        "matching_open_issue_titles_1": "Seed: ship repaired device",
+        "matching_open_issue_titles_2": "Seed: order missing parts",
+        "matching_open_issue_titles_3": "Seed: triage inbox",
+        "open_count": "3 Open",
+        "closed_count": "0 Closed"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "12/12",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_253336; observed issue_heading=fwgt38-eg-n2 Bench Issue #4, markdown_editor_id=_combo_markdown_editor_52, markdown_editor_label=Leave a comment, issue_heading_displayed=fwgt38-eg-n2 Bench Issue #5, issue_description_rendered=This issue was created by an automated bench run.\n\nMarker: fwgt38-eg-n2\n\nVerifies issue creation via the web UI\nTitle and body both carry the marker fwgt38-eg-n2, close_issue_button=Close Issue, issue_url=http://127.0.0.1:8095/bench/bench-repo/issues/5, issue_number=4, issue_title=fwgt38-eg-n2 Bench Issue, marker_present_in_description=fwgt38-eg-n2, issue_state=Open, repository_1=bench, repository_2=bench-repo.",
+      "values": {
+        "issue_heading": "fwgt38-eg-n2 Bench Issue #4",
+        "markdown_editor_id": "_combo_markdown_editor_52",
+        "markdown_editor_label": "Leave a comment",
+        "issue_heading_displayed": "fwgt38-eg-n2 Bench Issue #5",
+        "issue_description_rendered": "This issue was created by an automated bench run.\n\nMarker: fwgt38-eg-n2\n\nVerifies issue creation via the web UI\nTitle and body both carry the marker fwgt38-eg-n2",
+        "close_issue_button": "Close Issue",
+        "issue_url": "http://127.0.0.1:8095/bench/bench-repo/issues/5",
+        "issue_number": "4",
+        "issue_title": "fwgt38-eg-n2 Bench Issue",
+        "marker_present_in_description": "fwgt38-eg-n2",
+        "issue_state": "Open",
+        "repository_1": "bench",
+        "repository_2": "bench-repo"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "16/16",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "04-report",
+      "status": "success",
+      "summary": "Applied exactly the two labels 'bug' and 'priority-high' to the issue titled 'fwgt38-eg-n2 Bench Issue' in bench/bench-repo, and verified after a full page reload that the issue displays only those two labels. Caveat: the instruction named issue #4, but /bench/bench-repo/issues/4 does not exist (404); the only issue with that exact title is #5 (issue list showed #1–#3 \"Seed: …\" and #5), so the labels were set on #5. The sidebar Labels picker is a multi-select combo that commits the diff when the dropdown closes — clicking the 'bug' and 'priority-high' items marked them checked and clicking outside the dropdown committed them, after which both rendered as label links in the sidebar and header, with no other label present (the picker also offers documentation/enhancement, neither of which is applied). No issue content was edited.",
+      "values": {
+        "issue_number": "5",
+        "issue_title": "fwgt38-eg-n2 Bench Issue",
+        "displayed_labels": "bug\npriority-high",
+        "sidebar_text_after_apply": "Labels | bug | priority-high",
+        "note_issue_4_missing": "/bench/bench-repo/issues/4 returns 404; the matching-title issue is #5",
+        "note_issue_4": "/bench/bench-repo/issues/4 returns 404; the matching issue is #5",
+        "labels_list_read_all_1": "bug",
+        "labels_list_read_all_2": "priority-high",
+        "labels_list_read_all_3": "bug",
+        "labels_list_read_all_4": "priority-high",
+        "current_url": "http://127.0.0.1:8095/bench/bench-repo/issues/5",
+        "url_after_bug_click": "http://127.0.0.1:8095/bench/bench-repo/issues/5",
+        "url_after_escape": "http://127.0.0.1:8095/bench/bench-repo/issues/5",
+        "role_combobox": "Labels",
+        "issue_sidebar_combo_a_hr": "documentation",
+        "issue_sidebar_combo_a_hr_2": "enhancement",
+        "ref": "fwgt38-eg-n2"
+      },
+      "tier": null,
+      "recovered": true,
+      "fellBack": "the flow step has no pinned skill",
+      "replayed": null,
+      "repaired": false,
+      "turns": 52,
+      "repinned": "s_e6be3b",
+      "repinParams": {
+        "v1": "{{03-create.issue_title}}",
+        "v2": "{{runid}}",
+        "v3": "{{03-create.repository_1}}",
+        "v4": "{{03-create.repository_2}}",
+        "v5": "{{03-create.url.p3}}"
+      },
+      "unreported": [
+        "issue",
+        "requested_labels",
+        "extra_label"
+      ]
+    },
+    {
+      "id": "05-verify",
+      "status": "success",
+      "summary": "On the issue titled 'fwgt38-eg-n2 Bench Issue' (issue #5 — /bench/bench-repo/issues/4 does not exist/404, so #5 is the only issue with that exact title, same as in the previous step) the labels already were exactly 'bug' and 'priority-high': opening the sidebar Labels picker showed bug and priority-high with the \"checked\" class while documentation and enhancement were present but unchecked, i.e. 'documentation' was NOT applied this run contrary to the recorded value, so nothing needed removing. I closed the picker without altering the selection (Escape, no diff sent), reloaded the page, and verified the displayed labels are exactly bug and priority-high with no documentation and no \"No labels\" placeholder.",
+      "values": {
+        "issue_title": "fwgt38-eg-n2 Bench Issue",
+        "issue_number_displayed": "fwgt38-eg-n2 Bench Issue #5",
+        "sidebar_labels": "Labels | bug | priority-high",
+        "header_label_list": "bug\npriority-high",
+        "picker_items_state": "bug=item muted checked; priority-high=item muted checked; documentation=item muted (unchecked); enhancement=item muted (unchecked)",
+        "removed_label": "none - documentation was not applied this run; no label change was needed",
+        "note_issue_4_missing": "/bench/bench-repo/issues/4 returns 404; matching-title issue is #5",
+        "labels_list_read_all_1": "bug",
+        "labels_list_read_all_2": "priority-high",
+        "labels_list_read_all_3": "bug",
+        "labels_list_read_all_4": "priority-high",
+        "ref": "fwgt38-eg-n2"
+      },
+      "tier": null,
+      "recovered": true,
+      "fellBack": "unresolved reference(s): 04-report.extra_label, 04-report.extra_label",
+      "replayed": null,
+      "repaired": false,
+      "turns": 10,
+      "unreported": [
+        "label_ids_committed",
+        "label_id_map",
+        "empty_label_picker_option",
+        "bug_label_picker_option",
+        "issue_sidebar_combo_data_3"
+      ]
+    },
+    {
+      "id": "06-verify",
+      "status": "success",
+      "summary": "(assigned_user: Bench Assignee)",
+      "values": {
+        "issue": "#4 fwgt38-eg-n2 Bench Issue (bench/bench-repo)",
+        "assigned_user": "bench-assignee"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "5/5",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_23d23a: step 5: primary locator did not resolve; used fallback #2 elementAt(207, 522) /* link */"
+      ]
+    },
+    {
+      "id": "07-set",
+      "status": "success",
+      "summary": "Replayed stored procedure s_0e0e4d; observed issue=#4 fwgt38-eg-n2 Bench Issue (bench/bench-repo), milestone_id=1, assignee=bench-assignee, milestone_displayed=Bench Milestone.",
+      "values": {
+        "issue": "#4 fwgt38-eg-n2 Bench Issue (bench/bench-repo)",
+        "milestone_id": "1",
+        "assignee": "bench-assignee",
+        "milestone_displayed": "Bench Milestone"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "6/6",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_0e0e4d: step 5: primary locator did not resolve; used fallback #2 elementAt(207, 522) /* link */"
+      ]
+    },
+    {
+      "id": "08-add",
+      "status": "success",
+      "summary": "Replayed stored procedure s_3c7a5f; observed comment_timeline_anchor=#issuecomment-13, comment_anchor_id=issuecomment-13, comment_runid_marker=fwgt38-eg-n2, issue_title=fwgt38-eg-n2 Bench Issue #5, comment_text_posted_1=Bench run comment, comment_text_posted_2=runid: fwgt38-eg-n2, comment_text_posted_3=Verifying that comments can be posted on this issue (marker fwgt38-eg-n2)..",
+      "values": {
+        "comment_timeline_anchor": "#issuecomment-13",
+        "comment_anchor_id": "issuecomment-13",
+        "comment_runid_marker": "fwgt38-eg-n2",
+        "issue_title": "fwgt38-eg-n2 Bench Issue #5",
+        "comment_text_posted_1": "Bench run comment",
+        "comment_text_posted_2": "runid: fwgt38-eg-n2",
+        "comment_text_posted_3": "Verifying that comments can be posted on this issue (marker fwgt38-eg-n2)."
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "8/8",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 8,
+  "total": 8,
+  "repinned": 1,
+  "drift": 2,
+  "driftTickets": [
+    {
+      "flow": "fwgt38-eg",
+      "step": "06-verify",
+      "skill": "s_23d23a",
+      "atStep": "5",
+      "key": "target",
+      "similarity": 0.999,
+      "missedLocator": "page.locator('#issuecomment-5 > span:nth-of-type(2) > a')",
+      "fallbackUsed": "elementAt(207, 522) /* link */",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "pageUrl": "http://127.0.0.1:8095/bench/bench-repo/issues/5"
+    },
+    {
+      "flow": "fwgt38-eg",
+      "step": "07-set",
+      "skill": "s_0e0e4d",
+      "atStep": "5",
+      "key": "target",
+      "similarity": 1.001,
+      "missedLocator": "page.locator('#issuecomment-5 > span:nth-of-type(2) > a')",
+      "fallbackUsed": "elementAt(207, 522) /* link */",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "pageUrl": "http://127.0.0.1:8095/bench/bench-repo/issues/5"
+    }
+  ],
+  "wallMs": 233175,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 1198473,
+    "completionTokens": 14643,
+    "cachedTokens": 1117696
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 1198473,
+      "completionTokens": 14643,
+      "cachedTokens": 1117696
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "openai/gpt-6-luna",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

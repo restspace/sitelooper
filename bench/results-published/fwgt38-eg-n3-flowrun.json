@@ -1,0 +1,249 @@
+{
+  "flow": "fwgt38-eg",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_692bf9; observed signed_in_user=admin, final_url=http://127.0.0.1:8095/, page_title=admin - Dashboard - Gitea: Git with a cup of tea.",
+      "values": {
+        "signed_in_user": "admin",
+        "final_url": "http://127.0.0.1:8095/",
+        "page_title": "admin - Dashboard - Gitea: Git with a cup of tea"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "6/6",
+      "repaired": false,
+      "turns": 0,
+      "unreported": [
+        "authenticated_indicators"
+      ]
+    },
+    {
+      "id": "02-find",
+      "status": "success",
+      "summary": "Replayed stored procedure s_e946bf; observed issue_1_title=Seed: triage inbox, issue_2_title=Seed: order missing parts, issue_3_title=Seed: ship repaired device, match_count=3, all_issues_state=open, matching_open_issue_titles_1=Seed: ship repaired device, matching_open_issue_titles_2=Seed: order missing parts, matching_open_issue_titles_3=Seed: triage inbox, open_count=3 Open, closed_count=0 Closed.",
+      "values": {
+        "issue_1_title": "Seed: triage inbox",
+        "issue_2_title": "Seed: order missing parts",
+        "issue_3_title": "Seed: ship repaired device",
+        "match_count": "3",
+        "all_issues_state": "open",
+        "matching_open_issue_titles_1": "Seed: ship repaired device",
+        "matching_open_issue_titles_2": "Seed: order missing parts",
+        "matching_open_issue_titles_3": "Seed: triage inbox",
+        "open_count": "3 Open",
+        "closed_count": "0 Closed"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "12/12",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_253336; observed issue_heading=fwgt38-eg-n3 Bench Issue #4, markdown_editor_id=_combo_markdown_editor_52, markdown_editor_label=Leave a comment, issue_heading_displayed=fwgt38-eg-n3 Bench Issue #6, issue_description_rendered=This issue was created by an automated bench run.\n\nMarker: fwgt38-eg-n3\n\nVerifies issue creation via the web UI\nTitle and body both carry the marker fwgt38-eg-n3, close_issue_button=Close Issue, issue_url=http://127.0.0.1:8095/bench/bench-repo/issues/6, issue_number=4, issue_title=fwgt38-eg-n3 Bench Issue, marker_present_in_description=fwgt38-eg-n3, issue_state=Open, repository_1=bench, repository_2=bench-repo.",
+      "values": {
+        "issue_heading": "fwgt38-eg-n3 Bench Issue #4",
+        "markdown_editor_id": "_combo_markdown_editor_52",
+        "markdown_editor_label": "Leave a comment",
+        "issue_heading_displayed": "fwgt38-eg-n3 Bench Issue #6",
+        "issue_description_rendered": "This issue was created by an automated bench run.\n\nMarker: fwgt38-eg-n3\n\nVerifies issue creation via the web UI\nTitle and body both carry the marker fwgt38-eg-n3",
+        "close_issue_button": "Close Issue",
+        "issue_url": "http://127.0.0.1:8095/bench/bench-repo/issues/6",
+        "issue_number": "4",
+        "issue_title": "fwgt38-eg-n3 Bench Issue",
+        "marker_present_in_description": "fwgt38-eg-n3",
+        "issue_state": "Open",
+        "repository_1": "bench",
+        "repository_2": "bench-repo"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "16/16",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "04-report",
+      "status": "success",
+      "summary": "Replayed stored procedure s_e6be3b; observed current_url=http://127.0.0.1:8095/bench/bench-repo/issues/6, labels_list_read_all_1=bug, issue_sidebar_combo_a_hr=documentation, issue_sidebar_combo_a_hr_2=enhancement, labels_list_read_all_2=priority-high, labels_list_read_all_3=bug, labels_list_read_all_4=priority-high, displayed_labels=bug\npriority-high, ref=fwgt38-eg-n3, issue_title=fwgt38-eg-n3 Bench Issue, role_combobox=Labels.",
+      "values": {
+        "current_url": "http://127.0.0.1:8095/bench/bench-repo/issues/6",
+        "labels_list_read_all_1": "bug",
+        "issue_sidebar_combo_a_hr": "documentation",
+        "issue_sidebar_combo_a_hr_2": "enhancement",
+        "labels_list_read_all_2": "priority-high",
+        "labels_list_read_all_3": "bug",
+        "labels_list_read_all_4": "priority-high",
+        "displayed_labels": "bug\npriority-high",
+        "ref": "fwgt38-eg-n3",
+        "issue_title": "fwgt38-eg-n3 Bench Issue",
+        "role_combobox": "Labels"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "33/33",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_e6be3b: step 5: the recorded effect (- listbox \"Clear labels {{*}} {{*}} {{*}} {{*}}\") is already showing — a click would toggle it away; skipped as already in effect"
+      ],
+      "unreported": [
+        "issue",
+        "requested_labels",
+        "extra_label"
+      ]
+    },
+    {
+      "id": "05-verify",
+      "status": "success",
+      "summary": "On issue #6 \"fwgt38-eg-n3 Bench Issue\" in bench/bench-repo (the issue #4 of this flow, redirected to issues/6), the sidebar already displayed exactly the labels bug and priority-high — 'documentation' was not applied in this run. I verified this by opening the sidebar Labels picker, where the four options resolved to: bug = checked, documentation = unchecked, enhancement = unchecked, priority-high = checked, then closing the picker and reloading http://127.0.0.1:8095/bench/bench-repo/issues/6. After reload the only sidebar label links are 'bug' and 'priority-high', and the timeline shows \"admin added the bug priority-high labels\". No label edits were needed or made (nothing was toggled), so the issue still carries exactly those two labels. (removed_label_not_present: unchecked in picker, absent from sidebar)",
+      "values": {
+        "issue_number_displayed": "#6",
+        "issue_title": "fwgt38-eg-n3 Bench Issue",
+        "displayed_labels": "bug, priority-high",
+        "removed_label_not_present": "documentation",
+        "sidebar_label_count": "2",
+        "picker_options_state": "bug=checked, documentation=unchecked, enhancement=unchecked, priority-high=checked",
+        "final_url": "http://127.0.0.1:8095/bench/bench-repo/issues/6",
+        "a_href_labels": "bug",
+        "a_href_labels_2": "priority-high",
+        "a_href_labels_3": "documentation",
+        "a_href_labels_4": "enhancement",
+        "ref": "fwgt38-eg-n3"
+      },
+      "tier": null,
+      "recovered": true,
+      "fellBack": "unresolved reference(s): 04-report.extra_label, 04-report.extra_label",
+      "replayed": null,
+      "repaired": false,
+      "turns": 16,
+      "unreported": [
+        "removed_label",
+        "label_ids_committed",
+        "label_id_map",
+        "empty_label_picker_option",
+        "bug_label_picker_option",
+        "issue_sidebar_combo_data_3"
+      ]
+    },
+    {
+      "id": "06-verify",
+      "status": "success",
+      "summary": "(assigned_user: Bench Assignee)",
+      "values": {
+        "issue": "#4 fwgt38-eg-n3 Bench Issue (bench/bench-repo)",
+        "assigned_user": "bench-assignee"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "5/5",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_23d23a: step 5: primary locator did not resolve; used fallback #2 elementAt(207, 522) /* link */"
+      ]
+    },
+    {
+      "id": "07-set",
+      "status": "success",
+      "summary": "Replayed stored procedure s_0e0e4d; observed issue=#4 fwgt38-eg-n3 Bench Issue (bench/bench-repo), milestone_id=1, assignee=bench-assignee, milestone_displayed=Bench Milestone.",
+      "values": {
+        "issue": "#4 fwgt38-eg-n3 Bench Issue (bench/bench-repo)",
+        "milestone_id": "1",
+        "assignee": "bench-assignee",
+        "milestone_displayed": "Bench Milestone"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "6/6",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_0e0e4d: step 5: primary locator did not resolve; used fallback #2 elementAt(207, 522) /* link */"
+      ]
+    },
+    {
+      "id": "08-add",
+      "status": "success",
+      "summary": "Replayed stored procedure s_3c7a5f; observed comment_timeline_anchor=#issuecomment-19, comment_anchor_id=issuecomment-19, comment_runid_marker=fwgt38-eg-n3, issue_title=fwgt38-eg-n3 Bench Issue #6, comment_text_posted_1=Bench run comment, comment_text_posted_2=runid: fwgt38-eg-n3, comment_text_posted_3=Verifying that comments can be posted on this issue (marker fwgt38-eg-n3)..",
+      "values": {
+        "comment_timeline_anchor": "#issuecomment-19",
+        "comment_anchor_id": "issuecomment-19",
+        "comment_runid_marker": "fwgt38-eg-n3",
+        "issue_title": "fwgt38-eg-n3 Bench Issue #6",
+        "comment_text_posted_1": "Bench run comment",
+        "comment_text_posted_2": "runid: fwgt38-eg-n3",
+        "comment_text_posted_3": "Verifying that comments can be posted on this issue (marker fwgt38-eg-n3)."
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "8/8",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 8,
+  "total": 8,
+  "repinned": 0,
+  "drift": 2,
+  "driftTickets": [
+    {
+      "flow": "fwgt38-eg",
+      "step": "06-verify",
+      "skill": "s_23d23a",
+      "atStep": "5",
+      "key": "target",
+      "similarity": 0.999,
+      "missedLocator": "page.locator('#issuecomment-5 > span:nth-of-type(2) > a')",
+      "fallbackUsed": "elementAt(207, 522) /* link */",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "pageUrl": "http://127.0.0.1:8095/bench/bench-repo/issues/6"
+    },
+    {
+      "flow": "fwgt38-eg",
+      "step": "07-set",
+      "skill": "s_0e0e4d",
+      "atStep": "5",
+      "key": "target",
+      "similarity": 1.001,
+      "missedLocator": "page.locator('#issuecomment-5 > span:nth-of-type(2) > a')",
+      "fallbackUsed": "elementAt(207, 522) /* link */",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "pageUrl": "http://127.0.0.1:8095/bench/bench-repo/issues/6"
+    }
+  ],
+  "wallMs": 92356,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 217794,
+    "completionTokens": 2830,
+    "cachedTokens": 197120
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 217794,
+      "completionTokens": 2830,
+      "cachedTokens": 197120
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "openai/gpt-6-luna",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}
