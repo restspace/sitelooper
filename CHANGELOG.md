@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.8.1 — unreleased
+## 0.8.1 — 2026-11-05
 
 ### Readable specs
 - `compile --standalone` leaves out what only sitelooper reads: `@step` markers and segment

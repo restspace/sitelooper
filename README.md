@@ -356,12 +356,12 @@ your own environment. Prefer inheriting it or a prompted input to writing it int
 Claude Code:
 
 ```
-claude mcp add --transport stdio sitelooper -- npx -y sitelooper@0.8.0 mcp
+claude mcp add --transport stdio sitelooper -- npx -y sitelooper@0.8.1 mcp
 ```
 
 Add `--scope project` to share it through `.mcp.json`, or `--scope user` for all projects. The key is
 inherited from the shell that starts Claude Code. On native Windows, use
-`-- cmd /c npx -y sitelooper@0.8.0 mcp`.
+`-- cmd /c npx -y sitelooper@0.8.1 mcp`.
 
 Cursor (`.cursor/mcp.json`, or `~/.cursor/mcp.json` for all projects), Claude Desktop
 (`claude_desktop_config.json`) and Windsurf (`mcp_config.json`) use the same shape:
@@ -371,7 +371,7 @@ Cursor (`.cursor/mcp.json`, or `~/.cursor/mcp.json` for all projects), Claude De
   "mcpServers": {
     "sitelooper": {
       "command": "npx",
-      "args": ["-y", "sitelooper@0.8.0", "mcp"],
+      "args": ["-y", "sitelooper@0.8.1", "mcp"],
       "env": { "OPENROUTER_API_KEY": "${env:OPENROUTER_API_KEY}" }
     }
   }
@@ -392,7 +392,7 @@ VS Code (`.vscode/mcp.json`) uses `servers` and can prompt for the key without s
     "sitelooper": {
       "type": "stdio",
       "command": "npx",
-      "args": ["-y", "sitelooper@0.8.0", "mcp"],
+      "args": ["-y", "sitelooper@0.8.1", "mcp"],
       "env": { "OPENROUTER_API_KEY": "${input:sl-key}" }
     }
   }
