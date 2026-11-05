@@ -231,7 +231,10 @@ defaults, and CLI flags override them. Never put credentials in this file.
 }
 ```
 
-`targetUrl` may be relative to Playwright's `baseURL`. `fixtureIsolation: true` replaces the
+`targetUrl` may be relative to Playwright's `baseURL`. A runtime-style spec still expects the
+origin it was recorded on: `SITELOOPER_TARGET_URL` moves only its first page load, and its URL checks
+compare the origin exactly. So record on the origin your CI serves, or use `--style readable`,
+whose URLs are relative. `fixtureIsolation: true` replaces the
 reset command. `flow export` bundles a flow with its pinned procedures so that another machine can
 compile it. Commit the bundle, the config and the generated files.
 
@@ -278,6 +281,8 @@ sitelooper build ticket --var runid=test-{n} --reset-cmd "npm run reset:e2e" --s
 Use it for code that will be contributed to another project or reviewed by people. The readable
 file gives up two things on purpose: there is no locator fallback at run time, and no drift
 lines. When the app changes, the test fails at the step that broke, like any hand-written test.
+Its URLs are relative, so it runs on whatever origin Playwright's `baseURL` names, not only the one
+it was recorded on.
 
 The recording stays in the bundle (`flow export`, or the project's `snapshotFile`). The readable
 file names it on a `// @sitelooper-source` line, and it is still generated: it is rewritten on
@@ -297,6 +302,17 @@ Your `.spec.ts` is unchanged and works with either style.
 - `check` and readiness work the same way on both styles. A readable file whose bundle has
   changed since it was compiled is reported as stale (a warning) until you recompile it.
 - `--json` result documents include `style`.
+
+To hand the file over for good, as code that is yours (or another project's) to maintain, add
+`--standalone`:
+
+```sh
+sitelooper compile .sitelooper/procedures.json --style readable --standalone
+```
+
+The file then has no regenerate header and no `@sitelooper-source` link, and nothing in it depends
+on sitelooper. Edit it like any other test. sitelooper won't regenerate it: a later `compile`
+refuses to overwrite a `.flow.ts` it did not generate, so move the file or pass `--out <dir>`.
 
 ### Calling from another agent
 
@@ -381,7 +397,9 @@ VS Code (`.vscode/mcp.json`) uses `servers` and can prompt for the key without s
 
 Tools: `open`, `do`, `assert`, `set_var`, `peek`, `screenshot`, `save_flow`, `list_flows`,
 `build_start`, `check`, `repair_propose`, `repair_apply`, `rerecord`, `job_status`, `sessions`,
-`stop`, `doctor`. Builds and other long runs return a `job_id` to poll with `job_status`. See
+`stop`, `doctor`. Builds and other long runs return a `job_id` to poll with `job_status`. The
+tools have no style option: they compile in the style the project config or the existing file
+sets, so set `"style": "readable"` in `sitelooper.config.json` to get readable files. See
 [docs/mcp.md](docs/mcp.md) for inputs, safety rules and troubleshooting.
 
 ## Reference
