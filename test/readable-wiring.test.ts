@@ -27,6 +27,7 @@ vi.mock('../src/spec/emit-readable.js', async () => {
       ].join('\n'),
       warnings: ['the readable style has no run-time locator fallback'],
     }),
+    emitStandaloneSpecFile: (spec: import('../src/spec/ir.js').SpecFlow, flowModule: string) => `// standalone test of ${spec.name} from ./${flowModule}\n`,
   };
 });
 
@@ -120,6 +121,23 @@ describe('style selection on compile', () => {
     expect(result.warnings).toContain('the readable style has no run-time locator fallback');
     // The scaffold is the same user-owned spec.ts either way.
     expect(read(result.specFile!)).toContain("from './items.flow'");
+  });
+
+  it('--standalone writes a scaffold with no run record, and will not leave a generated one that no longer compiles', () => {
+    const p = project();
+    // A fresh project: the standalone scaffold.
+    expect(read(compileFlow(p.bundle, { outDir: p.out, style: 'readable', standalone: true }).specFile!)).toBe('// standalone test of items from ./items.flow\n');
+    // A project whose spec.ts was written for a generated file (it uses createFlowRun): refused, nothing written…
+    const q = project();
+    compileFlow(q.bundle, { outDir: q.out, style: 'readable' });
+    const qSpec = path.join(q.out, 'items.spec.ts');
+    fs.writeFileSync(qSpec, read(qSpec) + '\n// const run = createFlowRun();\n');
+    const flowBefore = read(path.join(q.out, 'items.flow.ts'));
+    expect(() => compileFlow(q.bundle, { outDir: q.out, style: 'readable', standalone: true })).toThrow(/uses createFlowRun.*--overwrite-spec/);
+    expect(read(path.join(q.out, 'items.flow.ts'))).toBe(flowBefore);
+    // …unless the spec may be replaced.
+    const replaced = compileFlow(q.bundle, { outDir: q.out, style: 'readable', standalone: true, overwriteSpec: true });
+    expect(read(replaced.specFile!)).toBe('// standalone test of items from ./items.flow\n');
   });
 
   it('a recompile keeps the existing file style unless --style says otherwise', () => {

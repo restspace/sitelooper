@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.8.1 — unreleased
+
+### Readable specs
+- `compile --standalone` leaves out what only sitelooper reads: `@step` markers and segment
+  headers, the `[sitelooper step]` log lines, the `flowStepIds`/`requiredInputNames`/`assertStepIds`
+  exports, the run record (`createFlowRun`, `FlowRun`), and reads no later step uses. Step titles
+  and comments name env values as `$NAME` and show the run's own input values, not `{{…}}` markers.
+  The `.spec.ts` written beside it is a plain test with no run record. An existing `.spec.ts` that
+  uses `createFlowRun` stops the compile unless `--overwrite-spec` is given.
+- A select2 dropdown opened by its place on the page (`.select2-container` nth N) is opened by its
+  field instead, `select[name="…"] + .select2-container`, when the option's click shows which
+  field it set.
+- A text check on a role locator found by that same exact name is written as a visibility check,
+  and the same check twice in a row is written once.
+- `pick()` carries the typed-search branch only when a dropdown in the file types a search.
+
 ## 0.8.0 — 2026-10-28
 
 ### Readable specs

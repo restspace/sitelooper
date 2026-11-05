@@ -78,18 +78,12 @@ async function visit(page: Page, path: string): Promise<void> {
 
 /**
  * Opens a dropdown and chooses an option. The opener's click can land before the page's script has
- * wired the dropdown up, and then nothing opens: it is clicked again until the option shows — but
- * not while a list is already open (a second click would close it), and a typed search is typed again.
+ * wired the dropdown up, and then nothing opens: it is clicked again until the option shows, but
+ * not while a list is already open (a second click would close it).
  */
-async function pick(page: Page, opener: Locator, option: Locator, typed?: { search: Locator; text: string; delay?: number }): Promise<void> {
+async function pick(page: Page, opener: Locator, option: Locator): Promise<void> {
   await expect(async () => {
-    if (!(await option.isVisible())) {
-      if (typed) {
-        if (!(await typed.search.isVisible())) await opener.click();
-        if (typed.delay === undefined) await typed.search.fill(typed.text);
-        else await typed.search.fill('').then(() => typed.search.pressSequentially(typed.text, { delay: typed.delay }));
-      } else if (!(await page.getByRole('listbox').or(page.getByRole('menu')).first().isVisible())) await opener.click();
-    }
+    if (!(await option.isVisible()) && !(await page.getByRole('listbox').or(page.getByRole('menu')).first().isVisible())) await opener.click();
     await expect(option).toBeVisible({ timeout: 3_000 });
   }).toPass({ timeout: 30_000 });
   await option.click();
@@ -124,13 +118,13 @@ async function step02Create(page: Page, { vars, outputs }: StepContext): Promise
   await page.locator('#optional_info').click();
   // @step 02-create s_bfea11/2
   // @step 02-create s_bfea11/3
-  await pick(page, page.locator('.select2-container').nth(1), page.getByRole('option', { name: 'E2E Laptops - E2E Manufacturer E2E Laptop Model', exact: true }));
+  await pick(page, page.locator('select[name="model_id"] + .select2-container'), page.getByRole('option', { name: 'E2E Laptops - E2E Manufacturer E2E Laptop Model', exact: true }));
   // @step 02-create s_bfea11/4
   // @step 02-create s_bfea11/5
-  await pick(page, page.locator('.select2-container').nth(2), page.getByRole('option', { name: 'Ready to Deploy', exact: true }));
+  await pick(page, page.locator('select[name="status_id"] + .select2-container'), page.getByRole('option', { name: 'Ready to Deploy', exact: true }));
   // @step 02-create s_bfea11/6
   // @step 02-create s_bfea11/7
-  await pick(page, page.locator('.select2-container').nth(7), page.getByRole('option', { name: 'E2E Office', exact: true }));
+  await pick(page, page.locator('select[name="rtd_location_id"] + .select2-container'), page.getByRole('option', { name: 'E2E Office', exact: true }));
   // @step 02-create s_bfea11/8
   await page.locator('input[name="name"]').fill(`${vars.runid} E2E Laptop`);
   // @step 02-create s_bfea11/9
@@ -167,7 +161,7 @@ async function step03Verify(page: Page, { vars, outputs }: StepContext): Promise
   await expect(page.locator('select[name="assigned_user"]')).toBeVisible({ timeout: 8000 });
   // @step 03-verify s_d9fe3e/2
   // @step 03-verify s_d9fe3e/3
-  await pick(page, page.locator('.select2-container').nth(1), page.getByRole('option', { name: 'E2E Assignee (e2e-assignee)', exact: true }));
+  await pick(page, page.locator('select[name="assigned_user"] + .select2-container'), page.getByRole('option', { name: 'E2E Assignee (e2e-assignee)', exact: true }));
   // @step 03-verify s_d9fe3e/4
   await page.getByRole('textbox', { name: 'Notes', exact: true }).fill(`${vars.runid} checkout`);
   // @step 03-verify s_d9fe3e/7
@@ -189,9 +183,8 @@ async function step04Assert(page: Page, { vars }: StepContext): Promise<void> {
   const failed = `assertion failed: the page of the asset '${vars.runid} E2E Laptop' shows it is checked out to E2E Assignee`;
   // s_3133ba — recorded on /hardware/:id
   // @step 04-assert s_3133ba/1
-  await expect(page.getByRole('link', { name: 'E2E Assignee', exact: true }), failed).toHaveText('E2E Assignee', { useInnerText: true });
-  // @step 04-assert s_3133ba/2
   await expect(page.getByRole('link', { name: 'E2E Assignee', exact: true }), failed).toBeVisible();
+  // @step 04-assert s_3133ba/2
   // @step 04-assert s_3133ba/3
   await expect(page.locator('h1'), failed).toContainText(`${vars.runid} E2E Laptop`, { useInnerText: true });
 }

@@ -204,6 +204,10 @@ interface FileState {
   /** Whether a step moves the procedure to another page (a popup, a close, a tab switch). */
   followsPages: boolean;
   actions: number;
+  /** `--standalone`: the file is handed over, so nothing sitelooper itself reads is written. */
+  standalone: boolean;
+  /** Whether a pick types a search: only then does the pick helper carry that branch. */
+  typedPick?: boolean;
 }
 
 interface Scope {
@@ -758,6 +762,9 @@ function keepRead(file: FileState, stepId: string, segment: SpecSegment, index: 
   if (Object.values(segment.derived ?? {}).some((d) => d.step === index && d.read === label)) return true;
   if (step.args?.target === '(read-back)' || step.args?.what === 'title') return false;
   if (echoRead(step, earlier)) return false;
+  // A handed-over file keeps only the values its own steps pass on: the rest
+  // were for sitelooper's report, and would be dead code in the user's.
+  if (file.standalone) return false;
   return outputs.includes(label);
 }
 
@@ -808,6 +815,11 @@ interface Emitted {
   lines: string[];
 }
 
+/** The quoted exact name a `getByRole(…, { name, exact: true })` locator is found by. */
+function namedBy(loc: string): string | null {
+  return /getByRole\('[\w-]+', \{ name: ('(?:[^'\\]|\\.)*'), exact: true \}\)$/.exec(loc)?.[1] ?? null;
+}
+
 function waitLines(scope: Scope, step: SkillStep, loc: string | null, where: string, message: string | null): string[] {
   const args = step.args ?? {};
   const state = String(args.state ?? 'visible');
@@ -829,6 +841,9 @@ function waitLines(scope: Scope, step: SkillStep, loc: string | null, where: str
     case 'hidden':
       return [`await ${subject(loc)}.toBeHidden(${opt()});`];
     case 'text_equals':
+      // A role locator found by this exact name already says what the text is:
+      // checking the text again can't fail, so the check is that it shows.
+      if (namedBy(loc) === text()) return [`await ${subject(loc)}.toBeVisible(${opt()});`];
       return [`await ${subject(loc)}.toHaveText(${text()}, ${opt(['useInnerText: true'])});`];
     case 'text_contains':
       return [`await ${subject(loc)}.toContainText(${text()}, ${opt(['useInnerText: true'])});`];
@@ -1025,7 +1040,7 @@ function finishAction(scope: Scope, p: Planned, out: string[], action: string, l
     out.push(`const ${name} = ${urlPartExpr(scope, d.at, to ?? null)};`);
     scope.captured.set(slot, name);
   }
-  if (step.mints) {
+  if (step.mints && (!scope.file.standalone || scope.file.consumed.has(`${stepId}.minted`))) {
     const bound = derived.find(([, d]) => d.at === step.mints!.at)?.[0];
     const value = bound ? scope.captured.get(bound)! : urlPartExpr(scope, step.mints.at, to ?? null);
     scope.uses.outputs = true;
@@ -1118,7 +1133,7 @@ function mergePicks(items: EmittedItem[], file: FileState, stepId: string): Emit
     const option = optionOf(b);
     if (direct && option) {
       file.helpers.add('pick');
-      out.push({ p: a.p, header: a.header, lines: [a.lines[0], b.lines[0], `await pick(page, ${direct}, ${option});`, ...b.lines.slice(2)] });
+      out.push({ p: a.p, header: a.header, lines: [a.lines[0], b.lines[0], `await pick(page, ${fieldOpener(direct, b)}, ${option});`, ...b.lines.slice(2)] });
       i += 1;
       continue;
     }
@@ -1127,7 +1142,8 @@ function mergePicks(items: EmittedItem[], file: FileState, stepId: string): Emit
     const searched = optionOf(c);
     if (opener && typed && searched) {
       file.helpers.add('pick');
-      out.push({ p: a.p, header: a.header, lines: [a.lines[0], b.lines[0], c!.lines[0], `await pick(page, ${opener}, ${searched}, ${typed});`, ...c!.lines.slice(2)] });
+      file.typedPick = true;
+      out.push({ p: a.p, header: a.header, lines: [a.lines[0], b.lines[0], c!.lines[0], `await pick(page, ${fieldOpener(opener, c!)}, ${searched}, ${typed});`, ...c!.lines.slice(2)] });
       i += 2;
       continue;
     }
@@ -1135,6 +1151,22 @@ function mergePicks(items: EmittedItem[], file: FileState, stepId: string): Emit
   }
   void stepId;
   return out;
+}
+
+/**
+ * A select2 opener found by its place on the page (`.select2-container` nth N,
+ * an nth-of-type path) breaks when the form gains a field. The option's click
+ * names the field it set: the hidden <select> appears as `combobox "<name>": …`
+ * in what it added. select2 puts its container right after that select, so the
+ * opener becomes the container next to the select of that name.
+ */
+function fieldOpener(opener: string, option: EmittedItem): string {
+  if (!/select2/.test(opener) || !/\.nth\(|nth-of-type|>> nth=/.test(opener)) return opener;
+  const fields = (option.p.step.expect?.addedContains ?? [])
+    .map((l) => /^- combobox "([\w[\]-]+)": /.exec(l)?.[1])
+    .filter((n): n is string => Boolean(n));
+  if (new Set(fields).size !== 1) return opener;
+  return `page.locator(${quote(`select[name="${fields[0]}"] + .select2-container`)})`;
 }
 
 /** A fill or a typed search into a box, as pick's `search` argument. */
@@ -1261,7 +1293,19 @@ function emitFlowStep(file: FileState, step: SpecStep, fn: string): StepCode {
     }
     items.push({ p, header, lines });
   }
-  for (const item of mergePicks(items, file, step.id)) body.push(...(item.header ? [item.header] : []), ...item.lines);
+  let lastCode: string | undefined;
+  for (const item of mergePicks(items, file, step.id)) {
+    // A handed-over file carries none of sitelooper's anchors: no `@step`
+    // markers, no recorded-segment headers.
+    if (item.header && !file.standalone) body.push(item.header);
+    for (const line of item.lines) {
+      if (file.standalone && /^\/\/ @step /.test(line)) continue;
+      // The same check twice in a row (two recorded checks that write as one) is said once.
+      if (line.startsWith('await expect(') && line === lastCode) continue;
+      body.push(line);
+      if (!line.startsWith('//')) lastCode = line;
+    }
+  }
 
   // What later steps refer to this one by, published.
   const published = new Set<string>();
@@ -1334,6 +1378,32 @@ function slotAt(pattern: string, label: string): string | null {
 }
 
 // --- helpers the file carries when it uses them ------------------------------------
+
+/** need() for a handed-over file: its message names the value, without sitelooper's marker syntax. */
+const PLAIN_NEED = [
+  '/** A value an earlier step published; stops the step before it runs when that step did not. */',
+  'function need(outputs: Outputs, key: string, by: string): string {',
+  '  const value = outputs[key];',
+  "  if (!value) throw new Error(`${by} needs ${key} from an earlier step, and this run never published it`);",
+  '  return value;',
+  '}',
+];
+
+/** pick() for a file whose dropdowns are all chosen by clicking: no typed-search branch. */
+const PLAIN_PICK = [
+  '/**',
+  " * Opens a dropdown and chooses an option. The opener's click can land before the page's script has",
+  ' * wired the dropdown up, and then nothing opens: it is clicked again until the option shows, but',
+  ' * not while a list is already open (a second click would close it).',
+  ' */',
+  'async function pick(page: Page, opener: Locator, option: Locator): Promise<void> {',
+  '  await expect(async () => {',
+  "    if (!(await option.isVisible()) && !(await page.getByRole('listbox').or(page.getByRole('menu')).first().isVisible())) await opener.click();",
+  '    await expect(option).toBeVisible({ timeout: 3_000 });',
+  '  }).toPass({ timeout: 30_000 });',
+  '  await option.click();',
+  '}',
+];
 
 const HELPERS: Record<string, string[]> = {
   need: [
@@ -1440,6 +1510,57 @@ function consumedRefs(spec: SpecFlow): Set<string> {
   return out;
 }
 
+/** A recorded marker as a reader says it: `{{env:NAME}}` → `$NAME`, a one-time code by its seed, anything else by name. */
+function spokenMarker(inner: string): string {
+  const env = /^env:(\w+)$/.exec(inner);
+  if (env) return `$${env[1]}`;
+  const totp = /^totp:(\w+)$/.exec(inner);
+  if (totp) return `a one-time code from $${totp[1]}`;
+  return `<${inner}>`;
+}
+
+/** An instruction for a doc comment in a handed-over file: no template markers. */
+function plainInstruction(text: string): string {
+  return text.replace(/\{\{([^{}]+)\}\}/g, (_m, inner: string) => spokenMarker(inner.trim()));
+}
+
+/** A test.step title for a handed-over file: a flow input shows this run's value, an env value only its name. */
+function stepTitle(text: string, vars: readonly string[]): string {
+  if (!vars.some((v) => text.includes(`{{${v}}}`))) return quote(plainInstruction(text));
+  const lit = (t: string) => t.replace(/[\\`]/g, '\\$&').replace(/\$\{/g, '\\${');
+  let out = '';
+  let at = 0;
+  for (const m of text.matchAll(/\{\{([^{}]+)\}\}/g)) {
+    out += lit(text.slice(at, m.index));
+    const inner = m[1].trim();
+    out += vars.includes(inner) ? `\${${member('ctx.vars', inner)}}` : lit(spokenMarker(inner));
+    at = m.index! + m[0].length;
+  }
+  return `\`${out}${lit(text.slice(at))}\``;
+}
+
+/**
+ * The .spec.ts written next to a --standalone flow file: the test and nothing
+ * sitelooper reads (no run record, no drift attachment).
+ */
+export function emitStandaloneSpecFile(spec: SpecFlow, flowModule: string): string {
+  const vars = spec.vars.map((v) => `${key(v)}: process.env[${quote(envName(v))}] ?? ''`).join(', ');
+  return [
+    "import { test } from '@playwright/test';",
+    `import { runFlow, BUDGET_MS, RECORDED_USE } from ${quote(`./${flowModule}`)};`,
+    '',
+    'test.use(RECORDED_USE);',
+    '',
+    `test(${quote(spec.name)}, async ({ page }) => {`,
+    '  test.setTimeout(BUDGET_MS);',
+    `  const outputs = await runFlow(page, { ${vars} });`,
+    '  // Add your own assertions here. `outputs` holds the values the steps pass on, keyed "<step>.<name>".',
+    '  void outputs;',
+    '});',
+    '',
+  ].join('\n');
+}
+
 // --- the file ------------------------------------------------------------------------
 
 export function emitReadableFlowFile(spec: SpecFlow, o: ReadableEmitOptions): ReadableEmitResult {
@@ -1453,6 +1574,7 @@ export function emitReadableFlowFile(spec: SpecFlow, o: ReadableEmitOptions): Re
       return Boolean((s.effect && s.effect.kind !== 'navigate') || (s.tool === 'tabs' && typeof s.args?.switch_to === 'number') || s.body?.some(moves));
     }))),
     actions: 0,
+    standalone: Boolean(o.standalone),
   };
   const envNames = requiredEnvNames(spec);
   const taken = new Set<string>();
@@ -1472,6 +1594,7 @@ export function emitReadableFlowFile(spec: SpecFlow, o: ReadableEmitOptions): Re
   const startParts = parseUrl(spec.startUrl);
   const startPath = startParts && startParts.origin === spec.origin ? spec.startUrl.slice(startParts.origin.length) || '/' : spec.startUrl;
   const source = { flow: spec.name, bundle: o.bundleRelPath, specHash: readableSpecHash(spec) };
+  const standalone = file.standalone;
 
   const header = o.standalone
     ? [
@@ -1491,19 +1614,28 @@ export function emitReadableFlowFile(spec: SpecFlow, o: ReadableEmitOptions): Re
     '// The one Node global this file reads, declared so it type-checks without @types/node.',
     'declare const process: { env: Record<string, string | undefined> };',
     '',
-    `export const flowStepIds = ${JSON.stringify(spec.steps.map((st) => st.id))} as const;`,
-    `export const requiredInputNames = ${JSON.stringify(spec.vars)} as const;`,
-    `export const requiredEnvNames = ${JSON.stringify(envNames)} as const;`,
-    ...(assertIds.length ? [`export const assertStepIds = ${JSON.stringify(assertIds)} as const;`] : []),
+    // What readiness and check read off the file; a handed-over file needs only the env names.
+    ...(standalone
+      ? [`const requiredEnvNames = ${JSON.stringify(envNames)} as const;`]
+      : [
+          `export const flowStepIds = ${JSON.stringify(spec.steps.map((st) => st.id))} as const;`,
+          `export const requiredInputNames = ${JSON.stringify(spec.vars)} as const;`,
+          `export const requiredEnvNames = ${JSON.stringify(envNames)} as const;`,
+          ...(assertIds.length ? [`export const assertStepIds = ${JSON.stringify(assertIds)} as const;`] : []),
+        ]),
     '',
     `export type Vars = ${spec.vars.length ? `{ ${spec.vars.map((v) => `${key(v)}: string`).join('; ')} }` : 'Record<string, never>'};`,
     `export type Env = ${envNames.length ? 'Record<(typeof requiredEnvNames)[number], string>' : 'Record<string, never>'};`,
     '/** Values the steps publish, keyed "<stepId>.<output>". */',
     'export type Outputs = Record<string, string>;',
     `export interface StepContext { vars: Vars; env: Env; outputs: Outputs${file.followsPages ? '; page?: Page' : ''} }`,
-    '/** The runtime style\'s run record, kept so an existing .spec.ts compiles unchanged; this style never drifts. */',
-    'export interface FlowRun { drift: string[]; warnings: string[]; echoed: string[] }',
-    'export interface RunOptions { startUrl?: string; run?: FlowRun }',
+    ...(standalone
+      ? ['export interface RunOptions { startUrl?: string }']
+      : [
+          '/** The runtime style\'s run record, kept so an existing .spec.ts compiles unchanged; this style never drifts. */',
+          'export interface FlowRun { drift: string[]; warnings: string[]; echoed: string[] }',
+          'export interface RunOptions { startUrl?: string; run?: FlowRun }',
+        ]),
     '',
     `/** 30 s plus 5 s for each of the flow's ${file.actions} recorded actions: with no fallback to try, a run either goes through or stops at its first stuck action. */`,
     `export const BUDGET_MS = ${budget};`,
@@ -1512,10 +1644,7 @@ export function emitReadableFlowFile(spec: SpecFlow, o: ReadableEmitOptions): Re
     '/** Where the app was when this flow was recorded: used only when neither startUrl nor the project baseURL says. */',
     `export const RECORDED_ORIGIN = ${quote(spec.origin)};`,
     '',
-    'export function createFlowRun(): FlowRun {',
-    '  return { drift: [], warnings: [], echoed: [] };',
-    '}',
-    '',
+    ...(standalone ? [] : ['export function createFlowRun(): FlowRun {', '  return { drift: [], warnings: [], echoed: [] };', '}', '']),
     '/** Every input the flow needs, checked before the browser goes anywhere. */',
     'function readInputs(vars: Vars): Env {',
     '  const missing: string[] = [];',
@@ -1535,15 +1664,17 @@ export function emitReadableFlowFile(spec: SpecFlow, o: ReadableEmitOptions): Re
   ];
   for (const st of steps) {
     const instruction = spec.steps.find((s) => s.id === st.id)!.instruction;
-    out.push(`  await test.step(${quote(`${st.id}: ${instruction}`)}, () => ${st.fn}(${file.followsPages ? 'ctx.page ?? page' : 'page'}, ctx));`);
-    out.push(`  console.log(${quote(`[sitelooper step] ${st.id}`)});`);
+    const title = standalone ? stepTitle(`${st.id}: ${instruction}`, spec.vars) : quote(`${st.id}: ${instruction}`);
+    out.push(`  await test.step(${title}, () => ${st.fn}(${file.followsPages ? 'ctx.page ?? page' : 'page'}, ctx));`);
+    // check.ts and readiness count the steps that ran by this line.
+    if (!standalone) out.push(`  console.log(${quote(`[sitelooper step] ${st.id}`)});`);
   }
   out.push('  return ctx.outputs;', '}', '');
   out.push('export const steps = {', ...steps.map((st) => `  ${quote(st.id)}: ${st.fn},`), '};');
   // Helpers sit above the first `@step` marker: a stack frame inside one then has no marker above it,
   // and check.ts walks on to the caller's frame, the step line that called it.
   for (const name of ['need', 'visit', 'pick', 'escapeRe', 'totp'] as const) {
-    if (file.helpers.has(name)) out.push('', ...HELPERS[name]);
+    if (file.helpers.has(name)) out.push('', ...(name === 'pick' && !file.typedPick ? PLAIN_PICK : name === 'need' && standalone ? PLAIN_NEED : HELPERS[name]));
   }
 
   for (const st of steps) {
@@ -1551,7 +1682,8 @@ export function emitReadableFlowFile(spec: SpecFlow, o: ReadableEmitOptions): Re
     const used = (['vars', 'env', 'outputs'] as const).filter((k) => st.uses[k]);
     const needsCtx = file.followsPages && st.lines.some((l) => l.includes('ctx.page'));
     const param = needsCtx ? 'ctx' : used.length ? `{ ${used.join(', ')} }` : '_ctx';
-    out.push('', `/** ${spStep.kind === 'assert' ? 'assert: ' : ''}${commentText(spStep.instruction)} */`);
+    const said = standalone ? plainInstruction(spStep.instruction) : spStep.instruction;
+    out.push('', `/** ${spStep.kind === 'assert' ? 'assert: ' : ''}${commentText(said)} */`);
     out.push(`async function ${st.fn}(page: Page, ${param}: StepContext): Promise<void> {`);
     if (needsCtx && used.length) out.push(`  const { ${used.join(', ')} } = ctx;`);
     for (const line of st.lines) out.push(...line.split('\n').map((l) => (l ? `  ${l}` : l)));

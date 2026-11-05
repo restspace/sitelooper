@@ -3,7 +3,7 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import ts from 'typescript';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { emitReadableFlowFile, NO_FALLBACK_WARNING } from '../src/spec/emit-readable.js';
+import { emitReadableFlowFile, emitStandaloneSpecFile, NO_FALLBACK_WARNING } from '../src/spec/emit-readable.js';
 import { emitSpecFile } from '../src/spec/emit.js';
 import { findStepAnchor } from '../src/spec/check.js';
 import { isReadableFlowFile, readableSource, readableSpecHash } from '../src/spec/lift.js';
@@ -143,7 +143,10 @@ describe('the Snipe-IT pilot', () => {
     expect(l).toContain("await page.getByRole('button', { name: 'Save', exact: true }).first().click();");
     // Only the primary was checked against the element; the label after it is unverified.
     expect(l).toContain('await page.locator(\'input[name="name"]\').fill(`${vars.runid} E2E Laptop`);');
-    expect(l).toContain("await pick(page, page.locator('.select2-container').nth(1), page.getByRole('option', { name: 'E2E Assignee (e2e-assignee)', exact: true }));");
+    // A select2 opener is found by the field the option set (its hidden select), not its place on the page.
+    expect(l).toContain("await pick(page, page.locator('select[name=\"assigned_user\"] + .select2-container'), page.getByRole('option', { name: 'E2E Assignee (e2e-assignee)', exact: true }));");
+    expect(l).toContain("await pick(page, page.locator('select[name=\"status_id\"] + .select2-container'), page.getByRole('option', { name: 'Ready to Deploy', exact: true }));");
+    expect(out.source).not.toContain(".select2-container').nth(");
     expect(out.source).not.toMatch(/@[ef]\d+/);
     // One locator per action: no unions in the step bodies (the pick helper's own listbox-or-menu check aside).
     expect(out.source.slice(out.source.indexOf('async function step01Signin'))).not.toContain('.or(');
@@ -211,8 +214,10 @@ describe('the Snipe-IT pilot', () => {
   it("writes the assertion's checks as expects with its sentence, none skippable", () => {
     const l = lines(out.source);
     expect(l).toContain("const failed = `assertion failed: the page of the asset '${vars.runid} E2E Laptop' shows it is checked out to E2E Assignee`;");
-    expect(l).toContain("await expect(page.getByRole('link', { name: 'E2E Assignee', exact: true }), failed).toHaveText('E2E Assignee', { useInnerText: true });");
-    expect(l).toContain("await expect(page.getByRole('link', { name: 'E2E Assignee', exact: true }), failed).toBeVisible();");
+    // The recorded text check on a link found by that same exact name can't fail: it is written as
+    // the visibility check, which the recording also made, so it is said once.
+    expect(out.source).not.toContain(".toHaveText('E2E Assignee'");
+    expect(l.filter((x) => x === "await expect(page.getByRole('link', { name: 'E2E Assignee', exact: true }), failed).toBeVisible();")).toHaveLength(1);
     expect(l).toContain("await expect(page.locator('h1'), failed).toContainText(`${vars.runid} E2E Laptop`, { useInnerText: true });");
     expect(out.source).toContain('export const assertStepIds = ["04-assert"] as const;');
     const body = out.source.slice(out.source.indexOf('async function step04Assert'));
@@ -563,13 +568,15 @@ describe('references, minted values and url outputs', () => {
 });
 
 describe('standalone readable files', () => {
-  it('drops the regenerate header, marker and source line, and is no longer a sitelooper file', async () => {
-    const { emitReadableFlowFile } = await import('../src/spec/emit-readable.js');
-    const { flowFileStyle } = await import('../src/spec/lift.js');
+  const load = async () => {
     const fsMod = await import('node:fs');
     const spec = JSON.parse(fsMod.readFileSync(new URL('./fixture/readable-snipeit.spec.json', import.meta.url), 'utf8'));
-    const owned = emitReadableFlowFile(spec, { compilerVersion: '0.8.0', bundleRelPath: '../.sitelooper/procedures.json' }).source;
-    const handed = emitReadableFlowFile(spec, { compilerVersion: '0.8.0', bundleRelPath: '../.sitelooper/procedures.json', standalone: true }).source;
+    return { spec, handed: emitReadableFlowFile(spec, { compilerVersion: '0.8.0', bundleRelPath: '../.sitelooper/procedures.json', standalone: true }).source };
+  };
+
+  it('drops the regenerate header, marker and source line, and is no longer a sitelooper file', async () => {
+    const { flowFileStyle } = await import('../src/spec/lift.js');
+    const { handed } = await load();
     expect(handed.split('\n').slice(0, 2)).toEqual([
       '// Written with sitelooper 0.8.0 from the recorded flow "asset-checkout".',
       '// Plain @playwright/test with no other dependency: edit it like any other test.',
@@ -577,9 +584,47 @@ describe('standalone readable files', () => {
     expect(handed).not.toContain('@sitelooper-readable');
     expect(handed).not.toContain('@sitelooper-source');
     expect(flowFileStyle(handed)).toBeNull();
-    // Everything after the header is the same code.
-    expect(handed.split('\n').slice(2).join('\n')).toBe(owned.split('\n').slice(4).join('\n'));
   });
+
+  it("carries none of sitelooper's bookkeeping: markers, step logs, metadata exports, run record", async () => {
+    const { handed } = await load();
+    expect(handed).not.toMatch(/\/\/ @step /);
+    expect(handed).not.toMatch(/\/\/ s_[0-9a-f]{6} — recorded on/);
+    expect(handed).not.toContain('[sitelooper step]');
+    for (const name of ['flowStepIds', 'requiredInputNames', 'assertStepIds', 'createFlowRun', 'FlowRun']) expect(handed).not.toContain(name);
+    expect(handed).not.toContain('export const requiredEnvNames');
+    expect(handed).toContain('const requiredEnvNames = ["E2E_ADMIN_PASSWORD","E2E_ADMIN_USERNAME"] as const;');
+    for (const name of ['runFlow', 'steps', 'BUDGET_MS', 'RECORDED_USE']) expect(handed).toMatch(new RegExp(`export (?:async )?(?:function|const) ${name}\\b`));
+  });
+
+  it('keeps only the values a later step uses', async () => {
+    const { handed } = await load();
+    expect(handed.match(/^ {2}outputs\['[^']+'\] = /gm)).toEqual(["  outputs['02-create.url.p1'] = "]);
+    expect(handed).toContain("const hardwareId = need(outputs, '02-create.url.p1', '03-verify');");
+  });
+
+  it("titles steps without template markers: env values by name, flow inputs by this run's value", async () => {
+    const { handed } = await load();
+    expect(handed).toContain("await test.step('01-signin: Sign in as $E2E_ADMIN_USERNAME with password $E2E_ADMIN_PASSWORD and verify the dashboard opens', () => step01Signin(page, ctx));");
+    expect(handed).toContain("await test.step(`04-assert: the page of the asset '${ctx.vars.runid} E2E Laptop' shows it is checked out to E2E Assignee`, () => step04Assert(page, ctx));");
+    expect(handed).toContain("/** Create an asset named '<runid> E2E Laptop' of model");
+    expect(handed).not.toContain('{{');
+  });
+
+  it('carries the short pick helper when no dropdown types a search', async () => {
+    const { handed } = await load();
+    expect(handed).toContain('async function pick(page: Page, opener: Locator, option: Locator): Promise<void> {');
+    expect(handed).not.toContain('typed');
+  });
+
+  it('type-checks with its standalone scaffold, which has no run record', async () => {
+    const { spec, handed } = await load();
+    const scaffold = emitStandaloneSpecFile(spec, 'asset-checkout.flow');
+    expect(scaffold).toContain("import { runFlow, BUDGET_MS, RECORDED_USE } from './asset-checkout.flow';");
+    expect(scaffold).toContain("const outputs = await runFlow(page, { runid: process.env['RUNID'] ?? '' });");
+    expect(scaffold).not.toMatch(/createFlowRun|drift/);
+    expect(typeErrors({ 'asset-checkout.flow.ts': handed, 'asset-checkout.spec.ts': scaffold })).toEqual([]);
+  }, 60_000);
 });
 
 describe('a dropdown opener and its option are one pick', () => {
@@ -597,6 +642,21 @@ describe('a dropdown opener and its option are one pick', () => {
     expect(r.source).toContain("import { expect, test, type Locator, type Page } from '@playwright/test';");
     const src = r.source.split('\n');
     expect(findStepAnchor(r.source, src.findIndex((l) => l.trim() === PICK) + 1)).toBe('01-a s_aaaaaa/2');
+  });
+
+  it("finds a positional select2 opener by the field its option set, and only on that evidence", () => {
+    const set = (lines: string[]) => click([css('role=option[name="Large"]'), role('option', 'Large')], { addedContains: lines });
+    const pickLine = (steps: SkillStep[]) => lines(one(steps).source).find((l) => l.startsWith('await pick('));
+    expect(pickLine([opener(), set(['- combobox "size_id": {{*}}', '- textbox "Large"']), save])).toBe(
+      "await pick(page, page.locator('select[name=\"size_id\"] + .select2-container'), page.getByRole('option', { name: 'Large', exact: true }));",
+    );
+    // No field named, two fields named, or an opener that is not select2 by position: left as recorded.
+    expect(pickLine([opener(), set(['- textbox "Large"']), save])).toBe(PICK);
+    expect(pickLine([opener(), set(['- combobox "a": x', '- combobox "b": y']), save])).toBe(PICK);
+    const named = click([role('button', 'Size')], { addedContains: ['- listbox "Sizes"', '- option "Large"'] });
+    expect(pickLine([named, set(['- combobox "size_id": {{*}}']), save])).toBe(
+      "await pick(page, page.getByRole('button', { name: 'Size', exact: true }), page.getByRole('option', { name: 'Large', exact: true }));",
+    );
   });
 
   it('near misses stay two plain clicks: no list opened, a navigation, something between, not an option next', () => {

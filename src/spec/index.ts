@@ -4,7 +4,7 @@ import { loadFlowFile } from '../skills/flow.js';
 import { ComponentStore } from '../skills/components.js';
 import { SkillStore } from '../skills/store.js';
 import { emitFlowFile, emitSpecFile } from './emit.js';
-import { emitReadableFlowFile } from './emit-readable.js';
+import { emitReadableFlowFile, emitStandaloneSpecFile } from './emit-readable.js';
 import { flowFileStyle, LiftError, readableSource, readableSpecHash, type FlowFileStyle } from './lift.js';
 import { flowToSpec, type SpecFlow } from './ir.js';
 import { hasError, type Diagnostic } from './diagnostics.js';
@@ -416,13 +416,19 @@ export function compileFlow(
   if (fs.existsSync(flowFile) && existingStyle(flowFile) === null) {
     throw new Error(`${flowFile} exists and is not a sitelooper-generated flow file (a --standalone file is yours to edit); move it or pass --out <dir>`);
   }
+  const specPath = path.join(outDir, `${base}.spec.ts`);
+  const standalone = style === 'readable' && Boolean(o.standalone);
+  // A standalone flow file has no run record: a scaffold written for a generated
+  // file (it imports createFlowRun and attaches run.drift) would no longer compile.
+  if (standalone && fs.existsSync(specPath) && !o.overwriteSpec && /\bcreateFlowRun\b/.test(fs.readFileSync(specPath, 'utf8'))) {
+    throw new Error(`${specPath} uses createFlowRun, which a --standalone flow file does not export; pass --overwrite-spec to replace it with the standalone test, or remove its run record first`);
+  }
   fs.mkdirSync(outDir, { recursive: true });
   fs.writeFileSync(flowFile, emitted.source);
   result.flowFile = flowFile;
 
-  const specPath = path.join(outDir, `${base}.spec.ts`);
   if (!fs.existsSync(specPath) || o.overwriteSpec) {
-    fs.writeFileSync(specPath, emitSpecFile(spec));
+    fs.writeFileSync(specPath, standalone ? emitStandaloneSpecFile(spec, `${base}.flow`) : emitSpecFile(spec));
     result.specFile = specPath;
   }
   return result;

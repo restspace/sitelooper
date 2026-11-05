@@ -311,7 +311,11 @@ sitelooper compile .sitelooper/procedures.json --style readable --standalone
 ```
 
 The file then has no regenerate header and no `@sitelooper-source` link, and nothing in it depends
-on sitelooper. Edit it like any other test. sitelooper won't regenerate it: a later `compile`
+on sitelooper. It also leaves out what only sitelooper reads: the `@step` markers, the step log
+lines, the metadata exports, the run record, and values no later step uses. The `.spec.ts`
+written beside it is a plain test with no run record; if a `.spec.ts` written for a generated
+file is already there (it uses `createFlowRun`), compile stops, so pass `--overwrite-spec` to
+replace it. Edit both like any other test. sitelooper won't regenerate them: a later `compile`
 refuses to overwrite a `.flow.ts` it did not generate, so move the file or pass `--out <dir>`.
 
 ### Calling from another agent
