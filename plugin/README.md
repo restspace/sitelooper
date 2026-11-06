@@ -27,7 +27,7 @@ Playwright before you apply it.
 - **Claude Code**, or another Claude app that can run shell commands on your computer. sitelooper
   runs a browser on the machine where the commands run. In claude.ai chat the skills can explain the
   workflow but cannot run it.
-- **Node.js 20 or later** and the CLI: `npm install -g sitelooper@0.6.0`. The skills check for it
+- **Node.js 20 or later** and the CLI: `npm install -g sitelooper@0.8.1`. The skills check for it
   and ask you before installing anything.
 - **Chrome, Edge or Playwright's bundled Chromium.**
 - **An API key for an LLM provider, set in your own shell** (for example `OPENROUTER_API_KEY`).

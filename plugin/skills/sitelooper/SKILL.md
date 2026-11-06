@@ -7,8 +7,8 @@ description: Drive a local browser with whole natural-language steps through the
 
 ## Setup check
 
-Before the first command: `sitelooper --version` must print 0.6.0 or later. If it is missing or
-older, ask the user before running `npm install -g sitelooper@0.6.0` (Node 20 or later). Then run
+Before the first command: `sitelooper --version` must print 0.8.1 or later. If it is missing or
+older, ask the user before running `npm install -g sitelooper@0.8.1` (Node 20 or later). Then run
 `sitelooper doctor`. If it reports no API key, ask the user to set one in their own shell and
 restart; never ask for a key in the conversation or write one into a file or command line.
 sitelooper runs a browser on the machine where the commands run, so it needs a shell on the user's

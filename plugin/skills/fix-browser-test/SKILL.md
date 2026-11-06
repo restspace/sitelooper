@@ -12,7 +12,7 @@ result under plain Playwright before anything is applied.
 
 ## Setup check
 
-`sitelooper --version` (0.6.0 or later; ask before `npm install -g sitelooper@0.6.0`) and
+`sitelooper --version` (0.8.1 or later; ask before `npm install -g sitelooper@0.8.1`) and
 `sitelooper doctor`. Repair calls the model, so it needs the user's provider key in their own
 shell. Never ask for the key in the conversation or put it in a file or command line. The app must
 be running, ideally with a reset command (`--reset-cmd` or `resetCommand` in

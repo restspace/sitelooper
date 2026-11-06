@@ -14,8 +14,8 @@ against fresh state. The spec it leaves needs only Playwright: no sitelooper, no
 
 Run these before anything else, and stop to tell the user what is missing:
 
-1. `sitelooper --version`. If the command is not found or prints a version below 0.6.0, ask the
-   user before installing: `npm install -g sitelooper@0.6.0` (Node 20 or later).
+1. `sitelooper --version`. If the command is not found or prints a version below 0.8.1, ask the
+   user before installing: `npm install -g sitelooper@0.8.1` (Node 20 or later).
 2. `sitelooper doctor`. It prints the provider, models and browser it will use and why. If it says
    no API key is set, ask the user to set one in their own shell (for example
    `export OPENROUTER_API_KEY=...`) and restart the session. **Never ask the user to paste a key
