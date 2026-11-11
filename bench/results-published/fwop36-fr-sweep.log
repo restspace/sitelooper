@@ -1,0 +1,114 @@
+
+[sweep] run 1/3: fwop36-fr-n1 (store: /home/user/sitelooper/bench/results/fwop36-fr-skills)
+[harness] openproject: defaulting APP_URL
+[harness] openproject: defaulting APP_EMAIL
+[harness] openproject: defaulting APP_PASSWORD
+[reset] openproject: no leftover bench work packages
+[harness] openproject responded 302 at http://127.0.0.1:8090/
+stopped: fwop36-fr-n1
+  flow "fwop36-fr" saved: 7 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwop36-fr.json
+  warning: note: 01-signin no longer publishes signed_in_user, user_menu_entries — no replay reads them from the page and the recording showed no line to read
+  warning: note: 02-find no longer publishes closed_work_packages_found, count_of_Seed_prefixed, work_packages_total_in_project, work_packages_visible_count, projects_navigation_href — no replay reads them from the page and the recording showed no line to read
+  warning: note: 03-create no longer publishes type, priority, button_3 — no replay reads them from the page and the recording showed no line to read
+  warning: note: 04-verify no longer publishes chosen_dropdown_option, assignee_field_button_label, dropdown_closed_after_selection — no replay reads them from the page and the recording showed no line to read
+  warning: note: 05-change no longer publishes reload_persistence_confirmed, status_element_class — no replay reads them from the page and the recording showed no line to read
+  warning: note: 06-set no longer publishes displayed_date_after_save, reload_persistence_confirmed, displayed_combined_date_, displayed_finish_date_af, finish_date_after_cancel — no replay reads them from the page and the recording showed no line to read
+  warning: note: 07-add no longer publishes activity_entry_aria_label, activity_journal_entry_dom_id, activity_anchor_comment_id, journal_items_count_after_submit — no replay reads them from the page and the recording showed no line to read
+  warning: note: 02-find: added a read for project to s_ee5d29 (page.getByRole('button', { name: 'Bench Project', exact: true }), page.getByRole('link', { name: 'Bench Project', exact: true }); seen on the next instruction's start page)
+  warning: note: 04-verify: added a read for confirmation_alert to s_7f9a0d (page.getByRole('alert', { name: 'Successful update.', exact: true }); seen on the instruction's own page)
+  warning: note: 05-change: added a read for confirmation_alert to s_ea3bce (page.getByRole('alert', { name: 'Successful update.', exact: true }); seen on the instruction's own page)
+  warning: note: 05-change: added a read for displayed_status_after_page_reload to s_ea3bce (page.getByRole('menuitem', { name: 'In progress', exact: true }); seen on the instruction's own page)
+  warning: note: 05-change: added a read for previous_status to s_ea3bce (page.getByRole('menuitem', { name: 'New', exact: true }); seen on the instruction's own page)
+  warning: note: 05-change: added a read for displayed_status to s_ea3bce (page.getByRole('menuitem', { name: 'In progress', exact: true }); seen on the instruction's own page)
+  warning: note: 05-change: added a read for wp41_status_displayed_af to s_ea3bce (page.getByRole('menuitem', { name: 'In progress', exact: true }); seen on the instruction's own page)
+  warning: note: 06-set: added a read for confirmation_alert to s_d1125b (page.getByRole('alert', { name: 'Successful update.', exact: true }); seen on the instruction's own page)
+  warning: warning: 214 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[1].instruction: "Bench Project" (output) in "In the project named Bench Project, find and report exactly the subjects of work packages that start with 'Seed:'. Do not modify any work package."
+  flow.steps[1].instruction: "Project" (output) in "In the project named Bench Project, find and report exactly the subjects of work packages that start with 'Seed:'. Do not modify any work package."
+  flow.steps[2].instruction: "Bench Project" (output) in "In Bench Project, create one new work package of type Task with the exact title '{{runid}} Bench Work Package' and a description that includes the exact text '{"
+  flow.steps[2].instruction: "Project" (output) in "In Bench Project, create one new work package of type Task with the exact title '{{runid}} Bench Work Package' and a description that includes the exact text '{"
+  flow.steps[2].instruction: "Task" (output) in "In Bench Project, create one new work package of type Task with the exact title '{{runid}} Bench Work Package' and a description that includes the exact text '{"
+arm=sitelooper model=openai/gpt-6-luna runid=fwop36-fr-n1 stop=completed
+turns=8 wall=509.8s
+commands=7 cmdTime=472.3s cmdBytes=9750 timeouts=0
+orchestrator in=5852 cw=0 cr=26304 out=883
+inner prompt=3121830 cached=2943104 completion=25829
+spend=$0.053 maxUsd=3
+learn: A_n=0 replayed=0/7 full=0 repaired=0 compiled=7 variants=0
+-> /home/user/sitelooper/bench/results/fwop36-fr-n1-sitelooper-result.json
+
+fwop36-fr-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed subjects reported
+  obj 2: PASS — type=Task, description includes runid=true
+  obj 3: PASS — assignee=Bench Assignee
+  obj 4: PASS — status=In progress
+  obj 5: PASS — finish date=2026-12-31, want 2026-12-31
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — work package id 41 reported
+
+[sweep] run 2/3: fwop36-fr-n2 (replay flow fwop36-fr, no orchestrator)
+[reset] openproject: deleted 1 leftover bench work package(s)
+[sweep] fwop36-fr-n2: 9 drift ticket(s) → fwop36-fr-n2-drift.json
+
+fwop36-fr-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed subjects reported
+  obj 2: PASS — type=Task, description includes runid=true
+  obj 3: PASS — assignee=Bench Assignee
+  obj 4: PASS — status=In progress
+  obj 5: PASS — finish date=2026-12-31, want 2026-12-31
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — work package id 42 reported
+
+[sweep] run 3/3: fwop36-fr-n3 (replay flow fwop36-fr, no orchestrator)
+[reset] openproject: deleted 1 leftover bench work package(s)
+[sweep] fwop36-fr-n3: 9 drift ticket(s) → fwop36-fr-n3-drift.json
+
+fwop36-fr-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed subjects reported
+  obj 2: PASS — type=Task, description includes runid=true
+  obj 3: PASS — assignee=Bench Assignee
+  obj 4: PASS — status=In progress
+  obj 5: PASS — finish date=2026-12-31, want 2026-12-31
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — work package id 43 reported
+
+Learning sweep fwop36-fr (K=3)
+┌─────────┬───┬────────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid          │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼────────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwop36-fr-n1' │ '7/7'    │ 'completed' │ 8     │ 7    │ 0.053     │ 0   │ '0/7'        │ 510    │
+│ 1       │ 2 │ 'fwop36-fr-n2' │ '7/7'    │ 'success'   │ 0     │ 7    │ 0         │ 1   │ '7/7 (flow)' │ 133    │
+│ 2       │ 3 │ 'fwop36-fr-n3' │ '7/7'    │ 'success'   │ 0     │ 7    │ 0         │ 1   │ '7/7 (flow)' │ 133    │
+└─────────┴───┴────────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:8090
+  s_140d77  validated    2 steps  3/3 (100%)
+           In {{v1}}, create one new work package of type Task with the exact title '{{v4}}' and a description that inclu…
+  s_142ce9  validated   12 steps  3/3 (100%)
+           In {{v1}}, create one new work package of type Task with the exact title '{{v4}}' and a description that inclu…
+  s_2cefe5  validated    3 steps  3/3 (100%)
+           Sign in to OpenProject at {{v1}} using username {{v2}} and password exactly {{v3}}. Verify that you are signed…
+  s_5c54e8  validated    2 steps  3/3 (100%)
+           In the project named Bench Project, find and report exactly the subjects of work packages that start with 'See…
+  s_7f9a0d  validated    9 steps  3/3 (100%)
+           On the existing work package '{{v1}}' in {{v3}}, assign it to the user 'Bench Assignee' by selecting the actua…
+  s_a914e2  validated    1 steps  3/3 (100%)
+           Sign in to OpenProject at {{v1}} using username {{v2}} and password exactly {{v3}}. Verify that you are signed…
+  s_aa980f  validated    1 steps  3/3 (100%)
+           On work package {{v1}} '{{v3}}' in {{v5}}, add a comment whose text includes the exact runid '{{v4}}'. Submit …
+  s_d1125b  validated   15 steps  3/3 (100%)
+           On work package {{v1}} '{{v3}}' in {{v5}}, set the finish date to {{v7}}. Verify the saved displayed finish da…
+  s_df9b0d  validated    3 steps  3/3 (100%)
+           In {{v1}}, create one new work package of type Task with the exact title '{{v4}}' and a description that inclu…
+  s_e86019  validated    5 steps  3/3 (100%)
+           Sign in to OpenProject at {{v1}} using username {{v2}} and password exactly {{v3}}. Verify that you are signed…
+  s_ea3bce  validated   22 steps  3/3 (100%)
+           On work package {{v1}} '{{v3}}' in {{v5}}, change the status to exactly 'In progress' and verify the saved dis…
+  s_edfe81  validated   11 steps  3/3 (100%)
+           On work package {{v1}} '{{v3}}' in {{v5}}, add a comment whose text includes the exact runid '{{v4}}'. Submit …
+  s_ee5d29  validated   12 steps  3/3 (100%)
+           In the project named Bench Project, find and report exactly the subjects of work packages that start with 'See…
+  s_fc1aa9  validated    1 steps  3/3 (100%)
+           In the project named Bench Project, find and report exactly the subjects of work packages that start with 'See…
+store: /home/user/sitelooper/bench/results/fwop36-fr-skills
+
+summary: /home/user/sitelooper/bench/results/fwop36-fr-sweep.json
