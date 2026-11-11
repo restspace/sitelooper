@@ -78,8 +78,8 @@ describe('recordedAsNavigation', () => {
   });
 
   it('where the step started is read from the nearest earlier step that says', () => {
-    const fill: RecordedStepEvidence = { tool: 'fill', args: { target: '@e1', value: 'x' } };
-    expect(recordedAsNavigation([click({ urlPattern: TICKET }), fill, click({ urlPattern: LIST })], 2, LIST)).toBe(true);
+    const hover: RecordedStepEvidence = { tool: 'hover', args: { target: '@e1' } };
+    expect(recordedAsNavigation([click({ urlPattern: TICKET }), hover, click({ urlPattern: LIST })], 2, LIST)).toBe(true);
     expect(recordedAsNavigation([{ tool: 'goto', args: { url: TICKET } }, click({ urlPattern: LIST })], 1, LIST)).toBe(true);
     // a back's landing is on no step: unknown is not "moved"
     expect(recordedAsNavigation([{ tool: 'back', args: {} }, click({ urlPattern: LIST })], 1, TICKET)).toBe(false);
@@ -95,6 +95,31 @@ describe('recordedAsNavigation', () => {
     expect(recordedAsNavigation([click(moved, { mints: { at: 'p1' } as never })], 0, TICKET)).toBe(false);
     expect(recordedAsNavigation([click(moved, { mints: { at: 'q.id', sole: true } as never })], 0, TICKET)).toBe(false);
     expect(recordedAsNavigation([click(moved, { effect: { kind: 'popup' } })], 0, TICKET)).toBe(false);
+  });
+
+  it('a click after values entered on its page submits them, and is not navigation', () => {
+    // openproject fwop36-fr s_2cefe5/3: two fills, then Sign in, /login → home. No mint, no alert.
+    const LOGIN = 'http://app.test/login';
+    const HOME = 'http://app.test/';
+    const fill = (value: string): RecordedStepEvidence => ({ tool: 'fill', args: { target: '@e1', value }, expect: { urlPattern: LOGIN } });
+    expect(recordedAsNavigation([fill('user'), fill('secret'), click({ urlPattern: HOME })], 2, LOGIN)).toBe(false);
+    // a select, a check and an upload are entered values too
+    for (const tool of ['select', 'check', 'upload']) {
+      expect(recordedAsNavigation([{ tool, args: { target: '@e1' }, expect: { urlPattern: LOGIN } }, click({ urlPattern: HOME })], 1, LOGIN)).toBe(false);
+    }
+    // ...and a click between the entry and the submit does not hide it
+    expect(recordedAsNavigation([fill('user'), click({ urlPattern: LOGIN }), click({ urlPattern: HOME })], 2, LOGIN)).toBe(false);
+  });
+
+  it('values entered on an earlier page do not count against a later link', () => {
+    const SEARCH = 'http://app.test/search';
+    const fill: RecordedStepEvidence = { tool: 'fill', args: { target: '@e1', value: 'x' }, expect: { urlPattern: SEARCH } };
+    // fill, submit (moves to the list), then a plain link from the list to the ticket
+    const steps = [fill, click({ urlPattern: LIST }), click({ urlPattern: TICKET })];
+    expect(recordedAsNavigation(steps, 1, SEARCH)).toBe(false);
+    expect(recordedAsNavigation(steps, 2, SEARCH)).toBe(true);
+    // a goto starts a page afresh too
+    expect(recordedAsNavigation([fill, { tool: 'goto', args: { url: LIST } }, click({ urlPattern: TICKET })], 2, SEARCH)).toBe(true);
   });
 
   it('two patterns for one page, spelled differently, are not a move', () => {
@@ -120,7 +145,10 @@ describe('recordedAsNavigation', () => {
     expect(recordedAsNavigation([open, fill, type, click({ urlPattern: TASK })], 3, LIST)).toBe(false);
     // ...back to where the segment starts when nothing else came before
     expect(recordedAsNavigation([fill, click({ urlPattern: TASK })], 1, TASK)).toBe(false);
-    expect(recordedAsNavigation([fill, click({ urlPattern: TASK })], 1, LIST)).toBe(true);
+    // The step after the Save is what the look-past decides: with the fill's bare
+    // origin taken as where the Save started, the Save read as the step that
+    // arrived on the task page, and the link after it as following nothing entered.
+    expect(recordedAsNavigation([open, fill, click({ urlPattern: TASK }), click({ urlPattern: LIST })], 3, LIST)).toBe(false);
   });
 
   it('a click after a goto is judged against the url the goto was sent to, as a pattern', () => {

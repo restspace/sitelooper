@@ -101,6 +101,35 @@ function movedFrom(from: { pattern: string } | { url: string }, dest: string): b
   return from.pattern !== dest && !urlMatches(dest, from.pattern) && !urlMatches(from.pattern, dest);
 }
 
+/** The tools that put a value into a form (echo.ts VALUE_TOOLS, and an upload). */
+const ENTRY_TOOLS = new Set(['fill', 'type', 'select', 'check', 'uncheck', 'set_checked', 'upload']);
+
+/**
+ * Whether step `index` follows values entered on the page it acts on: a
+ * value-entry step between it and the step that brought the procedure to
+ * this page (one that moved, a goto, a back), or the segment's start.
+ *
+ * Such a click SENDS what was entered, whatever else the recording shows of
+ * it. openproject fwop36-fr s_2cefe5/3 is the Sign in button after two fills:
+ * it moved from /login to the home page, minted nothing, raised no alert,
+ * took nothing away, and its recorded lines carry none of the run's values —
+ * so every other condition read it as a link, and on an app whose home page
+ * is public a renamed Sign in would have been "reached" by going there.
+ */
+function followsEntry(steps: readonly RecordedStepEvidence[], index: number, segmentStart: string | undefined): boolean {
+  for (let i = index - 1; i >= 0; i--) {
+    const earlier = steps[i];
+    if (ENTRY_TOOLS.has(earlier.tool)) return true;
+    if (earlier.tool === 'goto' || earlier.tool === 'back') return false;
+    const landed = earlier.expect?.urlPattern;
+    if (!landed) continue;
+    // A step that moved arrived on this page: what came before it was elsewhere.
+    const from = recordedStart(steps, i, segmentStart);
+    if (!from || movedFrom(from, landed)) return false;
+  }
+  return false;
+}
+
 /**
  * Whether the recording shows step `index` (0-based, in its segment) as a
  * NAVIGATION AND NOTHING ELSE — the only click another route to its
@@ -124,6 +153,8 @@ function movedFrom(from: { pattern: string } | { url: string }, dest: string): b
  *    gate reads it (gates.ts mintedAhead). Odoo's top-menu links all carry one
  *    (`q.action`), and fwod107-fr compiled "Contacts" and "Sales" with no
  *    fallback for it.
+ *  - nothing entered on its page before it (followsEntry): a click after a
+ *    fill, a type or a select submits them.
  * What the click ADDED is not asked here — a link's landing adds lines too —
  * but of the page reached (arrivalStop).
  */
@@ -133,6 +164,7 @@ export function recordedAsNavigation(steps: readonly RecordedStepEvidence[], ind
   if (!e?.urlPattern) return false;
   const minted = step.mints !== undefined && step.mints !== null && step.mints.sole !== false;
   if (minted || step.effect || e.alertContains || e.removedContains?.length || e.goneContains?.length || e.removalRequired) return false;
+  if (followsEntry(steps, index, segmentStart)) return false;
   const from = recordedStart(steps, index, segmentStart);
   return from !== undefined && movedFrom(from, e.urlPattern);
 }
