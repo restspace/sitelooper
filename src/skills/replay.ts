@@ -1197,6 +1197,11 @@ export async function replaySkill(
     // positional-click rule (R2) asked once every target is resolved.
     let targetHit: { locator: Locator; index: number; candidate: LocatorCandidate; missed: number[] } | null = null;
     let targetChain: LocatorCandidate[] = [];
+    // A wait for its target to APPEAR finds that target within its own
+    // timeout, and the wait after it gets what is left (presenceWaitMs,
+    // ghost fwgh21-fr). Null for every other step: the standard window.
+    const presenceBudget = presenceWaitMs(step, args, Boolean(skill.assert));
+    const presenceDeadline = presenceBudget === null ? null : Date.now() + presenceBudget;
     for (const key of ['target', 'source'] as const) {
       if (!(key in args)) continue;
       // A chain is a PREFERENCE ORDER, not a conjunction (shared fillableChain):
@@ -1234,7 +1239,7 @@ export async function replaySkill(
         requireIdentity: identity,
         // Polling to FIND something that is supposed to be gone only delays
         // the answer; the absence is the condition (see waitsForAbsence).
-        waitMs: absence ? 0 : resolveWaitMs(),
+        waitMs: absence ? 0 : presenceBudget !== null ? Math.max(resolveWaitMs(), presenceBudget) : resolveWaitMs(),
         stayOnOrigin: originOf(step.expect?.urlPattern ?? '') ?? originOf(page.url()) ?? undefined,
       };
       const framed = await rootFor(page, step.contexts?.[key]?.frame, policy.waitMs);
@@ -1683,7 +1688,10 @@ export async function replaySkill(
           // The step's expected effect is what its action observation polls for
           // (effect-verified), in the step's own line dialect.
           const expect = effectExpectation(page, step.expect?.addedContains, params, dialectOf(step), step.expect?.goneContains);
-          const dispatch = () => opts.exec(step.tool, args, resolved, { skill: skill.id, step: failIndex }, expect ? { expect } : undefined);
+          // A presence wait spends what its resolution left of its own timeout
+          // (presenceWaitMs): a target found late does not restart the clock.
+          const dispatched = presenceDeadline === null ? args : { ...args, timeout_ms: Math.max(presenceDeadline - Date.now(), PRESENCE_WAIT_FLOOR_MS) };
+          const dispatch = () => opts.exec(step.tool, dispatched, resolved, { skill: skill.id, step: failIndex }, expect ? { expect } : undefined);
           // A `type` never lands on a copy of its own value, and a typed or
           // filled field holding its value twice over stops (the shared
           // guardedTyping, which the artifact calls around its own dispatch;
@@ -2642,6 +2650,41 @@ export function identityOfPrimary(chain: LocatorCandidate[], skill: Skill, param
 export function waitsForAbsence(step: SkillStep, args: Record<string, unknown>): boolean {
   if (step.tool !== 'wait_for') return false;
   return args.state === 'hidden' || (args.state === 'count' && Number(args.count) === 0);
+}
+
+/** tools.ts waitFor's own default, for a wait_for recorded without a timeout_ms. */
+const WAIT_FOR_DEFAULT_MS = 10_000;
+
+/**
+ * The least a presence wait's condition is given once its target resolved
+ * late in the budget: one honest look rather than a zero timeout (which
+ * Playwright reads as "no timeout at all").
+ */
+export const PRESENCE_WAIT_FLOOR_MS = 1_000;
+
+/**
+ * A wait_for whose job is for its target to APPEAR — `visible`, the text and
+ * value states, a count of one or more — gets its OWN timeout to find that
+ * target, not the fixed resolve window: the window ran first and a miss there
+ * was a stop, so the step's `timeout_ms` was never used for the very thing it
+ * waits on. Ghost fwgh21-fr s_80a461 step 2, `wait_for text=Saved visible
+ * timeout_ms:15000`, stopped after 3 s on both replays while the editor still
+ * showed "Saving..."; the text was there two seconds later.
+ *
+ * The budget is the step's, in total: the target is resolved within
+ * max(resolve window, timeout), and the wait that follows gets what is left
+ * of the timeout (at least PRESENCE_WAIT_FLOOR_MS), so a 15 s wait stays a
+ * 15 s wait. Null for every other step, which keeps the standard window: an
+ * absence wait (resolving nothing is its condition), url_contains (no target)
+ * and an assertion's wait, whose miss is the run's answer and is left as it
+ * was. Both runners ask this (the artifact at compile time, emit.ts).
+ */
+export function presenceWaitMs(step: SkillStep, args: Record<string, unknown>, assertion: boolean): number | null {
+  if (step.tool !== 'wait_for' || assertion || step.assert) return null;
+  if (args.state === 'url_contains' || waitsForAbsence(step, args)) return null;
+  if (!['visible', 'text_equals', 'text_contains', 'value_equals', 'count'].includes(String(args.state))) return null;
+  const asked = typeof args.timeout_ms === 'number' && args.timeout_ms > 0 ? args.timeout_ms : WAIT_FOR_DEFAULT_MS;
+  return asked;
 }
 
 /**
