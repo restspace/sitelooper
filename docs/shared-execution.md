@@ -183,8 +183,22 @@ collections the page says are only partly rendered (`aria-rowcount` or
 a gap; a visible frame that could not be read, or one past the cap, is. A
 CLOSED shadow root cannot be seen from script and is not counted.
 
+**How a recorded line is matched.** `lineShows` has three rules. The default is
+a whitespace-normalised substring. `whole` is the identity rule, bounded at a
+letter or digit on both sides. `line` is the effect gate's rule
+(`expect.ts` `effectShows`): a whole recorded line is shown only by a page line
+that says the same thing. A line recorded with no value must be the page line
+whole, with the same state markers and no value, so an unchecked
+`- checkbox "Notify"` is not shown by `- checkbox "Notify" [checked]`. A line
+recorded with a value must start the page line, and the page's value may go on
+only past a token boundary: `125` is shown by `125.00`, never by `12500`. A
+`{{*}}` wildcard matches anything within the line under all three. A want that
+is not a whole line (a marker, a fragment, a line cut inside its name) falls
+back to the substring rule, and so does a recorded line the 120-character
+stored cap cut (`cutLine`).
+
 **Two line dialects, chosen per step.** Recorded lines are persisted and
-matched as substrings, so they cannot change meaning under a stored recording.
+matched as text, so they cannot change meaning under a stored recording.
 `renderLines(o, 1)` is the first capture byte for byte: main document, light
 DOM, the old caps, the old names (a `<label for>` input is `""`), no disabled
 state. `test/observation.browser.test.ts` keeps the old page function as an
@@ -229,8 +243,8 @@ that asserts no page change at all any more still is.
 ### `expect.ts` — the content-expectation verdict
 
 `expectedChangesVerdict`, `namesDialogControl`, `consequentialExpectations`,
-`isEchoLine`, `liveLines`, `maskMinted`, `TRANSIENT_LINE`, `SLOT_LINE`,
-`DIALOG_LINE`. Daemon: the `expectedChanges` gate, `replay.ts:843`. Artifact: the
+`isEchoLine`, `liveLines`, `effectShows`, `cutLine`, `maskMinted`,
+`TRANSIENT_LINE`, `SLOT_LINE`, `DIALOG_LINE`. Daemon: the `expectedChanges` gate, `replay.ts:843`. Artifact: the
 emitted `expectChanges` helper. `src/skills/compile.ts:1069` re-exports
 `TRANSIENT_LINE` and `maskMinted` for compile-time use.
 
@@ -335,13 +349,27 @@ runners.
 
 ### `recover.ts` — the two recovery rungs
 
-`mayNavigateToDestination`, `navigateToDestination`, `linkToDestination`,
-`textHeldElsewhere`, `RecoveryHooks`, `HELD_TEXT_READ_MS`. Imports `browser.ts`
-(`settleDom`, `outcomeOfError`, `outcomeLabel`) and `url.ts`.
+`recordedAsNavigation`, `mayNavigateToDestination`, `navigateToDestination`,
+`arrivalStop`, `linkToDestination`, `textHeldElsewhere`, `RecoveryHooks`,
+`RecordedStepEvidence`, `ARRIVAL_WAIT_MS`, `HELD_TEXT_READ_MS`. Imports
+`browser.ts` (`settleDom`, `outcomeOfError`, `outcomeLabel`), `url.ts`,
+`snapshot.ts` (`captureLines`) and `expect.ts` (`expectedChangesVerdict`).
+
+**Which clicks may be stood in for.** Every diffed click carries a recorded
+url, the one it was on afterwards, so "a click with a recorded url the browser
+is not on" does not make a click a navigation. `recordedAsNavigation` asks the
+recording: the click's url must differ from the one it was recorded starting on
+(the nearest earlier step's url, a goto's target, else the segment's start;
+unknown is not moved), and the step must carry nothing a navigation cannot do
+by itself: no `mints`, `goneContains`, `removedContains`, `removalRequired`,
+`alertContains` or page `effect`. On arrival `arrivalStop` asks the shared
+effect verdict of the page reached, with an empty diff: the recorded lines that
+carry the run's own values must show within `ARRIVAL_WAIT_MS`, and the plain
+lines are not required, as for any link landing.
 
 | | Daemon (`src/skills/replay.ts`) | Artifact (`src/spec/emit.ts`) |
 |---|---|---|
-| Navigation by recorded destination | `runOneStep`, after a missed resolution: `mayNavigateToDestination(tool, pattern, url, params, inLoopBody)`, then `navigateToDestination` with hooks over `opts.exec('click'/'goto')`; arrival returns `ran` before the gates | a navigation click with a recorded destination (not in a loop body) resolves through the emitted `pickOrNavigate`, hooks over the `click` adapter and `page.goto` (load, 30s); arrival logs `[sitelooper drift]` and returns `skipped`, before the gates |
+| Navigation by recorded destination | `runOneStep`, after a missed resolution: `recordedAsNavigation(skill.steps, i, preconditions.urlPattern)` and `mayNavigateToDestination(tool, pattern, url, params, inLoopBody)`, then `navigateToDestination` with hooks over `opts.exec('click'/'goto')`; on arrival `arrivalStop` — a stop ends the replay with `acted` set, else the step returns `ran` | the emitter asks `recordedAsNavigation` of the segment's steps at compile time and emits `pickOrNavigate` only for such a click (not in a loop body), else `pick`; hooks over the `click` adapter and `page.goto` (load, 30s); on arrival `arrivalStop` over the step's recorded added lines throws, else the step logs `[sitelooper drift]` and returns `skipped` |
 | A substitute link whose click may have landed | `navigateToDestination` returns `{ unknown: true, note }` when rung (a)'s click threw anything but a proven `not-dispatched`; replay stops with the note (`acted` stays set), never trying rung (b)'s direct navigation | `pickOrNavigate` throws with the note |
 | Text held elsewhere | the wait's `catch`: `textHeldElsewhere(heldObservations(page, chain), state, text)` | a text wait hoists its observations; the wait's `catch` calls the emitted `textHeldOrThrow`, which drifts and continues or rethrows |
 

@@ -468,9 +468,12 @@ describe('emitted step lifecycle', () => {
     // Every target resolves through the shared policy first, and the action
     // acts on what it resolved to.
     expect(act.body).toContain("{ locator: page.locator('#control'), index: 0, structural: false, kind: 'id', carries: JSON.stringify({ kind: 'id', selector: '#control' }) },");
-    expect(act.body).toContain(`], '01-step s_emit/1 target', { stayOnOrigin: '${ORIGIN}', waitMs: RESOLVE_WAIT_MS }, '${ORIGIN}/orders/{{d1}}', p, { drift: run.drift });`);
-    // a navigation click falls back to its recorded destination (shared recover.ts), and is then done
-    expect(act.body).toContain("if (!hit1) return { status: 'skipped' };");
+    expect(act.body).toContain(`], '01-step s_emit/1 target', { stayOnOrigin: '${ORIGIN}', waitMs: RESOLVE_WAIT_MS }, { drift: run.drift });`);
+    // A click that minted a record is not a navigation: it never falls back to
+    // its recorded destination (the shared recover.ts recordedAsNavigation).
+    expect(act.body).toContain('const hit1 = await pick(page, [');
+    expect(act.body).not.toContain('pickOrNavigate(');
+    expect(act.body).not.toContain("if (!hit1) return { status: 'skipped' };");
     expect(act.body).toContain('await click(hit1.locator, { obs: obs1 }).catch(actionFailed);');
     expect(act.body).toContain("return { status: 'completed', value: undefined };");
     // and the effect gate is told whether that resolution was positional.

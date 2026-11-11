@@ -589,7 +589,8 @@ describe('step bodies', () => {
       `await markActed(page, hit${n}.locator, echoLedger, [], 's_test1/${n}', 'click');`,
       // the action's observation begins just before it dispatches (the shared beginAction)
       `obs${n} = beginAction(page, { deadlineMs: ACTION_DEADLINE_MS, navigating: true });`,
-      `await click(hit${n}.locator, { obs: obs${n} }).catch(actionFailed);`,
+      // ...behind the fault guard, which withholds it only under SITELOOPER_FAULT
+      `if (!faultHere('01-do s_test1/${n}')) await click(hit${n}.locator, { obs: obs${n} }).catch(actionFailed);`,
     ];
     const i1 = sequenceAt(out, step(1, '#a'));
     const i2 = sequenceAt(out, step(2, '#b'));
@@ -1067,7 +1068,7 @@ describe('expectations', () => {
       ]),
     ).toBeGreaterThan(-1);
     expect(trimmedLines(step2).indexOf('absentDialog = null;')).toBeLessThan(trimmedLines(step2).indexOf('const hit2 = await pick(page, ['));
-    expect(trimmedLines(step2).indexOf('absentDialog = null;')).toBeLessThan(trimmedLines(step2).indexOf('await click(hit2.locator, { obs: obs2 }).catch(actionFailed);'));
+    expect(trimmedLines(step2).indexOf('absentDialog = null;')).toBeLessThan(trimmedLines(step2).indexOf("if (!faultHere('01-do s_test1/2')) await click(hit2.locator, { obs: obs2 }).catch(actionFailed);"));
     // a minting step is never skipped: it only clears the state
     const step3 = source.slice(source.indexOf('// @step 01-do s_test1/3'), source.indexOf('// @step 01-do s_test1/4'));
     expect(step3).not.toContain('absentDialogSkip');
@@ -2329,7 +2330,7 @@ describe('a derived value is read after the navigation lands', () => {
     // urlPartsWhen helper, which is emitted above the steps object
     const settled = lines.indexOf('await settle(page);', declared);
     const before = lines.indexOf('urlBefore1 = page.url();');
-    const acted = lines.indexOf('await click(hit1.locator, { obs: obs1 }).catch(actionFailed);');
+    const acted = lines.indexOf("if (!faultHere('01-do s_test1/1')) await click(hit1.locator, { obs: obs1 }).catch(actionFailed);");
     const bound = lines.findIndex((l) => l.startsWith("bindPart(p, 'd1', await urlPartWhen(page, 'q.action', urlBefore1));"));
     expect(declared).toBeGreaterThan(-1);
     expect(declared).toBeLessThan(settled);
@@ -2495,7 +2496,7 @@ describe('a click that opens a popup is a toggle', () => {
     expect(source).not.toContain('isVisible()');
     expect(source).toContain('} else {');
     // the action itself moved inside the else branch, indented with it
-    expect(source).toContain('        } else {\n          obs1 = beginAction(page, { deadlineMs: ACTION_DEADLINE_MS, navigating: true });\n          await click(hit1.locator, { obs: obs1 }).catch(actionFailed);');
+    expect(source).toContain('        } else {\n          obs1 = beginAction(page, { deadlineMs: ACTION_DEADLINE_MS, navigating: true });\n          if (!faultHere(\'01-do s_test1/1\')) await click(hit1.locator, { obs: obs1 }).catch(actionFailed);');
     // the guard reads the page through the shared capture, embedded once
     expect(source).toContain('async function openerAlreadyShowing(page: Page, popup: readonly string[], work: readonly string[]');
     expect(source).toContain('function liveLines(');
@@ -2538,7 +2539,7 @@ describe('a click that opens a popup is a toggle', () => {
     const lines = emit(specOf([many])).split('\n');
     const guard = lines.findIndex((l) => l.trim().startsWith('if (await openerAlreadyShowing('));
     const picked = lines.findIndex((l) => l.includes('= await pick(page, ['));
-    const clicked = lines.findIndex((l) => l.trim() === 'await click(hit1.locator, { obs: obs1 }).catch(actionFailed);');
+    const clicked = lines.findIndex((l) => l.trim() === "if (!faultHere('01-do s_test1/1')) await click(hit1.locator, { obs: obs1 }).catch(actionFailed);");
     expect(guard).toBeGreaterThan(-1);
     expect(picked).toBeGreaterThan(-1);
     expect(picked).toBeLessThan(guard);

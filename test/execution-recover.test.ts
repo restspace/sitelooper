@@ -7,7 +7,7 @@
 import type { Page } from 'playwright-core';
 import { describe, expect, it, vi } from 'vitest';
 import { actionFailure } from '../src/execution/browser.js';
-import { navigateToDestination } from '../src/execution/recover.js';
+import { recordedAsNavigation, navigateToDestination, type RecordedStepEvidence } from '../src/execution/recover.js';
 
 function stubPage() {
   let url = 'http://app.test/nav';
@@ -56,5 +56,49 @@ describe('navigateToDestination', () => {
     const out = await navigateToDestination(page, dest, {}, { click: async () => go(dest), goto });
     expect(goto).not.toHaveBeenCalled();
     expect(out).toMatchObject({ used: 'click a[href="/record/r7"]' });
+  });
+});
+
+describe('recordedAsNavigation', () => {
+  const LIST = 'http://app.test/tickets';
+  const TICKET = 'http://app.test/tickets/15';
+  const click = (expect: RecordedStepEvidence['expect'], more: Partial<RecordedStepEvidence> = {}): RecordedStepEvidence => ({ tool: 'click', args: { target: '@e1' }, expect, ...more });
+
+  it('a click the recording shows only moving is navigation', () => {
+    expect(recordedAsNavigation([click({ urlPattern: LIST })], 0, TICKET)).toBe(true);
+    // what a landing ADDED is not asked here: a link's landing adds lines too
+    expect(recordedAsNavigation([click({ urlPattern: LIST, addedContains: ['- heading "Tickets"'] })], 0, TICKET)).toBe(true);
+  });
+
+  it('a click that stayed where it was recorded starting is not', () => {
+    // Every diffed click carries a url: the one it was on afterwards, moved or not.
+    expect(recordedAsNavigation([click({ urlPattern: LIST })], 0, LIST)).toBe(false);
+    expect(recordedAsNavigation([click({ urlPattern: LIST }), click({ urlPattern: LIST })], 1, TICKET)).toBe(false);
+    expect(recordedAsNavigation([{ tool: 'goto', args: { url: LIST } }, click({ urlPattern: LIST })], 1, TICKET)).toBe(false);
+  });
+
+  it('where the step started is read from the nearest earlier step that says', () => {
+    const fill: RecordedStepEvidence = { tool: 'fill', args: { target: '@e1', value: 'x' } };
+    expect(recordedAsNavigation([click({ urlPattern: TICKET }), fill, click({ urlPattern: LIST })], 2, LIST)).toBe(true);
+    expect(recordedAsNavigation([{ tool: 'goto', args: { url: TICKET } }, click({ urlPattern: LIST })], 1, LIST)).toBe(true);
+    // a back's landing is on no step: unknown is not "moved"
+    expect(recordedAsNavigation([{ tool: 'back', args: {} }, click({ urlPattern: LIST })], 1, TICKET)).toBe(false);
+    expect(recordedAsNavigation([click({ urlPattern: LIST })], 0, undefined)).toBe(false);
+  });
+
+  it('a click the recording saw do more than move is not', () => {
+    const moved = { urlPattern: LIST };
+    expect(recordedAsNavigation([click({ ...moved, goneContains: ['- link "{{v1}}"'] })], 0, TICKET)).toBe(false);
+    expect(recordedAsNavigation([click({ ...moved, removedContains: ['- dialog "Delete?"'] })], 0, TICKET)).toBe(false);
+    expect(recordedAsNavigation([click({ ...moved, removalRequired: true })], 0, TICKET)).toBe(false);
+    expect(recordedAsNavigation([click({ ...moved, alertContains: 'Ticket deleted' })], 0, TICKET)).toBe(false);
+    expect(recordedAsNavigation([click(moved, { mints: { at: 'p1' } })], 0, TICKET)).toBe(false);
+    expect(recordedAsNavigation([click(moved, { effect: { kind: 'popup' } })], 0, TICKET)).toBe(false);
+  });
+
+  it('a step with no recorded url, or none at that index, is not', () => {
+    expect(recordedAsNavigation([click({})], 0, TICKET)).toBe(false);
+    expect(recordedAsNavigation([click(undefined)], 0, TICKET)).toBe(false);
+    expect(recordedAsNavigation([click({ urlPattern: LIST })], -1, TICKET)).toBe(false);
   });
 });

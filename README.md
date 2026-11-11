@@ -170,6 +170,22 @@ Playwright config and project (`--config`, `--project`). Evidence goes to
 `<name>.readiness.json`, or to `--report <file.json>`. Three clean runs are an execution gate, not
 a statistical guarantee against flakiness.
 
+Clean runs show the spec passes when the app does the work. `--faults` asks the other question,
+whether it fails when the app does not. After the clean runs, the spec runs again once per flow
+step with that step's main action withheld (a click, a key press or a pick; the last one the
+recording saw change the app), and each of those runs must fail:
+
+```sh
+sitelooper build ticket --var runid=test-{n} --reset-cmd "npm run reset:e2e" --faults
+sitelooper check tests/sitelooper/ticket.flow.ts --ready --var runid=test-{n} --reset-cmd "npm run reset:e2e" --faults all
+```
+
+A run that still passes names an action whose effect nothing in the spec checks, and readiness
+fails with `failureDetection: failed`. Add a `sitelooper assert` after that step, or an `expect`
+in your `.spec.ts`, and run it again. `--faults all` withholds every such action in turn. It
+needs no model, and it works on runtime-style files only. See
+[failure detection](docs/testing-workflow.md#failure-detection).
+
 `--negative-spec <file>` adds an authored fault-injection test that must fail its outcome
 assertion, and it reports `failureDetection: verified`. See
 [project fixtures and negative checks](docs/testing-workflow.md).

@@ -69,7 +69,61 @@ npx playwright test
 
 ## Failure detection
 
-Repeated green runs do not prove that assertions detect a regression. An optional negative spec
+Repeated green runs do not prove that assertions detect a regression. There are two ways to check
+that they do: fault runs sitelooper generates, and a negative spec you write.
+
+### Generated fault runs
+
+`--faults` (on `build`, and on `check --ready`) adds a pass after the clean runs. The compiled
+spec is run again with one action withheld per run, and each of those runs must fail:
+
+```sh
+sitelooper check tests/sitelooper/ticket.flow.ts --ready --reset-cmd "npm run reset:e2e" \
+  --var runid=verify-{n} --faults
+```
+
+```
+failure detection: failed
+  fault 02-create s_4c1e9a/7 (click): detected at the action itself
+  fault 03-archive s_b20f11/2 (click): undetected
+```
+
+- **What is withheld.** A gesture: a click, a key press, a pick from a select or a checkbox. The
+  action is resolved as usual and then not dispatched. Everything after it still runs, including
+  the step's own effect checks, as it would for an app that ignored the gesture. Typing is never
+  withheld, because the flow restores a field that lost its value before it submits.
+- **Which actions.** By default one per flow step: the last gesture after which the recording saw
+  the run's own values, a new record or an alert appear, or a record go. If the step recorded none
+  of those it is the last gesture that changed the page at all, and failing that the step's last
+  gesture. `--faults all` withholds every gesture in turn, one run each.
+- **What each run can show.**
+  - `detected`: the spec failed. The report says where: at the action itself (its own effect
+    check), later in the same step, or in a later step.
+  - `undetected`: the spec passed although the action never happened. Nothing in it checks what
+    that action does. Readiness fails and names the action.
+  - `not-reached`: the spec passed without arriving at the action (conditional UI). A warning.
+  - `inconclusive`: the run failed before the action was reached. Readiness stops as unavailable.
+- **The result.** `failureDetection` is `verified` when at least one fault was detected and none
+  was undetected or inconclusive. Each run is listed under `faults` in the evidence file and in
+  `--json`.
+
+An undetected fault is fixed by giving the spec something to check: record
+`sitelooper assert "<what the action should have changed>"` after the step, or add an `expect` to
+your `.spec.ts`, then run it again. A step whose action changes nothing a page can show (a
+background job, an email) stays undetected until you check it some other way, such as through
+the app's API in your own spec.
+
+Fault runs need no model. Each one starts from fresh state like any other readiness run, and
+`{n}` goes on counting past the clean runs. They work on the runtime style only: a readable file
+has no guard to withhold an action with. Setting `SITELOOPER_FAULT` to one of the file's
+`faultSites` (without its tool name) does the same thing by hand for a single run.
+
+A fault run cannot show that a step acted on the wrong record: it withholds an action, it does
+not redirect one.
+
+### A negative spec
+
+An optional negative spec
 should inject one explicit fault and assert a specific business-outcome assertion fails. For example,
 for a flow that reads back `save.ticket_status`:
 

@@ -1,6 +1,8 @@
 /**
  * The two RECOVERY rungs both execution targets share: a navigation step whose
- * recorded affordance is gone reaching its recorded destination another way,
+ * recorded affordance is gone reaching its recorded destination another way
+ * (only a step recorded as navigation and nothing else, and only when the page
+ * reached shows what the step was recorded putting there),
  * and a text wait that timed out on its resolved target while another recorded
  * candidate for that target already shows the text.
  *
@@ -14,18 +16,124 @@ import type { Locator, Page } from 'playwright-core';
 import { outcomeLabel, outcomeOfError, settleDom } from './browser.js';
 import { fillParams, urlMatches } from './url.js';
 import { textHolds } from './text.js';
+import { captureLines } from './snapshot.js';
+import { expectedChangesVerdict } from './expect.js';
 
 /** Tools whose miss can be substituted by navigating to the step's recorded destination: plain navigation clicks. */
 const NAV_FALLBACK_TOOLS = new Set(['click', 'dblclick']);
 
 /**
  * Whether a step whose target resolved nothing may fall back to its recorded
- * destination: a plain navigation click, with a recorded url expectation the
- * browser is not already on, outside a loop body (a loop re-acts per record;
- * navigating away from the collection is never that).
+ * destination: a click, with a recorded url expectation the browser is not
+ * already on, outside a loop body (a loop re-acts per record; navigating away
+ * from the collection is never that). The run-time half of the rule: whether
+ * the recording shows the click as a navigation at all is
+ * recordedAsNavigation, which each runner asks first.
  */
 export function mayNavigateToDestination(tool: string, destPattern: string | undefined, liveUrl: string, params: Record<string, string>, inLoopBody: boolean): destPattern is string {
   return Boolean(destPattern) && NAV_FALLBACK_TOOLS.has(tool) && !inLoopBody && !urlMatches(destPattern!, liveUrl, params);
+}
+
+/** What the fallback reads of a recorded step: its tool and args, and what the recording saw it do. */
+export interface RecordedStepEvidence {
+  tool: string;
+  args?: Record<string, unknown>;
+  expect?: {
+    urlPattern?: string;
+    addedContains?: readonly string[];
+    alertContains?: string;
+    removedContains?: readonly string[];
+    goneContains?: readonly string[];
+    removalRequired?: unknown;
+    lineDialect?: number;
+  };
+  mints?: unknown;
+  effect?: unknown;
+}
+
+/**
+ * The url pattern step `index` was recorded STARTING on: where the nearest
+ * earlier step ended (its own url expectation, or the url a goto was sent
+ * to), else where the segment starts. Undefined when the recording does not
+ * say — a `back`, whose landing no step carries.
+ */
+function recordedStart(steps: readonly RecordedStepEvidence[], index: number, segmentStart: string | undefined): string | undefined {
+  for (let i = index - 1; i >= 0; i--) {
+    const earlier = steps[i];
+    if (earlier.expect?.urlPattern) return earlier.expect.urlPattern;
+    if (earlier.tool === 'goto') return typeof earlier.args?.url === 'string' ? earlier.args.url : undefined;
+    if (earlier.tool === 'back') return undefined;
+  }
+  return segmentStart;
+}
+
+/**
+ * Whether the recording shows step `index` (0-based, in its segment) as a
+ * NAVIGATION AND NOTHING ELSE — the only click another route to its
+ * destination can stand in for.
+ *
+ * mayNavigateToDestination alone asks "a click with a recorded url the browser
+ * is not on", and every diffed click carries a recorded url: the one it was on
+ * afterwards, moved or not. So a Delete that redirected to its list qualified
+ * as well as a plain link, a renamed Delete button was "replaced" by the
+ * sidebar's link to the list, and the replay reported the delete as run with
+ * the record still there (test/replay-false-pass.browser.test.ts). Reaching
+ * the destination is evidence only of the going. So the recording must show:
+ *  - the click MOVED: its recorded url is not the one it was recorded
+ *    starting on (recordedStart; unknown is not moved);
+ *  - nothing a navigation cannot have done by itself: no record minted
+ *    (`mints`), none taken away (`goneContains`, `removedContains`,
+ *    `removalRequired`), no alert raised (`alertContains` — the app
+ *    answering a commit), no page opened or closed (`effect`).
+ * What the click ADDED is not asked here — a link's landing adds lines too —
+ * but of the page reached (arrivalStop).
+ */
+export function recordedAsNavigation(steps: readonly RecordedStepEvidence[], index: number, segmentStart: string | undefined): boolean {
+  const step = steps[index];
+  const e = step?.expect;
+  if (!e?.urlPattern) return false;
+  if (step.mints || step.effect || e.alertContains || e.removedContains?.length || e.goneContains?.length || e.removalRequired) return false;
+  const from = recordedStart(steps, index, segmentStart);
+  return from !== undefined && from !== e.urlPattern;
+}
+
+/** How long the page the fallback reached is given to show the step's recorded lines. */
+export const ARRIVAL_WAIT_MS = 3_000;
+
+/**
+ * After the fallback arrived: does the page it reached show what the step was
+ * recorded putting there? The stop's reason, or null.
+ *
+ * The shared effect verdict (expect.ts expectedChangesVerdict), asked of the
+ * live page alone — a substitute route has no diff of the recorded action.
+ * The lines carrying this run's own values are required: a Save recorded
+ * landing on its record, replaced by a link to that record, arrives at a page
+ * that never shows the saved title. The plain lines are not, as for any link
+ * landing (ChangeContext.leftByLink): they may have been captured on the page
+ * the click left.
+ */
+export async function arrivalStop(
+  page: Page,
+  step: RecordedStepEvidence,
+  params: Record<string, string>,
+  tag: string,
+  counters?: readonly string[],
+): Promise<string | null> {
+  const recorded = step.expect?.addedContains;
+  if (!recorded?.length) return null;
+  const dialect = step.expect?.lineDialect === 2 ? 2 : 1;
+  const deadline = Date.now() + ARRIVAL_WAIT_MS;
+  for (;;) {
+    const verdict = await expectedChangesVerdict(
+      recorded,
+      params,
+      { tag, tool: step.tool, positionalResolution: false, counters, leftByLink: true },
+      { added: [], live: (look) => captureLines(page, dialect, look) },
+    );
+    if (!verdict.stop) return null;
+    if (Date.now() >= deadline) return verdict.stop;
+    await new Promise((done) => setTimeout(done, 250));
+  }
 }
 
 /**

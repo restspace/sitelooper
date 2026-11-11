@@ -37,6 +37,7 @@ import { candidateExpr, type LocatorCandidate } from '../daemon/recorder.js';
 import { DIALOG_LINE, SLOT_LINE, TRANSIENT_LINE, popupItem, slotActs, openerWorkLines } from '../execution/expect.js';
 import { identityFields, snapshotRefCandidate, structuralCandidate } from '../execution/resolve.js';
 import { originOf } from '../execution/url.js';
+import { recordedAsNavigation } from '../execution/recover.js';
 import { describeFramePath, stepEffect } from '../execution/context.js';
 import { OPENER_LINE, recordMarkers, waitsForAbsence } from '../skills/replay.js';
 import { seedRecipes, snapshotRecipes } from '../skills/components.js';
@@ -238,6 +239,28 @@ const HELPERS: { token: string; source: string[] }[] = [
       ' * same way, at the same moment, as the daemon replaying the same step.',
       ' */',
       'const GOTO_TIMEOUT_MS = 30_000;',
+    ],
+  },
+  {
+    token: 'faultHere(',
+    source: [
+      '/**',
+      ' * The failure-detection check (`sitelooper check --ready --faults`): whether',
+      ' * this run is asked to withhold the gesture (a click, a press, a pick) at `site`',
+      ' * ("<step> <segment>/<n>", one of `faultSites`). Readiness runs the file once',
+      ' * per chosen site with SITELOOPER_FAULT set to it and requires that run to',
+      ' * FAIL: a spec that still passes with one of its own actions withheld does not',
+      ' * check what that action does. Nothing else changes under the fault — the',
+      " * action's observation, its settle and the step's gates all run, as they would",
+      ' * for an app that ignored the gesture — and the site is withheld every time it',
+      ' * is reached, so a press the flow repeats is not let through the second time.',
+      ' * Unset (every ordinary run), this is one string comparison per action.',
+      ' */',
+      'function faultHere(site: string): boolean {',
+      '  if (process.env.SITELOOPER_FAULT !== site) return false;',
+      '  console.log(`[sitelooper fault] ${site}: dispatch withheld`);',
+      '  return true;',
+      '}',
     ],
   },
   {
@@ -874,9 +897,13 @@ const HELPERS: { token: string; source: string[] }[] = [
       ' * embedded). When the chain resolves nothing and the browser is not already',
       ' * where the click was recorded to land, another visible link to that',
       ' * destination is clicked, else a fully concrete destination is navigated to',
-      ' * directly. Arrival returns null — the step is done, logged as drift, and',
-      ' * its gates are not asked, as replay returns before them. Otherwise the',
-      " * same stop `pick` throws. Never emitted in a loop body (replay's rule).",
+      ' * directly. Emitted only for a click the recording shows as navigation and',
+      ' * nothing else (the shared recordedAsNavigation, asked at compile time as',
+      ' * replay asks it at run time). On arrival the page reached must show what',
+      ' * the step was recorded putting there (`arrival`, the shared arrivalStop) or',
+      ' * the step stops; otherwise arrival returns null — the step is done and',
+      ' * logged as drift. No arrival: the same stop `pick` throws. Never emitted in',
+      " * a loop body (replay's rule).",
       ' */',
       'async function pickOrNavigate(',
       '  page: Page,',
@@ -887,6 +914,7 @@ const HELPERS: { token: string; source: string[] }[] = [
       '  p: Record<string, string>,',
       '  opts: { drift?: string[]; resolved?: { into: string[]; key: string; check?: () => void } } = {},',
       '  note?: string,',
+      '  arrival?: { added: string[]; dialect?: number },',
       '): Promise<Resolution | null> {',
       '  const hit = await resolveTarget(page, candidates, where, policy, opts);',
       '  if (hit) return hit;',
@@ -899,6 +927,10 @@ const HELPERS: { token: string; source: string[] }[] = [
       '    });',
       "    // The substitute link's click may have landed: a stop, never the direct navigation after it.",
       "    if (arrived && 'unknown' in arrived) throw new Error(`${where}: none of ${candidates.length} recorded locators resolved; ${arrived.note}`);",
+      '    if (arrived && arrival) {',
+      "      const unshown = await arrivalStop(page, { tool: 'click', expect: { addedContains: arrival.added, lineDialect: arrival.dialect } }, p, where, counterNames(siteFactsAt(page.url()), page.url()));",
+      '      if (unshown) throw new Error(`${where}: none of ${candidates.length} recorded locators resolved; ${arrived.note}, but ${unshown}`);',
+      '    }',
       '    if (arrived) {',
       '      const line = `[sitelooper drift] ${where}: none of ${candidates.length} recorded locators resolved; ${arrived.note}`;',
       '      console.log(line);',
@@ -1635,6 +1667,8 @@ interface Ctx {
   segmentId: string;
   /** The steps of the segment being emitted: what the positional-click rule (alreadyAddedLines) and scopeSetBy read. */
   segmentSteps?: readonly SkillStep[];
+  /** The url pattern that segment starts on (its precondition): where its first step was recorded starting. */
+  segmentStart?: string;
   stepIndex: number;
   /** Hoisted loop guards, so each loop names its own. */
   loops: number;
@@ -1745,6 +1779,15 @@ interface Ctx {
    * when the step emitting is a state-changing action.
    */
   obs?: string;
+  /**
+   * Every gesture (a state-changing dispatch other than typing) the file can
+   * withhold under SITELOOPER_FAULT (the faultHere guard, observeAction), as
+   * "<step> <segment>/<n> <tool>" in
+   * emit order. One list per file, shared by its steps' contexts and exported
+   * as `faultSites`, so readiness plans its fault runs from exactly the guards
+   * that were written. Absent in a context that emits none.
+   */
+  faultSites?: string[];
   /**
    * The flow step being emitted is an assertion (SpecStep.kind, or a segment
    * flagged `assert`): every wait in it is a check whose miss throws the
@@ -2330,15 +2373,22 @@ function actionTarget(
   const note = ctx.note ? `, ${q(ctx.note)}` : '';
   if (key === 'target' && root === 'page' && !ctx.loopSink && !unlocatable) out.push(...dismissalLines(step, chain, ctx), ...hideGoneLines(step, chain, ctx));
   const destPattern = step.expect?.urlPattern;
-  if (key === 'target' && destPattern && (step.tool === 'click' || step.tool === 'dblclick') && !ctx.loopSink) {
+  // Replay's rule, asked here of the same recorded steps: only a click the
+  // recording shows as navigation and nothing else may be stood in for by
+  // another route to its destination (the shared recordedAsNavigation).
+  const recordedNav = Boolean(ctx.segmentSteps) && recordedAsNavigation(ctx.segmentSteps ?? [], ctx.stepIndex - 1, ctx.segmentStart);
+  if (key === 'target' && destPattern && recordedNav && (step.tool === 'click' || step.tool === 'dblclick') && !ctx.loopSink) {
     // Replay's navigation fallback (the shared recover.ts): a missed
     // navigation click whose recorded destination the browser is not on
-    // reaches it by another link to it, else directly — then the step is
-    // done, and its gates are not asked, as replay returns before them.
+    // reaches it by another link to it, else directly — and the step is done
+    // once the page reached shows the lines it was recorded adding (`arrival`).
     noteSlots(destPattern, ctx);
+    const added = step.expect?.addedContains ?? [];
+    noteSlots(added, ctx);
+    const arrival = added.length ? `${note ? '' : ', undefined'}, { added: [${added.map(q).join(', ')}]${step.expect?.lineDialect === 2 ? ', dialect: 2' : ''} }` : '';
     const head = list(`const ${name} = await pickOrNavigate(page, `);
     const guard = positionalClickLines(step, chain, key, root, ctx);
-    head[head.length - 1] += `${policy}, ${q(destPattern)}, p, ${opts}${note})${guard ? guard.miss : ''};`;
+    head[head.length - 1] += `${policy}, ${q(destPattern)}, p, ${opts}${note}${arrival})${guard ? guard.miss : ''};`;
     out.push(...head, `if (!${name}) return { status: 'skipped' };`);
     if (guard) out.push(guard.hit(name));
   } else {
@@ -2622,6 +2672,7 @@ function emitSkillStep(recorded: SkillStep, segment: SpecSegment, index: number,
   ctx.segmentId = segment.id;
   ctx.stepIndex = index;
   ctx.segmentSteps = segment.steps;
+  ctx.segmentStart = segment.preconditions.urlPattern;
   const minted: ReadonlySet<string> = ctx.minted ?? new Set<string>();
   const unfillable = unfillableStep(recorded, segment, index, minted);
   if (unfillable) {
@@ -3383,7 +3434,24 @@ function observeAction(step: SkillStep, ctx: Ctx, out: string[]): void {
   // comment allowed): the failure is taken on the call itself, so the step
   // body gains no try block around it.
   const call = /^await (.+?);(\s*\/\/.*)?$/.exec(dispatch);
-  out.push(`${ctx.obs} = beginAction(page, { ${options.join(', ')} });`, call ? `await ${call[1]}.catch(actionFailed);${call[2] ?? ''}` : dispatch);
+  // The failure-detection check (readiness's fault runs, `check --ready
+  // --faults`): with SITELOOPER_FAULT naming this site the dispatch is
+  // withheld and everything around it still runs — the observation, the
+  // settle, the step's gates — as it would for an app that ignored the
+  // gesture. One site per recorded step: a loop body shares its loop's site
+  // and is left out, and a press repeated by repeatIfNoEffect carries the
+  // same guard both times because it re-emits this line. Typing is not
+  // guarded: a fill that did not land is put back by restoreStandingFills
+  // ahead of the next submit, so withholding one tests that repair, and a
+  // run it repairs is a correct run, not a missed failure.
+  let guard = '';
+  if (call && ctx.faultSites && !ctx.loopCursor && step.tool !== 'fill' && step.tool !== 'type') {
+    const site = `${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex}`;
+    const entry = `${site} ${step.tool}`;
+    if (!ctx.faultSites.includes(entry)) ctx.faultSites.push(entry);
+    guard = `if (!faultHere(${q(site)})) `;
+  }
+  out.push(`${ctx.obs} = beginAction(page, { ${options.join(', ')} });`, call ? `${guard}await ${call[1]}.catch(actionFailed);${call[2] ?? ''}` : dispatch);
 }
 
 /** Inputs, whose own save an app commonly debounces: tools.ts INPUT_TOOLS. */
@@ -4097,6 +4165,7 @@ function emitSegment(segment: SpecSegment, ctx: Ctx): string[] {
   // runner applies is the class of defect the parity harness exists to catch.
   const gate = segmentGate(segment.steps);
   ctx.segmentSteps = segment.steps;
+  ctx.segmentStart = segment.preconditions.urlPattern;
   ctx.appliedPicks = appliedPickCandidates(segment.steps);
   ctx.pickStart = ctx.appliedPicks.size ? `pickStart${ctx.segments}` : undefined;
   // The applied-pick rule's starting page, taken before the first step as
@@ -4644,6 +4713,8 @@ export function emitFlowFile(spec: SpecFlow, o: EmitOptions): { source: string; 
   const envInputs = requiredEnvNames(spec);
   const flagged = flaggedByStep(o.diagnostics);
   const assertIds = spec.steps.filter(isAssertStep).map((step) => step.id);
+  // Filled as the bodies below are emitted (observeAction), exported after them.
+  const faultSites: string[] = [];
 
   // A flow with a step that moves the procedure to another page (a popup, a
   // close, a tab switch) carries that page between flow steps on `run.page`;
@@ -4651,7 +4722,7 @@ export function emitFlowFile(spec: SpecFlow, o: EmitOptions): { source: string; 
   const followsPages = spec.steps.some((step) => step.segments.some((seg) => carriesEffect(seg.steps)));
   // Bodies first: which helpers the file needs is decided by what they use.
   const bodies = spec.steps.map((step) => {
-    const ctx: Ctx = { stepId: step.id, slots: new Set(), warnings, diagnostics, downloads: 0, loops: 0, picks: 0, urls: 0, binds: 0, segmentId: '', stepIndex: 0, note: stepNote(flagged.get(step.id)), known: new Set(), minted: new Set(), assertStep: isAssertStep(step) };
+    const ctx: Ctx = { stepId: step.id, slots: new Set(), warnings, diagnostics, downloads: 0, loops: 0, picks: 0, urls: 0, binds: 0, segmentId: '', stepIndex: 0, note: stepNote(flagged.get(step.id)), known: new Set(), minted: new Set(), assertStep: isAssertStep(step), faultSites };
     const lines: string[] = [];
     if (!step.segments.length) {
       lines.push(`// TODO: no converged procedure for ${JSON.stringify(commentSafe(step.instruction))}`);
@@ -4772,6 +4843,8 @@ export function emitFlowFile(spec: SpecFlow, o: EmitOptions): { source: string; 
     `export const flowStepIds = ${JSON.stringify(spec.steps.map((step) => step.id))} as const;`,
     `export const requiredInputNames = ${JSON.stringify(spec.vars)} as const;`,
     `export const requiredEnvNames = ${JSON.stringify(envInputs)} as const;`,
+    '/** Every gesture a fault run can withhold (SITELOOPER_FAULT, see faultHere): "<step> <segment>/<n> <tool>". Typing is not one. */',
+    `export const faultSites = ${JSON.stringify(faultSites)} as const;`,
     // Only a flow that carries assertions names them, so every other flow's file is unchanged.
     ...(assertIds.length
       ? [

@@ -1,5 +1,5 @@
 import type { Page } from 'playwright-core';
-import { WILDCARD, escapeRe, identityRe } from './text.js';
+import { IDENTITY_EDGE, WILDCARD, escapeRe, identityRe } from './text.js';
 import { settleDom } from './browser.js';
 
 /**
@@ -793,12 +793,55 @@ export interface LineShowsOptions {
    * Identity matching: the want must sit at a letter/digit boundary on both
    * sides (see IDENTITY_EDGE) instead of anywhere inside a longer run of
    * characters. Only for "is this the right RECORD" — the effect gate asks
-   * whether a change LANDED, which is a substring question and stays one.
+   * whether a change LANDED, and takes the LINE rule below.
    */
   whole?: boolean;
+  /**
+   * Line matching, for a want that is a whole recorded page line (an effect
+   * expectation): it is shown only by a page line that says the same thing,
+   * not by any line it happens to be the start of. See lineShownWhole.
+   */
+  line?: boolean;
 }
 
 const normWs = (s: string) => s.replace(/\s+/g, ' ').trim();
+
+/**
+ * A whole page line as renderLines writes it: `- role`, an optional quoted
+ * name, state markers, an optional `: value` (captured). A want this does not
+ * match — a marker, a fragment, a line the stored-line cap cut inside its
+ * name — is no whole line, and the LINE rule leaves it to the substring one.
+ */
+const WHOLE_LINE = /^- [^\s"]+(?: "(?:[^"\\]|\\.)*")?(?: \[[^\]]*\])*(?:: ?(.*))?$/;
+
+/**
+ * The LINE rule: is the whole recorded line `want` shown by one of `lines`?
+ * Null when `want` is not a whole line (WHOLE_LINE).
+ *
+ * A page line is role, name, ` [checked]`, ` [disabled]`, then `: value`
+ * (renderLines), so the line for less state is the START of the line for
+ * more, and a substring match took the one for the other: a recorded
+ * unchecked `- checkbox "Notify"` was shown by `- checkbox "Notify"
+ * [checked]`, an empty `- textbox "Total"` by one holding a value, and
+ * `- textbox "Total": 125` by `- textbox "Total": 12500`
+ * (test/replay-false-pass.browser.test.ts). So:
+ *  - a line recorded with no value must be the page line, whole: the same
+ *    state markers and no value;
+ *  - a line recorded with a value must start the page line, and the page's
+ *    value may go on only past a token boundary ("125" is shown by "125.00",
+ *    never by "12500") — IDENTITY_EDGE, the identity rule's own boundary.
+ * `{{*}}` still matches anything within the line, so a value the compile
+ * wildcarded stays as loose as it was made.
+ */
+function lineShownWhole(lines: string[], want: string): boolean | null {
+  const m = WHOLE_LINE.exec(want);
+  if (!m) return null;
+  const body = want.split(WILDCARD).map(escapeRe).join('[^\\n]*?');
+  const value = (m[1] ?? '').trim();
+  const tail = !value || want.endsWith(WILDCARD) ? '' : /[\p{L}\p{N}]$/u.test(want) ? `(?:(?!${IDENTITY_EDGE})[^\\n]*)?` : '[^\\n]*';
+  const re = new RegExp(`^${body}${tail}$`, 'u');
+  return lines.some((l) => re.test(l));
+}
 
 /**
  * Does any of `wants` appear in `haystack` (recorded page lines, or a diff's
@@ -808,14 +851,20 @@ const normWs = (s: string) => s.replace(/\s+/g, ' ').trim();
  *
  * `opts.whole` switches to the IDENTITY rule: same wildcards, but bounded at
  * both edges so `fwgr25-n1` is no longer satisfied by `fwgr25-n10`. Only the
- * identity callers pass it; the effect gate asks a different question.
+ * identity callers pass it; the effect gate asks a different question, with
+ * `opts.line` (lineShownWhole).
  */
 export function lineShows(haystack: string[], wants: string[], opts: LineShowsOptions = {}): boolean {
-  const all = haystack.map(normWs).join('\n');
+  const lines = haystack.map(normWs);
+  const all = lines.join('\n');
   return wants.some((raw) => {
     const want = normWs(raw);
     if (!want) return false;
     if (opts.whole) return identityRe(want).test(all);
+    if (opts.line) {
+      const shown = lineShownWhole(lines, want);
+      if (shown !== null) return shown;
+    }
     if (!want.includes(WILDCARD)) return all.includes(want);
     const re = new RegExp(want.split(WILDCARD).map(escapeRe).join('[^\\n]*?'));
     return re.test(all);

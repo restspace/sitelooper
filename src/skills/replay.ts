@@ -60,7 +60,7 @@ import { hasTotpMarker, resolveSecrets, resolveSecretsAsync } from '../shared/se
 import { appliedPickCandidates, armKeyboardPick, closeBeforeReopen, keyboardPickVerdict, isNavigation, pickAlreadyApplied, pickBaseline, hideBefore, hideEffectLines, hideVerdict, pressHadNoEffect, segmentStartDialect, toggleAlreadyShown, toggleEffectLines } from '../execution/toggle.js';
 import { inEffectShadow, preexistingShadow, segmentStart, type InEffectEvidence, type SegmentStart } from '../execution/delta.js';
 import { alreadyAddedLines, positionalClickVerdict, recordedAccessibleName } from '../execution/positional.js';
-import { mayNavigateToDestination, navigateToDestination, textHeldElsewhere } from '../execution/recover.js';
+import { arrivalStop, mayNavigateToDestination, navigateToDestination, recordedAsNavigation, textHeldElsewhere } from '../execution/recover.js';
 import { assertFailure, assertFailureKind, type AssertFailureKind } from '../execution/assert.js';
 import { readShadowLines, shadowEnabled, shadowReadLabels, shadowReadTemplates } from '../execution/shadow.js';
 import { CONTEXT_CONTRACT, contractOf, contractVerdict, isVerified, originOf, stepsCarryContext, type Skill, type SkillStep } from './store.js';
@@ -1471,8 +1471,12 @@ export async function replaySkill(
       // there directly. Both are logged as fallthroughs so drift telemetry
       // and post-session repair still see the miss.
       // The rule and both rungs are the shared src/execution/recover.ts.
+      // Only for a step the recording shows as navigation and nothing else
+      // (recordedAsNavigation): every diffed click has a recorded url, and a
+      // Delete that redirected to its list is not a link to the list.
       const destPattern = step.expect?.urlPattern;
-      if (!frameMissed && mayNavigateToDestination(step.tool, destPattern, page.url(), params, tag.includes('.'))) {
+      const recordedNav = recordedAsNavigation(skill.steps, skill.steps.indexOf(step), skill.preconditions.urlPattern);
+      if (!frameMissed && recordedNav && mayNavigateToDestination(step.tool, destPattern, page.url(), params, tag.includes('.'))) {
         const exec = (tool: string, a: Record<string, unknown>, r: Record<string, Locator>) => opts.exec(tool, a, r, { skill: skill.id, step: failIndex });
         const arrived = await navigateToDestination(page, destPattern, params, {
           click: (locator, selector) => exec('click', { target: selector }, { target: locator }),
@@ -1486,6 +1490,18 @@ export async function replaySkill(
           res.outcome = 'unknown';
           res.failedAt = failIndex;
           res.reason = `${resolveError}; ${arrived.note}`;
+          res.lines.push(`${head} → FAILED: ${res.reason}`);
+          return 'stop';
+        }
+        // Arrived — and the page reached must show what the step was
+        // recorded putting there (arrivalStop): the destination alone is
+        // evidence only of the going. A stop here is after a click or a
+        // navigation, so the replay has acted.
+        const unshown = arrived ? await arrivalStop(page, step, params, tag, countersAt(opts.facts, page.url())) : null;
+        if (arrived && unshown) {
+          res.acted = true;
+          res.failedAt = failIndex;
+          res.reason = `${resolveError}; ${arrived.note}, but ${unshown}`;
           res.lines.push(`${head} → FAILED: ${res.reason}`);
           return 'stop';
         }

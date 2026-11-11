@@ -244,6 +244,29 @@ export function liveLines(lines: readonly string[], params: Record<string, strin
   return lines.map((l) => fillParams(maskMinted(mask(maskVolatile(l))), rendered).replace(/\{\{(?:env|totp):\w+\}\}/g, WILDCARD));
 }
 
+/** The stored-line cap (skills/compile.ts expectationFor): a recorded line this long was cut there. */
+const STORED_LINE_CAP = 120;
+
+/**
+ * Whether a recorded effect line was cut by the stored-line cap. A cut line
+ * is the START of its page line by construction, so it keeps the substring
+ * rule; every other recorded line is whole and is matched as one (lineShows'
+ * `line`).
+ */
+export function cutLine(recorded: string): boolean {
+  return recorded.length >= STORED_LINE_CAP;
+}
+
+/**
+ * Is any of `filled` — recorded effect lines with this run's values in —
+ * shown in `haystack` (a step diff's added lines, or a look at the page)?
+ * Each as a whole line, except the ones in `cut` (the filled form of a line
+ * cutLine names).
+ */
+export function effectShows(haystack: readonly string[], filled: readonly string[], cut?: ReadonlySet<string>): boolean {
+  return filled.some((l) => lineShows(haystack as string[], [l], cut?.has(l) ? {} : { line: true }));
+}
+
 /**
  * The expectation lines that could tell a right-element fill from a
  * wrong-element one. A recorded added-line that merely restates the fill in a
@@ -393,9 +416,9 @@ export interface ChangeVerdict {
  * turns a rejected state change into a clean recovery instead of a false
  * success (the fwrd4l-n3 Ready click).
  *
- * Both halves are matched by lineShows over WHOLE snapshot lines — role,
- * name, state and the value after the colon — in the diff first and then on
- * the live page. Empty `warnings` and nothing else set means the step passed
+ * Both halves are matched as WHOLE snapshot lines — role, name, state and
+ * the value after the colon (effectShows; snapshot.ts lineShownWhole says
+ * what "whole" allows) — in the diff first and then on the live page. Empty `warnings` and nothing else set means the step passed
  * with nothing to say.
  */
 export async function expectedChangesVerdict(
@@ -419,7 +442,7 @@ export function linesInDiff(recorded: readonly string[], params: Record<string, 
   return recorded.filter((line) => {
     if (TRANSIENT_LINE.test(line) || boundToNothing(line, params)) return false;
     const [filled] = liveLines([line], params, counters);
-    return !identifiesNothing(filled) && !unfilledSlot(filled) && lineShows(added as string[], [filled]);
+    return !identifiesNothing(filled) && !unfilledSlot(filled) && lineShows(added as string[], [filled], cutLine(line) ? {} : { line: true });
   });
 }
 
@@ -479,7 +502,7 @@ async function changesVerdict(
   const look = async (lines: string[]): Promise<{ shown: boolean; complete: boolean; why: string; seen?: string[] }> => {
     const live = await obs.live();
     if (!live) return { shown: false, complete: false, why: 'the page could not be read' };
-    if (lineShows(live.lines, lines)) return { shown: true, complete: live.complete, why: '', seen: live.lines };
+    if (effectShows(live.lines, lines, cut)) return { shown: true, complete: live.complete, why: '', seen: live.lines };
     // A NAME PAST THE CAP (round 63, openproject fwop17 04-create): an
     // element named by its text is observed with no name once that text is
     // longer than NAME_CAP, and an attribute name is cut there, so a line
@@ -490,7 +513,7 @@ async function changesVerdict(
     const roles = lineRoles(lines);
     if (roles.length) {
       const full = await obs.live({ fullNameRoles: roles });
-      if (full && lineShows(full.lines, lines)) {
+      if (full && effectShows(full.lines, lines, cut)) {
         warnings.push(`step ${tag}: its recorded page change was found only by its full name, which is longer than the ${NAME_CAP} characters a look names an element by`);
         return { shown: true, complete: full.complete, why: '', seen: full.lines };
       }
@@ -509,6 +532,8 @@ async function changesVerdict(
   // store compiled before TRANSIENT_LINE existed stops failing on them.
   const lines = recorded.filter((l) => !TRANSIENT_LINE.test(l));
   if (!lines.length) return { warnings: [] };
+  // The lines the stored-line cap cut, as they read once filled (effectShows).
+  const cut = new Set(liveLines(lines.filter(cutLine), params, ctx.counters));
   // A line that identifies no element proves nothing either way, so it is not
   // looked for — filled first, so a store minted before compile dropped such
   // lines (fwod47-n3 04-open's `- textbox "": {{v5}}`) is fixed without
@@ -549,7 +574,7 @@ async function changesVerdict(
   // page that the step's before look already showed. Never read by a verdict.
   const preexisting: string[] = [];
   const notePreexisting = (group: string[], seen: string[] | undefined) => {
-    for (const l of preexistingLines(group, seen, obs.before)) if (!preexisting.includes(l)) preexisting.push(l);
+    for (const l of preexistingLines(group, seen, obs.before, cut)) if (!preexisting.includes(l)) preexisting.push(l);
   };
   const withShadow = (v: ChangeVerdict): ChangeVerdict => (preexisting.length ? { ...v, preexisting } : v);
   // A positionally-resolved fill must prove itself with a CONSEQUENTIAL
@@ -565,7 +590,7 @@ async function changesVerdict(
       warnings.push(`step ${tag}: resolved positionally and its only recorded effect is the fill's own echo — the effect gate cannot tell right element from wrong here`);
     }
   }
-  if (parameterised.length && !(added !== null && lineShows(added, parameterised))) {
+  if (parameterised.length && !(added !== null && effectShows(added, parameterised, cut))) {
     confirmed = false;
     const seen = await look(parameterised);
     if (!seen.shown) {
@@ -577,7 +602,7 @@ async function changesVerdict(
     }
     notePreexisting(parameterised, seen.seen);
   }
-  if (plain.length && !(added !== null && lineShows(added, plain))) {
+  if (plain.length && !(added !== null && effectShows(added, plain, cut))) {
     confirmed = false;
     // None of the recorded effects in the step diff — check the live page
     // before judging (a change can land outside the diff window).
@@ -648,10 +673,10 @@ async function changesVerdict(
  * step's `before` look; else []. A line that arrived late — in neither the
  * before look nor the diff — is a real effect, and makes it [].
  */
-export function preexistingLines(group: readonly string[], live: readonly string[] | null | undefined, before: readonly string[] | null | undefined): string[] {
+export function preexistingLines(group: readonly string[], live: readonly string[] | null | undefined, before: readonly string[] | null | undefined, cut?: ReadonlySet<string>): string[] {
   if (!before || !live) return [];
-  const shown = group.filter((l) => lineShows(live as string[], [l]));
-  if (!shown.length || !shown.every((l) => lineShows(before as string[], [l]))) return [];
+  const shown = group.filter((l) => effectShows(live, [l], cut));
+  if (!shown.length || !shown.every((l) => effectShows(before, [l], cut))) return [];
   return shown;
 }
 

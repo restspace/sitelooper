@@ -1,5 +1,33 @@
 # Changelog
 
+## Unreleased
+
+### Failure detection
+- `build --faults` and `check --ready --faults [step|all]` add fault runs to readiness: after the
+  clean runs, the compiled spec is run again with one gesture withheld per run, and each of those
+  runs must fail. A run that still passes is reported as `undetected`, names the action, and fails
+  readiness with `failureDetection: failed`. The evidence file and `--json` list every run under
+  `faults`. No model is used.
+- Runtime-style flow files carry a guard on every click, key press and pick, an exported
+  `faultSites` list, and read `SITELOOPER_FAULT`. Files compiled by an earlier version have none
+  and must be recompiled before `--faults` will run. Readable files are not supported.
+
+### Replay and compiled specs
+- A click whose target is gone is reached through its recorded url only when the recording shows
+  it as navigation and nothing else: it moved to another url, and it did not create or remove a
+  record, raise an alert, or open or close a page. Before, any click with a recorded url qualified,
+  so a renamed Delete button could be replaced by the page's own link to the list and the step
+  reported as run with the record still there. When another route is used, the page it reaches
+  must show the recorded lines that carry the run's own values, or the step stops. The same rule
+  applies in the daemon and in compiled runtime-style files, which now emit the fallback only for
+  such clicks.
+- A recorded page change is matched as a whole line, not as text found anywhere in one. A line
+  recorded with no value is no longer shown by the same control with more state: an unchecked
+  `- checkbox "Notify"` by `- checkbox "Notify" [checked]`, an enabled button by a disabled one, an
+  empty field by a filled one. A recorded value is no longer shown by a longer one that continues
+  the same word or number (`125` by `12500`); a value that goes on past a boundary (`125.00`)
+  still matches. Steps that passed only on such a match now stop.
+
 ## 0.8.1 — 2026-11-05
 
 ### Readable specs

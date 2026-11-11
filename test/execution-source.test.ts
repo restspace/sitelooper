@@ -88,6 +88,9 @@ describe('standalone execution source', () => {
             // through valueHolds/urlHolds, a miss raised through assertFailure. Last, so the locals above keep their numbers.
             { tool: 'wait_for', args: { target: '@e1', state: 'value_equals', text: '{{v1}}' }, locators: { target }, assert: { message: 'the name field holds {{v1}}' } },
             { tool: 'wait_for', args: { state: 'url_contains', text: '/record/' }, locators: {}, assert: { message: 'the record page is open' } },
+            // A click the recording shows as navigation and nothing else: the only kind the shared navigation
+            // fallback may stand in for (recover.ts recordedAsNavigation). Last again, for the same reason.
+            { tool: 'click', args: { target: '@e3' }, locators: { target: [{ kind: 'role' as const, role: 'link', name: 'Records' }] }, expect: { urlPattern: 'http://app.test/records', addedContains: ['- heading "Records for {{v1}}"'], lineDialect: 2 } },
           ],
         }],
       }],
@@ -135,9 +138,13 @@ describe('standalone execution source', () => {
     expect(source).toContain('absentDialog = changes2.absentDialog ?? null;');
     expect(source).toContain('positional2 = positional2 || hit1.structural || hit1.nth !== undefined;');
     // ...and every locator resolved through the shared policy with the daemon's policy inputs.
-    // (a navigation click with a recorded destination through the shared navigation fallback)
-    expect(source).toContain("], '01-actions s_runtime/2 target', { stayOnOrigin: 'http://app.test', waitMs: RESOLVE_WAIT_MS }, 'http://app.test/record/{{d1}}', p, { drift: run.drift });");
-    expect(source).toContain("if (!hit1) return { status: 'skipped' };");
+    // A click that minted a record and raised an alert is no navigation: it resolves through `pick`,
+    // with no fallback to its recorded url (the shared recordedAsNavigation)...
+    expect(source).toContain("], '01-actions s_runtime/2 target', { stayOnOrigin: 'http://app.test', waitMs: RESOLVE_WAIT_MS }, { drift: run.drift });");
+    expect(source).not.toContain("'http://app.test/record/{{d1}}', p, { drift: run.drift }");
+    // ...and one recorded only moving does, through the shared navigation fallback, held on arrival to the lines it was recorded adding.
+    expect(source).toMatch(/const (hit\d+) = await pickOrNavigate\(page, \[[^;]*?\], '01-actions s_measured\/5 target', \{[^}]*\}, 'http:\/\/app\.test\/records', p, \{ drift: run\.drift \}, undefined, \{ added: \['- heading "Records for \{\{v1\}\}"'\], dialect: 2 \}\);\s+if \(!\1\) return \{ status: 'skipped' \};/);
+    expect(source).toContain('const unshown = await arrivalStop(page, {');
     expect(source).toMatch(/const hit\d+ = await pick\(page, \[/);
     // ...a text wait's held-elsewhere fallback over its hoisted observations, and the echo ledger.
     expect(source).toMatch(/await textHeldOrThrow\(err, observations\d+, 'text_contains', 'Saved', '01-actions s_runtime\/\d+', run\.drift\);/);
