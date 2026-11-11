@@ -1,0 +1,205 @@
+{
+  "flow": "fwod107-fr",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_4d5b96; observed authenticated_home_url=http://127.0.0.1:8069/web#action=123&cids=1&menu_id=81, page_title=Odoo - Discuss, company=YourCompany, message_count=6, activity_count=3.",
+      "values": {
+        "authenticated_home_url": "http://127.0.0.1:8069/web#action=123&cids=1&menu_id=81",
+        "page_title": "Odoo - Discuss",
+        "company": "YourCompany",
+        "message_count": "6",
+        "activity_count": "3"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "8/8",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_4d5b96: report value logged_in_user is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)"
+      ],
+      "unreported": [
+        "logged_in_user"
+      ]
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_c10201; observed customer_record_id=45, customer_search_result_count=1-1.",
+      "values": {
+        "customer_record_id": "45",
+        "customer_search_result_count": "1-1"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "13/13",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_ab95a7: step 3: read 'customer_name' returned a value the skill itself set/selected ('fwod107-fr-n2 Bench Customer') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_ab95a7: step 4: read 'city' returned a value the skill itself set/selected ('Benchville') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_c10201: step 3: read 'customer_reference' returned a value the skill itself set/selected ('fwod107-fr-n2') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_c10201: report value customer_name_field is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)",
+        "s_c10201: report value customer_city_field is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)"
+      ],
+      "unreported": [
+        "customer_name",
+        "city",
+        "customer_record_url",
+        "customer_name_field",
+        "customer_city_field",
+        "customer_reference"
+      ]
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_ab68f8; observed sales_order_id=22, quotation_totals_summary=Untaxed Amount\t£ 885.00\nTAX 20%\t\n£ 177.00\n\nTotal\t£ 1,062.00, quotation_reference=S00022, quotation_line_count=1, customer_city=Benchville, product_name=[FURN_6666] Acoustic Bloc Screens, quantity=3.00, unit_price=295.00, product_tax_rate=20%, quotation_tax_amount=£ 177.00, quotation_total_amount=£ 1,062.00.",
+      "unanswered": [
+        "product_reference",
+        "untaxed_amount"
+      ],
+      "values": {
+        "sales_order_id": "22",
+        "quotation_totals_summary": "Untaxed Amount\t£ 885.00\nTAX 20%\t\n£ 177.00\n\nTotal\t£ 1,062.00",
+        "quotation_reference": "S00022",
+        "quotation_line_count": "1",
+        "customer_city": "Benchville",
+        "product_name": "[FURN_6666] Acoustic Bloc Screens",
+        "quantity": "3.00",
+        "unit_price": "295.00",
+        "product_tax_rate": "20%",
+        "quotation_tax_amount": "£ 177.00",
+        "quotation_total_amount": "£ 1,062.00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "21/21",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_ab68f8: step 4: read 'customer' returned a value the skill itself set/selected ('fwod107-fr-n2 Bench Customer') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_ab68f8: report value product_reference is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)"
+      ],
+      "unreported": [
+        "customer",
+        "product_reference"
+      ]
+    },
+    {
+      "id": "04-add",
+      "status": "success",
+      "summary": "Replayed stored procedure s_cdfa85; observed sales_order_id=22, quotation_totals_summary=Untaxed Amount\t£ 1,165.00\nTAX 20%\t\n£ 233.00\n\nTotal\t£ 1,398.00, quotation_line_count=2, second_order_line_details=[E-COM11] Cabinet with Doors\t\n[E-COM11] Cabinet with Doors\n\t2.00\t140.00\t\n20%\n\t£ 280.00, quotation_reference=S00022, customer=fwod107-fr-n2 Bench Customer, second_product_name=[E-COM11] Cabinet with Doors, second_product_quantity=2.00, second_product_unit_price=140.00, second_line_untaxed_amount=£ 280.00, first_product_name=[FURN_6666] Acoustic Bloc Screens, first_product_quantity=3.00, first_product_unit_price=295.00, first_line_untaxed_amount=£ 885.00, new_untaxed_amount=£ 1,165.00, quotation_tax_amount=£ 233.00, quotation_total_amount=£ 1,398.00.",
+      "values": {
+        "sales_order_id": "22",
+        "quotation_totals_summary": "Untaxed Amount\t£ 1,165.00\nTAX 20%\t\n£ 233.00\n\nTotal\t£ 1,398.00",
+        "quotation_line_count": "2",
+        "second_order_line_details": "[E-COM11] Cabinet with Doors\t\n[E-COM11] Cabinet with Doors\n\t2.00\t140.00\t\n20%\n\t£ 280.00",
+        "quotation_reference": "S00022",
+        "customer": "fwod107-fr-n2 Bench Customer",
+        "second_product_name": "[E-COM11] Cabinet with Doors",
+        "second_product_quantity": "2.00",
+        "second_product_unit_price": "140.00",
+        "second_line_untaxed_amount": "£ 280.00",
+        "first_product_name": "[FURN_6666] Acoustic Bloc Screens",
+        "first_product_quantity": "3.00",
+        "first_product_unit_price": "295.00",
+        "first_line_untaxed_amount": "£ 885.00",
+        "new_untaxed_amount": "£ 1,165.00",
+        "quotation_tax_amount": "£ 233.00",
+        "quotation_total_amount": "£ 1,398.00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "23/23",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "05-change",
+      "status": "success",
+      "summary": "The untaxed amount updated to £1,755.00 (TAX 20% £351.00, Total £2,106.00).",
+      "values": {
+        "sales_order_id": "22",
+        "quotation_totals_after_save": "Untaxed Amount\t£ 1,755.00\nTAX 20%\t\n£ 351.00\n\nTotal\t£ 2,106.00",
+        "quotation_line_count": "2",
+        "first_line_quantity": "5.00",
+        "first_line_untaxed_amount": "£ 1,475.00",
+        "first_product_name": "[FURN_6666] Acoustic Bloc Screens",
+        "first_line_unit_price": "295.00",
+        "quotation_reference": "S00022",
+        "second_line_untaxed_amount": "£ 280.00",
+        "second_product_name": "[E-COM11] Cabinet with Doors",
+        "second_product_quantity": "2.00",
+        "quotation_tax_amount": "£ 351.00",
+        "quotation_total_amount": "£ 2,106.00",
+        "updated_untaxed_amount": "£ 1,755.00",
+        "subtotal_footer_after_reload_1": "Untaxed Amount £ 1",
+        "subtotal_footer_after_reload_2": "755.00",
+        "totals_after_reload_tax_fragment": "TAX 20%\t\n£ 351.00",
+        "subtotal_footer_after_reload_4": "Total £ 2",
+        "subtotal_footer_after_reload_5": "106.00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "24/24",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "06-verify",
+      "status": "success",
+      "summary": "Replayed stored procedure s_9c6db0; observed order_reference=S00022, quotation_statusbar=Sales Order\nQuotation Sent\nQuotation, sales_order_totals_summary=Untaxed Amount\t£ 1,755.00\nTAX 20%\t\n£ 351.00\n\nTotal\t£ 2,106.00, confirmed_order_status=Sales Order.",
+      "values": {
+        "order_reference": "S00022",
+        "quotation_statusbar": "Sales Order\nQuotation Sent\nQuotation",
+        "sales_order_totals_summary": "Untaxed Amount\t£ 1,755.00\nTAX 20%\t\n£ 351.00\n\nTotal\t£ 2,106.00",
+        "confirmed_order_status": "Sales Order"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "8/8",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "07-verify",
+      "status": "success",
+      "summary": "Replayed stored procedure s_4b2d80; observed sales_order_statusbar_button=Sales Order, status_after_cancel_relo=Cancelled, cancelled_order_totals=Untaxed Amount\t£ 1,755.00\nTAX 20%\t\n£ 351.00\n\nTotal\t£ 2,106.00, order_reference=S00022, customer_reference=fwod107-fr-n2.",
+      "values": {
+        "sales_order_statusbar_button": "Sales Order",
+        "status_after_cancel_relo": "Cancelled",
+        "cancelled_order_totals": "Untaxed Amount\t£ 1,755.00\nTAX 20%\t\n£ 351.00\n\nTotal\t£ 2,106.00",
+        "order_reference": "S00022",
+        "customer_reference": "fwod107-fr-n2"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "12/12",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 7,
+  "total": 7,
+  "repinned": 0,
+  "drift": 0,
+  "wallMs": 88250,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "cachedTokens": 0
+  },
+  "usageByModel": {},
+  "servedByModel": {},
+  "recoveryModel": "openai/gpt-6-luna",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}
