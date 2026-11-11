@@ -5109,9 +5109,21 @@ function loopEquivalent(a: SkillStep, b: SkillStep): boolean {
   return typed(a) === typed(b) && chainSkeleton(a.locators.target) === chainSkeleton(b.locators.target) && chainSkeleton(a.locators.source) === chainSkeleton(b.locators.source);
 }
 
-/** True when two groups differ in a *raw* id somewhere — proof they act on distinct records, not an accidental repeat. */
+/**
+ * True when two groups differ in a *raw* id somewhere — proof they act on distinct records, not an accidental repeat.
+ *
+ * A `point` candidate is left out: it records where the element SAT, which is
+ * layout, not which record it is. espocrm fwec23-fr 05-edit pressed Escape in
+ * a date field ("Are you sure you want to leave the form?"), clicked Save once
+ * to take the dialog away and once more to save; the two clicks' chains were
+ * identical but for the button's y (116, then 153 after the dialog went), and
+ * that alone folded them into a loop bounded to 2. On one Save button the
+ * loop's cursor ran out after one pass (the guard still matched 1), so both
+ * replays and the artifact clicked once, never saved, and reported success.
+ */
 function differsInRawId(a: SkillStep[], b: SkillStep[]): boolean {
-  const raw = (g: SkillStep[]) => JSON.stringify(g.map((s) => [s.locators.target ?? [], s.locators.source ?? []]));
+  const identity = (chain: LocatorCandidate[] | undefined) => (chain ?? []).filter((c) => c.kind !== 'point');
+  const raw = (g: SkillStep[]) => JSON.stringify(g.map((s) => [identity(s.locators.target), identity(s.locators.source)]));
   return raw(a) !== raw(b);
 }
 
