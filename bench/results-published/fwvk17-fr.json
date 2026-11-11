@@ -1,0 +1,330 @@
+{
+  "name": "fwvk17-fr",
+  "origin": "http://127.0.0.1:8096",
+  "startUrl": "http://127.0.0.1:8096/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-signin",
+      "instruction": "Sign in to Vikunja at http://127.0.0.1:8096/ as admin using the password text exactly {{env:APP_PASSWORD}}. Verify that the signed-in app is open and report the visible signed-in state.",
+      "skill": "s_f7295f",
+      "params": {
+        "v1": "http://127.0.0.1:8096/",
+        "v2": "admin",
+        "v3": "{{env:APP_PASSWORD}}"
+      },
+      "outputs": [
+        "username_field",
+        "page_title",
+        "account_button_label",
+        "greeting_heading",
+        "signed_in_url",
+        "username_value",
+        "password",
+        "current_url",
+        "project_list_1",
+        "project_list_2",
+        "current_tasks_1",
+        "current_tasks_2",
+        "current_tasks_3",
+        "nav_links_1",
+        "nav_links_2",
+        "nav_links_3",
+        "nav_links_4",
+        "nav_links_5"
+      ],
+      "recorded": {
+        "username_field": "admin",
+        "page_title": "Current Tasks | Vikunja",
+        "account_button_label": "admin",
+        "greeting_heading": "Hi admin!",
+        "signed_in_url": "http://127.0.0.1:8096/",
+        "username_value": "admin",
+        "password": "{{env:APP_PASSWORD}}",
+        "current_url": "http://127.0.0.1:8096/",
+        "project_list_1": "Inbox",
+        "project_list_2": "Bench Project",
+        "current_tasks_1": "Seed: ship repaired device",
+        "current_tasks_2": "Seed: order missing parts",
+        "current_tasks_3": "Seed: triage inbox",
+        "nav_links_1": "Overview",
+        "nav_links_2": "Upcoming",
+        "nav_links_3": "Projects",
+        "nav_links_4": "Labels",
+        "nav_links_5": "Teams",
+        "url": "http://127.0.0.1:8096/"
+      },
+      "route": "http://127.0.0.1:8096/",
+      "outputEvidence": {
+        "username_field": {
+          "same": 0,
+          "differed": 0,
+          "empty": 1
+        },
+        "page_title": {
+          "same": 1,
+          "differed": 0
+        },
+        "account_button_label": {
+          "same": 1,
+          "differed": 0
+        },
+        "greeting_heading": {
+          "same": 1,
+          "differed": 0
+        },
+        "signed_in_url": {
+          "same": 1,
+          "differed": 0
+        },
+        "username_value": {
+          "same": 1,
+          "differed": 0
+        },
+        "password": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "current_url": {
+          "same": 1,
+          "differed": 0
+        },
+        "project_list_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "project_list_2": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "current_tasks_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "current_tasks_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "current_tasks_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "nav_links_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "nav_links_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "nav_links_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "nav_links_4": {
+          "same": 1,
+          "differed": 0
+        },
+        "nav_links_5": {
+          "same": 1,
+          "differed": 0
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "02-open",
+      "instruction": "Open the project Bench Project and report the exact titles of all tasks whose title starts with Seed: as displayed. Do not modify any task.",
+      "skill": "s_0ce37a",
+      "params": {
+        "v1": "Bench Project"
+      },
+      "outputs": [
+        "project_page_title",
+        "task_1_title",
+        "task_2_title",
+        "task_3_title",
+        "seed_task_titles_1",
+        "seed_task_titles_2",
+        "seed_task_titles_3"
+      ],
+      "recorded": {
+        "project_page_title": "Bench Project | Vikunja",
+        "project_url": "http://127.0.0.1:8096/projects/2/5",
+        "bench_project_task_count": "3",
+        "task_1_title": "Seed: triage inbox",
+        "task_2_title": "Seed: order missing parts",
+        "task_3_title": "Seed: ship repaired device",
+        "seed_task_titles_1": "Seed: triage inbox",
+        "seed_task_titles_2": "Seed: order missing parts",
+        "seed_task_titles_3": "Seed: ship repaired device",
+        "url": "http://127.0.0.1:8096/projects/2/5",
+        "url.p1": "2",
+        "url.p2": "5"
+      },
+      "route": "http://127.0.0.1:8096/projects/:id/:id",
+      "outputEvidence": {
+        "project_page_title": {
+          "same": 1,
+          "differed": 0
+        },
+        "project_url": {
+          "same": 1,
+          "differed": 0
+        },
+        "bench_project_task_count": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "task_1_title": {
+          "same": 1,
+          "differed": 0
+        },
+        "task_2_title": {
+          "same": 1,
+          "differed": 0
+        },
+        "task_3_title": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_task_titles_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_task_titles_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_task_titles_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        },
+        "url.p1": {
+          "same": 1,
+          "differed": 0
+        },
+        "url.p2": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "03-create",
+      "instruction": "In Bench Project create a task titled exactly '{{runid}} Bench Task'. Set its description to include the exact runid {{runid}}. Set due date 2026-12-31, priority High, and apply the existing Backend label by selecting it from suggestions (do not create a duplicate). Add a comment whose text includes {{runid}}. Verify each saved field on the task page and report the task identifier exactly as displayed (BENCH-number).",
+      "skill": "s_080090",
+      "params": {
+        "v1": "Bench Project",
+        "v3": "{{runid}} Bench Task",
+        "v2": "{{runid}}",
+        "v4": "2026-12-31",
+        "v6": "High",
+        "v7": "Backend"
+      },
+      "outputs": [
+        "comment_text",
+        "description",
+        "due_date_displayed",
+        "label",
+        "priority_displayed",
+        "project",
+        "task_identifier",
+        "task_title",
+        "ref"
+      ],
+      "recorded": {
+        "comment_text": "Comment for run fwvk17-fr-n1: label, due date and priority verified.",
+        "description": "Run fwvk17-fr-n1 bench task description.",
+        "due_date_displayed": "31 Dec 2026, 12:00:00",
+        "label": "Backend",
+        "priority_displayed": "High",
+        "project": "Bench Project",
+        "task_identifier": "BENCH-4",
+        "task_title": "fwvk17-fr-n1 Bench Task",
+        "ref": "fwvk17-fr-n1",
+        "url": "http://127.0.0.1:8096/tasks/4",
+        "url.p1": "4"
+      },
+      "route": "http://127.0.0.1:8096/tasks/:id",
+      "outputEvidence": {
+        "comment_text": {
+          "same": 0,
+          "differed": 1
+        },
+        "description": {
+          "same": 0,
+          "differed": 1
+        },
+        "due_date_displayed": {
+          "same": 1,
+          "differed": 0
+        },
+        "label": {
+          "same": 1,
+          "differed": 0
+        },
+        "priority_displayed": {
+          "same": 1,
+          "differed": 0
+        },
+        "project": {
+          "same": 1,
+          "differed": 0
+        },
+        "task_identifier": {
+          "same": 0,
+          "differed": 1
+        },
+        "task_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        },
+        "url.p1": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "session": "fwvk17-fr-n1",
+    "created": "2026-11-11T16:12:44.096Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "02-open",
+      "outputs": [
+        "project_url",
+        "bench_project_task_count"
+      ]
+    }
+  ]
+}

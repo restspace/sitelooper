@@ -1,0 +1,88 @@
+
+[sweep] run 1/3: fwvk17-fr-n1 (store: /home/user/sitelooper/bench/results/fwvk17-fr-skills)
+[harness] vikunja: defaulting APP_URL
+[harness] vikunja: defaulting APP_EMAIL
+[harness] vikunja: defaulting APP_PASSWORD
+[reset] vikunja: no leftover bench tasks
+[harness] vikunja responded 200 at http://127.0.0.1:8096/
+stopped: fwvk17-fr-n1
+  flow "fwvk17-fr" saved: 3 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwvk17-fr.json
+  warning: note: 02-open no longer publishes project_url, bench_project_task_count — no replay reads them from the page and the recording showed no line to read
+  warning: warning: 58 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.startUrl: "http://127.0.0.1:8096/" (output) in "http://127.0.0.1:8096/"
+  flow.steps[0].instruction: "http://127.0.0.1:8096/" (output) in "Sign in to Vikunja at http://127.0.0.1:8096/ as admin using the password text exactly {{env:APP_PASSWORD}}. Verify that the signed-in app is open and report the"
+  flow.steps[0].instruction: "{{env:APP_PASSWORD}}" (output) in "Sign in to Vikunja at http://127.0.0.1:8096/ as admin using the password text exactly {{env:APP_PASSWORD}}. Verify that the signed-in app is open and report the"
+  flow.steps[0].instruction: "admin" (output) in "Sign in to Vikunja at http://127.0.0.1:8096/ as admin using the password text exactly {{env:APP_PASSWORD}}. Verify that the signed-in app is open and report the"
+  flow.steps[0].params.v1: "http://127.0.0.1:8096/" (output) in "http://127.0.0.1:8096/"
+arm=sitelooper model=openai/gpt-6-luna runid=fwvk17-fr-n1 stop=completed
+turns=4 wall=169.1s
+commands=3 cmdTime=150.4s cmdBytes=2962 timeouts=0
+orchestrator in=3683 cw=0 cr=8719 out=491
+inner prompt=701510 cached=649856 completion=7468
+spend=$0.0149 maxUsd=3
+learn: A_n=0 replayed=0/3 full=0 repaired=0 compiled=3 variants=0
+-> /home/user/sitelooper/bench/results/fwvk17-fr-n1-sitelooper-result.json
+
+fwvk17-fr-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — project=Bench Project, description includes runid=true
+  obj 3: PASS — due date=2026-12-31T12:00:00Z, want 2026-12-31
+  obj 4: PASS — priority=3 (want 3 = High)
+  obj 5: PASS — labels=Backend#1; seeded Backend is #1
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — identifier BENCH-4 reported
+
+[sweep] run 2/3: fwvk17-fr-n2 (replay flow fwvk17-fr, no orchestrator)
+[reset] vikunja: deleted 1 leftover bench task(s)
+[reset] vikunja: re-created "Seed: ship repaired device" as BENCH-4 so the next task is BENCH-5
+[sweep] fwvk17-fr-n2: 1 drift ticket(s) → fwvk17-fr-n2-drift.json
+
+fwvk17-fr-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — project=Bench Project, description includes runid=true
+  obj 3: PASS — due date=2026-12-31T12:00:00Z, want 2026-12-31
+  obj 4: PASS — priority=3 (want 3 = High)
+  obj 5: PASS — labels=Backend#1; seeded Backend is #1
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — identifier BENCH-5 reported
+
+[sweep] run 3/3: fwvk17-fr-n3 (replay flow fwvk17-fr, no orchestrator)
+[reset] vikunja: deleted 1 leftover bench task(s)
+[reset] vikunja: re-created "Seed: ship repaired device" as BENCH-5 so the next task is BENCH-6
+[sweep] fwvk17-fr-n3: 1 drift ticket(s) → fwvk17-fr-n3-drift.json
+
+fwvk17-fr-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — project=Bench Project, description includes runid=true
+  obj 3: PASS — due date=2026-12-31T12:00:00Z, want 2026-12-31
+  obj 4: PASS — priority=3 (want 3 = High)
+  obj 5: PASS — labels=Backend#1; seeded Backend is #1
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — identifier BENCH-6 reported
+
+Learning sweep fwvk17-fr (K=3)
+┌─────────┬───┬────────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid          │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼────────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwvk17-fr-n1' │ '7/7'    │ 'completed' │ 4     │ 3    │ 0.0149    │ 0   │ '0/3'        │ 169    │
+│ 1       │ 2 │ 'fwvk17-fr-n2' │ '7/7'    │ 'success'   │ 0     │ 3    │ 0         │ 1   │ '3/3 (flow)' │ 54     │
+│ 2       │ 3 │ 'fwvk17-fr-n3' │ '7/7'    │ 'success'   │ 0     │ 3    │ 0         │ 1   │ '3/3 (flow)' │ 54     │
+└─────────┴───┴────────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:8096
+  s_080090  validated    3 steps  3/3 (100%)
+           In {{v1}} create a task titled exactly '{{v3}}'. Set its description to include the exact runid {{v2}}. Set du…
+  s_09492d  validated   31 steps  3/3 (100%)
+           In {{v1}} create a task titled exactly '{{v3}}'. Set its description to include the exact runid {{v2}}. Set du…
+  s_0ce37a  validated    1 steps  3/3 (100%)
+           Open the project {{v1}} and report the exact titles of all tasks whose title starts with Seed: as displayed. D…
+  s_6fc77f  validated   13 steps  3/3 (100%)
+           Sign in to Vikunja at {{v1}} as {{v2}} using the password text exactly {{v3}}. Verify that the signed-in app i…
+  s_ecee13  validated    7 steps  3/3 (100%)
+           Open the project {{v1}} and report the exact titles of all tasks whose title starts with Seed: as displayed. D…
+  s_f7295f  validated    1 steps  3/3 (100%)
+           Sign in to Vikunja at {{v1}} as {{v2}} using the password text exactly {{v3}}. Verify that the signed-in app i…
+  s_f86be2  validated    7 steps  3/3 (100%)
+           Sign in to Vikunja at {{v1}} as {{v2}} using the password text exactly {{v3}}. Verify that the signed-in app i…
+store: /home/user/sitelooper/bench/results/fwvk17-fr-skills
+
+summary: /home/user/sitelooper/bench/results/fwvk17-fr-sweep.json

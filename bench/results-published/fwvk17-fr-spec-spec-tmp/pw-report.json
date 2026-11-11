@@ -1,0 +1,186 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwvk17-fr-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwvk17-fr-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwvk17-fr-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/bench/results/fwvk17-fr-spec-spec-tmp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwvk17-fr-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwvk17-fr.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwvk17-fr-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwvk17-fr.spec.ts",
+      "file": "fwvk17-fr.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwvk17-fr",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 48456,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper shadow] [shadow:delta] step 01-signin s_f86be2/3: its recorded page change \"- textbox \\\"e.g. frederick\\\": admin\" was accepted from the live page, but it was already on the page before the step — this run did not produce it\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 01-signin s_f86be2/6: read 'password' returned a value the skill itself set/selected ('bench-admin-pass') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 01-signin s_f86be2/7: 1 field(s) this procedure filled were empty again before this click (the page replaced its document after the fills ran) — refilled once\n"
+                    },
+                    {
+                      "text": "[sitelooper skip] 01-signin s_6fc77f/2 target: read target not found — value left empty\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 01-signin\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-open\n"
+                    },
+                    {
+                      "text": "[sitelooper recipe] filled via recipe prosemirror/set-value (r_1ab693); value verified on the component\n"
+                    },
+                    {
+                      "text": "[sitelooper recipe] filled via recipe prosemirror/set-value (r_1ab693); value verified on the component\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 03-create s_09492d/23: read 'comment_text' returned a value the skill itself set/selected ('Comment for run fwvk17-fr-spec: label, due date and priority…') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 03-create s_09492d/24: read 'description' returned a value the skill itself set/selected ('Run fwvk17-fr-spec bench task description.') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 03-create s_09492d/26: read 'label' returned a value the skill itself set/selected ('Backend') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 03-create s_09492d/27: read 'priority_displayed' returned 'High' from a control this step set, and nothing committed it since — it shows the control, however the app formats it, not what the app stored; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-create\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-signin: Sign in to Vikunja at http://127.0.0.1:8096/ as admin using the password text exactly {{env:APP_PASSWORD}}. Verify that the signed-in app is open and report the visible signed-in state.",
+                      "duration": 20124
+                    },
+                    {
+                      "title": "02-open: Open the project Bench Project and report the exact titles of all tasks whose title starts with Seed: as displayed. Do not modify any task.",
+                      "duration": 1868
+                    },
+                    {
+                      "title": "03-create: In Bench Project create a task titled exactly '{{runid}} Bench Task'. Set its description to include the exact runid {{runid}}. Set due date 2026-12-31, priority High, and apply the existing Backend label by selecting it from suggestions (do not create a duplicate). Add a comment whose text includes {{runid}}. Verify each saved field on the task page and report the task identifier exactly as displayed (BENCH-number).",
+                      "duration": 25774
+                    }
+                  ],
+                  "startTime": "2026-11-11T16:15:28.980Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "outputs",
+                      "contentType": "application/json",
+                      "body": "ewogICIwMS1zaWduaW4udXNlcm5hbWVfZmllbGQiOiAiIiwKICAiMDEtc2lnbmluLnBhc3N3b3JkIjogImJlbmNoLWFkbWluLXBhc3MiLAogICIwMS1zaWduaW4ucHJvamVjdF9saXN0XzEiOiAiSW5ib3giLAogICIwMS1zaWduaW4ucHJvamVjdF9saXN0XzIiOiAiIiwKICAiMDEtc2lnbmluLnNpZ25lZF9pbl91cmwiOiAiaHR0cDovLzEyNy4wLjAuMTo4MDk2LyIsCiAgIjAxLXNpZ25pbi5wYWdlX3RpdGxlIjogIkN1cnJlbnQgVGFza3MgfCBWaWt1bmphIiwKICAiMDEtc2lnbmluLmdyZWV0aW5nX2hlYWRpbmciOiAiSGkgYWRtaW4hIiwKICAiMDEtc2lnbmluLmN1cnJlbnRfdGFza3NfMSI6ICJTZWVkOiBzaGlwIHJlcGFpcmVkIGRldmljZSIsCiAgIjAxLXNpZ25pbi5jdXJyZW50X3Rhc2tzXzIiOiAiU2VlZDogb3JkZXIgbWlzc2luZyBwYXJ0cyIsCiAgIjAxLXNpZ25pbi5jdXJyZW50X3Rhc2tzXzMiOiAiU2VlZDogdHJpYWdlIGluYm94IiwKICAiMDEtc2lnbmluLm5hdl9saW5rc18xIjogIk92ZXJ2aWV3IiwKICAiMDEtc2lnbmluLm5hdl9saW5rc18yIjogIlVwY29taW5nIiwKICAiMDEtc2lnbmluLm5hdl9saW5rc18zIjogIlByb2plY3RzIiwKICAiMDEtc2lnbmluLm5hdl9saW5rc180IjogIkxhYmVscyIsCiAgIjAxLXNpZ25pbi5uYXZfbGlua3NfNSI6ICJUZWFtcyIsCiAgIjAxLXNpZ25pbi5hY2NvdW50X2J1dHRvbl9sYWJlbCI6ICJhZG1pbiIsCiAgIjAxLXNpZ25pbi51c2VybmFtZV92YWx1ZSI6ICJhZG1pbiIsCiAgIjAxLXNpZ25pbi5jdXJyZW50X3VybCI6ICJodHRwOi8vMTI3LjAuMC4xOjgwOTYvIiwKICAiMDItb3Blbi5taW50ZWQiOiAiMiIsCiAgIjAyLW9wZW4udGFza18xX3RpdGxlIjogIlNlZWQ6IHRyaWFnZSBpbmJveCIsCiAgIjAyLW9wZW4udGFza18yX3RpdGxlIjogIlNlZWQ6IG9yZGVyIG1pc3NpbmcgcGFydHMiLAogICIwMi1vcGVuLnRhc2tfM190aXRsZSI6ICJTZWVkOiBzaGlwIHJlcGFpcmVkIGRldmljZSIsCiAgIjAyLW9wZW4ucHJvamVjdF9wYWdlX3RpdGxlIjogIkJlbmNoIFByb2plY3QgfCBWaWt1bmphIiwKICAiMDItb3Blbi5zZWVkX3Rhc2tfdGl0bGVzXzEiOiAiU2VlZDogdHJpYWdlIGluYm94IiwKICAiMDItb3Blbi5zZWVkX3Rhc2tfdGl0bGVzXzIiOiAiU2VlZDogb3JkZXIgbWlzc2luZyBwYXJ0cyIsCiAgIjAyLW9wZW4uc2VlZF90YXNrX3RpdGxlc18zIjogIlNlZWQ6IHNoaXAgcmVwYWlyZWQgZGV2aWNlIiwKICAiMDItb3Blbi5wcm9qZWN0X3VybCI6ICJodHRwOi8vMTI3LjAuMC4xOjgwOTYvcHJvamVjdHMvMi81IiwKICAiMDMtY3JlYXRlLm1pbnRlZCI6ICIxMCIsCiAgIjAzLWNyZWF0ZS5jb21tZW50X3RleHQiOiAiQ29tbWVudCBmb3IgcnVuIGZ3dmsxNy1mci1zcGVjOiBsYWJlbCwgZHVlIGRhdGUgYW5kIHByaW9yaXR5IHZlcmlmaWVkLiIsCiAgIjAzLWNyZWF0ZS5kZXNjcmlwdGlvbiI6ICJSdW4gZnd2azE3LWZyLXNwZWMgYmVuY2ggdGFzayBkZXNjcmlwdGlvbi4iLAogICIwMy1jcmVhdGUuZHVlX2RhdGVfZGlzcGxheWVkIjogIjMxIERlYyAyMDI2LCAxMjowMDowMCIsCiAgIjAzLWNyZWF0ZS5sYWJlbCI6ICJCYWNrZW5kIiwKICAiMDMtY3JlYXRlLnByaW9yaXR5X2Rpc3BsYXllZCI6ICJIaWdoIiwKICAiMDMtY3JlYXRlLnByb2plY3QiOiAiQmVuY2ggUHJvamVjdCIsCiAgIjAzLWNyZWF0ZS50YXNrX2lkZW50aWZpZXIiOiAiQkVOQ0gtNyIsCiAgIjAzLWNyZWF0ZS50YXNrX3RpdGxlIjogImZ3dmsxNy1mci1zcGVjIEJlbmNoIFRhc2siLAogICIwMy1jcmVhdGUucmVmIjogImZ3dmsxNy1mci1zcGVjIgp9"
+                    },
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": ""
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "fb107400898a891271ad-34dc81ee8aaba2d78918",
+          "file": "fwvk17-fr.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-11-11T16:15:28.410Z",
+    "duration": 49233.88,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}
