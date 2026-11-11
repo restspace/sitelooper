@@ -39,7 +39,8 @@ import { identityFields, RESOLVE_WAIT_MS, snapshotRefCandidate, structuralCandid
 import { originOf } from '../execution/url.js';
 import { recordedAsNavigation } from '../execution/recover.js';
 import { describeFramePath, stepEffect } from '../execution/context.js';
-import { OPENER_LINE, PRESENCE_WAIT_FLOOR_MS, presenceWaitMs, recordMarkers, waitsForAbsence } from '../skills/replay.js';
+import { GUARD_LOOK_FLOOR_MS, OPENER_LINE, PRESENCE_WAIT_FLOOR_MS, presenceWaitMs, recordMarkers, waitsForAbsence } from '../skills/replay.js';
+import { guardedRun, malformedFixups } from '../execution/fixup.js';
 import { seedRecipes, snapshotRecipes } from '../skills/components.js';
 import type { SkillStep } from '../skills/store.js';
 import { consumedReportedOutputs, recordedStandIn } from '../skills/flow.js';
@@ -1847,9 +1848,11 @@ interface Ctx {
    * step took off its record's page is retired rather than demanded back.
    */
   watchProbes?: boolean;
+  /** Fix-up guards emitted so far, so each guard's verdict names its own local (guardLines). */
+  fixups?: number;
 }
 
-const src = (text: string) => stringSource(text, { slot: slotAsParam });
+const src =(text: string) => stringSource(text, { slot: slotAsParam });
 const match = (text: string) => matcherSource(text, { slot: slotAsParam });
 
 /**
@@ -3071,6 +3074,77 @@ function absentDialogLines(step: SkillStep, args: Record<string, unknown>, ctx: 
   return out;
 }
 
+/**
+ * A fix-up's guard (SkillStep.guard, execution/fixup.ts): its condition,
+ * evaluated into `verdict`, a segment-scoped local the `steps` guarded steps
+ * after it are wrapped in (emitSegment). Replay's guardHolds, line for line:
+ * a settle, then the recorded chain resolved through the shared policy and
+ * the condition waited on as the step's wait_for would be, both within the
+ * shared GUARD_WAIT_MS in total — never presenceWaitMs's window, so a guard
+ * that misses costs the run about 1.5 s. Any way of not holding (false, not
+ * found, no frame, an error) is "does not hold": no drift line, no heal, no
+ * throw, nothing the run counts against the procedure.
+ */
+function guardLines(step: SkillStep, segment: SpecSegment, index: number, steps: number, verdict: string, ctx: Ctx): string[] {
+  ctx.segmentId = segment.id;
+  ctx.stepIndex = index;
+  const args = step.args ?? {};
+  noteSlots(args, ctx);
+  const where = `${ctx.stepId} ${segment.id}/${index}`;
+  const reason = step.guard?.reason ?? '';
+  noteSlots(reason, ctx);
+  const n = ctx.fixups ?? 0;
+  const absence = waitsForAbsence(step, args);
+  const waitMs = absence ? '0' : 'GUARD_WAIT_MS';
+  const chain = step.locators?.target ?? [];
+  noteSlots(chain, ctx);
+  const frame = step.contexts?.target?.frame;
+  const root = frame?.length ? `guardRoot${n}` : 'page';
+  const allowMultiple = spansEveryMatch(step.tool, args) || absence || dispatchesFirstMatch(step.tool, args);
+  const policy = `{ ${allowMultiple ? 'allowMultiple: true, ' : ''}stayOnOrigin: ${originSource(step)}, waitMs: ${waitMs} }`;
+  const hit = `guardHit${n}`;
+  const waited = dispatchesFirstMatch(step.tool, args) ? `${hit}.locator.first()` : `${hit}.locator`;
+  const timeout = `Math.max(guardUntil${n} - Date.now(), ${GUARD_LOOK_FLOOR_MS})`;
+  const body: string[] = [];
+  if (root !== 'page') {
+    body.push(
+      `const ${root}Of = await rootFor(page, ${JSON.stringify(frame)}, ${waitMs});`,
+      `if ('error' in ${root}Of) ${verdict} = ${absence ? `Boolean(${root}Of.missing)` : 'false'};`,
+      'else {',
+      `  const ${root} = ${root}Of.root;`,
+    );
+  }
+  const pad = root !== 'page' ? '  ' : '';
+  body.push(
+    `${pad}const ${hit} = await resolveCandidates(page, [`,
+    ...observationSources(chain, { slot: slotAsParam, page: root }).map((source) => `${pad}${CONT_INDENT}${source},`),
+    `${pad}], ${policy});`,
+    `${pad}if (!${hit}) ${verdict} = ${absence};`,
+    `${pad}else {`,
+    `${pad}  ${waitForLine(waited, args, timeout, ctx, index)}`,
+    `${pad}  ${verdict} = true;`,
+    `${pad}}`,
+  );
+  if (root !== 'page') body.push('}');
+  return [
+    `// @step ${where} — the guard of fix-up ${commentSafe(step.guard?.id ?? '')}: ${commentSafe(reason)}`,
+    `// The condition the recording declared before its repair (execution/fixup.ts): it holds and the`,
+    `// ${steps} step(s) after it run, or there is nothing to repair this time and they are skipped.`,
+    `let ${verdict} = false;`,
+    'await settle(page);',
+    '{',
+    `  const guardUntil${n} = Date.now() + GUARD_WAIT_MS;`,
+    '  try {',
+    ...body.map((l) => `    ${l}`),
+    '  } catch {',
+    `    ${verdict} = false;`,
+    '  }',
+    '}',
+    `if (${verdict}) console.log(\`[sitelooper fixup] \${fixupApplies(${q(where)}, ${src(reason)})}\`);`,
+    `else console.log(\`[sitelooper skip] \${fixupSkipped(${q(where)}, ${src(reason)}, ${steps})}\`);`,
+  ];
+}
+
 function emitSkillAction(step: SkillStep, segment: SpecSegment, index: number, ctx: Ctx, first = false): string[] {
   const out: string[] = [];
   // A location comment ahead of everything this step emits, so a Playwright
@@ -4251,6 +4325,15 @@ function emitSegment(segment: SpecSegment, ctx: Ctx): string[] {
   // replay takes it. Only for a segment with a step that can skip as in effect.
   const deltaDialect = segmentStartDialect(segment.steps);
   ctx.deltaStart = deltaDialect === null ? undefined : `deltaStart${ctx.segments}`;
+  // Declared fix-ups (execution/fixup.ts): one that is not well formed runs as
+  // compile would have left it — guard dropped, steps unconditional — as
+  // replay runs it; each well-formed guard's verdict is a segment-scoped local
+  // its guarded steps consult, as replay keeps `notNeeded` per replayed skill.
+  const malformed = new Set(malformedFixups(segment.steps));
+  if (malformed.size) {
+    ctx.warnings.push(`${ctx.stepId}: ${segment.id} carries fix-up(s) ${[...malformed].join(', ')} that are not well formed — their guard is dropped and their steps run unconditionally`);
+  }
+  const guardOf = new Map<string, string>();
   for (const [i, step] of segment.steps.entries()) {
     // …taken before the first step that is not a navigation and again after
     // each navigation, where replay takes it.
@@ -4260,13 +4343,33 @@ function emitSegment(segment: SpecSegment, ctx: Ctx): string[] {
     if (i + 1 === gate.at) out.push('', ...segmentGateLines(segment, ctx, gate.afterNavigation));
     if (i === 0 && ctx.deltaStart) out.push(`const ${ctx.deltaStart} = await segmentStart(page, ${deltaDialect});`);
     out.push('');
+    if (step.guard) {
+      if (malformed.has(step.guard.id)) {
+        out.push(`// @step ${ctx.stepId} ${segment.id}/${i + 1}: the guard of fix-up ${commentSafe(step.guard.id)}, which is not well formed — dropped, as replay drops it; its steps run unconditionally.`);
+      } else {
+        const verdict = `fixup${(ctx.fixups = (ctx.fixups ?? 0) + 1)}`;
+        guardOf.set(step.guard.id, verdict);
+        out.push(...guardLines(step, segment, i + 1, guardedRun(segment.steps, i), verdict, ctx));
+      }
+      continue;
+    }
+    // A step of a well-formed fix-up runs only if its guard held, and is
+    // otherwise passed over whole — no settle, capture, resolution, echo or
+    // fill note, binding or mint — as replay passes it over. Its gestures are
+    // not fault sites (faultSites): withholding a step a run may legitimately
+    // skip cannot be required to fail that run.
+    const guardedBy = step.guarded && !malformed.has(step.guarded) ? guardOf.get(step.guarded) : undefined;
+    const sites = ctx.faultSites;
+    if (guardedBy) ctx.faultSites = undefined;
     const lines =
       (segment.assert || ctx.assertStep) && step.tool !== 'wait_for'
         ? notACheck(step, segment, i + 1, ctx)
         : step.tool === 'loop'
           ? emitLoop(step, segment, i + 1, ctx)
           : emitSkillStep(step, segment, i + 1, ctx);
-    out.push(...lines);
+    ctx.faultSites = sites;
+    if (guardedBy) out.push(`if (${guardedBy}) {`, ...lines.flatMap((l) => l.split('\n')).map((l) => (l ? `  ${l}` : l)), '}');
+    else out.push(...lines);
   }
   // A read-only segment that skipped every read it could take did not replay
   // (the shared observedNothing, asked by replay after the same steps). Only

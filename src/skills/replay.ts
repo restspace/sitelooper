@@ -62,6 +62,7 @@ import { inEffectShadow, preexistingShadow, segmentStart, type InEffectEvidence,
 import { alreadyAddedLines, positionalClickVerdict, recordedAccessibleName } from '../execution/positional.js';
 import { arrivalStop, mayNavigateToDestination, navigateToDestination, recordedAsNavigation, textHeldElsewhere } from '../execution/recover.js';
 import { assertFailure, assertFailureKind, type AssertFailureKind } from '../execution/assert.js';
+import { GUARD_WAIT_MS, fixupApplies, fixupSkipped, guardedRun, malformedFixups } from '../execution/fixup.js';
 import { readShadowLines, shadowEnabled, shadowReadLabels, shadowReadTemplates } from '../execution/shadow.js';
 import { CONTEXT_CONTRACT, contractOf, contractVerdict, isVerified, originOf, stepsCarryContext, type Skill, type SkillStep } from './store.js';
 import { armPageEffect, describeFramePath, pageIndexVerdict, rootFor, stepEffect, type Root } from '../execution/context.js';
@@ -2141,6 +2142,56 @@ export async function replaySkill(
     return 'ran';
   };
 
+  /**
+   * A fix-up's guard (SkillStep.guard, execution/fixup.ts): whether the
+   * condition the recording agent declared before its repair holds on this
+   * run. Evaluated, never run: the target is resolved through its recorded
+   * chain and its condition waited on as a wait_for's is, both within
+   * GUARD_WAIT_MS in total — not presenceWaitMs's ten seconds, because a guard
+   * that misses is the ordinary case on a run where the mistake was not made,
+   * and it must cost that run about 1.5 s. Any way of not holding (the
+   * condition false, the target not found, a frame not there, an error) is
+   * "does not hold": no heal, no fallback rung, no drift, no recovery. The
+   * artifact evaluates the same (spec/emit.ts guardLines).
+   */
+  const guardHolds = async (step: SkillStep, n: number): Promise<boolean> => {
+    await settleDom(page);
+    const deadline = Date.now() + GUARD_WAIT_MS;
+    const args = fillParamsDeep(step.args, params) as Record<string, unknown>;
+    const absence = waitsForAbsence(step, args);
+    const waitMs = absence ? 0 : GUARD_WAIT_MS;
+    try {
+      const framed = await rootFor(page, step.contexts?.target?.frame, waitMs);
+      if ('error' in framed) return absence && Boolean(framed.missing);
+      const chain = (fillParamsDeep(step.locators.target ?? [], params) as LocatorCandidate[]) ?? [];
+      const hit = await resolveChain(
+        page,
+        chain,
+        {
+          allowMultiple: spansEveryMatch(step.tool, args) || absence || dispatchesFirstMatch(step.tool, args),
+          waitMs,
+          stayOnOrigin: originOf(step.expect?.urlPattern ?? '') ?? originOf(page.url()) ?? undefined,
+        },
+        framed.root,
+      );
+      if (!hit) return absence;
+      const timeout_ms = Math.max(deadline - Date.now(), GUARD_LOOK_FLOOR_MS);
+      await opts.exec('wait_for', { ...args, timeout_ms }, { target: hit.locator }, { skill: skill.id, step: n });
+      return true;
+    } catch {
+      return false;
+    }
+  };
+  // Fix-ups this skill carries that are not well formed (a store edited by
+  // hand or written by older code; compile dissolves them): run as compile
+  // would have left them — the guard dropped, its steps unconditional.
+  const malformed = new Set(malformedFixups(skill.steps));
+  if (malformed.size) {
+    res.warnings.push(`${skill.id}: fix-up(s) ${[...malformed].join(', ')} not well formed — their guard is dropped and their steps run unconditionally`);
+  }
+  /** The fix-up whose guard did not hold, and how many of its steps are still to be passed over. */
+  let notNeeded: { id: string; left: number } | null = null;
+
   // The delta shadow rule's one look at where this segment starts (execution/
   // delta.ts rule 2), after the first gate, before step 1 — where the artifact
   // takes it. Only for a segment with a step that can skip as in effect.
@@ -2153,6 +2204,45 @@ export async function replaySkill(
       res.reason = 'instruction budget exhausted before this step';
       res.lines.push(`${n}. ${step.tool} — not run (budget exhausted)`);
       break;
+    }
+    // A step of a fix-up whose guard did not hold contributes nothing, as a
+    // step skipped already in effect contributes nothing: nothing resolves,
+    // dispatches, binds, mints or is noted in the echo or fill ledgers. It
+    // counts as a step done, so the replay can still finish clean.
+    // The applied-pick baseline is still kept where the artifact keeps it — it
+    // takes it at the top of every step, guard and skipped step included.
+    if ((step.guard || (notNeeded && notNeeded.left > 0)) && pickSteps.size > 0) {
+      if (isNavigation(step.tool)) pickStale = true;
+      else if (pickStale) {
+        pickStart = await pickBaseline(page);
+        pickStale = false;
+      }
+    }
+    if (notNeeded && notNeeded.left > 0) {
+      notNeeded.left--;
+      res.lines.push(`${n}. ${step.tool} → skipped (fix-up ${notNeeded.id} not needed)`);
+      res.stepsRun++;
+      continue;
+    }
+    notNeeded = null;
+    if (step.guard) {
+      const { id } = step.guard;
+      const reason = fillParams(step.guard.reason ?? '', params);
+      const head = `${n}. ${step.tool} ${describeArgs(step.tool, fillParamsDeep(step.args, params) as Record<string, unknown>)}`;
+      if (malformed.has(id)) {
+        res.lines.push(`${head} → skipped (the guard of fix-up ${id}, which is not well formed)`);
+      } else {
+        const run = guardedRun(skill.steps, i);
+        if (await guardHolds(step, n)) {
+          res.lines.push(fixupApplies(head, reason));
+        } else {
+          res.warnings.push(fixupSkipped(`step ${n}`, reason, run));
+          res.lines.push(fixupSkipped(head, reason, run));
+          notNeeded = { id, left: run };
+        }
+      }
+      res.stepsRun++;
+      continue;
     }
     if (step.tool === 'loop') {
       if ((await runLoop(step, n)) === 'stop') break;
@@ -2665,6 +2755,15 @@ const WAIT_FOR_DEFAULT_MS = 10_000;
  * Playwright reads as "no timeout at all").
  */
 export const PRESENCE_WAIT_FLOOR_MS = 1_000;
+
+/**
+ * The least a fix-up's guard (execution/fixup.ts) gives its condition once
+ * its target resolved late in GUARD_WAIT_MS: one look, never a zero timeout
+ * (which Playwright reads as none). Not PRESENCE_WAIT_FLOOR_MS — a guard that
+ * misses is meant to cost the run about GUARD_WAIT_MS, not that plus a second.
+ * The artifact uses this same number (spec/emit.ts guardLines).
+ */
+export const GUARD_LOOK_FLOOR_MS = 100;
 
 /**
  * A wait_for whose job is for its target to APPEAR — `visible`, the text and
