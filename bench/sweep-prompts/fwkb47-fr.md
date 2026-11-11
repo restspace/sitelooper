@@ -5,7 +5,7 @@ TARGET: kanboard   RUNID: fwkb47-fr   TASK: bench/tasks/kanboard-board-flow.md
 OVERRIDES
 1. Code: use the branch `bench/fault-sweep` (feat/fault-readiness plus these prompts; source commit f0d05a6b):
    git fetch origin && git checkout -B bench/fault-sweep origin/bench/fault-sweep && npm run build
-   (The box's local main can be an unrelated old history; never push main or bench/fault-sweep.) Record `git log --oneline -1`. Check: `git diff --stat f0d05a6b HEAD -- src test package.json` must print nothing, and `grep -q recordedAsNavigation src/execution/recover.ts && grep -q lineShownWhole src/execution/snapshot.ts && grep -q faultHere src/spec/emit.ts && test -f bench/verify-kanboard.mjs` must succeed, else STOP and report rather than sweeping.
+   (The box's local main can be an unrelated old history; never push main or bench/fault-sweep.) Record `git log --oneline -1`. Check: `git diff --stat f0d05a6b HEAD -- src test package.json` must print nothing, and `grep -q recordedAsNavigation src/execution/recover.ts && grep -q lineShownWhole src/execution/snapshot.ts && grep -q faultHere src/spec/emit.ts && test -f bench/verify-kanboard.mjs` must succeed, else STOP and report rather than going on.
 2. Environment: do NOT edit ~/.bashrc, ~/.profile or any other shell startup file. Put the five exports below at the start of every command that needs them, or in a script file under /tmp that each command sources.
    Models: OpenRouter everywhere, never Novita. OPENROUTER_API_KEY is already in this environment. NEVER print it, write it to a file, or put it on a command line.
    export SITELOOPER_PROVIDER=openrouter
@@ -22,6 +22,12 @@ OVERRIDES
 5. Compiled script (no model, no sitelooper runtime at replay time). Run it after the sweep, against a reset app, whatever the sweep's result:
    node bench/spec-replay.mjs --flow bench/results/flows/fwkb47-fr.json --skills bench/results/fwkb47-fr-skills --tag fwkb47-fr-spec --target kanboard --reset --out bench/results 2>&1 | tee bench/results/fwkb47-fr-spec-run.log
    node bench/verify-kanboard.mjs fwkb47-fr-spec 2>&1 | tee bench/results/fwkb47-fr-spec-verify.log
+   BROWSER CHECK (a known problem on these boxes today): if bench/results/fwkb47-fr-spec-spec.log contains "Executable doesn't exist", the compiled run never started: Playwright wants a browser build the box does not have. Then, and only then:
+     a. Run `ls /opt/pw-browsers; echo "PLAYWRIGHT_BROWSERS_PATH=$PLAYWRIGHT_BROWSERS_PATH"` and keep the output for the report.
+     b. Run, with a 5 minute timeout: `npx --yes "playwright@$(node -p "require('./node_modules/playwright-core/package.json').version")" install chromium chromium-headless-shell` (the command bench/cloud-setup.sh itself uses).
+     c. Only if (b) fails or is refused: the error names a directory such as /opt/pw-browsers/chromium_headless_shell-NNNN. If another /opt/pw-browsers/chromium_headless_shell-MMMM directory exists and contains chrome-headless-shell-linux64/chrome-headless-shell, run `ln -s /opt/pw-browsers/chromium_headless_shell-MMMM /opt/pw-browsers/chromium_headless_shell-NNNN` and say in the report that the compiled run used build MMMM in place of NNNN.
+     d. Move the failed attempt aside (`mkdir -p bench/results/fwkb47-fr-spec-attempt1 && mv bench/results/fwkb47-fr-spec-spec* bench/results/fwkb47-fr-spec-run.log bench/results/fwkb47-fr-spec-verify.log bench/results/fwkb47-fr-spec-attempt1/`), then run the two step-5 commands again, ONCE. This is the one retry the rules allow; report both attempts.
+     If a command in (b)-(d) is refused by a permission check, do not retry it or work around it: publish what you have and report the refusal verbatim.
    If the flow is not compilable (compile exit 2), that is a legitimate result: keep bench/results/fwkb47-fr-spec-compile.log and skip the verifier. Do not recompile with --allow-demoted or any other override. Report-only objectives may be UNVERIFIABLE for the compiled arm; that is expected. There is no convergence/build step and no --faults run in this sweep.
 6. Publish (a results branch, never main). After steps 4-5, before any report item below, run this ONE command and nothing else until it returns:
    node bench/publish-results.mjs --base fwkb47-fr
@@ -34,7 +40,7 @@ REPORT, verbatim:
   2. Every run's verifier summary (n1, n2, n3, spec) and every FAIL/DUPLICATE/EXTRA line verbatim.
   3. For each replay (n2, n3), every step: id, tier, turns, fellBack, satisfied (if present) and every `shadow` and `warnings` entry verbatim, from bench/results/fwkb47-fr-n2-flowrun.json and -n3-flowrun.json. Wall time and total_usd per run.
   4. Every line of fwkb47-fr-sweep.log, and every reason or warning in the two flowrun files, containing any of: "recorded page change", "did not show", "recorded destination", "no element matched", "found on the page instead". Say for each which step it belongs to.
-  5. The compiled script: compiled or not (diagnostics verbatim if not), the last line of fwkb47-fr-spec-run.log, every `[sitelooper drift]`, `[sitelooper shadow]`, `[sitelooper warn]` and `[sitelooper skip]` line, stats, exitCode, every test error, and the full verifier output.
+  5. The compiled script: compiled or not (diagnostics verbatim if not), the last line of fwkb47-fr-spec-run.log, every `[sitelooper drift]`, `[sitelooper shadow]`, `[sitelooper warn]` and `[sitelooper skip]` line, stats, exitCode, every test error, and the full verifier output. Whether the BROWSER CHECK fired, the output of its step (a), which of (b) or (c) fixed it, and both attempts' last lines.
   6. Any step that PASSES while a verifier objective FAILS.
   7. Any model-side error (HTTP 4xx/5xx, empty turns, MODEL_PROVIDER_FAILED, STEP_TIMEOUT), and anything you had to install or change to make it run.
   8. The sign-in must appear in bench/results-published only as `{{env:APP_PASSWORD}}`: report `grep -rc '{{env:APP_PASSWORD}}' bench/results-published/fwkb47-fr*` (only AFTER the push).
