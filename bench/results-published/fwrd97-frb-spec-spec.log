@@ -1,0 +1,41 @@
+
+Running 1 test using 1 worker
+
+[sitelooper step] 01-signin
+[sitelooper step] 02-create
+[sitelooper step] 03-add
+[sitelooper step] 04-add
+[sitelooper step] 05-edit
+[sitelooper step] 06-change
+[sitelooper step] 07-remove
+  ✘  1 fwrd97-fr.spec.ts:9:1 › fwrd97-fr (1.3m)
+
+
+  1) fwrd97-fr.spec.ts:9:1 › fwrd97-fr ─────────────────────────────────────────────────────────────
+
+    Error: persistence: 03-add typed "fwrd97-frb-spec RD Part A", "100", "25", the record at http://127.0.0.1:4180/#/tickets/t15 does not show it after reload (missing - row "fwrd97-frb-spec RD Part A $100{{*}} 25% {{*}} {{*}} {{*}} Edit Delete" | - cell "fwrd97-frb-spec RD Part A" | - cell "$100{{*}}" | - cell "25%")
+
+       at fwrd97-fr.flow.ts:24869
+
+      24867 |     const failures: string[] = [...unpersisted];
+      24868 |     if (run.partial.length && process.env.SITELOOPER_ALLOW_PARTIAL !== '1') failures.push(`PARTIAL: ${run.partial.join('; ')}`);
+    > 24869 |     if (failures.length) throw new Error(failures.join('\n'));
+            |                                ^
+      24870 |     return outputs;
+      24871 |   } finally {
+      24872 |     DRIFT.splice(0, DRIFT.length, ...run.drift);
+        at runFlow (/home/user/sitelooper/bench/results/fwrd97-frb-spec-spec-tmp/fwrd97-fr.flow.ts:24869:32)
+        at /home/user/sitelooper/bench/results/fwrd97-frb-spec-spec-tmp/fwrd97-fr.spec.ts:14:21
+
+    attachment #2: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/fwrd97-fr-fwrd97-fr/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/fwrd97-fr-fwrd97-fr/error-context.md
+
+  1 failed
+    fwrd97-fr.spec.ts:9:1 › fwrd97-fr ──────────────────────────────────────────────────────────────
