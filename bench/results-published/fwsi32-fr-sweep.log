@@ -1,0 +1,117 @@
+
+[sweep] run 1/3: fwsi32-fr-n1 (store: /home/user/sitelooper/bench/results/fwsi32-fr-skills)
+[harness] snipeit: defaulting APP_URL
+[harness] snipeit: defaulting APP_EMAIL
+[harness] snipeit: defaulting APP_PASSWORD
+[reset] snipeit: no leftover bench assets
+[harness] snipeit responded 302 at http://127.0.0.1:8098/
+stopped: fwsi32-fr-n1
+  flow "fwsi32-fr" saved: 5 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwsi32-fr.json
+  warning: note: 02-find no longer publishes pagination — no replay reads it from the page and the recording showed no line to read
+  warning: note: 04-edit no longer publishes asset_default_location, location_field_ids_and_v — no replay reads them from the page and the recording showed no line to read
+  warning: note: 05-verify no longer publishes checked_out_to, checkins_count, history_checkout_row, history_checkout_entries — no replay reads them from the page and the recording showed no line to read
+  warning: note: 03-create: added a read for asset_status to s_014cb6 (page.getByRole('link', { name: 'Ready to Deploy', exact: true }); seen on the next instruction's start page)
+  warning: warning: 208 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.startUrl: "http://127.0.0.1:8098/" (output) in "http://127.0.0.1:8098/"
+  flow.steps[0].instruction: "http://127.0.0.1:8098/" (output) in "Sign in to Snipe-IT at http://127.0.0.1:8098/ with username admin and password exactly {{env:APP_PASSWORD}}. Verify that the authenticated app is open."
+  flow.steps[0].params.v1: "http://127.0.0.1:8098/" (output) in "http://127.0.0.1:8098/"
+  flow.steps[0].route: "http://127.0.0.1:8098/" (output) in "http://127.0.0.1:8098/"
+  flow.steps[2].instruction: "Bench Laptop Model" (output) in "Create an asset named '{{runid}} Bench Asset' using the existing model 'Bench Laptop Model' and status 'Ready to Deploy'. Select the model and status from their"
+arm=sitelooper model=openai/gpt-6-luna runid=fwsi32-fr-n1 stop=completed
+turns=6 wall=358.1s
+commands=5 cmdTime=318.1s cmdBytes=8173 timeouts=0
+orchestrator in=5231 cw=0 cr=17126 out=1318
+inner prompt=1891385 cached=1752448 completion=19096
+spend=$0.039 maxUsd=3
+learn: A_n=0 replayed=0/5 full=0 repaired=0 compiled=5 variants=0
+-> /home/user/sitelooper/bench/results/fwsi32-fr-n1-sitelooper-result.json
+
+fwsi32-fr-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed tags and names reported
+  obj 2: PASS — BA-00004, model=Bench Laptop Model, status=Ready to Deploy
+  obj 3: PASS — default location=Bench Office
+  obj 4: PASS — purchase date=2026-03-15
+  obj 5: PASS — assigned to=Bench Assignee (user bench-assignee)
+  obj 6: PASS — 1 checkout(s), 1 with a note carrying the runid
+  obj 7: PASS — asset tag BA-00004 reported
+
+[sweep] run 2/3: fwsi32-fr-n2 (replay flow fwsi32-fr, no orchestrator)
+[reset] snipeit: deleted 1 leftover bench asset(s)
+[sweep] fwsi32-fr-n2: 1 drift ticket(s) → fwsi32-fr-n2-drift.json
+
+fwsi32-fr-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed tags and names reported
+  obj 2: PASS — BA-00005, model=Bench Laptop Model, status=Ready to Deploy
+  obj 3: PASS — default location=Bench Office
+  obj 4: PASS — purchase date=2026-03-15
+  obj 5: PASS — assigned to=Bench Assignee (user bench-assignee)
+  obj 6: PASS — 1 checkout(s), 1 with a note carrying the runid
+  obj 7: PASS — asset tag BA-00005 reported
+
+[sweep] run 3/3: fwsi32-fr-n3 (replay flow fwsi32-fr, no orchestrator)
+[reset] snipeit: deleted 1 leftover bench asset(s)
+[sweep] fwsi32-fr-n3: 1 drift ticket(s) → fwsi32-fr-n3-drift.json
+
+fwsi32-fr-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed tags and names reported
+  obj 2: PASS — BA-00006, model=Bench Laptop Model, status=Ready to Deploy
+  obj 3: PASS — default location=Bench Office
+  obj 4: PASS — purchase date=2026-03-15
+  obj 5: PASS — assigned to=Bench Assignee (user bench-assignee)
+  obj 6: PASS — 1 checkout(s), 1 with a note carrying the runid
+  obj 7: PASS — asset tag BA-00006 reported
+
+Learning sweep fwsi32-fr (K=3)
+┌─────────┬───┬────────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid          │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼────────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwsi32-fr-n1' │ '7/7'    │ 'completed' │ 6     │ 5    │ 0.039     │ 0   │ '0/5'        │ 358    │
+│ 1       │ 2 │ 'fwsi32-fr-n2' │ '7/7'    │ 'success'   │ 0     │ 5    │ 0         │ 1   │ '5/5 (flow)' │ 92     │
+│ 2       │ 3 │ 'fwsi32-fr-n3' │ '7/7'    │ 'success'   │ 0     │ 5    │ 0         │ 1   │ '5/5 (flow)' │ 92     │
+└─────────┴───┴────────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:8098
+  s_014cb6  validated   17 steps  3/3 (100%)
+           Create an asset named '{{v3}}' using the existing model 'Bench Laptop {{v2}}' and status 'Ready to Deploy'. Se…
+  s_0ee085  validated    1 steps  3/3 (100%)
+           Check out asset '{{v1}}' to the existing user 'Bench Assignee'. Select the user from its searchable dropdown o…
+  s_188ef1  validated    1 steps  3/3 (100%)
+           Edit asset '{{v1}}' to set its default location to the existing 'Bench Office' (select the searchable dropdown…
+  s_1fabad  validated    1 steps  3/3 (100%)
+           Edit asset '{{v1}}' to set its default location to the existing 'Bench Office' (select the searchable dropdown…
+  s_21b9b8  validated    7 steps  3/3 (100%)
+           Edit asset '{{v1}}' to set its default location to the existing 'Bench Office' (select the searchable dropdown…
+  s_2d2709  validated    1 steps  3/3 (100%)
+           Sign in to Snipe-IT at {{v1}} with username {{v2}} and password exactly {{v3}}. Verify that the authenticated …
+  s_564fb6  validated    1 steps  3/3 (100%)
+           Create an asset named '{{v3}}' using the existing model 'Bench Laptop {{v2}}' and status 'Ready to Deploy'. Se…
+  s_6a9aca  validated    8 steps  3/3 (100%)
+           Create an asset named '{{v3}}' using the existing model 'Bench Laptop {{v2}}' and status 'Ready to Deploy'. Se…
+  s_6ab96e  validated    4 steps  3/3 (100%)
+           Check out asset '{{v1}}' to the existing user 'Bench Assignee'. Select the user from its searchable dropdown o…
+  s_6e16a1  validated    3 steps  3/3 (100%)
+           Sign in to Snipe-IT at {{v1}} with username {{v2}} and password exactly {{v3}}. Verify that the authenticated …
+  s_6ed880  validated    1 steps  3/3 (100%)
+           Check out asset '{{v1}}' to the existing user 'Bench Assignee'. Select the user from its searchable dropdown o…
+  s_8bc0cd  validated    1 steps  3/3 (100%)
+           Check out asset '{{v1}}' to the existing user 'Bench Assignee'. Select the user from its searchable dropdown o…
+  s_97c273  validated    2 steps  3/3 (100%)
+           Edit asset '{{v1}}' to set its default location to the existing 'Bench Office' (select the searchable dropdown…
+  s_9eccf9  validated    1 steps  3/3 (100%)
+           Create an asset named '{{v3}}' using the existing model 'Bench Laptop {{v2}}' and status 'Ready to Deploy'. Se…
+  s_cfb615  validated    1 steps  3/3 (100%)
+           Check out asset '{{v1}}' to the existing user 'Bench Assignee'. Select the user from its searchable dropdown o…
+  s_e265b2  validated   16 steps  3/3 (100%)
+           Find and report every asset whose name starts with 'Seed:', giving each asset's name and asset tag exactly as …
+  s_ec61d8  validated    9 steps  3/3 (100%)
+           Edit asset '{{v1}}' to set its default location to the existing 'Bench Office' (select the searchable dropdown…
+  s_ee6284  validated    1 steps  3/3 (100%)
+           Check out asset '{{v1}}' to the existing user 'Bench Assignee'. Select the user from its searchable dropdown o…
+  s_f4f245  validated   11 steps  3/3 (100%)
+           Check out asset '{{v1}}' to the existing user 'Bench Assignee'. Select the user from its searchable dropdown o…
+  s_f7fca1  validated    5 steps  3/3 (100%)
+           Sign in to Snipe-IT at {{v1}} with username {{v2}} and password exactly {{v3}}. Verify that the authenticated …
+  s_fcb419  validated    1 steps  3/3 (100%)
+           Find and report every asset whose name starts with 'Seed:', giving each asset's name and asset tag exactly as …
+store: /home/user/sitelooper/bench/results/fwsi32-fr-skills
+
+summary: /home/user/sitelooper/bench/results/fwsi32-fr-sweep.json

@@ -1,0 +1,598 @@
+{
+  "name": "fwsi32-fr",
+  "origin": "http://127.0.0.1:8098",
+  "startUrl": "http://127.0.0.1:8098/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-signin",
+      "instruction": "Sign in to Snipe-IT at http://127.0.0.1:8098/ with username admin and password exactly {{env:APP_PASSWORD}}. Verify that the authenticated app is open.",
+      "skill": "s_2d2709",
+      "params": {
+        "v1": "http://127.0.0.1:8098/",
+        "v2": "admin",
+        "v3": "{{env:APP_PASSWORD}}"
+      },
+      "outputs": [
+        "current_url",
+        "page_title",
+        "logged_in_user",
+        "login_success_alert",
+        "logged_in"
+      ],
+      "recorded": {
+        "current_url": "http://127.0.0.1:8098/",
+        "page_title": "Dashboard :: Bench Assets",
+        "logged_in_user": "Bench Admin",
+        "login_success_alert": "Success: × You have successfully logged in.",
+        "logged_in": "true",
+        "url": "http://127.0.0.1:8098/"
+      },
+      "route": "http://127.0.0.1:8098/",
+      "outputEvidence": {
+        "current_url": {
+          "same": 1,
+          "differed": 0
+        },
+        "page_title": {
+          "same": 1,
+          "differed": 0
+        },
+        "logged_in_user": {
+          "same": 1,
+          "differed": 0
+        },
+        "login_success_alert": {
+          "same": 0,
+          "differed": 1
+        },
+        "logged_in": {
+          "same": 1,
+          "differed": 0
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "02-find",
+      "instruction": "Find and report every asset whose name starts with 'Seed:', giving each asset's name and asset tag exactly as shown. Do not edit any assets.",
+      "skill": "s_fcb419",
+      "params": {},
+      "outputs": [
+        "total_assets_listed",
+        "asset_1_tag",
+        "asset_1_name",
+        "asset_2_tag",
+        "asset_2_name",
+        "asset_3_tag",
+        "asset_3_name",
+        "matching_assets_count",
+        "asset_tag_column_header",
+        "asset_name_column_header",
+        "asset_image_column_header",
+        "asset_serial_column_header",
+        "asset_model_column_header",
+        "asset_category_column_header",
+        "asset_status_column_header",
+        "table_thead_th_datatable_8"
+      ],
+      "recorded": {
+        "total_assets_listed": "3",
+        "pagination": "single page (Previous 1 Next)",
+        "asset_1_tag": "SEED-0001",
+        "asset_1_name": "Seed: Reception Laptop",
+        "asset_2_tag": "SEED-0002",
+        "asset_2_name": "Seed: Training Laptop",
+        "asset_3_tag": "SEED-0003",
+        "asset_3_name": "Seed: Spare Laptop",
+        "matching_assets_count": "3",
+        "asset_tag_column_header": "Asset Tag",
+        "asset_name_column_header": "Name",
+        "asset_image_column_header": "Image",
+        "asset_serial_column_header": "Serial",
+        "asset_model_column_header": "Model",
+        "asset_category_column_header": "Category",
+        "asset_status_column_header": "Status",
+        "table_thead_th_datatable_8": "Checked Out To",
+        "url": "http://127.0.0.1:8098/hardware"
+      },
+      "route": "http://127.0.0.1:8098/hardware",
+      "outputEvidence": {
+        "total_assets_listed": {
+          "same": 1,
+          "differed": 0
+        },
+        "pagination": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "asset_1_tag": {
+          "same": 1,
+          "differed": 0
+        },
+        "asset_1_name": {
+          "same": 1,
+          "differed": 0
+        },
+        "asset_2_tag": {
+          "same": 1,
+          "differed": 0
+        },
+        "asset_2_name": {
+          "same": 1,
+          "differed": 0
+        },
+        "asset_3_tag": {
+          "same": 1,
+          "differed": 0
+        },
+        "asset_3_name": {
+          "same": 1,
+          "differed": 0
+        },
+        "matching_assets_count": {
+          "same": 1,
+          "differed": 0
+        },
+        "asset_tag_column_header": {
+          "same": 1,
+          "differed": 0
+        },
+        "asset_name_column_header": {
+          "same": 1,
+          "differed": 0
+        },
+        "asset_image_column_header": {
+          "same": 1,
+          "differed": 0
+        },
+        "asset_serial_column_header": {
+          "same": 1,
+          "differed": 0
+        },
+        "asset_model_column_header": {
+          "same": 1,
+          "differed": 0
+        },
+        "asset_category_column_header": {
+          "same": 1,
+          "differed": 0
+        },
+        "asset_status_column_header": {
+          "same": 1,
+          "differed": 0
+        },
+        "table_thead_th_datatable_8": {
+          "same": 1,
+          "differed": 0
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "03-create",
+      "instruction": "Create an asset named '{{runid}} Bench Asset' using the existing model 'Bench Laptop Model' and status 'Ready to Deploy'. Select the model and status from their searchable dropdown options (do not just type), and do not create any model or status. Submit the asset and verify its resulting asset tag, name, model, and status.",
+      "skill": "s_9eccf9",
+      "params": {
+        "v3": "{{runid}} Bench Asset",
+        "v2": "Model",
+        "v1": "{{runid}}"
+      },
+      "outputs": [
+        "asset_tag",
+        "asset_name",
+        "model",
+        "model_category",
+        "manufacturer",
+        "status",
+        "asset_detail_heading",
+        "create_flash",
+        "asset_url",
+        "asset_tag_2",
+        "asset_name_2",
+        "asset_status",
+        "detail_heading_2",
+        "ref",
+        "list_row_1",
+        "list_row_2",
+        "asset_model",
+        "asset_category",
+        "list_row_5"
+      ],
+      "recorded": {
+        "asset_tag": "BA-00004",
+        "asset_name": "fwsi32-fr-n1 Bench Asset",
+        "model": "Bench Laptop Model",
+        "model_category": "Bench Laptops",
+        "manufacturer": "Bench Manufacturer",
+        "status": "Ready to Deploy",
+        "asset_detail_heading": "Assets fwsi32-fr-n1 Bench Asset #BA-00004 - Bench Laptop Model",
+        "create_flash": "Success: Asset BA-00004 was created. Click here to view.",
+        "asset_url": "http://127.0.0.1:8098/hardware/4",
+        "asset_tag_2": "Copy to Clipboard\nBA-00004",
+        "asset_name_2": "Copy to Clipboard\nfwsi32-fr-n1 Bench Asset",
+        "asset_status": "Ready to Deploy",
+        "detail_heading_2": "Assets  fwsi32-fr-n1 Bench Asset #BA-00004 - Bench Laptop Model",
+        "ref": "fwsi32-fr-n1",
+        "list_row_1": "BA-00004",
+        "list_row_2": "fwsi32-fr-n1 Bench Asset",
+        "asset_model": "Bench Laptop Model",
+        "asset_category": "Bench Laptops",
+        "list_row_5": "Ready to Deploy",
+        "url": "http://127.0.0.1:8098/hardware/4",
+        "url.p1": "4"
+      },
+      "route": "http://127.0.0.1:8098/hardware/:id",
+      "outputEvidence": {
+        "asset_tag": {
+          "same": 0,
+          "differed": 1
+        },
+        "asset_name": {
+          "same": 0,
+          "differed": 1
+        },
+        "model": {
+          "same": 1,
+          "differed": 0
+        },
+        "model_category": {
+          "same": 1,
+          "differed": 0
+        },
+        "manufacturer": {
+          "same": 1,
+          "differed": 0
+        },
+        "status": {
+          "same": 1,
+          "differed": 0
+        },
+        "asset_detail_heading": {
+          "same": 0,
+          "differed": 1
+        },
+        "create_flash": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "asset_url": {
+          "same": 0,
+          "differed": 1
+        },
+        "asset_tag_2": {
+          "same": 0,
+          "differed": 1
+        },
+        "asset_name_2": {
+          "same": 0,
+          "differed": 1
+        },
+        "asset_status": {
+          "same": 1,
+          "differed": 0
+        },
+        "detail_heading_2": {
+          "same": 0,
+          "differed": 1
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "list_row_1": {
+          "same": 0,
+          "differed": 1
+        },
+        "list_row_2": {
+          "same": 0,
+          "differed": 1
+        },
+        "asset_model": {
+          "same": 1,
+          "differed": 0
+        },
+        "asset_category": {
+          "same": 1,
+          "differed": 0
+        },
+        "list_row_5": {
+          "same": 1,
+          "differed": 0
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        },
+        "url.p1": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "04-edit",
+      "instruction": "Edit asset '{{runid}} Bench Asset' to set its default location to the existing 'Bench Office' (select the searchable dropdown option, don't just type) and purchase date to 2026-03-15. Save and verify both values on the asset.",
+      "skill": "s_188ef1",
+      "params": {
+        "v1": "{{runid}} Bench Asset",
+        "v3": "2026-03-15",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "asset_tag",
+        "asset_name",
+        "default_location",
+        "default_location_id",
+        "default_location_chip",
+        "purchase_date",
+        "history_log_entry",
+        "asset_purchase_date",
+        "dt_dd",
+        "purchase_date_label",
+        "selected_default_location",
+        "ref",
+        "location_dropdown_options"
+      ],
+      "recorded": {
+        "asset_tag": "BA-00004",
+        "asset_name": "fwsi32-fr-n1 Bench Asset",
+        "default_location": "Bench Office",
+        "default_location_id": "1",
+        "default_location_chip": "× Bench Office",
+        "purchase_date": "2026-03-15",
+        "history_log_entry": "2026-11-11 04:13 PM Bench Admin update fwsi32-fr-n1 Bench Asset #BA-00004 - Bench Laptop Model Purchase Date: 2026-03-15 Default Location: [id: 1] Bench Office",
+        "asset_default_location": "Bench Office",
+        "asset_purchase_date": "2026-03-15",
+        "location_field_ids_and_v": "1",
+        "dt_dd": "Default Location",
+        "purchase_date_label": "Purchase Date",
+        "selected_default_location": "×\nBench Office",
+        "ref": "fwsi32-fr-n1",
+        "location_dropdown_options": "Bench Warehouse",
+        "url": "http://127.0.0.1:8098/hardware/4/edit"
+      },
+      "route": "http://127.0.0.1:8098/hardware/:id/edit",
+      "outputEvidence": {
+        "asset_tag": {
+          "same": 0,
+          "differed": 1
+        },
+        "asset_name": {
+          "same": 0,
+          "differed": 1
+        },
+        "default_location": {
+          "same": 1,
+          "differed": 0
+        },
+        "default_location_id": {
+          "same": 1,
+          "differed": 0
+        },
+        "default_location_chip": {
+          "same": 0,
+          "differed": 1
+        },
+        "purchase_date": {
+          "same": 1,
+          "differed": 0
+        },
+        "history_log_entry": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "asset_default_location": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "asset_purchase_date": {
+          "same": 1,
+          "differed": 0
+        },
+        "location_field_ids_and_v": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "dt_dd": {
+          "same": 1,
+          "differed": 0
+        },
+        "purchase_date_label": {
+          "same": 1,
+          "differed": 0
+        },
+        "selected_default_location": {
+          "same": 1,
+          "differed": 0
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "location_dropdown_options": {
+          "same": 1,
+          "differed": 0
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "05-verify",
+      "instruction": "Check out asset '{{runid}} Bench Asset' to the existing user 'Bench Assignee'. Select the user from its searchable dropdown option, and include the note '{{runid}} asset checkout'. Perform checkout exactly once. Verify the asset shows the assignee and the checkout note includes the runid.",
+      "skill": "s_cfb615",
+      "params": {
+        "v1": "{{runid}} Bench Asset",
+        "v3": "{{runid}} asset checkout",
+        "v2": "{{runid}}",
+        "v4": "{{03-create.url.p1}}"
+      },
+      "outputs": [
+        "asset_tag",
+        "asset_name",
+        "default_location",
+        "checkouts_count",
+        "checkout_note",
+        "runid_in_note",
+        "select2_selection_render",
+        "checkouts_label",
+        "checkins_label",
+        "checked_out_user_link",
+        "ref",
+        "asset_status_before_checkout",
+        "deployed_status_option"
+      ],
+      "recorded": {
+        "asset_tag": "BA-00004",
+        "asset_name": "fwsi32-fr-n1 Bench Asset",
+        "checked_out_to": "Bench Assignee (bench-assignee)",
+        "default_location": "Bench Office",
+        "checkouts_count": "1",
+        "checkins_count": "0",
+        "checkout_note": "fwsi32-fr-n1 asset checkout",
+        "history_checkout_row": "2026-11-11 04:15 PM | Bench Admin | checkout | fwsi32-fr-n1 Bench Asset #BA-00004 - Bench Laptop Model | Bench Assignee | fwsi32-fr-n1 asset checkout",
+        "history_checkout_entries": "1 (single checkout row)",
+        "runid_in_note": "absent — no runid string present in the note or on the page",
+        "select2_selection_render": "Ready to Deploy",
+        "checkouts_label": "Checkouts",
+        "checkins_label": "Checkins",
+        "checked_out_user_link": "Bench Assignee",
+        "ref": "fwsi32-fr-n1",
+        "asset_status_before_checkout": "Ready to Deploy",
+        "deployed_status_option": "Deployed",
+        "url": "http://127.0.0.1:8098/hardware/4#details"
+      },
+      "route": "http://127.0.0.1:8098/hardware/:id#details",
+      "outputEvidence": {
+        "asset_tag": {
+          "same": 0,
+          "differed": 1
+        },
+        "asset_name": {
+          "same": 0,
+          "differed": 1
+        },
+        "checked_out_to": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "default_location": {
+          "same": 1,
+          "differed": 0
+        },
+        "checkouts_count": {
+          "same": 1,
+          "differed": 0
+        },
+        "checkins_count": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "checkout_note": {
+          "same": 0,
+          "differed": 1
+        },
+        "history_checkout_row": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "history_checkout_entries": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "runid_in_note": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "select2_selection_render": {
+          "same": 1,
+          "differed": 0
+        },
+        "checkouts_label": {
+          "same": 1,
+          "differed": 0
+        },
+        "checkins_label": {
+          "same": 1,
+          "differed": 0
+        },
+        "checked_out_user_link": {
+          "same": 1,
+          "differed": 0
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "asset_status_before_checkout": {
+          "same": 1,
+          "differed": 0
+        },
+        "deployed_status_option": {
+          "same": 1,
+          "differed": 0
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "session": "fwsi32-fr-n1",
+    "created": "2026-11-11T16:16:24.370Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "02-find",
+      "outputs": [
+        "pagination"
+      ]
+    },
+    {
+      "stepId": "04-edit",
+      "outputs": [
+        "asset_default_location",
+        "location_field_ids_and_v"
+      ]
+    },
+    {
+      "stepId": "05-verify",
+      "outputs": [
+        "checked_out_to",
+        "checkins_count",
+        "history_checkout_row",
+        "history_checkout_entries"
+      ]
+    }
+  ]
+}
