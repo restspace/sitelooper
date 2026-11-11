@@ -1,0 +1,9 @@
+facts http://127.0.0.1:8099: 13 relied (5 hard), 4 advisory
+error 03-create: its pinned procedure s_80a461 stopped at step 2 on its latest replay and has not replayed clean since — a compiled spec would stop there
+  why: s_80a461 is provisional: 1 of 3 replays succeeded; its replays stopped at step 2 ×2; the last 2 replay(s) all stopped (latest at step 2); 2 stop(s) were recovered by the model; 2 were judged harmless — forgiven in the daemon, which has a model to finish the step, but the compiled spec has none; last used 2026-11-11T16:16:46.396Z (--allow-demoted compiles it anyway).
+  fix: sitelooper rerecord bench/results/flows/fwgh21-fr.json 03-create
+
+nothing written: the error(s) above are about the RECORDING, not the app — a compiled spec would fail at a locator and read as drift.
+re-record the step(s) with the fix command above, or pass --allow-demoted to compile the demoted or unproven pin anyway.
+  warning: 03-create: step 2 (wait_for visible) acts on one element through a single unindexed candidate, page.locator('text=Saved') — never proved to identify one element on the page that produced it, so this run acts on whatever it matches first; re-record the step (sitelooper rerecord) to derive a full chain for it
+sitelooper: refused: a step is pinned to a unproven skill — see the diagnostics above (--allow-demoted compiles it anyway)

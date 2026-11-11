@@ -1,0 +1,128 @@
+
+[sweep] run 1/3: fwgh21-fr-n1 (store: /home/user/sitelooper/bench/results/fwgh21-fr-skills)
+[harness] ghost: defaulting APP_URL
+[harness] ghost: defaulting APP_EMAIL
+[harness] ghost: defaulting APP_PASSWORD
+[reset] ghost: no posts to delete
+[harness] ghost responded 200 at http://127.0.0.1:8099/
+stopped: fwgh21-fr-n1
+  flow "fwgh21-fr" saved: 5 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwgh21-fr.json
+  warning: note: 02-edit no longer publishes seed_post_count, total_published_rows_on_page, published_seed_post_1_id, published_seed_post_2_id, published_seed_post_3_id — no replay reads them from the page and the recording showed no line to read
+  warning: note: 03-create no longer publishes body_paragraph_count, post_editor_url, post_status — no replay reads them from the page and the recording showed no line to read
+  warning: note: 04-set no longer publishes tag_chip_count, publish_time, post_editor_url — no replay reads them from the page and the recording showed no line to read
+  warning: note: 05-report no longer publishes final_status — no replay reads it from the page and the recording showed no line to read
+  warning: note: 02-edit: added a read for published_seed_post_status to s_3ceed4 (page.getByRole('link', { name: 'Published', exact: true }); seen on the next instruction's start page)
+  warning: warning: 145 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.origin: "127.0.0.1" (output) in "http://127.0.0.1:8099"
+  flow.startUrl: "127.0.0.1" (output) in "http://127.0.0.1:8099/ghost/"
+  flow.steps[0].instruction: "{{env:APP_PASSWORD}}" (output) in "Sign in to the Ghost admin at http://127.0.0.1:8099/ghost/ using email admin@bench.local and password exactly {{env:APP_PASSWORD}}. Confirm the admin dashboard "
+  flow.steps[0].instruction: "admin@bench.local" (output) in "Sign in to the Ghost admin at http://127.0.0.1:8099/ghost/ using email admin@bench.local and password exactly {{env:APP_PASSWORD}}. Confirm the admin dashboard "
+  flow.steps[0].instruction: "127.0.0.1" (output) in "Sign in to the Ghost admin at http://127.0.0.1:8099/ghost/ using email admin@bench.local and password exactly {{env:APP_PASSWORD}}. Confirm the admin dashboard "
+arm=sitelooper model=openai/gpt-6-luna runid=fwgh21-fr-n1 stop=completed
+turns=6 wall=263.0s
+commands=5 cmdTime=225.0s cmdBytes=5623 timeouts=0
+orchestrator in=4814 cw=0 cr=16533 out=1077
+inner prompt=1249696 cached=1176320 completion=14364
+spend=$0.0245 maxUsd=3
+learn: A_n=0 replayed=0/5 full=0 repaired=0 compiled=5 variants=0
+-> /home/user/sitelooper/bench/results/fwgh21-fr-n1-sitelooper-result.json
+
+fwgh21-fr-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — fwgh21-fr-n1-bench-post, body includes runid=true
+  obj 3: PASS — tags=Bench News (bench-news), want only the seeded Bench News (bench-news)
+  obj 4: PASS — custom excerpt="Excerpt for fwgh21-fr-n1 Bench Post"
+  obj 5: PASS — status=published, visibility=public
+  obj 6: PASS — published_at=2026-09-01T16:12:00.000Z, want 2026-09-01
+  obj 7: PASS — slug fwgh21-fr-n1-bench-post reported
+
+[sweep] run 2/3: fwgh21-fr-n2 (replay flow fwgh21-fr, no orchestrator)
+[reset] ghost: deleted 1 post(s) (earlier runs' and non-seed)
+[sweep] fwgh21-fr-n2: 3 drift ticket(s) → fwgh21-fr-n2-drift.json
+
+fwgh21-fr-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — fwgh21-fr-n2-bench-post, body includes runid=true
+  obj 3: PASS — tags=Bench News (bench-news), want only the seeded Bench News (bench-news)
+  obj 4: PASS — custom excerpt="Excerpt for fwgh21-fr-n2 Bench Post"
+  obj 5: PASS — status=published, visibility=public
+  obj 6: PASS — published_at=2026-09-01T16:15:00.000Z, want 2026-09-01
+  obj 7: PASS — slug fwgh21-fr-n2-bench-post reported
+
+[sweep] run 3/3: fwgh21-fr-n3 (replay flow fwgh21-fr, no orchestrator)
+[reset] ghost: deleted 1 post(s) (earlier runs' and non-seed)
+[sweep] fwgh21-fr-n3: 1 drift ticket(s) → fwgh21-fr-n3-drift.json
+
+fwgh21-fr-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — fwgh21-fr-n3-bench-post, body includes runid=true
+  obj 3: PASS — tags=Bench News (bench-news), want only the seeded Bench News (bench-news)
+  obj 4: PASS — custom excerpt="fwgh21-fr-n3 excerpt for the bench post"
+  obj 5: PASS — status=published, visibility=public
+  obj 6: PASS — published_at=2026-09-01T16:16:00.000Z, want 2026-09-01
+  obj 7: PASS — slug fwgh21-fr-n3-bench-post reported
+
+Learning sweep fwgh21-fr (K=3)
+┌─────────┬───┬────────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid          │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼────────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwgh21-fr-n1' │ '7/7'    │ 'completed' │ 6     │ 5    │ 0.0245    │ 0   │ '0/5'        │ 263    │
+│ 1       │ 2 │ 'fwgh21-fr-n2' │ '7/7'    │ 'success'   │ 8     │ 5    │ 0.0027    │ 0.8 │ '5/5 (flow)' │ 85     │
+│ 2       │ 3 │ 'fwgh21-fr-n3' │ '7/7'    │ 'success'   │ 22    │ 5    │ 0.0061    │ 0.6 │ '5/5 (flow)' │ 94     │
+└─────────┴───┴────────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:8099
+  s_03a951  validated    5 steps  3/3 (100%)
+           Complete Ghost's publish confirmation flow for '{{v1}}' so it is published and publicly visible, not left as a…
+  s_28b404  validated    3 steps  3/3 (100%)
+           Sign in to the Ghost admin at {{v1}} using email {{v2}} and password exactly {{v3}}. Confirm the admin dashboa…
+  s_3ceed4  validated    4 steps  3/3 (100%)
+           In Ghost admin, read the titles of all published posts whose title starts with 'Seed:' exactly as shown. Do no…
+  s_55eab2  validated    2 steps  3/3 (100%)
+           Complete Ghost's publish confirmation flow for '{{v1}}' so it is published and publicly visible, not left as a…
+  s_597e0c  validated    1 steps  3/3 (100%)
+           Create a new Ghost post titled '{{v2}}' with exactly one body paragraph containing the text '{{v1}}'. Save it …
+  s_80a461  provisional  4 steps  1/3 (33%)
+           Create a new Ghost post titled '{{v2}}' with exactly one body paragraph containing the text '{{v1}}'. Save it …
+  s_aca1b1  validated    1 steps  3/3 (100%)
+           Sign in to the Ghost admin at {{v1}} using email {{v2}} and password exactly {{v3}}. Confirm the admin dashboa…
+  s_adb720  validated    5 steps  3/3 (100%)
+           Sign in to the Ghost admin at {{v1}} using email {{v2}} and password exactly {{v3}}. Confirm the admin dashboa…
+  s_b585c1  validated    2 steps  3/3 (100%)
+           Create a new Ghost post titled '{{v2}}' with exactly one body paragraph containing the text '{{v1}}'. Save it …
+  s_bd227f  validated    1 steps  3/3 (100%)
+           In Ghost admin, read the titles of all published posts whose title starts with 'Seed:' exactly as shown. Do no…
+  s_c09270  validated    4 steps  3/3 (100%)
+           Complete Ghost's publish confirmation flow for '{{v1}}' so it is published and publicly visible, not left as a…
+  s_e48371  validated    3 steps  3/3 (100%)
+           Complete Ghost's publish confirmation flow for '{{v1}}' so it is published and publicly visible, not left as a…
+  s_5f1265  validated   20 steps  2/2 (100%)
+           In the settings panel for the existing draft '{{v1}}', set its only tag to the existing tag '{{v3}}' by select…
+  s_aec214  validated    1 steps  2/2 (100%)
+           In the settings panel for the existing draft '{{v1}}', set its only tag to the existing tag '{{v3}}' by select…
+  s_18d545  provisional  4 steps  1/1 (100%)
+           Create a new Ghost post titled '{{v2}}' with exactly one body paragraph containing the text '{{v1}}'. Save it …
+  s_1a8b50  provisional  5 steps  1/1 (100%)
+           Create a new Ghost post titled '{{v2}}' with exactly one body paragraph containing the text '{{v1}}'. Save it …
+  s_3b8b10  provisional  1 steps  1/1 (100%)
+           Create a new Ghost post titled '{{v2}}' with exactly one body paragraph containing the text '{{v1}}'. Save it …
+  s_47f739  provisional  4 steps  1/1 (100%)
+           Create a new Ghost post titled '{{v2}}' with exactly one body paragraph containing the text '{{v1}}'. Save it …
+  s_5596ea  provisional  5 steps  1/1 (100%)  variant of s_80a461
+           Create a new Ghost post titled '{{v2}}' with exactly one body paragraph containing the text '{{v1}}'. Save it …
+  s_6721a1  provisional  5 steps  1/1 (100%)
+           Create a new Ghost post titled '{{v2}}' with exactly one body paragraph containing the text '{{v1}}'. Save it …
+  s_70c859  provisional  2 steps  1/1 (100%)
+           Create a new Ghost post titled '{{v2}}' with exactly one body paragraph containing the text '{{v1}}'. Save it …
+  s_a3bd79  provisional  4 steps  1/1 (100%)  variant of s_80a461
+           Create a new Ghost post titled '{{v2}}' with exactly one body paragraph containing the text '{{v1}}'. Save it …
+  s_baa3c9  provisional 19 steps  1/1 (100%)
+           In the settings panel for the existing draft '{{v1}}', set its only tag to the existing tag '{{v3}}' by select…
+  s_e8f299  provisional  2 steps  1/1 (100%)
+           Create a new Ghost post titled '{{v2}}' with exactly one body paragraph containing the text '{{v1}}'. Save it …
+  s_eb1525  provisional  5 steps  1/1 (100%)  variant of s_80a461
+           Create a new Ghost post titled '{{v1}} Bench Post' with exactly one body paragraph containing the text '{{v1}}…
+  s_f7b969  provisional  1 steps  1/1 (100%)
+           Create a new Ghost post titled '{{v2}}' with exactly one body paragraph containing the text '{{v1}}'. Save it …
+store: /home/user/sitelooper/bench/results/fwgh21-fr-skills
+
+summary: /home/user/sitelooper/bench/results/fwgh21-fr-sweep.json

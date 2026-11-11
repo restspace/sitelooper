@@ -1,0 +1,211 @@
+{
+  "flow": "fwgh21-fr",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_28b404; observed admin_dashboard_url=http://127.0.0.1:8099/ghost/#/analytics, signed_in_user=Bench Admin, dashboard_heading=Analytics.",
+      "values": {
+        "admin_dashboard_url": "http://127.0.0.1:8099/ghost/#/analytics",
+        "signed_in_user": "Bench Admin",
+        "dashboard_heading": "Analytics"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "9/9",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_adb720: step 3: read 'signed_in_email' returned a value the skill itself set/selected ('admin@bench.local') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_adb720: step 4: read 'password_field_value' returned a value the skill itself set/selected ('{{env:APP_PASSWORD}}') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_28b404: report value email_field_value is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)"
+      ],
+      "unreported": [
+        "signed_in_email",
+        "email_field_value",
+        "password_field_value"
+      ]
+    },
+    {
+      "id": "02-edit",
+      "status": "success",
+      "summary": "Replayed stored procedure s_3ceed4; observed published_seed_post_1=Seed: Welcome to the bench, published_seed_post_2=Seed: Release notes for September, published_seed_post_3=Seed: House style guide.",
+      "values": {
+        "published_seed_post_1": "Seed: Welcome to the bench",
+        "published_seed_post_2": "Seed: Release notes for September",
+        "published_seed_post_3": "Seed: House style guide"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "5/5",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_3ceed4: step 4: read 'published_seed_post_status' returned a value the skill itself set/selected ('Published') — confirms the control, not persistence; dropped from the report's confident values"
+      ],
+      "unreported": [
+        "published_seed_post_status"
+      ]
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "The draft post created by the replayed segments was already in the editor, so I did not create a second one. I waited for Ghost's \"Saved\" status, read the title back from the editor (\"fwgh21-fr-n2 Bench Post\"), and read the body paragraphs from the live DOM — the text \"fwgh21-fr-n2\" appears exactly once (a single paragraph containing only that text; the only other paragraph is empty). I then opened the Drafts list, which shows the post with status \"Draft\", confirming it was saved as a draft and not published; nothing was edited beyond the already-applied body text. (editor_save_status: Saved)",
+      "values": {
+        "post_title": "fwgh21-fr-n2 Bench Post",
+        "post_id": "6af494848fd6d00001d775ce",
+        "editor_url": "http://127.0.0.1:8099/ghost/#/editor/post/6af494848fd6d00001d775ce",
+        "editor_save_status": "Draft",
+        "body_paragraphs": "fwgh21-fr-n2, ",
+        "body_text_occurrences": "1",
+        "drafts_list_status": "Draft",
+        "data_kg_editor_p": "fwgh21-fr-n2"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_80a461 stopped at step 2 — no element matched any known locator for target (tried 1: page.locator('text=Saved'))",
+      "pinStopped": {
+        "skill": "s_80a461",
+        "step": 2,
+        "why": "no element matched any known locator for target (tried 1: page.locator('text=Saved'))"
+      },
+      "replayed": "1/4",
+      "repaired": false,
+      "turns": 8,
+      "warnings": [
+        "s_80a461: step 2: the target chain is dead and was not healed inline — the step's tool (wait_for) is not one inline healing acts for"
+      ],
+      "unreported": [
+        "body_paragraph",
+        "drafts_list_entries",
+        "post_title_in_editor"
+      ]
+    },
+    {
+      "id": "04-set",
+      "status": "success",
+      "summary": "Replayed stored procedure s_5f1265; observed post_title=fwgh21-fr-n2 Bench Post, publish_date=2026-09-01, slug=fwgh21-fr-n2-bench-post, post_url=127.0.0.1:8099/fwgh21-fr-n2-bench-post/, status=Saving..., post_reference_text=fwgh21-fr-n2, site_host=127.0.0.1.",
+      "values": {
+        "post_title": "fwgh21-fr-n2 Bench Post",
+        "publish_date": "2026-09-01",
+        "slug": "fwgh21-fr-n2-bench-post",
+        "post_url": "127.0.0.1:8099/fwgh21-fr-n2-bench-post/",
+        "status": "Saving...",
+        "post_reference_text": "fwgh21-fr-n2",
+        "site_host": "127.0.0.1"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "21/21",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_aec214: step 1: primary locator did not resolve; used fallback #2 page.locator('section > section > div:nth-of-type(1) > div > li > a')",
+        "s_5f1265: step 11: the panel this toggle shows (- heading \"Post settings\") is already showing — a click would hide it; skipped as already in effect",
+        "s_5f1265: step 13: read 'excerpt' returned a value the skill itself set/selected ('Excerpt for fwgh21-fr-n2 Bench Post') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_5f1265: step 18: read 'tag' returned a value the skill itself set/selected ('Bench News') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_5f1265: step 19: primary locator did not resolve; used fallback #2 page.locator('div:nth-of-type(1) > div > div:nth-of-type(1) > div > p > span')"
+      ],
+      "unreported": [
+        "tag",
+        "excerpt"
+      ]
+    },
+    {
+      "id": "05-report",
+      "status": "success",
+      "summary": "Replayed stored procedure s_03a951; observed public_post_heading=fwgh21-fr-n2 Bench Post, public_post_url=http://127.0.0.1:8099/fwgh21-fr-n2-bench-post/, slug=fwgh21-fr-n2-bench-post, public_post_title=fwgh21-fr-n2 Bench Post, post_title=fwgh21-fr-n2 Bench Post, excerpt=Excerpt for fwgh21-fr-n2 Bench Post, public_post_body_paragraph=fwgh21-fr-n2, public_post_date=01 Sep 2026, tag=BENCH NEWS.",
+      "values": {
+        "public_post_heading": "fwgh21-fr-n2 Bench Post",
+        "public_post_url": "http://127.0.0.1:8099/fwgh21-fr-n2-bench-post/",
+        "slug": "fwgh21-fr-n2-bench-post",
+        "public_post_title": "fwgh21-fr-n2 Bench Post",
+        "post_title": "fwgh21-fr-n2 Bench Post",
+        "excerpt": "Excerpt for fwgh21-fr-n2 Bench Post",
+        "public_post_body_paragraph": "fwgh21-fr-n2",
+        "public_post_date": "01 Sep 2026",
+        "tag": "BENCH NEWS"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "14/14",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 5,
+  "total": 5,
+  "repinned": 0,
+  "drift": 3,
+  "driftTickets": [
+    {
+      "flow": "fwgh21-fr",
+      "step": "03-create",
+      "skill": "s_80a461",
+      "atStep": "2",
+      "key": "target",
+      "similarity": 0.998,
+      "missedLocator": "page.locator('text=Saved')",
+      "fallbackUsed": null,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:8099/ghost/#/editor/post/:id",
+      "pageUrl": "http://127.0.0.1:8099/ghost/#/editor/post/6af494848fd6d00001d775ce"
+    },
+    {
+      "flow": "fwgh21-fr",
+      "step": "04-set",
+      "skill": "s_aec214",
+      "atStep": "1",
+      "key": "target",
+      "similarity": 1.001,
+      "missedLocator": "page.locator('[data-testid=\"posts-list-item\"] a')",
+      "fallbackUsed": "page.locator('section > section > div:nth-of-type(1) > div > li > a')",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "banked": true,
+      "pageUrlPattern": "http://127.0.0.1:8099/ghost/#/editor/post/:id",
+      "pageUrl": "http://127.0.0.1:8099/ghost/#/editor/post/6af494848fd6d00001d775ce"
+    },
+    {
+      "flow": "fwgh21-fr",
+      "step": "04-set",
+      "skill": "s_5f1265",
+      "atStep": "19",
+      "key": "target",
+      "similarity": 1.001,
+      "missedLocator": "page.getByText('fwgh21-fr-n2', { exact: true })",
+      "fallbackUsed": "page.locator('div:nth-of-type(1) > div > div:nth-of-type(1) > div > p > span')",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "banked": true,
+      "pageUrlPattern": "http://127.0.0.1:8099/ghost/#/editor/post/:id",
+      "pageUrl": "http://127.0.0.1:8099/ghost/#/editor/post/6af494848fd6d00001d775ce"
+    }
+  ],
+  "wallMs": 84616,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 84560,
+    "completionTokens": 1609,
+    "cachedTokens": 74752
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 84560,
+      "completionTokens": 1609,
+      "cachedTokens": 74752
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "openai/gpt-6-luna",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

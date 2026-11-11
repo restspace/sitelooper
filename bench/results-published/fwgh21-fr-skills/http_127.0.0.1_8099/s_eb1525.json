@@ -1,0 +1,196 @@
+{
+ "id": "s_eb1525",
+ "origin": "http://127.0.0.1:8099",
+ "template": "Create a new Ghost post titled '{{v1}} Bench Post' with exactly one body paragraph containing the text '{{v1}}'. Save it as a draft, then verify the post title and that the editor contains that paragraph exactly once.",
+ "params": {
+  "v1": {
+   "example": "fwgh21-fr-n3",
+   "usedIn": [
+    1
+   ],
+   "known": true,
+   "binding": "var:runid"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8099/ghost/#/editor/post/:id"
+ },
+ "steps": [
+  {
+   "tool": "type",
+   "args": {
+    "target": "@e465",
+    "text": "{{v1}}",
+    "tool": "type"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(1) > div > div:nth-of-type(1) > div > p"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 290,
+      "w": 740,
+      "h": 32,
+      "role": null,
+      "tag": "p",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8099/ghost/#/editor/post/:id",
+    "addedContains": [
+     "- textbox \"{{v1}}\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_80a461",
+    "step": 1
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "@e424",
+    "what": "text",
+    "label": "save_status"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "section > header > div > div > span > div"
+     },
+     {
+      "kind": "point",
+      "x": 175,
+      "y": 41,
+      "w": 87.3,
+      "h": 34,
+      "role": null,
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "save_status"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "@e437",
+    "what": "value",
+    "label": "post_title"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Post title"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "Post title"
+     },
+     {
+      "kind": "css",
+      "selector": "div > section > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > textarea"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 229,
+      "w": 740,
+      "h": 57,
+      "role": "textbox",
+      "tag": "textarea",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "post_title"
+  },
+  {
+   "tool": "read_all",
+   "args": {
+    "target": "div[contenteditable=\"true\"] p",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div[contenteditable=\"true\"] p"
+     }
+    ]
+   },
+   "label": "editor_paragraphs"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div > div:nth-of-type(1) > div > p > span"
+     },
+     {
+      "kind": "point",
+      "x": 324,
+      "y": 290,
+      "w": 108.5,
+      "h": 22,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "div_contenteditable_true"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "The post \"{{v1}} Bench Post\" exists and is saved as a draft: the editor's save indicator reads \"Draft - Saved\" and the title field still holds exactly \"{{v1}} Bench Post\". The Koenig editor body contains the text \"{{v1}}\" exactly once (one paragraph with that text, plus Ghost's usual empty trailing paragraph, which is an editor artifact rather than a second content paragraph). Nothing was published or altered beyond the draft save.",
+  "values": {
+   "post_title": "{{v1}} Bench Post",
+   "save_status": "Draft - Saved",
+   "post_id": "6af494dc8fd6d00001d775de",
+   "editor_paragraphs": "{{v1}}, ",
+   "occurrences_of_body_text": "1",
+   "div_contenteditable_true": "{{v1}}"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-11-11T16:16:46.416Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2
+ },
+ "status": "provisional",
+ "variantOf": "s_80a461",
+ "provenance": {
+  "session": "fwgh21-fr-n3",
+  "instruction": "Create a new Ghost post titled 'fwgh21-fr-n3 Bench Post' with exactly one body paragraph containing the text 'fwgh21-fr-n3'. Save it as a draft, then verify the post title and that the editor contains that paragraph exactly once.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-11-11T16:16:46.416Z"
+ },
+ "revision": 2
+}

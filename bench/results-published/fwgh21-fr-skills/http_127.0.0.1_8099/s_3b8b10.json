@@ -1,0 +1,93 @@
+{
+ "id": "s_3b8b10",
+ "origin": "http://127.0.0.1:8099",
+ "template": "Create a new Ghost post titled '{{v2}}' with exactly one body paragraph containing the text '{{v1}}'. Save it as a draft, then verify the post title and that the editor contains that paragraph exactly once.",
+ "params": {
+  "v1": {
+   "example": "fwgh21-fr-n3",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v2": {
+   "example": "fwgh21-fr-n3 Bench Post",
+   "usedIn": [],
+   "known": true
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8099/ghost/#/posts"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e343"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "link",
+      "name": "New post"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"posts-filters\"] a"
+     },
+     {
+      "kind": "css",
+      "selector": "section > div > header > section > div:nth-of-type(2) > a"
+     },
+     {
+      "kind": "point",
+      "x": 1196,
+      "y": 44,
+      "w": 87.6,
+      "h": 32,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8099/ghost/#/editor/post",
+    "addedContains": [
+     "- button \"Add feature image\"",
+     "- textbox \"Post title\"",
+     "- button \"Settings\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_597e0c",
+    "step": 1
+   }
+  }
+ ],
+ "contract": 2,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-11-11T16:16:46.432Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_9f26bb",
+  "index": 0,
+  "of": 3
+ },
+ "provenance": {
+  "session": "fwgh21-fr-n3",
+  "instruction": "Create a new Ghost post titled 'fwgh21-fr-n3 Bench Post' with exactly one body paragraph containing the text 'fwgh21-fr-n3'. Save it as a draft, then verify the post title and that the editor contains that paragraph exactly once.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-11-11T16:16:46.432Z"
+ },
+ "revision": 1
+}

@@ -1,0 +1,190 @@
+{
+  "flow": "fwgh21-fr",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_28b404; observed admin_dashboard_url=http://127.0.0.1:8099/ghost/#/analytics, signed_in_user=Bench Admin, dashboard_heading=Analytics.",
+      "values": {
+        "admin_dashboard_url": "http://127.0.0.1:8099/ghost/#/analytics",
+        "signed_in_user": "Bench Admin",
+        "dashboard_heading": "Analytics"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "9/9",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_adb720: step 3: read 'signed_in_email' returned a value the skill itself set/selected ('admin@bench.local') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_adb720: step 4: read 'password_field_value' returned a value the skill itself set/selected ('{{env:APP_PASSWORD}}') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_28b404: report value email_field_value is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)"
+      ],
+      "unreported": [
+        "signed_in_email",
+        "email_field_value",
+        "password_field_value"
+      ]
+    },
+    {
+      "id": "02-edit",
+      "status": "success",
+      "summary": "Replayed stored procedure s_3ceed4; observed published_seed_post_1=Seed: Welcome to the bench, published_seed_post_2=Seed: Release notes for September, published_seed_post_3=Seed: House style guide.",
+      "values": {
+        "published_seed_post_1": "Seed: Welcome to the bench",
+        "published_seed_post_2": "Seed: Release notes for September",
+        "published_seed_post_3": "Seed: House style guide"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "5/5",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_3ceed4: step 4: read 'published_seed_post_status' returned a value the skill itself set/selected ('Published') — confirms the control, not persistence; dropped from the report's confident values"
+      ],
+      "unreported": [
+        "published_seed_post_status"
+      ]
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "The post \"fwgh21-fr-n3 Bench Post\" exists and is saved as a draft: the editor's save indicator reads \"Draft - Saved\" and the title field still holds exactly \"fwgh21-fr-n3 Bench Post\". The Koenig editor body contains the text \"fwgh21-fr-n3\" exactly once (one paragraph with that text, plus Ghost's usual empty trailing paragraph, which is an editor artifact rather than a second content paragraph). Nothing was published or altered beyond the draft save.",
+      "values": {
+        "post_title": "fwgh21-fr-n3 Bench Post",
+        "save_status": "Draft - Saved",
+        "post_id": "6af494dc8fd6d00001d775de",
+        "editor_paragraphs": "fwgh21-fr-n3, ",
+        "occurrences_of_body_text": "1",
+        "div_contenteditable_true": "fwgh21-fr-n3"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_80a461 stopped at step 2 — no element matched any known locator for target (tried 1: page.locator('text=Saved'))",
+      "pinStopped": {
+        "skill": "s_80a461",
+        "step": 2,
+        "why": "no element matched any known locator for target (tried 1: page.locator('text=Saved'))"
+      },
+      "replayed": "1/4",
+      "repaired": false,
+      "turns": 5,
+      "warnings": [
+        "s_80a461: step 2: the target chain is dead and was not healed inline — the step's tool (wait_for) is not one inline healing acts for"
+      ],
+      "unreported": [
+        "body_paragraph",
+        "drafts_list_entries",
+        "post_title_in_editor"
+      ]
+    },
+    {
+      "id": "04-set",
+      "status": "success",
+      "summary": "Opened the settings panel of the existing draft \"fwgh21-fr-n3 Bench Post\" and set: the single tag to the existing \"Bench News\" (chosen from the suggestion list — a \"Bench Newsletter\" suggestion was ignored, no new tag created), the custom excerpt to \"fwgh21-fr-n3 excerpt for the bench post\", and the publish date to 2026-09-01 (time left at 16:16 UTC). The URL slug was left as Ghost generated it (\"fwgh21-fr-n3-bench-post\"). After the post auto-saved (\"Draft - Saved\") I reloaded the editor and reopened settings: the tag chip, excerpt, date and exact slug all persisted as listed. Nothing was published and the draft's other properties were untouched.",
+      "values": {
+        "post_title": "fwgh21-fr-n3 Bench Post",
+        "post_id": "6af494dc8fd6d00001d775de",
+        "tag": "Bench News",
+        "tag_source": "selected from suggestions (existing tag)",
+        "excerpt": "fwgh21-fr-n3 excerpt for the bench post",
+        "publish_date": "2026-09-01",
+        "publish_time": "16:16 UTC",
+        "url_slug": "fwgh21-fr-n3-bench-post",
+        "post_url_preview": "127.0.0.1:8099/fwgh21-fr-n3-bench-post/",
+        "save_status": "Draft - Saved",
+        "save_status_2": "Saving...",
+        "post_url_slug": "fwgh21-fr-n3-bench-post",
+        "excerpt_value": "fwgh21-fr-n3 excerpt for the bench post",
+        "ref": "fwgh21-fr-n3"
+      },
+      "tier": null,
+      "recovered": true,
+      "fellBack": "every candidate refused — s_aec214: not on the page this procedure starts from (expects http://127.0.0.1:8099/ghost/#/posts, browser is at http://127.0.0.1:8099/ghost#/editor/post/6af494dc8fd6d00001d775de) — nothing was run",
+      "replayed": null,
+      "repaired": false,
+      "turns": 17,
+      "unreported": [
+        "slug",
+        "post_url",
+        "status",
+        "post_reference_text",
+        "site_host"
+      ]
+    },
+    {
+      "id": "05-report",
+      "status": "success",
+      "summary": "Replayed stored procedure s_03a951; observed excerpt=Excerpt for fwgh21-fr-n3 Bench Post, public_post_heading=fwgh21-fr-n3 Bench Post, public_post_url=http://127.0.0.1:8099/fwgh21-fr-n3-bench-post/, slug=fwgh21-fr-n3-bench-post, public_post_title=fwgh21-fr-n3 Bench Post, post_title=fwgh21-fr-n3 Bench Post, public_post_body_paragraph=fwgh21-fr-n3, public_post_date=01 Sep 2026, tag=BENCH NEWS.",
+      "values": {
+        "excerpt": "Excerpt for fwgh21-fr-n3 Bench Post",
+        "public_post_heading": "fwgh21-fr-n3 Bench Post",
+        "public_post_url": "http://127.0.0.1:8099/fwgh21-fr-n3-bench-post/",
+        "slug": "fwgh21-fr-n3-bench-post",
+        "public_post_title": "fwgh21-fr-n3 Bench Post",
+        "post_title": "fwgh21-fr-n3 Bench Post",
+        "public_post_body_paragraph": "fwgh21-fr-n3",
+        "public_post_date": "01 Sep 2026",
+        "tag": "BENCH NEWS"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "14/14",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_e48371: step 2: none of the 4 expected page change(s) appeared in the step diff (found on the page instead)",
+        "s_03a951: step 2: read errored — the element shows another record than \"fwgh21-fr-n3 Bench Post\" — not published"
+      ],
+      "shadow": [
+        "s_e48371: [shadow:delta] step 2: its recorded page change \"- heading \\\"Seed: Welcome to the bench\\\"\" and 3 more was accepted from the live page, but it was already on the page before the step — this run did not produce it"
+      ]
+    }
+  ],
+  "passed": 5,
+  "total": 5,
+  "repinned": 0,
+  "drift": 1,
+  "driftTickets": [
+    {
+      "flow": "fwgh21-fr",
+      "step": "03-create",
+      "skill": "s_80a461",
+      "atStep": "2",
+      "key": "target",
+      "similarity": 0.998,
+      "missedLocator": "page.locator('text=Saved')",
+      "fallbackUsed": null,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:8099/ghost/#/editor/post/:id",
+      "pageUrl": "http://127.0.0.1:8099/ghost/#/editor/post/6af494dc8fd6d00001d775de"
+    }
+  ],
+  "wallMs": 93647,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 286324,
+    "completionTokens": 4171,
+    "cachedTokens": 268032
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 286324,
+      "completionTokens": 4171,
+      "cachedTokens": 268032
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "openai/gpt-6-luna",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

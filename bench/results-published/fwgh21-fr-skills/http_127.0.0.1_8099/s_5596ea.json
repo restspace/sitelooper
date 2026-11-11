@@ -1,0 +1,220 @@
+{
+ "id": "s_5596ea",
+ "origin": "http://127.0.0.1:8099",
+ "template": "Create a new Ghost post titled '{{v2}}' with exactly one body paragraph containing the text '{{v1}}'. Save it as a draft, then verify the post title and that the editor contains that paragraph exactly once.",
+ "params": {
+  "v1": {
+   "example": "fwgh21-fr-n2",
+   "usedIn": [
+    1
+   ],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v2": {
+   "example": "fwgh21-fr-n2 Bench Post",
+   "usedIn": [],
+   "known": true
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8099/ghost/#/editor/post/:id"
+ },
+ "steps": [
+  {
+   "tool": "type",
+   "args": {
+    "target": "@e465",
+    "text": "{{v1}}",
+    "tool": "type"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(1) > div > div:nth-of-type(1) > div > p"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 290,
+      "w": 740,
+      "h": 32,
+      "role": null,
+      "tag": "p",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8099/ghost/#/editor/post/:id",
+    "addedContains": [
+     "- textbox \"{{v1}}\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_80a461",
+    "step": 1
+   }
+  },
+  {
+   "tool": "wait_for",
+   "args": {
+    "target": "text=Saved",
+    "state": "visible",
+    "timeout_ms": 15000
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "text=Saved"
+     },
+     {
+      "kind": "text",
+      "text": "Draft - Saved"
+     },
+     {
+      "kind": "css",
+      "selector": "section > header > div > div > span > div"
+     },
+     {
+      "kind": "point",
+      "x": 175,
+      "y": 41,
+      "w": 87.3,
+      "h": 34,
+      "role": null,
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "role=textbox[name=\"Post title\"]",
+    "what": "value",
+    "label": "post_title"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "role=textbox[name=\"Post title\"]"
+     },
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Post title"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "Post title"
+     },
+     {
+      "kind": "css",
+      "selector": "div > section > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > textarea"
+     },
+     {
+      "kind": "point",
+      "x": 640,
+      "y": 229,
+      "w": 740,
+      "h": 57,
+      "role": "textbox",
+      "tag": "textarea",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "post_title"
+  },
+  {
+   "tool": "read_all",
+   "args": {
+    "target": "[data-kg=\"editor\"] p",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "[data-kg=\"editor\"] p"
+     }
+    ]
+   },
+   "label": "body_paragraphs"
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e418"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "link",
+      "name": "Posts"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div > section > header > div > a"
+     },
+     {
+      "kind": "point",
+      "x": 68,
+      "y": 41,
+      "w": 87.5,
+      "h": 34,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8099/ghost/#/posts",
+    "addedContains": [
+     "- button \"Search site Ctrl+K\"",
+     "- link \"Analytics\"",
+     "- link \"Network\"",
+     "- link \"View site\"",
+     "- link \"View site in new tab\""
+    ],
+    "lineDialect": 2
+   }
+  }
+ ],
+ "contract": 2,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-11-11T16:15:26.904Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_ae3214",
+  "index": 0,
+  "of": 2
+ },
+ "variantOf": "s_80a461",
+ "provenance": {
+  "session": "fwgh21-fr-n2",
+  "instruction": "Create a new Ghost post titled 'fwgh21-fr-n2 Bench Post' with exactly one body paragraph containing the text 'fwgh21-fr-n2'. Save it as a draft, then verify the post title and that the editor contains that paragraph exactly once.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-11-11T16:15:26.904Z"
+ },
+ "revision": 1
+}
