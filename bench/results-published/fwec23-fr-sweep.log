@@ -1,0 +1,97 @@
+
+[sweep] run 1/3: fwec23-fr-n1 (store: /home/user/sitelooper/bench/results/fwec23-fr-skills)
+[harness] espocrm: defaulting APP_URL
+[harness] espocrm: defaulting APP_EMAIL
+[harness] espocrm: defaulting APP_PASSWORD
+[reset] espocrm: no leftover bench opportunities
+[harness] espocrm responded 200 at http://127.0.0.1:8097/
+stopped: fwec23-fr-n1
+  flow "fwec23-fr" saved: 7 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwec23-fr.json
+  warning: note: 01-signin no longer publishes nav_items — no replay reads it from the page and the recording showed no line to read
+  warning: note: 02-open no longer publishes matching_count — no replay reads it from the page and the recording showed no line to read
+  warning: note: 04-edit no longer publishes record_url, stage_detail, probability — no replay reads them from the page and the recording showed no line to read
+  warning: note: 05-edit no longer publishes opportunity_currency, detail_amount, detail_close_date — no replay reads them from the page and the recording showed no line to read
+  warning: note: 06-edit no longer publishes assigned_user_id, assigned_user_detail — no replay reads them from the page and the recording showed no line to read
+  warning: note: 07-create no longer publishes post_note_id, post_note_url — no replay reads them from the page and the recording showed no line to read
+  warning: warning: 184 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.startUrl: "http://127.0.0.1:8097/" (output) in "http://127.0.0.1:8097/"
+  flow.steps[0].instruction: "http://127.0.0.1:8097/" (output) in "Sign in to EspoCRM at http://127.0.0.1:8097/ using username admin and password exactly {{env:APP_PASSWORD}}; verify that the authenticated CRM page is open."
+  flow.steps[0].instruction: "admin" (output) in "Sign in to EspoCRM at http://127.0.0.1:8097/ using username admin and password exactly {{env:APP_PASSWORD}}; verify that the authenticated CRM page is open."
+  flow.steps[0].params.v1: "http://127.0.0.1:8097/" (output) in "http://127.0.0.1:8097/"
+  flow.steps[0].params.v2: "admin" (output) in "admin"
+arm=sitelooper model=openai/gpt-6-luna runid=fwec23-fr-n1 stop=completed
+turns=8 wall=395.6s
+commands=7 cmdTime=357.1s cmdBytes=6812 timeouts=0
+orchestrator in=5198 cw=0 cr=25737 out=962
+inner prompt=2312639 cached=2172416 completion=20317
+spend=$0.0413 maxUsd=3
+learn: A_n=0 replayed=0/7 full=0 repaired=0 compiled=7 variants=0
+-> /home/user/sitelooper/bench/results/fwec23-fr-n1-sitelooper-result.json
+
+fwec23-fr-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: PASS — id=6af485a27cfddc969, account=Bench Account, description includes runid=true
+  obj 3: PASS — stage=Negotiation
+  obj 4: PASS — amount=12500 USD, closeDate=2026-12-31
+  obj 5: PASS — assignedUser=Bench Assignee
+  obj 6: PASS — 1 post(s), 1 carrying the runid
+  obj 7: PASS — record id 6af485a27cfddc969 reported
+
+[sweep] run 2/3: fwec23-fr-n2 (replay flow fwec23-fr, no orchestrator)
+[reset] espocrm: deleted 1 leftover bench opportunit(ies)
+[sweep] fwec23-fr-n2: 2 drift ticket(s) → fwec23-fr-n2-drift.json
+
+fwec23-fr-n2: objectives passed 6/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: PASS — id=6af4869d9abdc7205, account=Bench Account, description includes runid=true
+  obj 3: PASS — stage=Negotiation
+  obj 4: FAIL — amount=1000 USD, closeDate=2018-01-31
+  obj 5: PASS — assignedUser=Bench Assignee
+  obj 6: PASS — 1 post(s), 1 carrying the runid
+  obj 7: PASS — record id 6af4869d9abdc7205 reported
+
+[sweep] run 3/3: fwec23-fr-n3 (replay flow fwec23-fr, no orchestrator)
+[reset] espocrm: deleted 1 leftover bench opportunit(ies)
+[sweep] fwec23-fr-n3: 2 drift ticket(s) → fwec23-fr-n3-drift.json
+
+fwec23-fr-n3: objectives passed 6/7
+  obj 1: PASS — all 3 seed names reported
+  obj 2: PASS — id=6af4871b7c93327a7, account=Bench Account, description includes runid=true
+  obj 3: PASS — stage=Negotiation
+  obj 4: FAIL — amount=1000 USD, closeDate=2018-01-31
+  obj 5: PASS — assignedUser=Bench Assignee
+  obj 6: PASS — 1 post(s), 1 carrying the runid
+  obj 7: PASS — record id 6af4871b7c93327a7 reported
+
+Learning sweep fwec23-fr (K=3)
+┌─────────┬───┬────────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid          │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼────────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwec23-fr-n1' │ '7/7'    │ 'completed' │ 8     │ 7    │ 0.0413    │ 0   │ '0/7'        │ 396    │
+│ 1       │ 2 │ 'fwec23-fr-n2' │ '6/7'    │ 'success'   │ 0     │ 7    │ 0         │ 1   │ '7/7 (flow)' │ 119    │
+│ 2       │ 3 │ 'fwec23-fr-n3' │ '6/7'    │ 'success'   │ 0     │ 7    │ 0         │ 1   │ '7/7 (flow)' │ 119    │
+└─────────┴───┴────────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:8097
+  s_164f20  validated    6 steps  3/3 (100%)
+           Create a new EspoCRM opportunity named '{{v2}}', linked to the account 'Bench Account' by selecting the actual…
+  s_31723e  validated   10 steps  3/3 (100%)
+           In EspoCRM, open the Opportunities list and report the names of every opportunity whose name starts exactly wi…
+  s_4331dd  validated   23 steps  3/3 (100%)
+           Edit the existing opportunity '{{v1}}' to set Amount to {{v3}} in the default currency and Close Date to {{v4}…
+  s_4609dc  validated    1 steps  3/3 (100%)
+           In EspoCRM, open the Opportunities list and report the names of every opportunity whose name starts exactly wi…
+  s_52763b  validated   12 steps  3/3 (100%)
+           Sign in to EspoCRM at {{v1}} using username {{v2}} and password exactly {{v3}}; verify that the authenticated …
+  s_58289d  validated    9 steps  3/3 (100%)
+           Edit the existing opportunity '{{v1}}' and assign it to user 'Bench Assignee' by choosing the actual matching …
+  s_a9bba5  validated    6 steps  3/3 (100%)
+           On the Stream of the existing opportunity '{{v1}}', create a post whose text includes the exact runid '{{v2}}'…
+  s_e738a0  validated    1 steps  3/3 (100%)
+           Create a new EspoCRM opportunity named '{{v2}}', linked to the account 'Bench Account' by selecting the actual…
+  s_eb2f01  validated   27 steps  3/3 (100%)
+           Create a new EspoCRM opportunity named '{{v2}}', linked to the account 'Bench Account' by selecting the actual…
+  s_f6299d  validated    9 steps  3/3 (100%)
+           Edit the existing opportunity '{{v1}}' and set its stage to Negotiation. Save, then verify the detail page dis…
+store: /home/user/sitelooper/bench/results/fwec23-fr-skills
+
+summary: /home/user/sitelooper/bench/results/fwec23-fr-sweep.json
