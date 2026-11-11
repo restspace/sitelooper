@@ -52,15 +52,28 @@ export interface RecordedStepEvidence {
 }
 
 /**
+ * The tools that enter a value. One never navigates, and the url recorded
+ * after it keeps only its path (skills/compile.ts VALUE_ENTRY_TOOLS), so it
+ * says nothing about where the next step started that the step before it did
+ * not say better.
+ */
+const VALUE_ENTRY = new Set(['fill', 'type']);
+
+/**
  * Where step `index` was recorded STARTING: where the nearest earlier step
  * ended — its own url expectation, a pattern; or the url a goto was sent to,
  * which is a URL and not a pattern — else the pattern the segment starts on.
  * Undefined when the recording does not say: a `back`, whose landing no step
  * carries.
+ *
+ * Value-entry steps are looked past. Kanboard routes by query string, so the
+ * pattern of every fill there is the bare origin; fwkb47-fr's three Saves each
+ * followed a fill, never left their page, and read as moves against it.
  */
 function recordedStart(steps: readonly RecordedStepEvidence[], index: number, segmentStart: string | undefined): { pattern: string } | { url: string } | undefined {
   for (let i = index - 1; i >= 0; i--) {
     const earlier = steps[i];
+    if (VALUE_ENTRY.has(earlier.tool)) continue;
     if (earlier.expect?.urlPattern) return { pattern: earlier.expect.urlPattern };
     if (earlier.tool === 'goto') return typeof earlier.args?.url === 'string' ? { url: earlier.args.url } : undefined;
     if (earlier.tool === 'back') return undefined;

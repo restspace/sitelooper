@@ -97,6 +97,19 @@ describe('recordedAsNavigation', () => {
     expect(recordedAsNavigation([click(moved, { effect: { kind: 'popup' } })], 0, TICKET)).toBe(false);
   });
 
+  it('a fill or type is looked past: its recorded url keeps only the path', () => {
+    // kanboard fwkb47-fr s_7a7c7c: open the comment form, fill it, Save — all on one task page.
+    const TASK = 'http://app.test/?controller=TaskViewController&action=show&task_id=:id';
+    const open = click({ urlPattern: TASK });
+    const fill: RecordedStepEvidence = { tool: 'fill', args: { target: '@e1', value: 'x' }, expect: { urlPattern: 'http://app.test/' } };
+    const type: RecordedStepEvidence = { tool: 'type', args: { target: '@e1', text: 'x' }, expect: { urlPattern: 'http://app.test/' } };
+    expect(recordedAsNavigation([open, fill, click({ urlPattern: TASK })], 2, LIST)).toBe(false);
+    expect(recordedAsNavigation([open, fill, type, click({ urlPattern: TASK })], 3, LIST)).toBe(false);
+    // ...back to where the segment starts when nothing else came before
+    expect(recordedAsNavigation([fill, click({ urlPattern: TASK })], 1, TASK)).toBe(false);
+    expect(recordedAsNavigation([fill, click({ urlPattern: TASK })], 1, LIST)).toBe(true);
+  });
+
   it('a click after a goto is judged against the url the goto was sent to, as a pattern', () => {
     // grafana fwgr91-fr: the goto's literal url and the click's recorded pattern are one page.
     const sent = 'http://app.test/d/abc/board?from=now-6h&to=now&timezone=browser';
