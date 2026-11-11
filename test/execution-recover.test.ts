@@ -92,8 +92,16 @@ describe('recordedAsNavigation', () => {
     expect(recordedAsNavigation([click({ ...moved, removedContains: ['- dialog "Delete?"'] })], 0, TICKET)).toBe(false);
     expect(recordedAsNavigation([click({ ...moved, removalRequired: true })], 0, TICKET)).toBe(false);
     expect(recordedAsNavigation([click({ ...moved, alertContains: 'Ticket deleted' })], 0, TICKET)).toBe(false);
-    expect(recordedAsNavigation([click(moved, { mints: { at: 'p1' } })], 0, TICKET)).toBe(false);
+    expect(recordedAsNavigation([click(moved, { mints: { at: 'p1' } as never })], 0, TICKET)).toBe(false);
+    expect(recordedAsNavigation([click(moved, { mints: { at: 'q.id', sole: true } as never })], 0, TICKET)).toBe(false);
     expect(recordedAsNavigation([click(moved, { effect: { kind: 'popup' } })], 0, TICKET)).toBe(false);
+  });
+
+  it('a mint that is not sole is url state a navigation filled in, not a record', () => {
+    // odoo fwod107-fr s_d3678a/2, menuitem "Contacts": mints { at: 'q.action', sole: false }
+    expect(recordedAsNavigation([click({ urlPattern: LIST }, { mints: { at: 'q.action', sole: false } as never })], 0, TICKET)).toBe(true);
+    // ...and still nothing else a navigation cannot do
+    expect(recordedAsNavigation([click({ urlPattern: LIST, alertContains: 'Saved' }, { mints: { at: 'q.action', sole: false } as never })], 0, TICKET)).toBe(false);
   });
 
   it('a step with no recorded url, or none at that index, is not', () => {

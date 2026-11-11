@@ -47,7 +47,7 @@ export interface RecordedStepEvidence {
     removalRequired?: unknown;
     lineDialect?: number;
   };
-  mints?: unknown;
+  mints?: { sole?: boolean };
   effect?: unknown;
 }
 
@@ -85,6 +85,11 @@ function recordedStart(steps: readonly RecordedStepEvidence[], index: number, se
  *    (`mints`), none taken away (`goneContains`, `removedContains`,
  *    `removalRequired`), no alert raised (`alertContains` — the app
  *    answering a commit), no page opened or closed (`effect`).
+ *    A mint marked `sole: false` is not a record: it is a state key that
+ *    arrived with others, a navigation filling in its url state, as the start
+ *    gate reads it (gates.ts mintedAhead). Odoo's top-menu links all carry one
+ *    (`q.action`), and fwod107-fr compiled "Contacts" and "Sales" with no
+ *    fallback for it.
  * What the click ADDED is not asked here — a link's landing adds lines too —
  * but of the page reached (arrivalStop).
  */
@@ -92,7 +97,8 @@ export function recordedAsNavigation(steps: readonly RecordedStepEvidence[], ind
   const step = steps[index];
   const e = step?.expect;
   if (!e?.urlPattern) return false;
-  if (step.mints || step.effect || e.alertContains || e.removedContains?.length || e.goneContains?.length || e.removalRequired) return false;
+  const minted = step.mints !== undefined && step.mints !== null && step.mints.sole !== false;
+  if (minted || step.effect || e.alertContains || e.removedContains?.length || e.goneContains?.length || e.removalRequired) return false;
   const from = recordedStart(steps, index, segmentStart);
   return from !== undefined && from !== e.urlPattern;
 }
