@@ -2781,6 +2781,8 @@ function emitSkillStep(recorded: SkillStep, segment: SpecSegment, index: number,
   // every state-changing tool replay executes.
   const obs = isMutatingAction(step.tool) ? `obs${ctx.urls}` : undefined;
   ctx.obs = obs;
+  // The label this step's markActed is emitted with: what noteNavigation settles.
+  const echoStep = `${ctx.segmentId}/${ctx.stepIndex}`;
   const action = emitSkillAction(step, segment, index, ctx, first);
   ctx.landing = undefined;
   ctx.obs = undefined;
@@ -2991,6 +2993,10 @@ function emitSkillStep(recorded: SkillStep, segment: SpecSegment, index: number,
   return [
     ...head,
     ...body,
+    // A click whose route changed selected nothing (the shared noteNavigation, as replay asks it; erpnext fwen10-fr).
+    ...(ctx.echoes && (step.tool === 'click' || step.tool === 'dblclick') && !landing && action.some((line) => line.includes('await markActed('))
+      ? [`noteNavigation(${ctx.echoes}, ${q(echoStep)}, ${urlBefore}, page.url());`]
+      : []),
     // The recording watched the page move by itself after this step, before
     // its next one went out (SkillStep.movedAfterMs, erpnext fwen6-luna
     // 02-find): the next step is held that long from the action's settle, as

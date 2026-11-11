@@ -54,7 +54,7 @@ import * as stopLines from '../execution/expect.js';
 export { lineShows, type LineShowsOptions } from '../execution/snapshot.js';
 export { consequentialExpectations, isEchoLine } from '../execution/expect.js';
 import { offRecordReadReason, readsRecordedKind, recordedKinds } from '../execution/positional.js';
-import { candidateNames, judgeEcho, markActed, noteCommit, noteInteraction, setsSomething } from '../execution/echo.js';
+import { candidateNames, judgeEcho, markActed, noteCommit, noteInteraction, noteNavigation, setsSomething } from '../execution/echo.js';
 import { documentOf, fillLost, guardedTyping, noteFill, rearmStandingFills, restoreStandingFills, standingFills, standingFillsLost } from '../execution/refill.js';
 import { hasTotpMarker, resolveSecrets, resolveSecretsAsync } from '../shared/secrets.js';
 import { appliedPickCandidates, armKeyboardPick, closeBeforeReopen, keyboardPickVerdict, isNavigation, pickAlreadyApplied, pickBaseline, hideBefore, hideEffectLines, hideVerdict, pressHadNoEffect, segmentStartDialect, toggleAlreadyShown, toggleEffectLines } from '../execution/toggle.js';
@@ -1973,6 +1973,10 @@ export async function replaySkill(
         noteCommit(interacted, liveLines(inDiff, params, countersAt(opts.facts, page.url())), tag);
         for (const slot of committedSlots(step.tool, inDiff)) if (!res.committed!.includes(slot)) res.committed!.push(slot);
       }
+      // A click whose route changed opened something and selected nothing: what
+      // its target's names noted is taken back (the shared noteNavigation,
+      // erpnext fwen10-fr 02-find), as the artifact does after its lifecycle.
+      if (step.tool === 'click' || step.tool === 'dblclick') noteNavigation(interacted, tag, urlBefore, page.url());
       // The ledger refills with what the field was GIVEN: a `{{env:NAME}}`
       // secret resolved (the fill just dispatched with it, so it resolves), or
       // a rebuilt sign-in form is refilled with the marker text. In memory
