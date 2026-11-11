@@ -1,0 +1,915 @@
+{
+ "id": "s_6e2423",
+ "origin": "http://127.0.0.1:4180",
+ "template": "On ticket {{v1}} titled {{v2}}, remove both parts {{v4}} and {{v5}}, verifying the refreshed parts table is empty. Then archive the ticket using the app's available action, wait for refresh, and verify confirmation/archive status and that the ticket is no longer active in the tickets list. Report the concrete confirmations and final state.",
+ "params": {
+  "v1": {
+   "example": "RD-1015",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i2:ticket_reference"
+  },
+  "v2": {
+   "example": "fwrd97-fr-n1 RD Bench Ticket",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i2:ticket_title"
+  },
+  "v3": {
+   "example": "fwrd97-fr-n1",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v4": {
+   "example": "fwrd97-fr-n1 RD Part A",
+   "usedIn": [
+    2
+   ],
+   "known": true,
+   "binding": "output:i3:part_name"
+  },
+  "v5": {
+   "example": "fwrd97-fr-n1 RD Part B",
+   "usedIn": [
+    4
+   ],
+   "known": true,
+   "binding": "output:i4:part_b_name"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:4180/#/tickets/:id",
+  "fingerprint": [
+   0,
+   0.047,
+   0.024,
+   0,
+   0,
+   0,
+   0.071,
+   0,
+   0,
+   0.024,
+   0,
+   0,
+   0.024,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.165,
+   0,
+   0.094,
+   0.047,
+   0,
+   0.047,
+   0.094,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0,
+   0,
+   0.024,
+   0,
+   0,
+   0,
+   0.024,
+   0,
+   0,
+   0,
+   0,
+   0.094,
+   0,
+   0.094,
+   0,
+   0.024,
+   0,
+   0,
+   0.024,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0,
+   0,
+   0,
+   0.047,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0,
+   0,
+   0,
+   0,
+   0.024,
+   0,
+   0,
+   0,
+   0.047,
+   0,
+   0,
+   0.094,
+   0,
+   0,
+   0,
+   0,
+   0.094,
+   0,
+   0,
+   0,
+   0.094,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.094,
+   0,
+   0.047,
+   0,
+   0.047,
+   0.024,
+   0,
+   0,
+   0,
+   0.047,
+   0.047,
+   0.024,
+   0,
+   0,
+   0,
+   0,
+   0.024,
+   0.024,
+   0,
+   0,
+   0.024,
+   0.024,
+   0,
+   0.047,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.024,
+   0,
+   0,
+   0,
+   0.047,
+   0,
+   0,
+   0,
+   0.047,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0,
+   0.071,
+   0,
+   0.047,
+   0.094,
+   0.118,
+   0,
+   0.047,
+   0.047,
+   0.024,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.024,
+   0,
+   0.235,
+   0.047,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0.047,
+   0,
+   0.071,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.141,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.282,
+   0,
+   0.071,
+   0.047,
+   0,
+   0,
+   0,
+   0.235,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.024,
+   0.047,
+   0.047,
+   0.212,
+   0.047,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0,
+   0.024,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0,
+   0.024,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0.047,
+   0.047,
+   0,
+   0.094,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.424,
+   0.024,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0.071,
+   0,
+   0,
+   0,
+   0,
+   0.024,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0.047,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0.071,
+   0,
+   0.118,
+   0,
+   0,
+   0.094,
+   0,
+   0.047,
+   0,
+   0.047,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.071,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.024,
+   0,
+   0,
+   0.094,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.024,
+   0.024,
+   0,
+   0.235,
+   0.024,
+   0,
+   0,
+   0.047,
+   0,
+   0,
+   0,
+   0.165,
+   0.141,
+   0,
+   0,
+   0,
+   0.094,
+   0.024,
+   0.047,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.024,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0,
+   0.024,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.071,
+   0,
+   0,
+   0.047,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0.047,
+   0,
+   0,
+   0.024,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.024,
+   0,
+   0,
+   0,
+   0.141,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.188,
+   0,
+   0.165,
+   0,
+   0.047,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.094,
+   0.047,
+   0,
+   0.047,
+   0,
+   0.094,
+   0,
+   0,
+   0,
+   0.024,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0.024,
+   0.047,
+   0,
+   0,
+   0.047,
+   0.071,
+   0,
+   0.047,
+   0.047,
+   0.047,
+   0,
+   0,
+   0,
+   0,
+   0.047,
+   0,
+   0.047,
+   0.024,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0,
+   0
+  ],
+  "requireText": [
+   "{{v2}}",
+   "{{v3}}"
+  ]
+ },
+ "steps": [
+  {
+   "tool": "dialog_expect",
+   "args": {
+    "action": "accept"
+   },
+   "locators": {}
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e575"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "scoped",
+      "container": "tr",
+      "hasText": "{{v4}}",
+      "selector": "td:nth-of-type(7) > button:nth-of-type(2)"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Delete"
+     },
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr:nth-of-type(1) > td:nth-of-type(7) > button:nth-of-type(2)"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"part-row-p18\"] button"
+     },
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "part-delete-p18"
+     },
+     {
+      "kind": "point",
+      "x": 1087,
+      "y": 399,
+      "w": 61.9,
+      "h": 29.5,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets/:id",
+    "addedContains": [
+     "- dialog \"Confirm\"",
+     "- heading \"Confirm\"",
+     "- button \"Cancel\"",
+     "- button \"Delete part\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=button[name=\"Delete part\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "role=button[name=\"Delete part\"]"
+     },
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "confirm-yes"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Delete part"
+     },
+     {
+      "kind": "id",
+      "selector": "#confirm-yes"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"confirm-dialog\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "#confirm-yes"
+     },
+     {
+      "kind": "point",
+      "x": 777,
+      "y": 500,
+      "w": 103.8,
+      "h": 39,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets/:id",
+    "addedContains": [
+     "- row \"Total (price × quantity) $250.00\""
+    ],
+    "goneContains": [
+     "- row \"{{v4}} $150.00 25% 1 Bench Supply Co. $187.50 Edit Delete\"",
+     "- cell \"{{v4}}\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e635"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "scoped",
+      "container": "tr",
+      "hasText": "{{v5}}",
+      "selector": "td:nth-of-type(7) > button:nth-of-type(2)"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Delete"
+     },
+     {
+      "kind": "css",
+      "selector": "div > table > tbody > tr > td:nth-of-type(7) > button:nth-of-type(2)"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"part-row-p19\"] button"
+     },
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "part-delete-p19"
+     },
+     {
+      "kind": "point",
+      "x": 1087,
+      "y": 399,
+      "w": 61.9,
+      "h": 29.5,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets/:id",
+    "addedContains": [
+     "- dialog \"Confirm\"",
+     "- heading \"Confirm\"",
+     "- button \"Cancel\"",
+     "- button \"Delete part\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=button[name=\"Delete part\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "role=button[name=\"Delete part\"]"
+     },
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "confirm-yes"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Delete part"
+     },
+     {
+      "kind": "id",
+      "selector": "#confirm-yes"
+     },
+     {
+      "kind": "css",
+      "selector": "[data-testid=\"confirm-dialog\"] button"
+     },
+     {
+      "kind": "css",
+      "selector": "#confirm-yes"
+     },
+     {
+      "kind": "point",
+      "x": 777,
+      "y": 500,
+      "w": 103.8,
+      "h": 39,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets/:id",
+    "addedContains": [
+     "- row \"No parts on this ticket yet.\"",
+     "- cell \"No parts on this ticket yet.\""
+    ],
+    "goneContains": [
+     "- row \"{{v5}} $200.00 25% 1 Bench Supply Co. $250.00 Edit Delete\"",
+     "- cell \"{{v5}}\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e657"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "archive"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Archive ticket"
+     },
+     {
+      "kind": "css",
+      "selector": "#view > div > div:nth-of-type(2) > button:nth-of-type(3)"
+     },
+     {
+      "kind": "point",
+      "x": 1115,
+      "y": 145,
+      "w": 121.7,
+      "h": 39,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets/:id",
+    "addedContains": [
+     "- button \"Unarchive ticket\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=link[name=\"Tickets\"] >> nth=0"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "role=link[name=\"Tickets\"] >> nth=0"
+     },
+     {
+      "kind": "testid",
+      "attr": "data-testid",
+      "value": "nav-tickets"
+     },
+     {
+      "kind": "role",
+      "role": "link",
+      "name": "Tickets"
+     },
+     {
+      "kind": "css",
+      "selector": "#nav > div > nav > a"
+     },
+     {
+      "kind": "point",
+      "x": 295,
+      "y": 29,
+      "w": 72.2,
+      "h": 34.5,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:4180/#/tickets",
+    "addedContains": [
+     "- heading \"Repair tickets\"",
+     "- button \"New ticket\"",
+     "- heading \"Filter tickets\"",
+     "- combobox \"Status\": {{*}}",
+     "- searchbox \"Reference, title or customer\""
+    ],
+    "lineDialect": 2
+   }
+  }
+ ],
+ "contract": 2,
+ "stats": {
+  "uses": 3,
+  "successes": 3,
+  "partial": 0,
+  "created": "2026-11-11T15:11:20.088Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2,
+  "lastUsed": "2026-11-11T15:14:05.490Z",
+  "stopStreak": 0
+ },
+ "status": "validated",
+ "seq": {
+  "chain": "s_2261a3",
+  "index": 0,
+  "of": 2
+ },
+ "provenance": {
+  "session": "fwrd97-fr-n1",
+  "instruction": "On ticket RD-1015 titled fwrd97-fr-n1 RD Bench Ticket, remove both parts fwrd97-fr-n1 RD Part A and fwrd97-fr-n1 RD Part B, verifying the refreshed parts table is empty. Then archive the ticket using the app's available action, wait for refresh, and verify confirmation/archive status and that the ticket is no longer active in the tickets list. Report the concrete confirmations and final state.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-11-11T15:11:20.088Z"
+ },
+ "revision": 3
+}
