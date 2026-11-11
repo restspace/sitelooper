@@ -358,11 +358,23 @@ runners.
 **Which clicks may be stood in for.** Every diffed click carries a recorded
 url, the one it was on afterwards, so "a click with a recorded url the browser
 is not on" does not make a click a navigation. `recordedAsNavigation` asks the
-recording: the click's url must differ from the one it was recorded starting on
-(the nearest earlier step's url, a goto's target, else the segment's start;
-unknown is not moved), and the step must carry nothing a navigation cannot do
-by itself: no `mints`, `goneContains`, `removedContains`, `removalRequired`,
-`alertContains` or page `effect`. On arrival `arrivalStop` asks the shared
+recording, and three things must hold.
+
+- The click moved. Its recorded url names a different page from the one it was
+  recorded starting on: the nearest earlier step's url, a goto's target, else
+  the segment's start. Fill and type steps are looked past, because their
+  recorded url keeps only its path. Pages are compared with `urlMatches`, never
+  as strings: `/hardware/{{v4}}`, `/hardware/:id` and `/hardware/:id#history`
+  are one page, and so are a goto's literal url and the pattern recorded after
+  it. A start the recording does not say (after a `back`) is not a move.
+- It carries nothing a navigation cannot do by itself: no `goneContains`,
+  `removedContains`, `removalRequired`, `alertContains` or page `effect`, and no
+  `mints`, except a mint marked `sole: false`, which is url state a navigation
+  filled in and not a created record (as `gates.ts` `mintedAhead` reads it).
+- No value was entered on its page before it. A click after a fill, type,
+  select, check or upload submits them, whatever else the recording shows.
+
+On arrival `arrivalStop` asks the shared
 effect verdict of the page reached, with an empty diff: the recorded lines that
 carry the run's own values must show within `ARRIVAL_WAIT_MS`, and the plain
 lines are not required, as for any link landing.
@@ -604,6 +616,32 @@ or a cursor-narrowed match) into the step's effect gate, rather than guessed at
 compile time from the chain.
 
 ---
+
+### `fixup.ts` — declared fix-ups
+
+`GUARD_WAIT_MS`, `GUARD_STATES`, `GUARD_REASON_MAX`, `guardedRun`,
+`wellFormedFixup`, `malformedFixups`, `fixupApplies`, `fixupSkipped`. No imports.
+
+A fix-up is a repair the recording agent made to something an earlier step of
+the same recording left wrong, recorded with the condition under which it is a
+repair at all. The agent declares it with the `fixup` tool before acting; the
+recorder accepts the condition only if it holds then, records it as a
+`wait_for` step carrying `guard`, marks the steps that follow `guarded`, and
+marks the first step after which the condition no longer holds `guardEnd`.
+Compile carries a well-formed fix-up into one skill segment, or dissolves it
+into ordinary steps (a group never closed, split by a page seam, or changed by
+another pass).
+
+| | Daemon (`src/skills/replay.ts`) | Artifact (`src/spec/emit.ts`) |
+|---|---|---|
+| The guard | `guardHolds` in the top-level step loop: settle, resolve through the shared policy, then the wait's own condition, within `GUARD_WAIT_MS` in total. No heal, no recovery, no drift ticket, and never the presence-wait window | `guardLines`: a segment-scoped `let fixupN`, `resolveCandidates` and the wait's `expect` under the same budget, any throw read as not holding |
+| It holds | `fixupApplies` in the replay's lines; the guarded steps run as ordinary steps, with their own gates and stops | `[sitelooper fixup]`; each guarded step's lines run inside `if (fixupN) { … }` |
+| It does not hold | `fixupSkipped` as a warning and a line; each guarded step is reported `skipped (fix-up gN not needed)`, counts as done, and contributes nothing (no bindings, echo notes or standing fills) | `[sitelooper skip]` with the step count; the wrapped steps do not run, so neither do their captures, `noteNavigation` or `watchProbes` |
+| Fault runs | not applicable | guarded gestures are left out of `faultSites`: a run may rightly skip them |
+| A malformed fix-up | one warning; the guard is dropped and its steps run unconditionally, as compile's dissolve would leave them | the same, decided at compile time |
+
+A guard is evaluated only at the top level of a skill. A missed guard means the
+mistake was not made this time; it is not a failure, a fallback or drift.
 
 ### `assert.ts` — what a missed assertion says
 
