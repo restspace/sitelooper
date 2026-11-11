@@ -74,11 +74,11 @@
       "specs": [
         {
           "title": "fwod107-fr",
-          "ok": false,
+          "ok": true,
           "tags": [],
           "tests": [
             {
-              "timeout": 600000,
+              "timeout": 300000,
               "annotations": [],
               "expectedStatus": "passed",
               "projectId": "",
@@ -87,32 +87,105 @@
                 {
                   "workerIndex": 0,
                   "parallelIndex": 0,
-                  "status": "failed",
-                  "duration": 4,
-                  "error": {
-                    "message": "Error: browserType.launch: Executable doesn't exist at /opt/pw-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell\n╔════════════════════════════════════════════════════════════╗\n║ Looks like Playwright was just installed or updated.       ║\n║ Please run the following command to download new browsers: ║\n║                                                            ║\n║     npx playwright install                                 ║\n║                                                            ║\n║ <3 Playwright Team                                         ║\n╚════════════════════════════════════════════════════════════╝",
-                    "stack": "Error: browserType.launch: Executable doesn't exist at /opt/pw-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell\n╔════════════════════════════════════════════════════════════╗\n║ Looks like Playwright was just installed or updated.       ║\n║ Please run the following command to download new browsers: ║\n║                                                            ║\n║     npx playwright install                                 ║\n║                                                            ║\n║ <3 Playwright Team                                         ║\n╚════════════════════════════════════════════════════════════╝"
-                  },
-                  "errors": [
+                  "status": "passed",
+                  "duration": 80751,
+                  "errors": [],
+                  "stdout": [
                     {
-                      "message": "Error: browserType.launch: Executable doesn't exist at /opt/pw-browsers/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell\n╔════════════════════════════════════════════════════════════╗\n║ Looks like Playwright was just installed or updated.       ║\n║ Please run the following command to download new browsers: ║\n║                                                            ║\n║     npx playwright install                                 ║\n║                                                            ║\n║ <3 Playwright Team                                         ║\n╚════════════════════════════════════════════════════════════╝"
+                      "text": "[sitelooper warn] 01-signin: report value logged_in_user is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 01-signin\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 02-create s_ab95a7/3: read 'customer_name' returned a value the skill itself set/selected ('fwod107-fr-spec Bench Customer') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 02-create s_ab95a7/4: read 'city' returned a value the skill itself set/selected ('Benchville') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 02-create s_c10201/3: read 'customer_reference' returned a value the skill itself set/selected ('fwod107-fr-spec') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 02-create: report value customer_name_field is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 02-create: report value customer_city_field is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-create\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 03-create s_ab68f8/4: read 'customer' returned a value the skill itself set/selected ('fwod107-fr-spec Bench Customer') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 03-create: report value product_reference is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-create\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-add\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 05-change\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 06-verify\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 07-verify\n"
                     }
                   ],
-                  "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-11-11T15:19:46.813Z",
+                  "steps": [
+                    {
+                      "title": "01-signin: Sign in to the Odoo app at http://127.0.0.1:8069/ using login admin and password exactly {{env:APP_PASSWORD}}. Verify that the authenticated app/home page is shown.",
+                      "duration": 6581
+                    },
+                    {
+                      "title": "02-create: Create a customer named {{runid}} Bench Customer with City set to Benchville. Ensure the customer name is selected/created properly, save it, and verify the saved customer record shows that name and city.",
+                      "duration": 10150
+                    },
+                    {
+                      "title": "03-create: Create a new quotation for customer {{runid}} Bench Customer with exactly one order line: select any existing product from the catalogue (choose it from the autocomplete dropdown), set quantity to 3, save the quotation, and report the selected product name, unit price shown, untaxed amount shown, and quotation reference. Verify the saved quotation still has one line.",
+                      "duration": 23006
+                    },
+                    {
+                      "title": "04-add: On quotation {{03-create.quotation_reference}}, add a second order line using a different existing catalogue product selected from its autocomplete dropdown, set quantity to 2, save, and verify both lines and the new untaxed amount. Report the second product name and new untaxed amount.",
+                      "duration": 19071
+                    },
+                    {
+                      "title": "05-change: On quotation {{03-create.quotation_reference}}, change the first line ({{03-create.product_name}}) quantity from 3 to 5, save, and verify the first line quantity and updated untaxed amount.",
+                      "duration": 9126
+                    },
+                    {
+                      "title": "06-verify: Confirm quotation {{03-create.quotation_reference}} so it becomes a sales order. Verify and report the order reference and the status shown after confirmation.",
+                      "duration": 1396
+                    },
+                    {
+                      "title": "07-verify: Cancel sales order {{03-create.quotation_reference}} so this run's created order is no longer active. Complete any confirmation dialog if shown, then verify the saved order status shown after cancelling and report it.",
+                      "duration": 10503
+                    }
+                  ],
+                  "startTime": "2026-11-11T15:20:19.915Z",
                   "annotations": [],
                   "attachments": [
                     {
-                      "name": "error-context",
-                      "contentType": "text/markdown",
-                      "path": "/home/user/sitelooper/bench/results/fwod107-fr-spec-spec-tmp/test-results/fwod107-fr-fwod107-fr/error-context.md"
+                      "name": "outputs",
+                      "contentType": "application/json",
+                      "body": "ewogICIwMS1zaWduaW4ubWludGVkIjogIjEyMyIsCiAgIjAxLXNpZ25pbi5wYWdlX3RpdGxlIjogIk9kb28gLSBEaXNjdXNzIiwKICAiMDEtc2lnbmluLmNvbXBhbnkiOiAiWW91ckNvbXBhbnkiLAogICIwMS1zaWduaW4ubWVzc2FnZV9jb3VudCI6ICI1IiwKICAiMDEtc2lnbmluLmFjdGl2aXR5X2NvdW50IjogIjMiLAogICIwMS1zaWduaW4uYXV0aGVudGljYXRlZF9ob21lX3VybCI6ICJodHRwOi8vMTI3LjAuMC4xOjgwNjkvd2ViI2FjdGlvbj0xMjMmY2lkcz0xJm1lbnVfaWQ9ODEiLAogICIwMi1jcmVhdGUubWludGVkIjogIjQ3IiwKICAiMDItY3JlYXRlLmN1c3RvbWVyX25hbWUiOiAiZndvZDEwNy1mci1zcGVjIEJlbmNoIEN1c3RvbWVyIiwKICAiMDItY3JlYXRlLmNpdHkiOiAiQmVuY2h2aWxsZSIsCiAgIjAyLWNyZWF0ZS5jdXN0b21lcl9yZWZlcmVuY2UiOiAiZndvZDEwNy1mci1zcGVjIiwKICAiMDItY3JlYXRlLmN1c3RvbWVyX3NlYXJjaF9yZXN1bHRfY291bnQiOiAiMS0xIiwKICAiMDItY3JlYXRlLmN1c3RvbWVyX3JlY29yZF9pZCI6ICI0NyIsCiAgIjAzLWNyZWF0ZS5taW50ZWQiOiAiMjQiLAogICIwMy1jcmVhdGUucXVvdGF0aW9uX3RvdGFsc19zdW1tYXJ5IjogIlVudGF4ZWQgQW1vdW50XHTCo8KgODg1LjAwXG5UQVggMjAlXHRcbsKjwqAxNzcuMDBcblxuVG90YWxcdMKjwqAxLDA2Mi4wMCIsCiAgIjAzLWNyZWF0ZS5xdW90YXRpb25fcmVmZXJlbmNlIjogIlMwMDAyNCIsCiAgIjAzLWNyZWF0ZS5xdW90YXRpb25fbGluZV9jb3VudCI6ICIxIiwKICAiMDMtY3JlYXRlLmN1c3RvbWVyIjogImZ3b2QxMDctZnItc3BlYyBCZW5jaCBDdXN0b21lciIsCiAgIjAzLWNyZWF0ZS5jdXN0b21lcl9jaXR5IjogIkJlbmNodmlsbGUiLAogICIwMy1jcmVhdGUucHJvZHVjdF9uYW1lIjogIltGVVJOXzY2NjZdIEFjb3VzdGljIEJsb2MgU2NyZWVucyIsCiAgIjAzLWNyZWF0ZS5xdWFudGl0eSI6ICIzLjAwIiwKICAiMDMtY3JlYXRlLnVuaXRfcHJpY2UiOiAiMjk1LjAwIiwKICAiMDMtY3JlYXRlLnByb2R1Y3RfdGF4X3JhdGUiOiAiMjAlIiwKICAiMDMtY3JlYXRlLnF1b3RhdGlvbl90YXhfYW1vdW50IjogIsKjwqAxNzcuMDAiLAogICIwMy1jcmVhdGUucXVvdGF0aW9uX3RvdGFsX2Ftb3VudCI6ICLCo8KgMSwwNjIuMDAiLAogICIwMy1jcmVhdGUuc2FsZXNfb3JkZXJfaWQiOiAiMjQiLAogICIwMy1jcmVhdGUudXJsLnEuaWQiOiAiMjQiLAogICIwNC1hZGQucXVvdGF0aW9uX3RvdGFsc19zdW1tYXJ5IjogIlVudGF4ZWQgQW1vdW50XHTCo8KgMSwxNjUuMDBcblRBWCAyMCVcdFxuwqPCoDIzMy4wMFxuXG5Ub3RhbFx0wqPCoDEsMzk4LjAwIiwKICAiMDQtYWRkLnF1b3RhdGlvbl9saW5lX2NvdW50IjogIjIiLAogICIwNC1hZGQuc2Vjb25kX29yZGVyX2xpbmVfZGV0YWlscyI6ICJbRS1DT00xMV0gQ2FiaW5ldCB3aXRoIERvb3JzXHRcbltFLUNPTTExXSBDYWJpbmV0IHdpdGggRG9vcnNcblx0Mi4wMFx0MTQwLjAwXHRcbjIwJVxuXHTCo8KgMjgwLjAwIiwKICAiMDQtYWRkLnF1b3RhdGlvbl9yZWZlcmVuY2UiOiAiUzAwMDI0IiwKICAiMDQtYWRkLmN1c3RvbWVyIjogImZ3b2QxMDctZnItc3BlYyBCZW5jaCBDdXN0b21lciIsCiAgIjA0LWFkZC5zZWNvbmRfcHJvZHVjdF9uYW1lIjogIltFLUNPTTExXSBDYWJpbmV0IHdpdGggRG9vcnMiLAogICIwNC1hZGQuc2Vjb25kX3Byb2R1Y3RfcXVhbnRpdHkiOiAiMi4wMCIsCiAgIjA0LWFkZC5zZWNvbmRfcHJvZHVjdF91bml0X3ByaWNlIjogIjE0MC4wMCIsCiAgIjA0LWFkZC5zZWNvbmRfbGluZV91bnRheGVkX2Ftb3VudCI6ICLCo8KgMjgwLjAwIiwKICAiMDQtYWRkLmZpcnN0X3Byb2R1Y3RfbmFtZSI6ICJbRlVSTl82NjY2XSBBY291c3RpYyBCbG9jIFNjcmVlbnMiLAogICIwNC1hZGQuZmlyc3RfcHJvZHVjdF9xdWFudGl0eSI6ICIzLjAwIiwKICAiMDQtYWRkLmZpcnN0X3Byb2R1Y3RfdW5pdF9wcmljZSI6ICIyOTUuMDAiLAogICIwNC1hZGQuZmlyc3RfbGluZV91bnRheGVkX2Ftb3VudCI6ICLCo8KgODg1LjAwIiwKICAiMDQtYWRkLm5ld191bnRheGVkX2Ftb3VudCI6ICLCo8KgMSwxNjUuMDAiLAogICIwNC1hZGQucXVvdGF0aW9uX3RheF9hbW91bnQiOiAiwqPCoDIzMy4wMCIsCiAgIjA0LWFkZC5xdW90YXRpb25fdG90YWxfYW1vdW50IjogIsKjwqAxLDM5OC4wMCIsCiAgIjA0LWFkZC5zYWxlc19vcmRlcl9pZCI6ICIyNCIsCiAgIjA1LWNoYW5nZS5xdW90YXRpb25fdG90YWxzX2FmdGVyX3NhdmUiOiAiVW50YXhlZCBBbW91bnRcdMKjwqAxLDc1NS4wMFxuVEFYIDIwJVx0XG7Co8KgMzUxLjAwXG5cblRvdGFsXHTCo8KgMiwxMDYuMDAiLAogICIwNS1jaGFuZ2UucXVvdGF0aW9uX2xpbmVfY291bnQiOiAiMiIsCiAgIjA1LWNoYW5nZS5maXJzdF9saW5lX3F1YW50aXR5IjogIjUuMDAiLAogICIwNS1jaGFuZ2UuZmlyc3RfbGluZV91bnRheGVkX2Ftb3VudCI6ICLCo8KgMSw0NzUuMDAiLAogICIwNS1jaGFuZ2UuZmlyc3RfcHJvZHVjdF9uYW1lIjogIltGVVJOXzY2NjZdIEFjb3VzdGljIEJsb2MgU2NyZWVucyIsCiAgIjA1LWNoYW5nZS5maXJzdF9saW5lX3VuaXRfcHJpY2UiOiAiMjk1LjAwIiwKICAiMDUtY2hhbmdlLnF1b3RhdGlvbl9yZWZlcmVuY2UiOiAiUzAwMDI0IiwKICAiMDUtY2hhbmdlLnNlY29uZF9saW5lX3VudGF4ZWRfYW1vdW50IjogIsKjwqAyODAuMDAiLAogICIwNS1jaGFuZ2Uuc2Vjb25kX3Byb2R1Y3RfbmFtZSI6ICJbRS1DT00xMV0gQ2FiaW5ldCB3aXRoIERvb3JzIiwKICAiMDUtY2hhbmdlLnNlY29uZF9wcm9kdWN0X3F1YW50aXR5IjogIjIuMDAiLAogICIwNS1jaGFuZ2UucXVvdGF0aW9uX3RheF9hbW91bnQiOiAiwqPCoDM1MS4wMCIsCiAgIjA1LWNoYW5nZS5xdW90YXRpb25fdG90YWxfYW1vdW50IjogIsKjwqAyLDEwNi4wMCIsCiAgIjA1LWNoYW5nZS51cGRhdGVkX3VudGF4ZWRfYW1vdW50IjogIsKjwqAxLDc1NS4wMCIsCiAgIjA1LWNoYW5nZS5zdWJ0b3RhbF9mb290ZXJfYWZ0ZXJfcmVsb2FkXzEiOiAiVW50YXhlZCBBbW91bnQgwqMgMSIsCiAgIjA1LWNoYW5nZS5zdWJ0b3RhbF9mb290ZXJfYWZ0ZXJfcmVsb2FkXzIiOiAiNzU1LjAwIiwKICAiMDUtY2hhbmdlLnRvdGFsc19hZnRlcl9yZWxvYWRfdGF4X2ZyYWdtZW50IjogIlRBWCAyMCVcdFxuwqPCoDM1MS4wMCIsCiAgIjA1LWNoYW5nZS5zdWJ0b3RhbF9mb290ZXJfYWZ0ZXJfcmVsb2FkXzQiOiAiVG90YWwgwqMgMiIsCiAgIjA1LWNoYW5nZS5zdWJ0b3RhbF9mb290ZXJfYWZ0ZXJfcmVsb2FkXzUiOiAiMTA2LjAwIiwKICAiMDUtY2hhbmdlLnNhbGVzX29yZGVyX2lkIjogIjI0IiwKICAiMDYtdmVyaWZ5Lm9yZGVyX3JlZmVyZW5jZSI6ICJTMDAwMjQiLAogICIwNi12ZXJpZnkucXVvdGF0aW9uX3N0YXR1c2JhciI6ICJTYWxlcyBPcmRlclxuUXVvdGF0aW9uIFNlbnRcblF1b3RhdGlvbiIsCiAgIjA2LXZlcmlmeS5zYWxlc19vcmRlcl90b3RhbHNfc3VtbWFyeSI6ICJVbnRheGVkIEFtb3VudFx0wqPCoDEsNzU1LjAwXG5UQVggMjAlXHRcbsKjwqAzNTEuMDBcblxuVG90YWxcdMKjwqAyLDEwNi4wMCIsCiAgIjA2LXZlcmlmeS5jb25maXJtZWRfb3JkZXJfc3RhdHVzIjogIlNhbGVzIE9yZGVyIiwKICAiMDctdmVyaWZ5LnNhbGVzX29yZGVyX3N0YXR1c2Jhcl9idXR0b24iOiAiU2FsZXMgT3JkZXIiLAogICIwNy12ZXJpZnkuc3RhdHVzX2FmdGVyX2NhbmNlbF9yZWxvIjogIkNhbmNlbGxlZCIsCiAgIjA3LXZlcmlmeS5jYW5jZWxsZWRfb3JkZXJfdG90YWxzIjogIlVudGF4ZWQgQW1vdW50XHTCo8KgMSw3NTUuMDBcblRBWCAyMCVcdFxuwqPCoDM1MS4wMFxuXG5Ub3RhbFx0wqPCoDIsMTA2LjAwIiwKICAiMDctdmVyaWZ5Lm9yZGVyX3JlZmVyZW5jZSI6ICJTMDAwMjQiLAogICIwNy12ZXJpZnkuY3VzdG9tZXJfcmVmZXJlbmNlIjogImZ3b2QxMDctZnItc3BlYyIKfQ=="
+                    },
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": ""
                     }
                   ]
                 }
               ],
-              "status": "unexpected"
+              "status": "expected"
             }
           ],
           "id": "5d5ba01fffa6e3362466-b31ab553c80f2e03be9b",
@@ -125,11 +198,11 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-11-11T15:19:44.499Z",
-    "duration": 2414.834,
-    "expected": 0,
+    "startTime": "2026-11-11T15:20:19.068Z",
+    "duration": 82090.314,
+    "expected": 1,
     "skipped": 0,
-    "unexpected": 1,
+    "unexpected": 0,
     "flaky": 0
   }
 }
