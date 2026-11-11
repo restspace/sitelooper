@@ -140,6 +140,67 @@ else
   fi
 fi
 
+# ------------------------------------------------- the compiled arm's browser
+#
+# The check above is for the DAEMON, which launches Chrome by channel. The
+# compiled arm (bench/spec-replay.mjs) runs under @playwright/test, which
+# launches the headless build its own version is pinned to, from
+# PLAYWRIGHT_BROWSERS_PATH. Nothing here ever installed that build: it came
+# with the box image, and it launched only while the image's build was the one
+# the pinned Playwright wants. On 2026-11-11 the image carried 1243 where
+# 1.61.1 wants 1228, and every compiled run of the fw*-fr sweep died at
+# "browserType.launch: Executable doesn't exist" before its first step.
+#
+# So ask the runner itself, and when it cannot launch: install the pinned
+# build (bounded: an environment's setup has a time limit, and a box with no
+# route to the download host must not spend it here), else link the newest
+# build the box does have in its place. The link is what got the sweep's
+# compiled runs through (results/fwod107-fr and the others); it runs the
+# compiled arm on a newer build than the pinned one, so it is said out loud.
+
+# What the pinned runner says when asked to launch: "OK", or its error's first line.
+spec_browser_probe() {
+  node -e "require('@playwright/test').chromium.launch({ headless: true }).then((b) => b.close()).then(() => console.log('OK'), (e) => console.log(String(e && e.message).split('\n')[0]))" 2>/dev/null || true
+}
+
+# $1: the probe's line. Links the newest installed headless build in place of
+# the missing one it names. Prints what it did; returns 1 when it could not.
+spec_browser_link() {
+  local want dir base rel have
+  want="$(printf '%s\n' "$1" | sed -n "s/.*Executable doesn't exist at \(.*\)$/\1/p")"
+  [ -n "$want" ] || return 1
+  dir="$(dirname "$(dirname "$want")")"   # …/chromium_headless_shell-1228
+  base="$(dirname "$dir")"
+  rel="${want#"$dir"/}"                   # chrome-headless-shell-linux64/chrome-headless-shell
+  have="$(ls -d "$base"/chromium_headless_shell-* 2>/dev/null | grep -vxF "$dir" | sort -V | tail -1 || true)"
+  [ -n "$have" ] && [ -x "$have/$rel" ] || return 1
+  # Only a link or an empty leftover is ever replaced, never a real build.
+  if [ -L "$dir" ]; then rm -f "$dir"; elif [ -d "$dir" ]; then rmdir "$dir" 2>/dev/null || return 1; fi
+  ln -s "$have" "$dir" || return 1
+  warn "the compiled arm will run on $(basename "$have") in place of $(basename "$dir") (linked)"
+}
+
+if [ "$SKIP_BROWSER" != "1" ]; then
+  say "Checking the compiled arm's browser"
+  probe="$(spec_browser_probe)"
+  if [ "$probe" = "OK" ]; then
+    echo "    the pinned Playwright launches its own build"
+  elif ! printf '%s\n' "$probe" | grep -q "Executable doesn't exist"; then
+    warn "the pinned Playwright could not launch a browser: ${probe:-no answer}"
+  else
+    spec_pw="$(node -p "require('@playwright/test/package.json').version")"
+    echo "    missing; installing chromium-headless-shell via playwright@${spec_pw} (90s limit)"
+    if timeout 90 npx --yes "playwright@${spec_pw}" install chromium-headless-shell > /tmp/spec-browser-install.log 2>&1 \
+      && [ "$(spec_browser_probe)" = "OK" ]; then
+      echo "    installed"
+    elif spec_browser_link "$probe" && [ "$(spec_browser_probe)" = "OK" ]; then
+      :
+    else
+      warn "no usable headless build: the compiled arm will fail at launch (see /tmp/spec-browser-install.log)"
+    fi
+  fi
+fi
+
 # ---------------------------------------------------------------- arm B
 
 if [ "$WITH_ARM_B" = "1" ]; then
