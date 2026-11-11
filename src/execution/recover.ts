@@ -52,19 +52,33 @@ export interface RecordedStepEvidence {
 }
 
 /**
- * The url pattern step `index` was recorded STARTING on: where the nearest
- * earlier step ended (its own url expectation, or the url a goto was sent
- * to), else where the segment starts. Undefined when the recording does not
- * say — a `back`, whose landing no step carries.
+ * Where step `index` was recorded STARTING: where the nearest earlier step
+ * ended — its own url expectation, a pattern; or the url a goto was sent to,
+ * which is a URL and not a pattern — else the pattern the segment starts on.
+ * Undefined when the recording does not say: a `back`, whose landing no step
+ * carries.
  */
-function recordedStart(steps: readonly RecordedStepEvidence[], index: number, segmentStart: string | undefined): string | undefined {
+function recordedStart(steps: readonly RecordedStepEvidence[], index: number, segmentStart: string | undefined): { pattern: string } | { url: string } | undefined {
   for (let i = index - 1; i >= 0; i--) {
     const earlier = steps[i];
-    if (earlier.expect?.urlPattern) return earlier.expect.urlPattern;
-    if (earlier.tool === 'goto') return typeof earlier.args?.url === 'string' ? earlier.args.url : undefined;
+    if (earlier.expect?.urlPattern) return { pattern: earlier.expect.urlPattern };
+    if (earlier.tool === 'goto') return typeof earlier.args?.url === 'string' ? { url: earlier.args.url } : undefined;
     if (earlier.tool === 'back') return undefined;
   }
-  return segmentStart;
+  return segmentStart ? { pattern: segmentStart } : undefined;
+}
+
+/**
+ * Whether a click recorded ending on `dest` moved from where it started. Two
+ * patterns come from the same compile and are compared as written. A goto's
+ * url is matched against the pattern instead: grafana fwgr91-fr sent a goto to
+ * `…?from=now-6h&to=now&timezone=browser` and recorded the click after it on
+ * `…?from=:id&timezone=browser&to=now` — the same page, and never the same
+ * string, so every click after a goto read as a move.
+ */
+function movedFrom(from: { pattern: string } | { url: string }, dest: string): boolean {
+  if ('pattern' in from) return from.pattern !== dest;
+  return from.url !== dest && !urlMatches(dest, from.url);
 }
 
 /**
@@ -80,7 +94,7 @@ function recordedStart(steps: readonly RecordedStepEvidence[], index: number, se
  * the record still there (test/replay-false-pass.browser.test.ts). Reaching
  * the destination is evidence only of the going. So the recording must show:
  *  - the click MOVED: its recorded url is not the one it was recorded
- *    starting on (recordedStart; unknown is not moved);
+ *    starting on (recordedStart, movedFrom; unknown is not moved);
  *  - nothing a navigation cannot have done by itself: no record minted
  *    (`mints`), none taken away (`goneContains`, `removedContains`,
  *    `removalRequired`), no alert raised (`alertContains` — the app
@@ -100,7 +114,7 @@ export function recordedAsNavigation(steps: readonly RecordedStepEvidence[], ind
   const minted = step.mints !== undefined && step.mints !== null && step.mints.sole !== false;
   if (minted || step.effect || e.alertContains || e.removedContains?.length || e.goneContains?.length || e.removalRequired) return false;
   const from = recordedStart(steps, index, segmentStart);
-  return from !== undefined && from !== e.urlPattern;
+  return from !== undefined && movedFrom(from, e.urlPattern);
 }
 
 /** How long the page the fallback reached is given to show the step's recorded lines. */

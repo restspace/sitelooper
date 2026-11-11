@@ -97,6 +97,17 @@ describe('recordedAsNavigation', () => {
     expect(recordedAsNavigation([click(moved, { effect: { kind: 'popup' } })], 0, TICKET)).toBe(false);
   });
 
+  it('a click after a goto is judged against the url the goto was sent to, as a pattern', () => {
+    // grafana fwgr91-fr: the goto's literal url and the click's recorded pattern are one page.
+    const sent = 'http://app.test/d/abc/board?from=now-6h&to=now&timezone=browser';
+    const stayed = 'http://app.test/d/abc/board?from=:id&timezone=browser&to=now';
+    const goto: RecordedStepEvidence = { tool: 'goto', args: { url: sent } };
+    expect(recordedAsNavigation([goto, click({ urlPattern: stayed })], 1, LIST)).toBe(false);
+    expect(recordedAsNavigation([goto, click({ urlPattern: 'http://app.test/d/abc/board/settings' })], 1, LIST)).toBe(true);
+    // a record id the pattern reduced is the same page too
+    expect(recordedAsNavigation([{ tool: 'goto', args: { url: 'http://app.test/tickets/15' } }, click({ urlPattern: 'http://app.test/tickets/:id' })], 1, LIST)).toBe(false);
+  });
+
   it('a mint that is not sole is url state a navigation filled in, not a record', () => {
     // odoo fwod107-fr s_d3678a/2, menuitem "Contacts": mints { at: 'q.action', sole: false }
     expect(recordedAsNavigation([click({ urlPattern: LIST }, { mints: { at: 'q.action', sole: false } as never })], 0, TICKET)).toBe(true);
