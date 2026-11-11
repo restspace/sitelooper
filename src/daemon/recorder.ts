@@ -320,6 +320,17 @@ export interface RecordedStep {
    * and an eval's answer is no source a replay has (fwsi7's href).
    */
   evalResult?: string;
+  /**
+   * This wait_for is a fix-up's CONDITION (execution/fixup.ts): a check that is
+   * true because of something an earlier step left wrong. When it holds, the
+   * steps it guards run; when it does not, there is nothing to repair and they
+   * are skipped. `reason` is the recording agent's own sentence.
+   */
+  guard?: { id: string; reason: string };
+  /** This step belongs to the fix-up whose guard has this id: it runs only if that guard held. */
+  guarded?: string;
+  /** The last step of a fix-up: after it, the recorder saw the guard's condition turn false. */
+  guardEnd?: true;
   /** Set by compile (collapseTogglePairs), never by the recorder: see SkillStep.toggle. */
   toggle?: true;
   /** Set by compile (carryOpener), never by the recorder: see SkillStep.closedBefore. */
