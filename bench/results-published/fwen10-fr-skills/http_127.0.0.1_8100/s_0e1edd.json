@@ -1,0 +1,108 @@
+{
+ "id": "s_0e1edd",
+ "origin": "http://127.0.0.1:8100",
+ "template": "Create a Sales Order for the existing customer '{{v1}}' with delivery date {{v3}} and exactly two item lines: choose '{{v4}}' from item suggestions at its default rate, quantity 3; choose 'Bench Gadget' from suggestions at its default rate, quantity 2. Save as a draft and verify customer, delivery date, both exact linked items, quantities, and their rates; report the rates observed.",
+ "params": {
+  "v1": {
+   "example": "fwen10-fr-n3 Bench Customer",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i3:customer_list_row"
+  },
+  "v2": {
+   "example": "fwen10-fr-n3",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v3": {
+   "example": "2026-12-31",
+   "usedIn": []
+  },
+  "v4": {
+   "example": "Bench Widget",
+   "usedIn": []
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8100/app/customer/{{v1}}"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e2714"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Create"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(2) > button"
+     },
+     {
+      "kind": "point",
+      "x": 887,
+      "y": 78,
+      "w": 79.8,
+      "h": 28,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8100/app/customer/{{v1}}",
+    "addedContains": [
+     "- menu \"Pricing Rule\"",
+     "- link \"Pricing Rule\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_d2c431",
+    "step": 1
+   }
+  },
+  {
+   "tool": "goto",
+   "args": {
+    "url": "http://127.0.0.1:8100/app/sales-order/new"
+   },
+   "locators": {},
+   "via": {
+    "skill": "s_d2c431",
+    "step": 3
+   }
+  }
+ ],
+ "contract": 4,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-11-11T17:30:52.737Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 4
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_a7a9d6",
+  "index": 0,
+  "of": 3
+ },
+ "provenance": {
+  "session": "fwen10-fr-n3",
+  "instruction": "Create a Sales Order for the existing customer 'fwen10-fr-n3 Bench Customer' with delivery date 2026-12-31 and exactly two item lines: choose 'Bench Widget' from item suggestions at its default rate, quantity 3; choose 'Bench Gadget' from suggestions at its default rate, quantity 2. Save as a draft and verify customer, delivery date, both exact linked items, quantities, and their rates; report the rates observed.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-11-11T17:30:52.737Z"
+ },
+ "revision": 1
+}

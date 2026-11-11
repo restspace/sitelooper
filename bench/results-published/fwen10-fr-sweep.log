@@ -1,0 +1,147 @@
+
+[sweep] run 1/3: fwen10-fr-n1 (store: /home/user/sitelooper/bench/results/fwen10-fr-skills)
+[harness] erpnext: defaulting APP_URL
+[harness] erpnext: defaulting APP_EMAIL
+[harness] erpnext: defaulting APP_PASSWORD
+[reset] erpnext: no sales orders to delete
+[harness] erpnext responded 200 at http://127.0.0.1:8100/
+stopped: fwen10-fr-n1
+  flow "fwen10-fr" saved: 6 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwen10-fr.json
+  warning: note: 01-signin no longer publishes item_list_url — no replay reads it from the page and the recording showed no line to read
+  warning: note: 02-find no longer publishes filtered_list_url, so_1_customer_name, total_sales_order_count, total_so_count_no_filter — no replay reads them from the page and the recording showed no line to read
+  warning: note: 05-verify no longer publishes line_1, line_2 — no replay reads them from the page and the recording showed no line to read
+  warning: note: 06-add no longer publishes timeline_order_status — no replay reads it from the page and the recording showed no line to read
+  warning: note: 02-find: added a read for so_header_title_2 to s_c34600 (page.getByRole('link', { name: 'Seed: Alpha Traders', exact: true }); seen on the next instruction's start page)
+  warning: note: 02-find: added a read for so_header_title to s_c34600 (page.getByRole('link', { name: 'Seed: Alpha Traders', exact: true }); seen on the next instruction's start page)
+  warning: warning: 1 value(s) KNOWN to be this run's survived unslotted — a replay will act on or wait for the recording's value (non-fatal outside locators):
+  flow.steps[2].route: "fwen10-fr-n1" (var) in "http://127.0.0.1:8100/app/customer/fwen10-fr-n1%20Bench%20Customer"
+  warning: warning: 182 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[0].instruction: "{{env:APP_PASSWORD}}" (output) in "Sign in to ERPNext at http://127.0.0.1:8100/ as Administrator using password exactly {{env:APP_PASSWORD}}, and verify that the signed-in app is accessible."
+  flow.steps[0].instruction: "Administrator" (output) in "Sign in to ERPNext at http://127.0.0.1:8100/ as Administrator using password exactly {{env:APP_PASSWORD}}, and verify that the signed-in app is accessible."
+  flow.steps[0].params.v2: "Administrator" (output) in "Administrator"
+  flow.steps[0].params.v3: "{{env:APP_PASSWORD}}" (output) in "{{env:APP_PASSWORD}}"
+  flow.steps[1].outputs[3]: "SAL-ORD-2026-00003" (output) in "so_SAL-ORD-2026-00003_customer_name"
+arm=sitelooper model=openai/gpt-6-luna runid=fwen10-fr-n1 stop=completed
+turns=7 wall=629.2s
+commands=6 cmdTime=599.5s cmdBytes=8576 timeouts=0
+orchestrator in=5606 cw=0 cr=22962 out=843
+inner prompt=3015706 cached=2631262 completion=27588
+spend=$0.0737 maxUsd=3
+learn: A_n=0 replayed=0/6 full=0 repaired=0 compiled=6 variants=0
+-> /home/user/sitelooper/bench/results/fwen10-fr-n1-sitelooper-result.json
+
+fwen10-fr-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed customer names reported
+  obj 2: PASS — customer=fwen10-fr-n1 Bench Customer
+  obj 3: PASS — id=SAL-ORD-2026-00004, delivery_date=2026-12-31
+  obj 4: PASS — lines: Bench Widget x3 @ 40; Bench Gadget x2 @ 125
+  obj 5: PASS — docstatus=1 status=To Deliver and Bill
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — sales order id SAL-ORD-2026-00004 reported
+
+[sweep] run 2/3: fwen10-fr-n2 (replay flow fwen10-fr, no orchestrator)
+[reset] erpnext: cleared saved list settings for Sales Order (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view, updated_on)
+[reset] erpnext: cleared saved list settings for Customer (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view, updated_on)
+[reset] erpnext: cleared saved list settings for Item (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view, updated_on)
+[reset] erpnext: cleared saved list settings for Sales Invoice (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view)
+[reset] erpnext: cleared saved list settings for Quotation (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view)
+[reset] erpnext: cleared saved list settings for Delivery Note (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view)
+[reset] erpnext: deleted 1 sales order(s) (earlier runs' and non-seed)
+[reset] erpnext: deleted customer "fwen10-fr-n1 Bench Customer"
+[sweep] fwen10-fr-n2: 3 drift ticket(s) → fwen10-fr-n2-drift.json
+
+fwen10-fr-n2: objectives passed 5/7
+  obj 1: FAIL — name(s) not in report: Seed: Alpha Traders
+  obj 2: PASS — customer=fwen10-fr-n2 Bench Customer
+  obj 3: PASS — id=SAL-ORD-2026-00004, delivery_date=2026-12-31
+  obj 4: FAIL — lines: Bench Widget x3 @ 40
+  obj 5: PASS — docstatus=1 status=To Deliver and Bill
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — sales order id SAL-ORD-2026-00004 reported
+
+[sweep] run 3/3: fwen10-fr-n3 (replay flow fwen10-fr, no orchestrator)
+[reset] erpnext: cleared saved list settings for Sales Order (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view, updated_on)
+[reset] erpnext: cleared saved list settings for Customer (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view, updated_on)
+[reset] erpnext: cleared saved list settings for Item (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view, updated_on)
+[reset] erpnext: cleared saved list settings for Sales Invoice (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view)
+[reset] erpnext: cleared saved list settings for Quotation (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view)
+[reset] erpnext: cleared saved list settings for Delivery Note (List, Report, Kanban, Calendar, Gantt, Image, Inbox, Dashboard, last_view)
+[reset] erpnext: deleted 1 sales order(s) (earlier runs' and non-seed)
+[reset] erpnext: deleted customer "fwen10-fr-n2 Bench Customer"
+[sweep] fwen10-fr-n3: 3 drift ticket(s) → fwen10-fr-n3-drift.json
+
+fwen10-fr-n3: objectives passed 5/7
+  obj 1: FAIL — name(s) not in report: Seed: Alpha Traders
+  obj 2: PASS — customer=fwen10-fr-n3 Bench Customer
+  obj 3: PASS — id=SAL-ORD-2026-00004, delivery_date=2026-12-31
+  obj 4: FAIL — lines: Bench Widget x3 @ 40
+  obj 5: PASS — docstatus=1 status=To Deliver and Bill
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — sales order id SAL-ORD-2026-00004 reported
+
+Learning sweep fwen10-fr (K=3)
+┌─────────┬───┬────────────────┬──────────┬─────────────┬───────┬──────┬───────────┬──────┬──────────────┬────────┐
+│ (index) │ n │ runid          │ verified │ stop        │ turns │ cmds │ total_usd │ A_n  │ replayed     │ wall_s │
+├─────────┼───┼────────────────┼──────────┼─────────────┼───────┼──────┼───────────┼──────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwen10-fr-n1' │ '7/7'    │ 'completed' │ 7     │ 6    │ 0.0737    │ 0    │ '0/6'        │ 629    │
+│ 1       │ 2 │ 'fwen10-fr-n2' │ '5/7'    │ 'success'   │ 15    │ 6    │ 0.0052    │ 0.83 │ '6/6 (flow)' │ 149    │
+│ 2       │ 3 │ 'fwen10-fr-n3' │ '5/7'    │ 'success'   │ 15    │ 6    │ 0.0048    │ 0.83 │ '6/6 (flow)' │ 157    │
+└─────────┴───┴────────────────┴──────────┴─────────────┴───────┴──────┴───────────┴──────┴──────────────┴────────┘
+http://127.0.0.1:8100
+  s_19d27a  validated    1 steps  3/3 (100%)
+           Sign in to ERPNext at {{v1}} as {{v2}} using password exactly {{v3}}, and verify that the signed-in app is acc…
+  s_307bf0  validated    3 steps  3/3 (100%)
+           Sign in to ERPNext at {{v1}} as {{v2}} using password exactly {{v3}}, and verify that the signed-in app is acc…
+  s_3768c9  demoted     32 steps  1/3 (33%)
+           Create a Sales Order for the existing customer '{{v1}}' with delivery date {{v3}} and exactly two item lines: …
+  s_5e6ce9  validated    1 steps  3/3 (100%)
+           Create a customer named exactly '{{v2}}' (leave customer group and territory at defaults). Save it and verify …
+  s_6f0806  validated    2 steps  3/3 (100%)
+           Find the existing Sales Orders whose customer name starts with 'Seed:' without modifying any order. Report the…
+  s_6f4cbd  validated   20 steps  3/3 (100%)
+           Submit Sales Order {{v1}}, confirming the submission if ERPNext prompts. Verify the order is submitted (not dr…
+  s_724b07  validated    4 steps  3/3 (100%)
+           Create a customer named exactly '{{v2}}' (leave customer group and territory at defaults). Save it and verify …
+  s_a56ee6  validated    2 steps  3/3 (100%)
+           Sign in to ERPNext at {{v1}} as {{v2}} using password exactly {{v3}}, and verify that the signed-in app is acc…
+  s_aaac5c  validated    7 steps  3/3 (100%)
+           Add a timeline comment to Sales Order {{v1}} whose text includes exactly the runid '{{v2}}'. Verify the commen…
+  s_c336a7  validated    4 steps  3/3 (100%)
+           Find the existing Sales Orders whose customer name starts with 'Seed:' without modifying any order. Report the…
+  s_c34600  validated   21 steps  3/3 (100%)
+           Find the existing Sales Orders whose customer name starts with 'Seed:' without modifying any order. Report the…
+  s_c62ebb  validated    9 steps  3/3 (100%)
+           Find the existing Sales Orders whose customer name starts with 'Seed:' without modifying any order. Report the…
+  s_d2c431  validated    3 steps  3/3 (100%)
+           Create a Sales Order for the existing customer '{{v1}}' with delivery date {{v3}} and exactly two item lines: …
+  s_db2854  validated    4 steps  3/3 (100%)
+           Create a customer named exactly '{{v2}}' (leave customer group and territory at defaults). Save it and verify …
+  s_ea89c5  validated    5 steps  3/3 (100%)
+           Sign in to ERPNext at {{v1}} as {{v2}} using password exactly {{v3}}, and verify that the signed-in app is acc…
+  s_f0e951  validated    4 steps  3/3 (100%)
+           Create a customer named exactly '{{v2}}' (leave customer group and territory at defaults). Save it and verify …
+  s_0cfba6  provisional 14 steps  1/1 (100%)
+           Create a Sales Order for the existing customer '{{v1}}' with delivery date {{v3}} and exactly two item lines: …
+  s_0e1edd  provisional  2 steps  1/1 (100%)
+           Create a Sales Order for the existing customer '{{v1}}' with delivery date {{v3}} and exactly two item lines: …
+  s_4f7f61  provisional 18 steps  1/1 (100%)
+           Create a Sales Order for the existing customer '{{v1}}' with delivery date {{v3}} and exactly two item lines: …
+  s_514839  provisional 12 steps  1/1 (100%)
+           Create a Sales Order for the existing customer '{{v1}}' with delivery date {{v3}} and exactly two item lines: …
+  s_6a4bec  provisional 16 steps  1/1 (100%)
+           Create a Sales Order for the existing customer '{{v1}}' with delivery date {{v3}} and exactly two item lines: …
+  s_6dfebe  provisional 14 steps  1/1 (100%)  variant of s_3768c9
+           Create a Sales Order for the existing customer '{{v1}}' with delivery date {{v3}} and exactly two item lines: …
+  s_8931a3  provisional 18 steps  1/1 (100%)  variant of s_3768c9
+           Create a Sales Order for the existing customer '{{v1}}' with delivery date {{v3}} and exactly two item lines: …
+  s_b003cf  provisional 16 steps  1/1 (100%)  variant of s_3768c9
+           Create a Sales Order for the existing customer '{{v1}}' with delivery date {{v3}} and exactly two item lines: …
+  s_b6d7f2  provisional 11 steps  1/1 (100%)
+           Create a Sales Order for the existing customer '{{v1}}' with delivery date {{v3}} and exactly two item lines: …
+  s_c00468  provisional 11 steps  1/1 (100%)  variant of s_3768c9
+           Create a Sales Order for the existing customer '{{v1}}' with delivery date {{v3}} and exactly two item lines: …
+  s_ddaf55  provisional  2 steps  1/1 (100%)
+           Create a Sales Order for the existing customer '{{v1}}' with delivery date {{v3}} and exactly two item lines: …
+store: /home/user/sitelooper/bench/results/fwen10-fr-skills
+
+summary: /home/user/sitelooper/bench/results/fwen10-fr-sweep.json

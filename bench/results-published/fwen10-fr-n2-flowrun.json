@@ -1,0 +1,260 @@
+{
+  "flow": "fwen10-fr",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_a56ee6; observed signed_in_user_initial=A, home_url=http://127.0.0.1:8100/app/home, item_list_record_count=3 of 3, sample_item_name=Bench Widget Pro.",
+      "values": {
+        "signed_in_user_initial": "A",
+        "home_url": "http://127.0.0.1:8100/app/home",
+        "item_list_record_count": "3 of 3",
+        "sample_item_name": "Bench Widget Pro"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "11/11",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_ea89c5: step 3: read 'signed_in_user' returned a value the skill itself set/selected ('Administrator') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_ea89c5: step 4: read 'login_password_len' returned a value the skill itself set/selected ('{{env:APP_PASSWORD}}') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_a56ee6: report value login_email_value is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)"
+      ],
+      "unreported": [
+        "signed_in_user",
+        "login_email_value",
+        "login_password_len"
+      ]
+    },
+    {
+      "id": "02-find",
+      "status": "success",
+      "summary": "Replayed stored procedure s_c34600; observed matching_so_count=3 of 3, total_so_count_unfiltered=3 of 3, so_SAL-ORD-2026-00003_customer_name=Seed: Cobalt Retail, so_SAL-ORD-2026-00002_customer_name=Seed: Beacon Supplies, url_after_clear=http://127.0.0.1:8100/app/sales-order, ref=SAL-ORD-2026-00003, ref_2=SAL-ORD-2026-00002, ref_3=SAL-ORD-2026-00001, customer_names_1=Seed: Cobalt Retail, customer_names_2=Seed: Beacon Supplies.",
+      "values": {
+        "matching_so_count": "3 of 3",
+        "total_so_count_unfiltered": "3 of 3",
+        "so_SAL-ORD-2026-00003_customer_name": "Seed: Cobalt Retail",
+        "so_SAL-ORD-2026-00002_customer_name": "Seed: Beacon Supplies",
+        "url_after_clear": "http://127.0.0.1:8100/app/sales-order",
+        "ref": "SAL-ORD-2026-00003",
+        "ref_2": "SAL-ORD-2026-00002",
+        "ref_3": "SAL-ORD-2026-00001",
+        "customer_names_1": "Seed: Cobalt Retail",
+        "customer_names_2": "Seed: Beacon Supplies"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "36/36",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_c336a7: step 1: read 'filter_applied_customer_name_like' returned a value the skill itself set/selected ('Seed:%') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_c336a7: step 2: read 'filter_applied_customer_name_like' returned a value the skill itself set/selected ('Seed:%') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_c34600: step 3: read 'so_customer_name' returned a value the skill itself set/selected ('Seed: Alpha Traders') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_c34600: step 11: read 'so_customer_name' returned a value the skill itself set/selected ('Seed: Alpha Traders') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_c34600: step 19: read 'customer_names_3' returned a value the skill itself set/selected ('Seed: Alpha Traders') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_c34600: step 20: read 'so_header_title_2' returned a value the skill itself set/selected ('Seed: Alpha Traders') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_c34600: step 21: read 'so_header_title' returned a value the skill itself set/selected ('Seed: Alpha Traders') — confirms the control, not persistence; dropped from the report's confident values"
+      ],
+      "unreported": [
+        "filter_applied_customer_name_like",
+        "so_customer_name",
+        "so_header_title_2",
+        "so_header_title",
+        "customer_names_3"
+      ]
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_724b07; observed customer_record_url=http://127.0.0.1:8100/app/customer/fwen10-fr-n2%20Bench%20Customer, customer_list_row=fwen10-fr-n2 Bench Customer, ref=fwen10-fr-n2, customer_name=fwen10-fr-n2 Bench Customer, customer_group_default=Commercial, territory_default=United States, customer_list_count_after_create=7 of 7, doc_status=Enabled.",
+      "values": {
+        "customer_record_url": "http://127.0.0.1:8100/app/customer/fwen10-fr-n2%20Bench%20Customer",
+        "customer_list_row": "fwen10-fr-n2 Bench Customer",
+        "ref": "fwen10-fr-n2",
+        "customer_name": "fwen10-fr-n2 Bench Customer",
+        "customer_group_default": "Commercial",
+        "territory_default": "United States",
+        "customer_list_count_after_create": "7 of 7",
+        "doc_status": "Enabled"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "13/13",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_db2854: step 3: resolved positionally and its only recorded effect is the fill's own echo — the effect gate cannot tell right element from wrong here",
+        "s_f0e951: step 2: read 'record_heading' returned a value the skill itself set/selected ('fwen10-fr-n2 Bench Customer') — confirms the control, not persistence; dropped from the report's confident values"
+      ],
+      "unreported": [
+        "record_heading"
+      ]
+    },
+    {
+      "id": "04-create",
+      "status": "success",
+      "summary": "Continued the interrupted Sales Order creation on the new-sales-order page and finished it: committed 'Bench Widget' in row 1 with quantity 3 (default rate 40.00), then committed 'Bench Gadget' in row 2 with quantity 2 (default rate 125.00), and saved as draft. ERPNext assigned SAL-ORD-2026-00004; the saved record shows customer \"fwen10-fr-n2 Bench Customer\", header delivery date 2026-12-31, status Draft, and both lines (Bench Widget 3 @ 40.00 = 120.00; Bench Gadget 2 @ 125.00 = 250.00), all read back off the saved document.",
+      "values": {
+        "customer_name": "fwen10-fr-n2 Bench Customer",
+        "delivery_date": "2026-12-31",
+        "item_1_code": "Bench Widget",
+        "item_1_amount": "120.00",
+        "item_1_qty": "3",
+        "item_1_rate": "40.00",
+        "item_2_code": "Bench Gadget",
+        "item_2_amount": "250.00",
+        "item_2_qty": "2",
+        "item_2_rate": "125.00",
+        "order_reference": "SAL-ORD-2026-00004",
+        "order_url": "http://127.0.0.1:8100/app/sales-order/SAL-ORD-2026-00004",
+        "status": "Draft",
+        "ref": "fwen10-fr-n2"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_3768c9 stopped at step 11 — after step 11 none of the 1 recorded page change(s) appeared (e.g. \"- link \\\"Open Link\\\"\") — the step ran but did not have its recorded effect",
+      "pinStopped": {
+        "skill": "s_3768c9",
+        "step": 11,
+        "why": "after step 11 none of the 1 recorded page change(s) appeared (e.g. \"- link \\\"Open Link\\\"\") — the step ran but did not have its recorded effect"
+      },
+      "replayed": "10/32",
+      "repaired": false,
+      "turns": 15,
+      "warnings": [
+        "s_d2c431: step 2: the recorded effect (- menu \"Pricing Rule\") is already showing — a click would toggle it away; skipped as already in effect",
+        "s_3768c9: step 3: read 'customer' returned a value the skill itself set/selected ('fwen10-fr-n2 Bench Customer') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_3768c9: step 4: read 'customer' returned a value the skill itself set/selected ('fwen10-fr-n2 Bench Customer') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_3768c9: step 6: read 'customer' returned a value the skill itself set/selected ('fwen10-fr-n2 Bench Customer') — confirms the control, not persistence; dropped from the report's confident values"
+      ],
+      "unreported": [
+        "sales_order_reference",
+        "customer",
+        "item_1",
+        "item_1_quantity",
+        "item_2",
+        "item_2_quantity",
+        "sales_order_url"
+      ]
+    },
+    {
+      "id": "05-verify",
+      "status": "success",
+      "summary": "Replayed stored procedure s_6f4cbd; observed ref=fwen10-fr-n2, displayed_status=To Deliver and Bill, indicator_pill_indicator=Bench Widget, indicator_pill_indicator_2=, order_url=http://127.0.0.1:8100/app/sales-order/SAL-ORD-2026-00004, status_button_text=Status, sales_order_reference=SAL-ORD-2026-00004, customer=fwen10-fr-n2 Bench Customer, delivery_date=2026-12-31.",
+      "values": {
+        "ref": "fwen10-fr-n2",
+        "displayed_status": "To Deliver and Bill",
+        "indicator_pill_indicator": "Bench Widget",
+        "indicator_pill_indicator_2": "",
+        "order_url": "http://127.0.0.1:8100/app/sales-order/SAL-ORD-2026-00004",
+        "status_button_text": "Status",
+        "sales_order_reference": "SAL-ORD-2026-00004",
+        "customer": "fwen10-fr-n2 Bench Customer",
+        "delivery_date": "2026-12-31"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "20/20",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_6f4cbd: step 20: skipped read — no element matched any known locator for target (tried 2: page.locator('div:nth-of-type(1) > div:nth-of-type(2) > div > div:nth-of-type(3) > div:nth-of-type(2) > a').nth(0), elementAt(418, 504) /* link */)"
+      ]
+    },
+    {
+      "id": "06-add",
+      "status": "success",
+      "summary": "Replayed stored procedure s_aaac5c; observed sales_order_reference=SAL-ORD-2026-00004.",
+      "values": {
+        "sales_order_reference": "SAL-ORD-2026-00004"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "7/7",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_aaac5c: step 7: skipped read — no element matched any known locator for target (tried 2: page.locator('#comment-shnlbo78f0 > div > span > span:nth-of-type(1) > span'), elementAt(383, 1795) /* span */)",
+        "s_aaac5c: report value comment_text is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)",
+        "s_aaac5c: report value runid_included is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)"
+      ],
+      "unreported": [
+        "comment_author_line",
+        "runid_included"
+      ]
+    }
+  ],
+  "passed": 6,
+  "total": 6,
+  "repinned": 0,
+  "drift": 3,
+  "driftTickets": [
+    {
+      "flow": "fwen10-fr",
+      "step": "04-create",
+      "skill": "s_3768c9",
+      "similarity": 1.001,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_3768c9 stopped at step 11 — after step 11 none of the 1 recorded page change(s) appeared (e.g. \"- link \\\"Open Link\\\"\") — the step ran but did not have its recorded effect",
+      "reason": "after step 11 none of the 1 recorded page change(s) appeared (e.g. \"- link \\\"Open Link\\\"\") — the step ran but did not have its recorded effect",
+      "pageUrlPattern": "http://127.0.0.1:8100/app/sales-order/new-sales-order-rgvtazvbkp",
+      "pageUrl": "http://127.0.0.1:8100/app/sales-order/new-sales-order-rgvtazvbkp"
+    },
+    {
+      "flow": "fwen10-fr",
+      "step": "05-verify",
+      "skill": "s_6f4cbd",
+      "atStep": "20",
+      "key": "target",
+      "similarity": 0.999,
+      "missedLocator": "page.locator('div:nth-of-type(1) > div:nth-of-type(2) > div > div:nth-of-type(3) > div:nth-of-type(2) > a').nth(0)",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8100/app/sales-order/:id",
+      "pageUrl": "http://127.0.0.1:8100/app/sales-order/SAL-ORD-2026-00004"
+    },
+    {
+      "flow": "fwen10-fr",
+      "step": "06-add",
+      "skill": "s_aaac5c",
+      "atStep": "7",
+      "key": "target",
+      "similarity": 0.999,
+      "missedLocator": "page.locator('#comment-shnlbo78f0 > div > span > span:nth-of-type(1) > span')",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8100/app/sales-order/:id",
+      "pageUrl": "http://127.0.0.1:8100/app/sales-order/SAL-ORD-2026-00004"
+    }
+  ],
+  "wallMs": 149365,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 186516,
+    "completionTokens": 2666,
+    "cachedTokens": 165888
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 186516,
+      "completionTokens": 2666,
+      "cachedTokens": 165888
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "openai/gpt-6-luna",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}
