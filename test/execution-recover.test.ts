@@ -97,6 +97,19 @@ describe('recordedAsNavigation', () => {
     expect(recordedAsNavigation([click(moved, { effect: { kind: 'popup' } })], 0, TICKET)).toBe(false);
   });
 
+  it('two patterns for one page, spelled differently, are not a move', () => {
+    // snipeit fwsi32-fr: the segment starts on a slot, the click was recorded on the wildcard.
+    const START = 'http://app.test/hardware/{{v4}}';
+    expect(recordedAsNavigation([click({ urlPattern: 'http://app.test/hardware/:id' })], 0, START)).toBe(false);
+    // ...a tab that only sets the fragment
+    expect(recordedAsNavigation([click({ urlPattern: 'http://app.test/hardware/:id#history' })], 0, START)).toBe(false);
+    // ...and the other way round, between two steps
+    expect(recordedAsNavigation([click({ urlPattern: 'http://app.test/hardware/:id' }), click({ urlPattern: 'http://app.test/hardware/{{d1}}' })], 1, LIST)).toBe(false);
+    // a different page is still a move
+    expect(recordedAsNavigation([click({ urlPattern: 'http://app.test/hardware/:id/edit' })], 0, START)).toBe(true);
+    expect(recordedAsNavigation([click({ urlPattern: 'http://app.test/hardware' })], 0, START)).toBe(true);
+  });
+
   it('a fill or type is looked past: its recorded url keeps only the path', () => {
     // kanboard fwkb47-fr s_7a7c7c: open the comment form, fill it, Save — all on one task page.
     const TASK = 'http://app.test/?controller=TaskViewController&action=show&task_id=:id';

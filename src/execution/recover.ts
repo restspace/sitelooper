@@ -82,16 +82,23 @@ function recordedStart(steps: readonly RecordedStepEvidence[], index: number, se
 }
 
 /**
- * Whether a click recorded ending on `dest` moved from where it started. Two
- * patterns come from the same compile and are compared as written. A goto's
- * url is matched against the pattern instead: grafana fwgr91-fr sent a goto to
- * `…?from=now-6h&to=now&timezone=browser` and recorded the click after it on
- * `…?from=:id&timezone=browser&to=now` — the same page, and never the same
- * string, so every click after a goto read as a move.
+ * Whether a click recorded ending on `dest` moved from where it started:
+ * whether the two name different pages by the url matcher's own reading
+ * (urlMatches), never by how they are spelled. One page is written many ways.
+ * grafana fwgr91-fr sent a goto to `…?from=now-6h&to=now&timezone=browser` and
+ * recorded the click after it on `…?from=:id&timezone=browser&to=now`;
+ * snipeit fwsi32-fr's segments start on `/hardware/{{v4}}` and their first
+ * click was recorded on `/hardware/:id`, and on `/hardware/:id#history` for a
+ * tab. Each read as a move while the strings were compared.
+ *
+ * Two patterns are asked both ways round, since either may hold the wildcard
+ * where the other holds a slot. That also reads `/hardware/:id` and
+ * `/hardware/create` as one page; the cost is a fallback refused, the
+ * conservative side.
  */
 function movedFrom(from: { pattern: string } | { url: string }, dest: string): boolean {
-  if ('pattern' in from) return from.pattern !== dest;
-  return from.url !== dest && !urlMatches(dest, from.url);
+  if ('url' in from) return from.url !== dest && !urlMatches(dest, from.url);
+  return from.pattern !== dest && !urlMatches(dest, from.pattern) && !urlMatches(from.pattern, dest);
 }
 
 /**
