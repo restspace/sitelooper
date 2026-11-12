@@ -235,12 +235,59 @@ export const NAME_NOISE_SHAPE = '[\\s\\p{Co}\\p{So}\\p{Cf}]*';
  * and the compiled artifact calls the embedded copy (spec/locators.ts).
  */
 export function roleName(text: string): RegExp {
-  const masked = maskVolatile(text.replace(/\s+/g, ' ').trim());
+  const masked = maskVolatile(withoutShortcutHint(text.replace(/\s+/g, ' ').trim()));
   const body = masked
     .split(WILDCARD)
     .map((part) => escapeRe(part).replace(/ /g, '\\s+'))
     .join(VOLATILE_TOKEN_SHAPE);
-  return new RegExp(`^${NAME_NOISE_SHAPE}${body}${NAME_NOISE_SHAPE}$`, 'u');
+  return new RegExp(`^${NAME_NOISE_SHAPE}${body}(?:${SHORTCUT_HINT_SHAPE})?${NAME_NOISE_SHAPE}$`, 'u');
+}
+
+/**
+ * A KEYBOARD-SHORTCUT HINT is not part of a control's name (fwgh22-fc 04-set).
+ * Some apps append the shortcut to a button's accessible name while it is
+ * hovered or focused: "Publish" becomes "Publish ⌘ ⇧ P". The recording
+ * hovered the button and then clicked it, so the click's role rung said
+ * "Publish ⌘ ⇧ P"; a replay that did not hover first found a button named
+ * "Publish", and every name check refused the very control the recording
+ * clicked. So a name and the same name with a trailing hint are one name, in
+ * either direction.
+ *
+ * Tight on purpose. A hint is a trailing run of modifiers — the glyphs
+ * ⌘ ⇧ ⌥ ⌃ ⏎ ↵ or the words Ctrl, Control, Alt, Option, Shift, Cmd, Command,
+ * Meta, Win, Super (any case), separated by `+` or spaces — ending in at most
+ * one key: a single letter or digit, F1–F24, a named key (Enter, Esc, Tab,
+ * Space, Backspace, Delete, Del, Return) or one of , . / ; ' [ ] \ = - `.
+ * Word modifiers need a key after them ("Night Shift" is a name, not a hint);
+ * glyphs may stand alone ("Save ⏎"). At least one modifier, always: "Delete P"
+ * is a different name, and so is "Save As". The name before the hint is never
+ * empty. Exported as SOURCE, like NAME_NOISE_SHAPE, for roleName's matcher.
+ */
+const SHORTCUT_GLYPH = '[⌘⇧⌥⌃⏎↵]';
+const anyCase = (word: string) => word.replace(/[a-z]/g, (c) => `[${c.toUpperCase()}${c}]`);
+const SHORTCUT_WORD = `(?:${['ctrl', 'control', 'alt', 'option', 'shift', 'cmd', 'command', 'meta', 'win', 'super'].map(anyCase).join('|')})(?![\\p{L}\\p{N}])`;
+const SHORTCUT_KEY = `(?:[\\p{L}\\p{N}]|${anyCase('f')}(?:2[0-4]|1\\d|[1-9])|${['enter', 'return', 'escape', 'esc', 'tab', 'space', 'backspace', 'delete', 'del'].map(anyCase).join('|')}|[,./;'\\[\\]\\\\=\`-])(?![\\p{L}\\p{N}])`;
+export const SHORTCUT_HINT_SHAPE =
+  `(?:\\s+|(?=${SHORTCUT_GLYPH}))` +
+  `(?:(?:${SHORTCUT_GLYPH}\\s*\\+?\\s*|${SHORTCUT_WORD}(?:\\s*\\+\\s*|\\s+))+${SHORTCUT_KEY}` +
+  `|${SHORTCUT_GLYPH}(?:\\s*\\+?\\s*${SHORTCUT_GLYPH})*)`;
+
+/** `name` without a trailing keyboard-shortcut hint (see SHORTCUT_HINT_SHAPE); unchanged when it has none, or is nothing but one. */
+export function withoutShortcutHint(name: string): string {
+  const m = new RegExp(`^(.*?\\S)${SHORTCUT_HINT_SHAPE}\\s*$`, 'su').exec(name);
+  return m ? m[1] : name;
+}
+
+/**
+ * Whether two accessible names are one name: equal once whitespace is
+ * collapsed, or equal once a trailing keyboard-shortcut hint is dropped from
+ * either (withoutShortcutHint). Nothing else is forgiven.
+ */
+export function sameAccessibleName(a: string, b: string): boolean {
+  const norm = (t: string) => t.replace(/\s+/g, ' ').trim();
+  const x = norm(a);
+  const y = norm(b);
+  return x === y || withoutShortcutHint(x) === withoutShortcutHint(y);
 }
 
 /** Roles a <label> names. */

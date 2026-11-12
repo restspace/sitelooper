@@ -458,6 +458,16 @@ export interface SkillStep {
    * Optional: a build that ignores it goes on at once, as before.
    */
   movedAfterMs?: number;
+  /**
+   * The recording watched the app SAVE by itself this many ms after this
+   * step's capture — a write request no gesture caused — and its next action
+   * left the page (compile.ts savedAfterCapture; vikunja fwvk18-fc 03-create,
+   * a description saved by a 5 s timer, lost on the replay that left after
+   * 2.2 s). Both runners hold the next step until that long has passed since
+   * this step's action settled, and a slack (execution/lifecycle.ts
+   * recordedSaveHold). Optional: a build that ignores it goes on at once.
+   */
+  savedAfterMs?: number;
   expect?: StepExpectation;
   /** For read/read_all steps: which report value this read supplied, if any. */
   label?: string;

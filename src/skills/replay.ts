@@ -1,4 +1,4 @@
-import { changedCreation, dispatchesFirstMatch, holdForRecordedMove, isMutatingAction, isReadAction, runStepLifecycle, spansEveryMatch, type StepActionResult } from '../execution/lifecycle.js';
+import { changedCreation, dispatchesFirstMatch, holdForRecordedMove, holdForRecordedSave, isMutatingAction, isReadAction, runStepLifecycle, spansEveryMatch, type StepActionResult } from '../execution/lifecycle.js';
 import { outcomeLabel, outcomeOfError, urlHeldStill, type ActionOutcome } from '../execution/browser.js';
 import { inFlightRequests, type ActionExpectation } from '../execution/action.js';
 import { IDENTITY_POLL_MS, IDENTITY_WAIT_MS, SOFT_MATCH_MIN_SIMILARITY, alertVerdict, detourGiven, errorPageVerdict, gotoLandingVerdict, isErrorPageUrl, landedOnRecordedPage, markersBound, preconditionVerdict, retargetNavigation, segmentGate, fillableChain, leftByLink, linkLandingWarning, unfilledStepVerdict, urlEffectVerdict, urlRecordParts } from '../execution/gates.js';
@@ -1995,6 +1995,12 @@ export async function replaySkill(
       // 02-find, whose Filter click reached the list before its second refresh).
       const held = await holdForRecordedMove(step.movedAfterMs, settledAt);
       if (held) res.lines[res.lines.length - 1] += ` — held ${held} ms: the recording saw the page still moving ${step.movedAfterMs} ms after this step`;
+      // …or watched the app save by itself after it, before leaving the page
+      // (SkillStep.savedAfterMs, the shared holdForRecordedSave; vikunja
+      // fwvk18-fc 03-create, whose description a replay left before the
+      // app's timer stored it).
+      const saved = await holdForRecordedSave(step.savedAfterMs, settledAt);
+      if (saved) res.lines[res.lines.length - 1] += ` — held ${saved} ms: the recording saw the app save by itself ${step.savedAfterMs} ms after this step, before it left the page`;
     }
     return 'ran';
   };

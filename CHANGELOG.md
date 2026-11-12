@@ -50,6 +50,29 @@
   procedure. A flow step's candidates follow the same rule: a procedure that reads the step's
   instruction only by taking part of the sentence as a value is tried after the others, whatever
   its record.
+- A fill or type step no longer requires page changes that a page reload caused. When the
+  recording's own log shows a new document loading while the value was being entered, compile
+  keeps only a line showing the typed value and drops the rest. Before, a sign-in form that
+  reloaded during the recording stored "the username box is empty" as the password step's effect,
+  and every replay whose reload came a moment later stopped there.
+- A compiled spec's read that is skipped no longer erases a value an earlier read of the same
+  label published. Replay already kept it. A flow step recorded in two parts that both read a
+  reference stopped a later step with "this run never published it" when the second read had no
+  locator left.
+- A persistence probe is not taken when the step goes on to another page after its save, or ends
+  on a url that lacks a query key the saved page had (another view of the same record). The run
+  log says so. Before, the probe reloaded the other view and failed a run whose data was right.
+- Compile drops a click that the recording shows was forced onto an element covering its target
+  and changed nothing. Such clicks were kept, and on a replay with no cover in the way they acted
+  on the page underneath.
+- A control's name matches with or without a trailing keyboard-shortcut hint, so a button an app
+  renames from "Publish" to "Publish ⌘ ⇧ P" while hovered is still found. A hint needs a modifier:
+  "Save" and "Save As" stay different names. A hover that reached its element no longer fails
+  when the element's name changes under it.
+- When the recording shows the app saving by itself after a value was entered (a write request no
+  gesture caused) and the next action left the page, both runners wait that long before leaving.
+  Before, a replay could leave before an autosave timer fired: every step passed and the value was
+  never stored. Saves answered more than 10 seconds after the step are not waited for.
 
 ### Recording
 - The recording agent can declare a fix-up: a repair to something an earlier step left wrong, such

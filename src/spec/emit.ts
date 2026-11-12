@@ -323,10 +323,23 @@ const HELPERS: { token: string; source: string[] }[] = [
       " * ends on, if it is the record page the recording's save showed the lines",
       " * on, with the lines filled for this run. Lines this run cannot fill, or",
       ' * fills to nothing, prove nothing and are dropped, as the effect gate drops them.',
+      ' *',
+      ' * The url match lets a literal query key the live url lacks pass (urlDiff:',
+      ' * grafana drops `refresh=1m` on the same page), but the probe RELOADS the',
+      ' * live url, and `editview=settings` against the plain dashboard is another',
+      ' * view: the line it saved shows only in the view the pattern names (fwgr92-fc',
+      ' * 05-set failed a run the verifier scored 6/6). So such a page arms no probe;',
+      ' * the probe is dropped and said, never judged on a page it was not sited on.',
       ' */',
       'function noteProbe(run: FlowRun, step: string, page: Page, p: Record<string, string>, pattern: string, recorded: string[], dialect: 1 | 2): void {',
       '  if (!urlMatches(pattern, page.url(), p)) {',
       '    logWarning(`${step}: ended on ${page.url()}, not the record page its save showed (${pattern}) — no persistence probe`);',
+      '    return;',
+      '  }',
+      '  const liveQuery = urlShapeOf(page.url())?.query;',
+      '  const lacking = liveQuery ? oneSidedQueryKeys(fillParams(pattern, p), page.url()).filter((key) => !liveQuery.has(key)) : [];',
+      '  if (lacking.length) {',
+      "    console.log(`[sitelooper probe] ${step}: ended on ${page.url()}, which lacks the query key(s) ${lacking.join(', ')} of the page its save showed (${pattern}) — another view, no persistence probe`);",
       '    return;',
       '  }',
       '  const usable = recorded.filter((line) => !boundToNothing(line, p));',
@@ -1110,6 +1123,24 @@ const HELPERS: { token: string; source: string[] }[] = [
     ],
   },
   {
+    token: 'keptRead(',
+    source: [
+      '/**',
+      ' * What a read publishes when an earlier read of the same label may already',
+      ' * have published: its own value, unless it was SKIPPED and there is one to',
+      " * keep. Replay's skipped read publishes nothing, so the earlier segment's (or",
+      " * earlier loop pass's) value stands there; the empty string a skip returns",
+      ' * here must not erase it (fwrd98-fc: the reference a later step needed had',
+      ' * been read one segment earlier). `skipsBefore` is the skip count taken',
+      ' * before the read ran. A read that succeeded replaces the value, even with',
+      ' * an empty one.',
+      ' */',
+      'function keptRead(prev: string | undefined, skipsBefore: number, value: string): string {',
+      '  return skippedReads.length > skipsBefore && prev ? prev : value;',
+      '}',
+    ],
+  },
+  {
     token: 'readOptional(',
     source: [
       '/**',
@@ -1712,6 +1743,8 @@ interface Ctx {
   picks: number;
   /** The segment and within-segment step index currently emitting — for `@step` and `pick`'s `where`. */
   segmentId: string;
+  /** Output keys a read of this flow step has already been emitted for: a later read of one keeps its value when skipped (readLines). */
+  readOut?: Set<string>;
   /** The steps of the segment being emitted: what the positional-click rule (alreadyAddedLines) and scopeSetBy read. */
   segmentSteps?: readonly SkillStep[];
   /** The url pattern that segment starts on (its precondition): where its first step was recorded starting. */
@@ -2902,7 +2935,9 @@ function emitSkillStep(recorded: SkillStep, segment: SpecSegment, index: number,
   // already raised passes through assertMissed as it stands.
   const checkOf = assertedBy(step, segment, ctx);
   const backstop = checkOf ? `assertMissed('unlocatable', ${src(checkOf.message)}, err)` : null;
-  const movedHold = typeof step.movedAfterMs === 'number' && step.movedAfterMs > 0 && !isRead && !landing ? `movedSettled${ctx.urls}` : undefined;
+  const holdsMove = typeof step.movedAfterMs === 'number' && step.movedAfterMs > 0;
+  const holdsSave = typeof step.savedAfterMs === 'number' && step.savedAfterMs > 0;
+  const movedHold = (holdsMove || holdsSave) && !isRead && !landing ? `movedSettled${ctx.urls}` : undefined;
   const head = [
     `// @step ${where}`,
     `let ${urlBefore} = '';`,
@@ -3006,7 +3041,10 @@ function emitSkillStep(recorded: SkillStep, segment: SpecSegment, index: number,
     // replay's runStepBody holds it (the shared holdForRecordedMove). A step
     // that was skipped settled nothing and holds nothing; nor does one that
     // moved the procedure to another page, as in replay.
-    ...(movedHold ? [`if (${movedHold}) await holdForRecordedMove(${step.movedAfterMs}, ${movedHold});`] : []),
+    ...(movedHold && holdsMove ? [`if (${movedHold}) await holdForRecordedMove(${step.movedAfterMs}, ${movedHold});`] : []),
+    // …and one it watched the app save by itself after, before leaving the
+    // page (SkillStep.savedAfterMs, vikunja fwvk18-fc 03-create), as replay does.
+    ...(movedHold && holdsSave ? [`if (${movedHold}) await holdForRecordedSave(${step.savedAfterMs}, ${movedHold});`] : []),
     // Every later step of this body, and every later flow step (run.page), is
     // asked of the page the procedure continued on.
     ...(moved ? [`if (${moved}) page = run.page = ${moved};`] : []),
@@ -3797,6 +3835,19 @@ function readLines(step: SkillStep, ctx: Ctx): string[] {
     });
   }
 
+  // A SKIPPED READ PUBLISHES NOTHING, SO IT ERASES NOTHING. Replay sets a
+  // label only when a read succeeds (replay.ts `res.values[key] = value`) and a
+  // chain's segments are merged over one another (server.ts
+  // `Object.assign(agg.values, r.values)`): a read that is skipped leaves
+  // whatever an earlier read of the same label published — an earlier segment
+  // of this flow step, or an earlier pass of the loop it is in. A plain
+  // assignment of readOptional's '' erased it here. So a read that can have a
+  // predecessor keeps the predecessor's value when it is skipped (keptRead);
+  // one that cannot is emitted as it always was. A read that SUCCEEDS still
+  // replaces the value, empty or not, as replay's does.
+  const again = Boolean(ctx.loopSink) || (ctx.readOut ??= new Set()).has(out);
+  (ctx.readOut ??= new Set()).add(out);
+
   const chain = step.locators?.target ?? [];
   if (!chain.length) {
     // A read is an observation: replay skips one whose chain resolves nothing
@@ -3805,10 +3856,20 @@ function readLines(step: SkillStep, ctx: Ctx): string[] {
     // looked for a value a later run saw change — and refusing the whole flow
     // over it made fwrd55 and fwod48 uncompilable while both replays passed.
     // So the artifact skips it the same way: one skip line, the value empty.
+    //
+    // EMPTY ONLY IF NOTHING PUBLISHED IT ALREADY. Replay's skipped read
+    // publishes nothing, so what an earlier read of the same label published
+    // stands (see `again` above). Assigning '' here erased it: fwrd98-fc's
+    // 02-create read ticket_reference in both of its chain segments, the
+    // second read's chain was retired, and the spec stopped at "07-remove
+    // needs {{02-create.ticket_reference}}, and this run never published it"
+    // with the reference read and correct one segment earlier. (Not counted
+    // in skippedReads: replay does not count a read with no chain as a skipped
+    // one either, and observedNothing reads that count.)
     ctx.warnings.push(`${ctx.stepId}: step ${ctx.stepIndex} (${step.tool} ${step.label ?? ''}) has no locator left — it publishes nothing, as replay skips it`);
     return [
       `console.log(${q(`[sitelooper skip] ${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex} target: no locator recorded — value left empty`)});`,
-      `${out} = '';`,
+      again ? `${out} ??= '';` : `${out} = '';`,
     ];
   }
   // In a loop body a read's resolution is sunk for the progress guard too, as replay sinks every key.
@@ -3819,19 +3880,26 @@ function readLines(step: SkillStep, ctx: Ctx): string[] {
     const framed = `framed${(ctx.roots = (ctx.roots ?? 0) + 1)}`;
     const r = resolutionLines(chain, step, 'target', ctx, { allowMultiple: spansEveryMatch(step.tool, step.args ?? {}), waitMs: 'RESOLVE_WAIT_MS' }, `${framed}.root`);
     return [
+      ...(again ? [`const ${framed}Skips = skippedReads.length;`] : []),
       `const ${framed} = await rootFor(page, ${JSON.stringify(frame)}, RESOLVE_WAIT_MS);`,
       `if ('error' in ${framed}) {`,
       `  skippedReads.push(${q(`${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex} target`)});`,
       `  console.log(${q(`[sitelooper skip] ${ctx.stepId} ${ctx.segmentId}/${ctx.stepIndex} target: `)} + ${framed}.error + ' — value left empty');`,
       `}`,
-      `${out} = 'root' in ${framed} ? await readOptional(page, [`,
+      `${out} = ${again ? `keptRead(${out}, ${framed}Skips, ` : ''}'root' in ${framed} ? await readOptional(page, [`,
       ...r.open,
-      `], ${r.where}, ${r.policy}, ${read}, ${countOpts(step, chain, r.opts, `${framed}.root`)}) : '';`,
+      `], ${r.where}, ${r.policy}, ${read}, ${countOpts(step, chain, r.opts, `${framed}.root`)}) : ''${again ? ')' : ''};`,
       ...echoReadLines(step, ctx, 'lastReadHit'),
     ];
   }
   const { open, where, policy, opts } = resolutionLines(chain, step, 'target', ctx, { allowMultiple: spansEveryMatch(step.tool, step.args ?? {}), waitMs: 'RESOLVE_WAIT_MS' });
-  return [`${out} = await readOptional(page, [`, ...open, `], ${where}, ${policy}, ${read}, ${countOpts(step, chain, opts, 'page')});`, ...echoReadLines(step, ctx, 'lastReadHit')];
+  // (An argument list is evaluated left to right, so the skip count is taken before the read runs.)
+  return [
+    `${out} = ${again ? `keptRead(${out}, skippedReads.length, ` : ''}await readOptional(page, [`,
+    ...open,
+    `], ${where}, ${policy}, ${read}, ${countOpts(step, chain, opts, 'page')})${again ? ')' : ''};`,
+    ...echoReadLines(step, ctx, 'lastReadHit'),
+  ];
 }
 
 /**
@@ -4161,6 +4229,9 @@ function reportTemplateLines(step: SpecStep, ctx: Ctx, consumed: ReadonlySet<str
  */
 const EPHEMERAL_LINE = /^-?\s*(dialog|alertdialog|tooltip|log|marquee|timer|menu|menubar|listbox)\b/;
 
+/** The tools that take the browser to another page by themselves (see probeSite). */
+const NAVIGATING_TOOLS = new Set(['goto', 'back', 'tabs']);
+
 /**
  * Where a step's persistence probe comes from (3d), or null. Evidence-gated,
  * every condition from the recording:
@@ -4170,7 +4241,8 @@ const EPHEMERAL_LINE = /^-?\s*(dialog|alertdialog|tooltip|log|marquee|timer|menu
  *    a popup item, a transient line or a notification is not that;
  *  - the page that line was on is a RECORD's: the commit's url carries a
  *    `{{vN}}`/`{{dN}}` id, or the step mints one;
- *  - the step ends there: nothing after the commit moves the url, so "the
+ *  - the step ends there: nothing after the commit moves the url — no later
+ *    recorded url differs and no goto, back or tab switch follows — so "the
  *    live url after the step" is the page the recording saw the line on.
  */
 export function probeSite(step: SpecStep): { pattern: string; lines: string[]; dialect: 1 | 2 } | null {
@@ -4185,9 +4257,18 @@ export function probeSite(step: SpecStep): { pattern: string; lines: string[]; d
     let url = seg.preconditions.urlPattern;
     for (const s of seg.steps.slice(0, ci + 1)) if (s.expect?.urlPattern) url = s.expect.urlPattern;
     const commit = seg.steps[ci];
+    const after = [...seg.steps.slice(ci + 1), ...segments.slice(at + 1).flatMap((later) => later.steps)];
+    // A navigation after the commit moves the page whether or not the
+    // recording kept a url for it: a goto, back or tab switch with no
+    // urlPattern is a move to a page nobody recorded, so "where the step
+    // ends" is no longer where the line showed. Grafana fwgr92-fc: the last
+    // click after the fill switched to the settings view (the only view that
+    // shows the tag chip), then a goto opened the plain dashboard, and the
+    // probe reloaded that view and failed a run the verifier scored 6/6.
+    // Dropping the probe loses a check; it can never fail or pass a run.
     const moved = [
-      ...seg.steps.slice(ci + 1).map((s) => s.expect?.urlPattern),
-      ...segments.slice(at + 1).flatMap((later) => [later.preconditions.urlPattern, ...later.steps.map((s) => s.expect?.urlPattern)]),
+      ...after.map((s) => s.expect?.urlPattern ?? (NAVIGATING_TOOLS.has(s.tool) ? '' : undefined)),
+      ...segments.slice(at + 1).map((later) => later.preconditions.urlPattern),
     ].some((pattern) => pattern !== undefined && pattern !== url);
     if (moved) return null;
     const mints = segments.some((segment) => segment.steps.some((s) => s.mints));
