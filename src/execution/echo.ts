@@ -36,6 +36,9 @@
  * "Last 6 hours", ghost fwgh13's Excerpt textbox, a live preview mirroring a
  * field that was never saved.
  *
+ * A click whose route changed selected nothing, and what it noted is taken
+ * back (noteNavigation, erpnext fwen10-fr: a row's link opened its record).
+ *
  * Self-contained: sibling shared modules and Playwright types only.
  */
 import type { Locator, Page } from 'playwright-core';
@@ -81,10 +84,18 @@ export function echoKey(text: string): string {
  * candidates only once the chain RESOLVED, as replay does.
  */
 export function noteInteraction(ledger: Set<string>, texts: readonly unknown[]): void {
+  const meta = echoMeta(ledger);
+  const keys = new Set<string>();
   for (const text of texts) {
     // Every length: a short value is judged by its element (echoAt), not dropped here.
     const key = typeof text === 'string' ? echoKey(text) : '';
-    if (key) ledger.add(key);
+    if (key) keys.add(key);
+  }
+  // Counted once per call, so a navigation (noteNavigation) can take back what
+  // one click noted without taking a fill or an option pick of the same text.
+  for (const key of keys) {
+    ledger.add(key);
+    meta.noted.set(key, (meta.noted.get(key) ?? 0) + 1);
   }
 }
 
@@ -160,6 +171,10 @@ interface EchoMeta {
   seq: number;
   sets: EchoSet[];
   commits: EchoCommit[];
+  /** How many noteInteraction calls noted each key (noteNavigation takes one back). */
+  noted: Map<string, number>;
+  /** The sets the step acting now has marked, until its action lands (noteNavigation). */
+  pending: EchoSet[];
 }
 
 /** The per-ledger half the text Set cannot hold. */
@@ -169,7 +184,7 @@ function echoMeta(ledger: Set<string>): EchoMeta {
   let meta = ECHO_META.get(ledger);
   if (!meta) {
     echoLedgers += 1;
-    meta = { id: `echo-${echoLedgers}-${Date.now().toString(36)}`, seq: 0, sets: [], commits: [] };
+    meta = { id: `echo-${echoLedgers}-${Date.now().toString(36)}`, seq: 0, sets: [], commits: [], noted: new Map(), pending: [] };
     ECHO_META.set(ledger, meta);
   }
   return meta;
@@ -206,7 +221,57 @@ export async function markActed(page: Page, loc: Locator, ledger: Set<string>, t
   // control is what a later read is judged by (echoByControl).
   if (!keys.size && !value) return;
   meta.seq += 1;
-  meta.sets.push({ seq: meta.seq, step, texts: keys, locator: loc, url, index, value });
+  const set: EchoSet = { seq: meta.seq, step, texts: keys, locator: loc, url, index, value };
+  meta.sets.push(set);
+  // A step marks every target it resolved before it acts; noteNavigation, once
+  // the action has landed, judges them together. Another step's leftovers (a
+  // step that stopped or was skipped before its action landed) are not its.
+  if (meta.pending.some((s) => s.step !== step)) meta.pending = [];
+  meta.pending.push(set);
+}
+
+/**
+ * A CLICK THAT NAVIGATED SELECTED NOTHING (erpnext fwen10-fr 02-find). The
+ * name of a clicked option is the value it selects, so markActed and
+ * noteInteraction remember every resolved target's name; but a click on a
+ * list row's link "Seed: Alpha Traders" opened that sales order, and put no
+ * value anywhere. The flow came back to the list (a `back` to the same route,
+ * which commits nothing), every later read of the customer's name was the
+ * link's own text, and the daemon withheld the name from its report on both
+ * replays: objective 1 failed with nothing wrong on the page.
+ *
+ * The role cannot tell the two apart (many menus render their options as
+ * `<a>` links), and the recording only says what the click did THEN. What
+ * this run's click did is known once it has landed, in both runners: the url
+ * before and after it. So, after a click's action and its checks, the caller
+ * says where it started and where it is now; when the ROUTE changed (routeOf:
+ * a rewritten query string, as a filter or picker writes it, is not a
+ * navigation), the sets the step marked are forgotten, and each text they
+ * noted is taken back once — so a value a fill or a real option pick also put
+ * there stays in the ledger. Returns whether anything was forgotten. Either
+ * way the step's pending sets are settled; an empty url (a page that cannot
+ * say, a step that never acted) decides nothing.
+ */
+export function noteNavigation(ledger: Set<string>, step: string, urlBefore: string, urlAfter: string): boolean {
+  const meta = echoMeta(ledger);
+  const mine = meta.pending.filter((s) => s.step === step);
+  meta.pending = [];
+  if (!mine.length || !urlBefore || !urlAfter || routeOf(urlBefore) === routeOf(urlAfter)) return false;
+  meta.sets = meta.sets.filter((s) => !mine.includes(s));
+  for (const set of mine) {
+    for (const key of set.texts) {
+      const count = meta.noted.get(key) ?? 0;
+      // A key no noteInteraction call counted came from elsewhere: left alone.
+      if (count <= 0) continue;
+      if (count > 1) {
+        meta.noted.set(key, count - 1);
+        continue;
+      }
+      meta.noted.delete(key);
+      if (!meta.sets.some((s) => s.texts.has(key))) ledger.delete(key);
+    }
+  }
+  return true;
 }
 
 /** The tools that put a VALUE into the control they act on (EchoSet.value). */

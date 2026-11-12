@@ -47,24 +47,87 @@ export interface RecordedStepEvidence {
     removalRequired?: unknown;
     lineDialect?: number;
   };
-  mints?: unknown;
+  mints?: { sole?: boolean };
   effect?: unknown;
 }
 
 /**
- * The url pattern step `index` was recorded STARTING on: where the nearest
- * earlier step ended (its own url expectation, or the url a goto was sent
- * to), else where the segment starts. Undefined when the recording does not
- * say — a `back`, whose landing no step carries.
+ * The tools that enter a value. One never navigates, and the url recorded
+ * after it keeps only its path (skills/compile.ts VALUE_ENTRY_TOOLS), so it
+ * says nothing about where the next step started that the step before it did
+ * not say better.
  */
-function recordedStart(steps: readonly RecordedStepEvidence[], index: number, segmentStart: string | undefined): string | undefined {
+const VALUE_ENTRY = new Set(['fill', 'type']);
+
+/**
+ * Where step `index` was recorded STARTING: where the nearest earlier step
+ * ended — its own url expectation, a pattern; or the url a goto was sent to,
+ * which is a URL and not a pattern — else the pattern the segment starts on.
+ * Undefined when the recording does not say: a `back`, whose landing no step
+ * carries.
+ *
+ * Value-entry steps are looked past. Kanboard routes by query string, so the
+ * pattern of every fill there is the bare origin; fwkb47-fr's three Saves each
+ * followed a fill, never left their page, and read as moves against it.
+ */
+function recordedStart(steps: readonly RecordedStepEvidence[], index: number, segmentStart: string | undefined): { pattern: string } | { url: string } | undefined {
   for (let i = index - 1; i >= 0; i--) {
     const earlier = steps[i];
-    if (earlier.expect?.urlPattern) return earlier.expect.urlPattern;
-    if (earlier.tool === 'goto') return typeof earlier.args?.url === 'string' ? earlier.args.url : undefined;
+    if (VALUE_ENTRY.has(earlier.tool)) continue;
+    if (earlier.expect?.urlPattern) return { pattern: earlier.expect.urlPattern };
+    if (earlier.tool === 'goto') return typeof earlier.args?.url === 'string' ? { url: earlier.args.url } : undefined;
     if (earlier.tool === 'back') return undefined;
   }
-  return segmentStart;
+  return segmentStart ? { pattern: segmentStart } : undefined;
+}
+
+/**
+ * Whether a click recorded ending on `dest` moved from where it started:
+ * whether the two name different pages by the url matcher's own reading
+ * (urlMatches), never by how they are spelled. One page is written many ways.
+ * grafana fwgr91-fr sent a goto to `…?from=now-6h&to=now&timezone=browser` and
+ * recorded the click after it on `…?from=:id&timezone=browser&to=now`;
+ * snipeit fwsi32-fr's segments start on `/hardware/{{v4}}` and their first
+ * click was recorded on `/hardware/:id`, and on `/hardware/:id#history` for a
+ * tab. Each read as a move while the strings were compared.
+ *
+ * Two patterns are asked both ways round, since either may hold the wildcard
+ * where the other holds a slot. That also reads `/hardware/:id` and
+ * `/hardware/create` as one page; the cost is a fallback refused, the
+ * conservative side.
+ */
+function movedFrom(from: { pattern: string } | { url: string }, dest: string): boolean {
+  if ('url' in from) return from.url !== dest && !urlMatches(dest, from.url);
+  return from.pattern !== dest && !urlMatches(dest, from.pattern) && !urlMatches(from.pattern, dest);
+}
+
+/** The tools that put a value into a form (echo.ts VALUE_TOOLS, and an upload). */
+const ENTRY_TOOLS = new Set(['fill', 'type', 'select', 'check', 'uncheck', 'set_checked', 'upload']);
+
+/**
+ * Whether step `index` follows values entered on the page it acts on: a
+ * value-entry step between it and the step that brought the procedure to
+ * this page (one that moved, a goto, a back), or the segment's start.
+ *
+ * Such a click SENDS what was entered, whatever else the recording shows of
+ * it. openproject fwop36-fr s_2cefe5/3 is the Sign in button after two fills:
+ * it moved from /login to the home page, minted nothing, raised no alert,
+ * took nothing away, and its recorded lines carry none of the run's values —
+ * so every other condition read it as a link, and on an app whose home page
+ * is public a renamed Sign in would have been "reached" by going there.
+ */
+function followsEntry(steps: readonly RecordedStepEvidence[], index: number, segmentStart: string | undefined): boolean {
+  for (let i = index - 1; i >= 0; i--) {
+    const earlier = steps[i];
+    if (ENTRY_TOOLS.has(earlier.tool)) return true;
+    if (earlier.tool === 'goto' || earlier.tool === 'back') return false;
+    const landed = earlier.expect?.urlPattern;
+    if (!landed) continue;
+    // A step that moved arrived on this page: what came before it was elsewhere.
+    const from = recordedStart(steps, i, segmentStart);
+    if (!from || movedFrom(from, landed)) return false;
+  }
+  return false;
 }
 
 /**
@@ -80,11 +143,18 @@ function recordedStart(steps: readonly RecordedStepEvidence[], index: number, se
  * the record still there (test/replay-false-pass.browser.test.ts). Reaching
  * the destination is evidence only of the going. So the recording must show:
  *  - the click MOVED: its recorded url is not the one it was recorded
- *    starting on (recordedStart; unknown is not moved);
+ *    starting on (recordedStart, movedFrom; unknown is not moved);
  *  - nothing a navigation cannot have done by itself: no record minted
  *    (`mints`), none taken away (`goneContains`, `removedContains`,
  *    `removalRequired`), no alert raised (`alertContains` — the app
  *    answering a commit), no page opened or closed (`effect`).
+ *    A mint marked `sole: false` is not a record: it is a state key that
+ *    arrived with others, a navigation filling in its url state, as the start
+ *    gate reads it (gates.ts mintedAhead). Odoo's top-menu links all carry one
+ *    (`q.action`), and fwod107-fr compiled "Contacts" and "Sales" with no
+ *    fallback for it.
+ *  - nothing entered on its page before it (followsEntry): a click after a
+ *    fill, a type or a select submits them.
  * What the click ADDED is not asked here — a link's landing adds lines too —
  * but of the page reached (arrivalStop).
  */
@@ -92,9 +162,11 @@ export function recordedAsNavigation(steps: readonly RecordedStepEvidence[], ind
   const step = steps[index];
   const e = step?.expect;
   if (!e?.urlPattern) return false;
-  if (step.mints || step.effect || e.alertContains || e.removedContains?.length || e.goneContains?.length || e.removalRequired) return false;
+  const minted = step.mints !== undefined && step.mints !== null && step.mints.sole !== false;
+  if (minted || step.effect || e.alertContains || e.removedContains?.length || e.goneContains?.length || e.removalRequired) return false;
+  if (followsEntry(steps, index, segmentStart)) return false;
   const from = recordedStart(steps, index, segmentStart);
-  return from !== undefined && from !== e.urlPattern;
+  return from !== undefined && movedFrom(from, e.urlPattern);
 }
 
 /** How long the page the fallback reached is given to show the step's recorded lines. */

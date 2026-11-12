@@ -91,6 +91,10 @@ describe('standalone execution source', () => {
             // A click the recording shows as navigation and nothing else: the only kind the shared navigation
             // fallback may stand in for (recover.ts recordedAsNavigation). Last again, for the same reason.
             { tool: 'click', args: { target: '@e3' }, locators: { target: [{ kind: 'role' as const, role: 'link', name: 'Records' }] }, expect: { urlPattern: 'http://app.test/records', addedContains: ['- heading "Records for {{v1}}"'], lineDialect: 2 } },
+            // A declared fix-up (the shared fixup module): its guard's condition, then the repair it guards,
+            // skipped whole when the guard does not hold. Last again, for the same reason.
+            { tool: 'wait_for', args: { target: '.row a', state: 'count', count: 2 }, locators: { target: [{ kind: 'css' as const, selector: '.row a' }] }, guard: { id: 'g1', reason: '{{v1}} appears twice' } },
+            { tool: 'click', args: { target: '@e6' }, locators: { target: [{ kind: 'role' as const, role: 'button', name: 'Delete' }] }, guarded: 'g1', guardEnd: true },
           ],
         }],
       }],
@@ -189,7 +193,12 @@ describe('standalone execution source', () => {
     expect(source).toContain("await expectUrl(page, '/record/', 10000);");
     expect(source).toContain("assertMissed('failed', 'the record page is open', err);");
     expect(source).toContain('throw new Error(assertFailure(kind, message, detail));');
-    for (const name of ['text', 'url', 'gates', 'observe', 'browser', 'action', 'lifecycle', 'loop', 'snapshot', 'expect', 'point', 'resolve', 'recipes', 'fingerprint', 'echo', 'recover', 'context', 'assert']) {
+    // ...and a fix-up's guard, its verdict consulted by the step it guards.
+    expect(source).toContain('let fixup1 = false;');
+    expect(source).toContain("await expect(guardHit1.locator).toHaveCount(2, { timeout: Math.max(guardUntil1 - Date.now(), 100) });");
+    expect(source).toContain("else console.log(`[sitelooper skip] ${fixupSkipped('01-actions s_measured/6', `${p.v1} appears twice`, 1)}`);");
+    expect(source).toMatch(/if \(fixup1\) \{\n\s+\/\/ @step 01-actions s_measured\/7\n/);
+    for (const name of ['text', 'url', 'gates', 'observe', 'browser', 'action', 'lifecycle', 'loop', 'snapshot', 'expect', 'point', 'resolve', 'recipes', 'fingerprint', 'echo', 'recover', 'context', 'assert', 'fixup']) {
       expect(source.split(`// Shared execution source: ${name}.ts.`).length, name).toBe(2);
     }
     const options: ts.CompilerOptions = {

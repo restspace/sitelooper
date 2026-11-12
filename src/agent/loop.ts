@@ -70,7 +70,7 @@ const ESCALATION_BUDGET_MULTIPLIER = 1.5;
 /** Tools that observe, arm or wait: nothing they do changes what the page shows. */
 /** Browser gestures: the actions whose failure leaves the page short of what the instruction asked (see InstructionResult.unfinishedGesture). */
 const GESTURE_TOOLS = new Set(['click', 'dblclick', 'modifier_click', 'right_click', 'fill', 'type', 'press', 'select', 'check', 'drag', 'upload', 'goto', 'back']);
-const NOT_A_MUTATION = new Set(['snapshot', 'read', 'read_all', 'eval', 'screenshot', 'wait_for', 'fetch_source', 'dialog_expect', 'report', 'hover', 'scroll_into_view']);
+const NOT_A_MUTATION = new Set(['snapshot', 'read', 'read_all', 'eval', 'screenshot', 'wait_for', 'fixup', 'fetch_source', 'dialog_expect', 'report', 'hover', 'scroll_into_view']);
 
 /** How much of a tool result trace.jsonl keeps: enough to see the [state: …] note and the top of a [page: …] block. */
 const TRACE_RESULT_CHARS = 2500;

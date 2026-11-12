@@ -281,8 +281,10 @@ describe('compileFlow: a demoted pin refuses to write', () => {
     const source = fs.readFileSync(result.flowFile!, 'utf8');
     expect(source).toContain(`// error ${DEMOTED_STEP}: it is pinned to the demoted skill ${DEMOTED_SKILL}`);
     expect(source).toContain(`// fix: sitelooper rerecord ${FWOD34} ${DEMOTED_STEP}`);
-    // and the step's own failure says it too
-    expect(source).toContain(`'08-open s_c86522/1 target', { stayOnOrigin: 'http://127.0.0.1:8069', waitMs: RESOLVE_WAIT_MS }, 'http://127.0.0.1:8069/web#action=:id&cids=:id&id=21&menu_id=:id&model=sale.order&view_type=form', p, { drift: run.drift }, 'it is pinned to the demoted skill s_c86522`);
+    // and the step's own failure says it too. The click was recorded on the form it started on
+    // (`id=21` where the segment's start says `id=:id`: one page), so it is no navigation and has
+    // no fallback to its recorded url (recover.ts recordedAsNavigation).
+    expect(source).toContain(`'08-open s_c86522/1 target', { stayOnOrigin: 'http://127.0.0.1:8069', waitMs: RESOLVE_WAIT_MS }, { drift: run.drift }, 'it is pinned to the demoted skill s_c86522`);
   });
 });
 

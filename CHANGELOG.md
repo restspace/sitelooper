@@ -20,13 +20,46 @@
   reported as run with the record still there. When another route is used, the page it reaches
   must show the recorded lines that carry the run's own values, or the step stops. The same rule
   applies in the daemon and in compiled runtime-style files, which now emit the fallback only for
-  such clicks.
+  such clicks. Whether a click moved is judged by the url matcher, not by comparing text, and a
+  click that follows a fill, type, select, check or upload on its page is a submit, never a
+  navigation.
 - A recorded page change is matched as a whole line, not as text found anywhere in one. A line
   recorded with no value is no longer shown by the same control with more state: an unchecked
   `- checkbox "Notify"` by `- checkbox "Notify" [checked]`, an enabled button by a disabled one, an
   empty field by a filled one. A recorded value is no longer shown by a longer one that continues
   the same word or number (`125` by `12500`); a value that goes on past a boundary (`125.00`)
   still matches. Steps that passed only on such a match now stop.
+
+- A wait for something to appear is given its own timeout to find its target. Before, every
+  target had 3 seconds to resolve whatever the step asked for, so `wait_for text=Saved` with a
+  15-second timeout stopped while the page still said "Saving...". The wait that follows gets
+  what is left of the timeout, so the step takes no longer than it asked for.
+- A compiled spec's persistence probe no longer fails on something a later step of the same run
+  did on purpose. A probed line that a later step removes or rewrites is retired, and the run log
+  says which step retired it; a line nothing later touched is still required after reload.
+- Two repeated clicks on the same element are no longer folded into a loop because the element
+  moved on the page. A Save clicked once to dismiss a dialog and once more to save was replayed as
+  one click, and the edit was never saved.
+- A read is no longer withheld from the report because the flow earlier clicked a link with the
+  same name. A click that changed the route selected nothing.
+- An instruction issued directly is answered by the most specific stored procedure that matches it.
+  A template ending in a slot also matches any longer sentence that starts the same way, and the
+  first match in store order was taken, so "the owner is admin, the list has 1 item" could be
+  answered by the procedure stored for "the owner is admin", with the rest of the sentence as its
+  value. Which one ran varied from run to run. Ties go to the better record, then the older
+  procedure. A flow step's candidates follow the same rule: a procedure that reads the step's
+  instruction only by taking part of the sentence as a value is tried after the others, whatever
+  its record.
+
+### Recording
+- The recording agent can declare a fix-up: a repair to something an earlier step left wrong, such
+  as deleting a duplicate row. It calls `fixup` with a reason and a check that is true because of
+  the problem, then makes the repair. The check is recorded only if it holds at that moment, and
+  the fix-up is complete at the first step after which it no longer holds. On replay and in the
+  compiled spec the check is evaluated first: when it holds the repair runs, and when it does not
+  the repair's steps are skipped and the run says so. Before, such a repair was replayed
+  unconditionally and could delete real data on a run where the mistake had not happened.
+  A fix-up the recording never completed is compiled as ordinary steps.
 
 ## 0.8.1 — 2026-11-05
 

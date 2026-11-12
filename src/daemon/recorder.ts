@@ -17,6 +17,7 @@ import { flattenContainedComposite, type Report } from '../agent/report.js';
 import { evalResultForRecord } from './eval-result.js';
 import type { StepEvidence, StepFailure } from './step-evidence.js';
 import type { StepJournal } from './journal.js';
+import type { GuardState } from '../execution/fixup.js';
 import {
   affixOfFrame,
   counterObservations,
@@ -320,6 +321,17 @@ export interface RecordedStep {
    * and an eval's answer is no source a replay has (fwsi7's href).
    */
   evalResult?: string;
+  /**
+   * This wait_for is a fix-up's CONDITION (execution/fixup.ts): a check that is
+   * true because of something an earlier step left wrong. When it holds, the
+   * steps it guards run; when it does not, there is nothing to repair and they
+   * are skipped. `reason` is the recording agent's own sentence.
+   */
+  guard?: { id: string; reason: string };
+  /** This step belongs to the fix-up whose guard has this id: it runs only if that guard held. */
+  guarded?: string;
+  /** The last step of a fix-up: after it, the recorder saw the guard's condition turn false. */
+  guardEnd?: true;
   /** Set by compile (collapseTogglePairs), never by the recorder: see SkillStep.toggle. */
   toggle?: true;
   /** Set by compile (carryOpener), never by the recorder: see SkillStep.closedBefore. */
@@ -467,6 +479,23 @@ export interface RecordedReport {
 
 export type RecordedEntry = RecordedStep | RecordedInstruction | RecordedReport;
 
+/**
+ * A fix-up's check as the `fixup` tool took it (agent/tools.ts): a wait_for's
+ * own arguments, which are exactly what its guard step records.
+ */
+export interface GuardCheck {
+  target: string;
+  state: GuardState;
+  count?: number;
+  text?: string;
+}
+
+/** The fix-up open in a take: its guard's id and the check the recorder re-reads after each step. */
+export interface OpenFixup {
+  id: string;
+  check: GuardCheck;
+}
+
 /** A step recorded for an action that failed: on disk only, never a gesture (RecordedStep.failed). */
 export function isFailedStep(e: RecordedEntry): boolean {
   return e.k === 'step' && e.failed === true;
@@ -588,6 +617,10 @@ export class ScriptRecorder {
     for (const [after, steps] of parsed.failedAfter) this.failedAfter.set(after, steps);
     for (const e of [...parsed.entries, ...[...parsed.failedAfter.values()].flat()]) {
       if (typeof e.seq === 'number' && e.seq >= this.nextSeq) this.nextSeq = e.seq + 1;
+      // A later take continues the guard numbering too, so `g1` names one
+      // fix-up in the whole file, never two from two takes.
+      const n = e.k === 'step' && e.guard ? Number(/^g(\d+)$/.exec(e.guard.id)?.[1] ?? 0) : 0;
+      if (n > this.guards) this.guards = n;
     }
     // Make the file canonical before the first append: appending after a
     // torn last line glued the next entry onto the fragment, and the NEXT
@@ -604,6 +637,44 @@ export class ScriptRecorder {
 
   /** The next entry's `seq`: one past the highest on disk, so a later take continues the count. */
   private nextSeq = 0;
+
+  /**
+   * DECLARED FIX-UPS (execution/fixup.ts). The fix-up open now, if any, and how
+   * many guards this file has numbered. The open one lives HERE, beside the
+   * entries it annotates, because this is the one object every recorded step
+   * passes through (commit) and whose life is exactly the recording's: a
+   * daemon restart builds a new recorder, so nothing can stay open across one,
+   * and beginInstruction/endInstruction close it at the instruction's edges.
+   * In memory only: what is on disk is the guard step and the steps it marks.
+   */
+  private open: OpenFixup | null = null;
+  private guards = 0;
+  /** The fix-up the last commit closed, until the tool layer has told the model (takeClosedFixup). */
+  private closed: { id: string; tool: string } | null = null;
+
+  /** The fix-up whose guard holds open now: every step committed is guarded by it. */
+  get openFixup(): OpenFixup | null {
+    return this.open;
+  }
+
+  /** The fix-up a commit closed since the last call, once: the tool layer's cue to say so. */
+  takeClosedFixup(): { id: string; tool: string } | null {
+    const closed = this.closed;
+    this.closed = null;
+    return closed;
+  }
+
+  /**
+   * An instruction's edge with a fix-up still open: the instruction ended
+   * before the recorder saw the check turn false, so the group has no
+   * `guardEnd`. The file is append-only and is not rewritten; that missing
+   * `guardEnd` is what compile reads as an invalid fix-up and dissolves.
+   */
+  private abandonFixup(why: string): void {
+    if (!this.open) return;
+    console.error(`[sitelooper] fix-up ${this.open.id} left open: ${why} before its check stopped holding; compile will keep its steps as ordinary steps`);
+    this.open = null;
+  }
 
   /** Number and time-stamp an entry as it is written (stage 0 evidence). */
   private stamp<E extends RecordedEntry>(entry: E): E {
@@ -647,11 +718,17 @@ export class ScriptRecorder {
     text: string,
     context: { url?: string; fingerprint?: number[]; startText?: string; startDialect?: 2; startTextComplete?: boolean; resume?: true; assert?: true } = {},
   ): void {
+    // A fix-up never spans instructions: one the previous instruction left
+    // open (it ended with no report) closes here, and an escalation's resume
+    // starts with none, so its group dissolves rather than run on unproven.
+    this.abandonFixup('a new instruction began');
+    this.closed = null;
     this.append({ k: 'instruction', text, ...context });
   }
 
   /** Close the current instruction with its outcome (learning mode; flows are built from these). */
   endInstruction(report: Omit<RecordedReport, 'k'>): void {
+    this.abandonFixup('the instruction reported');
     this.append({
       k: 'report',
       ...report,
@@ -755,6 +832,11 @@ export class ScriptRecorder {
       this.append(step);
       return;
     }
+    // Inserted inside a fix-up, it belongs to that fix-up: a read-back the
+    // runner skips with its gesture, and a group compile still sees whole
+    // (wellFormedFixup wants its guarded steps contiguous).
+    const within = anchor.guard?.id ?? (anchor.guarded && !anchor.guardEnd ? anchor.guarded : undefined);
+    if (within && !step.guard) step = { ...step, guarded: within };
     this.entries.splice(at + 1, 0, this.stamp(step));
     this.rewrite();
   }
@@ -826,6 +908,9 @@ export class ScriptRecorder {
     this.entries.length = 0;
     this.failedAfter.clear();
     this.nextSeq = 0;
+    this.open = null;
+    this.closed = null;
+    this.guards = 0;
     this.priorCount = 0; // a cleared recording has no previous take to skip
     try {
       fs.rmSync(this.file(), { force: true });
@@ -902,9 +987,34 @@ export class ScriptRecorder {
   commit(
     step: RecordedStep | null,
     result: string,
-    extra: { diff?: StepDiff; via?: RecordedStep['via']; fingerprintAfter?: number[]; page?: number; effect?: PageEffect; afterUrl?: string; obs?: StepEvidence; journal?: StepJournal } = {},
+    extra: {
+      diff?: StepDiff;
+      via?: RecordedStep['via'];
+      fingerprintAfter?: number[];
+      page?: number;
+      effect?: PageEffect;
+      afterUrl?: string;
+      obs?: StepEvidence;
+      journal?: StepJournal;
+      /** This wait_for is a fix-up's guard (the `fixup` tool): it opens one, numbered here. */
+      guard?: { reason: string; check: GuardCheck };
+      /** The open fix-up's check no longer holds after this step (the tool layer re-read it): it closes here. */
+      guardEnd?: boolean;
+    } = {},
   ): void {
     if (!step) return;
+    // Fix-up marks, decided BEFORE the append: script.jsonl is append-only,
+    // so the line a step is written as is the line it keeps. A guard is never
+    // itself guarded (the tool refuses one while another is open).
+    const fixup: Pick<RecordedStep, 'guard' | 'guarded' | 'guardEnd'> = {};
+    let opens: OpenFixup | null = null;
+    if (extra.guard && !this.open) {
+      opens = { id: `g${++this.guards}`, check: extra.guard.check };
+      fixup.guard = { id: opens.id, reason: extra.guard.reason };
+    } else if (this.open) {
+      fixup.guarded = this.open.id;
+      if (extra.guardEnd) fixup.guardEnd = true;
+    }
     // A select is recorded by the option's visible LABEL whatever the caller
     // passed: the label is the term the procedure has provenance for (it is
     // what the instruction names, what an earlier step minted), while the
@@ -927,7 +1037,13 @@ export class ScriptRecorder {
       ...(extra.afterUrl ? { afterUrl: extra.afterUrl } : {}),
       ...(extra.obs ? { obs: extra.obs } : {}),
       ...(extra.journal ? { journal: extra.journal } : {}),
+      ...fixup,
     };
+    if (opens) this.open = opens;
+    if (fixup.guardEnd && this.open) {
+      this.closed = { id: this.open.id, tool: step.tool };
+      this.open = null;
+    }
     this.append(RESULT_TOOLS.has(step.tool) ? { ...entry, result } : step.tool === 'eval' ? { ...entry, evalResult: evalResultForRecord(result) } : entry);
     this.observeFormats(step, entry);
   }
