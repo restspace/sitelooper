@@ -1,0 +1,7 @@
+flow: /home/user/sitelooper/bench/results/fwgr92-fc-spec-spec-tmp/fwgr92-fc.flow.ts
+spec: /home/user/sitelooper/bench/results/fwgr92-fc-spec-spec-tmp/fwgr92-fc.spec.ts
+facts http://127.0.0.1:3000: 70 relied (3 hard), 40 advisory
+warning 07-report: 07-report changed nothing when it was recorded, though its instruction asks for a change
+  why: 07-report changed nothing: its instruction asks to save, the recording made no state-changing action, and the page already showed 'Choose refresh time interval with current interval 1 minute selected' before it ran. The step may be redundant.
+  fix: sitelooper rerecord bench/results/flows/fwgr92-fc.json 07-report
+

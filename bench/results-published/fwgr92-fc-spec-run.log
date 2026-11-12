@@ -1,0 +1,14 @@
+[spec-replay] resetting grafana
+[reset] grafana: deleted leftover dashboard "fwgr92-fc-n3 Bench Dashboard" (200)
+[reset] grafana: deleted leftover dashboard "Service Health" (400)
+[spec-replay] compiling: /opt/node22/bin/node /home/user/sitelooper/bin/sitelooper.js compile bench/results/flows/fwgr92-fc.json --out /home/user/sitelooper/bench/results/fwgr92-fc-spec-spec-tmp --overwrite-spec
+flow: /home/user/sitelooper/bench/results/fwgr92-fc-spec-spec-tmp/fwgr92-fc.flow.ts
+spec: /home/user/sitelooper/bench/results/fwgr92-fc-spec-spec-tmp/fwgr92-fc.spec.ts
+facts http://127.0.0.1:3000: 70 relied (3 hard), 40 advisory
+warning 07-report: 07-report changed nothing when it was recorded, though its instruction asks for a change
+  why: 07-report changed nothing: its instruction asks to save, the recording made no state-changing action, and the page already showed 'Choose refresh time interval with current interval 1 minute selected' before it ran. The step may be redundant.
+  fix: sitelooper rerecord bench/results/flows/fwgr92-fc.json 07-report
+[spec-replay] running: npx playwright test --config /home/user/sitelooper/bench/results/fwgr92-fc-spec-spec-tmp/playwright.config.mjs
+[spec-replay] failure evidence: fwgr92-fc-spec-spec-failure.png
+[spec-replay] failure evidence: fwgr92-fc-spec-spec-error-context.md
+[spec-replay] fwgr92-fc-spec: 0/1 passed, exit=1, 136s, 5 drift line(s) — result written

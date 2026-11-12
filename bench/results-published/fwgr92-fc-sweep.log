@@ -1,0 +1,102 @@
+
+[sweep] run 1/3: fwgr92-fc-n1 (store: /home/user/sitelooper/bench/results/fwgr92-fc-skills)
+[harness] grafana: defaulting APP_URL
+[harness] grafana: defaulting APP_EMAIL
+[harness] grafana: defaulting APP_PASSWORD
+[reset] grafana: deleted leftover dashboard "Service Health" (400)
+[harness] grafana responded 302 at http://127.0.0.1:3000/
+stopped: fwgr92-fc-n1
+  flow "fwgr92-fc" saved: 7 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwgr92-fc.json
+  warning: note: 01-signin no longer publishes login_status — no replay reads it from the page and the recording showed no line to read
+  warning: note: 02-find no longer publishes dashboard_url, panel_count — no replay reads them from the page and the recording showed no line to read
+  warning: note: 04-add no longer publishes save_action — no replay reads it from the page and the recording showed no line to read
+  warning: note: 05-set no longer publishes save_confirmation, dashboard_page_url_persi, tag_section_label, default_time_range_start — no replay reads them from the page and the recording showed no line to read
+  warning: note: 06-set no longer publishes dashboard_url, auto_refresh_before, refresh_picker_options — no replay reads them from the page and the recording showed no line to read
+  warning: note: 07-report no longer publishes dashboard_uid, refresh_control_text — no replay reads them from the page and the recording showed no line to read
+  warning: note: 06-set: added a read for save_confirmation to s_a65695 (page.getByRole('status', { name: 'Dashboard saved', exact: true }); seen on the instruction's own page)
+  warning: warning: noop-step: 07-report changed nothing: its instruction asks to save, the recording made no state-changing action, and the page already showed 'Choose refresh time interval with current interval 1 minute selected' before it ran. The step may be redundant.
+  warning: warning: 184 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[0].instruction: "admin" (output) in "Sign in to Grafana at http://127.0.0.1:3000/ using username admin and password exactly {{env:APP_PASSWORD}}. Verify that the signed-in Grafana page is reached."
+  flow.steps[0].params.v2: "admin" (output) in "admin"
+  flow.steps[2].instruction: "TestData" (output) in "Create a NEW Grafana dashboard titled {{runid}} Bench Dashboard. Add a Stat panel titled {{runid}} Availability whose query uses the TestData data source, then "
+  flow.steps[2].instruction: "Bench" (output) in "Create a NEW Grafana dashboard titled {{runid}} Bench Dashboard. Add a Stat panel titled {{runid}} Availability whose query uses the TestData data source, then "
+  flow.steps[2].instruction: "Stat" (output) in "Create a NEW Grafana dashboard titled {{runid}} Bench Dashboard. Add a Stat panel titled {{runid}} Availability whose query uses the TestData data source, then "
+arm=sitelooper model=openai/gpt-6-luna runid=fwgr92-fc-n1 stop=completed
+turns=8 wall=514.1s
+commands=7 cmdTime=477.8s cmdBytes=10515 timeouts=0
+orchestrator in=6390 cw=0 cr=28073 out=946
+inner prompt=2962671 cached=2764160 completion=27530
+spend=$0.0563 maxUsd=3
+learn: A_n=0 replayed=0/7 full=0 repaired=0 compiled=7 variants=0
+-> /home/user/sitelooper/bench/results/fwgr92-fc-n1-sitelooper-result.json
+
+fwgr92-fc-n1: objectives passed 6/6
+  obj 1: PASS — all 3 provisioned titles reported
+  obj 2: PASS — type=stat, datasource ok=true
+  obj 3: PASS — type=text, content includes runid=true
+  obj 4: PASS — tags=["bench"], time=now-6h..now
+  obj 5: PASS — refresh="1m"
+  obj 6: PASS — uid bg42gt535vc3kc reported
+
+[sweep] run 2/3: fwgr92-fc-n2 (replay flow fwgr92-fc, no orchestrator)
+[reset] grafana: deleted leftover dashboard "fwgr92-fc-n1 Bench Dashboard" (200)
+[reset] grafana: deleted leftover dashboard "Service Health" (400)
+[sweep] fwgr92-fc-n2: 6 drift ticket(s) → fwgr92-fc-n2-drift.json
+
+fwgr92-fc-n2: objectives passed 6/6
+  obj 1: PASS — all 3 provisioned titles reported
+  obj 2: PASS — type=stat, datasource ok=true
+  obj 3: PASS — type=text, content includes runid=true
+  obj 4: PASS — tags=["bench"], time=now-6h..now
+  obj 5: PASS — refresh="1m"
+  obj 6: PASS — uid cg42heflf6ha8e reported
+
+[sweep] run 3/3: fwgr92-fc-n3 (replay flow fwgr92-fc, no orchestrator)
+[reset] grafana: deleted leftover dashboard "fwgr92-fc-n2 Bench Dashboard" (200)
+[reset] grafana: deleted leftover dashboard "Service Health" (400)
+[sweep] fwgr92-fc-n3: 6 drift ticket(s) → fwgr92-fc-n3-drift.json
+
+fwgr92-fc-n3: objectives passed 6/6
+  obj 1: PASS — all 3 provisioned titles reported
+  obj 2: PASS — type=stat, datasource ok=true
+  obj 3: PASS — type=text, content includes runid=true
+  obj 4: PASS — tags=["bench"], time=now-6h..now
+  obj 5: PASS — refresh="1m"
+  obj 6: PASS — uid cg42hofhu0c8wc reported
+
+Learning sweep fwgr92-fc (K=3)
+┌─────────┬───┬────────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid          │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼────────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwgr92-fc-n1' │ '6/6'    │ 'completed' │ 8     │ 7    │ 0.0563    │ 0   │ '0/7'        │ 514    │
+│ 1       │ 2 │ 'fwgr92-fc-n2' │ '6/6'    │ 'success'   │ 0     │ 7    │ 0         │ 1   │ '7/7 (flow)' │ 185    │
+│ 2       │ 3 │ 'fwgr92-fc-n3' │ '6/6'    │ 'success'   │ 0     │ 7    │ 0         │ 1   │ '7/7 (flow)' │ 136    │
+└─────────┴───┴────────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:3000
+  s_01f67f  validated    1 steps  3/3 (100%)
+           Sign in to Grafana at {{v1}} using username {{v2}} and password exactly {{v3}}. Verify that the signed-in Graf…
+  s_04a25f  validated    2 steps  3/3 (100%)
+           Sign in to Grafana at {{v1}} using username {{v2}} and password exactly {{v3}}. Verify that the signed-in Graf…
+  s_21d373  validated    8 steps  3/3 (100%)
+           On the saved dashboard {{v1}}, read the current browser page URL directly from the address bar after loading t…
+  s_341139  validated    2 steps  3/3 (100%)
+           Find and open the provisioned dashboard named Service health, then report the titles of all its panels exactly…
+  s_3d49e8  validated   11 steps  3/3 (100%)
+           Create a NEW Grafana dashboard titled {{v3}}. Add a {{v4}} panel titled {{v5}} whose query uses the TestData d…
+  s_3f8583  validated   12 steps  3/3 (100%)
+           Find and open the provisioned dashboard named Service health, then report the titles of all its panels exactly…
+  s_557fb5  validated    5 steps  3/3 (100%)
+           Sign in to Grafana at {{v1}} using username {{v2}} and password exactly {{v3}}. Verify that the signed-in Graf…
+  s_559f00  validated   19 steps  3/3 (100%)
+           Update the saved dashboard {{v1}} to have the tag {{v4}} and a default time range of last 6 hours. Ensure the …
+  s_897c46  validated   28 steps  3/3 (100%)
+           On the existing saved dashboard {{v1}}, add a {{v4}} visualization panel titled {{v5}} with content that inclu…
+  s_a65695  validated   15 steps  3/3 (100%)
+           Set the saved dashboard {{v1}} auto-refresh interval to 1m and explicitly save the dashboard. Verify the auto-…
+  s_dbc7af  validated    2 steps  3/3 (100%)
+           Create a NEW Grafana dashboard titled {{v3}}. Add a {{v4}} panel titled {{v5}} whose query uses the TestData d…
+  s_e289ba  validated   15 steps  3/3 (100%)
+           Create a NEW Grafana dashboard titled {{v3}}. Add a {{v4}} panel titled {{v5}} whose query uses the TestData d…
+store: /home/user/sitelooper/bench/results/fwgr92-fc-skills
+
+summary: /home/user/sitelooper/bench/results/fwgr92-fc-sweep.json

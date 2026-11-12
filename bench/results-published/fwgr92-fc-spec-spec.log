@@ -1,0 +1,58 @@
+
+Running 1 test using 1 worker
+
+[sitelooper warn] 01-signin: report value username is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)
+[sitelooper step] 01-signin
+[sitelooper step] 02-find
+[sitelooper warn] 03-create s_3d49e8/11: expected alert containing "Dashboard saved"
+[sitelooper warn] 03-create s_e289ba/10: read 'panel_title' returned a value the skill itself set/selected ('fwgr92-fc-spec Availability') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper step] 03-create
+[sitelooper recipe] filled via recipe monaco/set-value (r_f2510e); value verified on the component
+[sitelooper drift] 04-add s_897c46/22 target: primary getByText('fwgr92-fc-spec Notes', { exact: true }) missed; used #2 locator('[data-testid="header-container"] h2').first() (#1 ambiguous)
+[sitelooper warn] 04-add s_897c46/25: read 'save_dashboard_button' returned a value the skill itself set/selected ('Save dashboard') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper drift] 04-add s_897c46/26 target: primary getByText('fwgr92-fc-spec Notes', { exact: true }) missed; used #2 locator('[data-testid="header-container"] h2').first() (#1 ambiguous)
+[sitelooper step] 04-add
+[sitelooper probe] 04-add: retired - heading "fwgr92-fc-spec Availability" — 05-set s_559f00/1 took it off http://127.0.0.1:3000/d/dg42ieytciiv4c/fwgr92-fc-spec-bench-dashboard?from=now-6h&to=now&timezone=browser&editview=settings
+[sitelooper probe] 04-add: retired - button "Menu for panel with title fwgr92-fc-spec Availability" — 05-set s_559f00/1 took it off http://127.0.0.1:3000/d/dg42ieytciiv4c/fwgr92-fc-spec-bench-dashboard?from=now-6h&to=now&timezone=browser&editview=settings
+[sitelooper drift] 05-set s_559f00/4 target: primary locator('[data-testid="data-testid Nav toolbar"] button') missed; used #2 locator('div:nth-of-type(2) > div:nth-of-type(1) > div > div:nth-of-type(3) > div > button:nth-of-type(1)') (#1 ambiguous)
+[sitelooper probe] 04-add: - heading "fwgr92-fc-spec Availability" shows again at 05-set s_559f00/7 — required again (retired by 05-set s_559f00/1)
+[sitelooper probe] 04-add: - button "Menu for panel with title fwgr92-fc-spec Availability" shows again at 05-set s_559f00/7 — required again (retired by 05-set s_559f00/1)
+[sitelooper step] 05-set
+[sitelooper drift] 06-set s_a65695/4 target: primary locator('[data-testid="data-testid Nav toolbar"] button') missed; used #2 locator('div:nth-of-type(2) > div:nth-of-type(1) > div > div:nth-of-type(6) > div > button:nth-of-type(1)') (#1 ambiguous)
+[sitelooper drift] 06-set s_a65695/14 target: primary getByText('fwgr92-fc-spec', { exact: true }) missed; used #2 locator('[data-testid="TextPanel-converted-content"] p').nth(1) (#1 absent)
+[sitelooper skip] 06-set s_a65695/15 target: read target not found — value left empty
+[sitelooper step] 06-set
+[sitelooper step] 07-report
+[sitelooper probe] 04-add: http://127.0.0.1:3000/d/dg42ieytciiv4c/fwgr92-fc-spec-bench-dashboard?from=now-6h&to=now&timezone=browser still shows what it saved
+  ✘  1 fwgr92-fc.spec.ts:9:1 › fwgr92-fc (2.2m)
+
+
+  1) fwgr92-fc.spec.ts:9:1 › fwgr92-fc ─────────────────────────────────────────────────────────────
+
+    Error: persistence: 05-set typed "bench", the record at http://127.0.0.1:3000/d/dg42ieytciiv4c/fwgr92-fc-spec-bench-dashboard?from=now-6h&to=now&timezone=browser does not show it after reload (missing - button "Remove \"bench\" tag")
+
+       at fwgr92-fc.flow.ts:25284
+
+      25282 |     const failures: string[] = [...unpersisted];
+      25283 |     if (run.partial.length && process.env.SITELOOPER_ALLOW_PARTIAL !== '1') failures.push(`PARTIAL: ${run.partial.join('; ')}`);
+    > 25284 |     if (failures.length) throw new Error(failures.join('\n'));
+            |                                ^
+      25285 |     return outputs;
+      25286 |   } finally {
+      25287 |     DRIFT.splice(0, DRIFT.length, ...run.drift);
+        at runFlow (/home/user/sitelooper/bench/results/fwgr92-fc-spec-spec-tmp/fwgr92-fc.flow.ts:25284:32)
+        at /home/user/sitelooper/bench/results/fwgr92-fc-spec-spec-tmp/fwgr92-fc.spec.ts:14:21
+
+    attachment #2: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    [sitelooper drift] 04-add s_897c46/22 target: primary getByText('fwgr92-fc-spec Notes', { exact: true }) missed; used #2 locator('[data-testid="header-container"] h2').first() (#1 ambiguous)
+    [sitelooper drift] 04-add s_897c46/26 target: primary getByText('fwgr92-fc-spec Notes', { exact: true }) miss...
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/fwgr92-fc-fwgr92-fc/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/fwgr92-fc-fwgr92-fc/error-context.md
+
+  1 failed
+    fwgr92-fc.spec.ts:9:1 › fwgr92-fc ──────────────────────────────────────────────────────────────
