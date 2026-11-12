@@ -1,4 +1,4 @@
-import { isMutatingAction, mutatesSteps } from '../execution/lifecycle.js';
+import { RECORDED_SAVE_MAX_MS, isMutatingAction, mutatesSteps } from '../execution/lifecycle.js';
 import type { LocatorCandidate, RecordedEntry, RecordedInstruction, RecordedStep, StepDiff } from '../daemon/recorder.js';
 import { urlMatches } from '../execution/url.js';
 
@@ -95,6 +95,28 @@ export const NAVIGATION_TOOLS = new Set(['goto', 'back']);
 
 /** Steps that enter a value and never navigate (see expectationFor's urlPattern). */
 const VALUE_ENTRY_TOOLS = new Set(['fill', 'type']);
+
+/**
+ * Whether a fill or type step's own journal shows a NEW DOCUMENT loading inside
+ * its diff window: the recorder's `domcontentloaded` event (daemon/journal.ts
+ * attachPage, `{ k: 'nav', doc: 1 }`), attributed to this step's gesture window
+ * and dated no later than its after-capture (`obs.at.c`, else `.s`). Entering a value
+ * cannot load a document — unless the text itself carries a line break, which
+ * a type turns into Enter — so the load was the page's own (a reload, a
+ * redirect landing late), and what the step's diff ADDED is that load's doing
+ * (see expectationFor). A press is never asked: Enter submits, and a
+ * navigation is then the press's own effect.
+ */
+export function documentLoadedDuring(step: RecordedStep): boolean {
+  if (!VALUE_ENTRY_TOOLS.has(step.tool)) return false;
+  if (Object.values(step.args ?? {}).some((v) => typeof v === 'string' && /[\r\n]/.test(v))) return false;
+  const w = step.journal?.w;
+  if (w === undefined) return false;
+  const until = step.obs?.at?.c ?? step.obs?.at?.s;
+  return (step.journal?.ev ?? []).some(
+    (e) => e.k === 'nav' && e.doc === 1 && Array.isArray(e.c) && e.c[0] === 'in' && e.c[1] === w && (until === undefined || e.t <= until),
+  );
+}
 
 const MAX_ADDED_LINES = 5;
 const MAX_SLOT_VALUES = 12;
@@ -1056,6 +1078,62 @@ function finalizeFixups(steps: SkillStep[]): void {
   for (const id of malformedFixups(steps)) throw new FixupDissolved(id, 'its compiled steps are not well formed');
 }
 
+/** Journal events that say nothing changed: the click's own pointer hits and the focus they moved. */
+const HIT_ONLY = new Set(['hit', 'foc']);
+
+/**
+ * Whether the recording shows click `step` as one that only struck something
+ * COVERING its target, and so did nothing the procedure needs. openproject
+ * fwop37-fc 02-find: a first-login tour overlay covered the page, three clicks
+ * went out by the forced tier (execution/browser.ts: a click that could not
+ * land normally), each one's journal hit landed on the overlay (`on: 0`,
+ * `cover`), and each left an empty diff. Compiled, they acted on n2, which had
+ * no tour — they opened a drawer, and a later click went through it onto Home
+ * (s_a8f156 stopped at step 5, 29 recovery turns). Every condition is a
+ * recorded fact:
+ *  - the settle says the forced tier delivered it (`obs.settle.via: 'forced'`);
+ *  - the journal recorded its hits and EVERY hit landed on another element
+ *    than the target (`on: 0`): a forced click that reached its target, or one
+ *    with no hit recorded, is kept;
+ *  - its diff is empty (no line added or removed, uncapped totals included,
+ *    no alert), its url is the one before it, and its journal holds nothing
+ *    but those hits and focus moves: no request, navigation, value or state;
+ *  - nothing refers to it: no label, no effect, not part of a declared fix-up,
+ *    not a replayed or toggle-paired step.
+ * A click with an empty diff that was not forced onto a cover is kept: many
+ * real clicks change nothing a snapshot shows. This cannot hide a failure:
+ * the recording saw the click change nothing at all, so no replay can depend
+ * on its having happened; the step that did the work (the overlay's own
+ * dismissal, recorded with its hit on target) is kept and judged as before.
+ */
+export function coverOnlyClick(step: RecordedStep, urlBefore: string | undefined): boolean {
+  if (step.tool !== 'click' || step.obs?.settle?.via !== 'forced') return false;
+  if (step.label !== undefined || step.args.label !== undefined || step.effect || step.guard || step.guarded || step.via || step.toggle || step.fingerprintAfter) return false;
+  const d = step.diff;
+  if (!d || d.added.length || (d.removed ?? []).length || d.alerts.length) return false;
+  const totals = step.obs.totals;
+  if (totals && (totals.added || totals.removed)) return false;
+  if (urlBefore !== undefined && d.url !== urlBefore) return false;
+  const ev = step.journal?.ev ?? [];
+  const hits = ev.filter((e) => e.k === 'hit');
+  if (!hits.length || hits.some((e) => e.on !== 0)) return false;
+  return ev.every((e) => HIT_ONLY.has(e.k));
+}
+
+/** Drops every coverOnlyClick, noted; the same step objects otherwise (compile matches kept steps by identity). */
+export function dropCoverOnlyClicks<T extends RecordedStep>(steps: readonly T[], notes?: TransformNote[]): T[] {
+  let url: string | undefined;
+  const dropped = new Set<number>();
+  steps.forEach((s, k) => {
+    if (coverOnlyClick(s, url)) {
+      dropped.add(k);
+      notes?.push({ name: 'dropCoverOnlyClicks', at: k + 1, reason: `click #${s.seq ?? k + 1} was forced onto ${String(s.journal?.ev?.find((e) => e.k === 'hit')?.cover ?? 'another element')} covering its target and changed nothing (empty diff, no request, url unchanged)` });
+    }
+    if (s.diff?.url) url = s.diff.url;
+  });
+  return dropped.size ? steps.filter((_, k) => !dropped.has(k)) : [...steps];
+}
+
 function compileRecording(input: CompileInput, fix: FixupContext): Skill[] {
   const head = input.entries.find((e): e is RecordedInstruction => e.k === 'instruction');
   const steps = input.entries.filter((e): e is RecordedStep => e.k === 'step');
@@ -1094,7 +1172,7 @@ function compileRecording(input: CompileInput, fix: FixupContext): Skill[] {
   // (fenceFixups): run once for real, and once without each fix-up to see
   // whether its steps decided anything about the steps around them.
   const prepare = (list: RecordedStep[], notesInto: TransformNote[], pressed: WeakSet<RecordedStep>): RecordedStep[] => {
-    const replayable = dropSupersededSets(collapseTogglePairs(expandListReads(dropEvalAssignedCandidates(creditUncreditedPopups(dropRetriedSubmits(dropRestoredDetours(dropDiscardedDetours(namedHighlightPicks(list), notesInto))), notesInto), notesInto), reportValues))).filter((step) => {
+    const replayable = dropSupersededSets(collapseTogglePairs(expandListReads(dropEvalAssignedCandidates(creditUncreditedPopups(dropRetriedSubmits(dropRestoredDetours(dropDiscardedDetours(namedHighlightPicks(dropCoverOnlyClicks(list, notesInto)), notesInto))), notesInto), notesInto), reportValues))).filter((step) => {
       if (step.tool === 'screenshot' || step.tool === 'eval') return false;
       // A bare tab listing (`tabs` with no switch_to) is the agent looking, like
       // a screenshot: it changes nothing and publishes nothing. openproject
@@ -1178,6 +1256,10 @@ function compileRecording(input: CompileInput, fix: FixupContext): Skill[] {
   // ...and a gesture the page was still moving after is replayed with that long
   // to finish (erpnext fwen6-luna 02-find): see movedAfterCapture.
   const movedAfter = movedAfterCapture(steps);
+  // ...and one the app saved by itself after, before the recording left the
+  // page, with that long for the save (vikunja fwvk18-fc 03-create): see
+  // savedAfterCapture.
+  const savedAfter = savedAfterCapture(steps);
   const sameTemplate = (a: string, b: string) => generaliseAppMinted(urlPattern(a, slots, { query: false }), appMinted) === generaliseAppMinted(urlPattern(b, slots, { query: false }), appMinted);
   // A url id this span minted is its OUTPUT: derived ({{dN}}, discoverMinted),
   // never a param — even when the ledger, which banked it before this compile,
@@ -1484,6 +1566,10 @@ function compileRecording(input: CompileInput, fix: FixupContext): Skill[] {
       // the next step went out (movedAfterCapture, erpnext fwen6-luna #22).
       const moved = step.obs ? movedAfter.get(step.obs) : undefined;
       if (moved !== undefined) out.movedAfterMs = moved;
+      // The app saved by itself this long after the recorded capture, and the
+      // recording's next action left the page (savedAfterCapture).
+      const saved = step.obs ? savedAfter.get(step.obs) : undefined;
+      if (saved !== undefined) out.savedAfterMs = saved;
       // The landing the app gave this goto where it rewrote a key the goto
       // asked for (SkillStep.landedAs): the recording's own evidence of what
       // "the page it asked for" looks like on this app.
@@ -3787,11 +3873,26 @@ function expectationFor(
     // rules, decided here where the step's own args are still in hand, and
     // both leaving the wildcard that identifiesNothing then sweeps up.
     const typed = typedValues(step, slots);
+    // A fill or type whose own journal shows a document loading in its diff
+    // window (documentLoadedDuring) recorded the RELOAD's page, not its own
+    // effect: vikunja fwvk18-fc's password fill recorded only the username box
+    // gone empty (`- textbox "…"`, the reload wiped what step 1 typed), and
+    // both replays — whose reload came after the check — stopped on it,
+    // although the recorded re-fill and submit would have signed in. Only a
+    // line showing a control holding exactly what this step typed can be its
+    // own; every other added line is dropped, and with no such line the step
+    // keeps no added lines at all. This cannot hide a failure: the fill's
+    // success is still judged by its own action result and value check, the
+    // steps after it carry their own effects, and only lines a document load
+    // put there are given up, never a line of the typed value.
+    const reloaded = documentLoadedDuring(step);
+    const ownValue = (l: string): boolean => typed.some((v) => l.endsWith(`: ${v}`));
     const compiled = (added: readonly string[]): string[] =>
       added
         .filter((l) => !TRANSIENT_LINE.test(l))
         .map((l) => maskPopupItem(maskForeignValue(maskMinted(maskVolatile(substitute(l, slots, { glue }))), typed)))
-        .filter((l) => !identifiesNothing(l));
+        .filter((l) => !identifiesNothing(l))
+        .filter((l) => !reloaded || ownValue(l));
     // A line the page took back before the next gesture is the page in
     // transit too, by the recording's own gap diff (takenBackLines) — dropped
     // BEFORE the budget is spent, so the lines that stayed take its place.
@@ -3808,8 +3909,9 @@ function expectationFor(
   // later run's own values match; the dialog line itself is kept even unnamed
   // — `- dialog ""` identifies nothing as an EFFECT, but as the thing that
   // must be absent it is the conservative reading: any unnamed dialog on the
-  // page counts as it.
-  const inert = !out.addedContains && !out.alertContains && !step.fingerprintAfter && !step.effect && step.label === undefined;
+  // page counts as it. A dialog a document load took away is the load's
+  // doing, as its added lines are (documentLoadedDuring): never kept.
+  const inert = !out.addedContains && !out.alertContains && !step.fingerprintAfter && !step.effect && step.label === undefined && !documentLoadedDuring(step);
   const removed = inert
     ? (step.diff.removed ?? [])
         .filter((l) => !TRANSIENT_LINE.test(l))
@@ -4966,6 +5068,101 @@ export function movedAfterCapture(steps: readonly RecordedStep[]): Map<NonNullab
       last = Math.max(last, e.t - captured);
     }
     if (last > 0) out.set(step.obs, last);
+  });
+  return out;
+}
+
+/** Request methods that write (daemon/journal-attribute.ts WRITES). */
+const WRITE_METHODS: ReadonlySet<string> = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
+/** Tools that enter a value an app may save by itself. */
+const VALUE_ENTRY: ReadonlySet<string> = new Set(['fill', 'type', 'select', 'check']);
+/** Tools that replace the document whatever the page is doing. */
+const LEAVES: ReadonlySet<string> = new Set(['goto', 'back']);
+
+/**
+ * An app that SAVES BY ITSELF, on a timer after a value is typed, saves
+ * nothing for a run that leaves the page before the timer fires.
+ *
+ * vikunja fwvk18-fc 03-create: the recording typed a task's description
+ * (#62, captured at …174752), took a screenshot and a read, and went to
+ * another url (#65, dispatched at …180469). In between the app sent `POST
+ * /api/v1/tasks/4` at …179342 — attributed `['app','timer']`, no gesture
+ * behind it — answered 13 ms later: its autosave, 4.6 s after the typing. A
+ * replay has no turns to think through: n2's goto went out 2.2 s after the
+ * type, the document was replaced before the timer fired, every step passed,
+ * and the verifier found the description empty (objective 2). The recording
+ * left the page later than the save by luck, not by any step it recorded.
+ *
+ * So the last gesture before the recording left a page is replayed with the
+ * time the app's own save took (SkillStep.savedAfterMs; both runners hold the
+ * next step for it, execution/lifecycle.ts recordedSaveHold). Recorded facts
+ * only, all of them:
+ *  - a value was ENTERED on this page (fill, type, select, check; no goto,
+ *    back or url change since): with nothing typed there is nothing to save;
+ *  - the step is the last gesture before the recording's next ACTION, and
+ *    that action leaves the page: a goto or back, or a gesture whose capture
+ *    is at another url. Observations in between (reads, screenshots, waits)
+ *    are not actions. A step that stays on the page leaves the app's timer
+ *    running, and its own effects are what it is judged by;
+ *  - between this step's capture and that action's dispatch, the journal
+ *    dates a WRITE request (POST, PUT, PATCH, DELETE), answered 2xx, that no
+ *    gesture caused: the app's timer, an input's debounce, or one that fell
+ *    inside an observation's window. A poll is none of these;
+ *  - it was answered within RECORDED_SAVE_MAX_MS of the capture. A later one
+ *    is not waited for (a replay is not held half a minute for a periodic
+ *    save), and such a recording replays as before.
+ * The value is the last such answer, in ms after the capture.
+ *
+ * It is a WAIT, never a check: a write that was something else (a beacon)
+ * costs that replay the hold and changes no verdict. A recording without a
+ * journal gives nothing. Keyed by the step's evidence (`obs`), which a kept
+ * copy of the step still carries.
+ */
+export function savedAfterCapture(steps: readonly RecordedStep[]): Map<NonNullable<RecordedStep['obs']>, number> {
+  const out = new Map<NonNullable<RecordedStep['obs']>, number>();
+  const urlAt = (k: number): string | undefined => {
+    for (let m = k; m >= 0; m--) if (steps[m].diff?.url) return steps[m].diff!.url;
+    return undefined;
+  };
+  const acts = (s: RecordedStep): boolean => !s.failed && (isMutatingAction(s.tool) || LEAVES.has(s.tool) || s.tool === 'eval');
+  const unprompted = (e: JournalEvent): boolean => {
+    const c = e.c as readonly unknown[] | undefined;
+    if (!c || e.also !== undefined) return false;
+    return (c[0] === 'app' && c[1] === 'timer') || (c[0] === 'late' && c[2] === 'debounce') || (c[0] === 'in' && c[2] === 'observe');
+  };
+  steps.forEach((step, i) => {
+    const captured = step.obs?.at?.c ?? step.obs?.at?.s;
+    if (!step.obs || captured === undefined || step.failed || !isMutatingAction(step.tool)) return;
+    const here = urlAt(i);
+    // The next action, and whether it leaves this page.
+    let j = i + 1;
+    while (j < steps.length && !acts(steps[j])) j++;
+    const next = steps[j];
+    if (!next) return;
+    const leaves = LEAVES.has(next.tool) || (isMutatingAction(next.tool) && here !== undefined && next.diff?.url !== undefined && next.diff.url !== here);
+    if (!leaves) return;
+    // A value entered on this page, at this step or before it.
+    let entered = false;
+    for (let m = i; m >= 0 && !entered; m--) {
+      const s = steps[m];
+      if (LEAVES.has(s.tool) || (here !== undefined && s.diff?.url !== undefined && s.diff.url !== here)) break;
+      entered = VALUE_ENTRY.has(s.tool) && !s.failed;
+    }
+    if (!entered) return;
+    const dispatched = next.obs?.at?.d;
+    const between: JournalEvent[] = [];
+    for (let k = i + 1; k < j; k++) between.push(...(steps[k].journal?.gap?.ev ?? []), ...(steps[k].journal?.ev ?? []));
+    between.push(...(next.journal?.gap?.ev ?? []));
+    let last = 0;
+    for (const e of between) {
+      if (e.k !== 'req' || !WRITE_METHODS.has(String(e.m ?? 'GET')) || !unprompted(e)) continue;
+      const status = typeof e.s === 'number' ? e.s : 0;
+      const answered = typeof e.t1 === 'number' ? e.t1 : e.t;
+      if (status < 200 || status >= 300 || e.t < captured || answered - captured > RECORDED_SAVE_MAX_MS) continue;
+      if (dispatched !== undefined && answered > dispatched) continue;
+      last = Math.max(last, answered - captured);
+    }
+    if (last > 0) out.set(step.obs, Math.max(1, Math.round(last)));
   });
   return out;
 }

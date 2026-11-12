@@ -1,6 +1,7 @@
 import type { Locator, Page } from 'playwright-core';
 import { SLOT_LINE, TRANSIENT_LINE, identifiesNothing, liveLines } from './expect.js';
 import { captureLines, lineShows, type LineDialect } from './snapshot.js';
+import { sameAccessibleName } from './text.js';
 
 /**
  * RULE R2 (round 61, grafana fwgr73 05-open step 3): what both runners do
@@ -102,10 +103,13 @@ export async function positionalHitNamed(hit: Locator, want: { by: 'role' | 'lab
   const role = m[1];
   const name = norm((m[2] ?? '').replace(/\\(.)/g, '$1'));
   if (want.by === 'role' && role !== want.role) return false;
-  if (name === norm(want.name)) return true;
+  // One name with or without a trailing keyboard-shortcut hint ("Publish" and
+  // "Publish ⌘ ⇧ P", which the app shows only while hovered) — never another
+  // word, and never a bare key with no modifier (sameAccessibleName, fwgh22-fc).
+  if (sameAccessibleName(name, want.name)) return true;
   if (want.by !== 'text') return false;
   try {
-    return norm((await hit.first().innerText({ timeout: POSITIONAL_PROBE_MS })) ?? '') === norm(want.name);
+    return sameAccessibleName((await hit.first().innerText({ timeout: POSITIONAL_PROBE_MS })) ?? '', want.name);
   } catch {
     return false;
   }

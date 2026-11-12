@@ -565,16 +565,30 @@ export async function syntheticHover(locator: Locator): Promise<void> {
   // waited out the page's default timeout — 30s in the daemon, and FOREVER in
   // the compiled artifact, whose Playwright Test actionTimeout is 0 (fwgr70
   // 02-create s_2712e5/5 hung until the test's 300s budget).
-  await locator.hover({ timeout: HOVER_PROBE_MS }).catch(() => {});
-  await locator.evaluate(
+  const hovered = await locator.hover({ timeout: HOVER_PROBE_MS }).then(
+    () => true,
+    () => false,
+  );
+  // When the real hover landed, the pointer is already on the element and the
+  // browser has sent it every event below for real: the synthetic events only
+  // supplement, so they are bounded by the probe and their failure is not the
+  // step's. A hover can change what the locator matches — an app that appends
+  // its shortcut hint to the hovered button's name ("Publish ⌘ ⇧ P") leaves an
+  // exact-name locator matching nothing, and the supplement waited out the 30s
+  // default and failed a hover that had happened (fwgh22-fc 04-set). When the
+  // real hover did NOT land, the synthetic events are the hover, and they wait
+  // and fail exactly as before: an element that never appears still stops.
+  const synthetic = locator.evaluate(
     (el) => {
       for (const type of ['pointerover', 'mouseover', 'mouseenter', 'mousemove']) {
         el.dispatchEvent(new MouseEvent(type, { bubbles: type !== 'mouseenter' }));
       }
     },
     undefined,
-    { timeout: DEFAULT_ACTION_TIMEOUT_MS },
+    { timeout: hovered ? HOVER_PROBE_MS : DEFAULT_ACTION_TIMEOUT_MS },
   );
+  if (hovered) await synthetic.catch(() => {});
+  else await synthetic;
 }
 
 /** How long syntheticHover's real hover may try before the synthetic events take over (fwgr70). */

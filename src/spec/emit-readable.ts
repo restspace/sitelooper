@@ -1051,6 +1051,9 @@ function finishAction(scope: Scope, p: Planned, out: string[], action: string, l
   if (typeof step.movedAfterMs === 'number' && step.movedAfterMs > 0) {
     out.push(`await page.waitForTimeout(${Math.round(step.movedAfterMs)}); // the recording saw the page keep moving this long after this step`);
   }
+  if (typeof step.savedAfterMs === 'number' && step.savedAfterMs > 0) {
+    out.push(`await page.waitForTimeout(${Math.round(step.savedAfterMs) + 1000}); // the recording saw the app save by itself this long after this step, before leaving the page`);
+  }
   void outputs;
   return { lines: out };
 }
