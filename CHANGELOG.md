@@ -42,6 +42,14 @@
   one click, and the edit was never saved.
 - A read is no longer withheld from the report because the flow earlier clicked a link with the
   same name. A click that changed the route selected nothing.
+- An instruction issued directly is answered by the most specific stored procedure that matches it.
+  A template ending in a slot also matches any longer sentence that starts the same way, and the
+  first match in store order was taken, so "the owner is admin, the list has 1 item" could be
+  answered by the procedure stored for "the owner is admin", with the rest of the sentence as its
+  value. Which one ran varied from run to run. Ties go to the better record, then the older
+  procedure. A flow step's candidates follow the same rule: a procedure that reads the step's
+  instruction only by taking part of the sentence as a value is tried after the others, whatever
+  its record.
 
 ### Recording
 - The recording agent can declare a fix-up: a repair to something an earlier step left wrong, such
