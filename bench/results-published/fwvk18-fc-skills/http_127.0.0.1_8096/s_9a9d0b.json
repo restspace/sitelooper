@@ -1,0 +1,569 @@
+{
+ "id": "s_9a9d0b",
+ "origin": "http://127.0.0.1:8096",
+ "template": "Open the existing task '{{v1}}' in {{01-signin.projects_visible_2}} and set its due date to 2026-12-{{v3}} and priority to {{v4}}. Save/allow autosave and verify both exact values from the task page.",
+ "params": {
+  "v1": {
+   "example": "fwvk18-fc-n3 Bench Task",
+   "usedIn": [
+    11,
+    16
+   ],
+   "known": true,
+   "binding": "output:i3:task_title"
+  },
+  "v2": {
+   "example": "fwvk18-fc-n3",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v3": {
+   "example": "31",
+   "usedIn": [
+    4,
+    6
+   ]
+  },
+  "v4": {
+   "example": "High",
+   "usedIn": [
+    8
+   ]
+  },
+  "v5": {
+   "example": "8",
+   "usedIn": [
+    9
+   ],
+   "known": true,
+   "binding": "03-create.url.p1"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8096/tasks/{{v5}}"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e462"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "main > div > div > div:nth-of-type(2) > div:nth-of-type(2) > button:nth-of-type(12)"
+     },
+     {
+      "kind": "point",
+      "x": 1098,
+      "y": 787,
+      "w": 284,
+      "h": 34,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8096/tasks/:id",
+    "addedContains": [
+     "- button \"Click here to set a due date\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=button[name=\"Click here to set a due date\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "role=button[name=\"Click here to set a due date\"]"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Click here to set a due date"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div:nth-of-type(1) > div > div:nth-of-type(2) > div > button"
+     },
+     {
+      "kind": "point",
+      "x": 636,
+      "y": 248,
+      "w": 592,
+      "h": 32,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8096/tasks/:id",
+    "addedContains": [
+     "- button \"Today Thu\"",
+     "- button \"{{*}} Fri\"",
+     "- button \"Next Monday Mon\"",
+     "- button \"This Weekend Sat\"",
+     "- button \"Later This Week Sat\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "select",
+   "args": {
+    "target": "@e546",
+    "option": "December"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "combobox",
+      "name": "Month"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div > div:nth-of-type(1) > div > div > select"
+     },
+     {
+      "kind": "point",
+      "x": 468,
+      "y": 544,
+      "w": 123.4,
+      "h": 28,
+      "role": "combobox",
+      "tag": "select",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8096/tasks/:id",
+    "addedContains": [
+     "- combobox \"Month\": {{*}}"
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": ".datepicker [aria-label=\"December {{v3}}, 2026\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "text",
+      "text": "{{v3}}"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(2) > div > div:nth-of-type(2) > div > span:nth-of-type(33)"
+     },
+     {
+      "kind": "css",
+      "selector": ".datepicker [aria-label=\"December {{v3}}, 2026\"]"
+     },
+     {
+      "kind": "point",
+      "x": 544,
+      "y": 761,
+      "w": 39,
+      "h": 39,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8096/tasks/:id",
+    "addedContains": [
+     "- button \"{{v3}} Dec 2026, {{*}}\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=button[name=\"Confirm\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "role=button[name=\"Confirm\"]"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div > div:nth-of-type(2) > div > div > button:nth-of-type(7)"
+     },
+     {
+      "kind": "point",
+      "x": 500,
+      "y": 898,
+      "w": 288,
+      "h": 34,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8096/tasks/:id",
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "read_all",
+   "args": {
+    "target": ".datepicker button, .task-detail .due-date, [class*=\"due\"] button",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".datepicker button, .task-detail .due-date, [class*=\"due\"] button"
+     },
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "{{v3}} Dec 2026, 12:00:00"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div:nth-of-type(1) > div > div:nth-of-type(2) > div > button"
+     },
+     {
+      "kind": "point",
+      "x": 624,
+      "y": 248,
+      "w": 568,
+      "h": 32,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "due_date"
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=button[name=\"Set Priority\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "role=button[name=\"Set Priority\"]"
+     },
+     {
+      "kind": "css",
+      "selector": "main > div > div > div:nth-of-type(2) > div:nth-of-type(2) > button:nth-of-type(5)"
+     },
+     {
+      "kind": "point",
+      "x": 1098,
+      "y": 425,
+      "w": 284,
+      "h": 34,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8096/tasks/:id",
+    "addedContains": [
+     "- combobox \"Unset Low Medium {{v4}} Urgent DO NOW\": {{*}}"
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "select",
+   "args": {
+    "option": "{{v4}}",
+    "target": "@e621"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > select"
+     },
+     {
+      "kind": "point",
+      "x": 401,
+      "y": 249,
+      "w": 121,
+      "h": 37,
+      "role": "combobox",
+      "tag": "select",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8096/tasks/:id",
+    "addedContains": [
+     "- combobox \"Unset Low Medium {{v4}} Urgent DO NOW\": {{*}}"
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "goto",
+   "args": {
+    "url": "http://127.0.0.1:8096/tasks/{{v5}}"
+   },
+   "locators": {}
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(1) > div > div > button > h1"
+     },
+     {
+      "kind": "point",
+      "x": 408,
+      "y": 126,
+      "w": 135.9,
+      "h": 36,
+      "role": "heading",
+      "tag": "h1",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "task_identifier"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text",
+    "scopedBy": "v1"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "text",
+      "text": "{{v1}}"
+     },
+     {
+      "kind": "css",
+      "selector": "div > main > div > div > div:nth-of-type(1) > h1"
+     },
+     {
+      "kind": "point",
+      "x": 860,
+      "y": 126,
+      "w": 759.3,
+      "h": 44,
+      "role": "heading",
+      "tag": "h1",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "task_title"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(2) > div > button"
+     },
+     {
+      "kind": "point",
+      "x": 778,
+      "y": 248,
+      "w": 260,
+      "h": 32,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "due_date"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > select > option:nth-of-type(4)"
+     }
+    ]
+   },
+   "label": "priority"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div > div > div > div > p"
+     },
+     {
+      "kind": "point",
+      "x": 634,
+      "y": 357,
+      "w": 580,
+      "h": 24,
+      "role": null,
+      "tag": "p",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "description"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div > main > div > div > h6"
+     },
+     {
+      "kind": "point",
+      "x": 790,
+      "y": 166,
+      "w": 900,
+      "h": 25,
+      "role": "heading",
+      "tag": "h6",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "project"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text",
+    "frame": "{{=}} Bench Task",
+    "slotFrame": "{{v1}}",
+    "frameMark": "v2"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "heading",
+      "name": "{{v1}}"
+     },
+     {
+      "kind": "css",
+      "selector": "div > main > div > div > div:nth-of-type(1) > h1"
+     },
+     {
+      "kind": "point",
+      "x": 860,
+      "y": 126,
+      "w": 759.3,
+      "h": 44,
+      "role": "heading",
+      "tag": "h1",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "ref"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "The project placeholder in the instruction was unresolved, but the browser was already on the target task page (BENCH-6 \"{{v1}}\" in Bench Project), so I worked from there. Via \"Set Due Date\" I picked December {{v3}}, 2026 and confirmed, then set priority to {{v4}} with the priority dropdown. I then reloaded http://127.0.0.1:8096/tasks/8 and read both values back from the live page: the due-date button shows \"{{v3}} Dec 2026, 12:00:00\" and the priority combobox shows \"{{v4}}\" selected — both persisted.",
+  "values": {
+   "task_identifier": "BENCH-6",
+   "task_title": "{{v1}}",
+   "due_date": "{{v3}} Dec 2026, 12:00:00",
+   "priority": "{{v4}}",
+   "project": "Bench Project",
+   "description": "Automated verification task for runid {{v2}}.",
+   "ref": "{{v2}}"
+  }
+ },
+ "contract": 4,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-11-12T12:29:52.907Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 4
+ },
+ "status": "provisional",
+ "provenance": {
+  "session": "fwvk18-fc-n3",
+  "instruction": "Open the existing task 'fwvk18-fc-n3 Bench Task' in {{01-signin.projects_visible_2}} and set its due date to 2026-12-31 and priority to High. Save/allow autosave and verify both exact values from the task page.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-11-12T12:29:52.907Z"
+ },
+ "revision": 1
+}

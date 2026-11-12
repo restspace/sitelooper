@@ -1,0 +1,11 @@
+facts http://127.0.0.1:8096: 70 relied (17 hard), 60 advisory
+error 02-report: slot v1 is bound to {{01-signin.projects_visible_2}}, and nothing has ever published projects_visible_2
+  why: nothing in 01-signin's procedure reads projects_visible_2 from the page, and no report value derives it from a parameter, so no run can publish it. The recording's own value is not a substitute: passing it would make every replay work run 1's record. 02-report types or locates by v1, so the artifact would stop here on every run, part-way through the flow and with everything earlier already done.
+  fix: re-record 01-signin so it reads projects_visible_2 from an element (`sitelooper rerecord <flow file> 01-signin`), or take {{01-signin.projects_visible_2}} out of 02-report's v1
+error 03-create: slot v1 is bound to {{01-signin.projects_visible_2}}, and nothing has ever published projects_visible_2
+  why: nothing in 01-signin's procedure reads projects_visible_2 from the page, and no report value derives it from a parameter, so no run can publish it. The recording's own value is not a substitute: passing it would make every replay work run 1's record. 03-create types or locates by v1, so the artifact would stop here on every run, part-way through the flow and with everything earlier already done.
+  fix: re-record 01-signin so it reads projects_visible_2 from an element (`sitelooper rerecord <flow file> 01-signin`), or take {{01-signin.projects_visible_2}} out of 03-create's v1
+
+nothing written: the error(s) above are about the RECORDING, not the app — a compiled spec would fail at a locator and read as drift.
+re-record the step(s) with the fix command above.
+sitelooper: refused: unsourced-ref — see the diagnostics above

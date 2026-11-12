@@ -1,0 +1,133 @@
+
+[sweep] run 1/3: fwvk18-fc-n1 (store: /home/user/sitelooper/bench/results/fwvk18-fc-skills)
+[harness] vikunja: defaulting APP_URL
+[harness] vikunja: defaulting APP_EMAIL
+[harness] vikunja: defaulting APP_PASSWORD
+[reset] vikunja: no leftover bench tasks
+[harness] vikunja responded 200 at http://127.0.0.1:8096/
+stopped: fwvk18-fc-n1
+  flow "fwvk18-fc" saved: 6 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwvk18-fc.json
+  warning: warning: 03-create's instruction asks to report displayed_identifier, and only a recorded literal backs it: no read in its procedure publishes it, so a replay reports it only if the page it ends on shows that exact text — re-record the step so the value is read where it is shown
+  warning: note: 02-report no longer publishes seed_tasks_count — no replay reads it from the page and the recording showed no line to read
+  warning: warning: 72 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.startUrl: "http://127.0.0.1:8096/" (output) in "http://127.0.0.1:8096/"
+  flow.steps[0].instruction: "http://127.0.0.1:8096/" (output) in "Sign in to Vikunja at http://127.0.0.1:8096/ as username admin, using the password exactly as text {{env:APP_PASSWORD}}. Verify signed in and report the visible"
+  flow.steps[0].instruction: "admin" (output) in "Sign in to Vikunja at http://127.0.0.1:8096/ as username admin, using the password exactly as text {{env:APP_PASSWORD}}. Verify signed in and report the visible"
+  flow.steps[0].params.v1: "http://127.0.0.1:8096/" (output) in "http://127.0.0.1:8096/"
+  flow.steps[0].params.v2: "admin" (output) in "admin"
+arm=sitelooper model=openai/gpt-6-luna runid=fwvk18-fc-n1 stop=completed
+turns=7 wall=298.6s
+commands=6 cmdTime=276.8s cmdBytes=5770 timeouts=0
+orchestrator in=4739 cw=0 cr=20901 out=642
+inner prompt=1354610 cached=1255424 completion=12655
+spend=$0.0275 maxUsd=3
+learn: A_n=0 replayed=0/6 full=0 repaired=0 compiled=6 variants=0
+-> /home/user/sitelooper/bench/results/fwvk18-fc-n1-sitelooper-result.json
+
+fwvk18-fc-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — project=Bench Project, description includes runid=true
+  obj 3: PASS — due date=2026-12-31T12:00:00Z, want 2026-12-31
+  obj 4: PASS — priority=3 (want 3 = High)
+  obj 5: PASS — labels=Backend#1; seeded Backend is #1
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — identifier BENCH-4 reported
+
+[sweep] run 2/3: fwvk18-fc-n2 (replay flow fwvk18-fc, no orchestrator)
+[reset] vikunja: deleted 1 leftover bench task(s)
+[reset] vikunja: re-created "Seed: ship repaired device" as BENCH-4 so the next task is BENCH-5
+[sweep] fwvk18-fc-n2: 3 drift ticket(s) → fwvk18-fc-n2-drift.json
+
+fwvk18-fc-n2: objectives passed 6/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: FAIL — project=Bench Project, description includes runid=false
+  obj 3: PASS — due date=2026-12-31T12:00:00Z, want 2026-12-31
+  obj 4: PASS — priority=3 (want 3 = High)
+  obj 5: PASS — labels=Backend#1; seeded Backend is #1
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — identifier BENCH-5 reported
+
+[sweep] run 3/3: fwvk18-fc-n3 (replay flow fwvk18-fc, no orchestrator)
+[reset] vikunja: deleted 1 leftover bench task(s)
+[reset] vikunja: re-created "Seed: ship repaired device" as BENCH-5 so the next task is BENCH-6
+[sweep] fwvk18-fc-n3: 3 drift ticket(s) → fwvk18-fc-n3-drift.json
+
+fwvk18-fc-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — project=Bench Project, description includes runid=true
+  obj 3: PASS — due date=2026-12-31T12:00:00Z, want 2026-12-31
+  obj 4: PASS — priority=3 (want 3 = High)
+  obj 5: PASS — labels=Backend#1; seeded Backend is #1
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — identifier BENCH-6 reported
+
+Learning sweep fwvk18-fc (K=3)
+┌─────────┬───┬────────────────┬──────────┬─────────────┬───────┬──────┬───────────┬──────┬──────────────┬────────┐
+│ (index) │ n │ runid          │ verified │ stop        │ turns │ cmds │ total_usd │ A_n  │ replayed     │ wall_s │
+├─────────┼───┼────────────────┼──────────┼─────────────┼───────┼──────┼───────────┼──────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwvk18-fc-n1' │ '7/7'    │ 'completed' │ 7     │ 6    │ 0.0275    │ 0    │ '0/6'        │ 299    │
+│ 1       │ 2 │ 'fwvk18-fc-n2' │ '6/7'    │ 'success'   │ 37    │ 6    │ 0.0129    │ 0.5  │ '6/6 (flow)' │ 162    │
+│ 2       │ 3 │ 'fwvk18-fc-n3' │ '7/7'    │ 'success'   │ 45    │ 6    │ 0.0135    │ 0.33 │ '6/6 (flow)' │ 138    │
+└─────────┴───┴────────────────┴──────────┴─────────────┴───────┴──────┴───────────┴──────┴──────────────┴────────┘
+http://127.0.0.1:8096
+  s_262773  validated    1 steps  3/3 (100%)
+           Sign in to Vikunja at {{v1}} as username {{v2}}, using the password exactly as text {{v3}}. Verify signed in a…
+  s_b3da7a  validated   13 steps  3/3 (100%)
+           On task {{v1}} '{{v2}}', add the existing label Backend by choosing it from the suggestions (do not create a n…
+  s_c666d3  validated    6 steps  3/3 (100%)
+           Create a task in {{v1}} titled '{{v3}}' with a description that includes the exact runid {{v2}}. Submit it and…
+  s_dc684a  demoted      6 steps  1/3 (33%)
+           Sign in to Vikunja at {{v1}} as username {{v2}}, using the password exactly as text {{v3}}. Verify signed in a…
+  s_45e444  validated    3 steps  2/2 (100%)
+           Create a task in {{v1}} titled '{{v3}}' with a description that includes the exact runid {{v2}}. Submit it and…
+  s_54ff69  validated    1 steps  2/2 (100%)
+           Open the existing task '{{v1}}' in {{v3}} and set its due date to 2026-12-{{v4}} and priority to {{v5}}. Save/…
+  s_7f1bad  demoted     11 steps  1/2 (50%)
+           Add a comment to task {{v1}} '{{v2}}' whose text includes the exact runid {{v3}}. Submit it and verify the com…
+  s_aa3438  validated    6 steps  2/2 (100%)  variant of s_7f1bad
+           Add a comment to task {{v1}} '{{v2}}' whose text includes the exact runid {{v3}}. Submit it and verify the com…
+  s_b2085b  validated    1 steps  2/2 (100%)
+           In {{v1}}, report the exact titles of all tasks whose title starts with 'Seed:'. Do not edit anything.
+  s_d2ba32  validated   17 steps  2/2 (100%)
+           Open the existing task '{{v1}}' in {{v3}} and set its due date to 2026-12-{{v4}} and priority to {{v5}}. Save/…
+  s_e8b4f6  validated    5 steps  2/2 (100%)
+           Create a task in {{v1}} titled '{{v3}}' with a description that includes the exact runid {{v2}}. Submit it and…
+  s_eadb77  validated    3 steps  2/2 (100%)
+           Create a task in {{v1}} titled '{{v3}}' with a description that includes the exact runid {{v2}}. Submit it and…
+  s_00f1e3  provisional  9 steps  1/1 (100%)
+           Sign in to Vikunja at {{v1}} as username {{v2}}, using the password exactly as text {{v3}}. Verify signed in a…
+  s_0eaafa  provisional  9 steps  1/1 (100%)  variant of s_dc684a
+           Sign in to Vikunja at http://127.0.0.1:8096/ as username {{v2}}, using the password exactly as text {{v3}}. Ve…
+  s_1a6690  provisional  4 steps  1/1 (100%)
+           In , report the exact titles of all tasks whose title starts with 'Seed:'. Do not edit anything.
+  s_2d7099  provisional  9 steps  1/1 (100%)
+           In , report the exact titles of all tasks whose title starts with 'Seed:'. Do not edit anything.
+  s_36009a  provisional 20 steps  1/1 (100%)  variant of s_dc684a
+           Sign in to Vikunja at http://127.0.0.1:8096/ as username {{v2}}, using the password exactly as text {{v3}}. Ve…
+  s_52e256  provisional  8 steps  1/1 (100%)
+           Create a task in titled '{{v2}}' with a description that includes the exact runid {{v1}}. Submit it and verify…
+  s_575352  provisional  6 steps  1/1 (100%)
+           Sign in to Vikunja at {{v1}} as username {{v2}}, using the password exactly as text {{v3}}. Verify signed in a…
+  s_5d79d5  provisional 11 steps  1/1 (100%)
+           Sign in to Vikunja at {{v1}} as username {{v2}}, using the password exactly as text {{v3}}. Verify signed in a…
+  s_74ed1e  provisional 20 steps  1/1 (100%)
+           Sign in to Vikunja at {{v1}} as username {{v2}}, using the password exactly as text {{v3}}. Verify signed in a…
+  s_9a9d0b  provisional 16 steps  1/1 (100%)
+           Open the existing task '{{v1}}' in {{01-signin.projects_visible_2}} and set its due date to 2026-12-{{v3}} and…
+  s_9af912  provisional  6 steps  1/1 (100%)
+           Create a task in titled '{{v2}}' with a description that includes the exact runid {{v1}}. Submit it and verify…
+  s_9ecf90  provisional  1 steps  1/1 (100%)
+           In 2, report the exact titles of all tasks whose title starts with 'Seed:'. Do not edit anything.
+  s_a83853  provisional  5 steps  1/1 (100%)  variant of s_dc684a
+           Sign in to Vikunja at http://127.0.0.1:8096/ as username {{v2}}, using the password exactly as text {{v3}}. Ve…
+  s_aac159  provisional 20 steps  1/1 (100%)
+           In {{v1}}, report the exact titles of all tasks whose title starts with 'Seed:'. Do not edit anything.
+  s_bf50a8  provisional 21 steps  1/1 (100%)
+           In 2, report the exact titles of all tasks whose title starts with 'Seed:'. Do not edit anything.
+  s_db10f7  provisional  6 steps  1/1 (100%)
+           Sign in to Vikunja at {{v1}} as username {{v2}}, using the password exactly as text {{v3}}. Verify signed in a…
+  s_f831bb  provisional  5 steps  1/1 (100%)  variant of s_dc684a
+           Sign in to Vikunja at http://127.0.0.1:8096/ as username {{v2}}, using the password exactly as text {{v3}}. Ve…
+store: /home/user/sitelooper/bench/results/fwvk18-fc-skills
+
+summary: /home/user/sitelooper/bench/results/fwvk18-fc-sweep.json

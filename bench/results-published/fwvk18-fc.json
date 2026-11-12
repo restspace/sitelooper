@@ -1,0 +1,532 @@
+{
+  "name": "fwvk18-fc",
+  "origin": "http://127.0.0.1:8096",
+  "startUrl": "http://127.0.0.1:8096/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-signin",
+      "instruction": "Sign in to Vikunja at http://127.0.0.1:8096/ as username admin, using the password exactly as text {{env:APP_PASSWORD}}. Verify signed in and report the visible landing page/project state.",
+      "skill": "s_575352",
+      "params": {
+        "v1": "http://127.0.0.1:8096/",
+        "v2": "admin",
+        "v3": "{{env:APP_PASSWORD}}"
+      },
+      "outputs": [
+        "landing_url",
+        "page_title",
+        "signed_in_user",
+        "greeting",
+        "current_tasks",
+        "current_tasks_heading",
+        "project_heading",
+        "task_title",
+        "main_a_main_h2_main_h3_4",
+        "main_a_main_h2_main_h3_5",
+        "projects_visible_1",
+        "projects_visible_2"
+      ],
+      "recorded": {
+        "landing_url": "http://127.0.0.1:8096/",
+        "page_title": "Current Tasks | Vikunja",
+        "signed_in_user": "admin",
+        "greeting": "Hi admin!",
+        "current_tasks": "Seed: ship repaired device; Seed: order missing parts; Seed: triage inbox (all in Bench Project)",
+        "current_tasks_heading": "Current Tasks",
+        "project_heading": "Bench Project",
+        "task_title": "Seed: ship repaired device",
+        "main_a_main_h2_main_h3_4": "Seed: order missing parts",
+        "main_a_main_h2_main_h3_5": "Seed: triage inbox",
+        "projects_visible_1": "Inbox",
+        "projects_visible_2": "Bench Project",
+        "url": "http://127.0.0.1:8096/"
+      },
+      "route": "http://127.0.0.1:8096/",
+      "outputEvidence": {
+        "landing_url": {
+          "same": 1,
+          "differed": 0,
+          "absent": 1
+        },
+        "page_title": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "signed_in_user": {
+          "same": 1,
+          "differed": 0,
+          "absent": 1
+        },
+        "greeting": {
+          "same": 1,
+          "differed": 0,
+          "absent": 1
+        },
+        "current_tasks": {
+          "same": 2,
+          "differed": 0
+        },
+        "current_tasks_heading": {
+          "same": 1,
+          "differed": 0,
+          "absent": 1
+        },
+        "project_heading": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "task_title": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "main_a_main_h2_main_h3_4": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "main_a_main_h2_main_h3_5": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "projects_visible_1": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "projects_visible_2": {
+          "same": 0,
+          "differed": 1,
+          "absent": 1
+        },
+        "url": {
+          "same": 2,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "02-report",
+      "instruction": "In {{01-signin.projects_visible_2}}, report the exact titles of all tasks whose title starts with 'Seed:'. Do not edit anything.",
+      "skill": "s_b2085b",
+      "params": {
+        "v1": "{{01-signin.projects_visible_2}}"
+      },
+      "outputs": [
+        "project",
+        "task_identifier",
+        "task_title",
+        "item_2",
+        "item_2_value",
+        "item_3",
+        "item_3_value",
+        "seed_titles_1",
+        "seed_titles_2",
+        "seed_titles_3"
+      ],
+      "recorded": {
+        "project": "Bench Project",
+        "seed_tasks_count": "3",
+        "task_identifier": "BENCH-1",
+        "task_title": "Seed: triage inbox",
+        "item_2": "BENCH-2",
+        "item_2_value": "Seed: order missing parts",
+        "item_3": "BENCH-3",
+        "item_3_value": "Seed: ship repaired device",
+        "seed_titles_1": "Seed: triage inbox",
+        "seed_titles_2": "Seed: order missing parts",
+        "seed_titles_3": "Seed: ship repaired device",
+        "url": "http://127.0.0.1:8096/projects/2/7",
+        "url.p1": "2",
+        "url.p2": "7"
+      },
+      "route": "http://127.0.0.1:8096/projects/:id/:id",
+      "outputEvidence": {
+        "project": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "seed_tasks_count": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "task_identifier": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "task_title": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "item_2": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "item_2_value": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "item_3": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "item_3_value": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "seed_titles_1": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "seed_titles_2": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "seed_titles_3": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "url": {
+          "same": 0,
+          "differed": 2
+        },
+        "url.p1": {
+          "same": 2,
+          "differed": 0
+        },
+        "url.p2": {
+          "same": 0,
+          "differed": 2
+        }
+      }
+    },
+    {
+      "id": "03-create",
+      "instruction": "Create a task in {{01-signin.projects_visible_2}} titled '{{runid}} Bench Task' with a description that includes the exact runid {{runid}}. Submit it and verify the task appears; report its displayed identifier and current details.",
+      "skill": "s_c666d3",
+      "params": {
+        "v1": "{{01-signin.projects_visible_2}}",
+        "v3": "{{runid}} Bench Task",
+        "v2": "{{runid}}",
+        "v4": "{{02-report.url.p1}}"
+      },
+      "outputs": [
+        "appears_in_list",
+        "description",
+        "displayed_identifier",
+        "keyboard_shortcuts_button_class",
+        "project",
+        "task_title",
+        "current_url",
+        "run_id"
+      ],
+      "recorded": {
+        "appears_in_list": "yes — first row of Bench Project list view, above the three Seed tasks",
+        "description": "Task created for runid fwvk18-fc-n1 to verify task creation in Bench Project.",
+        "displayed_identifier": "not confirmed (list view shows no ID column; table view not re-checked after creation)",
+        "keyboard_shortcuts_button_class": "base-button base-button--type-button keyboard-shortcuts-button d-print-none",
+        "project": "Bench Project",
+        "task_title": "fwvk18-fc-n1 Bench Task",
+        "current_url": "http://127.0.0.1:8096/projects/2/7",
+        "run_id": "fwvk18-fc-n1",
+        "url": "http://127.0.0.1:8096/projects/2/5",
+        "url.p2": "5",
+        "url.p1": "4"
+      },
+      "route": "http://127.0.0.1:8096/projects/:id/:id",
+      "urlRoutes": {
+        "url.p1": "http://127.0.0.1:8096 p0=tasks"
+      },
+      "outputEvidence": {
+        "appears_in_list": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "description": {
+          "same": 0,
+          "differed": 1
+        },
+        "displayed_identifier": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "keyboard_shortcuts_button_class": {
+          "same": 1,
+          "differed": 0
+        },
+        "project": {
+          "same": 1,
+          "differed": 0
+        },
+        "task_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "current_url": {
+          "same": 0,
+          "differed": 1
+        },
+        "run_id": {
+          "same": 0,
+          "differed": 1
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        },
+        "url.p2": {
+          "same": 1,
+          "differed": 0
+        },
+        "url.p1": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "04-open",
+      "instruction": "Open the existing task '{{runid}} Bench Task' in {{01-signin.projects_visible_2}} and set its due date to 2026-12-31 and priority to High. Save/allow autosave and verify both exact values from the task page.",
+      "skill": "s_54ff69",
+      "params": {
+        "v1": "{{runid}} Bench Task",
+        "v3": "{{01-signin.projects_visible_2}}",
+        "v4": "31",
+        "v5": "High",
+        "v2": "{{runid}}",
+        "v6": "{{03-create.url.p1}}"
+      },
+      "outputs": [
+        "task_identifier",
+        "title",
+        "project",
+        "due_date",
+        "priority",
+        "description",
+        "run_id"
+      ],
+      "recorded": {
+        "task_identifier": "BENCH-4",
+        "title": "fwvk18-fc-n1 Bench Task",
+        "project": "Bench Project",
+        "due_date": "31 Dec 2026, 12:00:00",
+        "priority": "High",
+        "description": "Task created for runid fwvk18-fc-n1 to verify task creation in Bench Project.",
+        "run_id": "fwvk18-fc-n1",
+        "url": "http://127.0.0.1:8096/tasks/4"
+      },
+      "route": "http://127.0.0.1:8096/tasks/:id",
+      "outputEvidence": {
+        "task_identifier": {
+          "same": 0,
+          "differed": 2
+        },
+        "title": {
+          "same": 0,
+          "differed": 1,
+          "absent": 1
+        },
+        "project": {
+          "same": 2,
+          "differed": 0
+        },
+        "due_date": {
+          "same": 2,
+          "differed": 0
+        },
+        "priority": {
+          "same": 2,
+          "differed": 0
+        },
+        "description": {
+          "same": 0,
+          "differed": 1,
+          "empty": 1
+        },
+        "run_id": {
+          "same": 0,
+          "differed": 1,
+          "absent": 1
+        },
+        "url": {
+          "same": 0,
+          "differed": 2
+        }
+      }
+    },
+    {
+      "id": "05-add",
+      "instruction": "On task {{04-open.task_identifier}} '{{runid}} Bench Task', add the existing label Backend by choosing it from the suggestions (do not create a new label), then verify the task page displays Backend as its label.",
+      "skill": "s_b3da7a",
+      "params": {
+        "v1": "{{04-open.task_identifier}}",
+        "v2": "{{runid}} Bench Task",
+        "v3": "{{runid}}",
+        "v4": "{{03-create.url.p1}}"
+      },
+      "outputs": [
+        "labels",
+        "priority",
+        "due_date",
+        "label_source",
+        "task_identifier",
+        "run_id",
+        "task_1",
+        "task_title"
+      ],
+      "recorded": {
+        "labels": "Backend",
+        "priority": "High",
+        "due_date": "31 Dec 2026, 12:00:00",
+        "label_source": "selected from existing suggestions (\"Click or press enter to select\"), not created",
+        "task_identifier": "BENCH-4",
+        "run_id": "fwvk18-fc-n1",
+        "task_1": "BENCH-4",
+        "task_title": "fwvk18-fc-n1 Bench Task"
+      },
+      "route": "http://127.0.0.1:8096/tasks/:id",
+      "outputEvidence": {
+        "labels": {
+          "same": 2,
+          "differed": 0
+        },
+        "priority": {
+          "same": 2,
+          "differed": 0
+        },
+        "due_date": {
+          "same": 2,
+          "differed": 0
+        },
+        "label_source": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "task_identifier": {
+          "same": 0,
+          "differed": 2
+        },
+        "run_id": {
+          "same": 0,
+          "differed": 2
+        },
+        "task_1": {
+          "same": 0,
+          "differed": 2
+        },
+        "task_title": {
+          "same": 0,
+          "differed": 2
+        }
+      }
+    },
+    {
+      "id": "06-add",
+      "instruction": "Add a comment to task {{04-open.task_identifier}} '{{runid}} Bench Task' whose text includes the exact runid {{runid}}. Submit it and verify the comment appears on the task page, then report the exact comment text.",
+      "skill": "s_aa3438",
+      "params": {
+        "v1": "{{04-open.task_identifier}}",
+        "v2": "{{03-create.task_title}}",
+        "v3": "{{runid}}"
+      },
+      "outputs": [
+        "comment_text",
+        "comment_author",
+        "comment_timestamp",
+        "comments_section",
+        "task_identifier",
+        "run_id",
+        "task_1",
+        "task_title"
+      ],
+      "recorded": {
+        "comment_text": "Comment for runid fwvk18-fc-n1: task verified and comment added.",
+        "comment_author": "admin",
+        "comment_timestamp": "less than a minute ago",
+        "comments_section": "Comments",
+        "task_identifier": "BENCH-4",
+        "run_id": "fwvk18-fc-n1",
+        "task_1": "BENCH-4",
+        "task_title": "fwvk18-fc-n1 Bench Task"
+      },
+      "route": "http://127.0.0.1:8096/tasks/:id",
+      "outputEvidence": {
+        "comment_text": {
+          "same": 0,
+          "differed": 2
+        },
+        "comment_author": {
+          "same": 1,
+          "differed": 0,
+          "absent": 1
+        },
+        "comment_timestamp": {
+          "same": 1,
+          "differed": 0,
+          "absent": 1
+        },
+        "comments_section": {
+          "same": 0,
+          "differed": 1,
+          "absent": 1
+        },
+        "task_identifier": {
+          "same": 0,
+          "differed": 2
+        },
+        "run_id": {
+          "same": 0,
+          "differed": 2
+        },
+        "task_1": {
+          "same": 0,
+          "differed": 0,
+          "absent": 2
+        },
+        "task_title": {
+          "same": 0,
+          "differed": 2
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "session": "fwvk18-fc-n1",
+    "created": "2026-11-12T12:24:56.836Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "02-report",
+      "outputs": [
+        "seed_tasks_count"
+      ]
+    }
+  ]
+}

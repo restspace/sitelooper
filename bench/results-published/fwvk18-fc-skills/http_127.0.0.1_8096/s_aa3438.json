@@ -1,0 +1,251 @@
+{
+ "id": "s_aa3438",
+ "origin": "http://127.0.0.1:8096",
+ "template": "Add a comment to task {{v1}} '{{v2}}' whose text includes the exact runid {{v3}}. Submit it and verify the comment appears on the task page, then report the exact comment text.",
+ "params": {
+  "v1": {
+   "example": "BENCH-5",
+   "usedIn": [],
+   "known": true,
+   "binding": "04-open.task_identifier"
+  },
+  "v2": {
+   "example": "fwvk18-fc-n2 Bench Task",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i3:task_title"
+  },
+  "v3": {
+   "example": "fwvk18-fc-n2",
+   "usedIn": [
+    1
+   ],
+   "known": true,
+   "binding": "var:runid"
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8096/tasks/:id"
+ },
+ "steps": [
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e261",
+    "value": "Comment for runid {{v3}}: task verified and comment added."
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "p[data-placeholder=\"Add your comment, hit '/' for more options…\"]"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(1) > div > div:nth-of-type(2) > div > p"
+     },
+     {
+      "kind": "point",
+      "x": 676,
+      "y": 908,
+      "w": 496,
+      "h": 24,
+      "role": null,
+      "tag": "p",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8096/tasks/:id",
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_7f1bad",
+    "step": 1
+   }
+  },
+  {
+   "tool": "read_all",
+   "args": {
+    "target": ".comments .ProseMirror, .comments .editor__content, .comment-input .ProseMirror",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": ".comments .ProseMirror, .comments .editor__content, .comment-input .ProseMirror"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div > div:nth-of-type(1) > div > div:nth-of-type(2) > div",
+      "nth": 5
+     },
+     {
+      "kind": "point",
+      "x": 676,
+      "y": 920,
+      "w": 512,
+      "h": 64,
+      "role": null,
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "comment_text"
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e349"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div > div > div > div:nth-of-type(2) > button",
+      "nth": 9
+     },
+     {
+      "kind": "point",
+      "x": 469,
+      "y": 1077,
+      "w": 98.8,
+      "h": 34,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8096/tasks/:id",
+    "addedContains": [
+     "- button \"Edit\"",
+     "- button \"Delete\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(1) > div > div > button > h1"
+     },
+     {
+      "kind": "point",
+      "x": 408,
+      "y": 126,
+      "w": 136.3,
+      "h": 36,
+      "role": "heading",
+      "tag": "h1",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "task_identifier"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > main > div > div > div:nth-of-type(1) > h1"
+     },
+     {
+      "kind": "point",
+      "x": 861,
+      "y": 126,
+      "w": 758.9,
+      "h": 44,
+      "role": "heading",
+      "tag": "h1",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "task_title"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div > div:nth-of-type(2) > div > div > p"
+     },
+     {
+      "kind": "point",
+      "x": 672,
+      "y": 862,
+      "w": 504,
+      "h": 48,
+      "role": null,
+      "tag": "p",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "comment_text"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "The stored procedure's draft had been typed into the comment editor on task {{v1}} but never submitted, so nothing was re-typed; I clicked the \"Comment\" submit button and the comment posted immediately (the comments list gained Edit/Delete controls). The live DOM now shows a single posted comment from admin, timestamped \"less than a minute ago\", with exactly the text \"Comment for runid {{v3}}: task verified and comment added.\"; the comment editor is back to empty.",
+  "values": {
+   "task_identifier": "{{v1}}",
+   "task_title": "{{v2}}",
+   "comment_text": "Comment for runid {{v3}}: task verified and comment added.",
+   "comment_author": "admin",
+   "comment_timestamp": "less than a minute ago",
+   "comments_section": "admin / less than a minute ago / Comment for runid {{v3}}: task verified and comment added. (with Edit and Delete controls)",
+   "posted_comment_count": "1",
+   "run_id": "{{v3}}"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 2,
+  "successes": 2,
+  "partial": 0,
+  "created": "2026-11-12T12:27:42.461Z",
+  "failedAtStep": {},
+  "fallthroughs": 1,
+  "verifiedContract": 2,
+  "lastUsed": "2026-11-12T12:30:03.355Z",
+  "stopStreak": 0
+ },
+ "status": "validated",
+ "variantOf": "s_7f1bad",
+ "provenance": {
+  "session": "fwvk18-fc-n2",
+  "instruction": "Add a comment to task BENCH-5 'fwvk18-fc-n2 Bench Task' whose text includes the exact runid fwvk18-fc-n2. Submit it and verify the comment appears on the task page, then report the exact comment text.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-11-12T12:27:42.461Z"
+ },
+ "revision": 2
+}

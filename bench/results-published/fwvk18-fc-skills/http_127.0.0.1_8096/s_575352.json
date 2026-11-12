@@ -1,0 +1,320 @@
+{
+ "id": "s_575352",
+ "origin": "http://127.0.0.1:8096",
+ "template": "Sign in to Vikunja at {{v1}} as username {{v2}}, using the password exactly as text {{v3}}. Verify signed in and report the visible landing page/project state.",
+ "params": {
+  "v1": {
+   "example": "http://127.0.0.1:8096/",
+   "usedIn": [
+    1
+   ]
+  },
+  "v2": {
+   "example": "admin",
+   "usedIn": [
+    2,
+    4
+   ]
+  },
+  "v3": {
+   "example": "{{env:APP_PASSWORD}}",
+   "usedIn": [
+    3,
+    5
+   ]
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8096/login"
+ },
+ "steps": [
+  {
+   "tool": "goto",
+   "args": {
+    "url": "{{v1}}"
+   },
+   "locators": {},
+   "via": {
+    "skill": "s_262773",
+    "step": 1
+   }
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e32",
+    "value": "{{v2}}"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Username Or Email Address"
+     },
+     {
+      "kind": "label",
+      "label": "Username Or Email Address"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "e.g. frederick"
+     },
+     {
+      "kind": "id",
+      "selector": "#username"
+     },
+     {
+      "kind": "css",
+      "selector": "#username"
+     },
+     {
+      "kind": "point",
+      "x": 896,
+      "y": 275,
+      "w": 448,
+      "h": 40,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8096/login",
+    "addedContains": [
+     "- textbox \"e.g. frederick\": {{v2}}"
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_dc684a",
+    "step": 1
+   }
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e38",
+    "value": "{{v3}}"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Password"
+     },
+     {
+      "kind": "label",
+      "label": "Password"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "e.g. •••••••••••"
+     },
+     {
+      "kind": "id",
+      "selector": "#password"
+     },
+     {
+      "kind": "css",
+      "selector": "#password"
+     },
+     {
+      "kind": "point",
+      "x": 896,
+      "y": 359,
+      "w": 448,
+      "h": 40,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8096/login",
+    "addedContains": [
+     "- textbox \"e.g. •••••••••••\": {{v3}}"
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_dc684a",
+    "step": 2,
+    "regated": true
+   }
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e32",
+    "value": "{{v2}}"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Username Or Email Address"
+     },
+     {
+      "kind": "label",
+      "label": "Username Or Email Address"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "e.g. frederick"
+     },
+     {
+      "kind": "id",
+      "selector": "#username"
+     },
+     {
+      "kind": "css",
+      "selector": "#username"
+     },
+     {
+      "kind": "point",
+      "x": 896,
+      "y": 275,
+      "w": 448,
+      "h": 40,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8096/login",
+    "addedContains": [
+     "- textbox \"e.g. frederick\": {{v2}}"
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e38",
+    "value": "{{v3}}"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Password"
+     },
+     {
+      "kind": "label",
+      "label": "Password"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "e.g. •••••••••••"
+     },
+     {
+      "kind": "id",
+      "selector": "#password"
+     },
+     {
+      "kind": "css",
+      "selector": "#password"
+     },
+     {
+      "kind": "point",
+      "x": 896,
+      "y": 359,
+      "w": 448,
+      "h": 40,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8096/login",
+    "addedContains": [
+     "- textbox \"e.g. •••••••••••\": {{v3}}"
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=button[name=\"Login\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "role=button[name=\"Login\"]"
+     },
+     {
+      "kind": "css",
+      "selector": "#loginform > button"
+     },
+     {
+      "kind": "point",
+      "x": 708,
+      "y": 444,
+      "w": 71.1,
+      "h": 34,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8096/",
+    "addedContains": [
+     "- button \"Hide the menu\"",
+     "- button \"Open the search/quick action bar\"",
+     "- button \"{{v2}}\""
+    ],
+    "lineDialect": 2
+   }
+  }
+ ],
+ "contract": 4,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-11-12T12:28:18.170Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 4
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_5687ed",
+  "index": 0,
+  "of": 2
+ },
+ "provenance": {
+  "session": "fwvk18-fc-n3",
+  "instruction": "Sign in to Vikunja at http://127.0.0.1:8096/ as username admin, using the password exactly as text {{env:APP_PASSWORD}}. Verify signed in and report the visible landing page/project state.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-11-12T12:28:18.170Z",
+  "transforms": [
+   {
+    "name": "unfreezeExpectations",
+    "at": 6,
+    "reason": "recorded page change(s) only the recording run could produce: [\"- button \\\"Hide the menu\\\"\",\"- button \\\"Open the search/quick action bar\\\"\",\"- button \\\"{{v2}}\\\"\",\"- link \\\"Overview\\\"\",\"- link \\\"Upcoming\\\"\"] → [\"- button \\\"Hide the menu\\\"\",\"- button \\\"Open the search/quick action bar\\\"\",\"- button \\\"{{v2}}\\\"\"]"
+   }
+  ]
+ },
+ "revision": 1
+}
