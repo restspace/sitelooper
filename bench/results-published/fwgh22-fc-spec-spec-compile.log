@@ -1,0 +1,9 @@
+facts http://127.0.0.1:8099: 39 relied (3 hard), 11 advisory
+error 04-set: its pinned procedure s_947181 stopped at step 8 on its latest replay and has not replayed clean since — a compiled spec would stop there
+  why: s_947181 is provisional: 1 of 2 replays succeeded; its replays stopped at step 8 ×1; the last 1 replay(s) all stopped (latest at step 8); 1 stop(s) were recovered by the model; last used 2026-11-12T10:17:50.862Z (--allow-demoted compiles it anyway).
+  fix: sitelooper rerecord bench/results/flows/fwgh22-fc.json 04-set
+
+nothing written: the error(s) above are about the RECORDING, not the app — a compiled spec would fail at a locator and read as drift.
+re-record the step(s) with the fix command above, or pass --allow-demoted to compile the demoted or unproven pin anyway.
+  warning: 02-create: step 3 (read save_status) has no locator left — it publishes nothing, as replay skips it
+sitelooper: refused: a step is pinned to a unproven skill — see the diagnostics above (--allow-demoted compiles it anyway)

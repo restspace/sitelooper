@@ -1,0 +1,201 @@
+{
+  "flow": "fwgh22-fc",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_9027b5; observed author=Bench Admin, published_seed_post_titles_1=Seed: Welcome to the bench, published_seed_post_titles_2=Seed: Release notes for September, published_seed_post_titles_3=Seed: House style guide.",
+      "values": {
+        "author": "Bench Admin",
+        "published_seed_post_titles_1": "Seed: Welcome to the bench",
+        "published_seed_post_titles_2": "Seed: Release notes for September",
+        "published_seed_post_titles_3": "Seed: House style guide"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "9/9",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_d0d1c3; observed post_id=6af5927175a3f20001a5e794, word_count=3 words.",
+      "values": {
+        "post_id": "6af5927175a3f20001a5e794",
+        "word_count": "3 words"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "8/8",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_d0d1c3: step 3: skipped read — no element matched any known locator for target (none recorded)",
+        "s_d0d1c3: step 5: read 'post_body_paragraph' returned a value the skill itself set/selected ('fwgh22-fc-n3') — confirms the control, not persistence; dropped from the report's confident values"
+      ],
+      "unreported": [
+        "save_status",
+        "post_body_paragraph"
+      ]
+    },
+    {
+      "id": "03-set",
+      "status": "success",
+      "summary": "Replayed stored procedure s_020fb6; observed save_status=Saving..., run_id=fwgh22-fc-n3, site_host=127.0.0.1.",
+      "values": {
+        "save_status": "Saving...",
+        "run_id": "fwgh22-fc-n3",
+        "site_host": "127.0.0.1"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "12/12",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_020fb6: step 7: read 'post_url_slug' returned a value the skill itself set/selected ('fwgh22-fc-n3-bench-post') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_020fb6: step 8: read 'excerpt' returned a value the skill itself set/selected ('Draft post fwgh22-fc-n3 for the bench blog.') — confirms the control, not persistence; dropped from the report's confident values"
+      ],
+      "unreported": [
+        "post_url_slug"
+      ]
+    },
+    {
+      "id": "04-set",
+      "status": "success",
+      "summary": "In the draft 'fwgh22-fc-n3 Bench Post' (post id 6af5927175a3f20001a5e794) the Publish date in Post settings is set to 2026-09-01 (Time 00:00 UTC) and saved; the header status reads \"Draft - Saved\", and the value survived a full page reload, so it is persisted rather than just typed into the field. I then opened the publish dialog (without confirming) to see how Ghost treats the date: its time selector showed \"Right now\" and the final review step's button read \"Publish post, right now\" — i.e. Ghost does NOT treat 2026-09-01 as a future schedule, which is consistent with the browser clock reading 2026-11-12T10:19Z (UTC), making the date already past. I closed both dialogs; no publish/schedule confirmation was completed and no post content was changed.",
+      "values": {
+        "post_title": "fwgh22-fc-n3 Bench Post",
+        "post_id": "6af5927175a3f20001a5e794",
+        "displayed_publish_date_after_reload": "2026-09-01",
+        "publish_time_utc": "00:00",
+        "timezone_label": "UTC",
+        "post_status": "Draft - Saved",
+        "publish_dialog_time_option": "Right now",
+        "publish_flow_final_button": "Publish post, right now",
+        "treated_as_future_schedule": "no",
+        "browser_current_datetime": "2026-11-12T10:19:22Z (UTC)",
+        "post_url_slug": "fwgh22-fc-n3-bench-post",
+        "publish_time_after_reloa": "00:00",
+        "header_span_header_div": "Publish",
+        "ref": "fwgh22-fc-n3",
+        "ref_2": "2026-11-12T10"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_addeae stopped at step 8 — every identifying locator missed, and the positional fallback #2 is not the recorded \"Publish ⌘ ⇧ P\" — the element there carries another name, so it was not clicked",
+      "pinStopped": {
+        "skill": "s_addeae",
+        "step": 8,
+        "why": "every identifying locator missed, and the positional fallback #2 is not the recorded \"Publish ⌘ ⇧ P\" — the element there carries another name, so it was not clicked"
+      },
+      "replayed": "7/13",
+      "repaired": false,
+      "turns": 15,
+      "warnings": [
+        "s_addeae: step 7: read 'displayed_publish_date' returned a value the skill itself set/selected ('2026-09-01') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_addeae: step 8: primary locator did not resolve; used fallback #2 page.locator('div > div > section > header > section > button:nth-of-type(2)')"
+      ],
+      "unreported": [
+        "publish_time",
+        "displayed_publish_date",
+        "save_status",
+        "publish_confirmation_button",
+        "run_id"
+      ]
+    },
+    {
+      "id": "05-verify",
+      "status": "success",
+      "summary": "Replayed stored procedure s_703772; observed displayed_publish_date=2026-09-01, publish_time=00:00, post_url_slug=fwgh22-fc-n3-bench-post, run_id=fwgh22-fc-n3.",
+      "values": {
+        "displayed_publish_date": "2026-09-01",
+        "publish_time": "00:00",
+        "post_url_slug": "fwgh22-fc-n3-bench-post",
+        "run_id": "fwgh22-fc-n3"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "11/11",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_249887: step 2: primary locator did not resolve; used fallback #2 elementAt(429, 546) /* button */"
+      ]
+    }
+  ],
+  "passed": 5,
+  "total": 5,
+  "repinned": 0,
+  "drift": 3,
+  "driftTickets": [
+    {
+      "flow": "fwgh22-fc",
+      "step": "02-create",
+      "skill": "s_d0d1c3",
+      "atStep": "3",
+      "key": "target",
+      "similarity": 0.998,
+      "missedLocator": "(none recorded)",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8099/ghost/#/editor/post/:id",
+      "pageUrl": "http://127.0.0.1:8099/ghost/#/editor/post/6af5927175a3f20001a5e794"
+    },
+    {
+      "flow": "fwgh22-fc",
+      "step": "04-set",
+      "skill": "s_addeae",
+      "atStep": "8",
+      "key": "target",
+      "similarity": null,
+      "missedLocator": "page.getByRole('button', { name: 'Publish ⌘ ⇧ P', exact: true })",
+      "fallbackUsed": "page.locator('div > div > section > header > section > button:nth-of-type(2)')",
+      "fallbackIndex": 1,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:8099/ghost/#/editor/post/:id",
+      "pageUrl": "http://127.0.0.1:8099/ghost/#/editor/post/6af5927175a3f20001a5e794"
+    },
+    {
+      "flow": "fwgh22-fc",
+      "step": "05-verify",
+      "skill": "s_249887",
+      "atStep": "2",
+      "key": "target",
+      "similarity": 0.999,
+      "missedLocator": "page.locator('div > div > div > div > div:nth-of-type(3) > button')",
+      "fallbackUsed": "elementAt(429, 546) /* button */",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8099/:id/",
+      "pageUrl": "http://127.0.0.1:8099/fwgh22-fc-n3-bench-post/"
+    }
+  ],
+  "wallMs": 103728,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 208622,
+    "completionTokens": 4922,
+    "cachedTokens": 191360
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 208622,
+      "completionTokens": 4922,
+      "cachedTokens": 191360
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "openai/gpt-6-luna",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

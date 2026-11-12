@@ -1,0 +1,103 @@
+
+[sweep] run 1/3: fwgh22-fc-n1 (store: /home/user/sitelooper/bench/results/fwgh22-fc-skills)
+[harness] ghost: defaulting APP_URL
+[harness] ghost: defaulting APP_EMAIL
+[harness] ghost: defaulting APP_PASSWORD
+[reset] ghost: no posts to delete
+[harness] ghost responded 200 at http://127.0.0.1:8099/
+stopped: fwgh22-fc-n1
+  flow "fwgh22-fc" saved: 5 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwgh22-fc.json
+  warning: note: 01-signin no longer publishes published_post_count, tags, post_ids — no replay reads them from the page and the recording showed no line to read
+  warning: warning: 04-set's instruction asks to report current_date, and no replay can publish it: nothing in its procedure reads it from the page, so export dropped it — re-record the step so the value is read, not only reported
+  warning: warning: 103 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.origin: "127.0.0.1" (output) in "http://127.0.0.1:8099"
+  flow.startUrl: "127.0.0.1" (output) in "http://127.0.0.1:8099/ghost/"
+  flow.steps[0].instruction: "127.0.0.1" (output) in "In Ghost at http://127.0.0.1:8099/ghost/, sign in with email admin@bench.local and password exactly {{env:APP_PASSWORD}} if prompted. Find and report the exact "
+  flow.steps[0].params.v1: "127.0.0.1" (output) in "http://127.0.0.1:8099/ghost/"
+  flow.steps[0].route: "127.0.0.1" (output) in "http://127.0.0.1:8099/ghost/#/posts"
+arm=sitelooper model=openai/gpt-6-luna runid=fwgh22-fc-n1 stop=completed
+turns=6 wall=247.4s
+commands=5 cmdTime=215.9s cmdBytes=4775 timeouts=0
+orchestrator in=4602 cw=0 cr=16629 out=1140
+inner prompt=1048749 cached=997248 completion=12762
+spend=$0.0196 maxUsd=3
+learn: A_n=0 replayed=0/5 full=0 repaired=0 compiled=5 variants=0
+-> /home/user/sitelooper/bench/results/fwgh22-fc-n1-sitelooper-result.json
+
+fwgh22-fc-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — fwgh22-fc-n1-bench-post, body includes runid=true
+  obj 3: PASS — tags=Bench News (bench-news), want only the seeded Bench News (bench-news)
+  obj 4: PASS — custom excerpt="Draft post fwgh22-fc-n1 for the bench blog."
+  obj 5: PASS — status=published, visibility=public
+  obj 6: PASS — published_at=2026-09-01T00:00:00.000Z, want 2026-09-01
+  obj 7: PASS — slug fwgh22-fc-n1-bench-post reported
+
+[sweep] run 2/3: fwgh22-fc-n2 (replay flow fwgh22-fc, no orchestrator)
+[reset] ghost: deleted 1 post(s) (earlier runs' and non-seed)
+[sweep] fwgh22-fc-n2: 3 drift ticket(s) → fwgh22-fc-n2-drift.json
+
+fwgh22-fc-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — fwgh22-fc-n2-bench-post, body includes runid=true
+  obj 3: PASS — tags=Bench News (bench-news), want only the seeded Bench News (bench-news)
+  obj 4: PASS — custom excerpt="Draft post fwgh22-fc-n2 for the bench blog."
+  obj 5: PASS — status=published, visibility=public
+  obj 6: PASS — published_at=2026-09-01T00:00:00.000Z, want 2026-09-01
+  obj 7: PASS — slug fwgh22-fc-n2-bench-post reported
+
+[sweep] run 3/3: fwgh22-fc-n3 (replay flow fwgh22-fc, no orchestrator)
+[reset] ghost: deleted 1 post(s) (earlier runs' and non-seed)
+[sweep] fwgh22-fc-n3: 3 drift ticket(s) → fwgh22-fc-n3-drift.json
+
+fwgh22-fc-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — fwgh22-fc-n3-bench-post, body includes runid=true
+  obj 3: PASS — tags=Bench News (bench-news), want only the seeded Bench News (bench-news)
+  obj 4: PASS — custom excerpt="Draft post fwgh22-fc-n3 for the bench blog."
+  obj 5: PASS — status=published, visibility=public
+  obj 6: PASS — published_at=2026-09-01T00:00:00.000Z, want 2026-09-01
+  obj 7: PASS — slug fwgh22-fc-n3-bench-post reported
+
+Learning sweep fwgh22-fc (K=3)
+┌─────────┬───┬────────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid          │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼────────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwgh22-fc-n1' │ '7/7'    │ 'completed' │ 6     │ 5    │ 0.0196    │ 0   │ '0/5'        │ 247    │
+│ 1       │ 2 │ 'fwgh22-fc-n2' │ '7/7'    │ 'success'   │ 13    │ 5    │ 0.0038    │ 0.8 │ '5/5 (flow)' │ 117    │
+│ 2       │ 3 │ 'fwgh22-fc-n3' │ '7/7'    │ 'success'   │ 15    │ 5    │ 0.0061    │ 0.8 │ '5/5 (flow)' │ 104    │
+└─────────┴───┴────────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:8099
+  s_020fb6  validated   12 steps  3/3 (100%)
+           For the existing draft titled '{{v1}} Bench Post', set its only tag to the existing tag '{{v2}}' by selecting …
+  s_249887  validated    3 steps  3/3 (100%)
+           Complete Ghost's publish confirmation flow for '{{v3}}' and ensure it is published now, not scheduled. Verify …
+  s_702f86  validated    1 steps  3/3 (100%)
+           In Ghost at {{v1}}, sign in with email {{v2}} and password exactly {{v3}} if prompted. Find and report the exa…
+  s_703772  validated    1 steps  3/3 (100%)
+           Complete Ghost's publish confirmation flow for '{{v3}}' and ensure it is published now, not scheduled. Verify …
+  s_76d5eb  validated    1 steps  3/3 (100%)
+           Create a Ghost post titled exactly '{{v2}}'. Add one body paragraph containing the exact runid '{{v1}}', and s…
+  s_8651b7  validated    1 steps  3/3 (100%)
+           In Ghost at {{v1}}, sign in with email {{v2}} and password exactly {{v3}} if prompted. Find and report the exa…
+  s_870735  validated    5 steps  3/3 (100%)
+           Complete Ghost's publish confirmation flow for '{{v3}}' and ensure it is published now, not scheduled. Verify …
+  s_9027b5  validated    4 steps  3/3 (100%)
+           In Ghost at {{v1}}, sign in with email {{v2}} and password exactly {{v3}} if prompted. Find and report the exa…
+  s_bfa8d3  validated    2 steps  3/3 (100%)
+           Create a Ghost post titled exactly '{{v2}}'. Add one body paragraph containing the exact runid '{{v1}}', and s…
+  s_d0d1c3  validated    5 steps  3/3 (100%)
+           Create a Ghost post titled exactly '{{v2}}'. Add one body paragraph containing the exact runid '{{v1}}', and s…
+  s_d34495  validated    3 steps  3/3 (100%)
+           In Ghost at {{v1}}, sign in with email {{v2}} and password exactly {{v3}} if prompted. Find and report the exa…
+  s_edc9f7  validated    2 steps  3/3 (100%)
+           Complete Ghost's publish confirmation flow for '{{v3}}' and ensure it is published now, not scheduled. Verify …
+  s_947181  provisional 15 steps  1/2 (50%)
+           In the saved draft '{{v1}} Bench Post', set the publish date to exactly {{v2}} in Post settings, save, and ver…
+  s_addeae  provisional 13 steps  1/2 (50%)  variant of s_947181
+           In the saved draft '{{v1}} Bench Post', set the publish date to exactly {{v2}} in Post settings, save, and ver…
+  s_ae78eb  provisional 19 steps  1/1 (100%)  variant of s_addeae
+           In the saved draft '{{v1}} Bench Post', set the publish date to exactly {{v2}} in Post settings, save, and ver…
+store: /home/user/sitelooper/bench/results/fwgh22-fc-skills
+
+summary: /home/user/sitelooper/bench/results/fwgh22-fc-sweep.json

@@ -1,0 +1,192 @@
+{
+  "flow": "fwgh22-fc",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_9027b5; observed author=Bench Admin, published_seed_post_titles_1=Seed: Welcome to the bench, published_seed_post_titles_2=Seed: Release notes for September, published_seed_post_titles_3=Seed: House style guide.",
+      "values": {
+        "author": "Bench Admin",
+        "published_seed_post_titles_1": "Seed: Welcome to the bench",
+        "published_seed_post_titles_2": "Seed: Release notes for September",
+        "published_seed_post_titles_3": "Seed: House style guide"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "9/9",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_d0d1c3; observed post_id=6af591f775a3f20001a5e784, word_count=3 words, save_status=Saving....",
+      "values": {
+        "post_id": "6af591f775a3f20001a5e784",
+        "word_count": "3 words",
+        "save_status": "Saving..."
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "8/8",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_d0d1c3: step 3: primary locator did not resolve; used fallback #2 page.locator('section > header > div > div > span > div')",
+        "s_d0d1c3: step 5: read 'post_body_paragraph' returned a value the skill itself set/selected ('fwgh22-fc-n2') — confirms the control, not persistence; dropped from the report's confident values"
+      ],
+      "unreported": [
+        "post_body_paragraph"
+      ]
+    },
+    {
+      "id": "03-set",
+      "status": "success",
+      "summary": "Replayed stored procedure s_020fb6; observed save_status=Saving..., run_id=fwgh22-fc-n2, site_host=127.0.0.1.",
+      "values": {
+        "save_status": "Saving...",
+        "run_id": "fwgh22-fc-n2",
+        "site_host": "127.0.0.1"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "12/12",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_020fb6: step 7: read 'post_url_slug' returned a value the skill itself set/selected ('fwgh22-fc-n2-bench-post') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_020fb6: step 8: read 'excerpt' returned a value the skill itself set/selected ('Draft post fwgh22-fc-n2 for the bench blog.') — confirms the control, not persistence; dropped from the report's confident values"
+      ],
+      "unreported": [
+        "post_url_slug"
+      ]
+    },
+    {
+      "id": "04-set",
+      "status": "success",
+      "summary": "In the draft 'fwgh22-fc-n2 Bench Post' the Post settings publish date now reads exactly 2026-09-01 (date-picker input value \"2026-09-01\", the settings button's accessible name is \"2026-09-01\", time 00:00 UTC) and the editor status shows \"Draft - Saved\", so it persisted after save. Ghost does NOT treat that date as a future schedule: the current date here is 2026-11-12 10:17 UTC, i.e. after 2026-09-01, so when I opened the publish confirmation (without completing it) it showed \"Ready, set, publish.\" with the time option \"Right now\" and a plain \"Publish\" — no \"Schedule for …\" wording. I closed the confirmation panel; nothing was published and no post was modified beyond the publish-date field + save. Screenshots: publish_confirmation_state.png, settings_publish_date.png.",
+      "values": {
+        "displayed_publish_date": "2026-09-01",
+        "publish_time_utc": "00:00",
+        "post_status": "Draft - Saved",
+        "current_date_on_page": "2026-11-12T10:17:22.756Z (Thu Nov 12 2026, UTC)",
+        "future_schedule_treatment": "No - date is in the past relative to 2026-11-12; confirmation offers 'Right now' + 'Publish' (publish immediately), not a scheduled time",
+        "post_id": "6af591f775a3f20001a5e784",
+        "date_picker_value": "2026-09-01",
+        "ref": "fwgh22-fc-n2"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_947181 stopped at step 8 — hover failed: locator.evaluate: Timeout 30000ms exceeded.",
+      "pinStopped": {
+        "skill": "s_947181",
+        "step": 8,
+        "why": "hover failed: locator.evaluate: Timeout 30000ms exceeded."
+      },
+      "replayed": "7/15",
+      "repaired": false,
+      "turns": 13,
+      "warnings": [
+        "s_947181: step 7: read 'displayed_publish_date' returned a value the skill itself set/selected ('2026-09-01') — confirms the control, not persistence; dropped from the report's confident values"
+      ],
+      "unreported": [
+        "publish_time",
+        "save_status",
+        "publish_confirmation_button",
+        "run_id"
+      ]
+    },
+    {
+      "id": "05-verify",
+      "status": "success",
+      "summary": "Replayed stored procedure s_703772; observed displayed_publish_date=2026-09-01, publish_time=00:00, post_url_slug=fwgh22-fc-n2-bench-post, run_id=fwgh22-fc-n2.",
+      "values": {
+        "displayed_publish_date": "2026-09-01",
+        "publish_time": "00:00",
+        "post_url_slug": "fwgh22-fc-n2-bench-post",
+        "run_id": "fwgh22-fc-n2"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "11/11",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_249887: step 2: primary locator did not resolve; used fallback #2 elementAt(429, 546) /* button */"
+      ]
+    }
+  ],
+  "passed": 5,
+  "total": 5,
+  "repinned": 0,
+  "drift": 3,
+  "driftTickets": [
+    {
+      "flow": "fwgh22-fc",
+      "step": "02-create",
+      "skill": "s_d0d1c3",
+      "atStep": "3",
+      "key": "target",
+      "similarity": 0.998,
+      "missedLocator": "page.getByText('Draft - Saved', { exact: true })",
+      "fallbackUsed": "page.locator('section > header > div > div > span > div')",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8099/ghost/#/editor/post/:id",
+      "pageUrl": "http://127.0.0.1:8099/ghost/#/editor/post/6af591f775a3f20001a5e784"
+    },
+    {
+      "flow": "fwgh22-fc",
+      "step": "04-set",
+      "skill": "s_947181",
+      "similarity": 1.002,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_947181 stopped at step 8 — hover failed: locator.evaluate: Timeout 30000ms exceeded.",
+      "reason": "hover failed: locator.evaluate: Timeout 30000ms exceeded.",
+      "pageUrlPattern": "http://127.0.0.1:8099/ghost/#/editor/post/:id",
+      "pageUrl": "http://127.0.0.1:8099/ghost/#/editor/post/6af591f775a3f20001a5e784"
+    },
+    {
+      "flow": "fwgh22-fc",
+      "step": "05-verify",
+      "skill": "s_249887",
+      "atStep": "2",
+      "key": "target",
+      "similarity": 0.999,
+      "missedLocator": "page.locator('div > div > div > div > div:nth-of-type(3) > button')",
+      "fallbackUsed": "elementAt(429, 546) /* button */",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8099/:id/",
+      "pageUrl": "http://127.0.0.1:8099/fwgh22-fc-n2-bench-post/"
+    }
+  ],
+  "wallMs": 117288,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 156049,
+    "completionTokens": 3209,
+    "cachedTokens": 146432
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 156049,
+      "completionTokens": 3209,
+      "cachedTokens": 146432
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "openai/gpt-6-luna",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

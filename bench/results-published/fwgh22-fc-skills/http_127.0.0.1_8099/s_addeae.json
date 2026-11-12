@@ -1,0 +1,557 @@
+{
+ "id": "s_addeae",
+ "origin": "http://127.0.0.1:8099",
+ "template": "In the saved draft '{{v1}} Bench Post', set the publish date to exactly {{v2}} in Post settings, save, and verify the exact displayed date. Also report whether Ghost treats that date as a future schedule (and the current date/status shown), without completing the publish confirmation flow yet.",
+ "params": {
+  "v1": {
+   "example": "fwgh22-fc-n2",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v2": {
+   "example": "2026-09-01",
+   "usedIn": [
+    2
+   ]
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8099/ghost/#/editor/post/:id"
+ },
+ "steps": [
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e507"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div[data-ebd-id=\"ember52-trigger\"]"
+     },
+     {
+      "kind": "css",
+      "selector": "form > section > div:nth-of-type(2) > div > div:nth-of-type(1) > div:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 974,
+      "y": 223,
+      "w": 177.7,
+      "h": 38,
+      "role": "button",
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8099/ghost/#/editor/post/:id",
+    "addedContains": [
+     "- button \"«\"",
+     "- button \"»\"",
+     "- button \"1\"",
+     "- button \"2\"",
+     "- button \"3\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_947181",
+    "step": 1
+   }
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e509",
+    "value": "{{v2}}"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Date Picker"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "YYYY-MM-DD"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div > div:nth-of-type(1) > div:nth-of-type(1) > div > input"
+     },
+     {
+      "kind": "point",
+      "x": 965,
+      "y": 223,
+      "w": 134.9,
+      "h": 16,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8099/ghost/#/editor/post/:id",
+    "addedContains": [
+     "- textbox \"Date Picker\": {{v2}}"
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_947181",
+    "step": 2
+   }
+  },
+  {
+   "tool": "press",
+   "args": {
+    "key": "Enter",
+    "target": "@e509"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Date Picker"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "YYYY-MM-DD"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div > div:nth-of-type(1) > div:nth-of-type(1) > div > input"
+     },
+     {
+      "kind": "point",
+      "x": 965,
+      "y": 223,
+      "w": 134.9,
+      "h": 16,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8099/ghost/#/editor/post/:id",
+    "addedContains": [
+     "- textbox \"Time Picker\": {{*}}"
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_947181",
+    "step": 3
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e491"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "heading",
+      "name": "Post settings"
+     },
+     {
+      "kind": "css",
+      "selector": "#entry-controls > div > div:nth-of-type(1) > h4"
+     },
+     {
+      "kind": "point",
+      "x": 931,
+      "y": 41,
+      "w": 91.6,
+      "h": 17.6,
+      "role": "heading",
+      "tag": "h4",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8099/ghost/#/editor/post/:id",
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_947181",
+    "step": 4
+   }
+  },
+  {
+   "tool": "wait_for",
+   "args": {
+    "target": "@e445",
+    "state": "text_contains",
+    "text": "Saved",
+    "timeout_ms": 14982
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "section > header > div > div > span > div"
+     },
+     {
+      "kind": "point",
+      "x": 160,
+      "y": 41,
+      "w": 56.6,
+      "h": 34,
+      "role": null,
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "via": {
+    "skill": "s_947181",
+    "step": 5
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "label": "publish_time",
+    "target": "@e514",
+    "what": "value"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Time Picker"
+     },
+     {
+      "kind": "css",
+      "selector": "form > section > div:nth-of-type(2) > div > div:nth-of-type(2) > input"
+     },
+     {
+      "kind": "point",
+      "x": 1149,
+      "y": 223,
+      "w": 137.9,
+      "h": 16,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "publish_time_utc",
+   "via": {
+    "skill": "s_947181",
+    "step": 6
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "label": "displayed_publish_date",
+    "target": "@e509",
+    "what": "value"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Date Picker"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "YYYY-MM-DD"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div > div:nth-of-type(1) > div:nth-of-type(1) > div > input"
+     },
+     {
+      "kind": "point",
+      "x": 965,
+      "y": 223,
+      "w": 134.9,
+      "h": 16,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "displayed_publish_date",
+   "via": {
+    "skill": "s_947181",
+    "step": 7
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e466"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Publish ⌘ ⇧ P"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div > section > header > section > button:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 797,
+      "y": 41,
+      "w": 78.5,
+      "h": 34,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8099/ghost/#/editor/post/:id",
+    "addedContains": [
+     "- button \"Publish\"",
+     "- heading \"Publish\"",
+     "- button \"Close\"",
+     "- button \"Not sent as newsletter\""
+    ],
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e594"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Close"
+     },
+     {
+      "kind": "css",
+      "selector": "div > div > div > header > div > button:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 1141,
+      "y": 30,
+      "w": 63.3,
+      "h": 34,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8099/ghost/#/editor/post/:id",
+    "lineDialect": 2
+   }
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "@e494",
+    "what": "value",
+    "label": "publish_time_utc"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Time Picker"
+     },
+     {
+      "kind": "css",
+      "selector": "form > section > div:nth-of-type(2) > div > div:nth-of-type(2) > input"
+     },
+     {
+      "kind": "point",
+      "x": 1149,
+      "y": 223,
+      "w": 137.9,
+      "h": 16,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "publish_time_utc"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "@e424",
+    "what": "text",
+    "label": "post_status"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "text",
+      "text": "Draft - Saved"
+     },
+     {
+      "kind": "css",
+      "selector": "section > header > div > div > span > div"
+     },
+     {
+      "kind": "point",
+      "x": 175,
+      "y": 41,
+      "w": 87.3,
+      "h": 34,
+      "role": null,
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "post_status"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "label": "date_picker_value",
+    "target": "@e489",
+    "what": "value"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "textbox",
+      "name": "Date Picker"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "YYYY-MM-DD"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(2) > div > div:nth-of-type(1) > div:nth-of-type(1) > div > input"
+     },
+     {
+      "kind": "point",
+      "x": 965,
+      "y": 223,
+      "w": 134.9,
+      "h": 16,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "displayed_publish_date"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div > div:nth-of-type(1) > div > p > span"
+     },
+     {
+      "kind": "point",
+      "x": 148,
+      "y": 290,
+      "w": 111.2,
+      "h": 22,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "ref"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "In the draft '{{v1}} Bench Post' the Post settings publish date now reads exactly {{v2}} (date-picker input value \"{{v2}}\", the settings button's accessible name is \"{{v2}}\", time 00:00 UTC) and the editor status shows \"Draft - Saved\", so it persisted after save. Ghost does NOT treat that date as a future schedule: the current date here is 2026-11-12 10:17 UTC, i.e. after {{v2}}, so when I opened the publish confirmation (without completing it) it showed \"Ready, set, publish.\" with the time option \"Right now\" and a plain \"Publish\" — no \"Schedule for …\" wording. I closed the confirmation panel; nothing was published and no post was modified beyond the publish-date field + save. Screenshots: publish_confirmation_state.png, settings_publish_date.png.",
+  "values": {
+   "displayed_publish_date": "{{v2}}",
+   "publish_time_utc": "00:00",
+   "post_status": "Draft - Saved",
+   "current_date_on_page": "2026-11-12T10:17:22.756Z (Thu Nov 12 2026, UTC)",
+   "future_schedule_treatment": "No - date is in the past relative to 2026-11-12; confirmation offers 'Right now' + 'Publish' (publish immediately), not a scheduled time",
+   "post_id": "6af591f775a3f20001a5e784",
+   "date_picker_value": "{{v2}}",
+   "ref": "{{v1}}"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 2,
+  "successes": 1,
+  "partial": 1,
+  "created": "2026-11-12T10:17:50.906Z",
+  "failedAtStep": {
+   "8": 1
+  },
+  "fallthroughs": 1,
+  "verifiedContract": 2,
+  "lastUsed": "2026-11-12T10:19:39.669Z",
+  "stopStreak": 1,
+  "lastStopAt": 8,
+  "recoveredStops": 1,
+  "lastFailedAt": 8
+ },
+ "status": "provisional",
+ "variantOf": "s_947181",
+ "provenance": {
+  "session": "fwgh22-fc-n2",
+  "instruction": "In the saved draft 'fwgh22-fc-n2 Bench Post', set the publish date to exactly 2026-09-01 in Post settings, save, and verify the exact displayed date. Also report whether Ghost treats that date as a future schedule (and the current date/status shown), without completing the publish confirmation flow yet.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-11-12T10:17:50.906Z",
+  "transforms": [
+   {
+    "name": "unfreezeExpectations",
+    "at": 8,
+    "reason": "recorded page change(s) only the recording run could produce: [\"- button \\\"Publish\\\"\",\"- heading \\\"Publish\\\"\",\"- button \\\"Close\\\"\",\"- button \\\"Publish\\\"\",\"- button \\\"Not sent as newsletter\\\"\"] → [\"- button \\\"Publish\\\"\",\"- heading \\\"Publish\\\"\",\"- button \\\"Close\\\"\",\"- button \\\"Not sent as newsletter\\\"\"]"
+   }
+  ]
+ },
+ "revision": 2
+}
