@@ -240,7 +240,26 @@ export function roleName(text: string): RegExp {
     .split(WILDCARD)
     .map((part) => escapeRe(part).replace(/ /g, '\\s+'))
     .join(VOLATILE_TOKEN_SHAPE);
-  return new RegExp(`^${NAME_NOISE_SHAPE}${body}(?:${SHORTCUT_HINT_SHAPE})?${NAME_NOISE_SHAPE}$`, 'u');
+  return new RegExp(selectorSafe(`^${NAME_NOISE_SHAPE}${body}(?:${SHORTCUT_HINT_SHAPE})?${NAME_NOISE_SHAPE}$`), 'u');
+}
+
+/**
+ * A regex SOURCE with every quote character and `>` written as a hex escape,
+ * which matches the same strings. Playwright carries a role name's regex
+ * inside its selector text and splits that text on `>>` outside quotes; for a
+ * `u`-flag regex it escapes nothing (a backslash before a quote is not a
+ * valid unicode-mode escape),
+ * so a lone `'`, `"` or backtick in the source opens a quote that never
+ * closes and the whole chained selector fails to parse: "unexpected symbol
+ * '>'" on the `>> nth=0` after it. The shortcut-hint shape's key class held
+ * `'` and a backtick, and every role locator in a real browser failed
+ * (verify-fault-readiness: 124 parity and 31 browser tests). A recorded NAME
+ * with an apostrophe ("Don't save") broke a chained locator the same way
+ * before that. None of the four characters is regex syntax in what roleName
+ * builds (no named group, no lookbehind), so the replacement is blind.
+ */
+function selectorSafe(source: string): string {
+  return source.replace(/["'`>]/g, (c) => `\\x${c.charCodeAt(0).toString(16).padStart(2, '0')}`);
 }
 
 /**
