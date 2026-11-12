@@ -99,3 +99,26 @@ describe('syntheticHover', () => {
     await expect(syntheticHover(loc)).resolves.toBeUndefined();
   });
 });
+
+describe('roleName stays parseable inside a Playwright selector', () => {
+  // Playwright writes a role name's regex into its selector text and splits
+  // that text on `>>` outside quotes; it escapes nothing in a `u`-flag regex.
+  // A quote character in the source (the hint shape's key class had two)
+  // opened a quote that never closed, and every chained role locator failed
+  // to parse in a real browser (verify-fault-readiness, 2026-11-12).
+  it('carries no quote character and no `>` in its source, for any name', async () => {
+    const { roleName } = await import('../src/execution/text.js');
+    for (const name of ['Publish', 'Publish ⌘ ⇧ P', "Don't save", 'Say "hi"', 'a `b` c', 'Next >>', 'Save']) {
+      const re = roleName(name);
+      expect(re.flags).toContain('u');
+      expect(re.source).not.toMatch(/["'`>]/);
+    }
+  });
+
+  it('still matches the names it is given, quotes and all', async () => {
+    const { roleName } = await import('../src/execution/text.js');
+    for (const name of ["Don't save", 'Say "hi"', 'a `b` c', 'Next >>']) expect(roleName(name).test(name)).toBe(true);
+    expect(roleName("Don't save").test('Dont save')).toBe(false);
+    expect(roleName('Find').test("Find Ctrl+'")).toBe(true);
+  });
+});
