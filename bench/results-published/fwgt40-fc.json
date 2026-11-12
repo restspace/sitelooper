@@ -1,0 +1,818 @@
+{
+  "name": "fwgt40-fc",
+  "origin": "http://127.0.0.1:8095",
+  "startUrl": "http://127.0.0.1:8095/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-signin",
+      "instruction": "Sign in to Gitea at http://127.0.0.1:8095/ using username admin and password exactly {{env:APP_PASSWORD}}. Verify that the signed-in page shows the authenticated account.",
+      "skill": "s_1fffeb",
+      "params": {
+        "v1": "http://127.0.0.1:8095/",
+        "v2": "admin",
+        "v3": "{{env:APP_PASSWORD}}"
+      },
+      "outputs": [
+        "dashboard_label",
+        "page_title",
+        "profile_menu_label",
+        "signed_in_username",
+        "sign_in_username"
+      ],
+      "recorded": {
+        "dashboard_label": "admin - Dashboard",
+        "page_title": "admin - Dashboard - Gitea: Git with a cup of tea",
+        "profile_menu_label": "Profile and Settings…",
+        "signed_in_username": "admin",
+        "sign_in_username": "admin",
+        "url": "http://127.0.0.1:8095/"
+      },
+      "route": "http://127.0.0.1:8095/",
+      "outputEvidence": {
+        "dashboard_label": {
+          "same": 1,
+          "differed": 0
+        },
+        "page_title": {
+          "same": 1,
+          "differed": 0
+        },
+        "profile_menu_label": {
+          "same": 1,
+          "differed": 0
+        },
+        "signed_in_username": {
+          "same": 1,
+          "differed": 0
+        },
+        "sign_in_username": {
+          "same": 1,
+          "differed": 0
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "02-open",
+      "instruction": "In repository bench/bench-repo, inspect only the open issues whose title starts with 'Seed:' and report their exact titles as displayed. Do not modify any issue.",
+      "skill": "s_767373",
+      "params": {},
+      "outputs": [
+        "repo",
+        "open_count",
+        "closed_count",
+        "total_open_issues",
+        "seed_issue_3_title",
+        "seed_issue_2_title",
+        "seed_issue_1_title",
+        "all_open_titles_1",
+        "all_open_titles_2",
+        "all_open_titles_3"
+      ],
+      "recorded": {
+        "repo": "bench/bench-repo",
+        "open_count": "3 Open",
+        "closed_count": "0 Closed",
+        "total_open_issues": "3",
+        "seed_issue_count": "3",
+        "seed_issue_3_title": "Seed: ship repaired device",
+        "seed_issue_2_title": "Seed: order missing parts",
+        "seed_issue_1_title": "Seed: triage inbox",
+        "issue_3_url": "/bench/bench-repo/issues/3",
+        "issue_2_url": "/bench/bench-repo/issues/2",
+        "issue_1_url": "/bench/bench-repo/issues/1",
+        "modifications_made": "none",
+        "all_open_titles_1": "Seed: ship repaired device",
+        "all_open_titles_2": "Seed: order missing parts",
+        "all_open_titles_3": "Seed: triage inbox",
+        "url": "http://127.0.0.1:8095/bench/bench-repo/issues"
+      },
+      "route": "http://127.0.0.1:8095/bench/bench-repo/issues",
+      "outputEvidence": {
+        "repo": {
+          "same": 0,
+          "differed": 1
+        },
+        "open_count": {
+          "same": 1,
+          "differed": 0
+        },
+        "closed_count": {
+          "same": 1,
+          "differed": 0
+        },
+        "total_open_issues": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_issue_count": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "seed_issue_3_title": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_issue_2_title": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_issue_1_title": {
+          "same": 1,
+          "differed": 0
+        },
+        "issue_3_url": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "issue_2_url": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "issue_1_url": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "modifications_made": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "all_open_titles_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "all_open_titles_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "all_open_titles_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "03-create",
+      "instruction": "Create a new issue in bench/bench-repo titled '{{runid}} Bench Issue' with a markdown description that includes the exact runid {{runid}}. Submit it, then report the issue number and verify the displayed title and description.",
+      "skill": "s_4cfe82",
+      "params": {
+        "v1": "bench/bench-repo",
+        "v3": "{{runid}} Bench Issue",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "issue_title_entered",
+        "issue_body_entered",
+        "issue_number_heading",
+        "issue_description_render",
+        "document_title",
+        "final_url",
+        "description_list",
+        "run_id"
+      ],
+      "recorded": {
+        "issue_title_entered": "fwgt40-fc-n1 Bench Issue",
+        "issue_body_entered": "## Benchmark run\n\nRun ID: `fwgt40-fc-n1`\n\nThis issue was created automatically to record benchmark run fwgt40-fc-n1 against bench/bench-repo.\n\n- runid: fwgt40-fc-n1\n- repository: bench/bench-repo",
+        "issue_number_heading": "fwgt40-fc-n1 Bench Issue #4",
+        "issue_description_render": "Benchmark run\n\nRun ID: fwgt40-fc-n1\n\nThis issue was created automatically to record benchmark run fwgt40-fc-n1 against bench/bench-repo.\n\nrunid: fwgt40-fc-n1\nrepository: bench/bench-repo",
+        "document_title": "#4 - fwgt40-fc-n1 Bench Issue - bench-repo - Gitea: Git with a cup of tea",
+        "final_url": "http://127.0.0.1:8095/bench/bench-repo/issues/4",
+        "description_list": "runid: fwgt40-fc-n1\nrepository: bench/bench-repo",
+        "run_id": "fwgt40-fc-n1",
+        "url": "http://127.0.0.1:8095/bench/bench-repo/issues/4",
+        "url.p3": "4"
+      },
+      "route": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "outputEvidence": {
+        "issue_title_entered": {
+          "same": 0,
+          "differed": 1
+        },
+        "issue_body_entered": {
+          "same": 0,
+          "differed": 1
+        },
+        "issue_number_heading": {
+          "same": 0,
+          "differed": 1
+        },
+        "issue_description_render": {
+          "same": 0,
+          "differed": 1
+        },
+        "document_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "final_url": {
+          "same": 0,
+          "differed": 1
+        },
+        "description_list": {
+          "same": 0,
+          "differed": 1
+        },
+        "run_id": {
+          "same": 0,
+          "differed": 1
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        },
+        "url.p3": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "04-verify",
+      "instruction": "Finish setting the labels on issue #4 ('{{runid}} Bench Issue') in bench/bench-repo. Verify current state first, then use the actual issue label assignment controls so the issue itself displays exactly bug and priority-high as applied labels, with no others. Do not treat checked entries in a menu as success; report the rendered sidebar label chips after the changes.",
+      "skill": "s_637a63",
+      "params": {
+        "v1": "{{runid}} Bench Issue",
+        "v3": "bench/bench-repo",
+        "v2": "{{runid}}",
+        "v4": "{{03-create.url.p3}}"
+      },
+      "outputs": [
+        "control_used",
+        "issue_number",
+        "sidebar_chip_hrefs",
+        "sidebar_labels_before_change",
+        "sidebar_picker_issue",
+        "state_before_changes",
+        "repository_owner",
+        "repository_name"
+      ],
+      "recorded": {
+        "control_used": "issue list bulk action Label dropdown: div.item.issue-action[data-action=toggle] data-url=/bench/bench-repo/issues/labels",
+        "issue_number": "#4",
+        "label_ids": "bug=1, priority-high=2",
+        "no_labels_placeholder": "hidden (absent) after the change",
+        "other_labels_present": "none",
+        "server_rendered_label_chips": "bug, priority-high",
+        "sidebar_chip_count": "2",
+        "sidebar_chip_hrefs": "bug -> /bench/bench-repo/issues?labels=1 ; priority-high -> /bench/bench-repo/issues?labels=2",
+        "sidebar_labels_before_change": "No labels",
+        "sidebar_picker_issue": "sidebar Labels picker anchors point to filter URLs (?labels=N) and did not assign labels; not used for the fix",
+        "state_before_changes": "after reload the sidebar read \"No labels\", confirming the previous attempt applied nothing",
+        "bug_label": "bug",
+        "priority_high_label": "priority-high",
+        "repository_owner": "bench",
+        "repository_name": "bench-repo"
+      },
+      "route": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "outputEvidence": {
+        "control_used": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "issue_number": {
+          "same": 0,
+          "differed": 1
+        },
+        "label_ids": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "no_labels_placeholder": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "other_labels_present": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "server_rendered_label_chips": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "sidebar_chip_count": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "sidebar_chip_hrefs": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "sidebar_labels_before_change": {
+          "same": 1,
+          "differed": 0
+        },
+        "sidebar_picker_issue": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "state_before_changes": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "bug_label": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "priority_high_label": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "repository_owner": {
+          "same": 1,
+          "differed": 0
+        },
+        "repository_name": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "05-verify",
+      "instruction": "Assign issue #4 ('{{runid}} Bench Issue') in bench/bench-repo to the user bench-assignee. Use the assignment control, then verify the issue page visibly shows bench-assignee as its assignee.",
+      "skill": "s_7047ba",
+      "params": {
+        "v1": "{{runid}} Bench Issue",
+        "v3": "bench/bench-repo",
+        "v2": "{{runid}}",
+        "v4": "bench",
+        "v5": "bench-repo",
+        "v6": "{{03-create.url.p3}}"
+      },
+      "outputs": [
+        "issue_number",
+        "assignee_displayed",
+        "assignee_username",
+        "assignee_full_name",
+        "assignee_id",
+        "control_used",
+        "sidebar_picker_issue",
+        "url_after_click",
+        "assignee_displayed_2",
+        "data_update_url_assignee",
+        "data_update_url_assignee_2",
+        "repository_owner",
+        "repository_name"
+      ],
+      "recorded": {
+        "issue_number": "#4",
+        "assignee_displayed": "bench-assignee",
+        "assignee_username": "bench-assignee",
+        "assignee_full_name": "Bench Assignee",
+        "assignee_id": "3",
+        "assignee_avatar_title": "Bench Assignee",
+        "no_assignees_placeholder": "absent (0 matches)",
+        "labels_still_applied": "bug, priority-high",
+        "control_used": "issue list bulk action Assignee dropdown: div.item.issue-action[data-element-id=3] data-url=/bench/bench-repo/issues/assignee",
+        "sidebar_picker_issue": "clicking bench-assignee in the issue-page sidebar Assignees dropdown did not commit — the item is an anchor to the filter URL /bench/bench-repo/issues?assignee=3 and no assignment was posted; same dead-handler behaviour previously seen with the sidebar Labels dropdown",
+        "url_after_click": "http://127.0.0.1:8095/bench/bench-repo/issues/4",
+        "assignee_displayed_2": "bench-assignee\n(Bench Assignee)",
+        "assignee_avatar_alt": "Bench Assignee",
+        "data_update_url_assignee": "Assignees",
+        "data_update_url_assignee_2": "admin",
+        "data_update_url_assignee_3": "item",
+        "repository_owner": "bench",
+        "repository_name": "bench-repo"
+      },
+      "route": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "outputEvidence": {
+        "issue_number": {
+          "same": 0,
+          "differed": 1
+        },
+        "assignee_displayed": {
+          "same": 1,
+          "differed": 0
+        },
+        "assignee_username": {
+          "same": 1,
+          "differed": 0
+        },
+        "assignee_full_name": {
+          "same": 1,
+          "differed": 0
+        },
+        "assignee_id": {
+          "same": 1,
+          "differed": 0
+        },
+        "assignee_avatar_title": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "no_assignees_placeholder": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "labels_still_applied": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "control_used": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "sidebar_picker_issue": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "url_after_click": {
+          "same": 0,
+          "differed": 1
+        },
+        "assignee_displayed_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "assignee_avatar_alt": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "data_update_url_assignee": {
+          "same": 1,
+          "differed": 0
+        },
+        "data_update_url_assignee_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "data_update_url_assignee_3": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "repository_owner": {
+          "same": 1,
+          "differed": 0
+        },
+        "repository_name": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "06-set",
+      "instruction": "Set the milestone of issue #4 ('{{runid}} Bench Issue') in bench/bench-repo to 'Bench Milestone'. Verify the issue page visibly displays that milestone after the selection is applied.",
+      "skill": "s_dbe485",
+      "params": {
+        "v1": "{{runid}} Bench Issue",
+        "v3": "bench/bench-repo",
+        "v2": "{{runid}}",
+        "v4": "bench",
+        "v5": "bench-repo",
+        "v6": "{{03-create.url.p3}}"
+      },
+      "outputs": [
+        "issue_number",
+        "milestone_displayed",
+        "milestone_link_href",
+        "milestone_id",
+        "no_milestone_placeholder",
+        "persisted_after_reload",
+        "control_used",
+        "assignee_unchanged",
+        "current_url",
+        "milestone_combo_text",
+        "milestone_displayed_text",
+        "labels_combo_text",
+        "assignee_combo_text",
+        "issue_sidebar_combo",
+        "repository_owner",
+        "repository_name"
+      ],
+      "recorded": {
+        "issue_number": "#4",
+        "milestone_displayed": "Bench Milestone",
+        "milestone_link_href": "/bench/bench-repo/milestone/1",
+        "milestone_id": "1",
+        "milestone_combo_rendered_text": "Milestone / Bench Milestone",
+        "no_milestone_placeholder": "not visible (only a hidden span.item.empty-list.tw-hidden remains in the DOM)",
+        "persisted_after_reload": "yes",
+        "control_used": "sidebar Milestone dropdown (.issue-sidebar-combo data-update-url=/bench/bench-repo/issues/milestone?issue_ids=4), item a.item[data-value=1]",
+        "labels_unchanged": "bug, priority-high",
+        "assignee_unchanged": "bench-assignee",
+        "current_url": "http://127.0.0.1:8095/bench/bench-repo/issues/4",
+        "milestone_combo_text": "Milestone\nBench Milestone",
+        "milestone_displayed_text": "Bench Milestone",
+        "milestone_after_reload": "Milestone\nBench Milestone",
+        "labels_combo_text": "Labels\nbug\npriority-high",
+        "assignee_combo_text": "Assignees\nbench-assignee\n(Bench Assignee)",
+        "issue_sidebar_combo": "/bench/bench-repo/issues/milestone?issue_ids=4",
+        "repository_owner": "bench",
+        "repository_name": "bench-repo"
+      },
+      "route": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "outputEvidence": {
+        "issue_number": {
+          "same": 0,
+          "differed": 1
+        },
+        "milestone_displayed": {
+          "same": 1,
+          "differed": 0
+        },
+        "milestone_link_href": {
+          "same": 1,
+          "differed": 0
+        },
+        "milestone_id": {
+          "same": 1,
+          "differed": 0
+        },
+        "milestone_combo_rendered_text": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "no_milestone_placeholder": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "persisted_after_reload": {
+          "same": 0,
+          "differed": 1
+        },
+        "control_used": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "labels_unchanged": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "assignee_unchanged": {
+          "same": 1,
+          "differed": 0
+        },
+        "current_url": {
+          "same": 0,
+          "differed": 1
+        },
+        "milestone_combo_text": {
+          "same": 1,
+          "differed": 0
+        },
+        "milestone_displayed_text": {
+          "same": 1,
+          "differed": 0
+        },
+        "milestone_after_reload": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "labels_combo_text": {
+          "same": 1,
+          "differed": 0
+        },
+        "assignee_combo_text": {
+          "same": 1,
+          "differed": 0
+        },
+        "issue_sidebar_combo": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "repository_owner": {
+          "same": 1,
+          "differed": 0
+        },
+        "repository_name": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "07-add",
+      "instruction": "Add a comment to issue #4 ('{{runid}} Bench Issue') in bench/bench-repo whose markdown text includes the exact runid {{runid}}. Submit it and verify the rendered comment text on the issue page.",
+      "skill": "s_2bacb1",
+      "params": {
+        "v1": "{{runid}} Bench Issue",
+        "v3": "bench/bench-repo",
+        "v2": "{{runid}}",
+        "v4": "bench",
+        "v5": "bench-repo",
+        "v6": "{{03-create.url.p3}}"
+      },
+      "outputs": [
+        "issue_number",
+        "comment_id",
+        "comment_author",
+        "comment_text_entered",
+        "rendered_comment_text",
+        "rendered_markdown",
+        "runid_present_in_rendered_text",
+        "comment_body_elements_on_issue",
+        "persisted_after_reload",
+        "rendered_comment_heading",
+        "run_id",
+        "repository_owner",
+        "repository_name"
+      ],
+      "recorded": {
+        "issue_number": "#4",
+        "comment_id": "issuecomment-5",
+        "comment_author": "admin",
+        "comment_text_entered": "## Benchmark comment\n\nRun ID: `fwgt40-fc-n1`\n\nThis comment records benchmark run fwgt40-fc-n1 on issue #4 in bench/bench-repo.\n\n- runid: fwgt40-fc-n1",
+        "rendered_comment_text": "Benchmark comment\n\nRun ID: fwgt40-fc-n1\n\nThis comment records benchmark run fwgt40-fc-n1 on issue #4 in bench/bench-repo.\n\nrunid: fwgt40-fc-n1",
+        "rendered_markdown": "heading 'Benchmark comment' (h2), code span fwgt40-fc-n1, paragraph, bullet list 'runid: fwgt40-fc-n1'",
+        "runid_present_in_rendered_text": "yes",
+        "comment_body_elements_on_issue": "2",
+        "persisted_after_reload": "yes",
+        "sidebar_state_unchanged": "labels bug + priority-high, assignee bench-assignee, milestone Bench Milestone",
+        "comment_body_entered": "## Benchmark comment\n\nRun ID: `fwgt40-fc-n1`\n\nThis comment records benchmark run fwgt40-fc-n1 on issue #4 in bench/bench-repo.\n\n- runid: fwgt40-fc-n1",
+        "rendered_comment_after_r": "Benchmark comment\n\nRun ID: fwgt40-fc-n1\n\nThis comment records benchmark run fwgt40-fc-n1 on issue #4 in bench/bench-repo.\n\nrunid: fwgt40-fc-n1",
+        "rendered_comment_heading": "Benchmark comment",
+        "run_id": "fwgt40-fc-n1",
+        "repository_owner": "bench",
+        "repository_name": "bench-repo",
+        "url.h0": "issuecomment-5"
+      },
+      "route": "http://127.0.0.1:8095/bench/bench-repo/issues/:id",
+      "urlRoutes": {
+        "url.h0": "http://127.0.0.1:8095 p0=bench p1=bench-repo p2=issues p3=4"
+      },
+      "outputEvidence": {
+        "issue_number": {
+          "same": 0,
+          "differed": 1
+        },
+        "comment_id": {
+          "same": 0,
+          "differed": 1
+        },
+        "comment_author": {
+          "same": 1,
+          "differed": 0
+        },
+        "comment_text_entered": {
+          "same": 0,
+          "differed": 1
+        },
+        "rendered_comment_text": {
+          "same": 0,
+          "differed": 1
+        },
+        "rendered_markdown": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "runid_present_in_rendered_text": {
+          "same": 0,
+          "differed": 1
+        },
+        "comment_body_elements_on_issue": {
+          "same": 1,
+          "differed": 0
+        },
+        "persisted_after_reload": {
+          "same": 0,
+          "differed": 1
+        },
+        "sidebar_state_unchanged": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "comment_body_entered": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "rendered_comment_after_r": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "rendered_comment_heading": {
+          "same": 1,
+          "differed": 0
+        },
+        "run_id": {
+          "same": 0,
+          "differed": 1
+        },
+        "repository_owner": {
+          "same": 1,
+          "differed": 0
+        },
+        "repository_name": {
+          "same": 1,
+          "differed": 0
+        },
+        "url.h0": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "session": "fwgt40-fc-n1",
+    "created": "2026-11-12T11:28:53.179Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "omitted": [
+    {
+      "instruction": "On issue #4 titled 'fwgt40-fc-n1 Bench Issue' in bench/bench-repo, apply exactly the labels bug and priority-high using the issue sidebar picker. Ensure both appear applied and no other labels remain, then report the displayed labels.",
+      "mutations": 17,
+      "status": "blocked"
+    }
+  ],
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "02-open",
+      "outputs": [
+        "seed_issue_count",
+        "issue_3_url",
+        "issue_2_url",
+        "issue_1_url",
+        "modifications_made"
+      ]
+    },
+    {
+      "stepId": "04-verify",
+      "outputs": [
+        "label_ids",
+        "no_labels_placeholder",
+        "other_labels_present",
+        "server_rendered_label_chips",
+        "sidebar_chip_count",
+        "bug_label",
+        "priority_high_label"
+      ]
+    },
+    {
+      "stepId": "05-verify",
+      "outputs": [
+        "assignee_avatar_title",
+        "no_assignees_placeholder",
+        "labels_still_applied",
+        "assignee_avatar_alt",
+        "data_update_url_assignee_3"
+      ]
+    },
+    {
+      "stepId": "06-set",
+      "outputs": [
+        "milestone_combo_rendered_text",
+        "labels_unchanged",
+        "milestone_after_reload"
+      ]
+    },
+    {
+      "stepId": "07-add",
+      "outputs": [
+        "sidebar_state_unchanged",
+        "comment_body_entered",
+        "rendered_comment_after_r"
+      ]
+    }
+  ]
+}
