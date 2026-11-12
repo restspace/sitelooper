@@ -1,0 +1,126 @@
+
+[sweep] run 1/3: fwop37-fc-n1 (store: /home/user/sitelooper/bench/results/fwop37-fc-skills)
+[harness] openproject: defaulting APP_URL
+[harness] openproject: defaulting APP_EMAIL
+[harness] openproject: defaulting APP_PASSWORD
+[reset] openproject: no leftover bench work packages
+[harness] openproject responded 302 at http://127.0.0.1:8090/
+stopped: fwop37-fc-n1
+  flow "fwop37-fc" saved: 7 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwop37-fc.json
+  warning: warning: 01-signin's instruction asks to report page_identity, and no replay can publish it: nothing in its procedure reads it from the page, so export dropped it — re-record the step so the value is read, not only reported
+  warning: note: 01-signin no longer publishes user_menu_items — no replay reads it from the page and the recording showed no line to read
+  warning: note: 02-find no longer publishes seed_work_package_count, status_filter_panel_contents — no replay reads them from the page and the recording showed no line to read
+  warning: note: 03-create no longer publishes work_package_type, wp_title — no replay reads them from the page and the recording showed no line to read
+  warning: note: 04-set no longer publishes assignee_before, dropdown_closed_after_selection — no replay reads them from the page and the recording showed no line to read
+  warning: note: 06-set no longer publishes displayed_combined_date — no replay reads it from the page and the recording showed no line to read
+  warning: note: 07-add no longer publishes comment_editor_state_after_submit — no replay reads it from the page and the recording showed no line to read
+  warning: note: 03-create: added a read for confirmation to s_cc84f0 (page.getByRole('alert', { name: 'Successful creation.', exact: true }); seen on the instruction's own page)
+  warning: note: 04-set: added a read for confirmation_alert to s_f799a8 (page.getByRole('alert', { name: 'Successful update.', exact: true }); seen on the instruction's own page)
+  warning: note: 05-set: added a read for status_before to s_3a88db (page.getByRole('menuitem', { name: 'New', exact: true }); seen on the instruction's own page)
+  warning: note: 05-set: added a read for displayed_status_after_save to s_3a88db (page.getByRole('menuitem', { name: 'In progress', exact: true }); seen on the instruction's own page)
+  warning: note: 05-set: added a read for list_row_status_after_save to s_3a88db (page.getByRole('menuitem', { name: 'In progress', exact: true }); seen on the instruction's own page)
+  warning: note: 05-set: added a read for confirmation_alert to s_3a88db (page.getByRole('alert', { name: 'Successful update.', exact: true }); seen on the instruction's own page)
+  warning: note: 05-set: added a read for displayed_status to s_3a88db (page.getByRole('menuitem', { name: 'In progress', exact: true }); seen on the instruction's own page)
+  warning: note: 06-set: added a read for confirmation_alert to s_b05c0d (page.getByRole('alert', { name: 'Successful update.', exact: true }); seen on the instruction's own page)
+  warning: warning: 122 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[0].instruction: "admin" (output) in "Sign in to OpenProject at http://127.0.0.1:8090/ using username admin and password exactly {{env:APP_PASSWORD}}. Verify that you are signed in and report the pa"
+  flow.steps[0].params.v2: "admin" (output) in "admin"
+  flow.steps[1].instruction: "Bench Project" (output) in "In the project named Bench Project, find and report the exact subjects of every work package whose subject starts with 'Seed:'. Do not modify any work packages."
+  flow.steps[1].instruction: "Bench" (output) in "In the project named Bench Project, find and report the exact subjects of every work package whose subject starts with 'Seed:'. Do not modify any work packages."
+  flow.steps[1].params.v1: "Bench" (output) in "Bench"
+arm=sitelooper model=openai/gpt-6-luna runid=fwop37-fc-n1 stop=completed
+turns=8 wall=352.0s
+commands=7 cmdTime=325.5s cmdBytes=9828 timeouts=0
+orchestrator in=5677 cw=0 cr=27115 out=917
+inner prompt=1710017 cached=1593728 completion=17602
+spend=$0.0346 maxUsd=3
+learn: A_n=0 replayed=0/7 full=0 repaired=0 compiled=7 variants=0
+-> /home/user/sitelooper/bench/results/fwop37-fc-n1-sitelooper-result.json
+
+fwop37-fc-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed subjects reported
+  obj 2: PASS — type=Task, description includes runid=true
+  obj 3: PASS — assignee=Bench Assignee
+  obj 4: PASS — status=In progress
+  obj 5: PASS — finish date=2026-12-31, want 2026-12-31
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — work package id 71 reported
+
+[sweep] run 2/3: fwop37-fc-n2 (replay flow fwop37-fc, no orchestrator)
+[reset] openproject: deleted 1 leftover bench work package(s)
+[sweep] fwop37-fc-n2: 10 drift ticket(s) → fwop37-fc-n2-drift.json
+
+fwop37-fc-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed subjects reported
+  obj 2: PASS — type=Task, description includes runid=true
+  obj 3: PASS — assignee=Bench Assignee
+  obj 4: PASS — status=In progress
+  obj 5: PASS — finish date=2026-12-31, want 2026-12-31
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — work package id 72 reported
+
+[sweep] run 3/3: fwop37-fc-n3 (replay flow fwop37-fc, no orchestrator)
+[reset] openproject: deleted 1 leftover bench work package(s)
+[sweep] fwop37-fc-n3: 9 drift ticket(s) → fwop37-fc-n3-drift.json
+
+fwop37-fc-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed subjects reported
+  obj 2: PASS — type=Task, description includes runid=true
+  obj 3: PASS — assignee=Bench Assignee
+  obj 4: PASS — status=In progress
+  obj 5: PASS — finish date=2026-12-31, want 2026-12-31
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — work package id 73 reported
+
+Learning sweep fwop37-fc (K=3)
+┌─────────┬───┬────────────────┬──────────┬─────────────┬───────┬──────┬───────────┬──────┬──────────────┬────────┐
+│ (index) │ n │ runid          │ verified │ stop        │ turns │ cmds │ total_usd │ A_n  │ replayed     │ wall_s │
+├─────────┼───┼────────────────┼──────────┼─────────────┼───────┼──────┼───────────┼──────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwop37-fc-n1' │ '7/7'    │ 'completed' │ 8     │ 7    │ 0.0346    │ 0    │ '0/7'        │ 352    │
+│ 1       │ 2 │ 'fwop37-fc-n2' │ '7/7'    │ 'success'   │ 29    │ 7    │ 0.009     │ 0.86 │ '7/7 (flow)' │ 194    │
+│ 2       │ 3 │ 'fwop37-fc-n3' │ '7/7'    │ 'success'   │ 0     │ 7    │ 0         │ 1    │ '7/7 (flow)' │ 121    │
+└─────────┴───┴────────────────┴──────────┴─────────────┴───────┴──────┴───────────┴──────┴──────────────┴────────┘
+http://127.0.0.1:8090
+  s_093990  validated    4 steps  3/3 (100%)
+           Sign in to OpenProject at {{v1}} using username {{v2}} and password exactly {{v3}}. Verify that you are signed…
+  s_2ebfd1  validated    3 steps  3/3 (100%)
+           Sign in to OpenProject at {{v1}} using username {{v2}} and password exactly {{v3}}. Verify that you are signed…
+  s_3a88db  validated    9 steps  3/3 (100%)
+           For work package '{{v1}}' ({{v4}}) in {{v6}}, set its status to In progress and verify the saved displayed sta…
+  s_433223  validated    6 steps  3/3 (100%)
+           Create a work package in {{v1}} of type Task titled '{{v4}}' with a description that includes the exact runid …
+  s_4c925c  validated    5 steps  3/3 (100%)
+           Sign in to OpenProject at {{v1}} using username {{v2}} and password exactly {{v3}}. Verify that you are signed…
+  s_5b9707  validated    1 steps  3/3 (100%)
+           Add a comment to work package '{{v1}}' ({{v4}}) in {{v6}} with text that includes the exact runid {{v2}}. Subm…
+  s_656fcf  validated    1 steps  3/3 (100%)
+           Sign in to OpenProject at {{v1}} using username {{v2}} and password exactly {{v3}}. Verify that you are signed…
+  s_660f07  validated    7 steps  3/3 (100%)
+           Add a comment to work package '{{v1}}' ({{v4}}) in {{v6}} with text that includes the exact runid {{v2}}. Subm…
+  s_67b960  validated    2 steps  3/3 (100%)
+           Create a work package in {{v1}} of type Task titled '{{v4}}' with a description that includes the exact runid …
+  s_b05c0d  validated   10 steps  3/3 (100%)
+           For work package '{{v1}}' ({{v4}}) in {{v6}}, set the finish date to {{v7}}. Ensure the date is saved, then ve…
+  s_cc84f0  validated    9 steps  3/3 (100%)
+           Create a work package in {{v1}} of type Task titled '{{v4}}' with a description that includes the exact runid …
+  s_f799a8  validated   10 steps  3/3 (100%)
+           For work package '{{v1}}' ({{v4}}) in {{v6}}, set the assignee to the user {{v3}} Assignee, selecting the actu…
+  s_23c7eb  validated    1 steps  2/2 (100%)  variant of s_a8f156
+           In the project named {{v1}} Project, find and report the exact subjects of every work package whose subject st…
+  s_433fc4  validated   13 steps  2/2 (100%)  variant of s_a8f156
+           In the project named {{v1}} Project, find and report the exact subjects of every work package whose subject st…
+  s_7eab15  validated    1 steps  2/2 (100%)  variant of s_a8f156
+           In the project named {{v1}} Project, find and report the exact subjects of every work package whose subject st…
+  s_a81adb  validated    5 steps  2/2 (100%)  variant of s_a8f156
+           In the project named {{v1}} Project, find and report the exact subjects of every work package whose subject st…
+  s_a8f156  demoted      6 steps  1/2 (50%)
+           In the project named {{v1}} Project, find and report the exact subjects of every work package whose subject st…
+  s_e41f21  validated    1 steps  2/2 (100%)  variant of s_a8f156
+           In the project named {{v1}} Project, find and report the exact subjects of every work package whose subject st…
+  s_580b8f  provisional  8 steps  1/1 (100%)
+           In the project named {{v1}} Project, find and report the exact subjects of every work package whose subject st…
+  s_9e70b7  provisional  1 steps  1/1 (100%)
+           In the project named {{v1}} Project, find and report the exact subjects of every work package whose subject st…
+store: /home/user/sitelooper/bench/results/fwop37-fc-skills
+
+summary: /home/user/sitelooper/bench/results/fwop37-fc-sweep.json

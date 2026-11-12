@@ -1,0 +1,377 @@
+{
+  "flow": "fwop37-fc",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_093990; observed signed_in_user=Bench Admin, login_landing_url=http://127.0.0.1:8090/, account_username=admin, account_full_name=Bench, account_email=admin@example.net.",
+      "unanswered": [
+        "page_identity"
+      ],
+      "values": {
+        "signed_in_user": "Bench Admin",
+        "login_landing_url": "http://127.0.0.1:8090/",
+        "account_username": "admin",
+        "account_full_name": "Bench",
+        "account_email": "admin@example.net"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "13/13",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_4c925c: step 1: skipped — it closes the dialog \"Welcome to OpenProject, Bench Admin\" with \"Close\", and that dialog is not open this time: already in effect"
+      ],
+      "shadow": [
+        "s_4c925c: [shadow:delta] step 1: skipped as already in effect (a dismissal of a dialog not open), on evidence (\"- dialog \\\"Welcome to OpenProject, Bench Admin\\\"\") already absent when this segment started — this run did not produce it"
+      ],
+      "unreported": [
+        "page_url"
+      ]
+    },
+    {
+      "id": "02-find",
+      "status": "success",
+      "summary": "In the Bench Project work-package list I filtered by the text \"Seed:\" and read the matching rows from the live table (no work packages were opened, edited, or otherwise modified). Three work packages in the project have subjects beginning with \"Seed:\": #38 \"Seed: triage inbox\", #39 \"Seed: order missing parts\", and #40 \"Seed: ship repaired device\" (all type TASK, status New). I then cleared the text filter so the list was left unfiltered. Caveat: the counts come from the rows rendered in the filtered list view; I did not separately test e.g. a \"starts with\" vs. \"contains\" distinction, so a work package whose subject merely contains \"Seed:\" elsewhere would also have been listed — all three shown do begin with it.",
+      "values": {
+        "project": "Bench Project",
+        "wp_38_subject": "Seed: triage inbox",
+        "wp_39_subject": "Seed: order missing parts",
+        "wp_40_subject": "Seed: ship repaired device",
+        "count": "3",
+        "seed_work_packages_1": "38",
+        "seed_work_packages_2": "Seed: triage inbox",
+        "seed_work_packages_3": "39",
+        "seed_work_packages_4": "Seed: order missing parts",
+        "seed_work_packages_5": "40",
+        "seed_work_packages_6": "Seed: ship repaired device"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_a8f156 stopped at step 5 — after step 5 expected url http://127.0.0.1:8090/my/account but browser is at http://127.0.0.1:8090/",
+      "pinStopped": {
+        "skill": "s_a8f156",
+        "step": 5,
+        "why": "after step 5 expected url http://127.0.0.1:8090/my/account but browser is at http://127.0.0.1:8090/"
+      },
+      "replayed": "4/6",
+      "repaired": false,
+      "turns": 29,
+      "warnings": [
+        "s_a8f156: step 4: primary locator did not resolve; used fallback #3 elementAt(777, 303) /* div */"
+      ],
+      "unreported": [
+        "seed_wp_1",
+        "seed_wp_2",
+        "seed_wp_3"
+      ]
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_cc84f0; observed project=Bench Project, description_text=Work package for runid fwop37-fc-n2 (created by automation)., page_title=Task: fwop37-fc-n2 Bench Work Package (#72) | Work Packages | Bench Project | OpenProject, details_url=http://127.0.0.1:8090/projects/bench-project/work_packages/details/72/overview?query_props=%7B%22c%22%3A%5B%22id%22%2C%22subject%22%2C%22type%22%2C%22status%22%2C%22assignee%22%2C%22priority%22%5D%2C%22hi%22%3Atrue%2C%22g%22%3A%22%22%2C%22is%22%3Atrue%2C%22tv%22%3Afalse%2C%22hla%22%3A%5B%22status%22%2C%22priority%22%2C%22dueDate%22%5D%2C%22t%22%3A%22id%3Aasc%22%2C%22f%22%3A%5B%5D%2C%22ts%22%3A%22PT0S%22%2C%22pp%22%3A20%2C%22pa%22%3A1%7D, subject_value=fwop37-fc-n2 Bench Work Package, created_work_package_id=72, displayed_id=#72, ref=fwop37-fc-n2.",
+      "values": {
+        "project": "Bench Project",
+        "description_text": "Work package for runid fwop37-fc-n2 (created by automation).",
+        "page_title": "Task: fwop37-fc-n2 Bench Work Package (#72) | Work Packages | Bench Project | OpenProject",
+        "details_url": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/72/overview?query_props=%7B%22c%22%3A%5B%22id%22%2C%22subject%22%2C%22type%22%2C%22status%22%2C%22assignee%22%2C%22priority%22%5D%2C%22hi%22%3Atrue%2C%22g%22%3A%22%22%2C%22is%22%3Atrue%2C%22tv%22%3Afalse%2C%22hla%22%3A%5B%22status%22%2C%22priority%22%2C%22dueDate%22%5D%2C%22t%22%3A%22id%3Aasc%22%2C%22f%22%3A%5B%5D%2C%22ts%22%3A%22PT0S%22%2C%22pp%22%3A20%2C%22pa%22%3A1%7D",
+        "subject_value": "fwop37-fc-n2 Bench Work Package",
+        "created_work_package_id": "72",
+        "displayed_id": "#72",
+        "ref": "fwop37-fc-n2"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "17/17",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_433223: step 4: read 'description' returned a value the skill itself set/selected ('Work package for runid fwop37-fc-n2 (created by automation).') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_433223: step 5: read 'subject' returned a value the skill itself set/selected ('fwop37-fc-n2 Bench Work Package') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_cc84f0: step 9: the target chain is dead and was not healed inline — the step is a synthesized read no run has ever resolved, so nothing about it has drifted",
+        "s_cc84f0: step 9: skipped read — no element matched any known locator for target (tried 1: page.getByRole('alert', { name: 'Successful creation.', exact: true }))"
+      ],
+      "unreported": [
+        "subject",
+        "confirmation"
+      ]
+    },
+    {
+      "id": "04-set",
+      "status": "success",
+      "summary": "Replayed stored procedure s_f799a8; observed work_package=#72 fwop37-fc-n2 Bench Work Package, assignee_field_read_back_1=BABench Assignee, assignee_field_read_back_2=BA\nBench Assignee, details_url=http://127.0.0.1:8090/projects/bench-project/work_packages/details/72/overview?query_props=%7B%22c%22%3A%5B%22id%22%2C%22subject%22%2C%22type%22%2C%22status%22%2C%22assignee%22%2C%22priority%22%5D%2C%22hi%22%3Atrue%2C%22g%22%3A%22%22%2C%22is%22%3Atrue%2C%22tv%22%3Afalse%2C%22hla%22%3A%5B%22status%22%2C%22priority%22%2C%22dueDate%22%5D%2C%22t%22%3A%22id%3Aasc%22%2C%22f%22%3A%5B%5D%2C%22ts%22%3A%22PT0S%22%2C%22pp%22%3A20%2C%22pa%22%3A1%7D, assignee_displayed_after_save=Bench Assignee, ref=fwop37-fc-n2.",
+      "values": {
+        "work_package": "#72 fwop37-fc-n2 Bench Work Package",
+        "assignee_field_read_back_1": "BABench Assignee",
+        "assignee_field_read_back_2": "BA\nBench Assignee",
+        "details_url": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/72/overview?query_props=%7B%22c%22%3A%5B%22id%22%2C%22subject%22%2C%22type%22%2C%22status%22%2C%22assignee%22%2C%22priority%22%5D%2C%22hi%22%3Atrue%2C%22g%22%3A%22%22%2C%22is%22%3Atrue%2C%22tv%22%3Afalse%2C%22hla%22%3A%5B%22status%22%2C%22priority%22%2C%22dueDate%22%5D%2C%22t%22%3A%22id%3Aasc%22%2C%22f%22%3A%5B%5D%2C%22ts%22%3A%22PT0S%22%2C%22pp%22%3A20%2C%22pa%22%3A1%7D",
+        "assignee_displayed_after_save": "Bench Assignee",
+        "ref": "fwop37-fc-n2"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "10/10",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_f799a8: step 10: the target chain is dead and was not healed inline — the step is a synthesized read no run has ever resolved, so nothing about it has drifted",
+        "s_f799a8: step 10: skipped read — no element matched any known locator for target (tried 1: page.getByRole('alert', { name: 'Successful update.', exact: true }))"
+      ],
+      "unreported": [
+        "autocomplete_option_chosen",
+        "confirmation_alert"
+      ]
+    },
+    {
+      "id": "05-set",
+      "status": "success",
+      "summary": "Replayed stored procedure s_3a88db; observed work_package=#72 fwop37-fc-n2 Bench Work Package, project=Bench Project, ref=fwop37-fc-n2, details_url=http://127.0.0.1:8090/projects/bench-project/work_packages/details/72/overview?query_props=%7B%22c%22%3A%5B%22id%22%2C%22subject%22%2C%22type%22%2C%22status%22%2C%22assignee%22%2C%22priority%22%5D%2C%22hi%22%3Atrue%2C%22g%22%3A%22%22%2C%22is%22%3Atrue%2C%22tv%22%3Afalse%2C%22hla%22%3A%5B%22status%22%2C%22priority%22%2C%22dueDate%22%5D%2C%22t%22%3A%22id%3Aasc%22%2C%22f%22%3A%5B%5D%2C%22ts%22%3A%22PT0S%22%2C%22pp%22%3A20%2C%22pa%22%3A1%7D.",
+      "values": {
+        "work_package": "#72 fwop37-fc-n2 Bench Work Package",
+        "project": "Bench Project",
+        "ref": "fwop37-fc-n2",
+        "details_url": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/72/overview?query_props=%7B%22c%22%3A%5B%22id%22%2C%22subject%22%2C%22type%22%2C%22status%22%2C%22assignee%22%2C%22priority%22%5D%2C%22hi%22%3Atrue%2C%22g%22%3A%22%22%2C%22is%22%3Atrue%2C%22tv%22%3Afalse%2C%22hla%22%3A%5B%22status%22%2C%22priority%22%2C%22dueDate%22%5D%2C%22t%22%3A%22id%3Aasc%22%2C%22f%22%3A%5B%5D%2C%22ts%22%3A%22PT0S%22%2C%22pp%22%3A20%2C%22pa%22%3A1%7D"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "9/9",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_3a88db: step 3: read 'status_option_chosen' returned a value the skill itself set/selected ('In progress') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_3a88db: step 5: the target chain is dead and was not healed inline — the step is a synthesized read no run has ever resolved, so nothing about it has drifted",
+        "s_3a88db: step 5: skipped read — no element matched any known locator for target (tried 1: page.getByRole('menuitem', { name: 'New', exact: true }))",
+        "s_3a88db: step 6: the target chain is dead and was not healed inline — the step is a synthesized read no run has ever resolved, so nothing about it has drifted",
+        "s_3a88db: step 6: skipped read — no element matched any known locator for target (tried 1: page.getByRole('menuitem', { name: 'In progress', exact: true }))",
+        "s_3a88db: step 7: the target chain is dead and was not healed inline — the step is a synthesized read no run has ever resolved, so nothing about it has drifted",
+        "s_3a88db: step 7: skipped read — no element matched any known locator for target (tried 1: page.getByRole('menuitem', { name: 'In progress', exact: true }))",
+        "s_3a88db: step 8: the target chain is dead and was not healed inline — the step is a synthesized read no run has ever resolved, so nothing about it has drifted",
+        "s_3a88db: step 8: skipped read — no element matched any known locator for target (tried 1: page.getByRole('alert', { name: 'Successful update.', exact: true }))",
+        "s_3a88db: step 9: the target chain is dead and was not healed inline — the step is a synthesized read no run has ever resolved, so nothing about it has drifted",
+        "s_3a88db: step 9: skipped read — no element matched any known locator for target (tried 1: page.getByRole('menuitem', { name: 'In progress', exact: true }))"
+      ],
+      "unreported": [
+        "status_before",
+        "status_option_chosen",
+        "displayed_status_after_save",
+        "list_row_status_after_save",
+        "confirmation_alert",
+        "displayed_status"
+      ]
+    },
+    {
+      "id": "06-set",
+      "status": "success",
+      "summary": "Replayed stored procedure s_b05c0d; observed work_package=#72 fwop37-fc-n2 Bench Work Package, project=Bench Project, ref=fwop37-fc-n2, displayed_date_field_after_save=no start date - 12/31/2026, details_url=http://127.0.0.1:8090/projects/bench-project/work_packages/details/72/overview?query_props=%7B%22c%22%3A%5B%22id%22%2C%22subject%22%2C%22type%22%2C%22status%22%2C%22assignee%22%2C%22priority%22%5D%2C%22hi%22%3Atrue%2C%22g%22%3A%22%22%2C%22is%22%3Atrue%2C%22tv%22%3Afalse%2C%22hla%22%3A%5B%22status%22%2C%22priority%22%2C%22dueDate%22%5D%2C%22t%22%3A%22id%3Aasc%22%2C%22f%22%3A%5B%5D%2C%22ts%22%3A%22PT0S%22%2C%22pp%22%3A20%2C%22pa%22%3A1%7D, date_field_before=no start date, displayed_finish_date=12/31/2026, start_date_displayed=no start date.",
+      "values": {
+        "work_package": "#72 fwop37-fc-n2 Bench Work Package",
+        "project": "Bench Project",
+        "ref": "fwop37-fc-n2",
+        "displayed_date_field_after_save": "no start date - 12/31/2026",
+        "details_url": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/72/overview?query_props=%7B%22c%22%3A%5B%22id%22%2C%22subject%22%2C%22type%22%2C%22status%22%2C%22assignee%22%2C%22priority%22%5D%2C%22hi%22%3Atrue%2C%22g%22%3A%22%22%2C%22is%22%3Atrue%2C%22tv%22%3Afalse%2C%22hla%22%3A%5B%22status%22%2C%22priority%22%2C%22dueDate%22%5D%2C%22t%22%3A%22id%3Aasc%22%2C%22f%22%3A%5B%5D%2C%22ts%22%3A%22PT0S%22%2C%22pp%22%3A20%2C%22pa%22%3A1%7D",
+        "date_field_before": "no start date",
+        "displayed_finish_date": "12/31/2026",
+        "start_date_displayed": "no start date"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "10/10",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_b05c0d: step 3: read 'finish_date_input_value' returned a value the skill itself set/selected ('2026-12-31') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_b05c0d: step 10: the target chain is dead and was not healed inline — the step is a synthesized read no run has ever resolved, so nothing about it has drifted",
+        "s_b05c0d: step 10: skipped read — no element matched any known locator for target (tried 1: page.getByRole('alert', { name: 'Successful update.', exact: true }))"
+      ],
+      "unreported": [
+        "finish_date_input_value",
+        "confirmation_alert"
+      ]
+    },
+    {
+      "id": "07-add",
+      "status": "success",
+      "summary": "Replayed stored procedure s_660f07; observed work_package=#72 fwop37-fc-n2 Bench Work Package, project=Bench Project, comment_text_in_editor=Comment for runid fwop37-fc-n2: assignee, status and finish date updated., details_url=http://127.0.0.1:8090/projects/bench-project/work_packages/details/72/activity?query_props=%7B%22c%22%3A%5B%22id%22%2C%22subject%22%2C%22type%22%2C%22status%22%2C%22assignee%22%2C%22priority%22%5D%2C%22hi%22%3Atrue%2C%22g%22%3A%22%22%2C%22is%22%3Atrue%2C%22tv%22%3Afalse%2C%22hla%22%3A%5B%22status%22%2C%22priority%22%2C%22dueDate%22%5D%2C%22t%22%3A%22id%3Aasc%22%2C%22f%22%3A%5B%5D%2C%22ts%22%3A%22PT0S%22%2C%22pp%22%3A20%2C%22pa%22%3A1%7D, comment_contains_exact_runid=fwop37-fc-n2.",
+      "values": {
+        "work_package": "#72 fwop37-fc-n2 Bench Work Package",
+        "project": "Bench Project",
+        "comment_text_in_editor": "Comment for runid fwop37-fc-n2: assignee, status and finish date updated.",
+        "details_url": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/72/activity?query_props=%7B%22c%22%3A%5B%22id%22%2C%22subject%22%2C%22type%22%2C%22status%22%2C%22assignee%22%2C%22priority%22%5D%2C%22hi%22%3Atrue%2C%22g%22%3A%22%22%2C%22is%22%3Atrue%2C%22tv%22%3Afalse%2C%22hla%22%3A%5B%22status%22%2C%22priority%22%2C%22dueDate%22%5D%2C%22t%22%3A%22id%3Aasc%22%2C%22f%22%3A%5B%5D%2C%22ts%22%3A%22PT0S%22%2C%22pp%22%3A20%2C%22pa%22%3A1%7D",
+        "comment_contains_exact_runid": "fwop37-fc-n2"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "8/8",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_660f07: step 3: read 'posted_comment_text' returned a value the skill itself set/selected ('Comment for runid fwop37-fc-n2: assignee, status and finish …') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_660f07: step 5: read 'posted_comment_text' returned a value the skill itself set/selected ('Comment for runid fwop37-fc-n2: assignee, status and finish …') — confirms the control, not persistence; dropped from the report's confident values"
+      ]
+    }
+  ],
+  "passed": 7,
+  "total": 7,
+  "repinned": 0,
+  "drift": 10,
+  "driftTickets": [
+    {
+      "flow": "fwop37-fc",
+      "step": "01-signin",
+      "skill": "s_4c925c",
+      "atStep": "1",
+      "key": "target",
+      "similarity": 0.987,
+      "missedLocator": "page.getByRole('button', { name: 'Close', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8090/my/account",
+      "pageUrl": "http://127.0.0.1:8090/my/account"
+    },
+    {
+      "flow": "fwop37-fc",
+      "step": "02-find",
+      "skill": "s_a8f156",
+      "atStep": "4",
+      "key": "target",
+      "similarity": 0.987,
+      "missedLocator": "page.getByText('Skip', { exact: true })",
+      "fallbackUsed": "elementAt(777, 303) /* div */",
+      "fallbackIndex": 2,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:8090/",
+      "pageUrl": "http://127.0.0.1:8090/"
+    },
+    {
+      "flow": "fwop37-fc",
+      "step": "03-create",
+      "skill": "s_cc84f0",
+      "atStep": "9",
+      "key": "target",
+      "similarity": 0.987,
+      "missedLocator": "page.getByRole('alert', { name: 'Successful creation.', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:id/overview?query_props={\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}",
+      "pageUrl": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/72/overview?query_props=%7B%22c%22%3A%5B%22id%22%2C%22subject%22%2C%22type%22%2C%22status%22%2C%22assignee%22%2C%22priority%22%5D%2C%22hi%22%3Atrue%2C%22g%22%3A%22%22%2C%22is%22%3Atrue%2C%22tv%22%3Afalse%2C%22hla%22%3A%5B%22status%22%2C%22priority%22%2C%22dueDate%22%5D%2C%22t%22%3A%22id%3Aasc%22%2C%22f%22%3A%5B%5D%2C%22ts%22%3A%22PT0S%22%2C%22pp%22%3A20%2C%22pa%22%3A1%7D"
+    },
+    {
+      "flow": "fwop37-fc",
+      "step": "04-set",
+      "skill": "s_f799a8",
+      "atStep": "10",
+      "key": "target",
+      "similarity": 0.986,
+      "missedLocator": "page.getByRole('alert', { name: 'Successful update.', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:id/overview?query_props={\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}",
+      "pageUrl": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/72/overview?query_props=%7B%22c%22%3A%5B%22id%22%2C%22subject%22%2C%22type%22%2C%22status%22%2C%22assignee%22%2C%22priority%22%5D%2C%22hi%22%3Atrue%2C%22g%22%3A%22%22%2C%22is%22%3Atrue%2C%22tv%22%3Afalse%2C%22hla%22%3A%5B%22status%22%2C%22priority%22%2C%22dueDate%22%5D%2C%22t%22%3A%22id%3Aasc%22%2C%22f%22%3A%5B%5D%2C%22ts%22%3A%22PT0S%22%2C%22pp%22%3A20%2C%22pa%22%3A1%7D"
+    },
+    {
+      "flow": "fwop37-fc",
+      "step": "05-set",
+      "skill": "s_3a88db",
+      "atStep": "5",
+      "key": "target",
+      "similarity": 0.986,
+      "missedLocator": "page.getByRole('menuitem', { name: 'New', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:id/overview?query_props={\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}",
+      "pageUrl": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/72/overview?query_props=%7B%22c%22%3A%5B%22id%22%2C%22subject%22%2C%22type%22%2C%22status%22%2C%22assignee%22%2C%22priority%22%5D%2C%22hi%22%3Atrue%2C%22g%22%3A%22%22%2C%22is%22%3Atrue%2C%22tv%22%3Afalse%2C%22hla%22%3A%5B%22status%22%2C%22priority%22%2C%22dueDate%22%5D%2C%22t%22%3A%22id%3Aasc%22%2C%22f%22%3A%5B%5D%2C%22ts%22%3A%22PT0S%22%2C%22pp%22%3A20%2C%22pa%22%3A1%7D"
+    },
+    {
+      "flow": "fwop37-fc",
+      "step": "05-set",
+      "skill": "s_3a88db",
+      "atStep": "6",
+      "key": "target",
+      "similarity": 0.986,
+      "missedLocator": "page.getByRole('menuitem', { name: 'In progress', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:id/overview?query_props={\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}",
+      "pageUrl": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/72/overview?query_props=%7B%22c%22%3A%5B%22id%22%2C%22subject%22%2C%22type%22%2C%22status%22%2C%22assignee%22%2C%22priority%22%5D%2C%22hi%22%3Atrue%2C%22g%22%3A%22%22%2C%22is%22%3Atrue%2C%22tv%22%3Afalse%2C%22hla%22%3A%5B%22status%22%2C%22priority%22%2C%22dueDate%22%5D%2C%22t%22%3A%22id%3Aasc%22%2C%22f%22%3A%5B%5D%2C%22ts%22%3A%22PT0S%22%2C%22pp%22%3A20%2C%22pa%22%3A1%7D"
+    },
+    {
+      "flow": "fwop37-fc",
+      "step": "05-set",
+      "skill": "s_3a88db",
+      "atStep": "7",
+      "key": "target",
+      "similarity": 0.986,
+      "missedLocator": "page.getByRole('menuitem', { name: 'In progress', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:id/overview?query_props={\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}",
+      "pageUrl": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/72/overview?query_props=%7B%22c%22%3A%5B%22id%22%2C%22subject%22%2C%22type%22%2C%22status%22%2C%22assignee%22%2C%22priority%22%5D%2C%22hi%22%3Atrue%2C%22g%22%3A%22%22%2C%22is%22%3Atrue%2C%22tv%22%3Afalse%2C%22hla%22%3A%5B%22status%22%2C%22priority%22%2C%22dueDate%22%5D%2C%22t%22%3A%22id%3Aasc%22%2C%22f%22%3A%5B%5D%2C%22ts%22%3A%22PT0S%22%2C%22pp%22%3A20%2C%22pa%22%3A1%7D"
+    },
+    {
+      "flow": "fwop37-fc",
+      "step": "05-set",
+      "skill": "s_3a88db",
+      "atStep": "8",
+      "key": "target",
+      "similarity": 0.986,
+      "missedLocator": "page.getByRole('alert', { name: 'Successful update.', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:id/overview?query_props={\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}",
+      "pageUrl": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/72/overview?query_props=%7B%22c%22%3A%5B%22id%22%2C%22subject%22%2C%22type%22%2C%22status%22%2C%22assignee%22%2C%22priority%22%5D%2C%22hi%22%3Atrue%2C%22g%22%3A%22%22%2C%22is%22%3Atrue%2C%22tv%22%3Afalse%2C%22hla%22%3A%5B%22status%22%2C%22priority%22%2C%22dueDate%22%5D%2C%22t%22%3A%22id%3Aasc%22%2C%22f%22%3A%5B%5D%2C%22ts%22%3A%22PT0S%22%2C%22pp%22%3A20%2C%22pa%22%3A1%7D"
+    },
+    {
+      "flow": "fwop37-fc",
+      "step": "05-set",
+      "skill": "s_3a88db",
+      "atStep": "9",
+      "key": "target",
+      "similarity": 0.986,
+      "missedLocator": "page.getByRole('menuitem', { name: 'In progress', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:id/overview?query_props={\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}",
+      "pageUrl": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/72/overview?query_props=%7B%22c%22%3A%5B%22id%22%2C%22subject%22%2C%22type%22%2C%22status%22%2C%22assignee%22%2C%22priority%22%5D%2C%22hi%22%3Atrue%2C%22g%22%3A%22%22%2C%22is%22%3Atrue%2C%22tv%22%3Afalse%2C%22hla%22%3A%5B%22status%22%2C%22priority%22%2C%22dueDate%22%5D%2C%22t%22%3A%22id%3Aasc%22%2C%22f%22%3A%5B%5D%2C%22ts%22%3A%22PT0S%22%2C%22pp%22%3A20%2C%22pa%22%3A1%7D"
+    },
+    {
+      "flow": "fwop37-fc",
+      "step": "06-set",
+      "skill": "s_b05c0d",
+      "atStep": "10",
+      "key": "target",
+      "similarity": 0.986,
+      "missedLocator": "page.getByRole('alert', { name: 'Successful update.', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/:id/overview?query_props={\"c\":[\"id\",\"subject\",\"type\",\"status\",\"assignee\",\"priority\"],\"hi\":true,\"g\":\"\",\"is\":true,\"tv\":false,\"hla\":[\"status\",\"priority\",\"dueDate\"],\"t\":\"id:asc\",\"f\":[],\"ts\":\"PT0S\",\"pp\":20,\"pa\":1}",
+      "pageUrl": "http://127.0.0.1:8090/projects/bench-project/work_packages/details/72/overview?query_props=%7B%22c%22%3A%5B%22id%22%2C%22subject%22%2C%22type%22%2C%22status%22%2C%22assignee%22%2C%22priority%22%5D%2C%22hi%22%3Atrue%2C%22g%22%3A%22%22%2C%22is%22%3Atrue%2C%22tv%22%3Afalse%2C%22hla%22%3A%5B%22status%22%2C%22priority%22%2C%22dueDate%22%5D%2C%22t%22%3A%22id%3Aasc%22%2C%22f%22%3A%5B%5D%2C%22ts%22%3A%22PT0S%22%2C%22pp%22%3A20%2C%22pa%22%3A1%7D"
+    }
+  ],
+  "wallMs": 194164,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 352981,
+    "completionTokens": 4417,
+    "cachedTokens": 317056
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 352981,
+      "completionTokens": 4417,
+      "cachedTokens": 317056
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "openai/gpt-6-luna",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}
