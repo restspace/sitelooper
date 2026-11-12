@@ -1,0 +1,182 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwsi33-fc-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwsi33-fc-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwsi33-fc-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/bench/results/fwsi33-fc-spec-spec-tmp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwsi33-fc-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwsi33-fc.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwsi33-fc-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwsi33-fc.spec.ts",
+      "file": "fwsi33-fc.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwsi33-fc",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 69020,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper step] 01-signin\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-find\n"
+                    },
+                    {
+                      "text": "[sitelooper skip] 03-create s_d80540/3 target: no locator recorded — value left empty\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 03-create s_d80540/14: read 'purchase_date_entered' returned a value the skill itself set/selected ('2026-03-15') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 03-create: report value purchase_date_field is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-create\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-create\n"
+                    },
+                    {
+                      "text": "[sitelooper skip] 05-verify s_354d65/9 target: read errored (the element no longer shows the value where the recording saw it (\"Purchased {{=}} - 7 months {{*}} weeks ago\")) — value left empty\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 05-verify\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-signin: Sign in to Snipe-IT at http://127.0.0.1:8098/ using username admin and password exactly {{env:APP_PASSWORD}}. Verify that the authenticated app is open and report the resulting page.",
+                      "duration": 7126
+                    },
+                    {
+                      "title": "02-find: In Snipe-IT, find the assets whose name starts with 'Seed:' and report each asset name exactly as shown with its asset tag exactly as displayed. Do not edit any asset.",
+                      "duration": 2481
+                    },
+                    {
+                      "title": "03-create: Create an asset named '{{runid}} Bench Asset' using existing model 'Bench Laptop Model', status 'Ready to Deploy', default location 'Bench Office', and purchase date 2026-03-15. Choose each searchable dropdown option rather than only typing it; do not create any model/location/status. Submit the asset and verify its displayed name, tag, model, status, location, and purchase date. Do not check it out yet.",
+                      "duration": 38278
+                    },
+                    {
+                      "title": "04-create: Check out the asset '{{runid}} Bench Asset' once to the existing user 'Bench Assignee'. Include a checkout note whose text contains the runid {{runid}}. Select the user from the searchable dropdown, do not create a user. Submit the checkout and verify the asset now shows it checked out to Bench Assignee and the checkout note contains {{runid}}.",
+                      "duration": 15186
+                    },
+                    {
+                      "title": "05-verify: Verify the saved purchase date for '{{runid}} Bench Asset' from the persisted asset record (open its detail/edit information as needed without changing or resubmitting anything). Report the purchase date exactly as shown, along with the asset tag and current model, status, default location, and checked-out user if visible.",
+                      "duration": 5232
+                    }
+                  ],
+                  "startTime": "2026-11-12T11:23:40.418Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "outputs",
+                      "contentType": "application/json",
+                      "body": "ewogICIwMS1zaWduaW4uZmluYWxfdXJsIjogImh0dHA6Ly8xMjcuMC4wLjE6ODA5OC8iLAogICIwMS1zaWduaW4ucGFnZV9oZWFkaW5nIjogIkRhc2hib2FyZCIsCiAgIjAxLXNpZ25pbi5wYWdlX3RpdGxlIjogIkRhc2hib2FyZCA6OiBCZW5jaCBBc3NldHMiLAogICIwMS1zaWduaW4ubG9naW5fYWxlcnQiOiAiU3VjY2VzczogXG7Dl1xuWW91IGhhdmUgc3VjY2Vzc2Z1bGx5IGxvZ2dlZCBpbi4iLAogICIwMi1maW5kLmFzc2V0X3RhZ19zZWVkX3JlY2VwdGlvbl9sYXB0b3AiOiAiU0VFRC0wMDAxIiwKICAiMDItZmluZC5hc3NldF90YWdfc2VlZF90cmFpbmluZ19sYXB0b3AiOiAiU0VFRC0wMDAyIiwKICAiMDItZmluZC5hc3NldF90YWdfc2VlZF9zcGFyZV9sYXB0b3AiOiAiU0VFRC0wMDAzIiwKICAiMDItZmluZC5tYXRjaGluZ19hc3NldF9jb3VudCI6ICIzIiwKICAiMDItZmluZC5zZWVkX3JlY2VwdGlvbl9sYXB0b3BfbmFtZSI6ICJTZWVkOiBSZWNlcHRpb24gTGFwdG9wIiwKICAiMDItZmluZC5zZWVkX3JlY2VwdGlvbl9sYXB0b3BfYXNzZXRfdGFnIjogIlNFRUQtMDAwMSIsCiAgIjAyLWZpbmQuc2VlZF90cmFpbmluZ19sYXB0b3BfbmFtZSI6ICJTZWVkOiBUcmFpbmluZyBMYXB0b3AiLAogICIwMi1maW5kLnNlZWRfdHJhaW5pbmdfbGFwdG9wX2Fzc2V0X3RhZyI6ICJTRUVELTAwMDIiLAogICIwMi1maW5kLnNlZWRfc3BhcmVfbGFwdG9wX25hbWUiOiAiU2VlZDogU3BhcmUgTGFwdG9wIiwKICAiMDItZmluZC5zZWVkX3NwYXJlX2xhcHRvcF9hc3NldF90YWciOiAiU0VFRC0wMDAzIiwKICAiMDMtY3JlYXRlLmlucHV0X25hbWVfbmFtZSI6ICJOYW1lIiwKICAiMDMtY3JlYXRlLnB1cmNoYXNlX2RhdGVfZW50ZXJlZCI6ICIyMDI2LTAzLTE1IiwKICAiMDMtY3JlYXRlLm1pbnRlZCI6ICI3IiwKICAiMDMtY3JlYXRlLmFzc2V0X25hbWUiOiAiZndzaTMzLWZjLXNwZWMgQmVuY2ggQXNzZXQiLAogICIwMy1jcmVhdGUuYXNzZXRfdGFnIjogIkJBLTAwMDA3IiwKICAiMDMtY3JlYXRlLm1vZGVsIjogIkJlbmNoIExhcHRvcCBNb2RlbCIsCiAgIjAzLWNyZWF0ZS5zdGF0dXMiOiAiUmVhZHkgdG8gRGVwbG95IiwKICAiMDMtY3JlYXRlLmFzc2V0X3RhZ19maWVsZF9sYWJlbCI6ICJBc3NldCBUYWciLAogICIwMy1jcmVhdGUuYXNzZXRfbmFtZV9maWVsZF9sYWJlbCI6ICJBc3NldCBOYW1lIiwKICAiMDMtY3JlYXRlLmRlZmF1bHRfbG9jYXRpb25fZmllbGRfbGFiZWwiOiAiRGVmYXVsdCBMb2NhdGlvbiIsCiAgIjAzLWNyZWF0ZS5jaGVja291dHNfbmF2aWdhdGlvbl9sYWJlbCI6ICJDaGVja291dHMiLAogICIwMy1jcmVhdGUuZGVmYXVsdF9sb2NhdGlvbiI6ICJCZW5jaCBPZmZpY2UiLAogICIwMy1jcmVhdGUuYXNzZXRzX25hdmlnYXRpb25fbGFiZWwiOiAiQXNzZXRzIiwKICAiMDMtY3JlYXRlLmFzc2V0X3VybCI6ICJodHRwOi8vMTI3LjAuMC4xOjgwOTgvaGFyZHdhcmUvNyIsCiAgIjAzLWNyZWF0ZS5hc3NldF9ydW5faWQiOiAiZndzaTMzLWZjLXNwZWMiLAogICIwMy1jcmVhdGUudXJsLnAxIjogIjciLAogICIwNC1jcmVhdGUuYXNzZXRfdGFnIjogIkJBLTAwMDA3IiwKICAiMDQtY3JlYXRlLmNoZWNrb3V0X25vdGUiOiAiQ2hlY2tlZCBvdXQgZm9yIHJ1biBmd3NpMzMtZmMtc3BlYyIsCiAgIjA0LWNyZWF0ZS5hc3NldF9kcm9wZG93bl9sYWJlbCI6ICJBc3NldCIsCiAgIjA0LWNyZWF0ZS5kZWZhdWx0X2xvY2F0aW9uX2xpbmsiOiAiQmVuY2ggT2ZmaWNlIiwKICAiMDQtY3JlYXRlLmNoZWNrZWRfb3V0X2Fzc2V0X2xpbmsiOiAiZndzaTMzLWZjLXNwZWMgQmVuY2ggQXNzZXQgI0JBLTAwMDA3IC0gQmVuY2ggTGFwdG9wIE1vZGVsIiwKICAiMDQtY3JlYXRlLmFzc2V0X21vZGVsX2xpbmsiOiAiQmVuY2ggTGFwdG9wIE1vZGVsIiwKICAiMDQtY3JlYXRlLmNoZWNrZWRfb3V0X2Fzc2V0X25hbWVfdGV4dCI6ICJmd3NpMzMtZmMtc3BlYyBCZW5jaCBBc3NldCIsCiAgIjA0LWNyZWF0ZS5hc3NldCI6ICJmd3NpMzMtZmMtc3BlYyBCZW5jaCBBc3NldCIsCiAgIjA0LWNyZWF0ZS5oaXN0b3J5X2VudHJpZXMiOiAiMiIsCiAgIjA0LWNyZWF0ZS5jaGVja2VkX291dF90byI6ICJCZW5jaCBBc3NpZ25lZSIsCiAgIjA0LWNyZWF0ZS5hc3NldF9ydW5faWQiOiAiZndzaTMzLWZjLXNwZWMiLAogICIwNS12ZXJpZnkucHVyY2hhc2VfZGF0ZSI6ICIiLAogICIwNS12ZXJpZnkuYXNzZXRfbmFtZSI6ICJmd3NpMzMtZmMtc3BlYyBCZW5jaCBBc3NldCIsCiAgIjA1LXZlcmlmeS5hc3NldF90YWciOiAiQkEtMDAwMDciLAogICIwNS12ZXJpZnkucHVyY2hhc2VfZGF0ZV9hc19zaG93biI6ICJQdXJjaGFzZWRcbiAgICAgICAgICAgICAgICAyMDI2LTAzLTE1IC1cbiAgICAgICAgICAgICAgICA3IG1vbnRocyA0IHdlZWtzIGFnbyIsCiAgIjA1LXZlcmlmeS5tb2RlbCI6ICJCZW5jaCBMYXB0b3AgTW9kZWwiLAogICIwNS12ZXJpZnkuY2F0ZWdvcnkiOiAiQmVuY2ggTGFwdG9wcyIsCiAgIjA1LXZlcmlmeS5tYW51ZmFjdHVyZXIiOiAiQmVuY2ggTWFudWZhY3R1cmVyIiwKICAiMDUtdmVyaWZ5LmRlcGxveWVkX2JhZGdlX2FzX3Nob3duIjogIkRlcGxveWVkIiwKICAiMDUtdmVyaWZ5LmRlZmF1bHRfbG9jYXRpb24iOiAiQmVuY2ggT2ZmaWNlIiwKICAiMDUtdmVyaWZ5LnN0YXR1c190ZXh0X2FzX3Nob3duIjogIlJlYWR5IHRvIERlcGxveSIsCiAgIjA1LXZlcmlmeS5jaGVja2VkX291dF90byI6ICJCZW5jaCBBc3NpZ25lZSIsCiAgIjA1LXZlcmlmeS5sYXN0X2NoZWNrb3V0IjogIjIwMjYtMTEtMTIgMTcgc2Vjb25kcyBhZ28iLAogICIwNS12ZXJpZnkuY2hlY2tvdXRzX2NvdW50IjogIjEiLAogICIwNS12ZXJpZnkuYXNzZXRfdGFnX2ZpZWxkX2xhYmVsIjogIkFzc2V0IFRhZyIsCiAgIjA1LXZlcmlmeS5hc3NldF9uYW1lX2ZpZWxkX2xhYmVsIjogIkFzc2V0IE5hbWUiLAogICIwNS12ZXJpZnkuZGVmYXVsdF9sb2NhdGlvbl9maWVsZF9sYWJlbCI6ICJEZWZhdWx0IExvY2F0aW9uIiwKICAiMDUtdmVyaWZ5LmNoZWNrb3V0c19maWVsZF9sYWJlbCI6ICJDaGVja291dHMiLAogICIwNS12ZXJpZnkuYXNzZXRfcnVuX2lkIjogImZ3c2kzMy1mYy1zcGVjIgp9"
+                    },
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": ""
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "92519c7dfd799bcfcfb0-247cf7ac64078f22b126",
+          "file": "fwsi33-fc.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-11-12T11:23:38.437Z",
+    "duration": 71212.194,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

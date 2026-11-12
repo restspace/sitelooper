@@ -1,0 +1,110 @@
+
+[sweep] run 1/3: fwsi33-fc-n1 (store: /home/user/sitelooper/bench/results/fwsi33-fc-skills)
+[harness] snipeit: defaulting APP_URL
+[harness] snipeit: defaulting APP_EMAIL
+[harness] snipeit: defaulting APP_PASSWORD
+[reset] snipeit: no leftover bench assets
+[harness] snipeit responded 302 at http://127.0.0.1:8098/
+stopped: fwsi33-fc-n1
+  flow "fwsi33-fc" saved: 5 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwsi33-fc.json
+  warning: warning: 05-verify's instruction asks to report status, and only a recorded literal backs it: no read in its procedure publishes it, so a replay reports it only if the page it ends on shows that exact text — re-record the step so the value is read where it is shown
+  warning: note: 01-signin no longer publishes signed_in_navigation — no replay reads it from the page and the recording showed no line to read
+  warning: note: 03-create no longer publishes checkout_status — no replay reads it from the page and the recording showed no line to read
+  warning: note: 04-create no longer publishes checkouts_count, checkouts_navigation_text, admin_user_dropdown_label, checked_out_to_field_label — no replay reads them from the page and the recording showed no line to read
+  warning: note: 05-verify no longer publishes edit_form_purchase_date_value — no replay reads it from the page and the recording showed no line to read
+  warning: warning: 221 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.startUrl: "http://127.0.0.1:8098/" (output) in "http://127.0.0.1:8098/"
+  flow.steps[0].instruction: "http://127.0.0.1:8098/" (output) in "Sign in to Snipe-IT at http://127.0.0.1:8098/ using username admin and password exactly {{env:APP_PASSWORD}}. Verify that the authenticated app is open and repo"
+  flow.steps[0].params.v1: "http://127.0.0.1:8098/" (output) in "http://127.0.0.1:8098/"
+  flow.steps[0].route: "http://127.0.0.1:8098/" (output) in "http://127.0.0.1:8098/"
+  flow.steps[1].instruction: "name" (output) in "In Snipe-IT, find the assets whose name starts with 'Seed:' and report each asset name exactly as shown with its asset tag exactly as displayed. Do not edit any"
+arm=sitelooper model=openai/gpt-6-luna runid=fwsi33-fc-n1 stop=completed
+turns=6 wall=324.4s
+commands=5 cmdTime=296.0s cmdBytes=6782 timeouts=0
+orchestrator in=5023 cw=0 cr=16808 out=816
+inner prompt=1721964 cached=1579008 completion=18219
+spend=$0.0385 maxUsd=3
+learn: A_n=0 replayed=0/5 full=0 repaired=0 compiled=5 variants=0
+-> /home/user/sitelooper/bench/results/fwsi33-fc-n1-sitelooper-result.json
+
+fwsi33-fc-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed tags and names reported
+  obj 2: PASS — BA-00004, model=Bench Laptop Model, status=Ready to Deploy
+  obj 3: PASS — default location=Bench Office
+  obj 4: PASS — purchase date=2026-03-15
+  obj 5: PASS — assigned to=Bench Assignee (user bench-assignee)
+  obj 6: PASS — 1 checkout(s), 1 with a note carrying the runid
+  obj 7: PASS — asset tag BA-00004 reported
+
+[sweep] run 2/3: fwsi33-fc-n2 (replay flow fwsi33-fc, no orchestrator)
+[reset] snipeit: deleted 1 leftover bench asset(s)
+
+fwsi33-fc-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed tags and names reported
+  obj 2: PASS — BA-00005, model=Bench Laptop Model, status=Ready to Deploy
+  obj 3: PASS — default location=Bench Office
+  obj 4: PASS — purchase date=2026-03-15
+  obj 5: PASS — assigned to=Bench Assignee (user bench-assignee)
+  obj 6: PASS — 1 checkout(s), 1 with a note carrying the runid
+  obj 7: PASS — asset tag BA-00005 reported
+
+[sweep] run 3/3: fwsi33-fc-n3 (replay flow fwsi33-fc, no orchestrator)
+[reset] snipeit: deleted 1 leftover bench asset(s)
+
+fwsi33-fc-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed tags and names reported
+  obj 2: PASS — BA-00006, model=Bench Laptop Model, status=Ready to Deploy
+  obj 3: PASS — default location=Bench Office
+  obj 4: PASS — purchase date=2026-03-15
+  obj 5: PASS — assigned to=Bench Assignee (user bench-assignee)
+  obj 6: PASS — 1 checkout(s), 1 with a note carrying the runid
+  obj 7: PASS — asset tag BA-00006 reported
+
+Learning sweep fwsi33-fc (K=3)
+┌─────────┬───┬────────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid          │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼────────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwsi33-fc-n1' │ '7/7'    │ 'completed' │ 6     │ 5    │ 0.0385    │ 0   │ '0/5'        │ 324    │
+│ 1       │ 2 │ 'fwsi33-fc-n2' │ '7/7'    │ 'success'   │ 0     │ 5    │ 0         │ 1   │ '5/5 (flow)' │ 76     │
+│ 2       │ 3 │ 'fwsi33-fc-n3' │ '7/7'    │ 'success'   │ 0     │ 5    │ 0         │ 1   │ '5/5 (flow)' │ 75     │
+└─────────┴───┴────────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:8098
+  s_1462c3  validated    1 steps  3/3 (100%)
+           Check out the asset '{{v1}}' once to the existing user 'Bench Assignee'. Include a checkout note whose text co…
+  s_24f514  validated    1 steps  3/3 (100%)
+           Check out the asset '{{v1}}' once to the existing user 'Bench Assignee'. Include a checkout note whose text co…
+  s_2f52fb  validated    1 steps  3/3 (100%)
+           Create an asset named '{{v2}}' using existing model 'Bench Laptop Model', status 'Ready to Deploy', default lo…
+  s_354d65  validated   17 steps  3/3 (100%)
+           Verify the saved purchase date for '{{v1}}' from the persisted asset record (open its detail/edit information …
+  s_3dc237  validated    1 steps  3/3 (100%)
+           Verify the saved purchase date for '{{v1}}' from the persisted asset record (open its detail/edit information …
+  s_417961  validated    2 steps  3/3 (100%)
+           Verify the saved purchase date for '{{v1}}' from the persisted asset record (open its detail/edit information …
+  s_444949  validated    1 steps  3/3 (100%)
+           Check out the asset '{{v1}}' once to the existing user 'Bench Assignee'. Include a checkout note whose text co…
+  s_4f5343  validated   10 steps  3/3 (100%)
+           In Snipe-IT, find the assets whose name starts with 'Seed:' and report each asset name exactly as shown with i…
+  s_66db06  validated   12 steps  3/3 (100%)
+           Create an asset named '{{v2}}' using existing model 'Bench Laptop Model', status 'Ready to Deploy', default lo…
+  s_9269fc  validated    1 steps  3/3 (100%)
+           In Snipe-IT, find the assets whose name starts with 'Seed:' and report each asset name exactly as shown with i…
+  s_9a6f3f  validated   10 steps  3/3 (100%)
+           Check out the asset '{{v1}}' once to the existing user 'Bench Assignee'. Include a checkout note whose text co…
+  s_a5823d  validated    4 steps  3/3 (100%)
+           Check out the asset '{{v1}}' once to the existing user 'Bench Assignee'. Include a checkout note whose text co…
+  s_d80540  validated   15 steps  3/3 (100%)
+           Create an asset named '{{v2}}' using existing model 'Bench Laptop Model', status 'Ready to Deploy', default lo…
+  s_e903e1  validated    1 steps  3/3 (100%)
+           Sign in to Snipe-IT at {{v1}} using username {{v2}} and password exactly {{v3}}. Verify that the authenticated…
+  s_f688ea  validated    4 steps  3/3 (100%)
+           Sign in to Snipe-IT at {{v1}} using username {{v2}} and password exactly {{v3}}. Verify that the authenticated…
+  s_f69d92  validated    3 steps  3/3 (100%)
+           Sign in to Snipe-IT at {{v1}} using username {{v2}} and password exactly {{v3}}. Verify that the authenticated…
+  s_f95dca  validated    2 steps  3/3 (100%)
+           Verify the saved purchase date for '{{v1}}' from the persisted asset record (open its detail/edit information …
+  s_fad12a  validated    1 steps  3/3 (100%)
+           Create an asset named '{{v2}}' using existing model 'Bench Laptop Model', status 'Ready to Deploy', default lo…
+store: /home/user/sitelooper/bench/results/fwsi33-fc-skills
+
+summary: /home/user/sitelooper/bench/results/fwsi33-fc-sweep.json
