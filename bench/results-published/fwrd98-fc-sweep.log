@@ -1,0 +1,125 @@
+
+[sweep] run 1/3: fwrd98-fc-n1 (store: /home/user/sitelooper/bench/results/fwrd98-fc-skills)
+[harness] repairdesk: defaulting APP_URL
+[harness] repairdesk: defaulting APP_EMAIL
+[harness] repairdesk: defaulting APP_PASSWORD
+[reset] repairdesk: reloaded seed via http://127.0.0.1:4180/__reset
+[harness] repairdesk responded 200 at http://127.0.0.1:4180/
+stopped: fwrd98-fc-n1
+  flow "fwrd98-fc" saved: 7 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwrd98-fc.json
+  warning: note: dropped 9 locator candidate(s) carrying a value this run minted (known only by export time)
+  warning: note: 6 goal/report value(s) carrying a value this run made were slotted or dropped:
+  s_2ac428.reportTemplate.values.ticket_reference dropped (recorded literal of a value this run made)
+  s_2ac428.reportTemplate.values.list_row dropped (recorded literal of a value this run made)
+  s_2ac428.reportTemplate.values.new_ticket_row dropped (recorded literal of a value this run made)
+  s_2ac428.reportTemplate.values.new_ticket_ref dropped (recorded literal of a value this run made)
+  s_2ac428.reportTemplate.values.detail_breadcrumb_ref dropped (recorded literal of a value this run made)
+  s_2ac428.reportTemplate.summary dropped (narrates a value this run made)
+  warning: warning: 06-change's instruction asks to report precondition_required, and only a recorded literal backs it: no read in its procedure publishes it, so a replay reports it only if the page it ends on shows that exact text — re-record the step so the value is read where it is shown
+  warning: note: 02-create no longer publishes new_ticket_row, new_ticket_ref, tickets_count, detail_breadcrumb_ref, detail_status — no replay reads them from the page and the recording showed no line to read
+  warning: warning: 03-add's instruction asks to report part_a_price, and no replay can publish it: nothing in its procedure reads it from the page, so export dropped it — re-record the step so the value is read, not only reported
+  warning: note: 03-add no longer publishes parts_total, part_a_row, part_a_total — no replay reads them from the page and the recording showed no line to read
+  warning: note: 04-add no longer publishes part_b_price, part_b_row, parts_table_total, part_a_price_previously, part_a_row, part_a_price, part_a_total, parts_total_label — no replay reads them from the page and the recording showed no line to read
+  warning: note: 06-change no longer publishes final_ticket_status — no replay reads it from the page and the recording showed no line to read
+  warning: note: 07-remove no longer publishes parts_after_deleting_a, delete_confirm_dialog_text, ticket_detail_status_line, active_list_count_before_archive, active_list_count_after_archive, final_url, final_url_2 — no replay reads them from the page and the recording showed no line to read
+  warning: warning: 202 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[0].route: "http://127.0.0.1:4180/#/tickets" (output) in "http://127.0.0.1:4180/#/tickets"
+  flow.steps[1].route: "http://127.0.0.1:4180/#/tickets" (output) in "http://127.0.0.1:4180/#/tickets/:id"
+  flow.steps[2].route: "http://127.0.0.1:4180/#/tickets" (output) in "http://127.0.0.1:4180/#/tickets/:id"
+  flow.steps[3].route: "http://127.0.0.1:4180/#/tickets" (output) in "http://127.0.0.1:4180/#/tickets/:id"
+  flow.steps[4].route: "http://127.0.0.1:4180/#/tickets" (output) in "http://127.0.0.1:4180/#/tickets/:id"
+arm=sitelooper model=openai/gpt-6-luna runid=fwrd98-fc-n1 stop=completed
+turns=8 wall=222.4s
+commands=7 cmdTime=181.3s cmdBytes=9154 timeouts=0
+orchestrator in=6151 cw=0 cr=27088 out=1124
+inner prompt=1055204 cached=985984 completion=10493
+spend=$0.0213 maxUsd=3
+learn: A_n=0.172 replayed=1/7 full=1 repaired=0 compiled=6 variants=0
+-> /home/user/sitelooper/bench/results/fwrd98-fc-n1-sitelooper-result.json
+
+=== fwrd98-fc-n1 === (run self-reported: completed)
+  obj 1  PASS  seq 1: ticket t15 (RD-1015) "fwrd98-fc-n1 RD Bench Ticket"
+  obj 2  PASS  seq 2 p18 cost=100 markup=25 price=125.00
+  obj 3  PASS  seq 3 p19 cost=200 markup=25 price=250.00
+  obj 4  PASS  seq 4: cost 100 -> 150, price 125.00 -> 187.50 (want 187.50), after the create at seq 2
+  obj 5  PASS  seq 7: status Draft -> Ready
+  obj 6  PASS  part A deleted, part B deleted, archive entry at seq 10; state: 0 part(s) surviving, ticket t15 archived=true
+  claim 2  ok — run reported 125.00, app recorded 125.00
+  claim 3  ok — run reported 250.00, app recorded 250.00
+  claim 4  ok — run reported 187.50, app recorded 187.50
+  summary: 6/6 objectives PASS, 0 price claim mismatch(es), 0 duplicate ticket(s)
+
+App state: 15 tickets total, 1 left by benchmark runs (0 still active), 17 parts total, 10 mutation log entries.
+
+[sweep] run 2/3: fwrd98-fc-n2 (replay flow fwrd98-fc, no orchestrator)
+[reset] repairdesk: reloaded seed via http://127.0.0.1:4180/__reset
+[sweep] fwrd98-fc-n2: 2 drift ticket(s) → fwrd98-fc-n2-drift.json
+
+=== fwrd98-fc-n2 === (run self-reported: no result file)
+  note: no result file in /home/user/sitelooper/bench/results — objectives are still scored from the log,
+        but the run's claimed prices cannot be cross-checked.
+  obj 1  PASS  seq 1: ticket t15 (RD-1016) "fwrd98-fc-n2 RD Bench Ticket"
+  obj 2  PASS  seq 2 p18 cost=100 markup=25 price=125.00
+  obj 3  PASS  seq 3 p19 cost=200 markup=25 price=250.00
+  obj 4  PASS  seq 4: cost 100 -> 150, price 125.00 -> 187.50 (want 187.50), after the create at seq 2
+  obj 5  PASS  seq 7: status Draft -> Ready
+  obj 6  PASS  part A deleted, part B deleted, archive entry at seq 10; state: 0 part(s) surviving, ticket t15 archived=true
+  claim 2  no claim parsed from the run's final report
+  claim 3  no claim parsed from the run's final report
+  claim 4  no claim parsed from the run's final report
+  summary: 6/6 objectives PASS, 0 price claim mismatch(es), 0 duplicate ticket(s)
+
+App state: 15 tickets total, 1 left by benchmark runs (0 still active), 17 parts total, 10 mutation log entries.
+
+[sweep] run 3/3: fwrd98-fc-n3 (replay flow fwrd98-fc, no orchestrator)
+[reset] repairdesk: reloaded seed via http://127.0.0.1:4180/__reset
+[sweep] fwrd98-fc-n3: 3 drift ticket(s) → fwrd98-fc-n3-drift.json
+
+=== fwrd98-fc-n3 === (run self-reported: no result file)
+  note: no result file in /home/user/sitelooper/bench/results — objectives are still scored from the log,
+        but the run's claimed prices cannot be cross-checked.
+  obj 1  PASS  seq 1: ticket t15 (RD-1017) "fwrd98-fc-n3 RD Bench Ticket"
+  obj 2  PASS  seq 2 p18 cost=100 markup=25 price=125.00
+  obj 3  PASS  seq 3 p19 cost=200 markup=25 price=250.00
+  obj 4  PASS  seq 4: cost 100 -> 150, price 125.00 -> 187.50 (want 187.50), after the create at seq 2
+  obj 5  PASS  seq 7: status Draft -> Ready
+  obj 6  PASS  part A deleted, part B deleted, archive entry at seq 10; state: 0 part(s) surviving, ticket t15 archived=true
+  claim 2  no claim parsed from the run's final report
+  claim 3  no claim parsed from the run's final report
+  claim 4  no claim parsed from the run's final report
+  summary: 6/6 objectives PASS, 0 price claim mismatch(es), 0 duplicate ticket(s)
+
+App state: 15 tickets total, 1 left by benchmark runs (0 still active), 17 parts total, 10 mutation log entries.
+
+Learning sweep fwrd98-fc (K=3)
+┌─────────┬───┬────────────────┬──────────┬─────────────┬───────┬──────┬───────────┬───────┬──────────────┬────────┐
+│ (index) │ n │ runid          │ verified │ stop        │ turns │ cmds │ total_usd │ A_n   │ replayed     │ wall_s │
+├─────────┼───┼────────────────┼──────────┼─────────────┼───────┼──────┼───────────┼───────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwrd98-fc-n1' │ '6/6'    │ 'completed' │ 8     │ 7    │ 0.0213    │ 0.172 │ '1/7'        │ 222    │
+│ 1       │ 2 │ 'fwrd98-fc-n2' │ '6/6'    │ 'success'   │ 0     │ 7    │ 0         │ 1     │ '7/7 (flow)' │ 33     │
+│ 2       │ 3 │ 'fwrd98-fc-n3' │ '6/6'    │ 'success'   │ 0     │ 7    │ 0         │ 1     │ '7/7 (flow)' │ 38     │
+└─────────┴───┴────────────────┴──────────┴─────────────┴───────┴──────┴───────────┴───────┴──────────────┴────────┘
+http://127.0.0.1:4180
+  s_ee334b  validated   16 steps  6/6 (100%)
+           On ticket {{v1}} ({{v3}}), add a part named '{{v4}}' with cost {{v5}} and markup {{v6}}. Save it, wait for the…
+  s_2ac428  validated    6 steps  3/3 (100%)
+           Create a repair ticket titled '{{v2}}'. Fill any required fields, submit, wait for the list/detail to refresh,…
+  s_422918  validated    4 steps  3/3 (100%)
+           Sign in to the repair-desk app at {{v1}} using email {{v2}} and password exactly {{v3}}. Verify the signed-in …
+  s_658614  validated   17 steps  3/3 (100%)
+           On ticket {{v1}} ({{v3}}), change its status to Ready. If the app rejects the change, discover the exact preco…
+  s_802e61  validated    8 steps  3/3 (100%)
+           Create a repair ticket titled '{{v2}}'. Fill any required fields, submit, wait for the list/detail to refresh,…
+  s_9275c4  validated   25 steps  3/3 (100%)
+           On ticket {{v1}} ({{v3}}), edit Part A ('{{v4}}') and change its cost from 100 to {{v5}}, leaving markup 25 an…
+  s_d60f09  validated   10 steps  3/3 (100%)
+           On ticket {{v1}} ({{v3}}), remove both parts ('{{v4}}' and '{{v5}}'), wait until the parts table confirms neit…
+  s_dd68bf  validated    3 steps  3/3 (100%)
+           Sign in to the repair-desk app at {{v1}} using email {{v2}} and password exactly {{v3}}. Verify the signed-in …
+  s_ed508d  validated    1 steps  3/3 (100%)
+           Sign in to the repair-desk app at {{v1}} using email {{v2}} and password exactly {{v3}}. Verify the signed-in …
+  s_ee44df  validated    9 steps  3/3 (100%)
+           On ticket {{v1}} ({{v3}}), remove both parts ('{{v4}}' and '{{v5}}'), wait until the parts table confirms neit…
+store: /home/user/sitelooper/bench/results/fwrd98-fc-skills
+
+summary: /home/user/sitelooper/bench/results/fwrd98-fc-sweep.json

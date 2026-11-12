@@ -1,0 +1,44 @@
+
+Running 1 test using 1 worker
+
+[sitelooper step] 01-signin
+[sitelooper skip] 02-create s_2ac428/1 target: no locator recorded — value left empty
+[sitelooper step] 02-create
+[sitelooper step] 03-add
+[sitelooper step] 04-add
+[sitelooper step] 05-edit
+[sitelooper warn] 06-change s_658614/12: read 'supplier_value_set' returned a value the skill itself set/selected ('Bench Supplier') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper step] 06-change
+  ✘  1 fwrd98-fc.spec.ts:9:1 › fwrd98-fc (27.7s)
+
+
+  1) fwrd98-fc.spec.ts:9:1 › fwrd98-fc › 07-remove: On ticket {{runid}} RD Bench Ticket ({{02-create.ticket_reference}}), remove both parts ('{{runid}} RD Part A' and '{{runid}} RD Part B'), wait until the parts table confirms neither remains, then archive the ticket. Verify the ticket is archived/not active and report any exact confirmation text and final state. 
+
+    Error: 07-remove needs {{02-create.ticket_reference}}, and this run never published it (it was published empty). No `[sitelooper skip]` line was logged for 02-create on this run, so no read of 02-create.ticket_reference was even attempted: check that 02-create is a step of this flow and that it is the step that publishes this value, rather than re-recording a read that may be working. Stopping here instead of passing an empty value into 07-remove: blank, a record-scoped locator matches every record and a known slot loses its identity, so the step would do its work to the wrong one. Everything earlier steps did stands; nothing of 07-remove has run.
+
+       at fwrd98-fc.flow.ts:18836
+
+      18834 |         ` attempted: check that ${sid} is a step of this flow and that it is the step that publishes` +
+      18835 |         ` this value, rather than re-recording a read that may be working.`;
+    > 18836 |     throw new Error(
+            |           ^
+      18837 |       `${by} needs {{${ref}}}, and this run never published it` +
+      18838 |         (value === '' ? ' (it was published empty)' : '') +
+      18839 |         `. ${trail}` +
+        at need (/home/user/sitelooper/bench/results/fwrd98-fc-spec-spec-tmp/fwrd98-fc.flow.ts:18836:11)
+        at /home/user/sitelooper/bench/results/fwrd98-fc-spec-spec-tmp/fwrd98-fc.flow.ts:24359:97
+        at runFlow (/home/user/sitelooper/bench/results/fwrd98-fc-spec-spec-tmp/fwrd98-fc.flow.ts:24358:5)
+        at /home/user/sitelooper/bench/results/fwrd98-fc-spec-spec-tmp/fwrd98-fc.spec.ts:14:21
+
+    attachment #2: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/fwrd98-fc-fwrd98-fc/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/fwrd98-fc-fwrd98-fc/error-context.md
+
+  1 failed
+    fwrd98-fc.spec.ts:9:1 › fwrd98-fc ──────────────────────────────────────────────────────────────
