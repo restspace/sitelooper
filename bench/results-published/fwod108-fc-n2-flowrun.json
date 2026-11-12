@@ -1,0 +1,200 @@
+{
+  "flow": "fwod108-fc",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_53d95c; observed final_url=http://127.0.0.1:8069/web#action=123&cids=1&menu_id=81, page_title=Odoo - Discuss, database=YourCompany.",
+      "values": {
+        "final_url": "http://127.0.0.1:8069/web#action=123&cids=1&menu_id=81",
+        "page_title": "Odoo - Discuss",
+        "database": "YourCompany"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "6/6",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_53d95c: report value login_used is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)"
+      ],
+      "unreported": [
+        "login_used"
+      ]
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_d476c6; observed record_url=http://127.0.0.1:8069/web#cids=1&menu_id=109&action=156&model=res.partner&view_type=form&id=69, ref=fwod108-fc-n2.",
+      "values": {
+        "record_url": "http://127.0.0.1:8069/web#cids=1&menu_id=109&action=156&model=res.partner&view_type=form&id=69",
+        "ref": "fwod108-fc-n2"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "11/11",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_d476c6: step 1: read 'customer_name' returned a value the skill itself set/selected ('fwod108-fc-n2 Bench Customer') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_d476c6: step 2: read 'customer_city' returned a value the skill itself set/selected ('Benchville') — confirms the control, not persistence; dropped from the report's confident values"
+      ],
+      "unreported": [
+        "customer_name",
+        "customer_city"
+      ]
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_4b0923; observed ref=fwod108-fc-n2, order_line_quantity=1.00, order_line_table=Product\n\t\nDescription\n\t\nQuantity\n\t\nUnit Price\n\t\nTaxes\n\t\nTax excl.\n\t\n\n\t[FURN_7777] Office Chair\t\n[FURN_7777] Office Chair\n\t3.00\t70.00\t\n20%\n\t£ 210.00\t\n\tAdd a productAdd a sectionAdd a noteCatalog\n​\n​, untaxed_amount_label=Untaxed Amount, totals_block=Untaxed Amount\t£ 210.00\nTAX 20%\t\n£ 42.00\n\nTotal\t£ 252.00, quotation_url=http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=35, quotation_reference=S00035.",
+      "values": {
+        "ref": "fwod108-fc-n2",
+        "order_line_quantity": "1.00",
+        "order_line_table": "Product\n\t\nDescription\n\t\nQuantity\n\t\nUnit Price\n\t\nTaxes\n\t\nTax excl.\n\t\n\n\t[FURN_7777] Office Chair\t\n[FURN_7777] Office Chair\n\t3.00\t70.00\t\n20%\n\t£ 210.00\t\n\tAdd a productAdd a sectionAdd a noteCatalog\n​\n​",
+        "untaxed_amount_label": "Untaxed Amount",
+        "totals_block": "Untaxed Amount\t£ 210.00\nTAX 20%\t\n£ 42.00\n\nTotal\t£ 252.00",
+        "quotation_url": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=35",
+        "quotation_reference": "S00035"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "19/19",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "04-add",
+      "status": "success",
+      "summary": "Replayed stored procedure s_1e6191; observed customer_reference=fwod108-fc-n2, order_line_quantity=1.00, saved_totals=Untaxed Amount\t£ 504.00\nTAX 20%\t\n£ 100.80\n\nTotal\t£ 604.80, ref=S00035, second_line_product=[E-COM06] Corner Desk Right Sit, second_line_quantity=2.00, second_line_unit_price=147.00, second_line_subtotal=£ 294.00, first_line_product=[FURN_7777] Office Chair, first_line_quantity=3.00.",
+      "values": {
+        "customer_reference": "fwod108-fc-n2",
+        "order_line_quantity": "1.00",
+        "saved_totals": "Untaxed Amount\t£ 504.00\nTAX 20%\t\n£ 100.80\n\nTotal\t£ 604.80",
+        "ref": "S00035",
+        "second_line_product": "[E-COM06] Corner Desk Right Sit",
+        "second_line_quantity": "2.00",
+        "second_line_unit_price": "147.00",
+        "second_line_subtotal": "£ 294.00",
+        "first_line_product": "[FURN_7777] Office Chair",
+        "first_line_quantity": "3.00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "15/15",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_1e6191: step 15: the target chain is dead and was not healed inline — the step is a synthesized read no run has ever resolved, so nothing about it has drifted",
+        "s_1e6191: step 15: skipped read — no element matched any known locator for target (tried 1: page.getByRole('button', { name: 'Save manually', exact: true }))"
+      ],
+      "unreported": [
+        "save_button_label"
+      ]
+    },
+    {
+      "id": "05-change",
+      "status": "success",
+      "summary": "Replayed stored procedure s_51236a; observed new_totals=Untaxed Amount\t£ 644.00\nTAX 20%\t\n£ 128.80\n\nTotal\t£ 772.80, ref=S00035, first_line_product=[FURN_7777] Office Chair, first_line_quantity=5.00, first_line_unit_price=70.00, first_line_subtotal=£ 350.00, second_line_product=[E-COM06] Corner Desk Right Sit, quotation_status=Quotation.",
+      "values": {
+        "new_totals": "Untaxed Amount\t£ 644.00\nTAX 20%\t\n£ 128.80\n\nTotal\t£ 772.80",
+        "ref": "S00035",
+        "first_line_product": "[FURN_7777] Office Chair",
+        "first_line_quantity": "5.00",
+        "first_line_unit_price": "70.00",
+        "first_line_subtotal": "£ 350.00",
+        "second_line_product": "[E-COM06] Corner Desk Right Sit",
+        "quotation_status": "Quotation"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "12/12",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_51236a: step 12: the target chain is dead and was not healed inline — the step is a synthesized read no run has ever resolved, so nothing about it has drifted",
+        "s_51236a: step 12: skipped read — no element matched any known locator for target (tried 1: page.getByRole('button', { name: 'Save manually', exact: true }))"
+      ],
+      "unreported": [
+        "save_button_label"
+      ]
+    },
+    {
+      "id": "06-verify",
+      "status": "success",
+      "summary": "Replayed stored procedure s_66ef87; observed order_reference=S00035, statusbar_state=Sales Order.",
+      "values": {
+        "order_reference": "S00035",
+        "statusbar_state": "Sales Order"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "3/3",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "07-verify",
+      "status": "success",
+      "summary": "Replayed stored procedure s_2ea428; observed status_before_cancellation=Sales Order, order_reference=S00035, current_status=Cancelled.",
+      "values": {
+        "status_before_cancellation": "Sales Order",
+        "order_reference": "S00035",
+        "current_status": "Cancelled"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "9/9",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 7,
+  "total": 7,
+  "repinned": 0,
+  "drift": 2,
+  "driftTickets": [
+    {
+      "flow": "fwod108-fc",
+      "step": "04-add",
+      "skill": "s_1e6191",
+      "atStep": "15",
+      "key": "target",
+      "similarity": 1.002,
+      "missedLocator": "page.getByRole('button', { name: 'Save manually', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "pageUrl": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=35"
+    },
+    {
+      "flow": "fwod108-fc",
+      "step": "05-change",
+      "skill": "s_51236a",
+      "atStep": "12",
+      "key": "target",
+      "similarity": 1.001,
+      "missedLocator": "page.getByRole('button', { name: 'Save manually', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "pageUrl": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=35"
+    }
+  ],
+  "wallMs": 81516,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "cachedTokens": 0
+  },
+  "usageByModel": {},
+  "servedByModel": {},
+  "recoveryModel": "openai/gpt-6-luna",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

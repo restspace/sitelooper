@@ -1,0 +1,199 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwod108-fc-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwod108-fc-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwod108-fc-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/bench/results/fwod108-fc-spec-spec-tmp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwod108-fc-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwod108-fc.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwod108-fc-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwod108-fc.spec.ts",
+      "file": "fwod108-fc.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwod108-fc",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 62235,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper warn] 01-signin: report value login_used is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 01-signin\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 02-create s_d476c6/1: read 'customer_name' returned a value the skill itself set/selected ('fwod108-fc-spec Bench Customer') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 02-create s_d476c6/2: read 'customer_city' returned a value the skill itself set/selected ('Benchville') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-create\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-create\n"
+                    },
+                    {
+                      "text": "[sitelooper skip] 04-add s_1e6191/15 target: no locator recorded — value left empty\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-add\n"
+                    },
+                    {
+                      "text": "[sitelooper skip] 05-change s_51236a/12 target: no locator recorded — value left empty\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 05-change\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 06-verify\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 07-verify\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-signin: Sign in to Odoo at http://127.0.0.1:8069/ using login admin and the password exactly as the text {{env:APP_PASSWORD}}. Verify that you reach the signed-in app.",
+                      "duration": 5333
+                    },
+                    {
+                      "title": "02-create: Create a customer named {{runid}} Bench Customer with City set to Benchville. Ensure the customer is saved and verify the resulting customer record shows that exact name and city.",
+                      "duration": 6676
+                    },
+                    {
+                      "title": "03-create: Create a new quotation for customer {{runid}} Bench Customer with exactly ONE order line: choose any product from the catalogue using its autocomplete option and set quantity to 3. Save the quotation without confirming it. Verify the saved quotation shows the chosen product, its unit price filled by Odoo, quantity 3, and the untaxed amount; report those exact values and the quotation reference.",
+                      "duration": 17128
+                    },
+                    {
+                      "title": "04-add: On the existing quotation {{03-create.quotation_reference}} for {{runid}} Bench Customer, add a SECOND order line using a different catalogue product (select an autocomplete option) and set its quantity to 2. Save without confirming. Verify both line products/quantities and report the second product and the new untaxed amount.",
+                      "duration": 11221
+                    },
+                    {
+                      "title": "05-change: On quotation {{03-create.quotation_reference}}, change the FIRST line ({{04-add.first_line_product}}) quantity from 3 to 5, save without confirming, and verify the new quantities and untaxed amount shown by Odoo.",
+                      "duration": 4845
+                    },
+                    {
+                      "title": "06-verify: Confirm quotation {{03-create.quotation_reference}} into a sales order. Verify that the saved document displays its order reference and the status after confirmation; report both exact values.",
+                      "duration": 932
+                    },
+                    {
+                      "title": "07-verify: Cancel sales order {{03-create.quotation_reference}} and verify the resulting status displayed on the document, confirming it is cancelled and no longer active.",
+                      "duration": 15469
+                    }
+                  ],
+                  "startTime": "2026-11-12T11:24:35.229Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "outputs",
+                      "contentType": "application/json",
+                      "body": "ewogICIwMS1zaWduaW4ubWludGVkIjogIjEyMyIsCiAgIjAxLXNpZ25pbi5wYWdlX3RpdGxlIjogIk9kb28gLSBEaXNjdXNzIiwKICAiMDEtc2lnbmluLmRhdGFiYXNlIjogIllvdXJDb21wYW55IiwKICAiMDEtc2lnbmluLmZpbmFsX3VybCI6ICJodHRwOi8vMTI3LjAuMC4xOjgwNjkvd2ViI2FjdGlvbj0xMjMmY2lkcz0xJm1lbnVfaWQ9ODEiLAogICIwMi1jcmVhdGUubWludGVkIjogIjcxIiwKICAiMDItY3JlYXRlLmN1c3RvbWVyX25hbWUiOiAiZndvZDEwOC1mYy1zcGVjIEJlbmNoIEN1c3RvbWVyIiwKICAiMDItY3JlYXRlLmN1c3RvbWVyX2NpdHkiOiAiQmVuY2h2aWxsZSIsCiAgIjAyLWNyZWF0ZS5yZWNvcmRfdXJsIjogImh0dHA6Ly8xMjcuMC4wLjE6ODA2OS93ZWIjY2lkcz0xJm1lbnVfaWQ9MTA5JmFjdGlvbj0xNTYmbW9kZWw9cmVzLnBhcnRuZXImdmlld190eXBlPWZvcm0maWQ9NzEiLAogICIwMi1jcmVhdGUucmVmIjogImZ3b2QxMDgtZmMtc3BlYyIsCiAgIjAzLWNyZWF0ZS5taW50ZWQiOiAiMzciLAogICIwMy1jcmVhdGUub3JkZXJfbGluZV9xdWFudGl0eSI6ICIxLjAwIiwKICAiMDMtY3JlYXRlLm9yZGVyX2xpbmVfdGFibGUiOiAiUHJvZHVjdFxuXHRcbkRlc2NyaXB0aW9uXG5cdFxuUXVhbnRpdHlcblx0XG5Vbml0IFByaWNlXG5cdFxuVGF4ZXNcblx0XG5UYXggZXhjbC5cblx0XG5cblx0W0ZVUk5fNzc3N10gT2ZmaWNlIENoYWlyXHRcbltGVVJOXzc3NzddIE9mZmljZSBDaGFpclxuXHQzLjAwXHQ3MC4wMFx0XG4yMCVcblx0wqPCoDIxMC4wMFx0XG5cdEFkZCBhIHByb2R1Y3RBZGQgYSBzZWN0aW9uQWRkIGEgbm90ZUNhdGFsb2dcbuKAi1xu4oCLIiwKICAiMDMtY3JlYXRlLnVudGF4ZWRfYW1vdW50X2xhYmVsIjogIlVudGF4ZWQgQW1vdW50IiwKICAiMDMtY3JlYXRlLnRvdGFsc19ibG9jayI6ICJVbnRheGVkIEFtb3VudFx0wqPCoDIxMC4wMFxuVEFYIDIwJVx0XG7Co8KgNDIuMDBcblxuVG90YWxcdMKjwqAyNTIuMDAiLAogICIwMy1jcmVhdGUucXVvdGF0aW9uX3VybCI6ICJodHRwOi8vMTI3LjAuMC4xOjgwNjkvd2ViI2NpZHM9MSZtZW51X2lkPTE5NCZhY3Rpb249MzE2Jm1vZGVsPXNhbGUub3JkZXImdmlld190eXBlPWZvcm0maWQ9MzciLAogICIwMy1jcmVhdGUucXVvdGF0aW9uX3JlZmVyZW5jZSI6ICJTMDAwMzciLAogICIwMy1jcmVhdGUucmVmIjogImZ3b2QxMDgtZmMtc3BlYyIsCiAgIjA0LWFkZC5vcmRlcl9saW5lX3F1YW50aXR5IjogIjEuMDAiLAogICIwNC1hZGQuc2F2ZWRfdG90YWxzIjogIlVudGF4ZWQgQW1vdW50XHTCo8KgNTA0LjAwXG5UQVggMjAlXHRcbsKjwqAxMDAuODBcblxuVG90YWxcdMKjwqA2MDQuODAiLAogICIwNC1hZGQucmVmIjogIlMwMDAzNyIsCiAgIjA0LWFkZC5zZWNvbmRfbGluZV9wcm9kdWN0IjogIltFLUNPTTA2XSBDb3JuZXIgRGVzayBSaWdodCBTaXQiLAogICIwNC1hZGQuc2Vjb25kX2xpbmVfcXVhbnRpdHkiOiAiMi4wMCIsCiAgIjA0LWFkZC5zZWNvbmRfbGluZV91bml0X3ByaWNlIjogIjE0Ny4wMCIsCiAgIjA0LWFkZC5zZWNvbmRfbGluZV9zdWJ0b3RhbCI6ICLCo8KgMjk0LjAwIiwKICAiMDQtYWRkLmZpcnN0X2xpbmVfcHJvZHVjdCI6ICJbRlVSTl83Nzc3XSBPZmZpY2UgQ2hhaXIiLAogICIwNC1hZGQuZmlyc3RfbGluZV9xdWFudGl0eSI6ICIzLjAwIiwKICAiMDQtYWRkLnNhdmVfYnV0dG9uX2xhYmVsIjogIiIsCiAgIjA0LWFkZC5jdXN0b21lcl9yZWZlcmVuY2UiOiAiZndvZDEwOC1mYy1zcGVjIiwKICAiMDUtY2hhbmdlLm5ld190b3RhbHMiOiAiVW50YXhlZCBBbW91bnRcdMKjwqA2NDQuMDBcblRBWCAyMCVcdFxuwqPCoDEyOC44MFxuXG5Ub3RhbFx0wqPCoDc3Mi44MCIsCiAgIjA1LWNoYW5nZS5yZWYiOiAiUzAwMDM3IiwKICAiMDUtY2hhbmdlLmZpcnN0X2xpbmVfcHJvZHVjdCI6ICJbRlVSTl83Nzc3XSBPZmZpY2UgQ2hhaXIiLAogICIwNS1jaGFuZ2UuZmlyc3RfbGluZV9xdWFudGl0eSI6ICI1LjAwIiwKICAiMDUtY2hhbmdlLmZpcnN0X2xpbmVfdW5pdF9wcmljZSI6ICI3MC4wMCIsCiAgIjA1LWNoYW5nZS5maXJzdF9saW5lX3N1YnRvdGFsIjogIsKjwqAzNTAuMDAiLAogICIwNS1jaGFuZ2Uuc2Vjb25kX2xpbmVfcHJvZHVjdCI6ICJbRS1DT00wNl0gQ29ybmVyIERlc2sgUmlnaHQgU2l0IiwKICAiMDUtY2hhbmdlLnF1b3RhdGlvbl9zdGF0dXMiOiAiUXVvdGF0aW9uIiwKICAiMDUtY2hhbmdlLnNhdmVfYnV0dG9uX2xhYmVsIjogIiIsCiAgIjA2LXZlcmlmeS5vcmRlcl9yZWZlcmVuY2UiOiAiUzAwMDM3IiwKICAiMDYtdmVyaWZ5LnN0YXR1c2Jhcl9zdGF0ZSI6ICJTYWxlcyBPcmRlciIsCiAgIjA3LXZlcmlmeS5zdGF0dXNfYmVmb3JlX2NhbmNlbGxhdGlvbiI6ICJTYWxlcyBPcmRlciIsCiAgIjA3LXZlcmlmeS5vcmRlcl9yZWZlcmVuY2UiOiAiUzAwMDM3IiwKICAiMDctdmVyaWZ5LmN1cnJlbnRfc3RhdHVzIjogIkNhbmNlbGxlZCIKfQ=="
+                    },
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": ""
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "6dac7d71c7e688a63b3f-81b3de2637fcff1dfcf3",
+          "file": "fwod108-fc.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-11-12T11:24:33.200Z",
+    "duration": 64458.12699999999,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

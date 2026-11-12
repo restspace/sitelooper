@@ -1,0 +1,507 @@
+{
+  "name": "fwod108-fc",
+  "origin": "http://127.0.0.1:8069",
+  "startUrl": "http://127.0.0.1:8069/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-signin",
+      "instruction": "Sign in to Odoo at http://127.0.0.1:8069/ using login admin and the password exactly as the text {{env:APP_PASSWORD}}. Verify that you reach the signed-in app.",
+      "skill": "s_dcdb92",
+      "params": {
+        "v1": "http://127.0.0.1:8069/",
+        "v2": "admin",
+        "v3": "{{env:APP_PASSWORD}}"
+      },
+      "outputs": [
+        "login_used",
+        "page_title",
+        "database"
+      ],
+      "recorded": {
+        "login_used": "admin",
+        "final_url": "http://127.0.0.1:8069/web#action=123&cids=1&menu_id=81",
+        "page_title": "Odoo - Discuss",
+        "database": "YourCompany",
+        "signed_in_user_menu": "User",
+        "url": "http://127.0.0.1:8069/web#action=123&cids=1&menu_id=81",
+        "url.q.action": "123"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&menu_id=:id",
+      "outputEvidence": {
+        "login_used": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "final_url": {
+          "same": 1,
+          "differed": 0
+        },
+        "page_title": {
+          "same": 1,
+          "differed": 0
+        },
+        "database": {
+          "same": 1,
+          "differed": 0
+        },
+        "signed_in_user_menu": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        },
+        "url.q.action": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "02-create",
+      "instruction": "Create a customer named {{runid}} Bench Customer with City set to Benchville. Ensure the customer is saved and verify the resulting customer record shows that exact name and city.",
+      "skill": "s_b0f0ac",
+      "params": {
+        "v2": "{{runid}} Bench Customer",
+        "v3": "Benchville",
+        "v1": "{{runid}}"
+      },
+      "outputs": [
+        "customer_name",
+        "customer_city",
+        "record_url",
+        "ref"
+      ],
+      "recorded": {
+        "customer_name": "fwod108-fc-n1 Bench Customer",
+        "customer_city": "Benchville",
+        "record_url": "http://127.0.0.1:8069/web#cids=1&menu_id=109&action=156&model=res.partner&view_type=form&id=68",
+        "ref": "fwod108-fc-n1",
+        "url": "http://127.0.0.1:8069/web#cids=1&menu_id=109&action=156&model=res.partner&view_type=form&id=68",
+        "url.q.menu_id": "109",
+        "url.q.action": "156",
+        "url.q.id": "68"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=res.partner&view_type=form",
+      "outputEvidence": {
+        "customer_name": {
+          "same": 0,
+          "differed": 1
+        },
+        "customer_city": {
+          "same": 1,
+          "differed": 0
+        },
+        "record_url": {
+          "same": 0,
+          "differed": 1
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        },
+        "url.q.menu_id": {
+          "same": 1,
+          "differed": 0
+        },
+        "url.q.action": {
+          "same": 1,
+          "differed": 0
+        },
+        "url.q.id": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "03-create",
+      "instruction": "Create a new quotation for customer {{runid}} Bench Customer with exactly ONE order line: choose any product from the catalogue using its autocomplete option and set quantity to 3. Save the quotation without confirming it. Verify the saved quotation shows the chosen product, its unit price filled by Odoo, quantity 3, and the untaxed amount; report those exact values and the quotation reference.",
+      "skill": "s_a60a04",
+      "params": {
+        "v1": "{{runid}} Bench Customer",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "order_line_table",
+        "untaxed_amount_label",
+        "totals_block",
+        "quotation_url",
+        "order_line_quantity",
+        "ref",
+        "quotation_reference"
+      ],
+      "recorded": {
+        "order_line_table": "Product\n\t\nDescription\n\t\nQuantity\n\t\nUnit Price\n\t\nTaxes\n\t\nTax excl.\n\t\n\n\t[FURN_7777] Office Chair\t\n[FURN_7777] Office Chair\n\t3.00\t70.00\t\n20%\n\t£ 210.00\t\n\tAdd a productAdd a sectionAdd a noteCatalog\n​\n​",
+        "untaxed_amount_label": "Untaxed Amount",
+        "totals_block": "Untaxed Amount\t£ 210.00\nTAX 20%\t\n£ 42.00\n\nTotal\t£ 252.00",
+        "quotation_url": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=34",
+        "saved_order_lines": "Product\n\t\nDescription\n\t\nQuantity\n\t\nUnit Price\n\t\nTaxes\n\t\nTax excl.\n\t\n\n\t[FURN_7777] Office Chair\t\n[FURN_7777] Office Chair\n\t3.00\t70.00\t\n20%\n\t£ 210.00\t\n\tAdd a productAdd a sectionAdd a noteCatalog\n​\n​",
+        "saved_totals": "Untaxed Amount\t£ 210.00\nTAX 20%\t\n£ 42.00\n\nTotal\t£ 252.00",
+        "order_line_quantity": "1.00",
+        "ref": "fwod108-fc-n1",
+        "product_reference": "FURN_7777",
+        "quotation_reference": "S00034",
+        "url": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=34",
+        "url.q.menu_id": "194",
+        "url.q.action": "316",
+        "url.q.id": "34"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "outputEvidence": {
+        "order_line_table": {
+          "same": 1,
+          "differed": 0
+        },
+        "untaxed_amount_label": {
+          "same": 1,
+          "differed": 0
+        },
+        "totals_block": {
+          "same": 1,
+          "differed": 0
+        },
+        "quotation_url": {
+          "same": 0,
+          "differed": 1
+        },
+        "saved_order_lines": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "saved_totals": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "order_line_quantity": {
+          "same": 1,
+          "differed": 0
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "product_reference": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "quotation_reference": {
+          "same": 0,
+          "differed": 1
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        },
+        "url.q.menu_id": {
+          "same": 1,
+          "differed": 0
+        },
+        "url.q.action": {
+          "same": 1,
+          "differed": 0
+        },
+        "url.q.id": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "04-add",
+      "instruction": "On the existing quotation {{03-create.quotation_reference}} for {{runid}} Bench Customer, add a SECOND order line using a different catalogue product (select an autocomplete option) and set its quantity to 2. Save without confirming. Verify both line products/quantities and report the second product and the new untaxed amount.",
+      "skill": "s_1e6191",
+      "params": {
+        "v1": "{{03-create.quotation_reference}}",
+        "v2": "{{runid}} Bench Customer",
+        "v3": "{{runid}}"
+      },
+      "outputs": [
+        "order_line_quantity",
+        "saved_totals",
+        "save_button_label",
+        "second_line_product",
+        "second_line_quantity",
+        "second_line_unit_price",
+        "second_line_subtotal",
+        "first_line_product",
+        "first_line_quantity",
+        "ref",
+        "customer_reference"
+      ],
+      "recorded": {
+        "order_line_quantity": "1.00",
+        "saved_totals": "Untaxed Amount\t£ 504.00\nTAX 20%\t\n£ 100.80\n\nTotal\t£ 604.80",
+        "save_button_label": "Save manually",
+        "second_line_product": "[E-COM06] Corner Desk Right Sit",
+        "second_line_quantity": "2.00",
+        "second_line_unit_price": "147.00",
+        "second_line_tax_rate": "20%",
+        "second_line_subtotal": "£ 294.00",
+        "first_line_product": "[FURN_7777] Office Chair",
+        "first_line_quantity": "3.00",
+        "ref": "S00034",
+        "customer_reference": "fwod108-fc-n1",
+        "first_product_reference": "FURN_7777"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "outputEvidence": {
+        "order_line_quantity": {
+          "same": 1,
+          "differed": 0
+        },
+        "saved_totals": {
+          "same": 1,
+          "differed": 0
+        },
+        "save_button_label": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "second_line_product": {
+          "same": 1,
+          "differed": 0
+        },
+        "second_line_quantity": {
+          "same": 1,
+          "differed": 0
+        },
+        "second_line_unit_price": {
+          "same": 1,
+          "differed": 0
+        },
+        "second_line_tax_rate": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "second_line_subtotal": {
+          "same": 1,
+          "differed": 0
+        },
+        "first_line_product": {
+          "same": 1,
+          "differed": 0
+        },
+        "first_line_quantity": {
+          "same": 1,
+          "differed": 0
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "customer_reference": {
+          "same": 0,
+          "differed": 1
+        },
+        "first_product_reference": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        }
+      }
+    },
+    {
+      "id": "05-change",
+      "instruction": "On quotation {{03-create.quotation_reference}}, change the FIRST line ({{04-add.first_line_product}}) quantity from 3 to 5, save without confirming, and verify the new quantities and untaxed amount shown by Odoo.",
+      "skill": "s_51236a",
+      "params": {
+        "v1": "{{03-create.quotation_reference}}",
+        "v2": "{{04-add.first_line_product}}"
+      },
+      "outputs": [
+        "new_totals",
+        "save_button_label",
+        "quotation_status",
+        "first_line_product",
+        "first_line_quantity",
+        "first_line_unit_price",
+        "first_line_subtotal",
+        "second_line_product",
+        "ref"
+      ],
+      "recorded": {
+        "new_totals": "Untaxed Amount\t£ 644.00\nTAX 20%\t\n£ 128.80\n\nTotal\t£ 772.80",
+        "save_button_label": "Save manually",
+        "quotation_status": "Quotation",
+        "first_line_product": "[FURN_7777] Office Chair",
+        "first_line_quantity": "5.00",
+        "first_line_unit_price": "70.00",
+        "first_line_tax_rate": "20%",
+        "first_line_subtotal": "£ 350.00",
+        "second_line_product": "[E-COM06] Corner Desk Right Sit",
+        "ref": "S00034",
+        "product_reference": "FURN_7777"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "outputEvidence": {
+        "new_totals": {
+          "same": 1,
+          "differed": 0
+        },
+        "save_button_label": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "quotation_status": {
+          "same": 1,
+          "differed": 0
+        },
+        "first_line_product": {
+          "same": 1,
+          "differed": 0
+        },
+        "first_line_quantity": {
+          "same": 1,
+          "differed": 0
+        },
+        "first_line_unit_price": {
+          "same": 1,
+          "differed": 0
+        },
+        "first_line_tax_rate": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "first_line_subtotal": {
+          "same": 1,
+          "differed": 0
+        },
+        "second_line_product": {
+          "same": 1,
+          "differed": 0
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "product_reference": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        }
+      }
+    },
+    {
+      "id": "06-verify",
+      "instruction": "Confirm quotation {{03-create.quotation_reference}} into a sales order. Verify that the saved document displays its order reference and the status after confirmation; report both exact values.",
+      "skill": "s_66ef87",
+      "params": {
+        "v1": "{{03-create.quotation_reference}}",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "order_reference",
+        "statusbar_state"
+      ],
+      "recorded": {
+        "order_reference": "S00034",
+        "statusbar_state": "Sales Order"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "outputEvidence": {
+        "order_reference": {
+          "same": 0,
+          "differed": 1
+        },
+        "statusbar_state": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "07-verify",
+      "instruction": "Cancel sales order {{03-create.quotation_reference}} and verify the resulting status displayed on the document, confirming it is cancelled and no longer active.",
+      "skill": "s_2ea428",
+      "params": {
+        "v1": "{{03-create.quotation_reference}}",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "status_before_cancellation",
+        "order_reference",
+        "current_status"
+      ],
+      "recorded": {
+        "status_before_cancellation": "Sales Order",
+        "order_reference": "S00034",
+        "current_status": "Cancelled"
+      },
+      "route": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "outputEvidence": {
+        "status_before_cancellation": {
+          "same": 1,
+          "differed": 0
+        },
+        "order_reference": {
+          "same": 0,
+          "differed": 1
+        },
+        "current_status": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "session": "fwod108-fc-n1",
+    "created": "2026-11-12T11:21:28.655Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "01-signin",
+      "outputs": [
+        "final_url",
+        "signed_in_user_menu"
+      ]
+    },
+    {
+      "stepId": "03-create",
+      "outputs": [
+        "saved_order_lines",
+        "saved_totals",
+        "product_reference"
+      ]
+    },
+    {
+      "stepId": "04-add",
+      "outputs": [
+        "second_line_tax_rate",
+        "first_product_reference"
+      ]
+    },
+    {
+      "stepId": "05-change",
+      "outputs": [
+        "first_line_tax_rate",
+        "product_reference"
+      ]
+    }
+  ]
+}
