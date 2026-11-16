@@ -55,6 +55,8 @@ export interface SpecTestRow {
   drift: string[];
   /** Every `[sitelooper satisfied] …` line this test logged. */
   satisfied: string[];
+  /** Every `[sitelooper fault] …` line this test logged: a dispatch SITELOOPER_FAULT withheld. */
+  faulted: string[];
   executedSteps?: string[];
 }
 
@@ -76,6 +78,12 @@ export interface ParsedSpecReport {
    * itself was never exercised — so it is counted rather than swallowed.
    */
   satisfied: string[];
+  /**
+   * Every `[sitelooper fault] <site>: dispatch withheld` line the run logged
+   * (the emitted faultHere guard under SITELOOPER_FAULT). Readiness's fault
+   * runs read it to tell a fault that fired from a site the run never reached.
+   */
+  faulted: string[];
   executedSteps?: string[];
 }
 
@@ -106,6 +114,8 @@ export interface SpecCheckResult {
    * by hand — and every result written before goals existed — has none.
    */
   satisfied?: string[];
+  /** The dispatches SITELOOPER_FAULT withheld in this run (ParsedSpecReport.faulted). Optional for the same reason. */
+  faulted?: string[];
   /**
    * The failure was one of the flow's assertions missing (`sitelooper assert`):
    * which way — the condition did not hold, or its target could not be found —
@@ -262,6 +272,7 @@ function flattenTests(suite: Record<string, unknown>, files: string[], acc: Spec
         errorSites: sites,
         drift: taggedLines(r, 'drift'),
         satisfied: taggedLines(r, 'satisfied'),
+        faulted: taggedLines(r, 'fault'),
         executedSteps: taggedLines(r, 'step').map((line) => line.slice('[sitelooper step]'.length).trim()),
       });
     }
@@ -292,6 +303,7 @@ export function parseSpecReport(report: unknown, files: string[] = []): ParsedSp
     durationMs,
     drift: tests.flatMap((t) => t.drift),
     satisfied: tests.flatMap((t) => t.satisfied),
+    faulted: tests.flatMap((t) => t.faulted),
     executedSteps: tests.flatMap((t) => t.executedSteps ?? []),
     error: failing?.error ?? (typeof reportError?.message === 'string' ? plain(reportError.message) : null),
     errorFile: failing?.errorFile ?? reportSites[0]?.file ?? null,
@@ -464,6 +476,18 @@ export function findPlaywrightConfig(fromDir: string): string | null {
   }
 }
 
+/**
+ * Remove the scratch directory a check ran in. `work` must be the mkdtemp child
+ * runSpecCheck made beside the flow file — never remove a computed project path.
+ * A passing check removes its own; a caller that EXPECTED the failure it got
+ * (readiness's fault runs) removes it through here.
+ */
+export function removeCheckWorkspace(work: string, flowFile: string): void {
+  const dir = path.dirname(path.resolve(flowFile));
+  if (path.dirname(work) !== dir || !path.basename(work).startsWith('.sitelooper-check-')) throw new Error('Invalid check workspace');
+  fs.rmSync(work, { recursive: true, force: true });
+}
+
 /** Run the original spec with project fixtures/configuration and zero retries. */
 export function runSpecCheck(o: SpecCheckOptions): SpecCheckResult {
   const flowFile = path.resolve(o.flowFile);
@@ -474,7 +498,7 @@ export function runSpecCheck(o: SpecCheckOptions): SpecCheckResult {
   const empty: Omit<SpecCheckResult, 'verdict'> = {
     outcome: 'unavailable', ran: false, skipped: null, passed: false, durationMs: 0,
     exitCode: null, timedOut: false, error: null, anchor: null, errorFile: null,
-    errorLine: null, drift: [], driftCount: 0, satisfied: [], executedSteps: [],
+    errorLine: null, drift: [], driftCount: 0, satisfied: [], faulted: [], executedSteps: [],
     tests: [], skippedCount: 0, workspace: null, specFile: specSrc,
   };
   const unavailable = (why: string, work: string | null = null): SpecCheckResult => {
@@ -551,15 +575,11 @@ export function runSpecCheck(o: SpecCheckOptions): SpecCheckResult {
     durationMs: parsed.durationMs || wallMs, exitCode: run.status, timedOut,
     error: passed ? null : error, anchor, errorFile: site?.file ?? null,
     errorLine: site?.line ?? null, drift: parsed.drift, driftCount: parsed.drift.length,
-    satisfied: parsed.satisfied, executedSteps: parsed.executedSteps, tests: parsed.tests,
+    satisfied: parsed.satisfied, faulted: parsed.faulted, executedSteps: parsed.executedSteps, tests: parsed.tests,
     skippedCount: parsed.tests.filter((t) => t.status === 'skipped').length,
     workspace: work, specFile: specSrc,
     ...(!passed && assertMiss(error) ? { assert: assertMiss(error)! } : {}),
   };
-  if (passed) {
-    // work is an absolute mkdtemp child of dir; never remove a computed project path.
-    if (path.dirname(work) !== dir || !path.basename(work).startsWith('.sitelooper-check-')) throw new Error('Invalid check workspace');
-    fs.rmSync(work, { recursive: true, force: true });
-  }
+  if (passed) removeCheckWorkspace(work, flowFile);
   return { ...r, verdict: verdictFor(r, o.liveReplayPassed ?? false, o.flagged), workspace: passed ? null : work };
 }

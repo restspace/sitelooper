@@ -108,6 +108,11 @@ Verification options:
   --config <playwright.config.ts> --project <name>
   --target-url <url>                       # override the recorded entry URL
   --negative-spec <file.spec.ts>           # explicit test asserting failure detection
+  --faults [step|all]                      # with --ready or build: after the clean runs, run the spec
+      again with one state-changing action withheld per run, and require each run to FAIL. A run
+      that still passes names an action whose effect nothing checks. "step" (the default) withholds
+      one action per flow step, the last that changed the app; "all" withholds each in turn.
+      Runtime-style files only; needs no model.
   --isolated                              # compiler smoke test; cannot establish readiness
   --report <file.json>                     # write the result document to a path you chose,
       creating its directory; the same bytes --json prints. For --ready and build this is
@@ -200,6 +205,7 @@ function parseArgv(argv: string[]): ParsedArgs {
     'project',
     'target-url',
     'negative-spec',
+    'faults',
     'instruction-file',
     'propose',
     'report',
@@ -252,6 +258,9 @@ function parseArgv(argv: string[]): ParsedArgs {
       if (name === 'converge' && !/^\d/.test(argv[i + 1] ?? '')) {
         // `build --converge` may stand bare (3 rounds); it must not swallow the next flag.
         flags.set(name, '');
+      } else if (name === 'faults' && !/^(step|all)$/.test(argv[i + 1] ?? '')) {
+        // `--faults` may stand bare (one action per flow step); it must not swallow a flow name or the next flag.
+        flags.set(name, 'step');
       } else if (valueFlags.has(name)) {
         flags.set(name, argv[++i] ?? '');
       } else if (booleanFlags.has(name)) {
@@ -1371,6 +1380,7 @@ function readinessCommand(file: string, flags: Map<string, string | boolean>, js
     fixtureIsolation: flags.has('fixture-isolation') || config.fixtureIsolation,
     requiredInputs: config.requiredVars,
     negativeSpec: flags.get('negative-spec') ? path.resolve(String(flags.get('negative-spec'))) : config.negativeSpec,
+    ...(flags.has('faults') ? { faults: flags.get('faults') === 'all' ? ('all' as const) : ('step' as const) } : {}),
     snapshotFile: fs.existsSync(config.snapshotFile) ? config.snapshotFile : undefined,
     onProgress: onProgress ?? ((m: string) => console.error(m)),
   });
@@ -1381,6 +1391,10 @@ function readinessCommand(file: string, flags: Map<string, string | boolean>, js
     for (const blocker of result.blockers) console.error(`  ${blocker}`);
     for (const warning of result.warnings) console.log(`  warning: ${warning}`);
     console.log(`failure detection: ${result.failureDetection}`);
+    for (const f of result.faults ?? []) {
+      const where = f.outcome !== 'detected' ? '' : f.detectedAt === 'action' ? ' at the action itself' : f.detectedAt === 'step' ? ` later in the same step${f.anchor ? ` (${f.anchor})` : ''}` : ` in a later step${f.anchor ? ` (${f.anchor})` : ''}`;
+      console.log(`  fault ${f.site} (${f.tool}): ${f.outcome}${where}`);
+    }
     if (fs.existsSync(result.evidenceFile)) console.log(`evidence: ${result.evidenceFile}`);
   }
   if (result.outcome !== 'verified') process.exit(result.outcome === 'unavailable' || result.outcome === 'blocked' ? 2 : 4);

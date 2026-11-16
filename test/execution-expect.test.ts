@@ -17,6 +17,8 @@ import {
   liveLines,
   maskForeignValue,
   maskMinted,
+  cutLine,
+  linesInDiff,
   maskPopupItem,
   namesDialogControl,
   popupItem,
@@ -411,6 +413,86 @@ describe('lineShows', () => {
     expect(lineShows(['- row "fwgr25-n10 Bench Customer"'], ['fwgr25-n1'], whole)).toBe(false);
     expect(lineShows(['- row "fwgr25-n1 Bench Customer"'], ['fwgr25-n1'], whole)).toBe(true);
     expect(lineShows(['- row "RD-1015"'], ['rd-1015'], whole)).toBe(true);
+  });
+});
+
+describe('lineShows, the line rule (effect expectations)', () => {
+  const line = { line: true };
+
+  it('a line recorded with no value is shown only by that line, whole', () => {
+    // The line for less state is the START of the line for more.
+    expect(lineShows(['- checkbox "Notify" [checked]'], ['- checkbox "Notify"'])).toBe(true);
+    expect(lineShows(['- checkbox "Notify" [checked]'], ['- checkbox "Notify"'], line)).toBe(false);
+    expect(lineShows(['- checkbox "Notify"'], ['- checkbox "Notify"'], line)).toBe(true);
+    expect(lineShows(['- button "Save" [disabled]'], ['- button "Save"'], line)).toBe(false);
+    expect(lineShows(['- textbox "Total": 125'], ['- textbox "Total"'], line)).toBe(false);
+    expect(lineShows(['- textbox "Total"'], ['- textbox "Total"'], line)).toBe(true);
+    // ...and it is a line, not a run of text inside one.
+    expect(lineShows(['- link "Open - button \\"Save\\""'], ['- button "Save"'], line)).toBe(false);
+    // State the recording did keep still has to be there.
+    expect(lineShows(['- checkbox "Notify"'], ['- checkbox "Notify" [checked]'], line)).toBe(false);
+    expect(lineShows(['- checkbox "Notify" [checked]'], ['- checkbox "Notify" [checked]'], line)).toBe(true);
+  });
+
+  it('a recorded value may go on only past a token boundary', () => {
+    expect(lineShows(['- textbox "Total": 12500'], ['- textbox "Total": 125'])).toBe(true);
+    expect(lineShows(['- textbox "Total": 12500'], ['- textbox "Total": 125'], line)).toBe(false);
+    expect(lineShows(['- textbox "Total": 125'], ['- textbox "Total": 125'], line)).toBe(true);
+    expect(lineShows(['- textbox "Total": 125.00'], ['- textbox "Total": 125'], line)).toBe(true);
+    expect(lineShows(['- textbox "Search": bench part'], ['- textbox "Search": bench'], line)).toBe(true);
+    expect(lineShows(['- textbox "Search": benchmark'], ['- textbox "Search": bench'], line)).toBe(false);
+    expect(lineShows(['- textbox "Owner": Ana'], ['- textbox "Owner": Bo'], line)).toBe(false);
+  });
+
+  it('a wildcard stays as loose as the compile made it, within the line', () => {
+    expect(lineShows(['- combobox "Project": 13f9pv52yozr'], ['- combobox "Project": {{*}}'], line)).toBe(true);
+    expect(lineShows(['- combobox "Project"'], ['- combobox "Project": {{*}}'], line)).toBe(false);
+    expect(lineShows(['- link "Ticket 41"'], ['- link "Ticket {{*}}"'], line)).toBe(true);
+    expect(lineShows(['- link "Ticket 41" [disabled]'], ['- link "Ticket {{*}}"'], line)).toBe(false);
+    expect(lineShows(['- a "x"', '- b "y"'], ['- a "{{*}}"'], line)).toBe(true);
+    expect(lineShows(['- cell "(1+1)*2"'], ['- cell "({{*}})*2"'], line)).toBe(true);
+  });
+
+  it('a want that is not a whole line keeps the substring rule', () => {
+    // a marker, a fragment, a line the stored cap cut inside its name
+    expect(lineShows(['- heading "Bench Board"'], ['Bench Board'], line)).toBe(true);
+    expect(lineShows(['- link "A very long name that goes on"'], ['- link "A very long name'], line)).toBe(true);
+  });
+});
+
+describe('the effect gate matches whole lines', () => {
+  it('a recorded unchecked box is not shown by the checked one, in the diff or on the page', async () => {
+    const recorded = ['- checkbox "Notify"'];
+    // The box the app refused to uncheck: nothing added, and still checked on the page.
+    const stuck = await expectedChangesVerdict(recorded, {}, ctx(), seen([], ['- checkbox "Notify" [checked]']));
+    expect(stuck.stop).toContain('none of the 1 recorded page change(s) appeared');
+    const worked = await expectedChangesVerdict(recorded, {}, ctx(), seen(['- checkbox "Notify"'], ['- checkbox "Notify"']));
+    expect(worked.stop).toBeUndefined();
+    expect(worked.confirmed).toBe(true);
+  });
+
+  it("a run's own value is not shown by a longer one", async () => {
+    const recorded = ['- textbox "Total": {{v1}}'];
+    const longer = await expectedChangesVerdict(recorded, { v1: '125' }, ctx(), seen(['- textbox "Total": 12500'], ['- textbox "Total": 12500']));
+    expect(longer.stop).toContain('did not show "- textbox \\"Total\\": 125"');
+    const same = await expectedChangesVerdict(recorded, { v1: '125' }, ctx(), seen(['- textbox "Total": 125'], ['- textbox "Total": 125']));
+    expect(same.stop).toBeUndefined();
+    expect(linesInDiff(recorded, { v1: '125' }, ['- textbox "Total": 12500'])).toEqual([]);
+    expect(linesInDiff(recorded, { v1: '125' }, ['- textbox "Total": 125'])).toEqual(recorded);
+  });
+
+  it('a line the stored cap cut is still the start of its page line', async () => {
+    const name = 'A'.repeat(140);
+    const cut = `- link "${name}"`.slice(0, 120);
+    expect(cutLine(cut)).toBe(true);
+    expect(cutLine('- link "short"')).toBe(false);
+    const verdict = await expectedChangesVerdict([cut], {}, ctx(), seen([`- link "${name}"`], [`- link "${name}"`]));
+    expect(verdict.stop).toBeUndefined();
+    expect(verdict.confirmed).toBe(true);
+    // ...cut inside a value too, where the line would otherwise read as whole.
+    const valued = `- textbox "Notes": ${'word '.repeat(30)}`.slice(0, 120);
+    const page = [`- textbox "Notes": ${'word '.repeat(16).trim()}`];
+    expect((await expectedChangesVerdict([valued], {}, ctx(), seen(page, page))).stop).toBeUndefined();
   });
 });
 

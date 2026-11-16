@@ -1,4 +1,4 @@
-import { isMutatingAction, mutatesSteps } from '../execution/lifecycle.js';
+import { RECORDED_SAVE_MAX_MS, isMutatingAction, mutatesSteps } from '../execution/lifecycle.js';
 import type { LocatorCandidate, RecordedEntry, RecordedInstruction, RecordedStep, StepDiff } from '../daemon/recorder.js';
 import { urlMatches } from '../execution/url.js';
 
@@ -26,6 +26,7 @@ import { keyPicks } from './key-pick.js';
 import { anchorEvidencedIds, shownBy, slotIdFragments } from './id-fragments.js';
 import type { ShadowRow } from './shadow.js';
 import { matchesShape, routeTemplateOf, valueClassFact, valueRoleFact, type SiteFacts } from '../execution/facts.js';
+import { GUARD_STATES, guardedRun, malformedFixups } from '../execution/fixup.js';
 
 /**
  * The url rules live in src/execution/url.ts, where a compiled artifact embeds
@@ -94,6 +95,28 @@ export const NAVIGATION_TOOLS = new Set(['goto', 'back']);
 
 /** Steps that enter a value and never navigate (see expectationFor's urlPattern). */
 const VALUE_ENTRY_TOOLS = new Set(['fill', 'type']);
+
+/**
+ * Whether a fill or type step's own journal shows a NEW DOCUMENT loading inside
+ * its diff window: the recorder's `domcontentloaded` event (daemon/journal.ts
+ * attachPage, `{ k: 'nav', doc: 1 }`), attributed to this step's gesture window
+ * and dated no later than its after-capture (`obs.at.c`, else `.s`). Entering a value
+ * cannot load a document — unless the text itself carries a line break, which
+ * a type turns into Enter — so the load was the page's own (a reload, a
+ * redirect landing late), and what the step's diff ADDED is that load's doing
+ * (see expectationFor). A press is never asked: Enter submits, and a
+ * navigation is then the press's own effect.
+ */
+export function documentLoadedDuring(step: RecordedStep): boolean {
+  if (!VALUE_ENTRY_TOOLS.has(step.tool)) return false;
+  if (Object.values(step.args ?? {}).some((v) => typeof v === 'string' && /[\r\n]/.test(v))) return false;
+  const w = step.journal?.w;
+  if (w === undefined) return false;
+  const until = step.obs?.at?.c ?? step.obs?.at?.s;
+  return (step.journal?.ev ?? []).some(
+    (e) => e.k === 'nav' && e.doc === 1 && Array.isArray(e.c) && e.c[0] === 'in' && e.c[1] === w && (until === undefined || e.t <= until),
+  );
+}
 
 const MAX_ADDED_LINES = 5;
 const MAX_SLOT_VALUES = 12;
@@ -816,6 +839,302 @@ interface Segment {
  * exactly one skill, as before.
  */
 export function compileSkills(input: CompileInput): Skill[] {
+  const recorded = input.entries.filter((e): e is RecordedStep => e.k === 'step');
+  if (!recorded.some((s) => s.guard || s.guarded !== undefined || s.guardEnd)) return compileRecording(input, NO_FIXUPS);
+  return compileWithFixups(input, recorded);
+}
+
+/**
+ * The declared fix-ups (execution/fixup.ts) a recording's compile carries,
+ * each by id: for every guarded step in recorded order, whether a pass may
+ * drop it without changing what the fix-up does (an observation: a
+ * screenshot, a read, a bare tab listing — the same steps the recording-level
+ * filter drops from every procedure).
+ */
+type LiveFixups = ReadonlyMap<string, { droppable: boolean[] }>;
+
+interface FixupContext {
+  live: LiveFixups;
+  /** The fix-ups dissolved so far and why, noted on the first segment. */
+  notes: TransformNote[];
+}
+
+const NO_FIXUPS: FixupContext = { live: new Map(), notes: [] };
+
+/**
+ * A fix-up this compile cannot carry intact. Thrown from inside a compile
+ * and caught by compileWithFixups, which dissolves it in the recording and
+ * compiles again — so what is stored for it is exactly what compile makes of
+ * those steps without one.
+ */
+class FixupDissolved extends Error {
+  constructor(
+    readonly id: string,
+    readonly why: string,
+  ) {
+    super(`fix-up ${id}: ${why}`);
+  }
+}
+
+/**
+ * While compiling, a guarded step carries its fix-up's id AND its place in
+ * the recorded group (`g1#0`, `g1#1`, …), so a check after any pass can tell
+ * a step that survived from one a pass dropped, merged or moved. Written back
+ * to the bare id once the skill's steps are final (finalizeFixups).
+ */
+const FIXUP_TAG = '#';
+
+function fixupTag(guarded: string | undefined): { id: string; k: number } | null {
+  if (guarded === undefined) return null;
+  const at = guarded.lastIndexOf(FIXUP_TAG);
+  if (at < 0) return { id: guarded, k: -1 };
+  return { id: guarded.slice(0, at), k: Number(guarded.slice(at + 1)) };
+}
+
+/** Whether `step` is the guard or one of the guarded steps of fix-up `id`. */
+function inFixup(step: { guard?: { id: string }; guarded?: string }, id: string): boolean {
+  return step.guard?.id === id || fixupTag(step.guarded)?.id === id;
+}
+
+/** A recorded step a pass may drop from a fix-up without changing what it does: it only looks. */
+function observationOnly(step: RecordedStep): boolean {
+  if (step.tool === 'screenshot' || step.tool === 'read' || step.tool === 'read_all') return true;
+  return step.tool === 'tabs' && typeof step.args.switch_to !== 'number';
+}
+
+/**
+ * A recording that declares fix-ups (the `fixup` tool, execution/fixup.ts).
+ *
+ * The rule: a fix-up reaches the skill INTACT — its condition, then every
+ * step it guards, unbroken, inside one segment — or it is DISSOLVED: the
+ * guard step is dropped and its steps compile as ordinary unconditional
+ * steps, which is what compile made of them before fix-ups existed. Never a
+ * half-conditional group: a repair whose last step a pass dropped, or that a
+ * page seam split, would run its first half on a replay and skip its second.
+ *
+ * Dissolved up front: a group the recorder never closed (no `guardEnd`: the
+ * instruction ended before its condition was seen to turn false), any other
+ * group malformed as recorded, a guard that is not a wait_for of one of the
+ * five states, and every fix-up of an assertion (which keeps only its
+ * waits). Dissolved on the way: whatever a pass or a seam would cut, merge,
+ * fold or move (fenceFixups and the checks in compileRecording throw
+ * FixupDissolved, and the compile starts again without that fix-up). Each
+ * dissolved fix-up is noted on the first segment (`dissolveFixup`), which is
+ * how compile reports what it could not carry (`skills show`).
+ */
+function compileWithFixups(input: CompileInput, recorded: RecordedStep[]): Skill[] {
+  const head = input.entries.find((e): e is RecordedInstruction => e.k === 'instruction');
+  const notes: TransformNote[] = [];
+  let entries = input.entries;
+  const dissolved = new Set<string>();
+  const dissolve = (id: string, why: string) => {
+    if (dissolved.has(id)) return;
+    dissolved.add(id);
+    const at = recorded.findIndex((s) => s.guard?.id === id || s.guarded === id);
+    const guard = recorded.find((s) => s.guard?.id === id)?.guard;
+    notes.push({
+      name: 'dissolveFixup',
+      at: at + 1,
+      reason: `fix-up ${id}${guard?.reason ? ` (${JSON.stringify(guard.reason)})` : ''} could not be carried: ${why}; its condition is dropped and its steps run as ordinary steps`,
+    });
+    entries = entries
+      .filter((e) => !(e.k === 'step' && e.guard?.id === id))
+      .map((e) => {
+        if (e.k !== 'step' || e.guarded !== id) return e;
+        const { guarded: _guarded, guardEnd: _end, ...plain } = e;
+        return plain;
+      });
+  };
+  const ids = [...new Set(recorded.flatMap((s) => [s.guard?.id, s.guarded].filter((v): v is string => typeof v === 'string')))];
+  if (head?.assert === true) for (const id of ids) dissolve(id, 'an assertion keeps only its checks');
+  for (const id of malformedFixups(recorded)) {
+    const at = recorded.findIndex((s) => s.guard?.id === id);
+    const run = at >= 0 ? recorded.slice(at + 1, at + 1 + guardedRun(recorded, at)) : [];
+    const open = run.length > 0 && !run.some((s) => s.guardEnd);
+    dissolve(id, open ? 'the instruction ended before its condition was seen to turn false (no guardEnd)' : at < 0 ? 'its guarded steps have no guard' : 'it is not one guard followed by one unbroken run of guarded steps closed by guardEnd');
+  }
+  for (const s of recorded) {
+    if (!s.guard || dissolved.has(s.guard.id)) continue;
+    if (s.tool !== 'wait_for' || !(GUARD_STATES as readonly string[]).includes(String(s.args.state ?? 'visible'))) dissolve(s.guard.id, `its condition is a ${s.tool} ${String(s.args.state ?? '')}, not a wait_for of one of ${GUARD_STATES.join(', ')}`);
+  }
+  for (;;) {
+    // Tag every guarded step with its place in its group (FIXUP_TAG).
+    const live = new Map<string, { droppable: boolean[] }>();
+    const tagged = entries.map((e) => {
+      if (e.k !== 'step' || e.guarded === undefined) return e;
+      const fx = live.get(e.guarded) ?? { droppable: [] };
+      live.set(e.guarded, fx);
+      const { guardEnd: _end, ...rest } = e;
+      const out: RecordedStep = { ...rest, guarded: `${e.guarded}${FIXUP_TAG}${fx.droppable.length}` };
+      fx.droppable.push(observationOnly(e));
+      return out;
+    });
+    try {
+      return compileRecording({ ...input, entries: tagged }, { live, notes });
+    } catch (e) {
+      if (!(e instanceof FixupDissolved) || dissolved.has(e.id)) throw e;
+      dissolve(e.id, e.why);
+    }
+  }
+}
+
+/**
+ * Run `pass` over `list` with every declared fix-up in it FENCED: kept
+ * whole, or reported for dissolving (FixupDissolved). Two things are checked
+ * for each fix-up whose guard is in the list:
+ *  - INTACT: the output still holds its guard once, followed directly by its
+ *    guarded steps in recorded order, at the top level (never in a loop's
+ *    body), each once; a step may be missing only if it merely looked;
+ *  - SELF-CONTAINED: the output without the fix-up is exactly what the pass
+ *    makes of the list without it. A pass that dropped the step BEFORE a
+ *    repair because the repair superseded it (a fill the fix-up overwrote),
+ *    or folded a step after it into a loop with one of its steps, decided
+ *    something about an unguarded step on the evidence of a guarded one: on a
+ *    run that skips the repair, that decision is wrong.
+ * The pass runs once per fix-up without it, on clones (passes mark steps in
+ * place), before the real run; `orig` maps a clone to the step it copies, for
+ * passes that look a step's recording up by identity.
+ */
+function fenceFixups<T extends { tool: string; guard?: { id: string }; guarded?: string; body?: unknown }>(
+  list: T[],
+  live: LiveFixups,
+  pass: (steps: T[], real: boolean, orig: (s: T) => T) => T[],
+): T[] {
+  const present = [...live.keys()].filter((id) => list.some((s) => s.guard?.id === id));
+  if (!present.length) return pass(list, true, (s) => s);
+  const without = new Map<string, string>();
+  for (const id of present) {
+    const rest = list.filter((s) => !inFixup(s, id));
+    const clones = structuredClone(rest);
+    const back = new Map(clones.map((c, i) => [c, rest[i]] as const));
+    for (const [c, o] of back) if (entryPopupHides.has(o as unknown as SkillStep)) entryPopupHides.add(c as unknown as SkillStep);
+    without.set(id, JSON.stringify(pass(clones, false, (s) => back.get(s) ?? s)));
+  }
+  const out = pass(list, true, (s) => s);
+  for (const id of present) {
+    const why = fixupBroken(list, out, id, live.get(id)!.droppable);
+    if (why) throw new FixupDissolved(id, why);
+    if (JSON.stringify(out.filter((s) => !inFixup(s, id))) !== without.get(id)) {
+      throw new FixupDissolved(id, 'the steps around it compile differently without it (a pass decided an unguarded step on the evidence of a guarded one)');
+    }
+  }
+  return out;
+}
+
+/**
+ * Why fix-up `id`, whole in `before`, is no longer whole in `after` — or null
+ * when it is: its guard once, then its guarded steps (those `before` holds) in
+ * order, unbroken and at the top level, with only steps that merely looked
+ * (`droppable`, by recorded place) allowed to be gone. A fix-up neither list
+ * holds any of is not broken; it is not there.
+ */
+function fixupBroken<T extends { guard?: { id: string }; guarded?: string; body?: unknown }>(before: readonly T[], after: readonly T[], id: string, droppable: readonly boolean[]): string | null {
+  const expected = before.flatMap((s) => {
+    const t = fixupTag(s.guarded);
+    return t?.id === id ? [t.k] : [];
+  });
+  const guards = after.flatMap((s, i) => (s.guard?.id === id ? [i] : []));
+  const at = after.flatMap((s, i) => (fixupTag(s.guarded)?.id === id ? [i] : []));
+  const nested = (steps: readonly T[]): boolean => steps.some((s) => Array.isArray(s.body) && ((s.body as T[]).some((b) => inFixup(b, id)) || nested(s.body as T[])));
+  if (!guards.length && !at.length && !nested(after) && !before.some((s) => inFixup(s, id))) return null;
+  if (nested(after)) return 'a step of it was folded into a loop';
+  if (guards.length !== 1) return guards.length ? 'its condition was duplicated' : 'its condition was dropped';
+  if (!at.length) return 'none of its steps survived';
+  if (at.some((p, j) => p !== guards[0] + 1 + j)) return 'its steps are no longer one unbroken run right after its condition';
+  let j = 0;
+  for (const p of at) {
+    const k = fixupTag(after[p].guarded)!.k;
+    while (j < expected.length && expected[j] !== k) {
+      if (!droppable[expected[j]]) return `its step ${expected[j] + 1} was dropped or merged`;
+      j++;
+    }
+    if (j === expected.length) return 'its steps were reordered or duplicated';
+    j++;
+  }
+  for (; j < expected.length; j++) if (!droppable[expected[j]]) return `its step ${expected[j] + 1} was dropped or merged`;
+  return null;
+}
+
+/**
+ * A built segment's fix-up markers in their stored form: each guarded step
+ * carries its fix-up's bare id and the last of each group `guardEnd` (the
+ * recorded last may have been an observation a pass dropped). In place: the
+ * steps are keys of the segment's recorded-diff map. Throws FixupDissolved
+ * for one that is not well formed (wellFormedFixup) — a belt to the checks
+ * above, never expected to fire.
+ */
+function finalizeFixups(steps: SkillStep[]): void {
+  for (const s of steps) {
+    const t = fixupTag(s.guarded);
+    if (!t) continue;
+    s.guarded = t.id;
+    delete s.guardEnd;
+  }
+  steps.forEach((s, i) => {
+    if (!s.guard) return;
+    const n = guardedRun(steps, i);
+    if (n) steps[i + n].guardEnd = true;
+  });
+  for (const id of malformedFixups(steps)) throw new FixupDissolved(id, 'its compiled steps are not well formed');
+}
+
+/** Journal events that say nothing changed: the click's own pointer hits and the focus they moved. */
+const HIT_ONLY = new Set(['hit', 'foc']);
+
+/**
+ * Whether the recording shows click `step` as one that only struck something
+ * COVERING its target, and so did nothing the procedure needs. openproject
+ * fwop37-fc 02-find: a first-login tour overlay covered the page, three clicks
+ * went out by the forced tier (execution/browser.ts: a click that could not
+ * land normally), each one's journal hit landed on the overlay (`on: 0`,
+ * `cover`), and each left an empty diff. Compiled, they acted on n2, which had
+ * no tour — they opened a drawer, and a later click went through it onto Home
+ * (s_a8f156 stopped at step 5, 29 recovery turns). Every condition is a
+ * recorded fact:
+ *  - the settle says the forced tier delivered it (`obs.settle.via: 'forced'`);
+ *  - the journal recorded its hits and EVERY hit landed on another element
+ *    than the target (`on: 0`): a forced click that reached its target, or one
+ *    with no hit recorded, is kept;
+ *  - its diff is empty (no line added or removed, uncapped totals included,
+ *    no alert), its url is the one before it, and its journal holds nothing
+ *    but those hits and focus moves: no request, navigation, value or state;
+ *  - nothing refers to it: no label, no effect, not part of a declared fix-up,
+ *    not a replayed or toggle-paired step.
+ * A click with an empty diff that was not forced onto a cover is kept: many
+ * real clicks change nothing a snapshot shows. This cannot hide a failure:
+ * the recording saw the click change nothing at all, so no replay can depend
+ * on its having happened; the step that did the work (the overlay's own
+ * dismissal, recorded with its hit on target) is kept and judged as before.
+ */
+export function coverOnlyClick(step: RecordedStep, urlBefore: string | undefined): boolean {
+  if (step.tool !== 'click' || step.obs?.settle?.via !== 'forced') return false;
+  if (step.label !== undefined || step.args.label !== undefined || step.effect || step.guard || step.guarded || step.via || step.toggle || step.fingerprintAfter) return false;
+  const d = step.diff;
+  if (!d || d.added.length || (d.removed ?? []).length || d.alerts.length) return false;
+  const totals = step.obs.totals;
+  if (totals && (totals.added || totals.removed)) return false;
+  if (urlBefore !== undefined && d.url !== urlBefore) return false;
+  const ev = step.journal?.ev ?? [];
+  const hits = ev.filter((e) => e.k === 'hit');
+  if (!hits.length || hits.some((e) => e.on !== 0)) return false;
+  return ev.every((e) => HIT_ONLY.has(e.k));
+}
+
+/** Drops every coverOnlyClick, noted; the same step objects otherwise (compile matches kept steps by identity). */
+export function dropCoverOnlyClicks<T extends RecordedStep>(steps: readonly T[], notes?: TransformNote[]): T[] {
+  let url: string | undefined;
+  const dropped = new Set<number>();
+  steps.forEach((s, k) => {
+    if (coverOnlyClick(s, url)) {
+      dropped.add(k);
+      notes?.push({ name: 'dropCoverOnlyClicks', at: k + 1, reason: `click #${s.seq ?? k + 1} was forced onto ${String(s.journal?.ev?.find((e) => e.k === 'hit')?.cover ?? 'another element')} covering its target and changed nothing (empty diff, no request, url unchanged)` });
+    }
+    if (s.diff?.url) url = s.diff.url;
+  });
+  return dropped.size ? steps.filter((_, k) => !dropped.has(k)) : [...steps];
+}
+
+function compileRecording(input: CompileInput, fix: FixupContext): Skill[] {
   const head = input.entries.find((e): e is RecordedInstruction => e.k === 'instruction');
   const steps = input.entries.filter((e): e is RecordedStep => e.k === 'step');
   if (!steps.length) return [];
@@ -846,71 +1165,79 @@ export function compileSkills(input: CompileInput): Skill[] {
   // on every replay. Keep the actions, the synthetic read-backs, and any read
   // whose value the run actually reported; drop the rest.
   /** What the recording-level passes dropped, noted on the first segment (built below). */
-  const recordingNotes: TransformNote[] = [];
-  const replayable = dropSupersededSets(collapseTogglePairs(expandListReads(dropEvalAssignedCandidates(creditUncreditedPopups(dropRetriedSubmits(dropRestoredDetours(dropDiscardedDetours(namedHighlightPicks(steps), recordingNotes))), recordingNotes), recordingNotes), reportValues))).filter((step) => {
-    if (step.tool === 'screenshot' || step.tool === 'eval') return false;
-    // A bare tab listing (`tabs` with no switch_to) is the agent looking, like
-    // a screenshot: it changes nothing and publishes nothing. openproject
-    // fwop13 01-signin's `tabs {}` sat between two inert link clicks and the
-    // goto that replaced them, and kept both clicks in s_d1e9fe (see observesOnly).
-    if (step.tool === 'tabs' && typeof step.args.switch_to !== 'number') return false;
-    if (step.tool === 'read' || step.tool === 'read_all') {
-      return step.args.target === '(read-back)' || Boolean(readLabel(step, reportValues));
-    }
-    return true;
-  });
-  let kept = replayable.length ? replayable : steps;
-  // An assertion keeps only its waits. The reads and looks around them were
-  // the model finding the element; replayed, a read that misses is skipped
-  // with a warning, which is exactly what a check must never be. Every
-  // recorded wait held (a failed step is never an entry, recorder.ts
-  // RecordedStep.failed), so each one is a condition the caller's sentence was
-  // seen to rest on. None at all is nothing checkable, and no skill.
-  if (asserting) {
-    kept = steps.filter((s) => s.tool === 'wait_for');
-    if (!kept.length) return [];
-  }
-  // A variant covers only the territory it repaired: steps that were replayed
-  // via a DIFFERENT stored skill (an earlier segment completing cleanly) are
-  // that skill's procedure, not this variant's.
-  if (input.variantOf) kept = kept.filter((s) => !s.via || s.via.skill === input.variantOf);
-  // ...and never the replayed step that stopped this replay. snipeit fwsi7-n3
-  // 02-create: s_5dcb48's step 1 (`goto /hardware/4`, the recording's record)
-  // ran and failed its gate, the recovery finished the step, and the re-pinned
-  // chain s_9a4939 → s_19095e → s_0aa6d6 kept that goto as its third segment
-  // (`via: {skill: s_5dcb48, step: 1}`) — the compiled script died on it.
-  const stopped = input.stoppedAt;
-  // ...unless it was a CLICK that had no effect and the recovery's next
-  // gesture is the same control clicked again, with only observations
-  // between: the app ignored the replay's press, not the procedure. ghost
-  // fwgh12-n3: the replay's click on link "Published" did nothing and stopped
-  // ("did not have its recorded effect"), the recovery's first action was the
-  // same click, which navigated, and the re-pin s_e46ad2 → s_414d80 kept only
-  // that one press — failing the same way on the next run. The failed press
-  // is dropped as before, and the recovery's click is marked to press again.
+  const recordingNotes: TransformNote[] = [...fix.notes];
   const pressedAgain = new WeakSet<RecordedStep>();
-  if (stopped) {
-    const at = kept.findIndex((s) => s.via?.skill === stopped.skill && s.via.step === stopped.step);
-    const failed = at >= 0 ? kept[at] : undefined;
-    if (failed?.tool === 'click' && failed.diff && !failed.diff.added.length && !(failed.diff.removed ?? []).length && !failed.diff.alerts.length) {
-      const next = kept.slice(at + 1).find((s) => !['read', 'read_all', 'wait_for'].includes(s.tool));
-      if (next?.tool === 'click' && !next.via && sameControl(failed, next)) pressedAgain.add(next);
+  // Everything from the recording to the steps the procedure keeps, as one
+  // pass over `list`, so a declared fix-up can be fenced through it
+  // (fenceFixups): run once for real, and once without each fix-up to see
+  // whether its steps decided anything about the steps around them.
+  const prepare = (list: RecordedStep[], notesInto: TransformNote[], pressed: WeakSet<RecordedStep>): RecordedStep[] => {
+    const replayable = dropSupersededSets(collapseTogglePairs(expandListReads(dropEvalAssignedCandidates(creditUncreditedPopups(dropRetriedSubmits(dropRestoredDetours(dropDiscardedDetours(namedHighlightPicks(dropCoverOnlyClicks(list, notesInto)), notesInto))), notesInto), notesInto), reportValues))).filter((step) => {
+      if (step.tool === 'screenshot' || step.tool === 'eval') return false;
+      // A bare tab listing (`tabs` with no switch_to) is the agent looking, like
+      // a screenshot: it changes nothing and publishes nothing. openproject
+      // fwop13 01-signin's `tabs {}` sat between two inert link clicks and the
+      // goto that replaced them, and kept both clicks in s_d1e9fe (see observesOnly).
+      if (step.tool === 'tabs' && typeof step.args.switch_to !== 'number') return false;
+      if (step.tool === 'read' || step.tool === 'read_all') {
+        return step.args.target === '(read-back)' || Boolean(readLabel(step, reportValues));
+      }
+      return true;
+    });
+    let kept = replayable.length ? replayable : list;
+    // An assertion keeps only its waits. The reads and looks around them were
+    // the model finding the element; replayed, a read that misses is skipped
+    // with a warning, which is exactly what a check must never be. Every
+    // recorded wait held (a failed step is never an entry, recorder.ts
+    // RecordedStep.failed), so each one is a condition the caller's sentence was
+    // seen to rest on. None at all is nothing checkable, and no skill.
+    if (asserting) {
+      kept = list.filter((s) => s.tool === 'wait_for');
+      if (!kept.length) return [];
     }
-    // ...and unless its ACTION did the step's work: it landed on a page (it
-    // moved the url or added something) and the recovery's next gesture ran on
-    // exactly that page, so the recovery continued from where the step left it
-    // and only its gate refused it. ghost fwgh14-n2 03-open: s_9433ad's click
-    // on the post opened n2's own post and its url gate refused it for not
-    // being n1's (a frozen id); dropping the click left n2's variant s_a63811
-    // starting with an editor control gated on the posts list, and n3 healed
-    // it onto Ghost's Settings nav (22 turns). Kept, its expectation is
-    // compiled from THIS recording like any step's, re-slotted. An addressed
-    // navigation (goto, back) is never kept: its target is what was wrong
-    // (fwsi7's goto /hardware/4, the recording's record).
-    if (!(failed && landedWhereRecoveryContinued(kept, at, startUrl))) {
-      kept = kept.filter((s) => !(s.via?.skill === stopped.skill && s.via.step === stopped.step));
+    // A variant covers only the territory it repaired: steps that were replayed
+    // via a DIFFERENT stored skill (an earlier segment completing cleanly) are
+    // that skill's procedure, not this variant's.
+    if (input.variantOf) kept = kept.filter((s) => !s.via || s.via.skill === input.variantOf);
+    // ...and never the replayed step that stopped this replay. snipeit fwsi7-n3
+    // 02-create: s_5dcb48's step 1 (`goto /hardware/4`, the recording's record)
+    // ran and failed its gate, the recovery finished the step, and the re-pinned
+    // chain s_9a4939 → s_19095e → s_0aa6d6 kept that goto as its third segment
+    // (`via: {skill: s_5dcb48, step: 1}`) — the compiled script died on it.
+    const stopped = input.stoppedAt;
+    // ...unless it was a CLICK that had no effect and the recovery's next
+    // gesture is the same control clicked again, with only observations
+    // between: the app ignored the replay's press, not the procedure. ghost
+    // fwgh12-n3: the replay's click on link "Published" did nothing and stopped
+    // ("did not have its recorded effect"), the recovery's first action was the
+    // same click, which navigated, and the re-pin s_e46ad2 → s_414d80 kept only
+    // that one press — failing the same way on the next run. The failed press
+    // is dropped as before, and the recovery's click is marked to press again.
+    if (stopped) {
+      const at = kept.findIndex((s) => s.via?.skill === stopped.skill && s.via.step === stopped.step);
+      const failed = at >= 0 ? kept[at] : undefined;
+      if (failed?.tool === 'click' && failed.diff && !failed.diff.added.length && !(failed.diff.removed ?? []).length && !failed.diff.alerts.length) {
+        const next = kept.slice(at + 1).find((s) => !['read', 'read_all', 'wait_for'].includes(s.tool));
+        if (next?.tool === 'click' && !next.via && sameControl(failed, next)) pressed.add(next);
+      }
+      // ...and unless its ACTION did the step's work: it landed on a page (it
+      // moved the url or added something) and the recovery's next gesture ran on
+      // exactly that page, so the recovery continued from where the step left it
+      // and only its gate refused it. ghost fwgh14-n2 03-open: s_9433ad's click
+      // on the post opened n2's own post and its url gate refused it for not
+      // being n1's (a frozen id); dropping the click left n2's variant s_a63811
+      // starting with an editor control gated on the posts list, and n3 healed
+      // it onto Ghost's Settings nav (22 turns). Kept, its expectation is
+      // compiled from THIS recording like any step's, re-slotted. An addressed
+      // navigation (goto, back) is never kept: its target is what was wrong
+      // (fwsi7's goto /hardware/4, the recording's record).
+      if (!(failed && landedWhereRecoveryContinued(kept, at, startUrl))) {
+        kept = kept.filter((s) => !(s.via?.skill === stopped.skill && s.via.step === stopped.step));
+      }
     }
-  }
+    return kept;
+  };
+  let kept = fix.live.size ? fenceFixups(steps, fix.live, (list, real) => prepare(list, real ? recordingNotes : [], real ? pressedAgain : new WeakSet())) : prepare(steps, recordingNotes, pressedAgain);
   kept = sourcelessGoto(kept, input, recordingNotes, slots);
   const readMints: ReadMint[] = [];
   kept = mintedFill(kept, input, slots, recordingNotes, readMints);
@@ -929,6 +1256,10 @@ export function compileSkills(input: CompileInput): Skill[] {
   // ...and a gesture the page was still moving after is replayed with that long
   // to finish (erpnext fwen6-luna 02-find): see movedAfterCapture.
   const movedAfter = movedAfterCapture(steps);
+  // ...and one the app saved by itself after, before the recording left the
+  // page, with that long for the save (vikunja fwvk18-fc 03-create): see
+  // savedAfterCapture.
+  const savedAfter = savedAfterCapture(steps);
   const sameTemplate = (a: string, b: string) => generaliseAppMinted(urlPattern(a, slots, { query: false }), appMinted) === generaliseAppMinted(urlPattern(b, slots, { query: false }), appMinted);
   // A url id this span minted is its OUTPUT: derived ({{dN}}, discoverMinted),
   // never a param — even when the ledger, which banked it before this compile,
@@ -1030,6 +1361,19 @@ export function compileSkills(input: CompileInput): Skill[] {
     }
   }
   if (seg.steps.length) segments.push(seg);
+  // A fix-up must still be whole after the passes that END a procedure early
+  // (sourcelessGoto, mintedFill), and inside ONE segment: each segment is its
+  // own skill, replayed, recovered and re-pinned on its own, so a guard in
+  // one and the rest of its repair in the next is a half-conditional group.
+  // Nor may a later step type a value one of its reads returned (mintedFill's
+  // read arm): on a run that skips the repair that read publishes nothing.
+  for (const [id, fx] of fix.live) {
+    const broken = fixupBroken(steps, kept, id, fx.droppable);
+    if (broken) throw new FixupDissolved(id, broken);
+    const holding = new Set(segments.flatMap((sg, si) => (sg.steps.some((s) => inFixup(s, id)) ? [si] : [])));
+    if (holding.size > 1) throw new FixupDissolved(id, 'a page-template seam falls inside it, which would split it across two skills');
+    if (readMints.some((r) => inFixup(r.read, id))) throw new FixupDissolved(id, 'a later step types the value one of its reads returned');
+  }
 
   // Provenance slots: values this run minted (first surfaced in a step's
   // post-nav url). Kept only where they can pay: a later step or a later
@@ -1184,6 +1528,20 @@ export function compileSkills(input: CompileInput): Skill[] {
       }
       if (Object.keys(contexts).length) out.contexts = contexts;
       if (step.page !== undefined) out.page = step.page;
+      // A fix-up's CONDITION (execution/fixup.ts) keeps its wait's shape and
+      // nothing an action carries: it is evaluated, never run, and a miss
+      // means there is nothing to repair, so it has no recorded effect to
+      // verify (expect), no settle to honour (movedAfterMs), mints nothing and
+      // publishes nothing. No timeout_ms either: the runners give every guard
+      // GUARD_WAIT_MS, never the recording model's patience. Its reason is
+      // slotted as an assertion's message is, with this run's values.
+      if (step.guard) {
+        const { timeout_ms: _patience, ...check } = args;
+        out.args = check;
+        out.guard = { id: step.guard.id, reason: substituteDeep(substituteDeep(step.guard.reason, textSlots), mintedBefore) as string };
+        for (const name of slotsUsed(JSON.stringify({ args: check, locators }))) segParams[name]?.usedIn.push(i + 1);
+        return out;
+      }
       if (step.toggle) out.toggle = true;
       if (step.closedBefore && step.tool === 'click') out.closedBefore = true;
       // A key press that picked an item (gitea fwgt13: ArrowDown, ArrowDown,
@@ -1208,6 +1566,10 @@ export function compileSkills(input: CompileInput): Skill[] {
       // the next step went out (movedAfterCapture, erpnext fwen6-luna #22).
       const moved = step.obs ? movedAfter.get(step.obs) : undefined;
       if (moved !== undefined) out.movedAfterMs = moved;
+      // The app saved by itself this long after the recorded capture, and the
+      // recording's next action left the page (savedAfterCapture).
+      const saved = step.obs ? savedAfter.get(step.obs) : undefined;
+      if (saved !== undefined) out.savedAfterMs = saved;
       // The landing the app gave this goto where it rewrote a key the goto
       // asked for (SkillStep.landedAs): the recording's own evidence of what
       // "the page it asked for" looks like on this app.
@@ -1277,6 +1639,8 @@ export function compileSkills(input: CompileInput): Skill[] {
       for (const name of slotsUsed(JSON.stringify({ args, locators }))) segParams[name]?.usedIn.push(i + 1);
       if (step.diff) recordedDiffs.set(out, step.diff);
       if (step.obs) recordedObs.set(out, step.obs);
+      // A step of a fix-up keeps its tag (FIXUP_TAG) through the passes below.
+      if (step.guarded !== undefined) out.guarded = step.guarded;
       return out;
     });
     const mintedForStart = mintedMap((m) => m.keptIndex < base);
@@ -1284,13 +1648,16 @@ export function compileSkills(input: CompileInput): Skill[] {
     // An assertion's waits are kept as recorded: every transform below removes
     // or folds steps on evidence about what an ACTION did, and a check that a
     // transform dropped is a check no run makes.
-    const folded = asserting
-      ? skillSteps
-      : foldLoops(
-          coalesceControls(namedKeyPicks(dropDismissedDialogs(dropSupersededNavigation(markRequiredRemovals(skillSteps, (s) => recordedDiffs.get(s)), notes, (s) => recordedDiffs.get(s), (s) => recordedObs.get(s)), notes, (s) => recordedDiffs.get(s)), notes), notes),
-          input.instruction,
-          notes,
-        );
+    // A declared fix-up goes through them fenced (fenceFixups): whole, never
+    // folded into a loop with the steps around it, or dissolved.
+    const transform = (list: SkillStep[], into: TransformNote[], orig: (s: SkillStep) => SkillStep) =>
+      foldLoops(
+        coalesceControls(namedKeyPicks(dropDismissedDialogs(dropSupersededNavigation(markRequiredRemovals(list, (s) => recordedDiffs.get(orig(s))), into, (s) => recordedDiffs.get(orig(s)), (s) => recordedObs.get(orig(s))), into, (s) => recordedDiffs.get(orig(s))), into), into),
+        input.instruction,
+        into,
+      );
+    const folded = asserting ? skillSteps : fix.live.size ? fenceFixups(skillSteps, fix.live, (list, real, orig) => transform(list, real ? notes : [], orig)) : transform(skillSteps, notes, (s) => s);
+    if (fix.live.size) finalizeFixups(folded);
     return { sg, segParams, mintedForStart, folded, notes, recordedDiffs };
   });
 
@@ -3506,11 +3873,26 @@ function expectationFor(
     // rules, decided here where the step's own args are still in hand, and
     // both leaving the wildcard that identifiesNothing then sweeps up.
     const typed = typedValues(step, slots);
+    // A fill or type whose own journal shows a document loading in its diff
+    // window (documentLoadedDuring) recorded the RELOAD's page, not its own
+    // effect: vikunja fwvk18-fc's password fill recorded only the username box
+    // gone empty (`- textbox "…"`, the reload wiped what step 1 typed), and
+    // both replays — whose reload came after the check — stopped on it,
+    // although the recorded re-fill and submit would have signed in. Only a
+    // line showing a control holding exactly what this step typed can be its
+    // own; every other added line is dropped, and with no such line the step
+    // keeps no added lines at all. This cannot hide a failure: the fill's
+    // success is still judged by its own action result and value check, the
+    // steps after it carry their own effects, and only lines a document load
+    // put there are given up, never a line of the typed value.
+    const reloaded = documentLoadedDuring(step);
+    const ownValue = (l: string): boolean => typed.some((v) => l.endsWith(`: ${v}`));
     const compiled = (added: readonly string[]): string[] =>
       added
         .filter((l) => !TRANSIENT_LINE.test(l))
         .map((l) => maskPopupItem(maskForeignValue(maskMinted(maskVolatile(substitute(l, slots, { glue }))), typed)))
-        .filter((l) => !identifiesNothing(l));
+        .filter((l) => !identifiesNothing(l))
+        .filter((l) => !reloaded || ownValue(l));
     // A line the page took back before the next gesture is the page in
     // transit too, by the recording's own gap diff (takenBackLines) — dropped
     // BEFORE the budget is spent, so the lines that stayed take its place.
@@ -3527,8 +3909,9 @@ function expectationFor(
   // later run's own values match; the dialog line itself is kept even unnamed
   // — `- dialog ""` identifies nothing as an EFFECT, but as the thing that
   // must be absent it is the conservative reading: any unnamed dialog on the
-  // page counts as it.
-  const inert = !out.addedContains && !out.alertContains && !step.fingerprintAfter && !step.effect && step.label === undefined;
+  // page counts as it. A dialog a document load took away is the load's
+  // doing, as its added lines are (documentLoadedDuring): never kept.
+  const inert = !out.addedContains && !out.alertContains && !step.fingerprintAfter && !step.effect && step.label === undefined && !documentLoadedDuring(step);
   const removed = inert
     ? (step.diff.removed ?? [])
         .filter((l) => !TRANSIENT_LINE.test(l))
@@ -4263,6 +4646,10 @@ export function sameProcedure(a: Skill, b: Skill): boolean {
   // and the run's answer in the other (Skill.assert).
   if (Boolean(a.assert) !== Boolean(b.assert)) return false;
   if (a.steps.length !== b.steps.length) return false;
+  // Nor are the same steps run unconditionally and run as a declared fix-up
+  // (execution/fixup.ts): a twin merge would keep one and drop the other.
+  const fixupShape = (steps: SkillStep[]) => JSON.stringify(steps.map((s) => (s.guard ? 'g' : s.guarded !== undefined ? (s.guardEnd ? 'e' : 'm') : '')));
+  if (fixupShape(a.steps) !== fixupShape(b.steps)) return false;
   return a.steps.every((s, i) => {
     const t = b.steps[i];
     if (s.tool !== t.tool) return false;
@@ -4681,6 +5068,101 @@ export function movedAfterCapture(steps: readonly RecordedStep[]): Map<NonNullab
       last = Math.max(last, e.t - captured);
     }
     if (last > 0) out.set(step.obs, last);
+  });
+  return out;
+}
+
+/** Request methods that write (daemon/journal-attribute.ts WRITES). */
+const WRITE_METHODS: ReadonlySet<string> = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
+/** Tools that enter a value an app may save by itself. */
+const VALUE_ENTRY: ReadonlySet<string> = new Set(['fill', 'type', 'select', 'check']);
+/** Tools that replace the document whatever the page is doing. */
+const LEAVES: ReadonlySet<string> = new Set(['goto', 'back']);
+
+/**
+ * An app that SAVES BY ITSELF, on a timer after a value is typed, saves
+ * nothing for a run that leaves the page before the timer fires.
+ *
+ * vikunja fwvk18-fc 03-create: the recording typed a task's description
+ * (#62, captured at …174752), took a screenshot and a read, and went to
+ * another url (#65, dispatched at …180469). In between the app sent `POST
+ * /api/v1/tasks/4` at …179342 — attributed `['app','timer']`, no gesture
+ * behind it — answered 13 ms later: its autosave, 4.6 s after the typing. A
+ * replay has no turns to think through: n2's goto went out 2.2 s after the
+ * type, the document was replaced before the timer fired, every step passed,
+ * and the verifier found the description empty (objective 2). The recording
+ * left the page later than the save by luck, not by any step it recorded.
+ *
+ * So the last gesture before the recording left a page is replayed with the
+ * time the app's own save took (SkillStep.savedAfterMs; both runners hold the
+ * next step for it, execution/lifecycle.ts recordedSaveHold). Recorded facts
+ * only, all of them:
+ *  - a value was ENTERED on this page (fill, type, select, check; no goto,
+ *    back or url change since): with nothing typed there is nothing to save;
+ *  - the step is the last gesture before the recording's next ACTION, and
+ *    that action leaves the page: a goto or back, or a gesture whose capture
+ *    is at another url. Observations in between (reads, screenshots, waits)
+ *    are not actions. A step that stays on the page leaves the app's timer
+ *    running, and its own effects are what it is judged by;
+ *  - between this step's capture and that action's dispatch, the journal
+ *    dates a WRITE request (POST, PUT, PATCH, DELETE), answered 2xx, that no
+ *    gesture caused: the app's timer, an input's debounce, or one that fell
+ *    inside an observation's window. A poll is none of these;
+ *  - it was answered within RECORDED_SAVE_MAX_MS of the capture. A later one
+ *    is not waited for (a replay is not held half a minute for a periodic
+ *    save), and such a recording replays as before.
+ * The value is the last such answer, in ms after the capture.
+ *
+ * It is a WAIT, never a check: a write that was something else (a beacon)
+ * costs that replay the hold and changes no verdict. A recording without a
+ * journal gives nothing. Keyed by the step's evidence (`obs`), which a kept
+ * copy of the step still carries.
+ */
+export function savedAfterCapture(steps: readonly RecordedStep[]): Map<NonNullable<RecordedStep['obs']>, number> {
+  const out = new Map<NonNullable<RecordedStep['obs']>, number>();
+  const urlAt = (k: number): string | undefined => {
+    for (let m = k; m >= 0; m--) if (steps[m].diff?.url) return steps[m].diff!.url;
+    return undefined;
+  };
+  const acts = (s: RecordedStep): boolean => !s.failed && (isMutatingAction(s.tool) || LEAVES.has(s.tool) || s.tool === 'eval');
+  const unprompted = (e: JournalEvent): boolean => {
+    const c = e.c as readonly unknown[] | undefined;
+    if (!c || e.also !== undefined) return false;
+    return (c[0] === 'app' && c[1] === 'timer') || (c[0] === 'late' && c[2] === 'debounce') || (c[0] === 'in' && c[2] === 'observe');
+  };
+  steps.forEach((step, i) => {
+    const captured = step.obs?.at?.c ?? step.obs?.at?.s;
+    if (!step.obs || captured === undefined || step.failed || !isMutatingAction(step.tool)) return;
+    const here = urlAt(i);
+    // The next action, and whether it leaves this page.
+    let j = i + 1;
+    while (j < steps.length && !acts(steps[j])) j++;
+    const next = steps[j];
+    if (!next) return;
+    const leaves = LEAVES.has(next.tool) || (isMutatingAction(next.tool) && here !== undefined && next.diff?.url !== undefined && next.diff.url !== here);
+    if (!leaves) return;
+    // A value entered on this page, at this step or before it.
+    let entered = false;
+    for (let m = i; m >= 0 && !entered; m--) {
+      const s = steps[m];
+      if (LEAVES.has(s.tool) || (here !== undefined && s.diff?.url !== undefined && s.diff.url !== here)) break;
+      entered = VALUE_ENTRY.has(s.tool) && !s.failed;
+    }
+    if (!entered) return;
+    const dispatched = next.obs?.at?.d;
+    const between: JournalEvent[] = [];
+    for (let k = i + 1; k < j; k++) between.push(...(steps[k].journal?.gap?.ev ?? []), ...(steps[k].journal?.ev ?? []));
+    between.push(...(next.journal?.gap?.ev ?? []));
+    let last = 0;
+    for (const e of between) {
+      if (e.k !== 'req' || !WRITE_METHODS.has(String(e.m ?? 'GET')) || !unprompted(e)) continue;
+      const status = typeof e.s === 'number' ? e.s : 0;
+      const answered = typeof e.t1 === 'number' ? e.t1 : e.t;
+      if (status < 200 || status >= 300 || e.t < captured || answered - captured > RECORDED_SAVE_MAX_MS) continue;
+      if (dispatched !== undefined && answered > dispatched) continue;
+      last = Math.max(last, answered - captured);
+    }
+    if (last > 0) out.set(step.obs, Math.max(1, Math.round(last)));
   });
   return out;
 }
@@ -5109,9 +5591,21 @@ function loopEquivalent(a: SkillStep, b: SkillStep): boolean {
   return typed(a) === typed(b) && chainSkeleton(a.locators.target) === chainSkeleton(b.locators.target) && chainSkeleton(a.locators.source) === chainSkeleton(b.locators.source);
 }
 
-/** True when two groups differ in a *raw* id somewhere — proof they act on distinct records, not an accidental repeat. */
+/**
+ * True when two groups differ in a *raw* id somewhere — proof they act on distinct records, not an accidental repeat.
+ *
+ * A `point` candidate is left out: it records where the element SAT, which is
+ * layout, not which record it is. espocrm fwec23-fr 05-edit pressed Escape in
+ * a date field ("Are you sure you want to leave the form?"), clicked Save once
+ * to take the dialog away and once more to save; the two clicks' chains were
+ * identical but for the button's y (116, then 153 after the dialog went), and
+ * that alone folded them into a loop bounded to 2. On one Save button the
+ * loop's cursor ran out after one pass (the guard still matched 1), so both
+ * replays and the artifact clicked once, never saved, and reported success.
+ */
 function differsInRawId(a: SkillStep[], b: SkillStep[]): boolean {
-  const raw = (g: SkillStep[]) => JSON.stringify(g.map((s) => [s.locators.target ?? [], s.locators.source ?? []]));
+  const identity = (chain: LocatorCandidate[] | undefined) => (chain ?? []).filter((c) => c.kind !== 'point');
+  const raw = (g: SkillStep[]) => JSON.stringify(g.map((s) => [identity(s.locators.target), identity(s.locators.source)]));
   return raw(a) !== raw(b);
 }
 

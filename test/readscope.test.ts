@@ -315,6 +315,6 @@ describe('the artifact carries the same rules (emit.ts)', () => {
       flow([{ tool: 'wait_for', args: { target: '@e1', state: 'text_contains', text: 'OVERVIEW' }, locators: { target: [{ kind: 'css', selector: '#tab' }] } }]),
       { tier: 'plain' },
     );
-    expect(source).toContain(".toContainText('OVERVIEW', { useInnerText: true });");
+    expect(source).toContain(".toContainText('OVERVIEW', { useInnerText: true, timeout: Math.max(waitUntil1 - Date.now(), 1000) });");
   });
 });

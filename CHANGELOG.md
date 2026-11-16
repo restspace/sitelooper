@@ -1,5 +1,89 @@
 # Changelog
 
+## Unreleased
+
+### Failure detection
+- `build --faults` and `check --ready --faults [step|all]` add fault runs to readiness: after the
+  clean runs, the compiled spec is run again with one gesture withheld per run, and each of those
+  runs must fail. A run that still passes is reported as `undetected`, names the action, and fails
+  readiness with `failureDetection: failed`. The evidence file and `--json` list every run under
+  `faults`. No model is used.
+- Runtime-style flow files carry a guard on every click, key press and pick, an exported
+  `faultSites` list, and read `SITELOOPER_FAULT`. Files compiled by an earlier version have none
+  and must be recompiled before `--faults` will run. Readable files are not supported.
+
+### Replay and compiled specs
+- A click whose target is gone is reached through its recorded url only when the recording shows
+  it as navigation and nothing else: it moved to another url, and it did not create or remove a
+  record, raise an alert, or open or close a page. Before, any click with a recorded url qualified,
+  so a renamed Delete button could be replaced by the page's own link to the list and the step
+  reported as run with the record still there. When another route is used, the page it reaches
+  must show the recorded lines that carry the run's own values, or the step stops. The same rule
+  applies in the daemon and in compiled runtime-style files, which now emit the fallback only for
+  such clicks. Whether a click moved is judged by the url matcher, not by comparing text, and a
+  click that follows a fill, type, select, check or upload on its page is a submit, never a
+  navigation.
+- A recorded page change is matched as a whole line, not as text found anywhere in one. A line
+  recorded with no value is no longer shown by the same control with more state: an unchecked
+  `- checkbox "Notify"` by `- checkbox "Notify" [checked]`, an enabled button by a disabled one, an
+  empty field by a filled one. A recorded value is no longer shown by a longer one that continues
+  the same word or number (`125` by `12500`); a value that goes on past a boundary (`125.00`)
+  still matches. Steps that passed only on such a match now stop.
+
+- A wait for something to appear is given its own timeout to find its target. Before, every
+  target had 3 seconds to resolve whatever the step asked for, so `wait_for text=Saved` with a
+  15-second timeout stopped while the page still said "Saving...". The wait that follows gets
+  what is left of the timeout, so the step takes no longer than it asked for.
+- A compiled spec's persistence probe no longer fails on something a later step of the same run
+  did on purpose. A probed line that a later step removes or rewrites is retired, and the run log
+  says which step retired it; a line nothing later touched is still required after reload.
+- Two repeated clicks on the same element are no longer folded into a loop because the element
+  moved on the page. A Save clicked once to dismiss a dialog and once more to save was replayed as
+  one click, and the edit was never saved.
+- A read is no longer withheld from the report because the flow earlier clicked a link with the
+  same name. A click that changed the route selected nothing.
+- An instruction issued directly is answered by the most specific stored procedure that matches it.
+  A template ending in a slot also matches any longer sentence that starts the same way, and the
+  first match in store order was taken, so "the owner is admin, the list has 1 item" could be
+  answered by the procedure stored for "the owner is admin", with the rest of the sentence as its
+  value. Which one ran varied from run to run. Ties go to the better record, then the older
+  procedure. A flow step's candidates follow the same rule: a procedure that reads the step's
+  instruction only by taking part of the sentence as a value is tried after the others, whatever
+  its record.
+- A fill or type step no longer requires page changes that a page reload caused. When the
+  recording's own log shows a new document loading while the value was being entered, compile
+  keeps only a line showing the typed value and drops the rest. Before, a sign-in form that
+  reloaded during the recording stored "the username box is empty" as the password step's effect,
+  and every replay whose reload came a moment later stopped there.
+- A compiled spec's read that is skipped no longer erases a value an earlier read of the same
+  label published. Replay already kept it. A flow step recorded in two parts that both read a
+  reference stopped a later step with "this run never published it" when the second read had no
+  locator left.
+- A persistence probe is not taken when the step goes on to another page after its save, or ends
+  on a url that lacks a query key the saved page had (another view of the same record). The run
+  log says so. Before, the probe reloaded the other view and failed a run whose data was right.
+- Compile drops a click that the recording shows was forced onto an element covering its target
+  and changed nothing. Such clicks were kept, and on a replay with no cover in the way they acted
+  on the page underneath.
+- A control's name matches with or without a trailing keyboard-shortcut hint, so a button an app
+  renames from "Publish" to "Publish ⌘ ⇧ P" while hovered is still found. A hint needs a modifier:
+  "Save" and "Save As" stay different names. A hover that reached its element no longer fails
+  when the element's name changes under it.
+- When the recording shows the app saving by itself after a value was entered (a write request no
+  gesture caused) and the next action left the page, both runners wait that long before leaving.
+  Before, a replay could leave before an autosave timer fired: every step passed and the value was
+  never stored. Saves answered more than 10 seconds after the step are not waited for.
+
+### Recording
+- The recording agent can declare a fix-up: a repair to something an earlier step left wrong, such
+  as deleting a duplicate row. It calls `fixup` with a reason and a check that is true because of
+  the problem, then makes the repair. The check is recorded only if it holds at that moment, and
+  the fix-up is complete at the first step after which it no longer holds. On replay and in the
+  compiled spec the check is evaluated first: when it holds the repair runs, and when it does not
+  the repair's steps are skipped and the run says so. Before, such a repair was replayed
+  unconditionally and could delete real data on a run where the mistake had not happened.
+  A fix-up the recording never completed is compiled as ordinary steps.
+
 ## 0.8.1 — 2026-11-05
 
 ### Readable specs

@@ -347,6 +347,17 @@ export interface SkillStep {
    * sentence, slots as "{{vN}}", raised through assertFailure when it misses.
    */
   assert?: { message: string };
+  /**
+   * This wait_for is a fix-up's CONDITION (execution/fixup.ts): a check that is
+   * true because of something an earlier step left wrong. When it holds, the
+   * steps it guards run; when it does not, there is nothing to repair and they
+   * are skipped. `reason` is the recording agent's own sentence.
+   */
+  guard?: { id: string; reason: string };
+  /** This step belongs to the fix-up whose guard has this id: it runs only if that guard held. */
+  guarded?: string;
+  /** The last step of a fix-up: after it, the recorder saw the guard's condition turn false. */
+  guardEnd?: true;
   tool: string;
   /** Tool arguments with slot values substituted as "{{vN}}" in string fields. */
   args: Record<string, unknown>;
@@ -447,6 +458,16 @@ export interface SkillStep {
    * Optional: a build that ignores it goes on at once, as before.
    */
   movedAfterMs?: number;
+  /**
+   * The recording watched the app SAVE by itself this many ms after this
+   * step's capture — a write request no gesture caused — and its next action
+   * left the page (compile.ts savedAfterCapture; vikunja fwvk18-fc 03-create,
+   * a description saved by a 5 s timer, lost on the replay that left after
+   * 2.2 s). Both runners hold the next step until that long has passed since
+   * this step's action settled, and a slack (execution/lifecycle.ts
+   * recordedSaveHold). Optional: a build that ignores it goes on at once.
+   */
+  savedAfterMs?: number;
   expect?: StepExpectation;
   /** For read/read_all steps: which report value this read supplied, if any. */
   label?: string;

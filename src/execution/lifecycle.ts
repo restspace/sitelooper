@@ -76,6 +76,41 @@ export async function holdForRecordedMove(movedAfterMs: unknown, settledAt: numb
   return wait;
 }
 
+/** Past a recorded save's answer: a timer's and a round trip's jitter. */
+export const RECORDED_SAVE_SLACK_MS = 1_000;
+/**
+ * The longest a recorded save is waited out. Compile records none later than
+ * this (compile.ts savedAfterCapture, which may not import this module's
+ * neighbours but does import this), so the cap only bounds a hand-edited value.
+ */
+export const RECORDED_SAVE_MAX_MS = 10_000;
+
+/**
+ * How long the NEXT step is held after a step the recording watched the app
+ * SAVE after, by itself, before the recording left the page (SkillStep.
+ * savedAfterMs, compile.ts savedAfterCapture): that long from the moment the
+ * step's action settled, plus the slack, less what has passed since.
+ *
+ * vikunja fwvk18-fc 03-create: the description typed into a task is saved by
+ * the app's own timer, a POST 4.6 s after the typing with no gesture behind
+ * it. The recording's next action, a goto, came 5.7 s after; n2's came 2.2 s
+ * after, the document was replaced before the timer fired, every step passed
+ * and the description was never stored. A wait, never a check: it can make a
+ * run slower and nothing else.
+ */
+export function recordedSaveHold(savedAfterMs: unknown, settledAt: number, now: number = Date.now()): number {
+  if (typeof savedAfterMs !== 'number' || !Number.isFinite(savedAfterMs) || savedAfterMs <= 0) return 0;
+  const wait = Math.min(savedAfterMs, RECORDED_SAVE_MAX_MS) + RECORDED_SAVE_SLACK_MS - Math.max(0, now - settledAt);
+  return wait > 0 ? Math.ceil(wait) : 0;
+}
+
+/** recordedSaveHold, waited: resolves with the ms it slept. */
+export async function holdForRecordedSave(savedAfterMs: unknown, settledAt: number): Promise<number> {
+  const wait = recordedSaveHold(savedAfterMs, settledAt);
+  if (wait > 0) await new Promise((resolve) => setTimeout(resolve, wait));
+  return wait;
+}
+
 /** Reads are optional observations in both execution targets. */
 export function isReadAction(tool: string): boolean {
   return tool === 'read' || tool === 'read_all';

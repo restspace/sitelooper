@@ -162,3 +162,48 @@ describe('link-to-destination rung (prefer clicking like a human)', () => {
     expect(res.ok).toBe(true);
   });
 });
+
+describe('only a click recorded as navigation may be stood in for', () => {
+  const DEST = 'http://h:1/d/uid7/service-health';
+  const anchors = [{ attr: '/d/uid7/service-health', abs: DEST }];
+  const withExpect = (more: Record<string, unknown>, mints?: unknown): Skill => {
+    const skill = navSkill(DEST);
+    skill.steps[0] = { ...skill.steps[0], expect: { urlPattern: DEST, ...more }, ...(mints ? { mints } : {}) } as never;
+    return skill;
+  };
+
+  it('a click that took a record away is never replaced by a link to where it landed', async () => {
+    const state = { url: 'http://h:1/' };
+    const gotos: string[] = [];
+    const clicks: string[] = [];
+    const res = await run(withExpect({ goneContains: ['- link "{{v1}}"'] }), state, gotos, anchors, clicks);
+    expect(clicks).toEqual([]);
+    expect(gotos).toEqual([]);
+    expect(res.ok).toBe(false);
+    expect(res.failedAt).toBe(1);
+    expect(res.fallthroughs).toBe(0);
+  });
+
+  it('nor one that raised an alert, or minted a record', async () => {
+    for (const skill of [withExpect({ alertContains: 'Saved' }), withExpect({}, { at: 'p1' })]) {
+      const state = { url: 'http://h:1/' };
+      const gotos: string[] = [];
+      const clicks: string[] = [];
+      const res = await run(skill, state, gotos, anchors, clicks);
+      expect([clicks, gotos]).toEqual([[], []]);
+      expect(res.ok).toBe(false);
+    }
+  });
+
+  it('nor one recorded staying on the page it started on', async () => {
+    // The browser has drifted elsewhere; the recorded url is where the click STAYED.
+    const skill = navSkill(DEST);
+    skill.preconditions.urlPattern = DEST;
+    const state = { url: 'http://h:1/elsewhere' };
+    const gotos: string[] = [];
+    const clicks: string[] = [];
+    const res = await run(skill, state, gotos, anchors, clicks);
+    expect([clicks, gotos]).toEqual([[], []]);
+    expect(res.ok).toBe(false);
+  });
+});

@@ -468,9 +468,12 @@ describe('emitted step lifecycle', () => {
     // Every target resolves through the shared policy first, and the action
     // acts on what it resolved to.
     expect(act.body).toContain("{ locator: page.locator('#control'), index: 0, structural: false, kind: 'id', carries: JSON.stringify({ kind: 'id', selector: '#control' }) },");
-    expect(act.body).toContain(`], '01-step s_emit/1 target', { stayOnOrigin: '${ORIGIN}', waitMs: RESOLVE_WAIT_MS }, '${ORIGIN}/orders/{{d1}}', p, { drift: run.drift });`);
-    // a navigation click falls back to its recorded destination (shared recover.ts), and is then done
-    expect(act.body).toContain("if (!hit1) return { status: 'skipped' };");
+    expect(act.body).toContain(`], '01-step s_emit/1 target', { stayOnOrigin: '${ORIGIN}', waitMs: RESOLVE_WAIT_MS }, { drift: run.drift });`);
+    // A click that minted a record is not a navigation: it never falls back to
+    // its recorded destination (the shared recover.ts recordedAsNavigation).
+    expect(act.body).toContain('const hit1 = await pick(page, [');
+    expect(act.body).not.toContain('pickOrNavigate(');
+    expect(act.body).not.toContain("if (!hit1) return { status: 'skipped' };");
     expect(act.body).toContain('await click(hit1.locator, { obs: obs1 }).catch(actionFailed);');
     expect(act.body).toContain("return { status: 'completed', value: undefined };");
     // and the effect gate is told whether that resolution was positional.
@@ -637,9 +640,11 @@ describe('emitted step lifecycle', () => {
     // stopped and the compiled arm failed 0/6, on a wait that would have
     // looked at `h2` number one. `hidden` was never the special case — the
     // dispatch is (dispatchesFirstMatch).
-    expect(acts[2].body).toContain("], '01-step s_emit/3 target', { allowMultiple: true, stayOnOrigin: originOf(page.url()) ?? undefined, waitMs: RESOLVE_WAIT_MS }, { drift: run.drift });");
-    expect(acts[2].body).toContain('await expect(hit3.locator.first()).toBeVisible();');
-    expect(acts[3].body).toContain("await expect(hit4.locator.first()).toContainText('Saved', { useInnerText: true });");
+    // …within its own timeout (the tool's 10 s default here), the wait then
+    // spending what is left of it (replay's presenceWaitMs, ghost fwgh21-fr).
+    expect(acts[2].body).toContain("], '01-step s_emit/3 target', { allowMultiple: true, stayOnOrigin: originOf(page.url()) ?? undefined, waitMs: 10000 }, { drift: run.drift });");
+    expect(acts[2].body).toContain('await expect(hit3.locator.first()).toBeVisible({ timeout: Math.max(waitUntil3 - Date.now(), 1000) });');
+    expect(acts[3].body).toContain("await expect(hit4.locator.first()).toContainText('Saved', { useInnerText: true, timeout: Math.max(waitUntil4 - Date.now(), 1000) });");
     for (const act of acts) expect(act.body).not.toMatch(/\bthrow\b/);
   });
 

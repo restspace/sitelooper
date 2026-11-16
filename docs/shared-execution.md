@@ -183,8 +183,22 @@ collections the page says are only partly rendered (`aria-rowcount` or
 a gap; a visible frame that could not be read, or one past the cap, is. A
 CLOSED shadow root cannot be seen from script and is not counted.
 
+**How a recorded line is matched.** `lineShows` has three rules. The default is
+a whitespace-normalised substring. `whole` is the identity rule, bounded at a
+letter or digit on both sides. `line` is the effect gate's rule
+(`expect.ts` `effectShows`): a whole recorded line is shown only by a page line
+that says the same thing. A line recorded with no value must be the page line
+whole, with the same state markers and no value, so an unchecked
+`- checkbox "Notify"` is not shown by `- checkbox "Notify" [checked]`. A line
+recorded with a value must start the page line, and the page's value may go on
+only past a token boundary: `125` is shown by `125.00`, never by `12500`. A
+`{{*}}` wildcard matches anything within the line under all three. A want that
+is not a whole line (a marker, a fragment, a line cut inside its name) falls
+back to the substring rule, and so does a recorded line the 120-character
+stored cap cut (`cutLine`).
+
 **Two line dialects, chosen per step.** Recorded lines are persisted and
-matched as substrings, so they cannot change meaning under a stored recording.
+matched as text, so they cannot change meaning under a stored recording.
 `renderLines(o, 1)` is the first capture byte for byte: main document, light
 DOM, the old caps, the old names (a `<label for>` input is `""`), no disabled
 state. `test/observation.browser.test.ts` keeps the old page function as an
@@ -229,8 +243,8 @@ that asserts no page change at all any more still is.
 ### `expect.ts` — the content-expectation verdict
 
 `expectedChangesVerdict`, `namesDialogControl`, `consequentialExpectations`,
-`isEchoLine`, `liveLines`, `maskMinted`, `TRANSIENT_LINE`, `SLOT_LINE`,
-`DIALOG_LINE`. Daemon: the `expectedChanges` gate, `replay.ts:843`. Artifact: the
+`isEchoLine`, `liveLines`, `effectShows`, `cutLine`, `maskMinted`,
+`TRANSIENT_LINE`, `SLOT_LINE`, `DIALOG_LINE`. Daemon: the `expectedChanges` gate, `replay.ts:843`. Artifact: the
 emitted `expectChanges` helper. `src/skills/compile.ts:1069` re-exports
 `TRANSIENT_LINE` and `maskMinted` for compile-time use.
 
@@ -335,13 +349,39 @@ runners.
 
 ### `recover.ts` — the two recovery rungs
 
-`mayNavigateToDestination`, `navigateToDestination`, `linkToDestination`,
-`textHeldElsewhere`, `RecoveryHooks`, `HELD_TEXT_READ_MS`. Imports `browser.ts`
-(`settleDom`, `outcomeOfError`, `outcomeLabel`) and `url.ts`.
+`recordedAsNavigation`, `mayNavigateToDestination`, `navigateToDestination`,
+`arrivalStop`, `linkToDestination`, `textHeldElsewhere`, `RecoveryHooks`,
+`RecordedStepEvidence`, `ARRIVAL_WAIT_MS`, `HELD_TEXT_READ_MS`. Imports
+`browser.ts` (`settleDom`, `outcomeOfError`, `outcomeLabel`), `url.ts`,
+`snapshot.ts` (`captureLines`) and `expect.ts` (`expectedChangesVerdict`).
+
+**Which clicks may be stood in for.** Every diffed click carries a recorded
+url, the one it was on afterwards, so "a click with a recorded url the browser
+is not on" does not make a click a navigation. `recordedAsNavigation` asks the
+recording, and three things must hold.
+
+- The click moved. Its recorded url names a different page from the one it was
+  recorded starting on: the nearest earlier step's url, a goto's target, else
+  the segment's start. Fill and type steps are looked past, because their
+  recorded url keeps only its path. Pages are compared with `urlMatches`, never
+  as strings: `/hardware/{{v4}}`, `/hardware/:id` and `/hardware/:id#history`
+  are one page, and so are a goto's literal url and the pattern recorded after
+  it. A start the recording does not say (after a `back`) is not a move.
+- It carries nothing a navigation cannot do by itself: no `goneContains`,
+  `removedContains`, `removalRequired`, `alertContains` or page `effect`, and no
+  `mints`, except a mint marked `sole: false`, which is url state a navigation
+  filled in and not a created record (as `gates.ts` `mintedAhead` reads it).
+- No value was entered on its page before it. A click after a fill, type,
+  select, check or upload submits them, whatever else the recording shows.
+
+On arrival `arrivalStop` asks the shared
+effect verdict of the page reached, with an empty diff: the recorded lines that
+carry the run's own values must show within `ARRIVAL_WAIT_MS`, and the plain
+lines are not required, as for any link landing.
 
 | | Daemon (`src/skills/replay.ts`) | Artifact (`src/spec/emit.ts`) |
 |---|---|---|
-| Navigation by recorded destination | `runOneStep`, after a missed resolution: `mayNavigateToDestination(tool, pattern, url, params, inLoopBody)`, then `navigateToDestination` with hooks over `opts.exec('click'/'goto')`; arrival returns `ran` before the gates | a navigation click with a recorded destination (not in a loop body) resolves through the emitted `pickOrNavigate`, hooks over the `click` adapter and `page.goto` (load, 30s); arrival logs `[sitelooper drift]` and returns `skipped`, before the gates |
+| Navigation by recorded destination | `runOneStep`, after a missed resolution: `recordedAsNavigation(skill.steps, i, preconditions.urlPattern)` and `mayNavigateToDestination(tool, pattern, url, params, inLoopBody)`, then `navigateToDestination` with hooks over `opts.exec('click'/'goto')`; on arrival `arrivalStop` — a stop ends the replay with `acted` set, else the step returns `ran` | the emitter asks `recordedAsNavigation` of the segment's steps at compile time and emits `pickOrNavigate` only for such a click (not in a loop body), else `pick`; hooks over the `click` adapter and `page.goto` (load, 30s); on arrival `arrivalStop` over the step's recorded added lines throws, else the step logs `[sitelooper drift]` and returns `skipped` |
 | A substitute link whose click may have landed | `navigateToDestination` returns `{ unknown: true, note }` when rung (a)'s click threw anything but a proven `not-dispatched`; replay stops with the note (`acted` stays set), never trying rung (b)'s direct navigation | `pickOrNavigate` throws with the note |
 | Text held elsewhere | the wait's `catch`: `textHeldElsewhere(heldObservations(page, chain), state, text)` | a text wait hoists its observations; the wait's `catch` calls the emitted `textHeldOrThrow`, which drifts and continues or rethrows |
 
@@ -576,6 +616,32 @@ or a cursor-narrowed match) into the step's effect gate, rather than guessed at
 compile time from the chain.
 
 ---
+
+### `fixup.ts` — declared fix-ups
+
+`GUARD_WAIT_MS`, `GUARD_STATES`, `GUARD_REASON_MAX`, `guardedRun`,
+`wellFormedFixup`, `malformedFixups`, `fixupApplies`, `fixupSkipped`. No imports.
+
+A fix-up is a repair the recording agent made to something an earlier step of
+the same recording left wrong, recorded with the condition under which it is a
+repair at all. The agent declares it with the `fixup` tool before acting; the
+recorder accepts the condition only if it holds then, records it as a
+`wait_for` step carrying `guard`, marks the steps that follow `guarded`, and
+marks the first step after which the condition no longer holds `guardEnd`.
+Compile carries a well-formed fix-up into one skill segment, or dissolves it
+into ordinary steps (a group never closed, split by a page seam, or changed by
+another pass).
+
+| | Daemon (`src/skills/replay.ts`) | Artifact (`src/spec/emit.ts`) |
+|---|---|---|
+| The guard | `guardHolds` in the top-level step loop: settle, resolve through the shared policy, then the wait's own condition, within `GUARD_WAIT_MS` in total. No heal, no recovery, no drift ticket, and never the presence-wait window | `guardLines`: a segment-scoped `let fixupN`, `resolveCandidates` and the wait's `expect` under the same budget, any throw read as not holding |
+| It holds | `fixupApplies` in the replay's lines; the guarded steps run as ordinary steps, with their own gates and stops | `[sitelooper fixup]`; each guarded step's lines run inside `if (fixupN) { … }` |
+| It does not hold | `fixupSkipped` as a warning and a line; each guarded step is reported `skipped (fix-up gN not needed)`, counts as done, and contributes nothing (no bindings, echo notes or standing fills) | `[sitelooper skip]` with the step count; the wrapped steps do not run, so neither do their captures, `noteNavigation` or `watchProbes` |
+| Fault runs | not applicable | guarded gestures are left out of `faultSites`: a run may rightly skip them |
+| A malformed fix-up | one warning; the guard is dropped and its steps run unconditionally, as compile's dissolve would leave them | the same, decided at compile time |
+
+A guard is evaluated only at the top level of a skill. A missed guard means the
+mistake was not made this time; it is not a failure, a fallback or drift.
 
 ### `assert.ts` — what a missed assertion says
 

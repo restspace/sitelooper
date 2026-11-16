@@ -356,6 +356,18 @@ function keep(store: SkillStore, skills: Skill[], variantOf: string | undefined)
  * was promoted by an engine with different rules, and letting it through here
  * would run it unattended on the strength of evidence about a different
  * engine. It stays a candidate elsewhere; it just cannot be trusted blind.
+ *
+ * THE MOST SPECIFIC MATCH, NEVER THE FIRST ONE. A slot reads as "any text", so
+ * a template that ends in a slot also matches every longer sentence that starts
+ * the same way: `the owner is {{v1}}` reads over `the owner is admin, the list
+ * has 1 item and no error is showing` with v1 bound to everything after "is".
+ * Taking the first match in store order therefore ran whichever of two stored
+ * procedures the store happened to list first, and a skill's id hashes its
+ * creation time, so that order differed from run to run (the assert end-to-end
+ * test answered with the one-check procedure about one run in three). Of the
+ * procedures that match, the one whose template fixes the most text was
+ * recorded answering the sentence closest to this one. Ties go to the better
+ * record, then the older procedure, then the id: never to store order.
  */
 export function matchTemplate(
   skills: Skill[],
@@ -370,15 +382,33 @@ export function matchTemplate(
    */
   opts: { assert?: boolean } = {},
 ): { skill: Skill; params: Record<string, string> } | null {
+  let best: { skill: Skill; params: Record<string, string>; literal: number } | null = null;
   for (const skill of skills) {
     if (Boolean(skill.assert) !== Boolean(opts.assert)) continue;
     if (!isVerified(skill)) continue;
     if (skill.seq && skill.seq.index > 0) continue; // chains start at their head
     if (!urlMatches(skill.preconditions.urlPattern, url)) continue;
     const params = bindSkill(skill, instruction, known);
-    if (params) return { skill, params };
+    if (!params) continue;
+    const literal = literalLength(skill.template);
+    if (!best || literal > best.literal || (literal === best.literal && betterRecord(skill, best.skill))) best = { skill, params, literal };
   }
-  return null;
+  return best ? { skill: best.skill, params: best.params } : null;
+}
+
+/** How much of a template is fixed text: its length with the slots taken out. */
+function literalLength(template: string): number {
+  return squash(template).replace(/\{\{v\d+\}\}/g, '').length;
+}
+
+/** Between two procedures whose templates fix the same amount of text: the better record, then the older, then the id. */
+function betterRecord(a: Skill, b: Skill): boolean {
+  const order =
+    successRate(b) - successRate(a) ||
+    b.stats.successes - a.stats.successes ||
+    a.provenance.created.localeCompare(b.provenance.created) ||
+    a.id.localeCompare(b.id);
+  return order < 0;
 }
 
 /**
@@ -588,11 +618,30 @@ export function selectCandidates(
   // put a fragile pin back in front of the proven sibling those rounds paid
   // for. The entitlement being withheld is the pin's, so only the pin loses it.
   const someoneBound = out.some((c) => c.bound);
+  // A LOOSER READING GOES LAST (the assert end-to-end test; matchTemplate has
+  // the same rule and says why). `bound` is evidence only as far as the bind is
+  // a fair reading: `the owner is {{v1}}` binds a four-part sentence that
+  // starts with those words by taking the other three parts as its value, and
+  // with the better record it was listed ahead of the procedure the step is
+  // pinned to. So a candidate that is here on its own bind alone, and whose
+  // template fixes less of the instruction than another bound candidate's,
+  // is tried after the rest. Not removed: with nothing better it is still the
+  // only reading there is. The pin is exempt (the flow's bindings are its
+  // authority, not its wording) and so is a candidate that does the pin's
+  // whole work, however its own recording happened to be slotted.
+  const fixed = new Map(out.filter((c) => c.bound).map((c) => [c.skill.id, literalLength(c.skill.template)]));
+  const mostFixed = Math.max(0, ...fixed.values());
+  const loose = new Set(
+    out
+      .filter((c) => c.bound && c.skill.id !== hintId && (fixed.get(c.skill.id) ?? 0) < mostFixed && !(hint && sameChainProcedure(c.skill, hint, skills)))
+      .map((c) => c.skill.id),
+  );
   return out
     .sort((a, b) => {
       const rank = (c: (typeof out)[number]) =>
         isVerified(c.skill) && !(someoneBound && !c.bound && c.skill.id === hintId) ? 1 : 0;
       return (
+        Number(loose.has(a.skill.id)) - Number(loose.has(b.skill.id)) ||
         rank(b) - rank(a) ||
         successRate(b.skill) - successRate(a.skill) ||
         b.skill.stats.uses - a.skill.stats.uses ||

@@ -203,8 +203,9 @@ describe('assert: emitted code for each state', () => {
     expect(plain).not.toContain('assertMissed');
     expect(plain).not.toContain('assertStepIds');
     expect(plain).not.toContain('// Shared execution source: assert.ts.');
-    expect(statements(plain)).toContain('await expect(hit1.locator.first()).toBeVisible();');
-    expect(statements(plain)[statements(plain).indexOf('await expect(hit1.locator.first()).toBeVisible();') - 1]).not.toBe('try {');
+    // An ordinary presence wait: its own timeout (10 s when none was recorded) is its whole budget (replay's presenceWaitMs).
+    expect(statements(plain)).toContain('await expect(hit1.locator.first()).toBeVisible({ timeout: Math.max(waitUntil1 - Date.now(), 1000) });');
+    expect(statements(plain)[statements(plain).indexOf('await expect(hit1.locator.first()).toBeVisible({ timeout: Math.max(waitUntil1 - Date.now(), 1000) });') - 1]).not.toBe('try {');
   });
 });
 

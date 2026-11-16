@@ -9,6 +9,7 @@ import { POPUP_WAIT_MS, type PageEffect } from '../execution/context.js';
 import { isElementRead, readElements } from '../execution/observe.js';
 import { textHolds } from '../execution/text.js';
 import { ASSERT_ONLY_STATES, ASSERT_STATES, ASSERT_TEXT_STATES, statedIn, urlHolds, valueHolds, type AssertState } from '../execution/assert.js';
+import { GUARD_REASON_MAX, GUARD_STATES, GUARD_WAIT_MS, type GuardState } from '../execution/fixup.js';
 export { fireWhenAttached, urlHeldStill } from '../execution/browser.js';
 import { ACTION_DEADLINE_MS, type BrowserSession } from '../daemon/browser.js';
 import { clip } from '../shared/text.js';
@@ -21,7 +22,7 @@ import { isRefTarget, refHint, resolveTarget, snapshot, truncate } from '../daem
 import { controlFromTarget, siteModel } from '../skills/sitemap.js';
 import { settleDom, settlePage } from '../daemon/settle.js';
 import { fingerprintPage } from '../daemon/fingerprint.js';
-import { isRecordable, type StepDiff } from '../daemon/recorder.js';
+import { isRecordable, type GuardCheck, type OpenFixup, type StepDiff } from '../daemon/recorder.js';
 import { imageForResult, visionSettings, type VisionSettings } from './vision.js';
 import { diffTotals, settleEvidence, stepFailure, type StepEvidence } from '../daemon/step-evidence.js';
 import { splitForStep, windowKindOf, type StepJournal } from '../daemon/journal.js';
@@ -229,6 +230,25 @@ export const TOOL_DEFS: ToolDef[] = [
         text: { type: 'string', description: 'Expected text for text_equals/text_contains.' },
         count: { type: 'number', description: 'Expected element count for count.' },
         timeout_ms: { type: 'number', description: 'Default 10000.' },
+      },
+    },
+  },
+  {
+    name: 'fixup',
+    description:
+      'Call this BEFORE you correct something that an earlier step or an earlier attempt left wrong and that the task did not ask for: a duplicate row, a leftover draft, a wrong value you are about to overwrite. ' +
+      'Give a check, as for wait_for, that is TRUE NOW because of the problem and will be FALSE once you have corrected it — for example state count, count 2, on the duplicated row\'s link. ' +
+      'The check must hold now or the call is refused. Then make the correction; you are told when the check stops holding. A later run makes the correction only where the problem is there. ' +
+      'Do not use it for work the task asks for.',
+    parameters: {
+      type: 'object',
+      required: ['reason', 'target', 'state'],
+      properties: {
+        reason: { type: 'string', description: `One sentence: what is wrong and what you will do about it (at most ${GUARD_REASON_MAX} characters).` },
+        target: { type: 'string', description: 'A selector (role=…[name="…"], text, or CSS) for the element that shows the problem. Not an @ref: the check is read again after each step, and a ref dies when the page re-renders.' },
+        state: { type: 'string', enum: [...GUARD_STATES] },
+        count: { type: 'number', description: 'Element count for state count.' },
+        text: { type: 'string', description: 'Text for text_equals/text_contains.' },
       },
     },
   },
@@ -547,10 +567,16 @@ export interface ToolExecution {
  * attached. In assert mode only the observing tools (ASSERT_TOOLS), with
  * wait_for in its assertion form; every other mode gets TOOL_DEFS, which
  * never names the assert-only states.
+ *
+ * `fixup` exists only where its guard has somewhere to go and something to
+ * mean: learning mode, whose recording compiles into skills a later run
+ * replays (with no store attached nothing replays the condition, and a plain
+ * script recording has no compile). Never in assert mode: an assertion
+ * repairs nothing, and ASSERT_TOOLS does not name it.
  */
 export function toolDefsFor(session: BrowserSession, vision: Pick<VisionSettings, 'on'> = { on: false }, mode: { assert?: boolean } = {}): ToolDef[] {
   const all = mode.assert ? TOOL_DEFS.filter((t) => ASSERT_TOOLS.has(t.name)).map((t) => (t.name === 'wait_for' ? ASSERT_WAIT_FOR : t)) : TOOL_DEFS;
-  const defs = session.learn ? all : all.filter((t) => t.name !== 'run_skill');
+  const defs = session.learn ? all : all.filter((t) => t.name !== 'run_skill' && t.name !== 'fixup');
   // Vision off: the very same definitions, byte for byte.
   return vision.on ? defs.map((t) => (t.name === 'screenshot' ? { ...t, description: VISION_SCREENSHOT_DESCRIPTION } : t)) : defs;
 }
@@ -578,6 +604,29 @@ export async function executeTool(
    */
   options: { deadlineMs?: number; assert?: { instruction: string } } = {},
 ): Promise<ToolExecution> {
+  const execution = await executeOneTool(session, name, args, screenshotDir, signal, options);
+  // A fix-up the recorder closed inside this call (one step of it, or one
+  // step of a batch or a replayed skill) is said once, after everything
+  // else: past every truncation, so a batch's clipped step lines cannot
+  // swallow it.
+  const closed = session.script?.takeClosedFixup?.();
+  if (!closed) return execution;
+  return { ...execution, result: `${execution.result}\n${fixupCompleteLine(closed)}` };
+}
+
+/** The line a tool result ends with when the step it ran closed a fix-up. */
+function fixupCompleteLine(closed: { id: string; tool: string }): string {
+  return `[fix-up ${closed.id} complete: after that ${closed.tool} its check no longer holds. Carry on with the task.]`;
+}
+
+async function executeOneTool(
+  session: BrowserSession,
+  name: string,
+  args: Record<string, unknown>,
+  screenshotDir: string,
+  signal: AbortSignal | undefined,
+  options: { deadlineMs?: number; assert?: { instruction: string } },
+): Promise<ToolExecution> {
   if (options.assert) {
     const refusal = assertRefusal(name, args, options.assert.instruction);
     if (refusal) return { result: truncate(`ERROR: ${refusal}`, TOOL_RESULT_BUDGET), isError: true, refused: true };
@@ -604,6 +653,7 @@ export async function executeTool(
     // instruction with no report and a dangling user message.
     if (name === 'batch') return await executeBatch(session, args, screenshotDir, signal);
     if (name === 'run_skill') return await executeSkill(session, args, screenshotDir, signal);
+    if (name === 'fixup') return await executeFixup(session, args, screenshotDir, signal);
     const diffing = STATE_CHANGING.has(name) ? await session.getPage().catch(() => null) : null;
     const before: PageSignature | null = diffing ? await captureSignature(diffing) : null;
     const { result, outcome, settled } = await runStep(session, name, args, screenshotDir, signal, { before, deadlineMs: options.deadlineMs });
@@ -865,7 +915,113 @@ async function isPasswordInput(locator: Locator): Promise<boolean> {
   }
 }
 
+/**
+ * The `fixup` tool (execution/fixup.ts; erpnext fwen10-fr): the agent declares
+ * a repair of something an earlier step left wrong, with a check that is true
+ * BECAUSE of the problem. The check is taken only if it holds now; it is then
+ * recorded as one ordinary wait_for step (runStep, so its locator chain is
+ * derived exactly as any wait_for's is) carrying `guard`, and the recorder
+ * marks every step after it `guarded` until the check stops holding (runStep's
+ * re-read, recorder.commit). A refusal records nothing a consumer reads.
+ */
+async function executeFixup(session: BrowserSession, args: Record<string, unknown>, screenshotDir: string, signal?: AbortSignal): Promise<ToolExecution> {
+  const refuse = (message: string): ToolExecution => ({ result: truncate(`ERROR: fixup refused: ${message} Nothing was recorded.`, TOOL_RESULT_BUDGET), isError: true });
+  const recorder = session.script;
+  if (!recorder || !session.learn) return refuse('a fix-up is declared only while recording in learning mode.');
+  const open = recorder.openFixup;
+  if (open) {
+    return refuse(
+      `fix-up ${open.id} is still open (its check ${describeCheck(open.check)} still holds). Fix-ups do not nest: finish that correction until its check stops holding, then declare the next one.`,
+    );
+  }
+  const reason = typeof args.reason === 'string' ? scrubSecrets(args.reason.replace(/\s+/g, ' ').trim()) : '';
+  if (!reason) return refuse('it needs a reason: one sentence saying what is wrong and what you will do about it.');
+  const target = typeof args.target === 'string' ? args.target.trim() : '';
+  if (!target) return refuse('it needs a target: the element that shows the problem.');
+  // The check is read again after every step of the correction, and a ref
+  // names an element of the snapshot it came from: deleting a row re-renders
+  // the table, the ref then names nothing, and the check would read as
+  // repaired because the handle died, not because the problem went.
+  if (isRefTarget(target)) {
+    return refuse(`its target ${JSON.stringify(target)} is a snapshot ref, which dies when the page re-renders, and the check is read again after each step. Name the element by a selector instead: role=link[name="…"], text=…, or CSS such as a:has-text("…").`);
+  }
+  const state = args.state as GuardState;
+  if (!(GUARD_STATES as readonly unknown[]).includes(state)) return refuse(`state ${JSON.stringify(args.state)} is not one a fix-up can check — use one of ${GUARD_STATES.join(', ')}.`);
+  const check: GuardCheck = { target, state };
+  if (state === 'count') {
+    if (typeof args.count !== 'number' || !Number.isFinite(args.count)) return refuse('state count needs count: the number of elements the problem shows now.');
+    check.count = args.count;
+  }
+  if (state === 'text_equals' || state === 'text_contains') {
+    if (typeof args.text !== 'string' || !args.text) return refuse(`state ${state} needs text: what the element shows now because of the problem.`);
+    check.text = args.text;
+  }
+  const page = await session.getPage();
+  // Through wait_for's own evaluation, given what a runner gives a guard
+  // (GUARD_WAIT_MS): a check that does not hold now is no evidence of a
+  // problem, and saying what was found lets the model correct its check.
+  const held = await waitFor(page, { ...check, timeout_ms: GUARD_WAIT_MS }, signal).then(
+    (r) => ({ ok: true as const, said: r }),
+    (err: unknown) => ({ ok: false as const, said: explainError(err, { ...check }) }),
+  );
+  if (!held.ok) {
+    return refuse(
+      `its check does not hold now — ${held.said}. A fix-up's check must be TRUE NOW because of the problem (and false once it is corrected). Look at the page and give a check that shows the problem, or, if nothing needs correcting, carry on without a fix-up.`,
+    );
+  }
+  // Recorded with exactly an ordinary wait_for's args: no timeout_ms.
+  const { result } = await runStep(session, 'wait_for', { ...check }, screenshotDir, signal, { guard: { reason: clip(reason, GUARD_REASON_MAX), check } }).catch((err: unknown) => ({
+    result: `ERROR: ${explainError(err, { ...check })}`,
+  }));
+  // Read again: the commit has just opened it (TS would keep the narrowing above).
+  const opened = recorder.openFixup as OpenFixup | null;
+  if (result.startsWith('ERROR:')) return refuse(`its check stopped holding as it was recorded (${result.replace(/^ERROR: /, '')}).`);
+  if (!opened) return refuse('the recorder could not describe its target on this page.');
+  return {
+    result: `fix-up ${opened.id} declared (${result}). Make the correction now: every step you take belongs to it until its check stops holding, and you will be told when that happens.`,
+    isError: false,
+  };
+}
+
+/** A check, said back to the model. */
+function describeCheck(check: GuardCheck): string {
+  const what = check.state === 'count' ? `count ${check.count}` : check.text !== undefined ? `${check.state} ${JSON.stringify(check.text)}` : check.state;
+  return `${what} on ${JSON.stringify(check.target)}`;
+}
+
+/**
+ * Tools whose step cannot have corrected anything: they only look (or arm a
+ * dialog handler). An open fix-up's check is not re-read after them, so a
+ * fix-up closes on the gesture that repaired it, never on a read that
+ * happened to come after a late paint.
+ */
+const NO_REPAIR = new Set(['wait_for', 'read', 'read_all', 'eval', 'screenshot', 'dialog_expect']);
+
+/**
+ * Whether an open fix-up's check still holds, read once with no wait: the
+ * step before it has settled, so this is a look, not a poll, and recording
+ * pays one locator round trip per guarded step. Through waitFor with
+ * timeout 0, on the selector resolved and taken at its first match, as a
+ * replay dispatches a wait on its resolved chain. Anything that stops the
+ * check from answering (the target gone, the page navigated) is "does not
+ * hold", as it is for both runners (fixup.ts).
+ */
+async function fixupStillHolds(session: BrowserSession, check: GuardCheck, signal?: AbortSignal): Promise<boolean> {
+  // An abandoned instruction observed nothing: claiming the check turned
+  // false would close a fix-up nobody saw repaired.
+  if (signal?.aborted) return true;
+  try {
+    const page = await session.getPage();
+    await waitFor(page, { ...check, timeout_ms: 0 }, undefined, resolveTarget(page, check.target));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 interface StepOptions {
+  /** This wait_for is the guard of a fix-up being declared (executeFixup): the recorder opens the fix-up at its commit. */
+  guard?: { reason: string; check: GuardCheck };
   /** Signature captured by the caller before the action, to avoid a second capture. */
   before?: PageSignature | null;
   /** Replay: locators already resolved through a skill's chain. */
@@ -1110,8 +1266,16 @@ note: this link points to ${verdict.link.href}, and its navigation had not commi
       if (gap) journaled.gap = { ...journaled.gap, ...gap };
     }
     if (journal && jw && pending && page && gapAfter) journal.lastAfter = { page, lines: gapAfter.lines, url: gapAfter.url, w: jw };
+    // An open fix-up (executeFixup): this step is one of its steps, and the
+    // first after which its check no longer holds is its last. Read here,
+    // settled and before the commit, because the line a step is appended as
+    // is the line it keeps.
+    const fixup = pending && !opts.guard ? recorder?.openFixup : null;
+    const guardEnd = Boolean(fixup && !NO_REPAIR.has(name) && !(await fixupStillHolds(session, fixup.check, signal)));
     committed = true;
     recorder?.commit(pending, result, {
+      ...(opts.guard ? { guard: opts.guard } : {}),
+      ...(guardEnd ? { guardEnd } : {}),
       diff,
       ...(journaled ? { journal: journaled } : {}),
       ...(evidence ? { obs: evidence } : {}),
@@ -2046,7 +2210,16 @@ async function waitFor(
     }
   }
 
+  // timeout 0 is ONE look, no wait: what an open fix-up's re-read after each
+  // step asks (fixupStillHolds). Playwright reads a 0 timeout as "no timeout",
+  // and the poll below would have looked zero times.
+  const once = timeout <= 0;
   if (state === 'visible' || state === 'hidden') {
+    if (once) {
+      const shown = await loc.first().isVisible().catch(() => false);
+      if (shown === (state === 'visible')) return `condition met: ${state}`;
+      throw new Error(`wait_for ${state} does not hold (looked once: the element is ${shown ? 'visible' : 'not visible'})`);
+    }
     await loc.first().waitFor({ state, timeout });
     return `condition met: ${state}`;
   }
@@ -2055,32 +2228,46 @@ async function waitFor(
     throw new Error('wait_for cancelled: instruction budget exhausted');
   };
 
-  const deadline = Date.now() + timeout;
-  let last = '';
-  let firstObserved: string | null = null;
-  while (Date.now() < deadline) {
-    if (signal?.aborted) cancelled();
+  // One look at the condition: whether it holds, and what was seen.
+  const look = async (): Promise<{ held: boolean; last: string }> => {
     if (state === 'count') {
       const count = await loc.count();
-      last = `count=${count}`;
-      if (count === Number(args.count)) return `condition met: ${last}`;
-    } else if (state === 'value_equals') {
+      return { held: count === Number(args.count), last: `count=${count}` };
+    }
+    if (state === 'value_equals') {
       // A field's CURRENT value (an assertion's state): what `read what=value`
       // reads (observe.ts readElements → inputValue), compared as text_equals
       // compares text (assert.ts valueHolds). An element with no value — not
       // an input, textarea or select, or not there — holds nothing: null is
       // never equal, whatever was asked for.
       const value = await loc.first().inputValue({ timeout: 1000 }).catch(() => null);
-      last = value === null ? 'value=(no field value)' : `value=${JSON.stringify(value.slice(0, 200))}`;
-      if (value !== null && valueHolds(value, String(args.text))) return `condition met: ${last}`;
-    } else {
-      const text = (await loc.first().innerText({ timeout: 1000 }).catch(() => null)) ?? '';
-      last = `text=${JSON.stringify(text.slice(0, 200))}`;
-      // One definition of "shows the text" in every tier (execution/text.ts
-      // textHolds): rendered text, whitespace collapsed — what the artifact's
-      // useInnerText assertions and the held-elsewhere rung compare (fwop10).
-      if ((state === 'text_equals' || state === 'text_contains') && textHolds(text, state, String(args.text))) return `condition met: ${last}`;
+      return { held: value !== null && valueHolds(value, String(args.text)), last: value === null ? 'value=(no field value)' : `value=${JSON.stringify(value.slice(0, 200))}` };
     }
+    // A single look does not wait out innerText's own second for an element
+    // that is not there: absent is an answer.
+    const present = !once || (await loc.count().catch(() => 0)) > 0;
+    const text = (present ? await loc.first().innerText({ timeout: 1000 }).catch(() => null) : null) ?? '';
+    // One definition of "shows the text" in every tier (execution/text.ts
+    // textHolds): rendered text, whitespace collapsed — what the artifact's
+    // useInnerText assertions and the held-elsewhere rung compare (fwop10).
+    return { held: (state === 'text_equals' || state === 'text_contains') && textHolds(text, state, String(args.text)), last: `text=${JSON.stringify(text.slice(0, 200))}` };
+  };
+
+  if (once) {
+    if (signal?.aborted) cancelled();
+    const seen = await look();
+    if (seen.held) return `condition met: ${seen.last}`;
+    throw new Error(`wait_for ${state} does not hold (looked once: ${seen.last})`);
+  }
+
+  const deadline = Date.now() + timeout;
+  let last = '';
+  let firstObserved: string | null = null;
+  while (Date.now() < deadline) {
+    if (signal?.aborted) cancelled();
+    const seen = await look();
+    last = seen.last;
+    if (seen.held) return `condition met: ${last}`;
     if (firstObserved === null) firstObserved = last;
     // Wake early on cancellation so an abandoned wait stops polling the page
     // instead of ticking on in the background for the rest of its own timeout.

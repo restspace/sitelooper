@@ -246,13 +246,14 @@ describe('the policy the artifact derives at compile time', () => {
     // was held to exactly one element with three panel headings on the page:
     // both replays stopped and the compiled arm failed 0/6.
     const visible = emit(flowOf([{ tool: 'wait_for', args: { target: 'text=x', state: 'visible' }, locators: { target: [{ kind: 'css', selector: 'td.name' }] } }])).source;
-    expect(policyOf(visible)).toBe('{ allowMultiple: true, stayOnOrigin: originOf(page.url()) ?? undefined, waitMs: RESOLVE_WAIT_MS }');
-    expect(bodyOf(visible)).toContain('await expect(hit1.locator.first()).toBeVisible();');
+    // ...and, waiting for its target to APPEAR, it finds that target within its own timeout (10 s when none was recorded), not the fixed window (ghost fwgh21-fr).
+    expect(policyOf(visible)).toBe('{ allowMultiple: true, stayOnOrigin: originOf(page.url()) ?? undefined, waitMs: 10000 }');
+    expect(bodyOf(visible)).toContain('await expect(hit1.locator.first()).toBeVisible({ timeout: Math.max(waitUntil1 - Date.now(), 1000) });');
     // a COUNT wait keeps the whole locator: the question is how many, and
     // `.first()` would always answer one (spansEveryMatch).
     const counted = emit(flowOf([{ tool: 'wait_for', args: { target: '.row', state: 'count', count: 3 }, locators: { target: [{ kind: 'css', selector: '.row' }] } }])).source;
-    expect(policyOf(counted)).toBe('{ allowMultiple: true, stayOnOrigin: originOf(page.url()) ?? undefined, waitMs: RESOLVE_WAIT_MS }');
-    expect(bodyOf(counted)).toContain('await expect(hit1.locator).toHaveCount(3);');
+    expect(policyOf(counted)).toBe('{ allowMultiple: true, stayOnOrigin: originOf(page.url()) ?? undefined, waitMs: 10000 }');
+    expect(bodyOf(counted)).toContain('await expect(hit1.locator).toHaveCount(3, { timeout: Math.max(waitUntil1 - Date.now(), 1000) });');
   });
 
   /**
