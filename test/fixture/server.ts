@@ -1066,8 +1066,8 @@ const BOARD = `<!doctype html><html><head><meta charset="utf-8"><title>Board</ti
  * columns are role=listitem, contacts are plain article cards, and this run's
  * card is fourth, below the recording's own (f1, third).
  */
-const BOARD_CARD = (name: string) =>
-  `<article class="pl-card"><button><span>${name}</span></button><div><label>Move ${name} to stage<select><option>Identified</option></select></label></div></article>`;
+const BOARD_CARD = (name: string, i = 0, all: string[] = []) =>
+  `<article class="pl-card ${i === all.length - 1 ? 'just-added' : ''}"><button><span>${name}</span>${i === all.length - 1 ? '<span>Just added</span>' : ''}</button><div><label>Move ${name} to stage<select><option>Identified</option></select></label></div></article>`;
 const BOARD_CARDS = `<!doctype html><html><head><meta charset="utf-8"><title>Pipeline</title></head><body><main><div role="list">
 <section class="pl-column" role="listitem" aria-label="Identified column"><header><span>Identified</span><span>4</span></header>
 <div>${['Test Speaker K7', 'Test Speaker K8', 'Test Speaker f1', 'Test Speaker f2'].map(BOARD_CARD).join('')}</div></section>

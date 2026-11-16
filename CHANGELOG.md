@@ -18,8 +18,12 @@
   (an `article` card), the recorder took the column as the record row, so a read of the new card
   found the column by this run's value and then took the card by position. A replay with a new
   run id read whichever card held that position, and reported another record's name. The record
-  is now the nearest repeated container inside the list item that shows the run's value. A list
-  row whose repeated cells or tag chips do not show it, and every table, keep the row.
+  is now the nearest repeated container inside the list item that shows the run's value, also when
+  the column is too long to be a row itself. A list row whose repeated cells or tag chips do not
+  show it, and every table, keep the row.
+- Repeated record containers are recognised by tag and first class. The full class string made
+  the record just created look unique wherever the app marks it (`pl-card just-added` among
+  `pl-card` cards), so exactly that record was read by position.
 - A read anchored on a run id shorter than three characters is now checked against this run's
   record. Such a read got no record check, because a two-character value is too easy to find by
   accident. When the read's own anchor carries the run id inside longer text (`Speaker {{runid}}`),

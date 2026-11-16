@@ -19,8 +19,11 @@ import { captureReadBack, describeLocator, makeLocator, setIdentityHints, type L
 const enabled = process.env.BP_BROWSER_TESTS === '1';
 const d = enabled ? describe : describe.skip;
 
-const card = (name: string) =>
-  `<article class="pl-card"><button><span>${name}</span></button><div><label>Move ${name} to stage<select><option>Identified</option></select></label></div></article>`;
+// The app marks the card just created with a modifier class and a badge
+// (className `pl-card ${justAdded ? "just-added" : ""}`): its full class
+// string differs from every sibling's.
+const card = (name: string, i = 0, all: string[] = []) =>
+  `<article class="pl-card ${i === all.length - 1 ? "just-added" : ""}"><button><span>${name}</span>${i === all.length - 1 ? "<span>Just added</span>" : ""}</button><div><label>Move ${name} to stage<select><option>Identified</option></select></label></div></article>`;
 const board = (names: string[]) => `
   <main><div role="list">
     <section class="pl-column" role="listitem" aria-label="Identified column">
@@ -63,6 +66,21 @@ d('captureReadBack: a record card inside a list-item column', () => {
     const next = makeLocator(page, { ...anchor!, hasText: 'Speaker f2' });
     expect(await next.count()).toBe(1);
     expect((await next.innerText()).trim()).toBe('Test Speaker f2');
+  });
+
+  it('finds the card in a column too long to be a row itself (kms j1: nine cards)', async () => {
+    // rowAt gives up on a container over 400 characters. A column of nine
+    // cards is that, and the card inside it was never looked for.
+    const page = await session.getPage();
+    const names = ['K7', 'K8', 'f1', 'f2', 'g1', 'h1', 'h2', 'i1', 'j1'].map((r) => `Test Speaker ${r}`);
+    await page.setContent(board(names));
+    expect((await page.locator('section.pl-column').first().innerText()).length).toBeGreaterThan(400);
+    setIdentityHints(['Test', 'Speaker j1', 'test.speaker.j1@example.com']);
+    const step = await captureReadBack(page, 'Test Speaker j1', 'contact_name');
+    expect(step).not.toBeNull();
+    const chain = step!.locators.target.chain as LocatorCandidate[];
+    expect(chain[0]).toMatchObject({ kind: 'scoped', hasText: 'Speaker j1' });
+    expect((chain[0] as Extract<LocatorCandidate, { kind: 'scoped' }>).container).toMatch(/^article/);
   });
 
   it('keeps a list row as the record when the element sits in one of its repeated cells', async () => {

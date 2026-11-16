@@ -2941,7 +2941,11 @@ function describeInPage(node: Node): ElementInfo {
       const parent = cur.parentElement;
       if (!parent || parent === stop?.parentElement) break;
       if (skipCells && (cur.tagName === 'TD' || cur.tagName === 'TH')) continue;
-      const shape = (n: Element) => `${n.tagName}.${n.getAttribute('class') ?? ''}`;
+      // Tag and FIRST class only, the shape the container selector names
+      // (rowAt's tagOf). The full class string missed the one record that
+      // mattered: KMS marks the card just created `pl-card just-added`, its
+      // siblings `pl-card `, so it had no sibling of its own shape.
+      const shape = (n: Element) => `${n.tagName}.${(n.getAttribute('class') ?? '').trim().split(/\s+/)[0] ?? ''}`;
       const sibs = Array.from(parent.children).filter((c) => shape(c) === shape(cur!));
       if (sibs.length >= 2 && cur !== el) return cur;
     }
@@ -2954,7 +2958,7 @@ function describeInPage(node: Node): ElementInfo {
     const box = semantic ?? repeatedAncestor(null, false);
     if (!box) return null;
     const row = rowAt(box);
-    if (!row || !semantic) return row;
+    if (!semantic) return row;
     // A semantic item can hold records of its own: a kanban column that is a
     // listitem, its cards plain articles (kms.r-s.workers.dev, 2026-11-16 —
     // the card was read by position inside the column and the replay read
@@ -2964,6 +2968,11 @@ function describeInPage(node: Node): ElementInfo {
     // Table cells are never records.
     const inner = repeatedAncestor(semantic, true);
     const nested = inner && inner !== semantic && semantic.contains(inner) ? rowAt(inner) : null;
+    // A semantic item too long to be one record (rowAt's 400-character cap; a
+    // column of nine cards, kms j1) leaves the record inside it as the row.
+    // Returned as its own `nested` too, so identityAnchor treats it as the
+    // record it is (anchored on the hint, never narrowed to the read's text).
+    if (!row) return nested ? { ...nested, nested } : null;
     return nested ? { ...row, nested } : row;
   };
   const rowAt = (box: Element): Row | null => {

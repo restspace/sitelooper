@@ -6836,7 +6836,7 @@ document.getElementById('yes').addEventListener('click', () => {
           tool: 'read',
           args: { target: '(read-back)', what: 'text', scopedBy: 'v1', scopedWithin: 'Speaker {{v1}}' },
           label: 'contact_name_2',
-          locators: { target: [{ kind: 'scoped', container: 'article.pl-card', hasText: 'Speaker {{v1}}', selector: 'button > span' }] },
+          locators: { target: [{ kind: 'scoped', container: 'article.pl-card', hasText: 'Speaker {{v1}}', selector: 'button > span:nth-of-type(1)' }] },
         },
       ];
       const { skill, spec } = withParams(steps, { v1: { example: 'f1', usedIn: [2, 3], known: true } });
