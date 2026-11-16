@@ -13,6 +13,19 @@
   and must be recompiled before `--faults` will run. Readable files are not supported.
 
 ### Replay and compiled specs
+- A read of a record card inside a list-item column is anchored on the card, not on the column.
+  Where a board renders each column as a list item and each record as a plain repeated element
+  (an `article` card), the recorder took the column as the record row, so a read of the new card
+  found the column by this run's value and then took the card by position. A replay with a new
+  run id read whichever card held that position, and reported another record's name. The record
+  is now the nearest repeated container inside the list item that shows the run's value. A list
+  row whose repeated cells or tag chips do not show it, and every table, keep the row.
+- A read anchored on a run id shorter than three characters is now checked against this run's
+  record. Such a read got no record check, because a two-character value is too easy to find by
+  accident. When the read's own anchor carries the run id inside longer text (`Speaker {{runid}}`),
+  both runners now require the read to show that text filled with this run's value, and skip it
+  otherwise.
+
 - A click whose target is gone is reached through its recorded url only when the recording shows
   it as navigation and nothing else: it moved to another url, and it did not create or remove a
   record, raise an alert, or open or close a page. Before, any click with a recorded url qualified,

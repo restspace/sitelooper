@@ -1662,7 +1662,7 @@ export async function replaySkill(
             const slot = (name: unknown) => (typeof name === 'string' ? params[name] : undefined);
             // …and one that proves a value this procedure SET did not land is a
             // failed step, not a skipped read (scopedReadLanded, gitea fwgt12).
-            return scopedReadLanded(decodeRead(result), { frame: args.frame, slotFrame: args.slotFrame, mark: slot(args.frameMark), within: slot(args.scopedBy) }, resolved.target ?? null, { set: scopeSetBy(skill.steps, step.args.scopedBy), what: String(args.what ?? 'text') });
+            return scopedReadLanded(decodeRead(result), { frame: args.frame, slotFrame: args.slotFrame, mark: slot(args.frameMark), within: typeof args.scopedWithin === 'string' && args.scopedWithin ? args.scopedWithin : slot(args.scopedBy) }, resolved.target ?? null, { set: scopeSetBy(skill.steps, step.args.scopedBy), what: String(args.what ?? 'text') });
           });
           if (!taken.ok && taken.lost) {
             res.failedAt = failIndex;

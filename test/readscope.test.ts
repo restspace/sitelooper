@@ -318,3 +318,84 @@ describe('the artifact carries the same rules (emit.ts)', () => {
     expect(source).toContain(".toContainText('OVERVIEW', { useInnerText: true, timeout: Math.max(waitUntil1 - Date.now(), 1000) });");
   });
 });
+
+/**
+ * kms.r-s.workers.dev (2026-11-16): runid "f1", two characters, is under
+ * MIN_ID_LEN, so the contact_name read-back anchored on "Speaker {{v1}}" got no
+ * scopedBy and the f2 replay published "Test Speaker f1". The anchor's whole
+ * text, "Speaker f1", is long enough to guard by.
+ */
+describe('a short locating slot is scoped by its anchor text (kms)', () => {
+  const kmsSlots = new Map([
+    ['v1', 'f1'],
+    ['v2', 'test.speaker.f1@example.com'],
+  ]);
+  const anchor: LocatorCandidate = { kind: 'scoped', container: 'section.pl-column', hasText: 'Speaker {{v1}}', selector: 'div > article:nth-of-type(3) > button > span' };
+
+  it('scopes the read by the slot and carries the anchor text in slot form', () => {
+    const args: Record<string, unknown> = { target: '(read-back)', what: 'text' };
+    const locators = { target: [anchor, positional] };
+    scopeReadBySlot(JSON.stringify('Test Speaker f1'), 'read', args, locators, kmsSlots, new Set(['v1']));
+    expect(args.scopedBy).toBe('v1');
+    expect(args.scopedWithin).toBe('Speaker {{v1}}');
+    expect(locators.target).toEqual([anchor, positional]);
+  });
+
+  it('negative: no scoped anchor naming the slot, no scope', () => {
+    const args: Record<string, unknown> = { target: '(read-back)', what: 'text' };
+    scopeReadBySlot(JSON.stringify('Test Speaker f1'), 'read', args, { target: [positional] }, kmsSlots, new Set(['v1']));
+    expect(args.scopedBy).toBeUndefined();
+    expect(args.scopedWithin).toBeUndefined();
+  });
+
+  it('negative: an anchor whose filled text is still short, or not in the value, or a slot that does not locate', () => {
+    const bare: LocatorCandidate = { kind: 'scoped', container: 'tr', hasText: '{{v1}}' };
+    for (const [chain, locating, value] of [
+      [[bare], new Set(['v1']), 'Test Speaker f1'],
+      [[anchor], new Set(['v1']), 'Speaker-f1 Test'],
+      [[anchor], new Set<string>(), 'Test Speaker f1'],
+    ] as const) {
+      const args: Record<string, unknown> = { target: '(read-back)', what: 'text' };
+      scopeReadBySlot(JSON.stringify(value), 'read', args, { target: [...chain] }, kmsSlots, locating);
+      expect(args.scopedBy).toBeUndefined();
+    }
+  });
+
+  it('the run-time check refuses the recording’s card for this run’s anchor text', () => {
+    expect(() => scopedRead('Test Speaker f1', { within: 'Speaker f2' })).toThrow(/another record/);
+    expect(scopedRead('Test Speaker f2', { within: 'Speaker f2' })).toBe('Test Speaker f2');
+  });
+
+  it('the artifact checks the filled anchor text, not the bare slot', () => {
+    const { source } = emitFlowFile(
+      {
+        version: 1,
+        name: 'kms',
+        origin: 'http://x.test',
+        startUrl: 'http://x.test/',
+        vars: [],
+        steps: [
+          {
+            id: '02-create',
+            instruction: 'enroll Speaker {{v1}}',
+            params: { v1: 'f1' },
+            outputs: ['contact_name'],
+            segments: [
+              {
+                id: 's_kms',
+                template: 'enroll Speaker {{v1}}',
+                params: { v1: { example: 'f1', usedIn: [1], known: true } },
+                preconditions: { urlPattern: 'http://x.test/' },
+                steps: [{ tool: 'read', args: { target: '(read-back)', what: 'text', scopedBy: 'v1', scopedWithin: 'Speaker {{v1}}' }, label: 'contact_name', locators: { target: [anchor] } }],
+              },
+            ],
+          },
+        ],
+      },
+      { tier: 'plain' },
+    );
+    const line = source.split('\n').find((l) => l.includes('scopedRead(await')) ?? '';
+    expect(line).toContain('within: `Speaker ${p.v1}`');
+    expect(line).not.toContain("within: p['v1']");
+  });
+});

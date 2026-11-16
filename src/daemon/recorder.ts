@@ -1134,7 +1134,7 @@ interface ElementInfo {
    * visible text, and this element's path relative to it. Raw material for an
    * identity-scoped candidate — see LocatorCandidate's 'scoped'.
    */
-  row: { container: string; text: string; inner: string; cells: string[] } | null;
+  row: RecordRow | null;
   /**
    * The nearest ANCESTOR carrying a testid, for the anchored fallback rung
    * between the element's own semantics and the bare positional path. cssPath
@@ -2673,20 +2673,42 @@ export function addIdentityHint(value: string): void {
 
 const MIN_HINT_LEN = 4;
 
+/**
+ * The record container an element sits in (rowOf): a semantic row or list
+ * item, else the nearest repeated ancestor. `nested`: the nearest repeated
+ * container inside a semantic one, which identityAnchor prefers when it shows
+ * the identifying value (a card inside a kanban column).
+ */
+export interface RecordRow {
+  container: string;
+  text: string;
+  inner: string;
+  cells: string[];
+  nested?: RecordRow;
+}
+
 /** The scoped candidate for this element, when its row shows an identity hint. */
-function identityAnchor(info: ElementInfo): LocatorCandidate | null {
-  const row = info.row;
-  if (!row || !identityHints.length) return null;
+export function identityAnchor(info: Pick<ElementInfo, 'row'>): LocatorCandidate | null {
+  if (!info.row || !identityHints.length) return null;
   // Longest match wins: a part's full name is a sharper anchor than the runid
   // it starts with, and the runid alone would match every row of this run.
-  const hit = identityHints.filter((h) => row.text.includes(h)).sort((a, b) => b.length - a.length)[0];
+  const hitIn = (r: RecordRow) => identityHints.filter((h) => r.text.includes(h)).sort((a, b) => b.length - a.length)[0];
+  // The record inside the row, when it is the one that shows the value: the
+  // row is then a group of records (a column of cards), not one record.
+  const nestedHit = info.row.nested ? hitIn(info.row.nested) : undefined;
+  const row = nestedHit ? info.row.nested! : info.row;
+  const hit = nestedHit ?? hitIn(row);
   if (!hit) return null;
   // A hint can be true of many rows at once: every part created this run is
   // named "<runid> RD Part X", so `hasText: runid` matches them all and replay
   // reads that ambiguity as drift (fwrd11l 03-add/04-edit/06-remove). Narrow
   // it to the shortest CELL containing the hint — that cell names this record
   // and still carries the hint, so compile slots the known value inside it.
-  const narrowed = row.cells.filter((c) => c.includes(hit)).sort((a, b) => a.length - b.length)[0];
+  // Not inside a nested record: a card is already one record, and its
+  // shortest cell is usually the very text a read-back reports ("Test Speaker
+  // f1"), which readBackFromHandle refuses as circular. The hint itself (the
+  // value this run typed, "Speaker f1") is the echo anchor that rule allows.
+  const narrowed = nestedHit ? undefined : row.cells.filter((c) => c.includes(hit)).sort((a, b) => a.length - b.length)[0];
   const hasText = narrowed && narrowed.length <= 120 ? narrowed : hit;
   return { kind: 'scoped', container: row.container, hasText, ...(row.inner ? { selector: row.inner } : {}) };
 }
@@ -2910,24 +2932,41 @@ function describeInPage(node: Node): ElementInfo {
   // container selector is deliberately GENERIC (its tag, scoped to a stable
   // ancestor id when there is one) so it matches every record's container on
   // a later run and `hasText` alone picks the record.
-  const rowOf = (): { container: string; text: string; inner: string; cells: string[] } | null => {
-    let box = el.closest('tr, li, [role="row"], [role="listitem"], [role="option"]');
-    // Not every list is semantic: an app that renders rows as divs is just as
-    // common. Fall back to the nearest ancestor that HAS siblings of its own
-    // shape — that repetition is what makes it a record container.
-    if (!box) {
-      for (let cur: Element | null = el, hops = 0; cur && hops < 4; cur = cur.parentElement, hops++) {
-        const parent = cur.parentElement;
-        if (!parent) break;
-        const shape = (n: Element) => `${n.tagName}.${n.getAttribute('class') ?? ''}`;
-        const sibs = Array.from(parent.children).filter((c) => shape(c) === shape(cur!));
-        if (sibs.length >= 2 && cur !== el) {
-          box = cur;
-          break;
-        }
-      }
+  type Row = { container: string; text: string; inner: string; cells: string[]; nested?: Row };
+  // The nearest ancestor (not the element itself, within four hops, never at
+  // or above `stop`) that HAS siblings of its own shape: that repetition is
+  // what makes it a record container.
+  const repeatedAncestor = (stop: Element | null, skipCells: boolean): Element | null => {
+    for (let cur: Element | null = el, hops = 0; cur && cur !== stop && hops < 4; cur = cur.parentElement, hops++) {
+      const parent = cur.parentElement;
+      if (!parent || parent === stop?.parentElement) break;
+      if (skipCells && (cur.tagName === 'TD' || cur.tagName === 'TH')) continue;
+      const shape = (n: Element) => `${n.tagName}.${n.getAttribute('class') ?? ''}`;
+      const sibs = Array.from(parent.children).filter((c) => shape(c) === shape(cur!));
+      if (sibs.length >= 2 && cur !== el) return cur;
     }
+    return null;
+  };
+  const rowOf = (): Row | null => {
+    const semantic = el.closest('tr, li, [role="row"], [role="listitem"], [role="option"]');
+    // Not every list is semantic: an app that renders rows as divs is just as
+    // common. Fall back to the nearest repeated ancestor.
+    const box = semantic ?? repeatedAncestor(null, false);
     if (!box) return null;
+    const row = rowAt(box);
+    if (!row || !semantic) return row;
+    // A semantic item can hold records of its own: a kanban column that is a
+    // listitem, its cards plain articles (kms.r-s.workers.dev, 2026-11-16 —
+    // the card was read by position inside the column and the replay read
+    // another card). The nearest repeated container INSIDE it is offered as
+    // `nested`; identityAnchor takes it only when it shows the identifying
+    // value, so a row's repeated cells or tag chips never replace the row.
+    // Table cells are never records.
+    const inner = repeatedAncestor(semantic, true);
+    const nested = inner && inner !== semantic && semantic.contains(inner) ? rowAt(inner) : null;
+    return nested ? { ...row, nested } : row;
+  };
+  const rowAt = (box: Element): Row | null => {
     const text = (box as HTMLElement).innerText?.replace(/\s+/g, ' ').trim() ?? '';
     if (!text || text.length > 400) return null;
     const cls = (box.getAttribute('class') ?? '').trim().split(/\s+/).filter(Boolean)[0];

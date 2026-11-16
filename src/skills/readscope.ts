@@ -82,6 +82,8 @@ export function scopeReadBySlot(
         chain.unshift(text);
       }
     }
+  } else {
+    scopeByShortAnchor(value, args, locators, slots, locating);
   }
 
   if (typeof args.frame !== 'string') return;
@@ -96,6 +98,53 @@ export function scopeReadBySlot(
   lines[at] = replaceAsToken(line, host[1], `{{${host[0]}}}`);
   args.slotFrame = lines.join('\n');
   args.frameMark = markSlot[0];
+}
+
+/**
+ * A locating slot too short to scope a read by on its own (under MIN_ID_LEN),
+ * scoped by the anchor text the read's own chain locates it with.
+ *
+ * kms.r-s.workers.dev (2026-11-16): the flow was recorded with runid "f1" and
+ * replayed with "f2". The enrollment's contact_name read-back was anchored as
+ * `section.pl-column { hasText: 'Speaker {{v1}}' } >> article:nth-of-type(3)`;
+ * v1 was "f1", two characters, so the read got no `scopedBy` and the replay
+ * published "Test Speaker f1" (the recording's own card, third in the column)
+ * for a run that had created "Test Speaker f2". A bare two-character value is
+ * too easy to find by accident to guard with (MIN_ID_LEN), and the runners'
+ * check is a substring test ("f2" is inside "f21").
+ *
+ * The anchor's whole text is not: when a scoped candidate of this read names
+ * the slot inside a longer hasText ("Speaker {{v1}}", filled "Speaker f1", at
+ * least MIN_ID_LEN), and the recorded value shows that filled text, the read
+ * is scoped by the slot and `scopedWithin` carries the hasText in slot form.
+ * The runners check this run's filled text ("Speaker f2") instead of the bare
+ * value. Provenance as above: the slot must locate, and the anchor is the
+ * recording's own candidate for this very element.
+ */
+function scopeByShortAnchor(
+  value: string,
+  args: Record<string, unknown>,
+  locators: Record<string, LocatorCandidate[]>,
+  slots: ReadonlyMap<string, string>,
+  locating: ReadonlySet<string>,
+): void {
+  const chain = locators.target ?? [];
+  for (const [name, raw] of slots) {
+    const example = collapse(raw);
+    if (!example || example.length >= MIN_ID_LEN || !locating.has(name) || !occursAsToken(value, example)) continue;
+    const marker = `{{${name}}}`;
+    for (const c of chain) {
+      if (c.kind !== 'scoped' || !c.hasText.includes(marker)) continue;
+      // Only this slot may vary in the anchor: another slot's marker would make
+      // the filled text unknowable here.
+      if (/\{\{[^}]+\}\}/.test(c.hasText.split(marker).join(''))) continue;
+      const filled = collapse(c.hasText.split(marker).join(example));
+      if (filled.length < MIN_ID_LEN || !value.includes(filled)) continue;
+      args.scopedBy = name;
+      args.scopedWithin = c.hasText;
+      return;
+    }
+  }
 }
 
 /** What the recording read of a read's page: the read itself and the reads before it (`listOf` set on an element split from a list read). */

@@ -6816,6 +6816,38 @@ document.getElementById('yes').addEventListener('click', () => {
       expect(replay.outputs.part_cost).toBe('$200.00');
       expect(emitted.outputs['01-clear.part_cost']).toBe('$200.00');
     }, 120_000);
+
+    it('neither runner publishes another card for a short runid, and both find this run’s card (kms)', async () => {
+      // kms.r-s.workers.dev 2026-11-16: recorded with runid "f1", replayed
+      // with "f2". The read-back was anchored on the COLUMN containing
+      // "Speaker {{v1}}" and the card by position (third), had no scopedBy
+      // because "f1" is under MIN_ID_LEN, and published "Test Speaker f1".
+      const steps: SkillStep[] = [
+        { tool: 'goto', args: { url: `${origin}/board-cards` }, locators: {} },
+        // the old compile, now scoped by the anchor's text
+        {
+          tool: 'read',
+          args: { target: '(read-back)', what: 'text', scopedBy: 'v1', scopedWithin: 'Speaker {{v1}}' },
+          label: 'contact_name',
+          locators: { target: [{ kind: 'scoped', container: 'section.pl-column', hasText: 'Speaker {{v1}}', selector: 'div > article:nth-of-type(3) > button > span' }] },
+        },
+        // the new recording: the card itself is the record
+        {
+          tool: 'read',
+          args: { target: '(read-back)', what: 'text', scopedBy: 'v1', scopedWithin: 'Speaker {{v1}}' },
+          label: 'contact_name_2',
+          locators: { target: [{ kind: 'scoped', container: 'article.pl-card', hasText: 'Speaker {{v1}}', selector: 'button > span' }] },
+        },
+      ];
+      const { skill, spec } = withParams(steps, { v1: { example: 'f1', usedIn: [2, 3], known: true } });
+      const { replay, emitted } = await bothOf(skill, spec, { v1: 'f2' });
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      expect(replay.outputs.contact_name ?? '').toBe('');
+      expect(emitted.outputs['01-clear.contact_name'] ?? '').toBe('');
+      expect(replay.outputs.contact_name_2).toBe('Test Speaker f2');
+      expect(emitted.outputs['01-clear.contact_name_2']).toBe('Test Speaker f2');
+    }, 120_000);
   });
 
   /**
