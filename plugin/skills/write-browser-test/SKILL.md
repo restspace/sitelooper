@@ -41,7 +41,10 @@ Rules that decide whether the recording compiles well:
   Never `$NAME`: the shell would expand it and the secret would reach the recording.
 - **Values in the instruction text.** A name, amount or date written in the instruction becomes a
   parameter. Declare the value that must differ between runs with `var runid=demo`; every `demo` in
-  later instructions becomes a `{{runid}}` slot, so each test run creates fresh records.
+  later instructions becomes a `{{runid}}` slot, so each test run creates fresh records. Write the
+  run id as its own word or segment (`Speaker demo`, `ops-demo@example.com`); inside a word
+  (`speakerdemo`) it is not recognised. Never leave fields for the agent to fill with test data it
+  makes up: a value the instruction did not state is recorded as a fixed literal.
 - **One outcome per `do`.** Don't pack unrelated checks into one instruction. Put navigation on
   `open`, which needs no model.
 - **Assertions you want enforced** go in `assert` with the expected value written in the sentence:
@@ -60,6 +63,10 @@ sitelooper --session t1 assert "the ticket list shows 'demo Bench' with status O
 sitelooper --session t1 stop --save-flow ticket
 sitelooper flow export ticket --out .sitelooper/procedures.json
 ```
+
+To see the saved flow replay before compiling it, run it in a fresh session with a new run id:
+`sitelooper --session t2 run ticket --var runid=demo2` (add `--record` for a video, written on
+`stop`).
 
 Check each `do` before the next: exit `0` succeeded, `1` failed or blocked, `2` setup error. Add
 `--json` to get the report, and read its `summary`. If a step failed, don't move on. Read the report,

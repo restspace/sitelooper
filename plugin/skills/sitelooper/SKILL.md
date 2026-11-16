@@ -1,6 +1,6 @@
 ---
 name: sitelooper
-description: Drive a local browser with whole natural-language steps through the sitelooper CLI. Each `sitelooper do "<instruction>"` is worked by sitelooper's own small model against a persistent Playwright browser and returns one verified result, instead of you clicking, filling and asserting element by element. Use for executing a manual test plan or multi-step check against a web app on this machine, exploring an app with sessions, peek and screenshot, and as the reference for sitelooper's sessions, learning mode, briefs and flags. To produce a committed Playwright test use write-browser-test; to repair one use fix-browser-test.
+description: Drive a local browser with whole natural-language steps through the sitelooper CLI. Each `sitelooper do "<instruction>"` is worked by sitelooper's own small model against a persistent Playwright browser and returns one verified result, instead of you clicking, filling and asserting element by element. Use for executing a manual test plan or multi-step check against a web app on this machine, exploring an app with sessions, peek and screenshot, recording a session once and replaying it (`stop --save-flow`, then `run <flow>`, optionally with a video) when asked to run, repeat, replay or rerun it, and as the reference for sitelooper's sessions, learning mode, briefs and flags. To produce a committed Playwright test use write-browser-test; to repair one use fix-browser-test.
 ---
 
 # sitelooper: agent-in-the-loop browser automation
@@ -62,6 +62,38 @@ To turn steps into a committed Playwright test (record with `--learn`, `stop --s
 export`, `build`), follow the `write-browser-test` skill. To repair a compiled spec after a red run
 (`repair --propose`, `repair apply`, `rerecord`), follow the `fix-browser-test` skill.
 
+## Record once, replay it
+
+When the user asks to run a session again, repeat it, replay it, rerun what was learned, or record a
+video of a repeat run, save the session as a **flow** and replay the flow with `run`. Do not re-issue
+the same `do`s: that is the learning-mode path below, which is matched one instruction at a time and
+still uses the model until each procedure has two clean successes.
+
+```sh
+sitelooper --session rec --learn open https://app.example.com
+sitelooper --session rec var runid=r1                  # every later "r1" becomes a {{runid}} slot
+sitelooper --session rec do "create a contact: First name 'Test', Last name 'Speaker r1', Email 'test.r1@example.com', Phone '+1 555 010 0101'; confirm 'Test Speaker r1' is listed"
+sitelooper --session rec stop --save-flow contact      # saves the recorded steps as flow "contact"
+
+sitelooper --session rep --record run contact --var runid=r2   # replays with no model; recovers a step only if it broke
+sitelooper --session rep stop                                  # prints the video path
+```
+
+- Replay in a **fresh** session, so a login is replayed rather than reused from the browser profile.
+- `run --json` reports each step's `tier`: `A` replayed with no model, otherwise the model recovered it.
+- Each run should create its own records: pass a new `--var runid=` every time.
+- Check what the replay **created** on the page or in the app, not only its exit code; report a
+  read-back that names a different record than the one this run created.
+
+### Values decide what replays
+
+- **Write every value into the instruction.** A field the agent fills with test data it made up is
+  stored as a fixed literal, so every replay types the first run's value. "Plausible test values for
+  the other fields" is the wrong instruction for anything you will replay.
+- **Put `{{runid}}` values as their own word or segment**: `Speaker r1`, `test.r1@example.com`,
+  `test-speaker-r1`. Glued inside a word (`testspeakerr1`, `@TestSpeakerR1`) the run id is not
+  recognised and stays the first run's value.
+
 ## Learning mode — repeated work gets cheaper
 
 Start a test-authoring session with `--learn`. Every `do` that succeeds is compiled
@@ -69,6 +101,10 @@ into a stored, parameterised procedure; on later `do`s that start on the same pa
 is offered those procedures, replays one deterministically, and only reasons about steps that no longer
 work. A run that took 14 internal turns the first time typically takes 2–3 the next, with the same
 report shape and every value still read back from the live page.
+
+This makes ad-hoc `do`s cheaper over time. It is not how to repeat a whole session (see above):
+a procedure replays with no model only after two clean successes, until then the model chooses
+whether to use it, and a procedure that spans several pages is offered only from its first one.
 
 ```sh
 sitelooper --session t1 --learn open http://localhost:5173
