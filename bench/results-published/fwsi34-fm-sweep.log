@@ -1,0 +1,110 @@
+
+[sweep] run 1/3: fwsi34-fm-n1 (store: /home/user/sitelooper/bench/results/fwsi34-fm-skills)
+[harness] snipeit: defaulting APP_URL
+[harness] snipeit: defaulting APP_EMAIL
+[harness] snipeit: defaulting APP_PASSWORD
+[reset] snipeit: no leftover bench assets
+[harness] snipeit responded 302 at http://127.0.0.1:8098/
+stopped: fwsi34-fm-n1
+  flow "fwsi34-fm" saved: 5 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwsi34-fm.json
+  warning: note: 03-create no longer publishes model_no, created_by, assets_breadcrumb_label — no replay reads them from the page and the recording showed no line to read
+  warning: note: 04-edit no longer publishes purchase_date_field_name, location_dropdown_placeholder, selected_default_location — no replay reads them from the page and the recording showed no line to read
+  warning: note: 05-verify no longer publishes checked_out_to, status_shown, last_checkout, checkouts_count, checkins_count, history_checkout_entry, checkout_url, checkout_note_field_name — no replay reads them from the page and the recording showed no line to read
+  warning: warning: 237 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[0].instruction: "admin" (output) in "Sign in to Snipe-IT at http://127.0.0.1:8098/ using username admin and the password exactly as the text {{env:APP_PASSWORD}}; verify that the authenticated appl"
+  flow.steps[0].params.v2: "admin" (output) in "admin"
+  flow.steps[1].instruction: "name" (output) in "In Snipe-IT, find assets whose displayed name starts with 'Seed:' and report each exact displayed asset name and asset tag. Do not edit any asset; verify the va"
+  flow.steps[2].instruction: "Bench Laptop Model" (output) in "Create the asset named '{{runid}} Bench Asset' using the existing model 'Bench Laptop Model' and status 'Ready to Deploy'. Choose the model and status from thei"
+  flow.steps[2].instruction: "Ready to Deploy" (output) in "Create the asset named '{{runid}} Bench Asset' using the existing model 'Bench Laptop Model' and status 'Ready to Deploy'. Choose the model and status from thei"
+arm=sitelooper model=openai/gpt-6-luna runid=fwsi34-fm-n1 stop=completed
+turns=6 wall=335.4s
+commands=5 cmdTime=312.3s cmdBytes=6272 timeouts=0
+orchestrator in=4835 cw=0 cr=16463 out=961
+inner prompt=2152002 cached=1996288 completion=19551
+spend=$0.0425 maxUsd=3
+learn: A_n=0 replayed=0/5 full=0 repaired=0 compiled=5 variants=0
+-> /home/user/sitelooper/bench/results/fwsi34-fm-n1-sitelooper-result.json
+
+fwsi34-fm-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed tags and names reported
+  obj 2: PASS — BA-00004, model=Bench Laptop Model, status=Ready to Deploy
+  obj 3: PASS — default location=Bench Office
+  obj 4: PASS — purchase date=2026-03-15
+  obj 5: PASS — assigned to=Bench Assignee (user bench-assignee)
+  obj 6: PASS — 1 checkout(s), 1 with a note carrying the runid
+  obj 7: PASS — asset tag BA-00004 reported
+
+[sweep] run 2/3: fwsi34-fm-n2 (replay flow fwsi34-fm, no orchestrator)
+[reset] snipeit: deleted 1 leftover bench asset(s)
+[sweep] fwsi34-fm-n2: 2 drift ticket(s) → fwsi34-fm-n2-drift.json
+
+fwsi34-fm-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed tags and names reported
+  obj 2: PASS — BA-00005, model=Bench Laptop Model, status=Ready to Deploy
+  obj 3: PASS — default location=Bench Office
+  obj 4: PASS — purchase date=2026-03-15
+  obj 5: PASS — assigned to=Bench Assignee (user bench-assignee)
+  obj 6: PASS — 1 checkout(s), 1 with a note carrying the runid
+  obj 7: PASS — asset tag BA-00005 reported
+
+[sweep] run 3/3: fwsi34-fm-n3 (replay flow fwsi34-fm, no orchestrator)
+[reset] snipeit: deleted 1 leftover bench asset(s)
+[sweep] fwsi34-fm-n3: 2 drift ticket(s) → fwsi34-fm-n3-drift.json
+
+fwsi34-fm-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed tags and names reported
+  obj 2: PASS — BA-00006, model=Bench Laptop Model, status=Ready to Deploy
+  obj 3: PASS — default location=Bench Office
+  obj 4: PASS — purchase date=2026-03-15
+  obj 5: PASS — assigned to=Bench Assignee (user bench-assignee)
+  obj 6: PASS — 1 checkout(s), 1 with a note carrying the runid
+  obj 7: PASS — asset tag BA-00006 reported
+
+Learning sweep fwsi34-fm (K=3)
+┌─────────┬───┬────────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid          │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼────────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwsi34-fm-n1' │ '7/7'    │ 'completed' │ 6     │ 5    │ 0.0425    │ 0   │ '0/5'        │ 335    │
+│ 1       │ 2 │ 'fwsi34-fm-n2' │ '7/7'    │ 'success'   │ 0     │ 5    │ 0         │ 1   │ '5/5 (flow)' │ 82     │
+│ 2       │ 3 │ 'fwsi34-fm-n3' │ '7/7'    │ 'success'   │ 0     │ 5    │ 0         │ 1   │ '5/5 (flow)' │ 81     │
+└─────────┴───┴────────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:8098
+  s_04cf7c  validated    1 steps  3/3 (100%)
+           Check out asset '{{v1}}' once to the existing user 'Bench Assignee', choosing that user from the searchable dr…
+  s_061dac  validated    7 steps  3/3 (100%)
+           Edit the existing asset '{{v1}}' to set its default location to the existing searchable-dropdown option 'Bench…
+  s_0b5d80  validated    3 steps  3/3 (100%)
+           Check out asset '{{v1}}' once to the existing user 'Bench Assignee', choosing that user from the searchable dr…
+  s_0dc118  validated    1 steps  3/3 (100%)
+           Create the asset named '{{v2}}' using the existing model '{{v3}}' and status 'Ready to Deploy'. Choose the mod…
+  s_339542  validated    1 steps  3/3 (100%)
+           Edit the existing asset '{{v1}}' to set its default location to the existing searchable-dropdown option 'Bench…
+  s_3d3043  validated    5 steps  3/3 (100%)
+           Check out asset '{{v1}}' once to the existing user 'Bench Assignee', choosing that user from the searchable dr…
+  s_47dc5e  validated   12 steps  3/3 (100%)
+           Edit the existing asset '{{v1}}' to set its default location to the existing searchable-dropdown option 'Bench…
+  s_4d8a68  validated   10 steps  3/3 (100%)
+           Create the asset named '{{v2}}' using the existing model '{{v3}}' and status 'Ready to Deploy'. Choose the mod…
+  s_4f5c08  validated    1 steps  3/3 (100%)
+           Sign in to Snipe-IT at {{v1}} using username {{v2}} and the password exactly as the text {{v3}}; verify that t…
+  s_69f32d  validated    1 steps  3/3 (100%)
+           In Snipe-IT, find assets whose displayed name starts with 'Seed:' and report each exact displayed asset name a…
+  s_7fa689  validated    4 steps  3/3 (100%)
+           Sign in to Snipe-IT at {{v1}} using username {{v2}} and the password exactly as the text {{v3}}; verify that t…
+  s_80f9b2  validated    1 steps  3/3 (100%)
+           Edit the existing asset '{{v1}}' to set its default location to the existing searchable-dropdown option 'Bench…
+  s_8db7a2  validated    1 steps  3/3 (100%)
+           Check out asset '{{v1}}' once to the existing user 'Bench Assignee', choosing that user from the searchable dr…
+  s_b7c762  validated    3 steps  3/3 (100%)
+           Sign in to Snipe-IT at {{v1}} using username {{v2}} and the password exactly as the text {{v3}}; verify that t…
+  s_bf9e3d  validated    1 steps  3/3 (100%)
+           Create the asset named '{{v2}}' using the existing model '{{v3}}' and status 'Ready to Deploy'. Choose the mod…
+  s_ce3b2c  validated    9 steps  3/3 (100%)
+           Create the asset named '{{v2}}' using the existing model '{{v3}}' and status 'Ready to Deploy'. Choose the mod…
+  s_d7ded5  validated    1 steps  3/3 (100%)
+           Check out asset '{{v1}}' once to the existing user 'Bench Assignee', choosing that user from the searchable dr…
+  s_ff9b3c  validated    8 steps  3/3 (100%)
+           In Snipe-IT, find assets whose displayed name starts with 'Seed:' and report each exact displayed asset name a…
+store: /home/user/sitelooper/bench/results/fwsi34-fm-skills
+
+summary: /home/user/sitelooper/bench/results/fwsi34-fm-sweep.json

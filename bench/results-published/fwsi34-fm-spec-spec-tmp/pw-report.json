@@ -1,0 +1,188 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwsi34-fm-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwsi34-fm-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwsi34-fm-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/bench/results/fwsi34-fm-spec-spec-tmp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwsi34-fm-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwsi34-fm.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwsi34-fm-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwsi34-fm.spec.ts",
+      "file": "fwsi34-fm.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwsi34-fm",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 72201,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper step] 01-signin\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-find\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 03-create s_4d8a68/8: read 'asset_name' returned a value the skill itself set/selected ('fwsi34-fm-spec Bench Asset') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper skip] 03-create s_ce3b2c/7 target: read target not found — value left empty\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-create\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 04-edit s_061dac/6: read 'purchase_date' returned a value the skill itself set/selected ('2026-03-15') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper shadow] [shadow:delta] step 04-edit s_47dc5e/2: skipped as already in effect (a disclosure toggle), on evidence (\"- link \\\"Bench Laptops\\\"\" and 1 more) already showing when this segment started — this run did not produce it\n"
+                    },
+                    {
+                      "text": "[sitelooper skip] 04-edit s_47dc5e/2: toggled panel already showing — click skipped\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-edit\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 05-verify s_3d3043/4: read 'checkout_note' returned a value the skill itself set/selected ('fwsi34-fm-spec') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 05-verify\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-signin: Sign in to Snipe-IT at http://127.0.0.1:8098/ using username admin and the password exactly as the text {{env:APP_PASSWORD}}; verify that the authenticated application is open.",
+                      "duration": 7608
+                    },
+                    {
+                      "title": "02-find: In Snipe-IT, find assets whose displayed name starts with 'Seed:' and report each exact displayed asset name and asset tag. Do not edit any asset; verify the values from the asset listing or individual records.",
+                      "duration": 2362
+                    },
+                    {
+                      "title": "03-create: Create the asset named '{{runid}} Bench Asset' using the existing model 'Bench Laptop Model' and status 'Ready to Deploy'. Choose the model and status from their searchable dropdown options (do not create any). Submit it, then verify the created asset's exact displayed name, model, status, and asset tag.",
+                      "duration": 27554
+                    },
+                    {
+                      "title": "04-edit: Edit the existing asset '{{runid}} Bench Asset' to set its default location to the existing searchable-dropdown option 'Bench Office' and purchase date to 2026-03-15. Do not change other fields; save and verify the displayed location and purchase date on its record.",
+                      "duration": 22845
+                    },
+                    {
+                      "title": "05-verify: Check out asset '{{runid}} Bench Asset' once to the existing user 'Bench Assignee', choosing that user from the searchable dropdown, and include the exact note '{{runid}}'. Complete the checkout and verify the asset record shows it checked out to Bench Assignee and that the checkout note includes the runid. Do not check it out more than once.",
+                      "duration": 11240
+                    }
+                  ],
+                  "startTime": "2026-11-17T12:52:42.548Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "outputs",
+                      "contentType": "application/json",
+                      "body": "ewogICIwMS1zaWduaW4uZGFzaGJvYXJkX2hlYWRpbmciOiAiRGFzaGJvYXJkIiwKICAiMDEtc2lnbmluLnNpZ25lZF9pbl91c2VyX21lbnUiOiAiQmVuY2ggQWRtaW4iLAogICIwMS1zaWduaW4uZGFzaGJvYXJkX3BhZ2VfdGl0bGUiOiAiRGFzaGJvYXJkIDo6IEJlbmNoIEFzc2V0cyIsCiAgIjAxLXNpZ25pbi5sb2dpbl9zdWNjZXNzX21lc3NhZ2UiOiAiU3VjY2VzczogXG7Dl1xuWW91IGhhdmUgc3VjY2Vzc2Z1bGx5IGxvZ2dlZCBpbi4iLAogICIwMS1zaWduaW4udXNlcm5hbWVfdXNlZCI6ICJhZG1pbiIsCiAgIjAyLWZpbmQuYXNzZXRfMV9uYW1lIjogIlNlZWQ6IFJlY2VwdGlvbiBMYXB0b3AiLAogICIwMi1maW5kLmFzc2V0XzFfdGFnIjogIlNFRUQtMDAwMSIsCiAgIjAyLWZpbmQuYXNzZXRfMl9uYW1lIjogIlNlZWQ6IFRyYWluaW5nIExhcHRvcCIsCiAgIjAyLWZpbmQuYXNzZXRfMl90YWciOiAiU0VFRC0wMDAyIiwKICAiMDItZmluZC5hc3NldF8zX25hbWUiOiAiU2VlZDogU3BhcmUgTGFwdG9wIiwKICAiMDItZmluZC5hc3NldF8zX3RhZyI6ICJTRUVELTAwMDMiLAogICIwMi1maW5kLmFzc2V0X2NvdW50IjogIjMiLAogICIwMi1maW5kLmxpc3Rpbmdfcm93X2NvdW50X3RleHQiOiAiU2hvd2luZyAxIHRvIDMgb2YgMyByb3dzIiwKICAiMDMtY3JlYXRlLmFzc2V0X25hbWUiOiAiZndzaTM0LWZtLXNwZWMgQmVuY2ggQXNzZXQiLAogICIwMy1jcmVhdGUuc3VibWl0X2J1dHRvbl9sYWJlbCI6ICJTYXZlIiwKICAiMDMtY3JlYXRlLm1pbnRlZCI6ICI3IiwKICAiMDMtY3JlYXRlLmFzc2V0X3JlY29yZF91cmwiOiAiaHR0cDovLzEyNy4wLjAuMTo4MDk4L2hhcmR3YXJlLzciLAogICIwMy1jcmVhdGUuYXNzZXRfdGFnIjogIkJBLTAwMDA3IiwKICAiMDMtY3JlYXRlLm1vZGVsIjogIkJlbmNoIExhcHRvcCBNb2RlbCIsCiAgIjAzLWNyZWF0ZS5jYXRlZ29yeSI6ICJCZW5jaCBMYXB0b3BzIiwKICAiMDMtY3JlYXRlLm1hbnVmYWN0dXJlciI6ICJCZW5jaCBNYW51ZmFjdHVyZXIiLAogICIwMy1jcmVhdGUuc3RhdHVzIjogIlJlYWR5IHRvIERlcGxveSIsCiAgIjAzLWNyZWF0ZS5jcmVhdGVkX2F0IjogIiIsCiAgIjAzLWNyZWF0ZS5hc3NldF90YWdfZmllbGRfbGFiZWwiOiAiQXNzZXQgVGFnIiwKICAiMDMtY3JlYXRlLmFzc2V0X25hbWVfZmllbGRfbGFiZWwiOiAiQXNzZXQgTmFtZSIsCiAgIjAzLWNyZWF0ZS5lbnRlcmVkX2Fzc2V0X25hbWUiOiAiZndzaTM0LWZtLXNwZWMgQmVuY2ggQXNzZXQiLAogICIwMy1jcmVhdGUucnVuX2lkIjogImZ3c2kzNC1mbS1zcGVjIiwKICAiMDMtY3JlYXRlLnVybC5wMSI6ICI3IiwKICAiMDQtZWRpdC5wdXJjaGFzZV9kYXRlIjogIjIwMjYtMDMtMTUiLAogICIwNC1lZGl0LmFzc2V0X25hbWUiOiAiZndzaTM0LWZtLXNwZWMgQmVuY2ggQXNzZXQiLAogICIwNC1lZGl0LmFzc2V0X3RhZyI6ICJCQS0wMDAwNyIsCiAgIjA0LWVkaXQuZGVmYXVsdF9sb2NhdGlvbiI6ICJCZW5jaCBPZmZpY2UiLAogICIwNC1lZGl0LnB1cmNoYXNlZF9saW5lX29uX3JlY29yZCI6ICJQdXJjaGFzZWQgMjAyNi0wMy0xNSAtIDggbW9udGhzIDIgZGF5cyBhZ28iLAogICIwNC1lZGl0LnN0YXR1cyI6ICJSZWFkeSB0byBEZXBsb3kiLAogICIwNC1lZGl0Lm1vZGVsIjogIkJlbmNoIExhcHRvcCBNb2RlbCIsCiAgIjA0LWVkaXQudXBkYXRlZF9hdCI6ICIyMDI2LTExLTE3IDEyOjUzIFBNIiwKICAiMDQtZWRpdC5wdXJjaGFzZV9kYXRlX2ZpZWxkX2xhYmVsIjogIlB1cmNoYXNlIERhdGUiLAogICIwNC1lZGl0Lm5hbWVfZmllbGRfbmFtZSI6ICJOYW1lIiwKICAiMDQtZWRpdC5kZWZhdWx0X2xvY2F0aW9uX2ZpZWxkX2xhYmVsIjogIkRlZmF1bHQgTG9jYXRpb24iLAogICIwNC1lZGl0LmZvcm1fcHVyY2hhc2VfZGF0ZSI6ICIyMDI2LTAzLTE1IiwKICAiMDQtZWRpdC5ydW5faWQiOiAiZndzaTM0LWZtLXNwZWMiLAogICIwNS12ZXJpZnkuY2hlY2tvdXRfbm90ZSI6ICJmd3NpMzQtZm0tc3BlYyIsCiAgIjA1LXZlcmlmeS5hc3NldF9uYW1lIjogImZ3c2kzNC1mbS1zcGVjIEJlbmNoIEFzc2V0IiwKICAiMDUtdmVyaWZ5LmFzc2V0X3RhZyI6ICJCQS0wMDAwNyIsCiAgIjA1LXZlcmlmeS5ub3RlX2VudGVyZWQiOiAiZndzaTM0LWZtLXNwZWMiCn0="
+                    },
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": ""
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "d4f15da13adaba32e687-cf9e195450c876da83ad",
+          "file": "fwsi34-fm.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-11-17T12:52:40.786Z",
+    "duration": 74130.175,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}
