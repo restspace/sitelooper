@@ -1,0 +1,186 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwgr93-fm-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwgr93-fm-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwgr93-fm-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/bench/results/fwgr93-fm-spec-spec-tmp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwgr93-fm-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwgr93-fm.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwgr93-fm-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwgr93-fm.spec.ts",
+      "file": "fwgr93-fm.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwgr93-fm",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 97118,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper warn] 01-signin: report value login_username is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 01-signin\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-open\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 03-create s_1cf168/14: expected alert containing \"Dashboard saved\"\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-create\n"
+                    },
+                    {
+                      "text": "[sitelooper recipe] filled via recipe monaco/set-value (r_f2510e); value verified on the component\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-add\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 05-verify\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 06-set\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-signin: Sign in to Grafana at http://127.0.0.1:3000/ with username admin and password exactly {{env:APP_PASSWORD}}. Verify that the signed-in Grafana page is reached.",
+                      "duration": 8957
+                    },
+                    {
+                      "title": "02-open: Open the provisioned dashboard named Service health and report the titles of its panels exactly as shown on the page. Do not modify it; verify dashboard name and each visible panel title.",
+                      "duration": 4884
+                    },
+                    {
+                      "title": "03-create: Create a new Grafana dashboard titled {{runid}} Bench Dashboard with a Stat panel titled {{runid}} Availability. Configure the panel query to use the TestData data source, apply the panel, and explicitly save the dashboard. Verify the saved dashboard and panel title and that the panel's selected query data source is TestData.",
+                      "duration": 29412
+                    },
+                    {
+                      "title": "04-add: On the saved dashboard {{runid}} Bench Dashboard, add a Text panel titled {{runid}} Notes whose content includes the exact runid {{runid}}, apply it, then explicitly save the dashboard. Verify the saved Text panel title and visible content includes the runid.",
+                      "duration": 18589
+                    },
+                    {
+                      "title": "05-verify: Update the saved dashboard {{runid}} Bench Dashboard so its dashboard tag is bench and its time range is Last 6 hours. Explicitly save, ticking the Save dialog's 'Update default time range' option so the time range persists. Verify the dashboard tag and the saved default time range through the saved dashboard state/dialog, not merely the top-bar browser-session range.",
+                      "duration": 21102
+                    },
+                    {
+                      "title": "06-set: Set the saved dashboard {{runid}} Bench Dashboard auto-refresh interval to 1m, explicitly save the dashboard, then verify after reload that the refresh control shows 1m (or the current 1 minute interval). Do not alter its panels, tag, or saved time range.",
+                      "duration": 13059
+                    }
+                  ],
+                  "startTime": "2026-11-17T11:52:33.191Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "outputs",
+                      "contentType": "application/json",
+                      "body": "ewogICIwMS1zaWduaW4uc2lnbmVkX2luX3VybCI6ICJodHRwOi8vMTI3LjAuMC4xOjMwMDAvP2Zyb209bm93LTZoJnRvPW5vdyZ0aW1lem9uZT1icm93c2VyIiwKICAiMDEtc2lnbmluLmhvbWVfcGFnZV9oZWFkaW5nIjogIldlbGNvbWUgdG8gR3JhZmFuYSIsCiAgIjAyLW9wZW4ubWFpbl9oMiI6ICJSZXF1ZXN0IHJhdGUiLAogICIwMi1vcGVuLm1haW5faDJfMiI6ICJFcnJvciBjb3VudCIsCiAgIjAyLW9wZW4ubWFpbl9oMl8zIjogIkxhdGVuY3kgYnkgZW5kcG9pbnQiLAogICIwMi1vcGVuLmRhc2hib2FyZF9uYW1lIjogIlNlcnZpY2UgSGVhbHRoIiwKICAiMDMtY3JlYXRlLnZpc3VhbGl6YXRpb25fdHlwZV9iZWZvcmVfY2hhbmdlIjogIlRpbWUgc2VyaWVzIiwKICAiMDMtY3JlYXRlLnBhbmVsX3R5cGUiOiAiU3RhdCIsCiAgIjAzLWNyZWF0ZS5xdWVyeV9kYXRhc291cmNlX2xvZ28iOiAiVGVzdERhdGEgbG9nbyIsCiAgIjAzLWNyZWF0ZS5taW50ZWQiOiAiZGc0a2p3dm9mY3dzZ2MiLAogICIwMy1jcmVhdGUuanNvbl9tb2RlbCI6ICJ7XG4gIFwiYW5ub3RhdGlvbnNcIjoge1xuICAgIFwibGlzdFwiOiBbXG4gICAgICB7XG4gICAgICAgIFwiYnVpbHRJblwiOiAxLFxuICAgICAgICBcImRhdGFzb3VyY2VcIjoge1xuICAgICAgICAgIFwidHlwZVwiOiBcImdyYWZhbmFcIixcbiAgICAgICAgICBcInVpZFwiOiBcIi0tIEdyYWZhbmEgLS1cIlxuICAgICAgICB9LFxuICAgICAgICBcImVuYWJsZVwiOiB0cnVlLFxuIiwKICAiMDMtY3JlYXRlLmRhc2hib2FyZF90aXRsZSI6ICJmd2dyOTMtZm0tc3BlYyBCZW5jaCBEYXNoYm9hcmQiLAogICIwMy1jcmVhdGUucGFuZWxfdGl0bGUiOiAiZndncjkzLWZtLXNwZWMgQXZhaWxhYmlsaXR5IiwKICAiMDMtY3JlYXRlLnBhbmVsX3ZhbHVlX3Nob3duIjogIjM2LjciLAogICIwMy1jcmVhdGUucGFuZWxfcXVlcnlfZGF0YXNvdXJjZSI6ICJUZXN0RGF0YSIsCiAgIjAzLWNyZWF0ZS5kYXNoYm9hcmRfdWlkIjogImRnNGtqd3ZvZmN3c2djIiwKICAiMDMtY3JlYXRlLnJ1bmlkIjogImZ3Z3I5My1mbS1zcGVjIiwKICAiMDMtY3JlYXRlLmRhc2hib2FyZF9zbHVnIjogImZ3Z3I5My1mbS1zcGVjLWJlbmNoLWRhc2hib2FyZCIsCiAgIjAzLWNyZWF0ZS51cmwucDEiOiAiZGc0a2p3dm9mY3dzZ2MiLAogICIwMy1jcmVhdGUudXJsLnAyIjogImZ3Z3I5My1mbS1zcGVjLWJlbmNoLWRhc2hib2FyZCIsCiAgIjA0LWFkZC5zYXZlZF9kYXNoYm9hcmRfdXJsIjogImh0dHA6Ly8xMjcuMC4wLjE6MzAwMC9kL2RnNGtqd3ZvZmN3c2djL2Z3Z3I5My1mbS1zcGVjLWJlbmNoLWRhc2hib2FyZD9mcm9tPW5vdy02aCZ0bz1ub3cmdGltZXpvbmU9YnJvd3NlciIsCiAgIjA0LWFkZC50ZXh0X3BhbmVsX2Z1bGxfY29udGVudCI6ICJmd2dyOTMtZm0tc3BlYyBOb3Rlc1xuXG5SdW4gSUQ6IGZ3Z3I5My1mbS1zcGVjXG5cbk5vdGVzIGZvciBydW4gZndncjkzLWZtLXNwZWMgb24gdGhlIEJlbmNoIGRhc2hib2FyZC4iLAogICIwNC1hZGQuZGFzaGJvYXJkX3RpdGxlIjogImZ3Z3I5My1mbS1zcGVjIEJlbmNoIERhc2hib2FyZCIsCiAgIjA0LWFkZC50ZXh0X3BhbmVsX3RpdGxlIjogImZ3Z3I5My1mbS1zcGVjIE5vdGVzIiwKICAiMDQtYWRkLnRleHRfcGFuZWxfY29udGVudF8xIjogImZ3Z3I5My1mbS1zcGVjIE5vdGVzIiwKICAiMDQtYWRkLnRleHRfcGFuZWxfcnVuX2lkX2xpbmUiOiAiUnVuIElEOiBmd2dyOTMtZm0tc3BlYyIsCiAgIjA0LWFkZC50ZXh0X3BhbmVsX25vdGVzX2xpbmUiOiAiTm90ZXMgZm9yIHJ1biBmd2dyOTMtZm0tc3BlYyBvbiB0aGUgQmVuY2ggZGFzaGJvYXJkLiIsCiAgIjA0LWFkZC5ydW5pZCI6ICJmd2dyOTMtZm0tc3BlYyIsCiAgIjA0LWFkZC5ydW5pZF9wcmVzZW50X2luX2NvbnRlbnQiOiAiZndncjkzLWZtLXNwZWMiLAogICIwNC1hZGQucmVmIjogImZ3Z3I5My1mbS1zcGVjLWJlbmNoLWRhc2hib2FyZCIsCiAgIjA1LXZlcmlmeS51cmxfYWZ0ZXJfY2xlYW5fbG9hZCI6ICJodHRwOi8vMTI3LjAuMC4xOjMwMDAvZC9kZzRrand2b2Zjd3NnYy9md2dyOTMtZm0tc3BlYy1iZW5jaC1kYXNoYm9hcmQ/ZnJvbT1ub3ctNmgmdG89bm93JnRpbWV6b25lPWJyb3dzZXIiLAogICIwNS12ZXJpZnkudGltZV9yYW5nZV9hZnRlcl9yZWxvYWQiOiAiTGFzdCA2IGhvdXJzIiwKICAiMDUtdmVyaWZ5LmRhc2hib2FyZF90aXRsZSI6ICJmd2dyOTMtZm0tc3BlYyBCZW5jaCBEYXNoYm9hcmQiLAogICIwNS12ZXJpZnkucnVuaWQiOiAiZndncjkzLWZtLXNwZWMiLAogICIwNS12ZXJpZnkuZGFzaGJvYXJkX3VpZCI6ICJkZzRrand2b2Zjd3NnYyIsCiAgIjA1LXZlcmlmeS5maW5hbF9kYXNoYm9hcmRfdXJsIjogImh0dHA6Ly8xMjcuMC4wLjE6MzAwMC9kL2RnNGtqd3ZvZmN3c2djL2Z3Z3I5My1mbS1zcGVjLWJlbmNoLWRhc2hib2FyZD9mcm9tPW5vdy02aCZ0bz1ub3cmdGltZXpvbmU9YnJvd3NlciIsCiAgIjA1LXZlcmlmeS5kYXNoYm9hcmRfc2x1ZyI6ICJmd2dyOTMtZm0tc3BlYy1iZW5jaC1kYXNoYm9hcmQiLAogICIwNi1zZXQuZGFzaGJvYXJkX3RpdGxlIjogImZ3Z3I5My1mbS1zcGVjIEJlbmNoIERhc2hib2FyZCIsCiAgIjA2LXNldC50YWdfdW5jaGFuZ2VkIjogImJlbmNoIiwKICAiMDYtc2V0LnJ1bmlkIjogImZ3Z3I5My1mbS1zcGVjIiwKICAiMDYtc2V0LmRhc2hib2FyZF91aWQiOiAiZGc0a2p3dm9mY3dzZ2MiLAogICIwNi1zZXQuc2F2ZWRfc3RhdGVfdXJsX2FmdGVyX3JlbG9hZCI6ICJodHRwOi8vMTI3LjAuMC4xOjMwMDAvZC9kZzRrand2b2Zjd3NnYy9md2dyOTMtZm0tc3BlYy1iZW5jaC1kYXNoYm9hcmQ/ZnJvbT1ub3ctNmgmdG89bm93JnRpbWV6b25lPWJyb3dzZXImcmVmcmVzaD0xbSIsCiAgIjA2LXNldC5kYXNoYm9hcmRfc2x1ZyI6ICJmd2dyOTMtZm0tc3BlYy1iZW5jaC1kYXNoYm9hcmQiCn0="
+                    },
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": ""
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "de070ec6049c2366ea35-9758a0ab648e265a3fde",
+          "file": "fwgr93-fm.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-11-17T11:52:31.262Z",
+    "duration": 99252.11,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}
