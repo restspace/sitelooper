@@ -1,0 +1,137 @@
+{
+  "flow": "fwvk19-fm",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_537833; observed user_menu=admin, projects_visible_1=Inbox, final_url=http://127.0.0.1:8096/, signed_in_user=admin, page_title=Current Tasks | Vikunja, greeting=Hi admin!, current_tasks_1=Seed: ship repaired device, current_tasks_2=Seed: order missing parts, current_tasks_3=Seed: triage inbox.",
+      "values": {
+        "user_menu": "admin",
+        "projects_visible_1": "Inbox",
+        "final_url": "http://127.0.0.1:8096/",
+        "signed_in_user": "admin",
+        "page_title": "Current Tasks | Vikunja",
+        "greeting": "Hi admin!",
+        "current_tasks_1": "Seed: ship repaired device",
+        "current_tasks_2": "Seed: order missing parts",
+        "current_tasks_3": "Seed: triage inbox"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "15/15",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_208b99: step 3: after step 3 the page did not show \"- textbox \\\"e.g. frederick\\\": admin\" as it did when recorded — the step ran but probably acted on the wrong element — the page replaced its document under this fill, so it is repeated once on the rebuilt field",
+        "s_537833: step 2: skipped read — no element matched any known locator for target (tried 1: page.getByRole('link', { name: 'Bench Project', exact: true }))"
+      ],
+      "unreported": [
+        "projects_visible_2"
+      ]
+    },
+    {
+      "id": "02-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_c17b69; observed seed_task_titles_1=Seed: triage inbox, seed_task_titles_2=Seed: order missing parts, seed_task_titles_3=Seed: ship repaired device, identifiers_1=BENCH-1 Seed: triage inbox, identifiers_2=BENCH-2 Seed: order missing parts, identifiers_3=BENCH-4 Seed: ship repaired device, project_name=Bench Project.",
+      "values": {
+        "seed_task_titles_1": "Seed: triage inbox",
+        "seed_task_titles_2": "Seed: order missing parts",
+        "seed_task_titles_3": "Seed: ship repaired device",
+        "identifiers_1": "BENCH-1 Seed: triage inbox",
+        "identifiers_2": "BENCH-2 Seed: order missing parts",
+        "identifiers_3": "BENCH-4 Seed: ship repaired device",
+        "project_name": "Bench Project"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "12/12",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_c17b69: step 11: primary locator did not resolve; used fallback #2 page.locator('#app > header > div:nth-of-type(1) > h1')"
+      ],
+      "unreported": [
+        "project_url"
+      ]
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_696b9a; observed task_identifier=BENCH-5, due_date=31 Dec 2026, 12:00:00.",
+      "values": {
+        "task_identifier": "BENCH-5",
+        "due_date": "31 Dec 2026, 12:00:00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "32/32",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_696b9a: step 5: read 'task_title' returned a value the skill itself set/selected ('fwvk19-fm-n2 Bench Task') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_696b9a: step 6: read 'description' returned a value the skill itself set/selected ('Bench task created for run fwvk19-fm-n2 verification.') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_696b9a: step 21: read 'task_title' returned a value the skill itself set/selected ('fwvk19-fm-n2 Bench Task') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_696b9a: step 22: read 'description' returned a value the skill itself set/selected ('Bench task created for run fwvk19-fm-n2 verification.') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_696b9a: step 24: read 'priority' returned 'High' from a control this step set, and nothing committed it since — it shows the control, however the app formats it, not what the app stored; dropped from the report's confident values",
+        "s_696b9a: step 25: read 'label' returned a value the skill itself set/selected ('Backend') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_696b9a: step 26: read 'comment' returned a value the skill itself set/selected ('fwvk19-fm-n2') — confirms the control, not persistence; dropped from the report's confident values"
+      ],
+      "unreported": [
+        "task_title",
+        "priority",
+        "label",
+        "comment"
+      ]
+    }
+  ],
+  "passed": 3,
+  "total": 3,
+  "repinned": 0,
+  "drift": 2,
+  "driftTickets": [
+    {
+      "flow": "fwvk19-fm",
+      "step": "01-signin",
+      "skill": "s_537833",
+      "atStep": "2",
+      "key": "target",
+      "similarity": 1.002,
+      "missedLocator": "page.getByRole('link', { name: 'Bench Project', exact: true })",
+      "fallbackUsed": null,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8096/",
+      "pageUrl": "http://127.0.0.1:8096/"
+    },
+    {
+      "flow": "fwvk19-fm",
+      "step": "02-open",
+      "skill": "s_c17b69",
+      "atStep": "11",
+      "key": "target",
+      "similarity": 0.999,
+      "missedLocator": "page.getByText('Bench Project', { exact: true })",
+      "fallbackUsed": "page.locator('#app > header > div:nth-of-type(1) > h1')",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "banked": true,
+      "pageUrlPattern": "http://127.0.0.1:8096/projects/:id/:id",
+      "pageUrl": "http://127.0.0.1:8096/projects/2/7"
+    }
+  ],
+  "wallMs": 52877,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "cachedTokens": 0
+  },
+  "usageByModel": {},
+  "servedByModel": {},
+  "recoveryModel": "openai/gpt-6-luna",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

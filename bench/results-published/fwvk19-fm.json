@@ -1,0 +1,304 @@
+{
+  "name": "fwvk19-fm",
+  "origin": "http://127.0.0.1:8096",
+  "startUrl": "http://127.0.0.1:8096/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-signin",
+      "instruction": "Sign in to Vikunja at http://127.0.0.1:8096/ as username admin using password exactly {{env:APP_PASSWORD}} (type this literal token, do not substitute or guess it). Verify the signed-in app is open.",
+      "skill": "s_f9df9e",
+      "params": {
+        "v1": "http://127.0.0.1:8096/",
+        "v2": "admin",
+        "v3": "{{env:APP_PASSWORD}}"
+      },
+      "outputs": [
+        "final_url",
+        "page_title",
+        "signed_in_user",
+        "greeting",
+        "user_menu",
+        "projects_visible_1",
+        "projects_visible_2",
+        "current_tasks_1",
+        "current_tasks_2",
+        "current_tasks_3"
+      ],
+      "recorded": {
+        "final_url": "http://127.0.0.1:8096/",
+        "page_title": "Current Tasks | Vikunja",
+        "signed_in_user": "admin",
+        "greeting": "Hi admin!",
+        "user_menu": "admin",
+        "projects_visible_1": "Inbox",
+        "projects_visible_2": "Bench Project",
+        "current_tasks_1": "Seed: ship repaired device",
+        "current_tasks_2": "Seed: order missing parts",
+        "current_tasks_3": "Seed: triage inbox",
+        "url": "http://127.0.0.1:8096/"
+      },
+      "route": "http://127.0.0.1:8096/",
+      "outputEvidence": {
+        "final_url": {
+          "same": 1,
+          "differed": 0
+        },
+        "page_title": {
+          "same": 1,
+          "differed": 0
+        },
+        "signed_in_user": {
+          "same": 1,
+          "differed": 0
+        },
+        "greeting": {
+          "same": 1,
+          "differed": 0
+        },
+        "user_menu": {
+          "same": 1,
+          "differed": 0
+        },
+        "projects_visible_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "projects_visible_2": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "current_tasks_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "current_tasks_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "current_tasks_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "02-open",
+      "instruction": "Open the project named Bench Project and report the exact titles of every task whose title starts with Seed:. Do not edit any seed tasks.",
+      "skill": "s_02e652",
+      "params": {
+        "v1": "Bench Project"
+      },
+      "outputs": [
+        "project_name",
+        "project_url",
+        "seed_task_titles_1",
+        "seed_task_titles_2",
+        "seed_task_titles_3",
+        "identifiers_1",
+        "identifiers_2",
+        "identifiers_3"
+      ],
+      "recorded": {
+        "project_name": "Bench Project",
+        "project_url": "http://127.0.0.1:8096/projects/2/2/kanban?  (project route /projects/2)",
+        "seed_task_count": "3",
+        "task_edits_made": "none",
+        "seed_task_titles_1": "Seed: triage inbox",
+        "seed_task_titles_2": "Seed: order missing parts",
+        "seed_task_titles_3": "Seed: ship repaired device",
+        "identifiers_1": "BENCH-1 Seed: triage inbox",
+        "identifiers_2": "BENCH-2 Seed: order missing parts",
+        "identifiers_3": "BENCH-3 Seed: ship repaired device",
+        "url": "http://127.0.0.1:8096/projects/2/7",
+        "url.p1": "2",
+        "url.p2": "7"
+      },
+      "route": "http://127.0.0.1:8096/projects/:id/:id",
+      "outputEvidence": {
+        "project_name": {
+          "same": 1,
+          "differed": 0
+        },
+        "project_url": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "seed_task_count": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "task_edits_made": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "seed_task_titles_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_task_titles_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "seed_task_titles_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "identifiers_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "identifiers_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "identifiers_3": {
+          "same": 0,
+          "differed": 1
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        },
+        "url.p1": {
+          "same": 1,
+          "differed": 0
+        },
+        "url.p2": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "03-create",
+      "instruction": "In Bench Project create a task titled '{{runid}} Bench Task' with a description that includes the exact text '{{runid}}'. Set due date 2026-12-31, priority High, and apply the existing Backend label by selecting it from suggestions (do not create a new label). Add a comment containing '{{runid}}'. Verify the saved task page displays the exact task identifier and all requested fields, and report those observed values.",
+      "skill": "s_c3fd93",
+      "params": {
+        "v1": "Bench Project",
+        "v3": "{{runid}} Bench Task",
+        "v2": "{{runid}}",
+        "v4": "31",
+        "v5": "High",
+        "v6": "Backend",
+        "v7": "{{02-open.url.p1}}"
+      },
+      "outputs": [
+        "task_identifier",
+        "task_title",
+        "description",
+        "due_date",
+        "priority",
+        "label",
+        "comment"
+      ],
+      "recorded": {
+        "task_identifier": "BENCH-4",
+        "task_title": "fwvk19-fm-n1 Bench Task",
+        "description": "Bench task created for run fwvk19-fm-n1 verification.",
+        "due_date": "31 Dec 2026, 12:00:00",
+        "priority": "High",
+        "label": "Backend",
+        "comment": "fwvk19-fm-n1",
+        "comment_success": "The comment was added successfully.",
+        "seed_tasks_edited": "No",
+        "url": "http://127.0.0.1:8096/tasks/4",
+        "url.p1": "4",
+        "url.p2": "5"
+      },
+      "route": "http://127.0.0.1:8096/tasks/:id",
+      "urlRoutes": {
+        "url.p2": "http://127.0.0.1:8096 p0=projects p1=2"
+      },
+      "outputEvidence": {
+        "task_identifier": {
+          "same": 0,
+          "differed": 1
+        },
+        "task_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "description": {
+          "same": 0,
+          "differed": 1
+        },
+        "due_date": {
+          "same": 1,
+          "differed": 0
+        },
+        "priority": {
+          "same": 1,
+          "differed": 0
+        },
+        "label": {
+          "same": 1,
+          "differed": 0
+        },
+        "comment": {
+          "same": 0,
+          "differed": 1
+        },
+        "comment_success": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "seed_tasks_edited": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "url": {
+          "same": 0,
+          "differed": 1
+        },
+        "url.p1": {
+          "same": 0,
+          "differed": 1
+        },
+        "url.p2": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "session": "fwvk19-fm-n1",
+    "created": "2026-11-17T11:43:25.430Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "02-open",
+      "outputs": [
+        "seed_task_count",
+        "task_edits_made"
+      ]
+    },
+    {
+      "stepId": "03-create",
+      "outputs": [
+        "comment_success",
+        "seed_tasks_edited"
+      ]
+    }
+  ]
+}
