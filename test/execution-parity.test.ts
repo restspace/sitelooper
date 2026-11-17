@@ -6848,6 +6848,28 @@ document.getElementById('yes').addEventListener('click', () => {
       expect(replay.outputs.contact_name_2).toBe('Test Speaker f2');
       expect(emitted.outputs['01-clear.contact_name_2']).toBe('Test Speaker f2');
     }, 120_000);
+
+    it('a read found only by position publishes this run’s card or nothing (kms s_6e6f1f, guardPositionalRead)', async () => {
+      // s_6e6f1f read the card as a bare css path from the start: no anchor,
+      // no slot. Compile now guards it with the value's own slot text.
+      const at = (n: number): LocatorCandidate[] => [{ kind: 'css', selector: `section:nth-of-type(1) article:nth-of-type(${n}) > button > span:nth-of-type(1)` }];
+      const guarded = { target: '(read-back)', what: 'text', scopedBy: 'v1', scopedWithin: 'Speaker {{v1}}' };
+      const steps: SkillStep[] = [
+        { tool: 'goto', args: { url: `${origin}/board-cards` }, locators: {} },
+        // the position the recording saw (third), now another run's card
+        { tool: 'read', args: { ...guarded }, label: 'contact_name', locators: { target: at(3) } },
+        // a position that still finds this run's card
+        { tool: 'read', args: { ...guarded }, label: 'contact_name_2', locators: { target: at(4) } },
+      ];
+      const { skill, spec } = withParams(steps, { v1: { example: 'f1', usedIn: [2, 3], known: true } });
+      const { replay, emitted } = await bothOf(skill, spec, { v1: 'f2' });
+      expect(replay.ok, replay.reason ?? '').toBe(true);
+      expect(emitted.ok, emitted.reason ?? '').toBe(true);
+      expect(replay.outputs.contact_name ?? '').toBe('');
+      expect(emitted.outputs['01-clear.contact_name'] ?? '').toBe('');
+      expect(replay.outputs.contact_name_2).toBe('Test Speaker f2');
+      expect(emitted.outputs['01-clear.contact_name_2']).toBe('Test Speaker f2');
+    }, 120_000);
   });
 
   /**

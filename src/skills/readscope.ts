@@ -85,6 +85,7 @@ export function scopeReadBySlot(
   } else {
     scopeByShortAnchor(value, args, locators, slots, locating);
   }
+  if (args.scopedBy === undefined) guardPositionalRead(value, args, locators, slots);
 
   if (typeof args.frame !== 'string') return;
   const lines = args.frame.split('\n');
@@ -147,6 +148,77 @@ function scopeByShortAnchor(
   }
 }
 
+/**
+ * A read found only BY POSITION whose recorded value shows a run value: it is
+ * scoped by that value's slot all the same, so it publishes this run's record
+ * or nothing.
+ *
+ * kms.r-s.workers.dev (2026-11-16): s_6e6f1f read the enrollment's contact
+ * name as `article:nth-of-type(7) > button > span` from the start: no record
+ * anchor, no `{{vN}}` in any candidate, so neither fwrd16's lost-anchor rule
+ * nor the rules above applied. Recorded "Test Speaker h2" with v1 = "h2", it
+ * validated 2/2 and then published another run's card on the i1 run.
+ *
+ * Provenance as above, and narrower than locating: the slot's example is in
+ * the value the read recorded as a whole token, and every candidate of the
+ * chain is positional (a css path, a point, an index), none carrying a slot.
+ * A read found by role, label or text is left alone, as is a positional read
+ * of text no slot shows (a column header).
+ *
+ *  - An example of MIN_ID_LEN or more: `scopedBy` alone, the runners check the
+ *    bare value as for fwrd87.
+ *  - A bare number is never the slot: it is a quantity far more often than a
+ *    record's name, and a typed cost "100" inside a price "$100.00" (fwrd87
+ *    part_cost) is a coincidence a guard would turn into a recovery on every
+ *    run with another cost. Such a read stays as it was.
+ *  - A shorter example: `scopedWithin` too, the example with its neighbouring
+ *    words in slot form (the word before first, then after) until the filled
+ *    text reaches MIN_ID_LEN: "Speaker {{v1}}". A window holding another
+ *    slot's example is not used.
+ *
+ * Where the position still finds this run's record the read publishes as
+ * before; where it finds another, the runners refuse it (scopedRead), and a
+ * value the procedure itself set is reported lost (scopedReadLanded), so the
+ * model recovers the step instead of the run carrying a wrong value.
+ */
+function guardPositionalRead(
+  value: string,
+  args: Record<string, unknown>,
+  locators: Record<string, LocatorCandidate[]>,
+  slots: ReadonlyMap<string, string>,
+): void {
+  const chain = locators.target ?? [];
+  if (!chain.length || !chain.every((c) => c.kind === 'css' || c.kind === 'point' || c.nth !== undefined)) return;
+  if (/\{\{v\d+\}\}/.test(JSON.stringify(chain))) return;
+  const examples = [...slots]
+    .map(([name, v]) => [name, collapse(v)] as const)
+    .filter(([, v]) => v.length > 0 && !NUMBER.test(v) && occursAsToken(value, v))
+    .sort((a, b) => b[1].length - a[1].length);
+  for (const [name, example] of examples) {
+    if (example.length >= MIN_ID_LEN) {
+      args.scopedBy = name;
+      return;
+    }
+    const marker = `{{${name}}}`;
+    const words = replaceAsToken(value, example, marker).split(' ');
+    const at = words.findIndex((w) => w.includes(marker));
+    if (at < 0) continue;
+    const others = examples.filter(([n]) => n !== name).map(([, v]) => v);
+    let lo = at;
+    let hi = at;
+    const filled = () => words.slice(lo, hi + 1).join(' ').split(marker).join(example);
+    while (filled().length < MIN_ID_LEN && (lo > 0 || hi < words.length - 1)) {
+      if (lo > 0) lo--;
+      else hi++;
+    }
+    const text = filled();
+    if (text.length < MIN_ID_LEN || others.some((o) => occursAsToken(text, o))) continue;
+    args.scopedBy = name;
+    args.scopedWithin = words.slice(lo, hi + 1).join(' ');
+    return;
+  }
+}
+
 /** What the recording read of a read's page: the read itself and the reads before it (`listOf` set on an element split from a list read). */
 export interface PageEvidence {
   reads: readonly { tool: string; result?: string; listOf?: number }[];
@@ -189,6 +261,8 @@ export function shownMoreThanOnce(value: string, page: PageEvidence): boolean {
 export function locatingSlots(chains: unknown): Set<string> {
   return new Set([...JSON.stringify(chains ?? null).matchAll(/\{\{(v\d+)\}\}/g)].map((m) => m[1]));
 }
+
+const NUMBER = /^[\d.,\s]+$/;
 
 const collapse = (s: string): string => s.replace(/\s+/g, ' ').trim();
 

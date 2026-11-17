@@ -29,6 +29,14 @@
   accident. When the read's own anchor carries the run id inside longer text (`Speaker {{runid}}`),
   both runners now require the read to show that text filled with this run's value, and skip it
   otherwise.
+- A read found only by position (a css path, an index or a screen point, with no role, label, text
+  or record anchor) whose recorded value shows a value the run typed is now checked against this
+  run's record too. Before, such a read published whatever sat at that position, and could report
+  the previous run's record as this run's. Now it publishes only when it shows this run's value
+  (with the word next to it when the value is shorter than three characters, as in
+  `Speaker {{runid}}`). Otherwise it is skipped, or, where the procedure set that value itself,
+  the step is recovered. Bare numbers are left alone, because a typed cost "100" inside a price
+  "$100.00" is a coincidence, not a record.
 
 - A click whose target is gone is reached through its recorded url only when the recording shows
   it as navigation and nothing else: it moved to another url, and it did not create or remove a

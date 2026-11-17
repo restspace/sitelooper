@@ -341,11 +341,11 @@ describe('a short locating slot is scoped by its anchor text (kms)', () => {
     expect(locators.target).toEqual([anchor, positional]);
   });
 
-  it('negative: no scoped anchor naming the slot, no scope', () => {
+  it('no scoped anchor naming the slot: a positional-only read is guarded by the value itself (guardPositionalRead)', () => {
     const args: Record<string, unknown> = { target: '(read-back)', what: 'text' };
     scopeReadBySlot(JSON.stringify('Test Speaker f1'), 'read', args, { target: [positional] }, kmsSlots, new Set(['v1']));
-    expect(args.scopedBy).toBeUndefined();
-    expect(args.scopedWithin).toBeUndefined();
+    expect(args.scopedBy).toBe('v1');
+    expect(args.scopedWithin).toBe('Speaker {{v1}}');
   });
 
   it('negative: an anchor whose filled text is still short, or not in the value, or a slot that does not locate', () => {
@@ -397,5 +397,65 @@ describe('a short locating slot is scoped by its anchor text (kms)', () => {
     const line = source.split('\n').find((l) => l.includes('scopedRead(await')) ?? '';
     expect(line).toContain('within: `Speaker ${p.v1}`');
     expect(line).not.toContain("within: p['v1']");
+  });
+});
+
+describe('a read found only by position is scoped by the run value it shows (kms s_6e6f1f)', () => {
+  const card: LocatorCandidate = { kind: 'css', selector: 'main > div > section:nth-of-type(1) > div > article:nth-of-type(7) > button > span' };
+  const point: LocatorCandidate = { kind: 'point', x: 120, y: 340 } as LocatorCandidate;
+  const read = (value: string, chain: LocatorCandidate[], slots: [string, string][]) => {
+    const args: Record<string, unknown> = { target: '(read-back)', what: 'text' };
+    scopeReadBySlot(JSON.stringify(value), 'read', args, { target: chain }, new Map(slots), new Set());
+    return args;
+  };
+
+  it('a short run id: scoped by the slot with the word before it', () => {
+    const args = read('Test Speaker h2', [card, point], [['v1', 'h2'], ['v2', 'test.speaker.h2@example.com']]);
+    expect(args.scopedBy).toBe('v1');
+    expect(args.scopedWithin).toBe('Speaker {{v1}}');
+    expect(() => scopedRead('Test Speaker h2', { within: 'Speaker i1' })).toThrow(/another record/);
+    expect(scopedRead('Test Speaker i1', { within: 'Speaker i1' })).toBe('Test Speaker i1');
+  });
+
+  it('a short run id first in the value takes the word after it', () => {
+    const args = read('h2 Speaker', [card], [['v1', 'h2']]);
+    expect(args.scopedWithin).toBe('{{v1}} Speaker');
+  });
+
+  it('a long value: scopedBy alone, the bare value is the check', () => {
+    const args = read('Ada Lovelace-k7x2', [card], [['v3', 'Ada Lovelace-k7x2']]);
+    expect(args.scopedBy).toBe('v3');
+    expect(args.scopedWithin).toBeUndefined();
+  });
+
+  it('negative: a read found by role, label or text is left alone', () => {
+    for (const named of [
+      { kind: 'role', role: 'button', name: 'Test Speaker h2' },
+      { kind: 'text', text: 'Test Speaker h2' },
+    ] as LocatorCandidate[]) {
+      expect(read('Test Speaker h2', [named, card], [['v1', 'h2']]).scopedBy).toBeUndefined();
+    }
+  });
+
+  it('negative: text no slot shows (a column header), a value only inside a word, or no chain', () => {
+    expect(read('Identified', [card], [['v1', 'h2']]).scopedBy).toBeUndefined();
+    expect(read('Test Speaker h21', [card], [['v1', 'h2']]).scopedBy).toBeUndefined();
+    expect(read('Test Speaker h2', [], [['v1', 'h2']]).scopedBy).toBeUndefined();
+  });
+
+  it('negative: a window that holds another slot is not used, and a value too short for any window', () => {
+    expect(read('ab h2', [card], [['v1', 'h2'], ['v2', 'ab']]).scopedWithin).not.toBe('ab {{v1}}');
+    expect(read('h2', [card], [['v1', 'h2']]).scopedBy).toBeUndefined();
+  });
+
+  it('negative: a bare number is a quantity, not the record (fwrd87 part_cost)', () => {
+    expect(read('$100.00', [card], [['v5', '100']]).scopedBy).toBeUndefined();
+    expect(read('Qty 2', [card], [['v6', '2']]).scopedBy).toBeUndefined();
+  });
+
+  it('negative: read_all and non-text reads are untouched', () => {
+    const args: Record<string, unknown> = { target: '(read-back)', what: 'text' };
+    scopeReadBySlot(JSON.stringify(['Test Speaker h2']), 'read_all', args, { target: [card] }, new Map([['v1', 'h2']]), new Set());
+    expect(args.scopedBy).toBeUndefined();
   });
 });
