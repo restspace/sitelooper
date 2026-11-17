@@ -1,0 +1,258 @@
+{
+  "flow": "fwen12-fm",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_b9ebc0; observed page_heading=Home.",
+      "values": {
+        "page_heading": "Home"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "5/5",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_b9ebc0: report value logged_in_user is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)",
+        "s_b9ebc0: report value login_username_used is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)"
+      ],
+      "unreported": [
+        "logged_in_user",
+        "login_username_used"
+      ]
+    },
+    {
+      "id": "02-find",
+      "status": "success",
+      "summary": "Replayed stored procedure s_f37189; observed sales_order_list_url=http://127.0.0.1:8100/app/sales-order?customer_name=%5B%22like%22%2C%22%25Seed%3A%25%22%5D, url_after_clear=http://127.0.0.1:8100/app/sales-order?customer_name=%5B%22like%22%2C%22%25Seed%3A%25%22%5D, matching_sales_orders_count=3 of 3, customer_name_1=Seed: Cobalt Retail, sales_order_id=SAL-ORD-2026-00003, customer_name_2=Seed: Beacon Supplies, customer_name_2_order_id=SAL-ORD-2026-00002, customer_name_3=Seed: Alpha Traders, customer_name_3_order_id=SAL-ORD-2026-00001.",
+      "values": {
+        "sales_order_list_url": "http://127.0.0.1:8100/app/sales-order?customer_name=%5B%22like%22%2C%22%25Seed%3A%25%22%5D",
+        "url_after_clear": "http://127.0.0.1:8100/app/sales-order?customer_name=%5B%22like%22%2C%22%25Seed%3A%25%22%5D",
+        "matching_sales_orders_count": "3 of 3",
+        "customer_name_1": "Seed: Cobalt Retail",
+        "sales_order_id": "SAL-ORD-2026-00003",
+        "customer_name_2": "Seed: Beacon Supplies",
+        "customer_name_2_order_id": "SAL-ORD-2026-00002",
+        "customer_name_3": "Seed: Alpha Traders",
+        "customer_name_3_order_id": "SAL-ORD-2026-00001"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "15/15",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "Continued from the interrupted replay: the New Customer form already had the name filled in, so I clicked Save (alert \"Saved\", URL moved to /app/customer/fwen12-fm-n2%20Bench%20Customer). The saved record's Name field reads exactly \"fwen12-fm-n2 Bench Customer\", with Customer Group and Territory left at their defaults (Commercial / United States). A filtered Customer list (Customer Name like %fwen12-fm-n2%) confirms exactly 1 matching row with that exact Customer Name and ID, so no duplicate was created.",
+      "values": {
+        "customer_name": "fwen12-fm-n2 Bench Customer",
+        "customer_id": "fwen12-fm-n2 Bench Customer",
+        "customer_group_default": "Commercial",
+        "territory_default": "United States",
+        "record_url": "http://127.0.0.1:8100/app/customer/fwen12-fm-n2%20Bench%20Customer",
+        "matching_customer_rows": "1",
+        "saved_customer_name": "Seed:",
+        "ref": "fwen12-fm-n2"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_f91ddf stopped at step 4 — after step 4 expected url http://127.0.0.1:8100/app/customer/new-customer-cmwklbdrch but browser is at http://127.0.0.1:8100/app/customer/new-customer-vbtpteglta",
+      "pinStopped": {
+        "skill": "s_f91ddf",
+        "step": 4,
+        "why": "after step 4 expected url http://127.0.0.1:8100/app/customer/new-customer-cmwklbdrch but browser is at http://127.0.0.1:8100/app/customer/new-customer-vbtpteglta"
+      },
+      "replayed": "3/4",
+      "repaired": false,
+      "turns": 12,
+      "warnings": [
+        "s_f91ddf: step 3: resolved positionally and its only recorded effect is the fill's own echo — the effect gate cannot tell right element from wrong here"
+      ],
+      "unreported": [
+        "customer_type",
+        "status",
+        "save_alert",
+        "run_id"
+      ]
+    },
+    {
+      "id": "04-create",
+      "status": "success",
+      "summary": "Saved the Sales Order as a draft and verified its displayed details: customer link is fwen12-fm-n2 Bench Customer, delivery date is 2026-12-31, and the Items table contains exactly two lines—Bench Widget (quantity 3, rate $40.00) and Bench Gadget (quantity 2, rate $125.00).",
+      "values": {
+        "sales_order_id": "SAL-ORD-2026-00004",
+        "status": "Draft",
+        "customer_link": "fwen12-fm-n2 Bench Customer",
+        "delivery_date": "2026-12-31",
+        "item_lines_count": "2",
+        "item_1": "Bench Widget",
+        "item_1_quantity": "3",
+        "item_1_rate_usd": "$ 40.00",
+        "item_2": "Bench Gadget",
+        "item_2_quantity": "2",
+        "item_2_rate_usd": "$ 125.00",
+        "ref": "fwen12-fm-n2"
+      },
+      "tier": null,
+      "recovered": true,
+      "fellBack": "every candidate refused — s_96d911: not on the page this procedure starts from (expects http://127.0.0.1:8100/app/customer/fwen12-fm-n2 Bench Customer, browser is at http://127.0.0.1:8100/app/customer) — nothing was run",
+      "replayed": null,
+      "repaired": false,
+      "turns": 34,
+      "unreported": [
+        "line_1_item",
+        "line_1_rate",
+        "line_1_amount",
+        "line_2_item",
+        "line_2_rate",
+        "line_2_amount",
+        "run_id"
+      ]
+    },
+    {
+      "id": "05-verify",
+      "status": "success",
+      "summary": "Submitted SAL-ORD-2026-00004.",
+      "values": {
+        "sales_order_url": "http://127.0.0.1:8100/app/sales-order/SAL-ORD-2026-00004",
+        "ref": "fwen12-fm-n2",
+        "displayed_status": "To Deliver and Bill",
+        "page_url": "http://127.0.0.1:8100/app/sales-order/SAL-ORD-2026-00004",
+        "sales_order_id": "SAL-ORD-2026-00004",
+        "customer_link": "fwen12-fm-n2 Bench Customer",
+        "delivery_date": "2026-12-31",
+        "page_head_indicator_pill": "Draft"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "12/12",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "06-add",
+      "status": "success",
+      "summary": "Replayed stored procedure s_f04d4d; observed run_id=fwen12-fm-n2, sales_order_id=SAL-ORD-2026-00004, timeline_entry_2=fwen12-fm-n2 comment on SAL-ORD-2026-00004, order_status=To Deliver and Bill.",
+      "values": {
+        "run_id": "fwen12-fm-n2",
+        "sales_order_id": "SAL-ORD-2026-00004",
+        "timeline_entry_2": "fwen12-fm-n2 comment on SAL-ORD-2026-00004",
+        "order_status": "To Deliver and Bill"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "9/9",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_f04d4d: step 3: read 'comment_text' returned a value the skill itself set/selected ('fwen12-fm-n2 comment on SAL-ORD-2026-00004') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_f04d4d: step 7: primary locator did not resolve; used fallback #2 elementAt(383, 1795) /* span */",
+        "s_f04d4d: step 7: read errored — the element no longer shows the value where the recording saw it (\"A\\n{{=}}\")",
+        "s_f04d4d: step 8: primary locator did not resolve; used fallback #2 elementAt(637, 1834) /* p */",
+        "s_f04d4d: step 9: primary locator did not resolve; used fallback #2 elementAt(417, 78) /* span */"
+      ],
+      "unreported": [
+        "comment_text",
+        "timeline_entry_1"
+      ]
+    }
+  ],
+  "passed": 6,
+  "total": 6,
+  "repinned": 0,
+  "drift": 4,
+  "driftTickets": [
+    {
+      "flow": "fwen12-fm",
+      "step": "03-create",
+      "skill": "s_f91ddf",
+      "similarity": 0.999,
+      "missedLocator": null,
+      "fallbackUsed": null,
+      "recovered": true,
+      "fellBack": "s_f91ddf stopped at step 4 — after step 4 expected url http://127.0.0.1:8100/app/customer/new-customer-cmwklbdrch but browser is at http://127.0.0.1:8100/app/customer/new-customer-vbtpteglta",
+      "reason": "after step 4 expected url http://127.0.0.1:8100/app/customer/new-customer-cmwklbdrch but browser is at http://127.0.0.1:8100/app/customer/new-customer-vbtpteglta",
+      "pageUrlPattern": "http://127.0.0.1:8100/app/customer/new-customer-vbtpteglta",
+      "pageUrl": "http://127.0.0.1:8100/app/customer/new-customer-vbtpteglta"
+    },
+    {
+      "flow": "fwen12-fm",
+      "step": "06-add",
+      "skill": "s_f04d4d",
+      "atStep": "7",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.locator('#comment-1rdbotrs6e > div > span > span:nth-of-type(1) > span')",
+      "fallbackUsed": "elementAt(383, 1795) /* span */",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8100/app/sales-order/:id",
+      "pageUrl": "http://127.0.0.1:8100/app/sales-order/SAL-ORD-2026-00004"
+    },
+    {
+      "flow": "fwen12-fm",
+      "step": "06-add",
+      "skill": "s_f04d4d",
+      "atStep": "8",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.locator('#comment-1rdbotrs6e > div > div:nth-of-type(1) > div > p')",
+      "fallbackUsed": "elementAt(637, 1834) /* p */",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8100/app/sales-order/:id",
+      "pageUrl": "http://127.0.0.1:8100/app/sales-order/SAL-ORD-2026-00004"
+    },
+    {
+      "flow": "fwen12-fm",
+      "step": "06-add",
+      "skill": "s_f04d4d",
+      "atStep": "9",
+      "key": "target",
+      "similarity": 1,
+      "missedLocator": "page.locator('div:nth-of-type(1) > div > div > div:nth-of-type(1) > span > span')",
+      "fallbackUsed": "elementAt(417, 78) /* span */",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:8100/app/sales-order/:id",
+      "pageUrl": "http://127.0.0.1:8100/app/sales-order/SAL-ORD-2026-00004"
+    }
+  ],
+  "wallMs": 206341,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 680983,
+    "completionTokens": 9111,
+    "cachedTokens": 611882
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 590147,
+      "completionTokens": 8377,
+      "cachedTokens": 550016
+    },
+    "openai/gpt-6-luna": {
+      "promptTokens": 90836,
+      "completionTokens": 734,
+      "cachedTokens": 61866
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ],
+    "openai/gpt-6-luna": [
+      "OpenAI"
+    ]
+  },
+  "recoveryModel": "openai/gpt-6-luna",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

@@ -1,0 +1,235 @@
+{
+ "id": "s_6dcf86",
+ "origin": "http://127.0.0.1:8100",
+ "template": "Create a Customer named '{{v2}}' in ERPNext, leaving customer group and territory at their defaults. Save it, then verify the saved customer record shows exactly that name.",
+ "params": {
+  "v1": {
+   "example": "fwen12-fm-n3",
+   "usedIn": [],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v2": {
+   "example": "fwen12-fm-n3 Bench Customer",
+   "usedIn": [
+    3
+   ],
+   "known": true
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8100/app/sales-order?customer_name=[\"like\",\"%Seed:%\"]"
+ },
+ "steps": [
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e12",
+    "value": "Customer"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "combobox",
+      "name": "Search or type a command (Ctrl + G)"
+     },
+     {
+      "kind": "placeholder",
+      "placeholder": "Search or type a command (Ctrl + G)"
+     },
+     {
+      "kind": "id",
+      "selector": "#navbar-search"
+     },
+     {
+      "kind": "css",
+      "selector": "#navbar-search"
+     },
+     {
+      "kind": "point",
+      "x": 935,
+      "y": 24,
+      "w": 300,
+      "h": 28,
+      "role": "combobox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8100/app/sales-order",
+    "addedContains": [
+     "- combobox \"Search or type a command (Ctrl + G)\": {{*}}",
+     "- listbox \"\"",
+     "- link \"Customer List\"",
+     "- link \"Customer Report\"",
+     "- link \"New Customer\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_afd67b",
+    "step": 1
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "role=link[name=\"New Customer\"]"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "link",
+      "name": "New Customer"
+     },
+     {
+      "kind": "point",
+      "x": 841,
+      "y": 132,
+      "w": 90.9,
+      "h": 16,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8100/app/sales-order?customer_name=[\"like\",\"%Seed:%\"]",
+    "addedContains": [
+     "- combobox \"Search or type a command (Ctrl + G)\"",
+     "- dialog \"\"",
+     "- heading \"New Customer\"",
+     "- combobox \"Company Individual Partnership\": {{*}}",
+     "- button \"Edit Full Form\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_afd67b",
+    "step": 2
+   }
+  },
+  {
+   "tool": "fill",
+   "args": {
+    "target": "@e894",
+    "value": "{{v2}}"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "form > div:nth-of-type(1) > div > div:nth-of-type(2) > div:nth-of-type(1) > input",
+      "nth": 0
+     },
+     {
+      "kind": "point",
+      "x": 633,
+      "y": 148,
+      "w": 533,
+      "h": 28,
+      "role": "textbox",
+      "tag": "input",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8100/app/sales-order",
+    "addedContains": [
+     "- textbox \"\": {{v2}}"
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_afd67b",
+    "step": 3
+   }
+  },
+  {
+   "tool": "click",
+   "args": {
+    "target": "@e991"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "role",
+      "role": "button",
+      "name": "Edit Full Form"
+     },
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(8) > div > div > div:nth-of-type(3) > div:nth-of-type(1) > button"
+     },
+     {
+      "kind": "point",
+      "x": 421,
+      "y": 750,
+      "w": 109.6,
+      "h": 29,
+      "role": "button",
+      "tag": "button",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "expect": {
+    "urlPattern": "http://127.0.0.1:8100/app/customer/new-customer-dajhvywmwi",
+    "addedContains": [
+     "- link \"Customer\"",
+     "- link \"New Customer\"",
+     "- tab \"Details\"",
+     "- tab \"Address & Contact\"",
+     "- tab \"Tax\""
+    ],
+    "lineDialect": 2
+   },
+   "via": {
+    "skill": "s_afd67b",
+    "step": 4,
+    "regated": true
+   }
+  }
+ ],
+ "contract": 2,
+ "stats": {
+  "uses": 1,
+  "successes": 1,
+  "partial": 0,
+  "created": "2026-11-17T12:55:41.732Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2
+ },
+ "status": "provisional",
+ "seq": {
+  "chain": "s_0ce760",
+  "index": 0,
+  "of": 4
+ },
+ "variantOf": "s_afd67b",
+ "provenance": {
+  "session": "fwen12-fm-n3",
+  "instruction": "Create a Customer named 'fwen12-fm-n3 Bench Customer' in ERPNext, leaving customer group and territory at their defaults. Save it, then verify the saved customer record shows exactly that name.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-11-17T12:55:41.732Z",
+  "transforms": [
+   {
+    "name": "anchorEvidencedIds",
+    "at": 2,
+    "reason": "#awesomplete_list_1 > li:nth-of-type(3) > a: removed — anchored on id \"awesomplete_list_1\", whose \"1\" the recording never showed as an address (the id itself nowhere, the number at no url position, in no ledger value), and nothing stable stands above it"
+   }
+  ]
+ },
+ "revision": 1
+}

@@ -1,0 +1,42 @@
+
+Running 1 test using 1 worker
+
+[sitelooper warn] 01-signin: report value logged_in_user is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)
+[sitelooper warn] 01-signin: report value login_username_used is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)
+[sitelooper step] 01-signin
+[sitelooper step] 02-find
+[sitelooper warn] step 03-create s_f91ddf/3: resolved positionally and its only recorded effect is the fill's own echo — the effect gate cannot tell right element from wrong here
+  ✘  1 fwen12-fm.spec.ts:9:1 › fwen12-fm (26.9s)
+
+
+  1) fwen12-fm.spec.ts:9:1 › fwen12-fm › 03-create: Create a Customer named '{{runid}} Bench Customer' in ERPNext, leaving customer group and territory at their defaults. Save it, then verify the saved customer record shows exactly that name. 
+
+    Error: 03-create s_526e7e: not on the page this procedure starts from (expects http://127.0.0.1:8100/app/customer/new-customer-cmwklbdrch, browser is at http://127.0.0.1:8100/app/customer/new-customer-jwpoffaqzf) — nothing of this segment has run
+
+       at fwen12-fm.flow.ts:16764
+
+      16762 |   const verdict = preconditionVerdictWithFacts(siteFactsAt(url), pattern, url, p, similarity, mints);
+      16763 |   for (const line of verdict.warnings) logWarning(`${where}: ${line}`);
+    > 16764 |   if (verdict.refuse) throw new Error(`${where}: ${verdict.refuse} — nothing of this segment has run`);
+            |                             ^
+      16765 | }
+      16766 |
+      16767 | /**
+        at preconditionGate (/home/user/sitelooper/bench/results/fwen12-fm-spec-spec-tmp/fwen12-fm.flow.ts:16764:29)
+        at Object.03-create (/home/user/sitelooper/bench/results/fwen12-fm-spec-spec-tmp/fwen12-fm.flow.ts:18558:11)
+        at /home/user/sitelooper/bench/results/fwen12-fm-spec-spec-tmp/fwen12-fm.flow.ts:21024:7
+        at runFlow (/home/user/sitelooper/bench/results/fwen12-fm-spec-spec-tmp/fwen12-fm.flow.ts:21023:5)
+        at /home/user/sitelooper/bench/results/fwen12-fm-spec-spec-tmp/fwen12-fm.spec.ts:14:21
+
+    attachment #2: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/fwen12-fm-fwen12-fm/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/fwen12-fm-fwen12-fm/error-context.md
+
+  1 failed
+    fwen12-fm.spec.ts:9:1 › fwen12-fm ──────────────────────────────────────────────────────────────

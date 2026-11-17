@@ -1,0 +1,66 @@
+{
+ "id": "s_8485e9",
+ "origin": "http://127.0.0.1:8100",
+ "template": "Create a Sales Order for the existing customer '{{v1}}'. Set delivery date to {{v3}} and add exactly two Items-table lines: choose '{{v4}}' from the item dropdown with quantity 3, and choose 'Bench Gadget' from the dropdown with quantity 2. Keep each item's default rate. Save the order as a draft. Verify the chosen link records, date, exactly two lines, quantities, and displayed rates, and report the saved Sales Order ID.",
+ "params": {
+  "v1": {
+   "example": "fwen12-fm-n2 Bench Customer",
+   "usedIn": [],
+   "known": true,
+   "binding": "output:i3:customer_name"
+  },
+  "v2": {
+   "example": "fwen12-fm-n2",
+   "usedIn": [
+    1
+   ],
+   "known": true,
+   "binding": "var:runid"
+  },
+  "v3": {
+   "example": "2026-12-31",
+   "usedIn": []
+  },
+  "v4": {
+   "example": "Bench Widget",
+   "usedIn": []
+  }
+ },
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8100/app/customer?customer_name=[\"like\",\"%{{v2}}%\"]"
+ },
+ "steps": [
+  {
+   "tool": "goto",
+   "args": {
+    "url": "http://127.0.0.1:8100/app/customer/{{v2}}%20Bench%20Customer"
+   },
+   "locators": {}
+  }
+ ],
+ "contract": 4,
+ "stats": {
+  "uses": 2,
+  "successes": 2,
+  "partial": 0,
+  "created": "2026-11-17T12:54:07.498Z",
+  "failedAtStep": {},
+  "fallthroughs": 1,
+  "verifiedContract": 4,
+  "lastUsed": "2026-11-17T12:56:34.001Z",
+  "stopStreak": 0
+ },
+ "status": "validated",
+ "seq": {
+  "chain": "s_1ce1c9",
+  "index": 0,
+  "of": 4
+ },
+ "provenance": {
+  "session": "fwen12-fm-n2",
+  "instruction": "Create a Sales Order for the existing customer 'fwen12-fm-n2 Bench Customer'. Set delivery date to 2026-12-31 and add exactly two Items-table lines: choose 'Bench Widget' from the item dropdown with quantity 3, and choose 'Bench Gadget' from the dropdown with quantity 2. Keep each item's default rate. Save the order as a draft. Verify the chosen link records, date, exactly two lines, quantities, and displayed rates, and report the saved Sales Order ID.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-11-17T12:54:07.498Z"
+ },
+ "revision": 2
+}

@@ -1,0 +1,51 @@
+{
+  "arm": "spec",
+  "runid": "fwen12-fm-spec",
+  "target": "erpnext",
+  "flow": "fwen12-fm.json",
+  "flowName": "fwen12-fm",
+  "skillsDir": "/home/user/sitelooper/bench/results/fwen12-fm-skills",
+  "compiled": true,
+  "outputs": {
+    "01-signin.page_heading": "Home",
+    "02-find.sales_order_list_url": "http://127.0.0.1:8100/app/sales-order?customer_name=%5B%22like%22%2C%22%25Seed%3A%25%22%5D",
+    "02-find.url_after_clear": "http://127.0.0.1:8100/app/sales-order?customer_name=%5B%22like%22%2C%22%25Seed%3A%25%22%5D",
+    "02-find.matching_sales_orders_count": "3 of 3",
+    "02-find.customer_name_1": "Seed: Cobalt Retail",
+    "02-find.sales_order_id": "SAL-ORD-2026-00003",
+    "02-find.customer_name_2": "Seed: Beacon Supplies",
+    "02-find.customer_name_2_order_id": "SAL-ORD-2026-00002",
+    "02-find.customer_name_3": "Seed: Alpha Traders",
+    "02-find.customer_name_3_order_id": "SAL-ORD-2026-00001"
+  },
+  "finalText": "01-signin.page_heading: Home\n02-find.sales_order_list_url: http://127.0.0.1:8100/app/sales-order?customer_name=%5B%22like%22%2C%22%25Seed%3A%25%22%5D\n02-find.url_after_clear: http://127.0.0.1:8100/app/sales-order?customer_name=%5B%22like%22%2C%22%25Seed%3A%25%22%5D\n02-find.matching_sales_orders_count: 3 of 3\n02-find.customer_name_1: Seed: Cobalt Retail\n02-find.sales_order_id: SAL-ORD-2026-00003\n02-find.customer_name_2: Seed: Beacon Supplies\n02-find.customer_name_2_order_id: SAL-ORD-2026-00002\n02-find.customer_name_3: Seed: Alpha Traders\n02-find.customer_name_3_order_id: SAL-ORD-2026-00001",
+  "flowFile": "bench/results/fwen12-fm-spec-spec-tmp/fwen12-fm.flow.ts",
+  "specFile": "bench/results/fwen12-fm-spec-spec-tmp/fwen12-fm.spec.ts",
+  "wallMs": 30876,
+  "exitCode": 1,
+  "timedOut": false,
+  "costUsd": 0,
+  "stats": {
+    "total": 1,
+    "passed": 0,
+    "failed": 1,
+    "skipped": 0
+  },
+  "tests": [
+    {
+      "title": "fwen12-fm",
+      "status": "unexpected",
+      "ok": false,
+      "durationMs": 26865,
+      "error": "Error: 03-create s_526e7e: not on the page this procedure starts from (expects http://127.0.0.1:8100/app/customer/new-customer-cmwklbdrch, browser is at http://127.0.0.1:8100/app/customer/new-customer-jwpoffaqzf) — nothing of this segment has run",
+      "drift": []
+    }
+  ],
+  "drift": [],
+  "driftCount": 0,
+  "evidence": [
+    "fwen12-fm-spec-spec-failure.png",
+    "fwen12-fm-spec-spec-error-context.md"
+  ],
+  "logTail": "\nRunning 1 test using 1 worker\n\n[sitelooper warn] 01-signin: report value logged_in_user is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)\n[sitelooper warn] 01-signin: report value login_username_used is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)\n[sitelooper step] 01-signin\n[sitelooper step] 02-find\n[sitelooper warn] step 03-create s_f91ddf/3: resolved positionally and its only recorded effect is the fill's own echo — the effect gate cannot tell right element from wrong here\n  ✘  1 fwen12-fm.spec.ts:9:1 › fwen12-fm (26.9s)\n\n\n  1) fwen12-fm.spec.ts:9:1 › fwen12-fm › 03-create: Create a Customer named '{{runid}} Bench Customer' in ERPNext, leaving customer group and territory at their defaults. Save it, then verify the saved customer record shows exactly that name. \n\n    Error: 03-create s_526e7e: not on the page this procedure starts from (expects http://127.0.0.1:8100/app/customer/new-customer-cmwklbdrch, browser is at http://127.0.0.1:8100/app/customer/new-customer-jwpoffaqzf) — nothing of this segment has run\n\n       at fwen12-fm.flow.ts:16764\n\n      16762 |   const verdict = preconditionVerdictWithFacts(siteFactsAt(url), pattern, url, p, similarity, mints);\n      16763 |   for (const line of verdict.warnings) logWarning(`${where}: ${line}`);\n    > 16764 |   if (verdict.refuse) throw new Error(`${where}: ${verdict.refuse} — nothing of this segment has run`);\n            |                             ^\n      16765 | }\n      16766 |\n      16767 | /**\n        at preconditionGate (/home/user/sitelooper/bench/results/fwen12-fm-spec-spec-tmp/fwen12-fm.flow.ts:16764:29)\n        at Object.03-create (/home/user/sitelooper/bench/results/fwen12-fm-spec-spec-tmp/fwen12-fm.flow.ts:18558:11)\n        at /home/user/sitelooper/bench/results/fwen12-fm-spec-spec-tmp/fwen12-fm.flow.ts:21024:7\n        at runFlow (/home/user/sitelooper/bench/results/fwen12-fm-spec-spec-tmp/fwen12-fm.flow.ts:21023:5)\n        at /home/user/sitelooper/bench/results/fwen12-fm-spec-spec-tmp/fwen12-fm.spec.ts:14:21\n\n    attachment #2: sitelooper-drift (text/plain) ───────────────────────────────────────────────────\n    \n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    attachment #3: screenshot (image/png) ──────────────────────────────────────────────────────────\n    test-results/fwen12-fm-fwen12-fm/test-failed-1.png\n    ────────────────────────────────────────────────────────────────────────────────────────────────\n\n    Error Context: test-results/fwen12-fm-fwen12-fm/error-context.md\n\n  1 failed\n    fwen12-fm.spec.ts:9:1 › fwen12-fm ──────────────────────────────────────────────────────────────\n"
+}
