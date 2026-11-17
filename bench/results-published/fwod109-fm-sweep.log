@@ -1,0 +1,124 @@
+
+[sweep] run 1/3: fwod109-fm-n1 (store: /home/user/sitelooper/bench/results/fwod109-fm-skills)
+[harness] odoo: defaulting APP_URL
+[harness] odoo: defaulting APP_EMAIL
+[harness] odoo: defaulting APP_PASSWORD
+[reset] odoo: no leftover bench customers
+[harness] odoo responded 303 at http://127.0.0.1:8069/
+stopped: fwod109-fm-n1
+  flow "fwod109-fm" saved: 7 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwod109-fm.json
+  warning: note: dropped 1 locator candidate(s) carrying a value this run minted (known only by export time)
+  warning: note: 11 goal/report value(s) carrying a value this run made were slotted or dropped:
+  s_165a55.reportTemplate.values.customer_name dropped (recorded literal of a value this run made)
+  s_165a55.reportTemplate.values.persistence_check slotted "34" → {{v5}}
+  s_165a55.reportTemplate.summary slotted "34" → {{v5}}
+  s_1a40a7.reportTemplate.values.customer_name dropped (recorded literal of a value this run made)
+  s_1a40a7.reportTemplate.values.persistence_check slotted "34" → {{v5}}
+  s_1a40a7.reportTemplate.summary slotted "34" → {{v5}}
+  s_3746c3.reportTemplate.summary dropped (narrates a value this run made)
+  s_af3519.reportTemplate.values.persistence_check slotted "34" → {{v4}}
+  s_af3519.reportTemplate.summary slotted "34" → {{v4}}
+  s_d19e84.reportTemplate.summary dropped (narrates a value this run made)
+  s_fc47e4.reportTemplate.values.order_record_id dropped (recorded literal of a value this run made)
+  warning: note: 01-signin no longer publishes sign_in_confirmation — no replay reads it from the page and the recording showed no line to read
+  warning: warning: 03-create's instruction asks to report product_name, untaxed_amount, and no replay can publish them: nothing in its procedure reads them from the page, so export dropped them — re-record the step so the value is read, not only reported
+  warning: note: 03-create no longer publishes order_reference, product_internal_reference, line_taxes_and_subtotal_display, line_tax_excl, quotation_order_line_details — no replay reads them from the page and the recording showed no line to read
+  warning: note: 04-add no longer publishes line_2_row_text, order_line_count, document_status, virtual_record_reference, first_product_internal_reference — no replay reads them from the page and the recording showed no line to read
+  warning: note: 05-change no longer publishes order_line_count, document_status, first_product_internal_reference, virtual_record_reference — no replay reads them from the page and the recording showed no line to read
+  warning: note: 06-verify no longer publishes order_record_id, current_status_button_class, confirm_button_absent, current_order_status_button, quotation_status_option — no replay reads them from the page and the recording showed no line to read
+  warning: note: 07-verify no longer publishes final_status, final_statusbar_radio_states, final_status_from_status — no replay reads them from the page and the recording showed no line to read
+  warning: warning: instruction "On the saved quotation S00034, add a SECOND order line using a differe…" ran 26 state-changing step(s) but reported failure — its work is NOT in the flow
+  warning: warning: 250 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[0].instruction: "admin" (output) in "Sign in to Odoo at http://127.0.0.1:8069/ using login admin and password exactly {{env:APP_PASSWORD}}. Verify the authenticated app is open and report what page"
+  flow.steps[0].params.v2: "admin" (output) in "admin"
+  flow.steps[1].instruction: "Benchville" (output) in "Create a customer named {{runid}} Bench Customer with City set to Benchville. Ensure the customer is saved and verify the resulting customer record shows that n"
+  flow.steps[1].params.v3: "Benchville" (output) in "Benchville"
+  flow.steps[3].instruction: "virtual_323" (output) in "Recover the Odoo save error on quotation {{03-create.quotation_number}} and make the saved quotation contain exactly two distinct product lines: retain {{03-cre"
+arm=sitelooper model=openai/gpt-6-luna runid=fwod109-fm-n1 stop=completed
+turns=9 wall=700.5s
+commands=8 cmdTime=655.4s cmdBytes=15366 timeouts=0
+orchestrator in=7727 cw=0 cr=36907 out=1006
+inner prompt=4055643 cached=3649490 completion=34969
+spend=$0.0868 maxUsd=3
+learn: A_n=0 replayed=0/8 full=0 repaired=0 compiled=7 variants=0
+-> /home/user/sitelooper/bench/results/fwod109-fm-n1-sitelooper-result.json
+
+fwod109-fm-n1: objectives passed 6/6
+  obj 1: PASS — city="Benchville"
+  obj 2: PASS — orders for customer: 1, lines: 2
+  obj 3: PASS — 2 lines, 2 distinct products
+  obj 4: PASS — quantities: 5, 2
+  obj 5: PASS — state tracking shows confirmation
+  obj 6: PASS — final state=cancel, ref=S00034
+
+[sweep] run 2/3: fwod109-fm-n2 (replay flow fwod109-fm, no orchestrator)
+[reset] odoo: deleted 1 leftover bench order(s)
+[reset] odoo: deleted 1 leftover bench customer(s)
+[sweep] fwod109-fm-n2: 2 drift ticket(s) → fwod109-fm-n2-drift.json
+
+fwod109-fm-n2: objectives passed 6/6
+  obj 1: PASS — city="Benchville"
+  obj 2: PASS — orders for customer: 1, lines: 2
+  obj 3: PASS — 2 lines, 2 distinct products
+  obj 4: PASS — quantities: 5, 2
+  obj 5: PASS — state tracking shows confirmation
+  obj 6: PASS — final state=cancel, ref=S00035
+
+[sweep] run 3/3: fwod109-fm-n3 (replay flow fwod109-fm, no orchestrator)
+[reset] odoo: deleted 1 leftover bench order(s)
+[reset] odoo: deleted 1 leftover bench customer(s)
+
+fwod109-fm-n3: objectives passed 6/6
+  obj 1: PASS — city="Benchville"
+  obj 2: PASS — orders for customer: 1, lines: 2
+  obj 3: PASS — 2 lines, 2 distinct products
+  obj 4: PASS — quantities: 5, 2
+  obj 5: PASS — state tracking shows confirmation
+  obj 6: PASS — final state=cancel, ref=S00036
+
+Learning sweep fwod109-fm (K=3)
+┌─────────┬───┬─────────────────┬──────────┬─────────────┬───────┬──────┬───────────┬──────┬──────────────┬────────┐
+│ (index) │ n │ runid           │ verified │ stop        │ turns │ cmds │ total_usd │ A_n  │ replayed     │ wall_s │
+├─────────┼───┼─────────────────┼──────────┼─────────────┼───────┼──────┼───────────┼──────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwod109-fm-n1' │ '6/6'    │ 'completed' │ 9     │ 8    │ 0.0868    │ 0    │ '0/8'        │ 700    │
+│ 1       │ 2 │ 'fwod109-fm-n2' │ '6/6'    │ 'success'   │ 19    │ 7    │ 0.0084    │ 0.86 │ '7/7 (flow)' │ 138    │
+│ 2       │ 3 │ 'fwod109-fm-n3' │ '6/6'    │ 'success'   │ 0     │ 7    │ 0         │ 1    │ '7/7 (flow)' │ 95     │
+└─────────┴───┴─────────────────┴──────────┴─────────────┴───────┴──────┴───────────┴──────┴──────────────┴────────┘
+http://127.0.0.1:8069
+  s_1a40a7  validated   31 steps  3/3 (100%)
+           On saved quotation {{v1}}, change the first line {{v2}} quantity from 3 to 5, save, then reload/reopen to veri…
+  s_30bc62  validated    1 steps  3/3 (100%)
+           Create a quotation for customer {{v1}} with exactly ONE order line: choose any product from the catalogue usin…
+  s_350e96  validated    1 steps  3/3 (100%)
+           Sign in to Odoo at {{v1}} using login {{v2}} and password exactly {{v3}}. Verify the authenticated app is open…
+  s_3746c3  validated   20 steps  3/3 (100%)
+           Create a quotation for customer {{v1}} with exactly ONE order line: choose any product from the catalogue usin…
+  s_52d9ce  validated    1 steps  3/3 (100%)
+           Create a customer named {{v2}} with City set to {{v3}}. Ensure the customer is saved and verify the resulting …
+  s_5be17a  validated   12 steps  3/3 (100%)
+           Create a quotation for customer {{v1}} with exactly ONE order line: choose any product from the catalogue usin…
+  s_725e7b  validated    2 steps  3/3 (100%)
+           Sign in to Odoo at {{v1}} using login {{v2}} and password exactly {{v3}}. Verify the authenticated app is open…
+  s_7428b6  validated    2 steps  3/3 (100%)
+           Create a customer named {{v2}} with City set to {{v3}}. Ensure the customer is saved and verify the resulting …
+  s_75b863  validated    3 steps  3/3 (100%)
+           Sign in to Odoo at {{v1}} using login {{v2}} and password exactly {{v3}}. Verify the authenticated app is open…
+  s_884cae  validated    1 steps  3/3 (100%)
+           Create a customer named {{v2}} with City set to {{v3}}. Ensure the customer is saved and verify the resulting …
+  s_af3519  validated   10 steps  3/3 (100%)
+           {{v1}} sales order {{v2}} so it is no longer active. Confirm any cancellation prompt if required, then verify …
+  s_be42b4  validated    2 steps  3/3 (100%)
+           Create a quotation for customer {{v1}} with exactly ONE order line: choose any product from the catalogue usin…
+  s_d19e84  validated    6 steps  3/3 (100%)
+           Create a customer named {{v2}} with City set to {{v3}}. Ensure the customer is saved and verify the resulting …
+  s_da1a85  validated    5 steps  3/3 (100%)
+           Create a customer named {{v2}} with City set to {{v3}}. Ensure the customer is saved and verify the resulting …
+  s_fc47e4  validated   23 steps  3/3 (100%)
+           Confirm quotation {{v1}} for {{v2}} so it becomes a sales order. Verify the resulting order reference and the …
+  s_165a55  demoted     32 steps  1/2 (50%)
+           Recover the Odoo save error on quotation {{v1}} and make the saved quotation contain exactly two distinct prod…
+  s_5fecec  validated   24 steps  2/2 (100%)  variant of s_165a55
+           Recover the Odoo save error on quotation {{v1}} and make the saved quotation contain exactly two distinct prod…
+store: /home/user/sitelooper/bench/results/fwod109-fm-skills
+
+summary: /home/user/sitelooper/bench/results/fwod109-fm-sweep.json

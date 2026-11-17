@@ -1,0 +1,299 @@
+{
+  "flow": "fwod109-fm",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_725e7b; observed authenticated_page_url=http://127.0.0.1:8069/web#action=123&cids=1&menu_id=81, page_title=Odoo - Discuss.",
+      "values": {
+        "authenticated_page_url": "http://127.0.0.1:8069/web#action=123&cids=1&menu_id=81",
+        "page_title": "Odoo - Discuss"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "6/6",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_725e7b: report value login_username is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)"
+      ],
+      "unreported": [
+        "login_username"
+      ]
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_d19e84; observed customer_record_id=69, customer_reference=fwod109-fm-n2, customer_city=Benchville, verified_customer_city=Benchville.",
+      "values": {
+        "customer_record_id": "69",
+        "customer_reference": "fwod109-fm-n2",
+        "customer_city": "Benchville",
+        "verified_customer_city": "Benchville"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "15/15",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_d19e84: step 4: read 'customer_name' returned a value the skill itself set/selected ('fwod109-fm-n2 Bench Customer') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_d19e84: step 5: read 'verified_customer_name' returned a value the skill itself set/selected ('fwod109-fm-n2 Bench Customer') — confirms the control, not persistence; dropped from the report's confident values"
+      ],
+      "unreported": [
+        "customer_name",
+        "customer_record_url",
+        "verified_customer_name"
+      ]
+    },
+    {
+      "id": "03-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_3746c3; observed customer_reference=fwod109-fm-n2, tax_rate=20%, quotation_line_subtotal=£ 885.00, unit_price=295.00, order_line_count=1, order_line_row_text_2=[FURN_6666] Acoustic Bloc Screens\t\n[FURN_6666] Acoustic Bloc Screens\n\t3.00\t295.00\t\n20%\n\t£ 885.00, quotation_number=S00035, quotation_record_url=http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=35, customer_city=Benchville, tax_amount=£ 177.00, total=£ 1,062.00, saved_quotation_tax_label=TAX 20%, saved_quotation_tax_amount=£ 177.00, saved_quotation_total_label=Total, quotation_total_currency_symbol=£ 1, quotation_total_amount_remainder=062.00, status=Quotation, quotation_untaxed_amount_row=Untaxed Amount\t£ 885.00.",
+      "unanswered": [
+        "product_name"
+      ],
+      "values": {
+        "customer_reference": "fwod109-fm-n2",
+        "tax_rate": "20%",
+        "quotation_line_subtotal": "£ 885.00",
+        "unit_price": "295.00",
+        "order_line_count": "1",
+        "order_line_row_text_2": "[FURN_6666] Acoustic Bloc Screens\t\n[FURN_6666] Acoustic Bloc Screens\n\t3.00\t295.00\t\n20%\n\t£ 885.00",
+        "quotation_number": "S00035",
+        "quotation_record_url": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=35",
+        "customer_city": "Benchville",
+        "tax_amount": "£ 177.00",
+        "total": "£ 1,062.00",
+        "saved_quotation_tax_label": "TAX 20%",
+        "saved_quotation_tax_amount": "£ 177.00",
+        "saved_quotation_total_label": "Total",
+        "quotation_total_currency_symbol": "£ 1",
+        "quotation_total_amount_remainder": "062.00",
+        "status": "Quotation",
+        "quotation_untaxed_amount_row": "Untaxed Amount\t£ 885.00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "35/35",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_5be17a: step 9: read 'quotation_line_product' returned a value the skill itself set/selected ('[FURN_6666] Acoustic Bloc Screens') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_5be17a: step 10: read 'quantity' returned '3.00' from a control this step set, and nothing committed it since — it shows the control, however the app formats it, not what the app stored; dropped from the report's confident values",
+        "s_3746c3: step 5: read 'customer_name' returned a value the skill itself set/selected ('fwod109-fm-n2 Bench Customer') — confirms the control, not persistence; dropped from the report's confident values"
+      ],
+      "unreported": [
+        "customer_name",
+        "quantity",
+        "quotation_line_product"
+      ]
+    },
+    {
+      "id": "04-add",
+      "status": "success",
+      "summary": "Quotation S00035 for fwod109-fm-n2 Bench Customer now has exactly two distinct product lines and is saved: [FURN_6666] Acoustic Bloc Screens qty 3.00 @ £295.00 (£885.00) retained, and a new line [E-COM11] Cabinet with Doors qty 2.00 @ £140.00 (£280.00) chosen via the product autocomplete. Clicking \"Save manually\" raised no error this time (no error dialog/virtual_323 warning appeared), and after a full page reload of the quotation form the two lines, untaxed amount, tax and total were all still present, confirming persistence. Status remains \"Quotation\" — no confirmation was performed. (save_error_seen: saved cleanly, no virtual_323 error dialog or notification appeared)",
+      "values": {
+        "order_reference": "S00035",
+        "customer_name": "fwod109-fm-n2 Bench Customer",
+        "customer_city": "Benchville",
+        "line_1_product": "[FURN_6666] Acoustic Bloc Screens",
+        "line_1_quantity": "3.00",
+        "line_1_unit_price": "295.00",
+        "line_1_subtotal": "£ 885.00",
+        "line_2_product": "[E-COM11] Cabinet with Doors",
+        "line_2_quantity": "2.00",
+        "line_2_unit_price": "140.00",
+        "line_2_subtotal": "£ 280.00",
+        "product_line_count": "2",
+        "untaxed_amount": "£ 1,165.00",
+        "tax_amount": "TAX 20% £ 233.00",
+        "total": "£ 1,398.00",
+        "status": "Quotation",
+        "save_button_used": "Save manually",
+        "save_error_seen": "none",
+        "verified_after_reload": "yes - line products/quantities/prices and untaxed amount £1,165.00 identical after a full page reload of the quotation",
+        "ref": "fwod109-fm-n2",
+        "ref_2": "FURN_6666",
+        "ref_3": "virtual_323"
+      },
+      "tier": "A",
+      "recovered": true,
+      "fellBack": "s_165a55 stopped at step 3 — every identifying locator missed, and the positional fallback #2 is not the recorded \"Save manually\" — the element there carries another name, so it was not clicked",
+      "pinStopped": {
+        "skill": "s_165a55",
+        "step": 3,
+        "why": "every identifying locator missed, and the positional fallback #2 is not the recorded \"Save manually\" — the element there carries another name, so it was not clicked"
+      },
+      "replayed": "2/32",
+      "repaired": false,
+      "turns": 19,
+      "warnings": [
+        "s_165a55: step 1: every identifying locator missed and everything this click was recorded adding is already showing (\"- button \\\"Home Menu\\\"\" and 4 more) — its recorded effect is in place, so it is skipped",
+        "s_165a55: step 3: primary locator did not resolve; used fallback #2 page.locator('div:nth-of-type(1) > div > div:nth-of-type(1) > div:nth-of-type(3) > div > button:nth-of-type(1)')"
+      ],
+      "unreported": [
+        "order_record_id",
+        "line_1_row_text",
+        "distinct_product_lines",
+        "chatter_last_message",
+        "oe_subtotal_footer_tr",
+        "saved_quotation_total_row",
+        "saved_quotation_tax_label",
+        "saved_quotation_tax_amount"
+      ]
+    },
+    {
+      "id": "05-change",
+      "status": "success",
+      "summary": "Replayed stored procedure s_1a40a7; observed order_record_id=35, line_1_product=[FURN_6666] Acoustic Bloc Screens, line_1_quantity_before=3.00, line_1_unit_price=295.00, order_reference=S00035, customer_name=fwod109-fm-n2 Bench Customer, customer_city=Benchville, line_1_subtotal=£ 1,475.00, line_2_product=[E-COM11] Cabinet with Doors, line_2_quantity=2.00, line_2_unit_price=140.00, line_2_subtotal=£ 280.00, untaxed_amount=£ 1,755.00, tax_amount=£ 351.00, total=£ 2,106.00, saved_order_tax_label=TAX 20%, saved_order_tax_amount=£ 351.00, saved_order_total_label=Total, oe_subtotal_footer_tr_3_2=£ 2, oe_subtotal_footer_tr_3_3=106.00, saved_order_untaxed_amount_row=Untaxed Amount\t£ 1,755.00.",
+      "values": {
+        "order_record_id": "35",
+        "line_1_product": "[FURN_6666] Acoustic Bloc Screens",
+        "line_1_quantity_before": "3.00",
+        "line_1_unit_price": "295.00",
+        "order_reference": "S00035",
+        "customer_name": "fwod109-fm-n2 Bench Customer",
+        "customer_city": "Benchville",
+        "line_1_subtotal": "£ 1,475.00",
+        "line_2_product": "[E-COM11] Cabinet with Doors",
+        "line_2_quantity": "2.00",
+        "line_2_unit_price": "140.00",
+        "line_2_subtotal": "£ 280.00",
+        "untaxed_amount": "£ 1,755.00",
+        "tax_amount": "£ 351.00",
+        "total": "£ 2,106.00",
+        "saved_order_tax_label": "TAX 20%",
+        "saved_order_tax_amount": "£ 351.00",
+        "saved_order_total_label": "Total",
+        "oe_subtotal_footer_tr_3_2": "£ 2",
+        "oe_subtotal_footer_tr_3_3": "106.00",
+        "saved_order_untaxed_amount_row": "Untaxed Amount\t£ 1,755.00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "31/31",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_1a40a7: step 8: read 'line_1_quantity_saved' returned '5.00' from a control this step set, and nothing committed it since — it shows the control, however the app formats it, not what the app stored; dropped from the report's confident values"
+      ],
+      "unreported": [
+        "line_1_quantity_saved"
+      ]
+    },
+    {
+      "id": "06-verify",
+      "status": "success",
+      "summary": "Replayed stored procedure s_fc47e4; observed order_reference=S00035, order_statusbar_checked_state=Sales Order\nQuotation Sent\nQuotation, status_shown=Sales Order, customer_name=fwod109-fm-n2 Bench Customer, customer_city=Benchville, order_date=11/17/2026 12:57:02, untaxed_amount=£ 1,755.00, tax_amount=£ 351.00, total=£ 2,106.00, quotation_sent_status_option=Quotation Sent, order_statusbar_option_text=Quotation Sent, new_actions_available_1=Create Invoice, new_actions_available_2=Send by Email, new_actions_available_3=Preview, new_actions_available_4=Cancel, saved_order_tax_label=TAX 20%, saved_order_tax_amount=£ 351.00, saved_order_total_label=Total, oe_subtotal_footer_tr_3_2=£ 2, oe_subtotal_footer_tr_3_3=106.00, saved_order_untaxed_amount_row=Untaxed Amount\t£ 1,755.00, customer_reference=fwod109-fm-n2.",
+      "values": {
+        "order_reference": "S00035",
+        "order_statusbar_checked_state": "Sales Order\nQuotation Sent\nQuotation",
+        "status_shown": "Sales Order",
+        "customer_name": "fwod109-fm-n2 Bench Customer",
+        "customer_city": "Benchville",
+        "order_date": "11/17/2026 12:57:02",
+        "untaxed_amount": "£ 1,755.00",
+        "tax_amount": "£ 351.00",
+        "total": "£ 2,106.00",
+        "quotation_sent_status_option": "Quotation Sent",
+        "order_statusbar_option_text": "Quotation Sent",
+        "new_actions_available_1": "Create Invoice",
+        "new_actions_available_2": "Send by Email",
+        "new_actions_available_3": "Preview",
+        "new_actions_available_4": "Cancel",
+        "saved_order_tax_label": "TAX 20%",
+        "saved_order_tax_amount": "£ 351.00",
+        "saved_order_total_label": "Total",
+        "oe_subtotal_footer_tr_3_2": "£ 2",
+        "oe_subtotal_footer_tr_3_3": "106.00",
+        "saved_order_untaxed_amount_row": "Untaxed Amount\t£ 1,755.00",
+        "customer_reference": "fwod109-fm-n2"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "23/23",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "07-verify",
+      "status": "success",
+      "summary": "Replayed stored procedure s_af3519; observed order_record_id=35, secondary_status_text=Sales Order, final_statusbar_text=Cancelled\nSales Order\nQuotation Sent\nQuotation, order_reference=S00035, customer_name=fwod109-fm-n2 Bench Customer, customer_city=Benchville, available_actions_after_1=Preview, available_actions_after_2=Set to Quotation.",
+      "values": {
+        "order_record_id": "35",
+        "secondary_status_text": "Sales Order",
+        "final_statusbar_text": "Cancelled\nSales Order\nQuotation Sent\nQuotation",
+        "order_reference": "S00035",
+        "customer_name": "fwod109-fm-n2 Bench Customer",
+        "customer_city": "Benchville",
+        "available_actions_after_1": "Preview",
+        "available_actions_after_2": "Set to Quotation"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "10/10",
+      "repaired": false,
+      "turns": 0
+    }
+  ],
+  "passed": 7,
+  "total": 7,
+  "repinned": 0,
+  "drift": 2,
+  "driftTickets": [
+    {
+      "flow": "fwod109-fm",
+      "step": "04-add",
+      "skill": "s_165a55",
+      "atStep": "1",
+      "key": "target",
+      "similarity": 0.979,
+      "missedLocator": "page.getByRole('button', { name: 'Stay here', exact: true })",
+      "fallbackUsed": null,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "pageUrl": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=35"
+    },
+    {
+      "flow": "fwod109-fm",
+      "step": "04-add",
+      "skill": "s_165a55",
+      "atStep": "3",
+      "key": "target",
+      "similarity": 0.979,
+      "missedLocator": "page.getByRole('button', { name: 'Save manually', exact: true })",
+      "fallbackUsed": "page.locator('div:nth-of-type(1) > div > div:nth-of-type(1) > div:nth-of-type(3) > div > button:nth-of-type(1)')",
+      "fallbackIndex": 1,
+      "recovered": true,
+      "pageUrlPattern": "http://127.0.0.1:8069/web#action=:id&cids=:id&id=:id&menu_id=:id&model=sale.order&view_type=form",
+      "pageUrl": "http://127.0.0.1:8069/web#cids=1&menu_id=194&action=316&model=sale.order&view_type=form&id=35"
+    }
+  ],
+  "wallMs": 137983,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 272971,
+    "completionTokens": 4457,
+    "cachedTokens": 239488
+  },
+  "usageByModel": {
+    "deepseek/deepseek-v4.1-flash": {
+      "promptTokens": 272971,
+      "completionTokens": 4457,
+      "cachedTokens": 239488
+    }
+  },
+  "servedByModel": {
+    "deepseek/deepseek-v4.1-flash": [
+      "DeepSeek"
+    ]
+  },
+  "recoveryModel": "openai/gpt-6-luna",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

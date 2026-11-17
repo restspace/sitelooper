@@ -1,0 +1,12 @@
+[spec-replay] resetting odoo
+[reset] odoo: deleted 1 leftover bench order(s)
+[reset] odoo: deleted 1 leftover bench customer(s)
+[spec-replay] compiling: /opt/node22/bin/node /home/user/sitelooper/bin/sitelooper.js compile bench/results/flows/fwod109-fm.json --out /home/user/sitelooper/bench/results/fwod109-fm-spec-spec-tmp --overwrite-spec
+flow: /home/user/sitelooper/bench/results/fwod109-fm-spec-spec-tmp/fwod109-fm.flow.ts
+spec: /home/user/sitelooper/bench/results/fwod109-fm-spec-spec-tmp/fwod109-fm.spec.ts
+facts http://127.0.0.1:8069: 36 relied (20 hard), 13 advisory
+warning the recording's instruction "On the saved quotation S00034, add a SECOND order line using a different catalogue product…" changed the app but is not in the flow — a spec may pass without that work
+  why: it ran 26 state-changing step(s) and reported failure, and no step of the flow carries them
+  fix: check the flow covers the work another way; if not, re-record so that instruction reports success
+[spec-replay] running: npx playwright test --config /home/user/sitelooper/bench/results/fwod109-fm-spec-spec-tmp/playwright.config.mjs
+[spec-replay] fwod109-fm-spec: 1/1 passed, exit=0, 95s, 0 drift line(s) — result written
