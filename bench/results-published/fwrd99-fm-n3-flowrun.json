@@ -1,0 +1,214 @@
+{
+  "flow": "fwrd99-fm",
+  "status": "success",
+  "steps": [
+    {
+      "id": "01-signin",
+      "status": "success",
+      "summary": "Replayed stored procedure s_300250; observed page_heading=Repair tickets, signed_in_user=Bench User, tickets_summary=Showing 1–10 of 13, first_ticket_ref=RD-1014.",
+      "values": {
+        "page_heading": "Repair tickets",
+        "signed_in_user": "Bench User",
+        "tickets_summary": "Showing 1–10 of 13",
+        "first_ticket_ref": "RD-1014"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "8/8",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "02-create",
+      "status": "success",
+      "summary": "Replayed stored procedure s_ed3147; observed new_ticket_reference=RD-1017, new_ticket_title=fwrd99-fm-n3 RD Bench Ticket, tickets_summary=Showing 1–10 of 14, test_run_id=fwrd99-fm-n3, new_ticket_status=Draft.",
+      "values": {
+        "new_ticket_reference": "RD-1017",
+        "new_ticket_title": "fwrd99-fm-n3 RD Bench Ticket",
+        "tickets_summary": "Showing 1–10 of 14",
+        "test_run_id": "fwrd99-fm-n3",
+        "new_ticket_status": "Draft"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "8/8",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "03-open",
+      "status": "success",
+      "summary": "Replayed stored procedure s_eb9964; observed ticket_reference=RD-1017, ticket_title=fwrd99-fm-n3 RD Bench Ticket, part_name=fwrd99-fm-n3 RD Part A, part_cost=$100.00, part_markup=25%, part_quantity=1, part_supplier=No supplier, app_computed_part_price=$125.00, test_run_id=fwrd99-fm-n3.",
+      "values": {
+        "ticket_reference": "RD-1017",
+        "ticket_title": "fwrd99-fm-n3 RD Bench Ticket",
+        "part_name": "fwrd99-fm-n3 RD Part A",
+        "part_cost": "$100.00",
+        "part_markup": "25%",
+        "part_quantity": "1",
+        "part_supplier": "No supplier",
+        "app_computed_part_price": "$125.00",
+        "test_run_id": "fwrd99-fm-n3"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "17/17",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_eb9964: step 8: primary locator did not resolve; used fallback #2 page.getByTestId('ticket-ref')"
+      ]
+    },
+    {
+      "id": "04-add",
+      "status": "success",
+      "summary": "Replayed stored procedure s_c4172b; observed test_run_id=fwrd99-fm-n3, ticket_reference=RD-1017, part_b_name=fwrd99-fm-n3 RD Part B, part_b_cost=$200.00, part_b_markup=25%, part_b_quantity=1, part_b_app_computed_price=$250.00, parts_total_price_x_quantity=$375.00.",
+      "values": {
+        "test_run_id": "fwrd99-fm-n3",
+        "ticket_reference": "RD-1017",
+        "part_b_name": "fwrd99-fm-n3 RD Part B",
+        "part_b_cost": "$200.00",
+        "part_b_markup": "25%",
+        "part_b_quantity": "1",
+        "part_b_app_computed_price": "$250.00",
+        "parts_total_price_x_quantity": "$375.00"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "15/15",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "05-edit",
+      "status": "success",
+      "summary": "Replayed stored procedure s_894215; observed test_run_id=fwrd99-fm-n3, part_a_markup_field=25, ticket_reference=RD-1017, part_a_name=fwrd99-fm-n3 RD Part A, part_a_new_cost=$150.00, part_a_markup=25%, part_a_qty=1, part_a_new_app_computed_price=$187.50, part_b_price=$250.00, parts_total_price_x_quantity=$437.50.",
+      "values": {
+        "test_run_id": "fwrd99-fm-n3",
+        "part_a_markup_field": "25",
+        "ticket_reference": "RD-1017",
+        "part_a_name": "fwrd99-fm-n3 RD Part A",
+        "part_a_new_cost": "$150.00",
+        "part_a_markup": "25%",
+        "part_a_qty": "1",
+        "part_a_new_app_computed_price": "$187.50",
+        "part_b_price": "$250.00",
+        "parts_total_price_x_quantity": "$437.50"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "13/13",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_894215: step 3: read 'part_a_cost_field' returned a value the skill itself set/selected ('150') — confirms the control, not persistence; dropped from the report's confident values"
+      ],
+      "unreported": [
+        "part_a_cost_field"
+      ]
+    },
+    {
+      "id": "06-change",
+      "status": "success",
+      "summary": "Replayed stored procedure s_8ad285; observed part_a_row_after=fwrd99-fm-n3 RD Part A | $150.00 | 25% | 1 | Bench Supplier Co | $187.50, part_b_row_after=fwrd99-fm-n3 RD Part B | $200.00 | 25% | 1 | Bench Supplier Co | $250.00, test_run_id=fwrd99-fm-n3, ticket_reference=RD-1017, ticket_title=fwrd99-fm-n3 RD Bench Ticket, final_status=Ready, parts_total=$437.50, main_p_main_badge_main_c=Status.",
+      "unanswered": [
+        "requirement_1",
+        "requirement_2"
+      ],
+      "values": {
+        "part_a_row_after": "fwrd99-fm-n3 RD Part A | $150.00 | 25% | 1 | Bench Supplier Co | $187.50",
+        "part_b_row_after": "fwrd99-fm-n3 RD Part B | $200.00 | 25% | 1 | Bench Supplier Co | $250.00",
+        "test_run_id": "fwrd99-fm-n3",
+        "ticket_reference": "RD-1017",
+        "ticket_title": "fwrd99-fm-n3 RD Bench Ticket",
+        "final_status": "Ready",
+        "parts_total": "$437.50",
+        "main_p_main_badge_main_c": "Status"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "15/15",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "07-remove",
+      "status": "success",
+      "summary": "Replayed stored procedure s_3feb50; observed final_status=Ready, ticket_reference=RD-1017, ticket_title=fwrd99-fm-n3 RD Bench Ticket, parts_rows_visible=No parts on this ticket yet., remaining_actions_1=Mark Draft, remaining_actions_2=Mark Closed, remaining_actions_3=Archive ticket.",
+      "unanswered": [
+        "parts_total_visible"
+      ],
+      "values": {
+        "final_status": "Ready",
+        "ticket_reference": "RD-1017",
+        "ticket_title": "fwrd99-fm-n3 RD Bench Ticket",
+        "parts_rows_visible": "No parts on this ticket yet.",
+        "remaining_actions_1": "Mark Draft",
+        "remaining_actions_2": "Mark Closed",
+        "remaining_actions_3": "Archive ticket"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "12/12",
+      "repaired": false,
+      "turns": 0
+    },
+    {
+      "id": "08-archive",
+      "status": "success",
+      "summary": "Replayed stored procedure s_77d533; observed ticket_reference=RD-1017, ticket_title=fwrd99-fm-n3 RD Bench Ticket.",
+      "values": {
+        "ticket_reference": "RD-1017",
+        "ticket_title": "fwrd99-fm-n3 RD Bench Ticket"
+      },
+      "tier": "A",
+      "recovered": false,
+      "replayed": "10/10",
+      "repaired": false,
+      "turns": 0,
+      "warnings": [
+        "s_77d533: step 5: read 'test_run_id' returned a value the skill itself set/selected ('fwrd99-fm-n3') — confirms the control, not persistence; dropped from the report's confident values",
+        "s_77d533: step 6: read 'test_run_id' returned a value the skill itself set/selected ('fwrd99-fm-n3') — confirms the control, not persistence; dropped from the report's confident values"
+      ],
+      "unreported": [
+        "active_list_before_search",
+        "test_run_id"
+      ]
+    }
+  ],
+  "passed": 8,
+  "total": 8,
+  "repinned": 0,
+  "drift": 1,
+  "driftTickets": [
+    {
+      "flow": "fwrd99-fm",
+      "step": "03-open",
+      "skill": "s_eb9964",
+      "atStep": "8",
+      "key": "target",
+      "similarity": 1.004,
+      "missedLocator": "page.getByText('RD-1017', { exact: true })",
+      "fallbackUsed": "page.getByTestId('ticket-ref')",
+      "fallbackIndex": 1,
+      "recovered": false,
+      "pageUrlPattern": "http://127.0.0.1:4180/#/tickets/:id",
+      "pageUrl": "http://127.0.0.1:4180/#/tickets/t15"
+    }
+  ],
+  "wallMs": 44101,
+  "model": "deepseek/deepseek-v4.1-flash",
+  "usage": {
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "cachedTokens": 0
+  },
+  "usageByModel": {},
+  "servedByModel": {},
+  "recoveryModel": "openai/gpt-6-luna",
+  "provider": "openrouter",
+  "schemaVersion": 1,
+  "stage": "run",
+  "outcome": "success",
+  "nextActions": []
+}

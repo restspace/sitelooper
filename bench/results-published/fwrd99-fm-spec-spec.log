@@ -1,0 +1,48 @@
+
+Running 1 test using 1 worker
+
+[sitelooper step] 01-signin
+[sitelooper step] 02-create
+[sitelooper step] 03-open
+[sitelooper step] 04-add
+[sitelooper warn] 05-edit s_894215/3: read 'part_a_cost_field' returned a value the skill itself set/selected ('150') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper probe] 03-open: retired - row "fwrd99-fm-spec RD Part A $100{{*}} 25% {{*}} {{*}} {{*}} Edit Delete" — 05-edit s_894215/5 took it off http://127.0.0.1:4180/#/tickets/t15
+[sitelooper probe] 03-open: retired - cell "$100{{*}}" — 05-edit s_894215/5 took it off http://127.0.0.1:4180/#/tickets/t15
+[sitelooper step] 05-edit
+[sitelooper step] 06-change
+[sitelooper probe] 03-open: retired - cell "fwrd99-fm-spec RD Part A" — 07-remove s_3feb50/3 took it off http://127.0.0.1:4180/#/tickets/t15
+[sitelooper step] 07-remove
+[sitelooper warn] 08-archive s_77d533/5: read 'test_run_id' returned a value the skill itself set/selected ('fwrd99-fm-spec') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper warn] 08-archive s_77d533/6: read 'test_run_id' returned a value the skill itself set/selected ('fwrd99-fm-spec') — confirms the control, not persistence; dropped from the report's confident values
+[sitelooper step] 08-archive
+  ✘  1 fwrd99-fm.spec.ts:9:1 › fwrd99-fm (42.8s)
+
+
+  1) fwrd99-fm.spec.ts:9:1 › fwrd99-fm ─────────────────────────────────────────────────────────────
+
+    Error: persistence: 03-open typed "fwrd99-fm-spec RD Part A", "100", "25", the record at http://127.0.0.1:4180/#/tickets/t15 does not show it after reload (missing - cell "25%")
+
+       at fwrd99-fm.flow.ts:23488
+
+      23486 |     const failures: string[] = [...unpersisted];
+      23487 |     if (run.partial.length && process.env.SITELOOPER_ALLOW_PARTIAL !== '1') failures.push(`PARTIAL: ${run.partial.join('; ')}`);
+    > 23488 |     if (failures.length) throw new Error(failures.join('\n'));
+            |                                ^
+      23489 |     return outputs;
+      23490 |   } finally {
+      23491 |     DRIFT.splice(0, DRIFT.length, ...run.drift);
+        at runFlow (/home/user/sitelooper/bench/results/fwrd99-fm-spec-spec-tmp/fwrd99-fm.flow.ts:23488:32)
+        at /home/user/sitelooper/bench/results/fwrd99-fm-spec-spec-tmp/fwrd99-fm.spec.ts:14:21
+
+    attachment #2: sitelooper-drift (text/plain) ───────────────────────────────────────────────────
+    
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #3: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/fwrd99-fm-fwrd99-fm/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/fwrd99-fm-fwrd99-fm/error-context.md
+
+  1 failed
+    fwrd99-fm.spec.ts:9:1 › fwrd99-fm ──────────────────────────────────────────────────────────────
