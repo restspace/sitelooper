@@ -1,0 +1,575 @@
+{
+  "name": "fwkb49-fm",
+  "origin": "http://127.0.0.1:8085",
+  "startUrl": "http://127.0.0.1:8085/",
+  "vars": [
+    "runid"
+  ],
+  "steps": [
+    {
+      "id": "01-signin",
+      "instruction": "Sign in to Kanboard at http://127.0.0.1:8085/ with username admin and password exactly {{env:APP_PASSWORD}}. Verify that the signed-in page loads, then report the visible confirmation.",
+      "skill": "s_ef097e",
+      "params": {
+        "v1": "http://127.0.0.1:8085/",
+        "v2": "admin",
+        "v3": "{{env:APP_PASSWORD}}"
+      },
+      "outputs": [
+        "dashboard_heading",
+        "signed_in_user",
+        "page_title",
+        "final_url"
+      ],
+      "recorded": {
+        "dashboard_heading": "KB Dashboard for admin",
+        "signed_in_user": "admin",
+        "page_title": "Dashboard for admin",
+        "final_url": "http://127.0.0.1:8085/",
+        "url": "http://127.0.0.1:8085/"
+      },
+      "route": "http://127.0.0.1:8085/",
+      "outputEvidence": {
+        "dashboard_heading": {
+          "same": 1,
+          "differed": 0
+        },
+        "signed_in_user": {
+          "same": 1,
+          "differed": 0
+        },
+        "page_title": {
+          "same": 1,
+          "differed": 0
+        },
+        "final_url": {
+          "same": 1,
+          "differed": 0
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "02-open",
+      "instruction": "Open the Bench Board project board and report its column names in left-to-right order exactly as displayed. Do not alter any tasks.",
+      "skill": "s_643960",
+      "params": {},
+      "outputs": [
+        "project",
+        "project_heading",
+        "column_1",
+        "column_2",
+        "column_3",
+        "column_4",
+        "columns_left_to_right_1",
+        "columns_left_to_right_2",
+        "columns_left_to_right_3",
+        "columns_left_to_right_4"
+      ],
+      "recorded": {
+        "project": "Bench Board",
+        "project_heading": "KB Bench Board",
+        "column_1": "Backlog",
+        "column_2": "Ready",
+        "column_3": "Work in progress",
+        "column_4": "Done",
+        "column_count": "4",
+        "columns_left_to_right_1": "Backlog",
+        "columns_left_to_right_2": "Ready",
+        "columns_left_to_right_3": "Work in progress",
+        "columns_left_to_right_4": "Done",
+        "url": "http://127.0.0.1:8085/?controller=BoardViewController&action=show&project_id=1"
+      },
+      "route": "http://127.0.0.1:8085/",
+      "outputEvidence": {
+        "project": {
+          "same": 1,
+          "differed": 0
+        },
+        "project_heading": {
+          "same": 1,
+          "differed": 0
+        },
+        "column_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "column_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "column_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "column_4": {
+          "same": 1,
+          "differed": 0
+        },
+        "column_count": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "columns_left_to_right_1": {
+          "same": 1,
+          "differed": 0
+        },
+        "columns_left_to_right_2": {
+          "same": 1,
+          "differed": 0
+        },
+        "columns_left_to_right_3": {
+          "same": 1,
+          "differed": 0
+        },
+        "columns_left_to_right_4": {
+          "same": 1,
+          "differed": 0
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "03-create",
+      "instruction": "On the Bench Board project, create a task titled exactly '{{runid}} Bench Task' with a description that includes the exact runid '{{runid}}'. Verify the created task appears and report its displayed title, description, and numeric task ID as shown on the card or task page.",
+      "skill": "s_63ec99",
+      "params": {
+        "v1": "Bench Board",
+        "v3": "{{runid}} Bench Task",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "task_id",
+        "task_id_display",
+        "task_title",
+        "task_description",
+        "runid",
+        "column",
+        "status",
+        "project",
+        "creator",
+        "card_display",
+        "task_title_heading",
+        "task_page_heading"
+      ],
+      "recorded": {
+        "task_id": "4",
+        "task_id_display": "Task #4",
+        "task_title": "fwkb49-fm-n1 Bench Task",
+        "task_description": "Created by bench automation for run fwkb49-fm-n1. Runid: fwkb49-fm-n1",
+        "runid": "fwkb49-fm-n1",
+        "column": "Backlog",
+        "status": "open",
+        "project": "Bench Board",
+        "creator": "admin",
+        "card_display": "#4 fwkb49-fm-n1 Bench Task",
+        "task_title_heading": "fwkb49-fm-n1 Bench Task",
+        "task_page_heading": "Task #4",
+        "url": "http://127.0.0.1:8085/?controller=TaskViewController&action=show&task_id=4"
+      },
+      "route": "http://127.0.0.1:8085/",
+      "outputEvidence": {
+        "task_id": {
+          "same": 1,
+          "differed": 0
+        },
+        "task_id_display": {
+          "same": 1,
+          "differed": 0
+        },
+        "task_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "task_description": {
+          "same": 0,
+          "differed": 1
+        },
+        "runid": {
+          "same": 0,
+          "differed": 1
+        },
+        "column": {
+          "same": 1,
+          "differed": 0
+        },
+        "status": {
+          "same": 1,
+          "differed": 0
+        },
+        "project": {
+          "same": 1,
+          "differed": 0
+        },
+        "creator": {
+          "same": 1,
+          "differed": 0
+        },
+        "card_display": {
+          "same": 0,
+          "differed": 1
+        },
+        "task_title_heading": {
+          "same": 0,
+          "differed": 1
+        },
+        "task_page_heading": {
+          "same": 1,
+          "differed": 0
+        },
+        "url": {
+          "same": 1,
+          "differed": 0
+        }
+      }
+    },
+    {
+      "id": "04-verify",
+      "instruction": "Move the newly created task '{{runid}} Bench Task' on Bench Board into the '{{02-open.column_3}}' column, without changing any other task. Verify the task page or board shows it in that column and report the displayed task ID.",
+      "skill": "s_98535f",
+      "params": {
+        "v1": "{{runid}} Bench Task",
+        "v3": "Bench Board",
+        "v4": "{{02-open.column_3}}",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "task_id",
+        "task_id_display",
+        "task_title",
+        "column",
+        "position",
+        "status",
+        "swimlane",
+        "card_in_wip_column",
+        "card_in_wip_column_2",
+        "ref"
+      ],
+      "recorded": {
+        "task_id": "4",
+        "task_id_display": "Task #4",
+        "task_title": "fwkb49-fm-n1 Bench Task",
+        "column": "Work in progress",
+        "position": "1",
+        "status": "open",
+        "swimlane": "Default swimlane",
+        "moved_timestamp": "11/17/2026 12:44",
+        "board_url": "http://127.0.0.1:8085/?controller=BoardViewController&action=show&project_id=1",
+        "card_in_wip_column": "#4 fwkb49-fm-n1 Bench Task",
+        "backlog_count_after": "3",
+        "wip_count_after": "1",
+        "card_in_wip_column_2": "#4 \n \nfwkb49-fm-n1 Bench Task\n \nTask age in days\n<15m \nDays in this column\n<15m \nTask priority\nP0",
+        "ref": "fwkb49-fm-n1"
+      },
+      "route": "http://127.0.0.1:8085/",
+      "outputEvidence": {
+        "task_id": {
+          "same": 1,
+          "differed": 0
+        },
+        "task_id_display": {
+          "same": 1,
+          "differed": 0
+        },
+        "task_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "column": {
+          "same": 1,
+          "differed": 0
+        },
+        "position": {
+          "same": 1,
+          "differed": 0
+        },
+        "status": {
+          "same": 1,
+          "differed": 0
+        },
+        "swimlane": {
+          "same": 1,
+          "differed": 0
+        },
+        "moved_timestamp": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "board_url": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "card_in_wip_column": {
+          "same": 0,
+          "differed": 1
+        },
+        "backlog_count_after": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "wip_count_after": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "card_in_wip_column_2": {
+          "same": 0,
+          "differed": 1
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "05-add",
+      "instruction": "On the task page for '{{runid}} Bench Task' (task #4), add a comment whose text includes the exact runid '{{runid}}'. Verify the saved comment is visibly displayed on the task page and report its exact text.",
+      "skill": "s_ac3a3f",
+      "params": {
+        "v1": "{{runid}} Bench Task",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "task_id",
+        "task_id_display",
+        "task_title",
+        "comment_text",
+        "comment_visibility",
+        "comment_count",
+        "comment_block_display",
+        "ref",
+        "comment_displayed_at_1",
+        "comment_displayed_at_2"
+      ],
+      "recorded": {
+        "task_id": "4",
+        "task_id_display": "Task #4",
+        "task_title": "fwkb49-fm-n1 Bench Task",
+        "comment_text": "Comment added by bench automation for run fwkb49-fm-n1. Runid: fwkb49-fm-n1",
+        "comment_header": "A",
+        "comment_author": "admin",
+        "comment_visibility": "Standard users",
+        "comment_count": "1",
+        "comment_block_display": "A\nadmin Created at: 11/17/2026 12:44 Updated at: 11/17/2026 12:44 Visibility: Standard users\n\nComment added by bench automation for run fwkb49-fm-n1. Runid: fwkb49-fm-n1",
+        "ref": "fwkb49-fm-n1",
+        "comment_displayed_at_1": "Created at: 11/17/2026 12:44",
+        "comment_displayed_at_2": "Updated at: 11/17/2026 12:44"
+      },
+      "route": "http://127.0.0.1:8085/",
+      "outputEvidence": {
+        "task_id": {
+          "same": 1,
+          "differed": 0
+        },
+        "task_id_display": {
+          "same": 1,
+          "differed": 0
+        },
+        "task_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "comment_text": {
+          "same": 0,
+          "differed": 1
+        },
+        "comment_header": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "comment_author": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "comment_visibility": {
+          "same": 1,
+          "differed": 0
+        },
+        "comment_count": {
+          "same": 1,
+          "differed": 0
+        },
+        "comment_block_display": {
+          "same": 0,
+          "differed": 1
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        },
+        "comment_displayed_at_1": {
+          "same": 0,
+          "differed": 1
+        },
+        "comment_displayed_at_2": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    },
+    {
+      "id": "06-set",
+      "instruction": "Set the due date of task '{{runid}} Bench Task' (task #4) to 2026-12-31. Verify the task page shows that exact due date after saving, and report it as displayed.",
+      "skill": "s_22a6bb",
+      "params": {
+        "v1": "{{runid}} Bench Task",
+        "v3": "2026-12-31",
+        "v2": "{{runid}}"
+      },
+      "outputs": [
+        "task_id_display",
+        "task_title",
+        "due_date_as_displayed",
+        "due_date_iso",
+        "task_summary_due_line",
+        "column",
+        "status",
+        "modified_timestamp",
+        "item_1_value",
+        "date_due_input_type",
+        "date_due_after_fill",
+        "ref"
+      ],
+      "recorded": {
+        "task_id_display": "Task #4",
+        "task_title": "fwkb49-fm-n1 Bench Task",
+        "due_date_as_displayed": "12/31/2026 12:45",
+        "due_date_iso": "2026-12-31",
+        "due_date_field_value_after_save": "12/31/2026 12:45",
+        "task_summary_due_line": "Due date: 12/31/2026 12:45",
+        "column": "Work in progress",
+        "status": "open",
+        "modified_timestamp": "11/17/2026 12:45",
+        "item_1": "task_id",
+        "item_1_value": "4",
+        "date_due_input_type": "text",
+        "date_due_after_fill": "2026-12-31",
+        "date_due_stored_value": "12/31/2026 12:45",
+        "ref": "fwkb49-fm-n1"
+      },
+      "route": "http://127.0.0.1:8085/",
+      "outputEvidence": {
+        "task_id_display": {
+          "same": 1,
+          "differed": 0
+        },
+        "task_title": {
+          "same": 0,
+          "differed": 1
+        },
+        "due_date_as_displayed": {
+          "same": 0,
+          "differed": 1
+        },
+        "due_date_iso": {
+          "same": 1,
+          "differed": 0
+        },
+        "due_date_field_value_after_save": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "task_summary_due_line": {
+          "same": 0,
+          "differed": 1
+        },
+        "column": {
+          "same": 1,
+          "differed": 0
+        },
+        "status": {
+          "same": 1,
+          "differed": 0
+        },
+        "modified_timestamp": {
+          "same": 0,
+          "differed": 1
+        },
+        "item_1": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "item_1_value": {
+          "same": 1,
+          "differed": 0
+        },
+        "date_due_input_type": {
+          "same": 1,
+          "differed": 0
+        },
+        "date_due_after_fill": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "date_due_stored_value": {
+          "same": 0,
+          "differed": 0,
+          "absent": 1
+        },
+        "ref": {
+          "same": 0,
+          "differed": 1
+        }
+      }
+    }
+  ],
+  "provenance": {
+    "session": "fwkb49-fm-n1",
+    "created": "2026-11-17T12:45:57.652Z",
+    "model": "deepseek/deepseek-v4.1-flash"
+  },
+  "browser": {
+    "viewport": {
+      "width": 1280,
+      "height": 900
+    }
+  },
+  "pruned": [
+    {
+      "stepId": "02-open",
+      "outputs": [
+        "column_count"
+      ]
+    },
+    {
+      "stepId": "04-verify",
+      "outputs": [
+        "moved_timestamp",
+        "board_url",
+        "backlog_count_after",
+        "wip_count_after"
+      ]
+    },
+    {
+      "stepId": "05-add",
+      "outputs": [
+        "comment_header",
+        "comment_author"
+      ]
+    },
+    {
+      "stepId": "06-set",
+      "outputs": [
+        "due_date_field_value_after_save",
+        "item_1",
+        "date_due_stored_value"
+      ]
+    }
+  ]
+}

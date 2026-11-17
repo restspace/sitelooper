@@ -1,0 +1,186 @@
+{
+  "config": {
+    "argv": [
+      "/opt/node22/bin/node",
+      "/home/user/sitelooper/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "/home/user/sitelooper/bench/results/fwkb49-fm-spec-spec-tmp/playwright.config.mjs"
+    ],
+    "configFile": "/home/user/sitelooper/bench/results/fwkb49-fm-spec-spec-tmp/playwright.config.mjs",
+    "rootDir": "/home/user/sitelooper/bench/results/fwkb49-fm-spec-spec-tmp",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/user/sitelooper/bench/results/fwkb49-fm-spec-spec-tmp/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "",
+        "name": "",
+        "testDir": "/home/user/sitelooper/bench/results/fwkb49-fm-spec-spec-tmp",
+        "testIgnore": [],
+        "testMatch": [
+          "fwkb49-fm.spec.ts"
+        ],
+        "timeout": 600000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "json",
+        {
+          "outputFile": "/home/user/sitelooper/bench/results/fwkb49-fm-spec-spec-tmp/pw-report.json"
+        }
+      ],
+      [
+        "list",
+        null
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "fwkb49-fm.spec.ts",
+      "file": "fwkb49-fm.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fwkb49-fm",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 300000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 35707,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[sitelooper step] 01-signin\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 02-open\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 03-create\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 04-verify\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 05-add\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 06-set s_22a6bb/4: read 'due_date_iso' returned a value the skill itself set/selected ('2026-12-31') — confirms the control, not persistence; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 06-set s_22a6bb/8: read 'due_date_as_displayed' returned '12/31/2026 12:47' from a control this step set, and nothing committed it since — it shows the control, however the app formats it, not what the app stored; dropped from the report's confident values\n"
+                    },
+                    {
+                      "text": "[sitelooper warn] 06-set: report value date_due_after_fill is only what this run typed: no click's own diff showed it outside its control and no read returned it — withheld from the report (still given to a later step)\n"
+                    },
+                    {
+                      "text": "[sitelooper step] 06-set\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "steps": [
+                    {
+                      "title": "01-signin: Sign in to Kanboard at http://127.0.0.1:8085/ with username admin and password exactly {{env:APP_PASSWORD}}. Verify that the signed-in page loads, then report the visible confirmation.",
+                      "duration": 5364
+                    },
+                    {
+                      "title": "02-open: Open the Bench Board project board and report its column names in left-to-right order exactly as displayed. Do not alter any tasks.",
+                      "duration": 3588
+                    },
+                    {
+                      "title": "03-create: On the Bench Board project, create a task titled exactly '{{runid}} Bench Task' with a description that includes the exact runid '{{runid}}'. Verify the created task appears and report its displayed title, description, and numeric task ID as shown on the card or task page.",
+                      "duration": 10803
+                    },
+                    {
+                      "title": "04-verify: Move the newly created task '{{runid}} Bench Task' on Bench Board into the '{{02-open.column_3}}' column, without changing any other task. Verify the task page or board shows it in that column and report the displayed task ID.",
+                      "duration": 4090
+                    },
+                    {
+                      "title": "05-add: On the task page for '{{runid}} Bench Task' (task #4), add a comment whose text includes the exact runid '{{runid}}'. Verify the saved comment is visibly displayed on the task page and report its exact text.",
+                      "duration": 3804
+                    },
+                    {
+                      "title": "06-set: Set the due date of task '{{runid}} Bench Task' (task #4) to 2026-12-31. Verify the task page shows that exact due date after saving, and report it as displayed.",
+                      "duration": 7431
+                    }
+                  ],
+                  "startTime": "2026-11-17T12:47:28.403Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "outputs",
+                      "contentType": "application/json",
+                      "body": "ewogICIwMS1zaWduaW4uZGFzaGJvYXJkX2hlYWRpbmciOiAiS0IgRGFzaGJvYXJkIGZvciBhZG1pbiIsCiAgIjAxLXNpZ25pbi5maW5hbF91cmwiOiAiaHR0cDovLzEyNy4wLjAuMTo4MDg1LyIsCiAgIjAxLXNpZ25pbi5zaWduZWRfaW5fdXNlciI6ICJhZG1pbiIsCiAgIjAxLXNpZ25pbi5wYWdlX3RpdGxlIjogIkRhc2hib2FyZCBmb3IgYWRtaW4iLAogICIwMi1vcGVuLnByb2plY3QiOiAiQmVuY2ggQm9hcmQiLAogICIwMi1vcGVuLnByb2plY3RfaGVhZGluZyI6ICJLQiBCZW5jaCBCb2FyZCIsCiAgIjAyLW9wZW4uY29sdW1uc19sZWZ0X3RvX3JpZ2h0XzEiOiAiQmFja2xvZyIsCiAgIjAyLW9wZW4uY29sdW1uc19sZWZ0X3RvX3JpZ2h0XzIiOiAiUmVhZHkiLAogICIwMi1vcGVuLmNvbHVtbnNfbGVmdF90b19yaWdodF8zIjogIldvcmsgaW4gcHJvZ3Jlc3MiLAogICIwMi1vcGVuLmNvbHVtbnNfbGVmdF90b19yaWdodF80IjogIkRvbmUiLAogICIwMi1vcGVuLmNvbHVtbl8xIjogIkJhY2tsb2ciLAogICIwMi1vcGVuLmNvbHVtbl8yIjogIlJlYWR5IiwKICAiMDItb3Blbi5jb2x1bW5fMyI6ICJXb3JrIGluIHByb2dyZXNzIiwKICAiMDItb3Blbi5jb2x1bW5fNCI6ICJEb25lIiwKICAiMDMtY3JlYXRlLnRhc2tfdGl0bGUiOiAiZndrYjQ5LWZtLXNwZWMgQmVuY2ggVGFzayIsCiAgIjAzLWNyZWF0ZS50YXNrX2lkX2Rpc3BsYXkiOiAiVGFzayAjNCIsCiAgIjAzLWNyZWF0ZS50YXNrX2lkIjogIjQiLAogICIwMy1jcmVhdGUudGFza19kZXNjcmlwdGlvbiI6ICJDcmVhdGVkIGJ5IGJlbmNoIGF1dG9tYXRpb24gZm9yIHJ1biBmd2tiNDktZm0tc3BlYy4gUnVuaWQ6IGZ3a2I0OS1mbS1zcGVjIiwKICAiMDMtY3JlYXRlLmNvbHVtbiI6ICJCYWNrbG9nIiwKICAiMDMtY3JlYXRlLnN0YXR1cyI6ICJvcGVuIiwKICAiMDMtY3JlYXRlLnByb2plY3QiOiAiQmVuY2ggQm9hcmQiLAogICIwMy1jcmVhdGUuY3JlYXRvciI6ICJhZG1pbiIsCiAgIjAzLWNyZWF0ZS50YXNrX3BhZ2VfaGVhZGluZyI6ICJUYXNrICM0IiwKICAiMDMtY3JlYXRlLnJ1bmlkIjogImZ3a2I0OS1mbS1zcGVjIiwKICAiMDMtY3JlYXRlLmNhcmRfZGlzcGxheSI6ICIjNCBmd2tiNDktZm0tc3BlYyBCZW5jaCBUYXNrIiwKICAiMDMtY3JlYXRlLnRhc2tfdGl0bGVfaGVhZGluZyI6ICJmd2tiNDktZm0tc3BlYyBCZW5jaCBUYXNrIiwKICAiMDQtdmVyaWZ5LnRhc2tfaWQiOiAiNCIsCiAgIjA0LXZlcmlmeS5jYXJkX2luX3dpcF9jb2x1bW5fMiI6ICIjNCBcbiBcbmZ3a2I0OS1mbS1zcGVjIEJlbmNoIFRhc2tcbiBcblRhc2sgYWdlIGluIGRheXNcbjwxNW0gXG5EYXlzIGluIHRoaXMgY29sdW1uXG48MTVtIFxuVGFzayBwcmlvcml0eVxuUDAiLAogICIwNC12ZXJpZnkudGFza19pZF9kaXNwbGF5IjogIlRhc2sgIzQiLAogICIwNC12ZXJpZnkudGFza190aXRsZSI6ICJmd2tiNDktZm0tc3BlYyBCZW5jaCBUYXNrIiwKICAiMDQtdmVyaWZ5LmNvbHVtbiI6ICJXb3JrIGluIHByb2dyZXNzIiwKICAiMDQtdmVyaWZ5LnBvc2l0aW9uIjogIjEiLAogICIwNC12ZXJpZnkuc3RhdHVzIjogIm9wZW4iLAogICIwNC12ZXJpZnkuc3dpbWxhbmUiOiAiRGVmYXVsdCBzd2ltbGFuZSIsCiAgIjA0LXZlcmlmeS5jYXJkX2luX3dpcF9jb2x1bW4iOiAiIzQgZndrYjQ5LWZtLXNwZWMgQmVuY2ggVGFzayIsCiAgIjA0LXZlcmlmeS5yZWYiOiAiZndrYjQ5LWZtLXNwZWMiLAogICIwNS1hZGQuY29tbWVudF9ibG9ja19kaXNwbGF5IjogIkFcbmFkbWluIENyZWF0ZWQgYXQ6IDExLzE3LzIwMjYgMTI6NDcgVXBkYXRlZCBhdDogMTEvMTcvMjAyNiAxMjo0NyBWaXNpYmlsaXR5OiBTdGFuZGFyZCB1c2Vyc1xuXG5Db21tZW50IGFkZGVkIGJ5IGJlbmNoIGF1dG9tYXRpb24gZm9yIHJ1biBmd2tiNDktZm0tc3BlYy4gUnVuaWQ6IGZ3a2I0OS1mbS1zcGVjIiwKICAiMDUtYWRkLmNvbW1lbnRfY291bnQiOiAiMSIsCiAgIjA1LWFkZC50YXNrX2lkIjogIjQiLAogICIwNS1hZGQudGFza19pZF9kaXNwbGF5IjogIlRhc2sgIzQiLAogICIwNS1hZGQudGFza190aXRsZSI6ICJmd2tiNDktZm0tc3BlYyBCZW5jaCBUYXNrIiwKICAiMDUtYWRkLmNvbW1lbnRfdGV4dCI6ICJDb21tZW50IGFkZGVkIGJ5IGJlbmNoIGF1dG9tYXRpb24gZm9yIHJ1biBmd2tiNDktZm0tc3BlYy4gUnVuaWQ6IGZ3a2I0OS1mbS1zcGVjIiwKICAiMDUtYWRkLmNvbW1lbnRfdmlzaWJpbGl0eSI6ICJTdGFuZGFyZCB1c2VycyIsCiAgIjA1LWFkZC5jb21tZW50X2Rpc3BsYXllZF9hdF8xIjogIkNyZWF0ZWQgYXQ6IDExLzE3LzIwMjYgMTI6NDciLAogICIwNS1hZGQuY29tbWVudF9kaXNwbGF5ZWRfYXRfMiI6ICJVcGRhdGVkIGF0OiAxMS8xNy8yMDI2IDEyOjQ3IiwKICAiMDUtYWRkLnJlZiI6ICJmd2tiNDktZm0tc3BlYyIsCiAgIjA2LXNldC5kYXRlX2R1ZV9pbnB1dF90eXBlIjogInRleHQiLAogICIwNi1zZXQuZHVlX2RhdGVfaXNvIjogIjIwMjYtMTItMzEiLAogICIwNi1zZXQuZHVlX2RhdGVfYXNfZGlzcGxheWVkIjogIjEyLzMxLzIwMjYgMTI6NDciLAogICIwNi1zZXQudGFza19pZF9kaXNwbGF5IjogIlRhc2sgIzQiLAogICIwNi1zZXQudGFza190aXRsZSI6ICJmd2tiNDktZm0tc3BlYyBCZW5jaCBUYXNrIiwKICAiMDYtc2V0LnRhc2tfc3VtbWFyeV9kdWVfbGluZSI6ICJEdWUgZGF0ZTogMTIvMzEvMjAyNiAxMjo0NyIsCiAgIjA2LXNldC5jb2x1bW4iOiAiV29yayBpbiBwcm9ncmVzcyIsCiAgIjA2LXNldC5zdGF0dXMiOiAib3BlbiIsCiAgIjA2LXNldC5tb2RpZmllZF90aW1lc3RhbXAiOiAiMTEvMTcvMjAyNiAxMjo0NyIsCiAgIjA2LXNldC5pdGVtXzFfdmFsdWUiOiAiNCIsCiAgIjA2LXNldC5yZWYiOiAiZndrYjQ5LWZtLXNwZWMiCn0="
+                    },
+                    {
+                      "name": "sitelooper-drift",
+                      "contentType": "text/plain",
+                      "body": ""
+                    }
+                  ]
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "6336c36d7f7b13d021ff-a94d972312cb53da4e8e",
+          "file": "fwkb49-fm.spec.ts",
+          "line": 9,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-11-17T12:47:25.321Z",
+    "duration": 39056.473,
+    "expected": 1,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}
