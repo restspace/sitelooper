@@ -1,0 +1,113 @@
+
+[sweep] run 1/3: fwop38-fm-n1 (store: /home/user/sitelooper/bench/results/fwop38-fm-skills)
+[harness] openproject: defaulting APP_URL
+[harness] openproject: defaulting APP_EMAIL
+[harness] openproject: defaulting APP_PASSWORD
+[reset] openproject: no leftover bench work packages
+[harness] openproject responded 302 at http://127.0.0.1:8090/
+stopped: fwop38-fm-n1
+  flow "fwop38-fm" saved: 7 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwop38-fm.json
+  warning: note: dropped 1 locator candidate(s) carrying a value this run minted (known only by export time)
+  warning: note: 01-signin no longer publishes user_menu_entries, signed_in_interface — no replay reads them from the page and the recording showed no line to read
+  warning: note: 02-find no longer publishes seed_work_package_count, project_work_package_count — no replay reads them from the page and the recording showed no line to read
+  warning: note: 03-create no longer publishes priority, verification, work_package_list_url — no replay reads them from the page and the recording showed no line to read
+  warning: note: 04-open no longer publishes assignee_field_label, other_rows_unchanged — no replay reads them from the page and the recording showed no line to read
+  warning: note: 06-set no longer publishes finish_date_saved_value — no replay reads it from the page and the recording showed no line to read
+  warning: note: 07-add no longer publishes comment_journal_item, comment_reference — no replay reads them from the page and the recording showed no line to read
+  warning: note: 05-set: added a read for status_update_result to s_c8fc41 (page.getByRole('alert', { name: 'Successful update.', exact: true }); seen on the instruction's own page)
+  warning: note: 05-set: added a read for status_field_label to s_c8fc41 (page.getByRole('button', { name: 'Status In progress: Edit', exact: true }); seen on the next instruction's start page)
+  warning: note: 05-set: added a read for status_options_summary to s_c8fc41 (page.getByRole('menuitem', { name: 'In progress', exact: true }); seen on the instruction's own page)
+  warning: warning: 294 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.steps[1].instruction: "Bench Project" (output) in "In project Bench Project, find the work packages whose subject starts with 'Seed:' and report their subjects exactly as displayed. Do not edit anything."
+  flow.steps[1].instruction: "Project" (output) in "In project Bench Project, find the work packages whose subject starts with 'Seed:' and report their subjects exactly as displayed. Do not edit anything."
+  flow.steps[1].route: "http://127.0.0.1:8090/projects/bench-project/work_packages" (output) in "http://127.0.0.1:8090/projects/bench-project/work_packages"
+  flow.steps[1].route: "http://127.0.0.1:8090/projects" (output) in "http://127.0.0.1:8090/projects/bench-project/work_packages"
+  flow.steps[2].instruction: "Bench Project" (output) in "Create a work package in Bench Project with type Task and subject '{{runid}} Bench Work Package', and description containing '{{runid}}'. Submit it, then verify"
+arm=sitelooper model=openai/gpt-6-luna runid=fwop38-fm-n1 stop=completed
+turns=8 wall=551.5s
+commands=7 cmdTime=520.4s cmdBytes=9210 timeouts=0
+orchestrator in=5597 cw=0 cr=26850 out=831
+inner prompt=3856672 cached=3692928 completion=29871
+spend=$0.0552 maxUsd=3
+learn: A_n=0 replayed=0/7 full=0 repaired=0 compiled=7 variants=0
+-> /home/user/sitelooper/bench/results/fwop38-fm-n1-sitelooper-result.json
+
+fwop38-fm-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed subjects reported
+  obj 2: PASS — type=Task, description includes runid=true
+  obj 3: PASS — assignee=Bench Assignee
+  obj 4: PASS — status=In progress
+  obj 5: PASS — finish date=2026-12-31, want 2026-12-31
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — work package id 71 reported
+
+[sweep] run 2/3: fwop38-fm-n2 (replay flow fwop38-fm, no orchestrator)
+[reset] openproject: deleted 1 leftover bench work package(s)
+[sweep] fwop38-fm-n2: 3 drift ticket(s) → fwop38-fm-n2-drift.json
+
+fwop38-fm-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed subjects reported
+  obj 2: PASS — type=Task, description includes runid=true
+  obj 3: PASS — assignee=Bench Assignee
+  obj 4: PASS — status=In progress
+  obj 5: PASS — finish date=2026-12-31, want 2026-12-31
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — work package id 72 reported
+
+[sweep] run 3/3: fwop38-fm-n3 (replay flow fwop38-fm, no orchestrator)
+[reset] openproject: deleted 1 leftover bench work package(s)
+[sweep] fwop38-fm-n3: 4 drift ticket(s) → fwop38-fm-n3-drift.json
+
+fwop38-fm-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed subjects reported
+  obj 2: PASS — type=Task, description includes runid=true
+  obj 3: PASS — assignee=Bench Assignee
+  obj 4: PASS — status=In progress
+  obj 5: PASS — finish date=2026-12-31, want 2026-12-31
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — work package id 73 reported
+
+Learning sweep fwop38-fm (K=3)
+┌─────────┬───┬────────────────┬──────────┬─────────────┬───────┬──────┬───────────┬─────┬──────────────┬────────┐
+│ (index) │ n │ runid          │ verified │ stop        │ turns │ cmds │ total_usd │ A_n │ replayed     │ wall_s │
+├─────────┼───┼────────────────┼──────────┼─────────────┼───────┼──────┼───────────┼─────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwop38-fm-n1' │ '7/7'    │ 'completed' │ 8     │ 7    │ 0.0552    │ 0   │ '0/7'        │ 551    │
+│ 1       │ 2 │ 'fwop38-fm-n2' │ '7/7'    │ 'success'   │ 0     │ 7    │ 0         │ 1   │ '7/7 (flow)' │ 83     │
+│ 2       │ 3 │ 'fwop38-fm-n3' │ '7/7'    │ 'success'   │ 0     │ 7    │ 0         │ 1   │ '7/7 (flow)' │ 86     │
+└─────────┴───┴────────────────┴──────────┴─────────────┴───────┴──────┴───────────┴─────┴──────────────┴────────┘
+http://127.0.0.1:8090
+  s_07760b  validated    1 steps  3/3 (100%)
+           In project Bench Project, find the work packages whose subject starts with 'Seed:' and report their subjects e…
+  s_0986ca  validated   14 steps  3/3 (100%)
+           Set work package {{v1}} ('{{v3}}') finish date to 2026-12-31 using the date field, save if needed, and verify …
+  s_0bf044  validated    4 steps  3/3 (100%)
+           In project Bench Project, find the work packages whose subject starts with 'Seed:' and report their subjects e…
+  s_123471  validated    1 steps  3/3 (100%)
+           Sign in to OpenProject at {{v1}} as {{v2}} using the password exactly {{v3}}. Verify that the signed-in projec…
+  s_146c92  validated    9 steps  3/3 (100%)
+           In {{v1}}, open work package {{v3}} ('{{v5}}') and assign it to the user 'Bench Assignee'. Choose the actual a…
+  s_59044c  validated   10 steps  3/3 (100%)
+           Create a work package in {{v1}} with type Task and subject '{{v4}}', and description containing '{{v3}}'. Subm…
+  s_5ad850  validated    1 steps  3/3 (100%)
+           Add a comment to work package {{v1}} ('{{v3}}') with text containing '{{v4}}'. Submit the comment and verify i…
+  s_5dea2a  validated    2 steps  3/3 (100%)
+           Create a work package in {{v1}} with type Task and subject '{{v4}}', and description containing '{{v3}}'. Subm…
+  s_617113  validated    5 steps  3/3 (100%)
+           Add a comment to work package {{v1}} ('{{v3}}') with text containing '{{v4}}'. Submit the comment and verify i…
+  s_67834d  validated    2 steps  3/3 (100%)
+           In project Bench Project, find the work packages whose subject starts with 'Seed:' and report their subjects e…
+  s_7481d5  validated    2 steps  3/3 (100%)
+           Create a work package in {{v1}} with type Task and subject '{{v4}}', and description containing '{{v3}}'. Subm…
+  s_789a8e  validated    5 steps  3/3 (100%)
+           Sign in to OpenProject at {{v1}} as {{v2}} using the password exactly {{v3}}. Verify that the signed-in projec…
+  s_b307a8  validated    3 steps  3/3 (100%)
+           Sign in to OpenProject at {{v1}} as {{v2}} using the password exactly {{v3}}. Verify that the signed-in projec…
+  s_bc2093  validated   13 steps  3/3 (100%)
+           In project Bench Project, find the work packages whose subject starts with 'Seed:' and report their subjects e…
+  s_c4bf1a  validated    6 steps  3/3 (100%)
+           Add a comment to work package {{v1}} ('{{v3}}') with text containing '{{v4}}'. Submit the comment and verify i…
+  s_c8fc41  validated   12 steps  3/3 (100%)
+           Set work package {{v1}} ('{{v3}}') status to exactly 'In progress', save through the inline field behavior, an…
+store: /home/user/sitelooper/bench/results/fwop38-fm-skills
+
+summary: /home/user/sitelooper/bench/results/fwop38-fm-sweep.json
