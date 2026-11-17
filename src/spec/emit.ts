@@ -3807,11 +3807,13 @@ function readLines(step: SkillStep, ctx: Ctx): string[] {
   const slotFrame = typeof step.args?.slotFrame === 'string' && step.args.slotFrame ? step.args.slotFrame : null;
   const frameMark = slotName(step.args?.frameMark);
   const scopedBy = slotName(step.args?.scopedBy);
+  // A short slot is checked by its anchor's whole text (readscope.ts scopeByShortAnchor).
+  const scopedWithin = scopedBy && typeof step.args?.scopedWithin === 'string' && step.args.scopedWithin ? step.args.scopedWithin : null;
   const scope = [
     ...(valueFrame ? [`frame: ${src(valueFrame)}`] : []),
     ...(slotFrame ? [`slotFrame: ${src(slotFrame)}`] : []),
     ...(frameMark ? [`mark: p[${q(frameMark)}]`] : []),
-    ...(scopedBy ? [`within: p[${q(scopedBy)}]`] : []),
+    ...(scopedBy ? [scopedWithin ? `within: ${src(scopedWithin)}` : `within: p[${q(scopedBy)}]`] : []),
   ];
   const read = readable
     ? slotFrame || frameMark || scopedBy

@@ -1061,6 +1061,20 @@ const BOARD = `<!doctype html><html><head><meta charset="utf-8"><title>Board</ti
  * recording read Part A's row, whose test hook names its id; this run's part
  * is Part B.
  */
+/**
+ * kms.r-s.workers.dev Pipeline board after a replay with runid f2 (2026-11-16):
+ * columns are role=listitem, contacts are plain article cards, and this run's
+ * card is fourth, below the recording's own (f1, third).
+ */
+const BOARD_CARD = (name: string, i = 0, all: string[] = []) =>
+  `<article class="pl-card ${i === all.length - 1 ? 'just-added' : ''}"><button><span>${name}</span>${i === all.length - 1 ? '<span>Just added</span>' : ''}</button><div><label>Move ${name} to stage<select><option>Identified</option></select></label></div></article>`;
+const BOARD_CARDS = `<!doctype html><html><head><meta charset="utf-8"><title>Pipeline</title></head><body><main><div role="list">
+<section class="pl-column" role="listitem" aria-label="Identified column"><header><span>Identified</span><span>4</span></header>
+<div>${['Test Speaker K7', 'Test Speaker K8', 'Test Speaker f1', 'Test Speaker f2'].map(BOARD_CARD).join('')}</div></section>
+<section class="pl-column" role="listitem" aria-label="Contacted column"><header><span>Contacted</span><span>1</span></header>
+<div>${BOARD_CARD('Ada Lovelace')}</div></section>
+</div></main></body></html>`;
+
 const PARTS = `<!doctype html><html><head><meta charset="utf-8"><title>Ticket</title></head><body>
 <h1>Ticket</h1>
 <section><div><table><tbody>
@@ -2290,6 +2304,7 @@ export async function createFixtureServer(initialCount = 10): Promise<FixtureSer
       if (url === '/transform') return html(TRANSFORM);
       if (url === '/board') return html(BOARD);
       if (url === '/parts') return html(PARTS);
+      if (url === '/board-cards') return html(BOARD_CARDS);
       if (url === '/tick') return html(TICK);
       if (url === '/far') return html(FAR);
       if (url.startsWith('/observe/frame/')) return html(OBSERVE_FRAME(tail('/observe/frame/')));

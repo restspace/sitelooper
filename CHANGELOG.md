@@ -13,6 +13,31 @@
   and must be recompiled before `--faults` will run. Readable files are not supported.
 
 ### Replay and compiled specs
+- A read of a record card inside a list-item column is anchored on the card, not on the column.
+  Where a board renders each column as a list item and each record as a plain repeated element
+  (an `article` card), the recorder took the column as the record row, so a read of the new card
+  found the column by this run's value and then took the card by position. A replay with a new
+  run id read whichever card held that position, and reported another record's name. The record
+  is now the nearest repeated container inside the list item that shows the run's value, also when
+  the column is too long to be a row itself. A list row whose repeated cells or tag chips do not
+  show it, and every table, keep the row.
+- Repeated record containers are recognised by tag and first class. The full class string made
+  the record just created look unique wherever the app marks it (`pl-card just-added` among
+  `pl-card` cards), so exactly that record was read by position.
+- A read anchored on a run id shorter than three characters is now checked against this run's
+  record. Such a read got no record check, because a two-character value is too easy to find by
+  accident. When the read's own anchor carries the run id inside longer text (`Speaker {{runid}}`),
+  both runners now require the read to show that text filled with this run's value, and skip it
+  otherwise.
+- A read found only by position (a css path, an index or a screen point, with no role, label, text
+  or record anchor) whose recorded value shows a value the run typed is now checked against this
+  run's record too. Before, such a read published whatever sat at that position, and could report
+  the previous run's record as this run's. Now it publishes only when it shows this run's value
+  (with the word next to it when the value is shorter than three characters, as in
+  `Speaker {{runid}}`). Otherwise it is skipped, or, where the procedure set that value itself,
+  the step is recovered. Bare numbers are left alone, because a typed cost "100" inside a price
+  "$100.00" is a coincidence, not a record.
+
 - A click whose target is gone is reached through its recorded url only when the recording shows
   it as navigation and nothing else: it moved to another url, and it did not create or remove a
   record, raise an alert, or open or close a page. Before, any click with a recorded url qualified,

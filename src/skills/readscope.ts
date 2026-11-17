@@ -82,7 +82,10 @@ export function scopeReadBySlot(
         chain.unshift(text);
       }
     }
+  } else {
+    scopeByShortAnchor(value, args, locators, slots, locating);
   }
+  if (args.scopedBy === undefined) guardPositionalRead(value, args, locators, slots);
 
   if (typeof args.frame !== 'string') return;
   const lines = args.frame.split('\n');
@@ -96,6 +99,124 @@ export function scopeReadBySlot(
   lines[at] = replaceAsToken(line, host[1], `{{${host[0]}}}`);
   args.slotFrame = lines.join('\n');
   args.frameMark = markSlot[0];
+}
+
+/**
+ * A locating slot too short to scope a read by on its own (under MIN_ID_LEN),
+ * scoped by the anchor text the read's own chain locates it with.
+ *
+ * kms.r-s.workers.dev (2026-11-16): the flow was recorded with runid "f1" and
+ * replayed with "f2". The enrollment's contact_name read-back was anchored as
+ * `section.pl-column { hasText: 'Speaker {{v1}}' } >> article:nth-of-type(3)`;
+ * v1 was "f1", two characters, so the read got no `scopedBy` and the replay
+ * published "Test Speaker f1" (the recording's own card, third in the column)
+ * for a run that had created "Test Speaker f2". A bare two-character value is
+ * too easy to find by accident to guard with (MIN_ID_LEN), and the runners'
+ * check is a substring test ("f2" is inside "f21").
+ *
+ * The anchor's whole text is not: when a scoped candidate of this read names
+ * the slot inside a longer hasText ("Speaker {{v1}}", filled "Speaker f1", at
+ * least MIN_ID_LEN), and the recorded value shows that filled text, the read
+ * is scoped by the slot and `scopedWithin` carries the hasText in slot form.
+ * The runners check this run's filled text ("Speaker f2") instead of the bare
+ * value. Provenance as above: the slot must locate, and the anchor is the
+ * recording's own candidate for this very element.
+ */
+function scopeByShortAnchor(
+  value: string,
+  args: Record<string, unknown>,
+  locators: Record<string, LocatorCandidate[]>,
+  slots: ReadonlyMap<string, string>,
+  locating: ReadonlySet<string>,
+): void {
+  const chain = locators.target ?? [];
+  for (const [name, raw] of slots) {
+    const example = collapse(raw);
+    if (!example || example.length >= MIN_ID_LEN || !locating.has(name) || !occursAsToken(value, example)) continue;
+    const marker = `{{${name}}}`;
+    for (const c of chain) {
+      if (c.kind !== 'scoped' || !c.hasText.includes(marker)) continue;
+      // Only this slot may vary in the anchor: another slot's marker would make
+      // the filled text unknowable here.
+      if (/\{\{[^}]+\}\}/.test(c.hasText.split(marker).join(''))) continue;
+      const filled = collapse(c.hasText.split(marker).join(example));
+      if (filled.length < MIN_ID_LEN || !value.includes(filled)) continue;
+      args.scopedBy = name;
+      args.scopedWithin = c.hasText;
+      return;
+    }
+  }
+}
+
+/**
+ * A read found only BY POSITION whose recorded value shows a run value: it is
+ * scoped by that value's slot all the same, so it publishes this run's record
+ * or nothing.
+ *
+ * kms.r-s.workers.dev (2026-11-16): s_6e6f1f read the enrollment's contact
+ * name as `article:nth-of-type(7) > button > span` from the start: no record
+ * anchor, no `{{vN}}` in any candidate, so neither fwrd16's lost-anchor rule
+ * nor the rules above applied. Recorded "Test Speaker h2" with v1 = "h2", it
+ * validated 2/2 and then published another run's card on the i1 run.
+ *
+ * Provenance as above, and narrower than locating: the slot's example is in
+ * the value the read recorded as a whole token, and every candidate of the
+ * chain is positional (a css path, a point, an index), none carrying a slot.
+ * A read found by role, label or text is left alone, as is a positional read
+ * of text no slot shows (a column header).
+ *
+ *  - An example of MIN_ID_LEN or more: `scopedBy` alone, the runners check the
+ *    bare value as for fwrd87.
+ *  - A bare number is never the slot: it is a quantity far more often than a
+ *    record's name, and a typed cost "100" inside a price "$100.00" (fwrd87
+ *    part_cost) is a coincidence a guard would turn into a recovery on every
+ *    run with another cost. Such a read stays as it was.
+ *  - A shorter example: `scopedWithin` too, the example with its neighbouring
+ *    words in slot form (the word before first, then after) until the filled
+ *    text reaches MIN_ID_LEN: "Speaker {{v1}}". A window holding another
+ *    slot's example is not used.
+ *
+ * Where the position still finds this run's record the read publishes as
+ * before; where it finds another, the runners refuse it (scopedRead), and a
+ * value the procedure itself set is reported lost (scopedReadLanded), so the
+ * model recovers the step instead of the run carrying a wrong value.
+ */
+function guardPositionalRead(
+  value: string,
+  args: Record<string, unknown>,
+  locators: Record<string, LocatorCandidate[]>,
+  slots: ReadonlyMap<string, string>,
+): void {
+  const chain = locators.target ?? [];
+  if (!chain.length || !chain.every((c) => c.kind === 'css' || c.kind === 'point' || c.nth !== undefined)) return;
+  if (/\{\{v\d+\}\}/.test(JSON.stringify(chain))) return;
+  const examples = [...slots]
+    .map(([name, v]) => [name, collapse(v)] as const)
+    .filter(([, v]) => v.length > 0 && !NUMBER.test(v) && occursAsToken(value, v))
+    .sort((a, b) => b[1].length - a[1].length);
+  for (const [name, example] of examples) {
+    if (example.length >= MIN_ID_LEN) {
+      args.scopedBy = name;
+      return;
+    }
+    const marker = `{{${name}}}`;
+    const words = replaceAsToken(value, example, marker).split(' ');
+    const at = words.findIndex((w) => w.includes(marker));
+    if (at < 0) continue;
+    const others = examples.filter(([n]) => n !== name).map(([, v]) => v);
+    let lo = at;
+    let hi = at;
+    const filled = () => words.slice(lo, hi + 1).join(' ').split(marker).join(example);
+    while (filled().length < MIN_ID_LEN && (lo > 0 || hi < words.length - 1)) {
+      if (lo > 0) lo--;
+      else hi++;
+    }
+    const text = filled();
+    if (text.length < MIN_ID_LEN || others.some((o) => occursAsToken(text, o))) continue;
+    args.scopedBy = name;
+    args.scopedWithin = words.slice(lo, hi + 1).join(' ');
+    return;
+  }
 }
 
 /** What the recording read of a read's page: the read itself and the reads before it (`listOf` set on an element split from a list read). */
@@ -140,6 +261,8 @@ export function shownMoreThanOnce(value: string, page: PageEvidence): boolean {
 export function locatingSlots(chains: unknown): Set<string> {
   return new Set([...JSON.stringify(chains ?? null).matchAll(/\{\{(v\d+)\}\}/g)].map((m) => m[1]));
 }
+
+const NUMBER = /^[\d.,\s]+$/;
 
 const collapse = (s: string): string => s.replace(/\s+/g, ' ').trim();
 

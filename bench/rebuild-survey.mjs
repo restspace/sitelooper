@@ -92,6 +92,9 @@ const summarise = (skill) => {
   });
   (skill.steps ?? []).forEach((s, i) => {
     if (s.expect?.urlPattern) lines.push(`${at}/${i + 1} ${s.tool} expect ${s.expect.urlPattern}`);
+    // A read's record check (readscope.ts scopedBy/scopedWithin): what the
+    // runners require the read to show, which no locator line above carries.
+    if ((s.tool === 'read' || s.tool === 'read_all') && s.args?.scopedBy) lines.push(`${at}/${i + 1} ${s.tool} scopedBy ${s.args.scopedBy}${s.args.scopedWithin ? ` within ${s.args.scopedWithin}` : ''}`);
     for (const [slot, cands] of Object.entries(s.locators ?? {})) {
       for (const c of cands ?? []) if (c.kind === 'css' || c.kind === 'id') lines.push(`${at}/${i + 1} ${s.tool} ${slot} ${c.kind} ${c.selector ?? c.id ?? ''}`);
       // A chain left with nothing but a screen position finds its element by where it was drawn.
