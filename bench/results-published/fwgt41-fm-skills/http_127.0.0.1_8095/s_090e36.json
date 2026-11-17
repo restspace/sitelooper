@@ -1,0 +1,413 @@
+{
+ "id": "s_090e36",
+ "origin": "http://127.0.0.1:8095",
+ "template": "In repository bench/bench-repo, find the open issues whose titles start with Seed:. Do not modify any issue. Report each matching title exactly as shown, verifying they are open.",
+ "params": {},
+ "preconditions": {
+  "urlPattern": "http://127.0.0.1:8095/bench/bench-repo/issues?q=&state=open&type=all"
+ },
+ "steps": [
+  {
+   "tool": "read",
+   "args": {
+    "target": "role=link[name=/^Seed:/]",
+    "what": "text",
+    "label": "role_link_name_seed"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "role=link[name=/^Seed:/]",
+      "nth": 0
+     }
+    ]
+   },
+   "label": "first_seed_issue_title"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "role=link[name=/^Seed:/]",
+    "what": "text",
+    "label": "role_link_name_seed_2"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "role=link[name=/^Seed:/]",
+      "nth": 1
+     }
+    ]
+   },
+   "label": "second_seed_issue_title"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "role=link[name=/^Seed:/]",
+    "what": "text",
+    "label": "role_link_name_seed_3"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "role=link[name=/^Seed:/]",
+      "nth": 2
+     }
+    ]
+   },
+   "label": "third_seed_issue_title"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "role=link[name=/Open|Closed/]",
+    "what": "text",
+    "label": "open_issue_count_in_repo"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "role=link[name=/Open|Closed/]",
+      "nth": 0
+     }
+    ]
+   },
+   "label": "open_issue_count_in_repo"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "role=link[name=/Open|Closed/]",
+    "what": "text",
+    "label": "closed_issue_count_in_repo"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "role=link[name=/Open|Closed/]",
+      "nth": 1
+     }
+    ]
+   },
+   "label": "closed_issue_count_in_repo"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div:nth-of-type(1) > div:nth-of-type(2) > overflow-menu > div > a:nth-of-type(2) > span:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 216,
+      "y": 118,
+      "w": 18.9,
+      "h": 18,
+      "role": null,
+      "tag": "span",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "matching_open_issue_count"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "div > div:nth-of-type(1) > div:nth-of-type(1) > div > div:nth-of-type(1) > div:nth-of-type(1)",
+      "nth": 1
+     },
+     {
+      "kind": "point",
+      "x": 150,
+      "y": 79,
+      "w": 173.7,
+      "h": 20,
+      "role": null,
+      "tag": "div",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "repo"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#issue-list > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div > a"
+     },
+     {
+      "kind": "point",
+      "x": 189,
+      "y": 264,
+      "w": 205.2,
+      "h": 20,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "first_seed_issue_title"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#issue-list > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div > a"
+     },
+     {
+      "kind": "point",
+      "x": 186,
+      "y": 331,
+      "w": 198.5,
+      "h": 20,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "second_seed_issue_title"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#issue-list > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(1) > div > a"
+     },
+     {
+      "kind": "point",
+      "x": 157,
+      "y": 397,
+      "w": 140,
+      "h": 20,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "third_seed_issue_title"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#issue-list > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div > a"
+     },
+     {
+      "kind": "point",
+      "x": 189,
+      "y": 264,
+      "w": 205.2,
+      "h": 20,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "matching_titles_1"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#issue-list > div:nth-of-type(2) > div:nth-of-type(2) > div:nth-of-type(1) > div > a"
+     },
+     {
+      "kind": "point",
+      "x": 186,
+      "y": 331,
+      "w": 198.5,
+      "h": 20,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "matching_titles_2"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#issue-list > div:nth-of-type(3) > div:nth-of-type(2) > div:nth-of-type(1) > div > a"
+     },
+     {
+      "kind": "point",
+      "x": 157,
+      "y": 397,
+      "w": 140,
+      "h": 20,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "matching_titles_3"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#issue-filters > div:nth-of-type(1) > div > a:nth-of-type(1)"
+     },
+     {
+      "kind": "point",
+      "x": 107,
+      "y": 226,
+      "w": 92.5,
+      "h": 33.4,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "open_issue_count_in_repo"
+  },
+  {
+   "tool": "read",
+   "args": {
+    "target": "(read-back)",
+    "what": "text"
+   },
+   "locators": {
+    "target": [
+     {
+      "kind": "css",
+      "selector": "#issue-filters > div:nth-of-type(1) > div > a:nth-of-type(2)"
+     },
+     {
+      "kind": "point",
+      "x": 204,
+      "y": 226,
+      "w": 101.6,
+      "h": 33.4,
+      "role": "link",
+      "tag": "a",
+      "vw": 1280,
+      "vh": 900
+     }
+    ]
+   },
+   "label": "closed_issue_count_in_repo"
+  }
+ ],
+ "reportTemplate": {
+  "summary": "In bench/bench-repo, the issues list filtered to state=open & type=all reports \"3 Open / 0 Closed\", i.e. the repo has exactly three issues and all are open. All three titles start with \"Seed:\": \"Seed: ship repaired device\", \"Seed: order missing parts\", \"Seed: triage inbox\". The same three titles also came back from a title search for \"Seed:\". No issue was opened for editing or modified in any way — only listing/search pages were viewed.",
+  "values": {
+   "matching_open_issue_count": "3",
+   "open_issue_count_in_repo": "3 Open",
+   "closed_issue_count_in_repo": "0 Closed",
+   "repo": "bench/bench-repo",
+   "verified_url": "http://127.0.0.1:8095/bench/bench-repo/issues?q=&type=all&state=open",
+   "first_seed_issue_title": "Seed: ship repaired device",
+   "second_seed_issue_title": "Seed: order missing parts",
+   "third_seed_issue_title": "Seed: triage inbox",
+   "matching_titles_1": "Seed: ship repaired device",
+   "matching_titles_2": "Seed: order missing parts",
+   "matching_titles_3": "Seed: triage inbox"
+  }
+ },
+ "contract": 2,
+ "stats": {
+  "uses": 3,
+  "successes": 3,
+  "partial": 0,
+  "created": "2026-11-17T13:44:31.181Z",
+  "failedAtStep": {},
+  "fallthroughs": 0,
+  "verifiedContract": 2,
+  "lastUsed": "2026-11-17T13:54:29.247Z",
+  "stopStreak": 0
+ },
+ "status": "validated",
+ "seq": {
+  "chain": "s_78c652",
+  "index": 1,
+  "of": 2
+ },
+ "provenance": {
+  "session": "fwgt41-fm-n1",
+  "instruction": "In repository bench/bench-repo, find the open issues whose titles start with Seed:. Do not modify any issue. Report each matching title exactly as shown, verifying they are open.",
+  "model": "deepseek/deepseek-v4.1-flash",
+  "created": "2026-11-17T13:44:31.181Z"
+ },
+ "revision": 4
+}

@@ -1,0 +1,113 @@
+
+[sweep] run 1/3: fwgt41-fm-n1 (store: /home/user/sitelooper/bench/results/fwgt41-fm-skills)
+[harness] gitea: defaulting APP_URL
+[harness] gitea: defaulting APP_EMAIL
+[harness] gitea: defaulting APP_PASSWORD
+[reset] gitea: no leftover bench issues
+[harness] gitea responded 200 at http://127.0.0.1:8095/
+stopped: fwgt41-fm-n1
+  flow "fwgt41-fm" saved: 8 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwgt41-fm.json
+  warning: note: 1 goal/report value(s) carrying a value this run made were slotted or dropped:
+  s_82488d.reportTemplate.values.issue_title dropped (recorded literal of a value this run made)
+  warning: note: 02-find no longer publishes verified_url — no replay reads it from the page and the recording showed no line to read
+  warning: note: 04-set no longer publishes label_reload_verification_status — no replay reads it from the page and the recording showed no line to read
+  warning: note: 05-report no longer publishes labels_on_issue — no replay reads it from the page and the recording showed no line to read
+  warning: note: 06-set no longer publishes milestone_sidebar_text, milestone_picker_options, labels_on_issue — no replay reads them from the page and the recording showed no line to read
+  warning: note: 07-add no longer publishes comment_count_rendered — no replay reads it from the page and the recording showed no line to read
+  warning: note: 08-verify no longer publishes labels_after_reload, labels_sidebar_text_after_reload, label_link_count_in_sidebar_labels_picker, milestone_after_reload, bug_label_link_name, priority_high_label_link_name — no replay reads them from the page and the recording showed no line to read
+  warning: note: 06-set: added a read for milestone_displayed to s_9ff339 (page.getByRole('link', { name: 'Bench Milestone', exact: true }); seen on the next instruction's start page)
+  warning: warning: noop-step: 08-verify changed nothing: its instruction asks to confirm, the recording made no state-changing action, and the page already showed 'fwgt41-fm-n1 Bench Issue' before it ran. The step may be redundant.
+  warning: warning: 1 value(s) KNOWN to be this run's survived unslotted — a replay will act on or wait for the recording's value (non-fatal outside locators):
+  flow.warnings[0]: "fwgt41-fm-n1" (var) in "noop-step: 08-verify changed nothing: its instruction asks to confirm, the recording made no state-changing action, and the page already showed 'fwgt41-fm-n1 Be"
+  warning: warning: 327 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.startUrl: "http://127.0.0.1:8095/" (output) in "http://127.0.0.1:8095/"
+  flow.steps[0].instruction: "http://127.0.0.1:8095/" (output) in "Sign in to the Gitea site at http://127.0.0.1:8095/ using username admin and password exactly {{env:APP_PASSWORD}}. Verify that the signed-in page shows the aut"
+  flow.steps[0].instruction: "admin" (output) in "Sign in to the Gitea site at http://127.0.0.1:8095/ using username admin and password exactly {{env:APP_PASSWORD}}. Verify that the signed-in page shows the aut"
+  flow.steps[0].params.v1: "http://127.0.0.1:8095/" (output) in "http://127.0.0.1:8095/"
+  flow.steps[0].params.v2: "admin" (output) in "admin"
+arm=sitelooper model=openai/gpt-6-luna runid=fwgt41-fm-n1 stop=completed
+turns=9 wall=422.0s
+commands=8 cmdTime=380.6s cmdBytes=12092 timeouts=0
+orchestrator in=6615 cw=0 cr=34842 out=1158
+inner prompt=2568785 cached=2418816 completion=25824
+spend=$0.0472 maxUsd=3
+learn: A_n=0 replayed=0/8 full=0 repaired=0 compiled=8 variants=0
+-> /home/user/sitelooper/bench/results/fwgt41-fm-n1-sitelooper-result.json
+
+fwgt41-fm-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — #4, state=open, description includes runid=true
+  obj 3: PASS — labels=[bug, priority-high], want [bug, priority-high]
+  obj 4: PASS — assignees=[bench-assignee]
+  obj 5: PASS — milestone=Bench Milestone
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — issue #4 reported
+
+[sweep] run 2/3: fwgt41-fm-n2 (replay flow fwgt41-fm, no orchestrator)
+[reset] gitea: deleted 1 leftover bench issue(s)
+[sweep] fwgt41-fm-n2: 2 drift ticket(s) → fwgt41-fm-n2-drift.json
+
+fwgt41-fm-n2: objectives passed 3/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — #5, state=open, description includes runid=true
+  obj 3: FAIL — labels=[], want [bug, priority-high]
+  obj 4: FAIL — assignees=[]
+  obj 5: FAIL — milestone=(none)
+  obj 6: FAIL — 0 comment(s), 0 carrying the runid
+  obj 7: PASS — issue #5 reported
+
+[sweep] run 3/3: fwgt41-fm-n3 (replay flow fwgt41-fm, no orchestrator)
+[reset] gitea: deleted 1 leftover bench issue(s)
+[sweep] fwgt41-fm-n3: 13 drift ticket(s) → fwgt41-fm-n3-drift.json
+
+fwgt41-fm-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — #6, state=open, description includes runid=true
+  obj 3: PASS — labels=[bug, priority-high], want [bug, priority-high]
+  obj 4: PASS — assignees=[bench-assignee]
+  obj 5: PASS — milestone=Bench Milestone
+  obj 6: PASS — 1 comment(s), 1 carrying the runid
+  obj 7: PASS — issue #6 reported
+
+Learning sweep fwgt41-fm (K=3)
+┌─────────┬───┬────────────────┬──────────┬─────────────┬───────┬──────┬───────────┬──────┬──────────────┬────────┐
+│ (index) │ n │ runid          │ verified │ stop        │ turns │ cmds │ total_usd │ A_n  │ replayed     │ wall_s │
+├─────────┼───┼────────────────┼──────────┼─────────────┼───────┼──────┼───────────┼──────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwgt41-fm-n1' │ '7/7'    │ 'completed' │ 9     │ 8    │ 0.0472    │ 0    │ '0/8'        │ 422    │
+│ 1       │ 2 │ 'fwgt41-fm-n2' │ '3/7'    │ 'halted'    │ 37    │ 8    │ 0.0166    │ 0.75 │ '3/8 (flow)' │ 212    │
+│ 2       │ 3 │ 'fwgt41-fm-n3' │ '7/7'    │ 'success'   │ 0     │ 8    │ 0         │ 1    │ '8/8 (flow)' │ 80     │
+└─────────┴───┴────────────────┴──────────┴─────────────┴───────┴──────┴───────────┴──────┴──────────────┴────────┘
+http://127.0.0.1:8095
+  s_090e36  validated   15 steps  3/3 (100%)
+           In repository bench/bench-repo, find the open issues whose titles start with Seed:. Do not modify any issue. R…
+  s_1fb248  validated   27 steps  3/3 (100%)
+           Sign in to the Gitea site at {{v1}} using username {{v2}} and password exactly {{v3}}. Verify that the signed-…
+  s_2ce7ae  validated    4 steps  3/3 (100%)
+           In {{v1}}, create a new issue titled exactly '{{v3}}' with a description that includes the exact runid {{v2}}.…
+  s_456a1e  validated    1 steps  3/3 (100%)
+           In repository bench/bench-repo, find the open issues whose titles start with Seed:. Do not modify any issue. R…
+  s_71755b  validated    3 steps  3/3 (100%)
+           Sign in to the Gitea site at {{v1}} using username {{v2}} and password exactly {{v3}}. Verify that the signed-…
+  s_b895ef  validated    1 steps  3/3 (100%)
+           In {{v1}}, create a new issue titled exactly '{{v3}}' with a description that includes the exact runid {{v2}}.…
+  s_c6976b  validated   10 steps  3/3 (100%)
+           In {{v1}}, create a new issue titled exactly '{{v3}}' with a description that includes the exact runid {{v2}}.…
+  s_e2bfd8  validated    2 steps  3/3 (100%)
+           Sign in to the Gitea site at {{v1}} using username {{v2}} and password exactly {{v3}}. Verify that the signed-…
+  s_e6bef9  validated   21 steps  2/3 (67%)
+           On issue #4 ('{{v1}}') in {{v3}}, set its labels to exactly {{v6}} and priority-high (no other labels). Use th…
+  s_82488d  validated    4 steps  2/2 (100%)
+           Verify objective 3 on issue #4 in {{v1}}: reload or revisit the issue and confirm the persisted complete label…
+  s_9ff339  validated   12 steps  2/2 (100%)
+           On issue #4 ('{{v1}}') in {{v3}}, set the milestone to 'Bench Milestone' using the sidebar milestone picker. E…
+  s_c528f8  validated   13 steps  2/2 (100%)
+           On issue #4 ('{{v1}}') in {{v3}}, assign it to user bench-assignee using the sidebar assignee picker. Ensure t…
+  s_ee193a  validated   15 steps  2/2 (100%)
+           On issue #4 ('{{v1}}') in {{v3}}, add a new comment whose text includes the exact runid {{v2}}. Submit it and …
+  s_f0e6d9  validated    2 steps  2/2 (100%)
+           On issue #4 ('{{v1}}') in {{v3}}, add a new comment whose text includes the exact runid {{v2}}. Submit it and …
+  s_f58b58  validated    2 steps  2/2 (100%)
+           On issue #4 ('{{v1}}') in {{v3}}, add a new comment whose text includes the exact runid {{v2}}. Submit it and …
+store: /home/user/sitelooper/bench/results/fwgt41-fm-skills
+
+summary: /home/user/sitelooper/bench/results/fwgt41-fm-sweep.json
