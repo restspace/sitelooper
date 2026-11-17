@@ -1,0 +1,11 @@
+[spec-replay] resetting espocrm
+[reset] espocrm: deleted 1 leftover bench opportunit(ies)
+[spec-replay] compiling: /opt/node22/bin/node /home/user/sitelooper/bin/sitelooper.js compile bench/results/flows/fwec25-fm.json --out /home/user/sitelooper/bench/results/fwec25-fm-spec-spec-tmp --overwrite-spec
+flow: /home/user/sitelooper/bench/results/fwec25-fm-spec-spec-tmp/fwec25-fm.flow.ts
+spec: /home/user/sitelooper/bench/results/fwec25-fm-spec-spec-tmp/fwec25-fm.spec.ts
+facts http://127.0.0.1:8097: 45 relied (7 hard), 14 advisory
+warning 08-open: 08-open changed nothing when it was recorded, though its instruction asks for a change
+  why: 08-open changed nothing: its instruction asks to save, the recording made no state-changing action, and the page already showed 'fwec25-fm-n1 Bench Opportunity' before it ran. The step may be redundant.
+  fix: sitelooper rerecord bench/results/flows/fwec25-fm.json 08-open
+[spec-replay] running: npx playwright test --config /home/user/sitelooper/bench/results/fwec25-fm-spec-spec-tmp/playwright.config.mjs
+[spec-replay] fwec25-fm-spec: 1/1 passed, exit=0, 127s, 4 drift line(s) — result written
