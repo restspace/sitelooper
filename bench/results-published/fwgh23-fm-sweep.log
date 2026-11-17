@@ -1,0 +1,150 @@
+
+[sweep] run 1/3: fwgh23-fm-n1 (store: /home/user/sitelooper/bench/results/fwgh23-fm-skills)
+[harness] ghost: defaulting APP_URL
+[harness] ghost: defaulting APP_EMAIL
+[harness] ghost: defaulting APP_PASSWORD
+[reset] ghost: no posts to delete
+[harness] ghost responded 200 at http://127.0.0.1:8099/
+stopped: fwgh23-fm-n1
+  flow "fwgh23-fm" saved: 8 step(s), vars runid → /home/user/sitelooper/bench/results/flows/fwgh23-fm.json
+  warning: note: 03-create no longer publishes post_status, body_paragraph_count, runid_occurrences_in_body — no replay reads them from the page and the recording showed no line to read
+  warning: note: 06-set no longer publishes publish_time, save_status — no replay reads them from the page and the recording showed no line to read
+  warning: note: 07-open no longer publishes post_id — no replay reads it from the page and the recording showed no line to read
+  warning: note: 08-report no longer publishes final_status, publish_time, post_access — no replay reads them from the page and the recording showed no line to read
+  warning: note: 08-report: added a read for publish_flow_button to s_5b11c4 (page.getByRole('button', { name: 'Publish post, right now', exact: true }); seen on the instruction's own page)
+  warning: warning: 175 other value(s) the run saw survived unslotted, judged by shape only (usually page copy; non-fatal):
+  flow.origin: "127.0.0.1" (output) in "http://127.0.0.1:8099"
+  flow.startUrl: "127.0.0.1" (output) in "http://127.0.0.1:8099/ghost/"
+  flow.steps[0].instruction: "admin@bench.local" (output) in "Sign in to Ghost admin at http://127.0.0.1:8099/ghost/ using email admin@bench.local and password exactly {{env:APP_PASSWORD}}. Verify the admin is signed in an"
+  flow.steps[0].instruction: "127.0.0.1" (output) in "Sign in to Ghost admin at http://127.0.0.1:8099/ghost/ using email admin@bench.local and password exactly {{env:APP_PASSWORD}}. Verify the admin is signed in an"
+  flow.steps[0].params.v1: "127.0.0.1" (output) in "http://127.0.0.1:8099/ghost/"
+arm=sitelooper model=openai/gpt-6-luna runid=fwgh23-fm-n1 stop=completed
+turns=9 wall=278.0s
+commands=8 cmdTime=235.7s cmdBytes=7996 timeouts=0
+orchestrator in=5776 cw=0 cr=30349 out=1537
+inner prompt=1476463 cached=1384704 completion=13911
+spend=$0.0281 maxUsd=3
+learn: A_n=0 replayed=0/8 full=0 repaired=0 compiled=8 variants=0
+-> /home/user/sitelooper/bench/results/fwgh23-fm-n1-sitelooper-result.json
+
+fwgh23-fm-n1: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — fwgh23-fm-n1-bench-post, body includes runid=true
+  obj 3: PASS — tags=Bench News (bench-news), want only the seeded Bench News (bench-news)
+  obj 4: PASS — custom excerpt="Excerpt for fwgh23-fm-n1"
+  obj 5: PASS — status=published, visibility=public
+  obj 6: PASS — published_at=2026-09-01T00:00:00.000Z, want 2026-09-01
+  obj 7: PASS — slug fwgh23-fm-n1-bench-post reported
+
+[sweep] run 2/3: fwgh23-fm-n2 (replay flow fwgh23-fm, no orchestrator)
+[reset] ghost: deleted 1 post(s) (earlier runs' and non-seed)
+[sweep] fwgh23-fm-n2: 4 drift ticket(s) → fwgh23-fm-n2-drift.json
+
+fwgh23-fm-n2: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — fwgh23-fm-n2-bench-post, body includes runid=true
+  obj 3: PASS — tags=Bench News (bench-news), want only the seeded Bench News (bench-news)
+  obj 4: PASS — custom excerpt="Excerpt for fwgh23-fm-n2"
+  obj 5: PASS — status=published, visibility=public
+  obj 6: PASS — published_at=2026-09-01T00:00:00.000Z, want 2026-09-01
+  obj 7: PASS — slug fwgh23-fm-n2-bench-post reported
+
+[sweep] run 3/3: fwgh23-fm-n3 (replay flow fwgh23-fm, no orchestrator)
+[reset] ghost: deleted 1 post(s) (earlier runs' and non-seed)
+[sweep] fwgh23-fm-n3: 4 drift ticket(s) → fwgh23-fm-n3-drift.json
+
+fwgh23-fm-n3: objectives passed 7/7
+  obj 1: PASS — all 3 seed titles reported
+  obj 2: PASS — fwgh23-fm-n3-bench-post, body includes runid=true
+  obj 3: PASS — tags=Bench News (bench-news), want only the seeded Bench News (bench-news)
+  obj 4: PASS — custom excerpt="Excerpt for fwgh23-fm-n3"
+  obj 5: PASS — status=published, visibility=public
+  obj 6: PASS — published_at=2026-09-01T00:00:00.000Z, want 2026-09-01
+  obj 7: PASS — slug fwgh23-fm-n3-bench-post reported
+
+Learning sweep fwgh23-fm (K=3)
+┌─────────┬───┬────────────────┬──────────┬─────────────┬───────┬──────┬───────────┬──────┬──────────────┬────────┐
+│ (index) │ n │ runid          │ verified │ stop        │ turns │ cmds │ total_usd │ A_n  │ replayed     │ wall_s │
+├─────────┼───┼────────────────┼──────────┼─────────────┼───────┼──────┼───────────┼──────┼──────────────┼────────┤
+│ 0       │ 1 │ 'fwgh23-fm-n1' │ '7/7'    │ 'completed' │ 9     │ 8    │ 0.0281    │ 0    │ '0/8'        │ 278    │
+│ 1       │ 2 │ 'fwgh23-fm-n2' │ '7/7'    │ 'success'   │ 7     │ 8    │ 0.0045    │ 0.88 │ '8/8 (flow)' │ 113    │
+│ 2       │ 3 │ 'fwgh23-fm-n3' │ '7/7'    │ 'success'   │ 19    │ 8    │ 0.0067    │ 0.88 │ '8/8 (flow)' │ 137    │
+└─────────┴───┴────────────────┴──────────┴─────────────┴───────┴──────┴───────────┴──────┴──────────────┴────────┘
+http://127.0.0.1:8099
+  s_0a3466  validated    3 steps  3/3 (100%)
+           Create and save a Ghost post titled '{{v2}}'. Its body must contain exactly one paragraph including the litera…
+  s_156efe  validated    4 steps  3/3 (100%)
+           Sign in to Ghost admin at {{v1}} using email {{v2}} and password exactly {{v3}}. Verify the admin is signed in…
+  s_23ffbc  demoted      2 steps  1/3 (33%)
+           Complete Ghost's publish confirmation flow for '{{v1}}' so it is published immediately, not a draft or schedul…
+  s_2ee35b  validated    1 steps  3/3 (100%)
+           Create and save a Ghost post titled '{{v2}}'. Its body must contain exactly one paragraph including the litera…
+  s_542fab  validated    2 steps  3/3 (100%)
+           Create and save a Ghost post titled '{{v2}}'. Its body must contain exactly one paragraph including the litera…
+  s_5cd52b  validated    5 steps  3/3 (100%)
+           Open Post settings for '{{v1}}' and read the URL slug exactly as displayed in the post's settings. Do not chan…
+  s_5d8aad  validated    3 steps  3/3 (100%)
+           Complete Ghost's publish confirmation flow for '{{v1}}' so it is published immediately, not a draft or schedul…
+  s_603ee7  validated    4 steps  3/3 (100%)
+           In Ghost admin, read-only identify the titles of all published posts whose title starts with 'Seed:' exactly a…
+  s_8cc3c6  validated    1 steps  3/3 (100%)
+           Sign in to Ghost admin at {{v1}} using email {{v2}} and password exactly {{v3}}. Verify the admin is signed in…
+  s_aa5b5e  validated    1 steps  3/3 (100%)
+           On the saved draft '{{v1}}', set its only tag to the existing tag 'Bench News'. Choose the existing suggestion…
+  s_ab2a5e  validated    7 steps  3/3 (100%)
+           On the saved draft '{{v1}}', set its only tag to the existing tag 'Bench News'. Choose the existing suggestion…
+  s_c31f1b  validated   11 steps  3/3 (100%)
+           For the saved draft '{{v1}}', set the post's publish date in Post settings to {{v3}}, save, and verify the dat…
+  s_c33274  validated    1 steps  3/3 (100%)
+           In Ghost admin, read-only identify the titles of all published posts whose title starts with 'Seed:' exactly a…
+  s_caa179  validated   10 steps  3/3 (100%)
+           On the saved draft '{{v1}}', set a custom excerpt that includes the literal runid '{{v2}}' (for example '{{v3}…
+  s_d74879  validated    3 steps  3/3 (100%)
+           Sign in to Ghost admin at {{v1}} using email {{v2}} and password exactly {{v3}}. Verify the admin is signed in…
+  s_e2fbd9  validated    5 steps  3/3 (100%)
+           Create and save a Ghost post titled '{{v2}}'. Its body must contain exactly one paragraph including the litera…
+  s_eb2de2  validated    1 steps  3/3 (100%)
+           Complete Ghost's publish confirmation flow for '{{v1}}' so it is published immediately, not a draft or schedul…
+  s_306e16  provisional  2 steps  1/1 (100%)
+           Complete Ghost's publish confirmation flow for '{{v1}}' so it is published immediately, not a draft or schedul…
+  s_33a674  provisional  6 steps  1/1 (100%)  variant of s_23ffbc
+           Complete Ghost's publish confirmation flow for '{{v1}}' so it is published immediately, not a draft or schedul…
+  s_4683d0  provisional  3 steps  1/1 (100%)  variant of s_23ffbc
+           Complete Ghost's publish confirmation flow for '{{v1}}' so it is published immediately, not a draft or schedul…
+  s_4b8c17  provisional  3 steps  1/1 (100%)
+           Complete Ghost's publish confirmation flow for '{{v1}}' so it is published immediately, not a draft or schedul…
+  s_5653f1  provisional  1 steps  1/1 (100%)
+           Complete Ghost's publish confirmation flow for '{{v1}}' so it is published immediately, not a draft or schedul…
+  s_5aa77b  provisional  1 steps  1/1 (100%)  variant of s_23ffbc
+           Complete Ghost's publish confirmation flow for '{{v1}}' so it is published immediately, not a draft or schedul…
+  s_5b11c4  provisional  8 steps  1/1 (100%)
+           Complete Ghost's publish confirmation flow for '{{v1}}' so it is published immediately, not a draft or schedul…
+  s_6f34ac  provisional  2 steps  1/1 (100%)  variant of s_23ffbc
+           Complete Ghost's publish confirmation flow for '{{v1}}' so it is published immediately, not a draft or schedul…
+  s_80e14e  provisional  1 steps  1/1 (100%)
+           Complete Ghost's publish confirmation flow for '{{v1}}' so it is published immediately, not a draft or schedul…
+  s_91317f  provisional  2 steps  1/1 (100%)
+           Complete Ghost's publish confirmation flow for '{{v1}}' so it is published immediately, not a draft or schedul…
+  s_9c1789  provisional  1 steps  1/1 (100%)
+           Complete Ghost's publish confirmation flow for '{{v1}}' so it is published immediately, not a draft or schedul…
+  s_c558e9  provisional  7 steps  1/1 (100%)  variant of s_23ffbc
+           Complete Ghost's publish confirmation flow for '{{v1}}' so it is published immediately, not a draft or schedul…
+  s_c735e2  provisional  6 steps  1/1 (100%)
+           Complete Ghost's publish confirmation flow for '{{v1}}' so it is published immediately, not a draft or schedul…
+  s_d45a04  provisional  3 steps  1/1 (100%)
+           Complete Ghost's publish confirmation flow for '{{v1}}' so it is published immediately, not a draft or schedul…
+  s_d4d288  provisional  3 steps  1/1 (100%)  variant of s_23ffbc
+           Complete Ghost's publish confirmation flow for '{{v1}}' so it is published immediately, not a draft or schedul…
+  s_d7547d  provisional  3 steps  1/1 (100%)
+           Complete Ghost's publish confirmation flow for '{{v1}}' so it is published immediately, not a draft or schedul…
+  s_d82fbb  provisional  1 steps  1/1 (100%)
+           Complete Ghost's publish confirmation flow for '{{v1}}' so it is published immediately, not a draft or schedul…
+  s_eb5a51  provisional  2 steps  1/1 (100%)  variant of s_23ffbc
+           Complete Ghost's publish confirmation flow for '{{v1}}' so it is published immediately, not a draft or schedul…
+  s_f66486  provisional  3 steps  1/1 (100%)
+           Complete Ghost's publish confirmation flow for '{{v1}}' so it is published immediately, not a draft or schedul…
+  s_faa568  provisional  7 steps  1/1 (100%)
+           Complete Ghost's publish confirmation flow for '{{v1}}' so it is published immediately, not a draft or schedul…
+store: /home/user/sitelooper/bench/results/fwgh23-fm-skills
+
+summary: /home/user/sitelooper/bench/results/fwgh23-fm-sweep.json

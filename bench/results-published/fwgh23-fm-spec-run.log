@@ -1,0 +1,11 @@
+[spec-replay] resetting ghost
+[reset] ghost: deleted 1 post(s) (earlier runs' and non-seed)
+[spec-replay] compiling: /opt/node22/bin/node /home/user/sitelooper/bin/sitelooper.js compile bench/results/flows/fwgh23-fm.json --out /home/user/sitelooper/bench/results/fwgh23-fm-spec-spec-tmp --overwrite-spec
+flow: /home/user/sitelooper/bench/results/fwgh23-fm-spec-spec-tmp/fwgh23-fm.flow.ts
+spec: /home/user/sitelooper/bench/results/fwgh23-fm-spec-spec-tmp/fwgh23-fm.spec.ts
+facts http://127.0.0.1:8099: 14 relied (6 hard), 13 advisory
+warning 04-set: its commit (press Control+s, s_ab2a5e step 6) has no recorded effect to check and nothing is read after it — a compiled run where the app ignored it still passes
+  why: s_ab2a5e step 6 is the last press after the segment's fills, and the recording saw it change nothing a check could hold: no line added or removed, no alert, the url it recorded is the one it started on; no read or wait follows it in the step.
+  fix: add an assertion with `sitelooper assert` or re-record
+[spec-replay] running: npx playwright test --config /home/user/sitelooper/bench/results/fwgh23-fm-spec-spec-tmp/playwright.config.mjs
+[spec-replay] fwgh23-fm-spec: 1/1 passed, exit=0, 77s, 1 drift line(s) — result written
