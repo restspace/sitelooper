@@ -60,7 +60,7 @@ bot detection.
 ## Install
 
 ```
-/plugin marketplace add restspace/sitelooper
+/plugin marketplace add restspace/sitelooper-plugin
 /plugin install sitelooper@sitelooper
 ```
 

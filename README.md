@@ -354,7 +354,7 @@ with this CLI. It has three skills (`write-browser-test`, `fix-browser-test`, `s
 hooks or servers:
 
 ```
-/plugin marketplace add restspace/sitelooper
+/plugin marketplace add restspace/sitelooper-plugin
 /plugin install sitelooper@sitelooper
 ```
 
